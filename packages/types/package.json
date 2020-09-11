@@ -1,0 +1,19 @@
+{
+  "name": "@aurorats/types",
+  "version": "0.1.10",
+  "license": "MIT",
+  "homepage": "https://github.com/aurorats/aurora",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.2"
+  },
+  "scripts": {
+    "build": "tsc --build --verbose"
+  },
+  "gitHead": "1b166728c00e969d9c6f775c16b0f265fe7c3a41"
+}

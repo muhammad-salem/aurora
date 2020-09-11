@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "typescript": "^4.0.2",
+    "tslib": "^2.0.1"
+  },
+  "scripts": {
+    "clean": "rimraf ./packages/**/dist",
+    "build": "yarn clean && tsc --build -v",
+    "build:watch": "yarn clean && tsc --build -v -w",
+    "do:publish-no-git": "yarn build && lerna publish --no-git-tag-version --no-push",
+    "do:publish-no-tag": "yarn build && lerna publish --no-git-tag-version",
+    "do:publish-no-push": "yarn build && lerna publish --no-push",
+    "do:publish": "yarn build && lerna publish"
+  }
+}

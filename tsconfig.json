@@ -1,0 +1,20 @@
+{
+	"references": [
+		{ "path": "packages/types" },
+		{ "path": "packages/metadata" },
+		{ "path": "packages/element" },
+		{ "path": "packages/expression" },
+		{ "path": "packages/html-parser" },
+		{ "path": "packages/jsx" },
+		{ "path": "packages/api" },
+		{ "path": "packages/pipe" },
+		{ "path": "packages/directive" },
+		{ "path": "packages/forms" },
+		{ "path": "packages/router" },
+		{ "path": "packages/http" },
+		{ "path": "packages/core" },
+		{ "path": "packages/testing" }
+	],
+	"files": [],
+}
+
