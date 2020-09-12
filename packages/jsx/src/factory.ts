@@ -8,6 +8,8 @@ export class JsxFactory {
 
 	static Fragment = 'fragment';
 
+	static CommentTag = 'comment';
+
 	static Directive = 'directive';
 
 	static createElement(tagName: string, attributes: JsxAttributes | undefined, ...children: (string | JsxComponent)[]): JsxComponent {

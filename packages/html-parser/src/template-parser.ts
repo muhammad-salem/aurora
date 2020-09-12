@@ -1,9 +1,11 @@
+import { JsxFactory } from '@aurorats/jsx';
 import { JsxComponent, JsxAttributes, JSXRender } from '@aurorats/jsx';
 
 export function htmlTemplateToJSXRender<T>(template: HTMLTemplateElement | string): JSXRender<T> {
     // should render her, all variables and resolve binding
     let temp: HTMLTemplateElement;
     if (typeof template === 'string') {
+        // bad practies, all attributes will be lowercase names
         temp = document.createElement('template');
         temp.innerHTML = template;
         template = temp;
@@ -21,27 +23,15 @@ export function htmlTemplateParser(template: HTMLTemplateElement): JsxComponent 
     } else if (template.content.childNodes.length === 1) {
         const child = template.content.firstChild;
         if (child instanceof Text) {
-            return { tagName: 'fragment', children: [(child.textContent as string).trim()] };
+            return JsxFactory.createElement(JsxFactory.Fragment, undefined, child.textContent as string);
         } else if (child instanceof HTMLElement) {
             return createComponent(child) as JsxComponent;
         }
     } else if (template.content.childNodes.length > 1) {
-        let root: JsxComponent = { tagName: 'fragment', children: [] };
-        template.content.childNodes.forEach(item => {
-            appendChildToElement(createComponent(item), root);
-        });
-        return root;
+        const childs = [].slice.call(template.content.childNodes).map(item => createComponent(item));
+        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...childs);
     }
     return undefined;
-}
-
-function appendChildToElement(childElement: string | JsxComponent, root: JsxComponent) {
-    if (typeof childElement === 'string' && childElement.length == 0) {
-        // do nothing
-    }
-    else {
-        root.children?.push(childElement);
-    }
 }
 
 function toJsxAttributes(attributes: NamedNodeMap): JsxAttributes {
@@ -56,22 +46,13 @@ function createComponent(child: ChildNode): string | JsxComponent {
     if (child instanceof Text) {
         return (child.textContent as string).trim();
     } else if (child instanceof Comment) {
-        return {
-            tagName: 'comment',
-            attributes: { comment: child.textContent }
-        };
+        return JsxFactory.createElement(JsxFactory.CommentTag, { comment: child.textContent });
     } else {
         const element: HTMLElement = child as HTMLElement;
-        let root: JsxComponent = {
-            tagName: element.tagName.toLowerCase() as string,
-            attributes: toJsxAttributes(element.attributes)
-        };
-        if (element.childNodes.length > 0) {
-            root.children = [];
-            element.childNodes.forEach(item => {
-                appendChildToElement(createComponent(item), root);
-            });
+        const childs = [].slice.call(element.childNodes).map(item => createComponent(item));
+        if (childs) {
+            return JsxFactory.createElement(element.tagName.toLowerCase(), toJsxAttributes(element.attributes), ...childs);
         }
-        return root;
+        return JsxFactory.createElement(element.tagName.toLowerCase(), toJsxAttributes(element.attributes));
     }
 }
