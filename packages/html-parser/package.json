@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/html-parser",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
@@ -10,8 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/jsx": "^0.1.10",
-    "@aurorats/element": "^0.1.10"
+    "@aurorats/element": "^0.1.11",
+    "@aurorats/jsx": "^0.1.11"
   },
   "devDependencies": {
     "typescript": "^4.0.2"

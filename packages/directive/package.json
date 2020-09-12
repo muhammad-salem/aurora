@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/directive",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
@@ -10,7 +10,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/api": "^0.1.10",
+    "@aurorats/api": "^0.1.11",
     "tslib": "^2.0.1"
   },
   "devDependencies": {

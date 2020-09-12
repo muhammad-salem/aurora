@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/core",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
@@ -10,12 +10,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/api": "^0.1.10",
-    "@aurorats/directive": "^0.1.10",
-    "@aurorats/forms": "^0.1.10",
-    "@aurorats/http": "^0.1.10",
-    "@aurorats/pipe": "^0.1.10",
-    "@aurorats/router": "^0.1.10",
+    "@aurorats/api": "^0.1.11",
+    "@aurorats/directive": "^0.1.11",
+    "@aurorats/forms": "^0.1.11",
+    "@aurorats/http": "^0.1.11",
+    "@aurorats/pipe": "^0.1.11",
+    "@aurorats/router": "^0.1.11",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
