@@ -10,12 +10,11 @@
     "access": "public"
   },
   "dependencies": {
+    "@aurorats/metadata": "^0.1.10",
     "@aurorats/element": "^0.1.10",
     "@aurorats/expression": "^0.1.10",
-    "@aurorats/html-parser": "^0.1.10",
     "@aurorats/jsx": "^0.1.10",
-    "@aurorats/metadata": "^0.1.10",
-    "@aurorats/types": "^0.1.10",
+    "@aurorats/html-parser": "^0.1.10",
     "tslib": "^2.0.1"
   },
   "devDependencies": {

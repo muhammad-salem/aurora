@@ -1,13 +1,13 @@
 import { Tag } from '@aurorats/element';
-import { isModel, Model, TypeOf } from '@aurorats/types';
 
 import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';
-import { defineModel } from '../model/change-detection.js';
+import { defineModel, isModel, Model } from '../model/change-detection.js';
 import { ToCamelCase } from '../utils/utils.js';
 import { Constructable } from '../providers/injector.js';
 import { ComponentRender } from './render.js';
+import { TypeOf } from '../utils/types.js';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit

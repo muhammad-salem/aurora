@@ -1,4 +1,3 @@
-export * from '@aurorats/types';
 export * from '@aurorats/element';
 export * from '@aurorats/expression';
 export * from '@aurorats/metadata';

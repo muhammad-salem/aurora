@@ -1,10 +1,12 @@
 import { NodeExpression, parseHtmlExpression } from '@aurorats/expression';
-import { jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory } from '@aurorats/jsx';
-import { AttrDiscription, isJsxComponentWithElement, isModel, JsxAttrComponent, Model } from '@aurorats/types';
+import {
+	AttrDiscription, isJsxComponentWithElement, JsxAttrComponent,
+	jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory
+} from '@aurorats/jsx';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
-import { defineModel, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import { defineModel, isModel, Model, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import { dependencyInjector } from '../providers/injector.js';
 import { ClassRegistry } from '../providers/provider.js';
 import { setValueByPath, updateAttribute, updateValue } from '../utils/utils.js';

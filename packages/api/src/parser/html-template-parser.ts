@@ -1,6 +1,9 @@
-import { JsxAttrComponent, JsxComponent, JSXRender } from '@aurorats/types';
+
+import {
+    JsxFactory, jsxAttrComponentBuilder, JsxAttrComponent,
+    JsxComponent, JSXRender
+} from '@aurorats/jsx';
 import { parseHtmlToJsxComponent } from '@aurorats/html-parser';
-import { JsxFactory, jsxAttrComponentBuilder } from '@aurorats/jsx';
 
 export function toJsxAttrComponent(html: string): JsxAttrComponent {
     // should render her all the variables and resolve binding

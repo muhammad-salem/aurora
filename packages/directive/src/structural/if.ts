@@ -1,4 +1,4 @@
-import { JsxAttrComponent } from '@aurorats/types';
+import { JsxAttrComponent } from '@aurorats/jsx';
 import {
 	ComponentRender, Directive, OnInit,
 	StructuralDirective, subscribe1way

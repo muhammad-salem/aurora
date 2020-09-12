@@ -1,4 +1,3 @@
-import { TemplateUrl } from '@aurorats/types';
 
 function resolveHtmlFilePath(moduleUrl: string, filename?: string): string {
     if (filename) {
@@ -16,6 +15,8 @@ export async function fetchFromCache(url: string): Promise<string> {
             return response.text()
         });
 }
+
+export type TemplateUrl = { filename?: string; meta: { url: string } };
 
 export function fetchHtmlFromModule(fileNameResolver: TemplateUrl): Promise<string> {
     const url = resolveHtmlFilePath(fileNameResolver.meta?.url, fileNameResolver.filename);

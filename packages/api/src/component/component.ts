@@ -1,5 +1,5 @@
 
-import { JsxAttrComponent, JSXRender, TypeOf } from '@aurorats/types';
+import { JsxAttrComponent, JSXRender } from '@aurorats/jsx';
 import { findByModelClassOrCreat, setBootstrapTagNameMatadata } from '@aurorats/metadata';
 import { findByTagName, Tag } from '@aurorats/element';
 import { htmlTemplateToJSXRender } from '@aurorats/html-parser';
@@ -10,6 +10,7 @@ import { ClassRegistry } from '../providers/provider.js';
 import { toJsxAttrComponent } from '../parser/html-template-parser.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
+import { TypeOf } from '../utils/types.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions

@@ -1,6 +1,7 @@
-import { TypeOf, Model } from '@aurorats/types';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
+import { Model } from '../model/change-detection.js';
+import { TypeOf } from '../utils/types.js';
 
 export interface CustomElement {
 	attributeChangedCallback(name: string, oldValue: string, newValue: string): void;

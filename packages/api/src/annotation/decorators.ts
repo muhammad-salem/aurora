@@ -1,7 +1,7 @@
-
-import { JsxAttrComponent, JSXRender, TemplateUrl, TypeOf } from '@aurorats/types';
+import { JsxAttrComponent, JSXRender } from '@aurorats/jsx';
+import { TypeOf } from '../utils/types.js';
 import { Components } from '../component/component.js';
-import { fetchHtml } from '../utils/path.js';
+import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
 export interface DirectiveOptions {
 	selector: string;

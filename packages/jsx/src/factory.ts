@@ -1,5 +1,8 @@
 
-import { AttrDiscription, JsxAttrComponent, JsxAttributes, JsxComponent } from '@aurorats/types';
+import {
+	AttrDiscription, JsxAttrComponent,
+	JsxAttributes, JsxComponent
+} from './factory-types.js';
 
 export class JsxFactory {
 
