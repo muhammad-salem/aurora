@@ -1,4 +1,4 @@
-import { JsxComponent } from '@aurorats/types';
+import { JsxFactory, JsxComponent } from '@aurorats/jsx';
 import { isEmptyElment } from '@aurorats/element';
 
 export function parseHtmlToJsxComponent(html: string): JsxComponent | undefined {
@@ -13,41 +13,32 @@ export function childsToJsxComponent(childList: (string | Child)[]): JsxComponen
         const child = childList[0];
         if (typeof child === 'string') {
             /** a case that should never happen **/
-            return { tagName: 'fragment', children: [child] };
+            return JsxFactory.createElement(JsxFactory.Fragment, undefined, child);
         } else {
-            let root: JsxComponent = {
-                tagName: child.tag as string,
-                attributes: child.attrs
-            };
-            if (child.childs) {
-                root.children = [];
-                child.childs.forEach(item => {
-                    root.children?.push(createComponent(item));
-                });
+            // return root;
+            const childs = child.childs?.map(item => createComponent(item));
+            if (childs) {
+                return JsxFactory.createElement(child.tag as string, child.attrs, ...childs);
             }
-            return root;
+            return JsxFactory.createElement(child.tag as string, child.attrs);
         }
 
     } else if (childList.length > 1) {
-        let root: JsxComponent = { tagName: 'fragment', children: [] };
-        childList.forEach(item => {
-            root.children?.push(createComponent(item));
-        });
-        return root;
+        const childs = childList.map(item => createComponent(item));
+        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...childs);
     }
     return undefined;
 }
 
 function createComponent(child: string | Child): string | JsxComponent {
     if (typeof child === 'string') {
-        // return { tagName: Fragment, children: [child] };
         return child;
     } else {
-        let root: JsxComponent = { tagName: child.tag as string, attributes: child.attrs };
-        if (child.childs) {
-            root.children = child.childs.map(item => createComponent(item));
+        const childs = child.childs?.map(item => createComponent(item));
+        if (childs) {
+            return JsxFactory.createElement(child.tag as string, child.attrs, ...childs);
         }
-        return root;
+        return JsxFactory.createElement(child.tag as string, child.attrs);
     }
 }
 
@@ -64,7 +55,7 @@ export function parseHtml(html: string): (string | Child)[] {
 }
 
 /**
- * tag name start with^, end tag name start with ^/
+ * tag name start with '^', end tag name start with '^/'
  * @param arr 
  * @param parent 
  */

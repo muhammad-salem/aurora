@@ -1,4 +1,4 @@
-import { JsxAttributes, JsxComponent, JSXRender } from '@aurorats/types';
+import { JsxComponent, JsxAttributes, JSXRender } from '@aurorats/jsx';
 
 export function htmlTemplateToJSXRender<T>(template: HTMLTemplateElement | string): JSXRender<T> {
     // should render her, all variables and resolve binding

@@ -10,6 +10,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@aurorats/jsx": "^0.1.10",
     "@aurorats/element": "^0.1.10",
     "@aurorats/types": "^0.1.10",
     "tslib": "^2.0.1"
