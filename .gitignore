@@ -109,3 +109,4 @@ public
 /src/**/*.d.ts
 /src/**/*.map
 .idea
+**/types
