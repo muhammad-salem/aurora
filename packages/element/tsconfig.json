@@ -5,6 +5,7 @@
 		"outDir": "dist",
 		"rootDir": "src",
 		"composite": true,
+		"declarationDir": "types",
 		"tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
 	},
 	"include": [

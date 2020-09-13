@@ -1,17 +1,19 @@
 {
   "name": "@aurorats/testing",
   "version": "0.1.11",
+  "description": "Aurora testing, all the test apps, used while building this lib",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./types/index.d.ts",
   "private": true,
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   },
   "dependencies": {
     "@aurorats/core": "^0.1.11",
+    "bootstrap": "^5.0.0-alpha1",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
