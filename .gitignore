@@ -106,8 +106,7 @@ dist
 ## project 
 public
 /src/**/*.js
-/src/**/*.d.ts
-/src/**/*.map
-.idea
 **/*.d.ts
+**/*.map
+.idea
 .verdaccio
