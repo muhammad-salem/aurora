@@ -1,0 +1,10 @@
+.img
+.idea
+.vscode
+src
+test
+public
+index.html
+*.tgz
+tsconfig.json
+dist/tsconfig.tsbuildinfo

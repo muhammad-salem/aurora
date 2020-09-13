@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+for pkgDir in packages/*/ ; do
+  cp tasks/config/{tsconfig.json,tsconfig.prod.json,.npmignore} $pkgDir
+done
+
+cp tasks/config/tsconfig.compilerOption.json packages/
+cp tasks/config/tsconfig.compilerOption.json packages/core
