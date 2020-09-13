@@ -23,11 +23,6 @@ declare module '*.json' {
     export default value;
 }
 
-declare module "*.svg" {
-    const value: any;
-    export default value;
-}
-
 declare module "*.jpg" {
     const value: string;
     export default value;
@@ -72,4 +67,3 @@ declare module '*.buf' {
     const value: Uint8Array
     export default value;
 }
-
