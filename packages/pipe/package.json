@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/pipe",
   "version": "0.1.11",
+  "description": "Aurora pipe, build-in pipes for aurora lib, like json, translate, async, etc...",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

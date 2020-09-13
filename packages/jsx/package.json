@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/jsx",
   "version": "0.1.11",
+  "description": "Aurora jsx, has jsx factory, to build and collect tag name, attr and children for element",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

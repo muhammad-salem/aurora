@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/metadata",
   "version": "0.1.11",
+  "description": "Aurora metadata, basic functionality to save and load type metadate at runtime",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

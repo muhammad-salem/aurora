@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/api",
   "version": "0.1.11",
+  "description": "Implements Aurora's core functionality, low-level services, and utilities",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

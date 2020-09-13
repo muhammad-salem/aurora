@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/directive",
   "version": "0.1.11",
+  "description": "Aurora directive had the built-in directives for aurora project",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

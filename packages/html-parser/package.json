@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/html-parser",
   "version": "0.1.11",
+  "description": "Aurora HTML parser, parse an html string or file to jsx component",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

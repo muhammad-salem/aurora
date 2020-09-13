@@ -6,4 +6,5 @@ test
 public
 index.html
 *.tgz
-*.json
+tsconfig.json
+dist/tsconfig.tsbuildinfo

@@ -1,6 +1,7 @@
 {
   "name": "@aurorats/expression",
   "version": "0.1.11",
+  "description": "Aurora expression, an template expression evaluation",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",

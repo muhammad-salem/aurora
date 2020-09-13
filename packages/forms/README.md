@@ -1,11 +1,13 @@
 # Aurora Forms
 
+Aurora forms, deal with input elements and form
+
 ## `Install`
 
-``` bash
+```bash
 npm i --save @aurorats/forms
 ```
 
-``` bash
+```bash
 yarn add @aurorats/forms
 ```
