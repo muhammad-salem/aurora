@@ -7,4 +7,5 @@ public
 index.html
 *.tgz
 tsconfig.json
+tsconfig.prod.json
 dist/tsconfig.tsbuildinfo
