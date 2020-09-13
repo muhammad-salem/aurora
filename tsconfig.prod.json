@@ -1,0 +1,19 @@
+{
+	"references": [
+		{ "path": "packages/metadata/tsconfig.prod.json" },
+		{ "path": "packages/element/tsconfig.prod.json" },
+		{ "path": "packages/expression/tsconfig.prod.json" },
+		{ "path": "packages/jsx/tsconfig.prod.json" },
+		{ "path": "packages/html-parser/tsconfig.prod.json" },
+		{ "path": "packages/api/tsconfig.prod.json" },
+		{ "path": "packages/http/tsconfig.prod.json" },
+		{ "path": "packages/pipe/tsconfig.prod.json" },
+		{ "path": "packages/directive/tsconfig.prod.json" },
+		{ "path": "packages/forms/tsconfig.prod.json" },
+		{ "path": "packages/router/tsconfig.prod.json" },
+		{ "path": "packages/core/tsconfig.prod.json" },
+		{ "path": "packages/testing/tsconfig.prod.json" }
+	],
+	"files": [],
+}
+
