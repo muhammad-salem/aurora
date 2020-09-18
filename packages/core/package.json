@@ -17,6 +17,7 @@
     "@aurorats/http": "^0.1.11",
     "@aurorats/pipe": "^0.1.11",
     "@aurorats/router": "^0.1.11",
+    "@aurorats/types": "^0.1.11",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
