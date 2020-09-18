@@ -17,9 +17,9 @@ import {
 } from '../annotation/decorators.js';
 
 export class PropertyRef {
-	constructor(public modelProperty: string, private _viewNanme?: string) { }
+	constructor(public modelProperty: string, private _viewName?: string) { }
 	get viewAttribute(): string {
-		return this._viewNanme || this.modelProperty;
+		return this._viewName || this.modelProperty;
 	}
 }
 
