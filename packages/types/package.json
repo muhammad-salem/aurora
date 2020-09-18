@@ -1,0 +1,17 @@
+{
+  "name": "@aurorats/types",
+  "version": "0.1.11",
+  "description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
+  "license": "MIT",
+  "homepage": "https://github.com/aurorats/aurora",
+  "types": "./index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.2"
+  },
+  "scripts": {
+    "build": "tsc --build --verbose"
+  }
+}
