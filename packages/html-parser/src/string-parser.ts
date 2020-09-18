@@ -1,11 +1,11 @@
 import { JsxFactory, JsxComponent } from '@aurorats/jsx';
-import { isEmptyElment } from '@aurorats/element';
+import { isEmptyElement } from '@aurorats/element';
 
 export function parseHtmlToJsxComponent(html: string): JsxComponent | undefined {
-    return childsToJsxComponent(parseHtml(html));
+    return childToJsxComponent(parseHtml(html));
 }
 
-export function childsToJsxComponent(childList: (string | Child)[]): JsxComponent | undefined {
+export function childToJsxComponent(childList: (string | Child)[]): JsxComponent | undefined {
     if (!childList) {
         return undefined;
     }
@@ -16,16 +16,16 @@ export function childsToJsxComponent(childList: (string | Child)[]): JsxComponen
             return JsxFactory.createElement(JsxFactory.Fragment, undefined, child);
         } else {
             // return root;
-            const childs = child.childs?.map(item => createComponent(item));
-            if (childs) {
-                return JsxFactory.createElement(child.tag as string, child.attrs, ...childs);
+            const list = child.childs?.map(item => createComponent(item));
+            if (list) {
+                return JsxFactory.createElement(child.tag as string, child.attrs, ...list);
             }
             return JsxFactory.createElement(child.tag as string, child.attrs);
         }
 
     } else if (childList.length > 1) {
-        const childs = childList.map(item => createComponent(item));
-        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...childs);
+        const list = childList.map(item => createComponent(item));
+        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...list);
     }
     return undefined;
 }
@@ -34,9 +34,9 @@ function createComponent(child: string | Child): string | JsxComponent {
     if (typeof child === 'string') {
         return child;
     } else {
-        const childs = child.childs?.map(item => createComponent(item));
-        if (childs) {
-            return JsxFactory.createElement(child.tag as string, child.attrs, ...childs);
+        const list = child.childs?.map(item => createComponent(item));
+        if (list) {
+            return JsxFactory.createElement(child.tag as string, child.attrs, ...list);
         }
         return JsxFactory.createElement(child.tag as string, child.attrs);
     }
@@ -85,7 +85,7 @@ function analysis(arr: string[]): (Child | string)[] {
             stackTrace.push(defineChild(current));
             let child = stackTrace[stackTrace.length - 1];
             if (typeof child === 'object') {
-                if (isEmptyElment(child.tag as string)) {
+                if (isEmptyElement(child.tag as string)) {
                     popElement(stackTrace, childStack);
                 }
             }

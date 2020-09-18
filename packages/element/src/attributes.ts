@@ -160,3 +160,7 @@ export function hasNativeAttr(element: string | HTMLElement, attr: string): bool
     }
     return false;
 }
+
+export function getTagsForAttr(attr: string): string[] {
+    return Object.keys(Attrs).filter(tag => Attrs[tag].includes(attr));
+}
