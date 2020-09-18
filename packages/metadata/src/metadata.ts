@@ -186,7 +186,7 @@ export class Metadata {
 }
 
 // Map<string, MetadataRef>
-//    propaperty name: ==> {key: value}
+//    property name: ==> {key: value}
 function getMetadataMap(target: Object): Metadata {
 	let prototype = typeof target === 'function' ? target.prototype : target;
 	return Metadata.getMetadata(prototype);

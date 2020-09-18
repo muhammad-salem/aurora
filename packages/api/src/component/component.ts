@@ -1,6 +1,6 @@
 
 import { JsxAttrComponent, JSXRender } from '@aurorats/jsx';
-import { findByModelClassOrCreat, setBootstrapTagNameMatadata } from '@aurorats/metadata';
+import { findByModelClassOrCreat, setBootstrapTagNameMetadata as setBootstrapTagNameMetadata } from '@aurorats/metadata';
 import { findByTagName, Tag } from '@aurorats/element';
 import { htmlTemplateToJSXRender } from '@aurorats/html-parser';
 
@@ -35,7 +35,7 @@ export class HostBindingRef {
 	constructor(public viewProperty: string, public hostPropertyName: string) { }
 }
 
-export interface BootstropMatadata {
+export interface BootstrapMetadata {
 	[key: string]: any;
 }
 
@@ -94,42 +94,42 @@ export class Components {
 	}
 
 	static addInput(modelProperty: Object, modelName: string, viewNanme: string) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.inputs = bootstrap.inputs || [];
 		bootstrap.inputs.push(new PropertyRef(modelName, viewNanme));
 	}
 
 	static addOutput(modelProperty: Object, modelName: string, viewNanme: string) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.outputs = bootstrap.outputs || [];
 		bootstrap.outputs.push(new PropertyRef(modelName, viewNanme));
 	}
 
 	static setComponentView(modelProperty: Object, modelName: string) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.view = modelName;
 	}
 
 	static addViewChild(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.viewChild = bootstrap.viewChild || [];
 		bootstrap.viewChild.push(new ChildRef(modelName, selector, childOptions));
 	}
 
 	static addViewChildren(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.ViewChildren = bootstrap.ViewChildren || [];
 		bootstrap.ViewChildren.push(new ChildRef(modelName, selector));
 	}
 
 	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.hostListeners = bootstrap.hostListeners || [];
 		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
 	}
 
 	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelProperty);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.hostBinding = bootstrap.hostBinding || [];
 		bootstrap.hostBinding.push(
 			new HostBindingRef(propertyKey, hostPropertyName)
@@ -137,7 +137,7 @@ export class Components {
 	}
 
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelClass.prototype);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -146,7 +146,7 @@ export class Components {
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelClass.prototype);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -154,7 +154,7 @@ export class Components {
 	}
 
 	static defineService(modelClass: Function, opts: ServiceOptions) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelClass.prototype);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -162,7 +162,7 @@ export class Components {
 	}
 
 	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
-		var bootstrap: BootstropMatadata = findByModelClassOrCreat(modelClass.prototype);
+		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
 
 		var componentRef: ComponentRef<T> = opts as unknown as ComponentRef<T>;
 		for (const key in bootstrap) {
@@ -199,13 +199,13 @@ export class Components {
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
 		const componentRefName = componentRef.viewClass.name + 'ComponentRef';
-		setBootstrapTagNameMatadata(modelClass, componentRefName, componentRef);
+		setBootstrapTagNameMetadata(modelClass, componentRefName, componentRef);
 
 		dependencyInjector.getInstance(ClassRegistry).registerComponent(modelClass);
 		dependencyInjector
 			.getInstance(ClassRegistry)
 			.registerView(bootstrap.viewClass);
-		// setBootstrapMatadata(modelClass.prototype, componentRef);
+		// setBootstrapMetadata(modelClass.prototype, componentRef);
 
 		const options: ElementDefinitionOptions = {};
 		const parentTagName = componentRef.extend?.name;

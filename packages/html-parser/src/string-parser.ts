@@ -16,7 +16,7 @@ export function childToJsxComponent(childList: (string | Child)[]): JsxComponent
             return JsxFactory.createElement(JsxFactory.Fragment, undefined, child);
         } else {
             // return root;
-            const list = child.childs?.map(item => createComponent(item));
+            const list = child.children?.map(item => createComponent(item));
             if (list) {
                 return JsxFactory.createElement(child.tag as string, child.attrs, ...list);
             }
@@ -34,7 +34,7 @@ function createComponent(child: string | Child): string | JsxComponent {
     if (typeof child === 'string') {
         return child;
     } else {
-        const list = child.childs?.map(item => createComponent(item));
+        const list = child.children?.map(item => createComponent(item));
         if (list) {
             return JsxFactory.createElement(child.tag as string, child.attrs, ...list);
         }
@@ -45,7 +45,7 @@ function createComponent(child: string | Child): string | JsxComponent {
 export interface Child {
     tag?: string;
     attrs?: { [key: string]: string };
-    childs?: (Child | string)[];
+    children?: (Child | string)[];
 }
 export function parseHtml(html: string): (string | Child)[] {
     const arr: string[] = html.replace(/</g, '<^').split(/[<|>]/g)
@@ -108,8 +108,8 @@ function popElement(stackTrace: (string | Child)[], childStack: (string | Child)
     if (element) {
         const parent = stackTrace.pop();
         if (parent && typeof parent !== 'string') {
-            parent.childs = parent.childs || [];
-            parent.childs.push(element);
+            parent.children = parent.children || [];
+            parent.children.push(element);
             stackTrace.push(parent);
         }
         else {

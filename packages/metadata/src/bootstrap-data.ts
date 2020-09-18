@@ -8,14 +8,14 @@ export function findByModelClassOrCreat<T = any>(modelProperty: Object): T {
     return bootstrapMetadata;
 }
 
-export function setBootstrapTagNameMatadata(modelProperty: Object, bootstrapTagName: string, metadata: Object) {
+export function setBootstrapTagNameMetadata(modelProperty: Object, bootstrapTagName: string, metadata: Object) {
     Reflect.set(modelProperty, bootstrapTagName, metadata);
 }
 
-export function getBootstrapMatadata<T = any>(modelProperty: Object): T {
+export function getBootstrapMetadata<T = any>(modelProperty: Object): T {
     return Reflect.get(modelProperty, 'bootstrap');
 }
 
-export function getBootstrapTagNameMatadata<T = any>(modelProperty: Object, bootstrapTagName: string): T {
+export function getBootstrapTagNameMetadata<T = any>(modelProperty: Object, bootstrapTagName: string): T {
     return Reflect.get(modelProperty, bootstrapTagName);
 }

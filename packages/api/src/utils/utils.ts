@@ -8,8 +8,8 @@ function keyFor(keys: string[], paramPath: string): string | false {
 	return false;
 }
 
-function splitByRegix(str: string, regx: RegExp) {
-	return str.split(regx).filter(key => key).map(a => a.trim());
+function splitByRegex(str: string, regex: RegExp) {
+	return str.split(regex).filter(key => key).map(a => a.trim());
 }
 
 interface Args {
@@ -18,23 +18,23 @@ interface Args {
 }
 
 export function mapFunArgs(path: string): Args[] {
-	const splits = splitByRegix(path, /\(|\)/g);
+	const splits = splitByRegex(path, /\(|\)/g);
 	let temp: Args = {
-		prop: splitByRegix(splits[0], /\.|\[|\]/g)
+		prop: splitByRegex(splits[0], /\.|\[|\]/g)
 	};
-	const callpaths: Args[] = [temp];
+	const callPaths: Args[] = [temp];
 	for (let i = 1; i < splits.length; i++) {
-		const args = splitByRegix(splits[i], /,/g);
+		const args = splitByRegex(splits[i], /,/g);
 		if (args.length > 1) {
 			temp.params = args;
 		} else {
 			temp = {
-				prop: splitByRegix(splits[i], /\.|\[|\]/g),
+				prop: splitByRegex(splits[i], /\.|\[|\]/g),
 			}
-			callpaths.push(temp);
+			callPaths.push(temp);
 		}
 	}
-	return callpaths;
+	return callPaths;
 }
 
 export function getValueByPath(parent: any, objectPath: string, skipFirst?: boolean, resolver?: { [key: string]: any }) {
@@ -53,22 +53,22 @@ export function getValueByPath(parent: any, objectPath: string, skipFirst?: bool
 		}
 		if (args[i].params) {
 			const resolverKeys = Object.keys(resolver || {});
-			const keyParamters: any[] = [];
+			const keyParameters: any[] = [];
 			const params = args[i].params as string[];
 			for (let j = 0; j < params.length; j++) {
 				const param = params[j];
 				let rkey;
 				if (resolver && (rkey = keyFor(resolverKeys, param))) {
-					keyParamters.push(getValueByPath(resolver[<string>rkey], param, true));
+					keyParameters.push(getValueByPath(resolver[<string>rkey], param, true));
 				} else if (!Number.isNaN(+param)) {
 					// is number
-					keyParamters.push(+param);
+					keyParameters.push(+param);
 				} else {
 					// is string
-					keyParamters.push(param);
+					keyParameters.push(param);
 				}
 			}
-			ref = ref(...keyParamters);
+			ref = ref(...keyParameters);
 		}
 	}
 	return ref;

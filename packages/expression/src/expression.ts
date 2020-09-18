@@ -13,7 +13,7 @@ export class ValueNode implements NodeExpression {
         this.value = JSON.parse(value as string);
     }
     set(context: object, value: any) {
-        throw new Error("ValueNode#set() is not Supported");
+        throw new Error("ValueNode#set() has no implementation.");
     }
     get(context: object) {
         return this.value;

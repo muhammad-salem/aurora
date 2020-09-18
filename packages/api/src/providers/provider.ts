@@ -1,5 +1,5 @@
 
-import { getBootstrapMatadata } from '@aurorats/metadata';
+import { getBootstrapMetadata } from '@aurorats/metadata';
 import { ComponentRef, DirectiveRef, PropertyRef } from '../component/component.js';
 
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
@@ -27,10 +27,10 @@ export class ClassRegistry {
 		this.pipeSet.add(classRef);
 	}
 
-	hasComponet<T>(selector: string): boolean {
+	hasComponent<T>(selector: string): boolean {
 		for (const modelClass of this.componentSet) {
 			const componentRef: ComponentRef<T> =
-				getBootstrapMatadata(modelClass.prototype);
+				getBootstrapMetadata(modelClass.prototype);
 			if (componentRef.selector === selector) {
 				return true;
 			}
@@ -40,25 +40,25 @@ export class ClassRegistry {
 	getComponentRef<T>(selector: string): ComponentRef<T> | undefined {
 		for (const modelClass of this.componentSet) {
 			const componentRef: ComponentRef<T> =
-				getBootstrapMatadata(modelClass.prototype);
+				getBootstrapMetadata(modelClass.prototype);
 			if (componentRef.selector === selector) {
 				return componentRef;
 			}
 		}
 	}
 
-	getComponet<T>(selector: string) {
+	getComponent<T>(selector: string) {
 		// this.componentSet.
 		for (const modelClass of this.componentSet) {
 			const componentRef: ComponentRef<T> =
-				getBootstrapMatadata(modelClass.prototype);
+				getBootstrapMetadata(modelClass.prototype);
 			if (componentRef.selector === selector) {
 				return modelClass;
 			}
 		}
 	}
 
-	getComponetView(selector: string) {
+	getComponentView(selector: string) {
 		return this.getComponentRef(selector)?.viewClass;
 	}
 
@@ -79,7 +79,7 @@ export class ClassRegistry {
 	hasDirective<T>(selector: string): boolean {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef: DirectiveRef<T> =
-				getBootstrapMatadata(directiveClass.prototype);
+				getBootstrapMetadata(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return true;
 			}
@@ -90,7 +90,7 @@ export class ClassRegistry {
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef: DirectiveRef<T> =
-				getBootstrapMatadata(directiveClass.prototype);
+				getBootstrapMetadata(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return directiveRef;
 			}

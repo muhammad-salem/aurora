@@ -1,6 +1,6 @@
 
 import {
-	AttrDiscription, JsxAttrComponent,
+	AttrDescription, JsxAttrComponent,
 	JsxAttributes, JsxComponent
 } from './factory-types.js';
 
@@ -69,87 +69,87 @@ export function jsxAttrComponentBuilder(component: JsxComponent): JsxAttrCompone
 	return jsxAttrComponent;
 }
 
-export function jsxComponentAttrHandler(componentAttr: JsxAttributes): AttrDiscription {
-	const attr = new AttrDiscription();
+export function jsxComponentAttrHandler(componentAttr: JsxAttributes): AttrDescription {
+	const attr = new AttrDescription();
 	Object.keys(componentAttr).forEach(attrName => {
 		handelAttribute(attr, attrName, componentAttr[attrName]);
 	});
 	return attr;
 }
 
-function handelAttribute(discr: AttrDiscription, attr: string, value: string | Function | object) {
+function handelAttribute(descriptor: AttrDescription, attr: string, value: string | Function | object) {
 
 	if (attr.startsWith('#')) {
 		// <app-tag #element-name="directiveName?" ></app-tag>
 		attr = attr.substring(1);
 		if (value === 'true') {
-			discr.elementName = attr;
+			descriptor.elementName = attr;
 		} else if (typeof value === 'string') {
-			discr.directiveName = attr;
+			descriptor.directiveName = attr;
 			let temp = value.split('|', 2);
-			discr.directive = temp[0];
-			discr.directiveValue = temp[1];
+			descriptor.directive = temp[0];
+			descriptor.directiveValue = temp[1];
 		}
 	}
 	else if (attr === 'is') {
-		discr.setAttrIs(value as string);
+		descriptor.setAttrIs(value as string);
 	}
 	else if (attr === 'comment') {
-		discr.setComment(value as string);
+		descriptor.setComment(value as string);
 	}
 	else if (attr.startsWith('[(')) {
 		// [(attr)]="modelProperty"
 		attr = attr.substring(2, attr.length - 2);
-		discr.addPropertyBinding(attr, value as string);
+		descriptor.addPropertyBinding(attr, value as string);
 	}
 	else if (attr.startsWith('$') && typeof value === 'string' && value.startsWith('$')) {
 		// $attr="$viewProperty" 
 		attr = attr.substring(1);
 		value = value.substring(1);
-		discr.addPropertyBinding(attr, value);
+		descriptor.addPropertyBinding(attr, value);
 	}
 	else if (attr.startsWith('[')) {
 		// [attr]="modelProperty"
 		attr = attr.substring(1, attr.length - 1);
-		discr.addExpressionBinding(attr, value as string);
+		descriptor.addExpressionBinding(attr, value as string);
 	}
 	else if (attr.startsWith('$') && typeof value === 'string') {
 		// $attr="viewProperty" 
 		attr = attr.substring(1);
-		discr.addExpressionBinding(attr, value);
+		descriptor.addExpressionBinding(attr, value);
 	}
 	else if (attr.startsWith('$') && typeof value === 'object') {
 		// $attr={viewProperty} // as an object
 		attr = attr.substring(1);
-		discr.addObjectRecord(attr, value);
+		descriptor.addObjectRecord(attr, value);
 	}
 	else if (typeof value === 'string' && value.startsWith('$')) {
 		// bad practice
 		// attr="$viewProperty" // as an object
 		value = value.substring(1);
-		discr.addLessbinding(attr, value);
+		descriptor.addLessBinding(attr, value);
 	}
 	else if (typeof value === 'string' && (/^\{\{(.+\w*)*\}\}/g).test(value)) {
 		// attr="{{viewProperty}}" // just pass data
 		value = value.substring(2, value.length - 2);
-		discr.addExpressionBinding(attr, value);
+		descriptor.addExpressionBinding(attr, value);
 	}
 	else if (typeof value === 'string' && (/\{\{|\}\}/g).test(value)) {
 		// attr="any string{{viewProperty}}any text" // just pass data
-		discr.addTemplate(attr, value);
+		descriptor.addTemplate(attr, value);
 	}
 	else if (attr.startsWith('(')) {
 		// (elementAttr)="modelProperty()"
 		attr = attr.substring(1, attr.length - 1);
-		discr.addEventRecord(attr, value as string);
+		descriptor.addEventRecord(attr, value as string);
 	}
 	else if (attr.startsWith('on')) {
 		// onattr="modelProperty()"
 		// onattr={modelProperty} // as an function
-		discr.addEventRecord(attr, value as (string | Function));
+		descriptor.addEventRecord(attr, value as (string | Function));
 	}
 	else {
-		discr.addAttr(attr, value);
+		descriptor.addAttr(attr, value);
 	}
 }
 

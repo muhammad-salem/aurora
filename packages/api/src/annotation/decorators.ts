@@ -51,8 +51,8 @@ export interface ComponentOptions<T = Function> {
 	 */
 	styles?: string | { [key: string]: string }[];
 	/**
-	 * what baisc element should the new component inhert from,
-	 * the tag name to inhert from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
+	 * what basic element should the new component inherit from,
+	 * the tag name to inherit from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
 	 */
 	extend?: string;
 
@@ -61,12 +61,12 @@ export interface ComponentOptions<T = Function> {
 	 *  'custom': Use global CSS without any encapsulation.
 	 *  'shadow-dom': Use Shadow DOM v1 to encapsulate styles.
 	 * 
-	 *  'template': like 'custom', with load the template from the documnet ('index.html' file)
+	 *  'template': like 'custom', with load the template from the document ('index.html' file)
 	 * 	 			that had the same id as the component "selector".
 	 *  'shadow-dom-template': like 'shadowDom', and load template by selector id.
 	 * 
 	 * Both 'template' & 'shadow-dom-template' encapsulation type:
-	 *  should had atrribttes name like lowercase,
+	 *  should had attributes name like lowercase,
 	 * 	the browser itself, will convert all attributes to lowercase
 	 * 
 	 * ```typescript

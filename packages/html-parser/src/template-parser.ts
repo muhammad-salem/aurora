@@ -5,7 +5,7 @@ export function htmlTemplateToJSXRender<T>(template: HTMLTemplateElement | strin
     // should render her, all variables and resolve binding
     let temp: HTMLTemplateElement;
     if (typeof template === 'string') {
-        // bad practies, all attributes will be lowercase names
+        // bad practice, all attributes will be lowercase names
         temp = document.createElement('template');
         temp.innerHTML = template;
         template = temp;
@@ -28,8 +28,10 @@ export function htmlTemplateParser(template: HTMLTemplateElement): JsxComponent 
             return createComponent(child) as JsxComponent;
         }
     } else if (template.content.childNodes.length > 1) {
-        const childs = [].slice.call(template.content.childNodes).map(item => createComponent(item));
-        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...childs);
+        const children = [].slice.call(template.content.childNodes)
+            .map(item => createComponent(item))
+            .filter(component => component !== null);
+        return JsxFactory.createElement(JsxFactory.Fragment, undefined, ...children as (string | JsxComponent)[]);
     }
     return undefined;
 }
@@ -42,17 +44,20 @@ function toJsxAttributes(attributes: NamedNodeMap): JsxAttributes {
     return attrs;
 }
 
-function createComponent(child: ChildNode): string | JsxComponent {
+function createComponent(child: ChildNode): string | JsxComponent | null {
     if (child instanceof Text) {
-        return (child.textContent as string).trim();
+        return child.textContent;
     } else if (child instanceof Comment) {
         return JsxFactory.createElement(JsxFactory.CommentTag, { comment: child.textContent });
     } else {
         const element: HTMLElement = child as HTMLElement;
-        const childs = [].slice.call(element.childNodes).map(item => createComponent(item));
-        if (childs) {
-            return JsxFactory.createElement(element.tagName.toLowerCase(), toJsxAttributes(element.attributes), ...childs);
-        }
-        return JsxFactory.createElement(element.tagName.toLowerCase(), toJsxAttributes(element.attributes));
+        const children = [].slice.call(element.childNodes)
+            .map(item => createComponent(item))
+            .filter(component => component !== null);
+        return JsxFactory.createElement(
+            element.tagName.toLowerCase(),
+            toJsxAttributes(element.attributes),
+            ...children as (string | JsxComponent)[]
+        );
     }
 }

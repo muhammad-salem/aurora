@@ -20,15 +20,15 @@ export interface JsxComponentWithName extends JsxComponent {
 	element: HTMLElement;
 }
 
-export function isJsxComponentWithElement(componet: JsxComponent): componet is JsxComponentWithName {
-	return Reflect.has(componet, 'element');
+export function isJsxComponentWithElement(component: JsxComponent): component is JsxComponentWithName {
+	return Reflect.has(component, 'element');
 }
 
-export function toJsxComponentWithElement(componet: JsxComponent, element: HTMLElement): void {
-	(componet as JsxComponentWithName).element = element;
+export function toJsxComponentWithElement(component: JsxComponent, element: HTMLElement): void {
+	(component as JsxComponentWithName).element = element;
 }
 
-export class AttrDiscription {
+export class AttrDescription {
 
 	/**
 	 * Template reference variables (#var)
@@ -56,9 +56,9 @@ export class AttrDiscription {
 	/**
 	 * init attr from property without binding
 	 */
-	lessbinding: Map<string, string>;
+	lessBinding: Map<string, string>;
 	/**
-	 * init normal atrr, string, number, boolean, with no binding at all
+	 * init normal attr, string, number, boolean, with no binding at all
 	 */
 	attr: Map<string, string | boolean>;
 	/**
@@ -72,14 +72,14 @@ export class AttrDiscription {
 		this.property = new Map<string, string>();
 		this.expression = new Map<string, string>();
 		this.objects = new Map<string, object>();
-		this.lessbinding = new Map<string, string>();
+		this.lessBinding = new Map<string, string>();
 		this.attr = new Map<string, string>();
 		this.events = new Map<string, string | Function>();
 		this.template = new Map<string, string>();
 	}
 
-	setAttrIs(tageName: string) {
-		this.is = tageName;
+	setAttrIs(tagName: string) {
+		this.is = tagName;
 	}
 
 	setComment(comment: string) {
@@ -102,8 +102,8 @@ export class AttrDiscription {
 		this.events.set(attr, value);
 	}
 
-	addLessbinding(attr: string, value: any) {
-		this.lessbinding.set(attr, value);
+	addLessBinding(attr: string, value: any) {
+		this.lessBinding.set(attr, value);
 	}
 
 	addTemplate(attr: string, value: any) {
@@ -117,7 +117,7 @@ export class AttrDiscription {
 
 export class JsxAttrComponent {
 	tagName: string;
-	attributes?: AttrDiscription;
+	attributes?: AttrDescription;
 	children?: (string | JsxAttrComponent)[];
 
 	constructor(tagName: string) {

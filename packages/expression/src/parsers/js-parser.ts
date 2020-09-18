@@ -70,7 +70,7 @@ function oneTimeProcess(tokens: (NodeExpression | string)[]): (NodeExpression | 
 
 const specialCase = ['+', '-'];
 
-function tokenAnlzise(tokens: (string | NodeExpression)[]): NodeExpression {
+function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
 
     MemberNode.parseBracketMember(tokens);
 
@@ -101,9 +101,9 @@ function tokenAnlzise(tokens: (string | NodeExpression)[]): NodeExpression {
 export function parseJSExpression(str: string) {
     let tokens: (NodeExpression | string)[] = generateTokens(str, tokenParser);
     oneTimeProcess(tokens);
-    GroupingOperator.parse(tokens, tokenAnlzise);
-    ObjectOperator.parse(tokens, tokenAnlzise);
-    tokenAnlzise(tokens);
+    GroupingOperator.parse(tokens, tokenAnalysis);
+    ObjectOperator.parse(tokens);
+    tokenAnalysis(tokens);
     StatementNode.parse(tokens);
     return tokens[0] as NodeExpression;
 }

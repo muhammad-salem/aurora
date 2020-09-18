@@ -1,6 +1,6 @@
 import { NodeExpression, parseHtmlExpression } from '@aurorats/expression';
 import {
-	AttrDiscription, isJsxComponentWithElement, JsxAttrComponent,
+	AttrDescription, isJsxComponentWithElement, JsxAttrComponent,
 	jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory
 } from '@aurorats/jsx';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
@@ -38,14 +38,14 @@ export class ComponentRender<T> {
 
 	viewChildMap: { [name: string]: any } = {};
 
-	constructor(public baiseView: HTMLComponent<T>) {
-		this.componentRef = baiseView.getComponentRef();
+	constructor(public basicView: HTMLComponent<T>) {
+		this.componentRef = basicView.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
 	}
 
 	getPropertySource(viewProperty: string): PropertySource {
 		let expression = parseHtmlExpression(viewProperty);
-		let input = this.baiseView.getInputStartWith(viewProperty);
+		let input = this.basicView.getInputStartWith(viewProperty);
 		let dotIndex = viewProperty.indexOf('.');
 		let modelProperty = viewProperty;
 		if (dotIndex > 0 && input) {
@@ -57,8 +57,8 @@ export class ComponentRender<T> {
 		if (dotIndex > 0) {
 			parent = viewProperty.substring(0, dotIndex);
 		}
-		if (Reflect.has(this.baiseView, parent)) {
-			// parent = Reflect.get(this.baiseView, parent);
+		if (Reflect.has(this.basicView, parent)) {
+			// parent = Reflect.get(this.basicView, parent);
 			// /**
 			//  * case of element refrence
 			//  * <root-app>
@@ -68,9 +68,9 @@ export class ComponentRender<T> {
 			// if (parent instanceof HTMLElement) {
 			// 	return { property: modelProperty.substring(dotIndex + 1), src: parent, expression };
 			// }
-			return { property: modelProperty, src: this.baiseView, expression };
+			return { property: modelProperty, src: this.basicView, expression };
 		}
-		return { property: modelProperty, src: this.baiseView._model, expression };
+		return { property: modelProperty, src: this.basicView._model, expression };
 	}
 
 	initElementData(element: HTMLElement, elementAttr: string, viewProperty: string, isAttr: boolean) {
@@ -149,7 +149,7 @@ export class ComponentRender<T> {
 				renderText = renderText.replace(propTemplate, value);
 				// let tempValue = getValueByPath(prop.src, prop.property);
 				// if (typeof tempValue === 'function') {
-				// 	// tempValue = tempValue.call(this.baiseView._model);
+				// 	// tempValue = tempValue.call(this.basicView._model);
 				// 	tempValue = tempValue.call(prop.src);
 				// }
 				// renderText = renderText.replace(propTemplate, tempValue);
@@ -187,7 +187,7 @@ export class ComponentRender<T> {
 			if (this.componentRef.template instanceof JsxAttrComponent) {
 				this.template = this.componentRef.template;
 			} else {
-				this.template = jsxAttrComponentBuilder(this.componentRef.template(this.baiseView._model));
+				this.template = jsxAttrComponentBuilder(this.componentRef.template(this.basicView._model));
 			}
 
 			this.defineElementNameKey(this.template);
@@ -196,19 +196,19 @@ export class ComponentRender<T> {
 				// support for string selector 
 				let selctorName: string = view.selector as string;
 				if (Reflect.has(this.viewChildMap, selctorName)) {
-					Reflect.set(this.baiseView._model, view.modelName, this.viewChildMap[selctorName]);
+					Reflect.set(this.basicView._model, view.modelName, this.viewChildMap[selctorName]);
 				}
 			});
 			let rootRef: HTMLElement | ShadowRoot;
 			if (this.componentRef.isShadowDom) {
-				if (this.baiseView.shadowRoot /* OPEN MODE */) {
-					rootRef = this.baiseView.shadowRoot;
+				if (this.basicView.shadowRoot /* OPEN MODE */) {
+					rootRef = this.basicView.shadowRoot;
 				} else /* CLOSED MODE*/ {
-					rootRef = Reflect.get(this.baiseView, '_shadowRoot') as ShadowRoot;
-					Reflect.deleteProperty(this.baiseView, '_shadowRoot');
+					rootRef = Reflect.get(this.basicView, '_shadowRoot') as ShadowRoot;
+					Reflect.deleteProperty(this.basicView, '_shadowRoot');
 				}
 			} else {
-				rootRef = this.baiseView;
+				rootRef = this.basicView;
 			}
 			rootRef.appendChild(this.createElement(this.template));
 		}
@@ -232,7 +232,7 @@ export class ComponentRender<T> {
 				component.attributes?.is,
 				component.attributes?.comment
 			);
-			Reflect.set(this.baiseView, elName, element);
+			Reflect.set(this.basicView, elName, element);
 			this.viewChildMap.elName = element;
 		}
 		if (component.children) {
@@ -249,7 +249,7 @@ export class ComponentRender<T> {
 	}
 
 	getElementByName(name: string) {
-		return Reflect.get(this.baiseView, name);
+		return Reflect.get(this.basicView, name);
 	}
 
 	createElement(viewTemplate: JsxAttrComponent): HTMLElement | DocumentFragment | Comment {
@@ -279,7 +279,7 @@ export class ComponentRender<T> {
 						directive.onInit();
 					}
 
-					Reflect.set(this.baiseView, viewTemplate.attributes.directiveName, directive);
+					Reflect.set(this.basicView, viewTemplate.attributes.directiveName, directive);
 
 				} else {
 					// attributes directive selector as '[class]'
@@ -312,7 +312,7 @@ export class ComponentRender<T> {
 	}
 
 	// abstract initAttribute(element: HTMLElement, propertyKey: string, propertyValue: any): void;
-	initAttribute(element: HTMLElement, attr: AttrDiscription): void {
+	initAttribute(element: HTMLElement, attr: AttrDescription): void {
 		attr.property.forEach((attrValue, attrName) => {
 			const isAttr = hasAttr(element, attrName);
 			this.initElementData(element, attrName, attrValue, isAttr);
@@ -329,7 +329,7 @@ export class ComponentRender<T> {
 		attr.objects.forEach((attrValue, attrName) => {
 			setValueByPath(element, attrName, attrValue);
 		});
-		attr.lessbinding.forEach((attrValue, attrName) => {
+		attr.lessBinding.forEach((attrValue, attrName) => {
 			const isAttr = hasAttr(element, attrName);
 			this.initElementData(element, attrName, attrValue, isAttr);
 		});
@@ -410,7 +410,7 @@ export class ComponentRender<T> {
 			element = document.createElement(tagName, is ? { is } : undefined);
 		}
 		if (isHTMLComponent(element)) {
-			element.setParentComponent(this.baiseView);
+			element.setParentComponent(this.basicView);
 		}
 		return element;
 	}
@@ -432,7 +432,7 @@ export class ComponentRender<T> {
 	handelHostListener(listener: ListenerRef) {
 		let eventName: string = listener.eventName,
 			source: HTMLElement | Window,
-			eventCallback: Function = this.baiseView._model[listener.modelCallbackName];
+			eventCallback: Function = this.basicView._model[listener.modelCallbackName];
 		if (listener.eventName.includes(':')) {
 			const eventSource = eventName.substring(0, eventName.indexOf(':'));
 			eventName = eventName.substring(eventName.indexOf(':') + 1);
@@ -440,17 +440,17 @@ export class ComponentRender<T> {
 				source = window;
 				this.addNativeEventListener(source, eventName, eventCallback);
 				return;
-			} else if (eventSource in this.baiseView) {
-				source = Reflect.get(this.baiseView, eventSource);
+			} else if (eventSource in this.basicView) {
+				source = Reflect.get(this.basicView, eventSource);
 				if (!Reflect.has(source, '_model')) {
 					this.addNativeEventListener(source, eventName, eventCallback);
 					return;
 				}
 			} else {
-				source = this.baiseView;
+				source = this.basicView;
 			}
 		} else {
-			source = this.baiseView;
+			source = this.basicView;
 		}
 		const sourceModel = Reflect.get(source, '_model');
 		const output = dependencyInjector
@@ -464,14 +464,14 @@ export class ComponentRender<T> {
 		else if (Reflect.has(source, 'on' + eventName)) {
 			this.addNativeEventListener(source, eventName, eventCallback);
 		}
-		// else if (this.componentRef.encapsulation === 'template' && !this.baiseView.hasParentComponent()) {
-		// 	this.addNativeEventListener(this.baiseView, eventName, eventCallback);
+		// else if (this.componentRef.encapsulation === 'template' && !this.basicView.hasParentComponent()) {
+		// 	this.addNativeEventListener(this.basicView, eventName, eventCallback);
 		// }
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
 			// funcallback(event);
-			funcallback.call(this.baiseView._model, event);
+			funcallback.call(this.basicView._model, event);
 		});
 	}
 }

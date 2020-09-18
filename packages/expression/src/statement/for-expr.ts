@@ -15,7 +15,7 @@ export class CommaOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(op in CommaOperators.Operators)) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, CommaOperators.Evaluations[op]);
     }

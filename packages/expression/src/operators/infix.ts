@@ -82,14 +82,14 @@ export class NavigationNode implements NodeExpression {
 }
 
 export type TokenReducier = (tokens: (string | NodeExpression)[]) => NodeExpression[];
-export type TokenAnlzise = (tokens: (string | NodeExpression)[]) => NodeExpression;
+export type TokenAnalysis = (tokens: (string | NodeExpression)[]) => NodeExpression;
 
 
 export class GroupingOperator implements NodeExpression {
 
     static Operators = ['(', ')'];
 
-    static parse(tokens: (NodeExpression | string)[], tokenAnlzise: TokenAnlzise) {
+    static parse(tokens: (NodeExpression | string)[], tokenAnalysis: TokenAnalysis) {
 
         for (var i, j; (i = tokens.lastIndexOf('(')) > -1 && (j = tokens.indexOf(')', i)) > -1;) {
             let groupTokens = tokens.slice(i + 1, j);
@@ -101,13 +101,13 @@ export class GroupingOperator implements NodeExpression {
                 let commaIndex = groupTokens.indexOf(',', last);
                 let args: NodeExpression[] = [];
                 while (commaIndex > last) {
-                    args.push(tokenAnlzise(groupTokens.slice(last, commaIndex)));
+                    args.push(tokenAnalysis(groupTokens.slice(last, commaIndex)));
                     last = commaIndex + 1;
                     commaIndex = groupTokens.indexOf(',', last);
                 }
                 if (commaIndex === -1) {
                     commaIndex = groupTokens.length;
-                    let param = tokenAnlzise(groupTokens.slice(last, commaIndex));
+                    let param = tokenAnalysis(groupTokens.slice(last, commaIndex));
                     if (param) {
                         args.push(param);
                     }
@@ -115,7 +115,7 @@ export class GroupingOperator implements NodeExpression {
                 let func = new FunctionExpression(funcName, args);
                 tokens.splice(i - 1, j + 2 - i, func);
             } else {
-                let group = new GroupingOperator(tokenAnlzise(groupTokens));
+                let group = new GroupingOperator(tokenAnalysis(groupTokens));
                 tokens.splice(i, j + 1 - i, group);
             }
         }
@@ -166,7 +166,7 @@ export class ObjectOperator implements NodeExpression {
             }
         }
     }
-    static parse(tokens: (NodeExpression | string)[], tokenAnlzise: TokenAnlzise) {
+    static parse(tokens: (NodeExpression | string)[]) {
 
         for (var i, j; (i = tokens.lastIndexOf('{')) > -1 && (j = tokens.indexOf('}', i)) > -1;) {
             let newToken = tokens.slice(i + 1, j);
@@ -178,7 +178,6 @@ export class ObjectOperator implements NodeExpression {
             } else {
                 continue;
             }
-            // let group = new GroupingOperator(tokenAnlzise(tokens.slice(i + 1, j)));
             tokens.splice(i, j + 1 - i, obj);
         }
     }
@@ -192,13 +191,13 @@ export class ObjectOperator implements NodeExpression {
         this.model = {};
         this.proxy = new Proxy(this.model, {
             deleteProperty: (target: { [key: string]: any }, p: PropertyKey): boolean => {
-                return this.rempveProperty(p as string);
+                return this.removeProperty(p as string);
             }
         });
     }
 
     set(context: object, value: any) {
-        throw new Error(`ObjectOperator#set() not implemented.`);
+        throw new Error(`ObjectOperator#set() has no implementation.`);
     }
     get(context: object) {
         Object.keys(this.props).forEach(key => {
@@ -216,7 +215,7 @@ export class ObjectOperator implements NodeExpression {
         this.props[propertyName] = propertyNode;
     }
 
-    rempveProperty(propertyName: string): boolean {
+    removeProperty(propertyName: string): boolean {
         return Reflect.deleteProperty(this.props, propertyName)
             && Reflect.deleteProperty(this.model, propertyName);
     }
@@ -236,7 +235,7 @@ export class ArrayOperator implements NodeExpression {
                 if (node === ',') {
                     continue;
                 } else if (typeof node === 'string') {
-                    throw new Error('error at Prsing Brackets op,');
+                    throw new Error('error at Parsing Brackets op,');
                 } else {
                     nodes.push(node);
                 }
@@ -259,7 +258,7 @@ export class ArrayOperator implements NodeExpression {
 
     constructor(public nodes: NodeExpression[]) { }
     set(context: object, value: any) {
-        throw new Error(`ArrayOperator#set() not implemented.`);
+        throw new Error(`ArrayOperator#set() has no implementation.`);
     }
     get(context: object) {
         return this.nodes.map(node => node.get(context));
@@ -277,14 +276,14 @@ export class TernaryNode implements NodeExpression {
         for (let i = 1; (i = tokens.indexOf(':', i - 1)) > -1;) {
             let pre = tokens[i - 1], post = tokens[i + 1];
             let conditional = tokens[i - 2];
-            function creatrTernaryNode() {
+            function createTernaryNode() {
                 let ternary = new TernaryNode(conditional as ConditionalOperators, pre as NodeExpression, post as NodeExpression);
                 tokens.splice(i - 2, 4, ternary);
             }
             if (conditional instanceof ConditionalOperators) {
-                creatrTernaryNode();
+                createTernaryNode();
             } else if (conditional instanceof GroupingOperator && conditional.node instanceof ConditionalOperators) {
-                creatrTernaryNode();
+                createTernaryNode();
             } else if (objectNode && typeof pre === 'object' && typeof post === 'object') {
                 if (pre instanceof PropertyNode) {
                     objectNode.addProperty(pre.property, post);
@@ -300,7 +299,7 @@ export class TernaryNode implements NodeExpression {
 
     constructor(public conditional: ConditionalOperators | GroupingOperator, public left: NodeExpression, public right: NodeExpression) { }
     set(context: object, value: any) {
-        throw new Error(`TernaryNode#set() not implemented.`);
+        throw new Error(`TernaryNode#set() has no implementation.`);
     }
     get(context: object) {
         return this.conditional.get(context) ? this.right.get(context) : this.left.get(context);
@@ -316,7 +315,7 @@ export class FunctionNode implements NodeExpression {
 
     constructor(public func: NodeExpression, public params: NodeExpression[]) { }
     set(context: object, value: any) {
-        throw new Error(`TernaryNode#set() not implemented.`);
+        throw new Error(`TernaryNode#set() has no implementation.`);
     }
     get(context: object) {
         let funCallBack = this.func.get(context) as Function;
@@ -334,16 +333,16 @@ export class StatementNode implements NodeExpression {
 
     static parse(tokens: (NodeExpression | string)[]) {
         if (tokens.includes(';') || tokens.includes('\n')) {
-            let statments = tokens
+            let statements = tokens
                 .filter(node => typeof node === 'object') as NodeExpression[];
-            let statementNode = new StatementNode(statments);
+            let statementNode = new StatementNode(statements);
             tokens.splice(0, tokens.length, statementNode);
         }
     }
 
     constructor(public nodes: NodeExpression[]) { }
     set(context: object, value: any) {
-        throw new Error(`StatementNode#set() not implemented.`);
+        throw new Error(`StatementNode#set() has no implementation.`);
     }
     get(context: object) {
         let value;
@@ -378,7 +377,7 @@ export abstract class InfixOperators implements NodeExpression {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
     }
     set(context: object, value: any) {
-        throw new Error(`${this.constructor.name}#set() not implemented.`);
+        throw new Error(`${this.constructor.name}#set() has no implementation.`);
     }
 }
 
@@ -411,7 +410,7 @@ export class AssignmentNode implements NodeExpression {
 
     constructor(public op: string, public left: NodeExpression, public right: NodeExpression) {
         if (!(AssignmentNode.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation`);
         }
     }
     set(context: object, value: any) {
@@ -468,7 +467,7 @@ export class LogicalAssignmentNode implements NodeExpression {
 
     constructor(public op: string, public left: NodeExpression, public right: NodeExpression) {
         if (!(LogicalAssignmentNode.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation`);
         }
     }
     set(context: object, value: any) {
@@ -504,7 +503,7 @@ export class ComparisonOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(ComparisonOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation`);
         }
         super(op, left, right, ComparisonOperators.Evaluations[op]);
     }
@@ -527,7 +526,7 @@ export class ArithmeticOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(ArithmeticOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation yet`);
         }
         super(op, left, right, ArithmeticOperators.Evaluations[op]);
     }
@@ -550,7 +549,7 @@ export class BitwiseOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(BitwiseOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, BitwiseOperators.Evaluations[op]);
     }
@@ -577,7 +576,7 @@ export class LogicalOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(LogicalOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, LogicalOperators.Evaluations[op]);
     }
@@ -595,7 +594,7 @@ export class RelationalOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(RelationalOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, RelationalOperators.Evaluations[op]);
     }
@@ -623,7 +622,7 @@ export class ArrayCommaOperators extends InfixOperators {
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(ArrayCommaOperators.Operators.includes(op))) {
-            throw new Error(`[${op}]: operation not implmented yet`);
+            throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, ArrayCommaOperators.Evaluations[op]);
     }

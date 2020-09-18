@@ -189,8 +189,8 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
     connectedCallback() {
 
       // if (!this.hasParentComponent() && this.attributes.length > 0) {
-      // 	let oldAttrValus = [].slice.call(this.attributes);
-      //	oldAttrValus.forEach((attr: Attr) => {
+      // 	let oldAttrValues = [].slice.call(this.attributes);
+      //	oldAttrValues.forEach((attr: Attr) => {
       // 		Reflect.set(this, attr.name, attr.value);
       // 	});
       // }
