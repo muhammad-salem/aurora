@@ -6,7 +6,6 @@
   "homepage": "https://github.com/aurorats/aurora",
   "types": "./dist/index.d.ts",
   "files": [
-  	"src",
     "dist"
   ],
   "publishConfig": {
