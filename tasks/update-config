@@ -2,12 +2,7 @@
 set -e
 
 for pkgDir in packages/*/ ; do
-  if [ "$pkgDir" == "types" ]; then
-    echo "ignore modify types tsconfig"
-  else
-    echo "cp tasks/config/{tsconfig.json,tsconfig.prod.json} to [$pkgDir]"
-    cp tasks/config/{tsconfig.json,tsconfig.prod.json} $pkgDir
-  fi
+  cp tasks/config/{tsconfig.json,tsconfig.prod.json} $pkgDir
 done
 
 cp tasks/config/tsconfig.compilerOption.json packages/

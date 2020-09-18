@@ -1,9 +1,17 @@
 {
+	"extends": "../tsconfig.compilerOption.json",
 	"compilerOptions": {
+		"baseUrl": ".",
+		"outDir": "dist",
+		"rootDir": "src",
 		"composite": true
 	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx"
+	],
 	"files": [
-		"index.ts"
+		"src/index.ts"
 	],
 	"compileOnSave": true
 }

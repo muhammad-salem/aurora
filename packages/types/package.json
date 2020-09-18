@@ -4,9 +4,9 @@
   "description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
-    "./index.d.ts"
+    "./dist/index.d.ts"
   ],
   "publishConfig": {
     "access": "public"

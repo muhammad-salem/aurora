@@ -1,6 +1,6 @@
 {
 	"references": [
-		{ "path": "packages/types" },
+		{ "path": "packages/types/tsconfig.prod.json"},
 		{ "path": "packages/metadata/tsconfig.prod.json" },
 		{ "path": "packages/element/tsconfig.prod.json" },
 		{ "path": "packages/expression/tsconfig.prod.json" },
