@@ -5,6 +5,9 @@
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "types": "./index.d.ts",
+  "files": [
+    "./index.d.ts"
+  ],
   "publishConfig": {
     "access": "public"
   },
