@@ -6,7 +6,10 @@
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./types/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "restricted"
   },

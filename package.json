@@ -9,7 +9,7 @@
     "tslib": "^2.0.1"
   },
   "scripts": {
-    "clean": "rimraf ./packages/**/dist",
+    "clean": "rimraf ./packages/**/{dist,tsconfig.tsbuildinfo}",
     "build": "yarn clean && tsc --build -v",
     "build:watch": "yarn clean && tsc --build -v -w",
     "build:prod": "yarn clean && tsc --build -v tsconfig.prod.json",
