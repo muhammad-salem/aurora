@@ -2,8 +2,7 @@
 set -e
 
 for pkgDir in packages/*/ ; do
-  cp tasks/config/{tsconfig.json,tsconfig.prod.json} $pkgDir
+  cp tasks/config/tsconfig.json $pkgDir
 done
 
-cp tasks/config/tsconfig.compilerOption.json packages/
 cp tasks/config/tsconfig.compilerOption.json packages/core

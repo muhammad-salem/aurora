@@ -12,7 +12,6 @@
     "clean": "rimraf ./packages/**/{dist,tsconfig.tsbuildinfo}",
     "build": "yarn clean && tsc --build -v",
     "build:watch": "yarn clean && tsc --build -v -w",
-    "build:prod": "yarn clean && tsc --build -v tsconfig.prod.json",
     "do:publish-no-git": "yarn build:prod && lerna publish --no-git-tag-version --no-push",
     "do:publish-no-tag": "yarn build:prod && lerna publish --no-git-tag-version",
     "do:publish-no-push": "yarn build:prod && lerna publish --no-push",
