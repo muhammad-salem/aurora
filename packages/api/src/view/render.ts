@@ -60,7 +60,7 @@ export class ComponentRender<T> {
 		if (Reflect.has(this.basicView, parent)) {
 			// parent = Reflect.get(this.basicView, parent);
 			// /**
-			//  * case of element refrence
+			//  * case of element reference
 			//  * <root-app>
 			//  * 	<app-tag #element-name ></app-tag>
 			//  * </root-app>
@@ -136,15 +136,15 @@ export class ComponentRender<T> {
 		if (result.length === 0) {
 			return;
 		}
-		const propSrcs: { [match: string]: PropertySource } = {};
-		result.forEach(match => propSrcs[match[0]] = this.getPropertySource(match[1]));
+		const propSrc: { [match: string]: PropertySource } = {};
+		result.forEach(match => propSrc[match[0]] = this.getPropertySource(match[1]));
 
 		// console.log(result);
-		// console.log(propSrcs);
+		// console.log(propSrc);
 		const handler = () => {
 			let renderText = viewProperty;
-			Object.keys(propSrcs).forEach(propTemplate => {
-				const prop = propSrcs[propTemplate];
+			Object.keys(propSrc).forEach(propTemplate => {
+				const prop = propSrc[propTemplate];
 				let value = prop.expression.get(prop.src);
 				renderText = renderText.replace(propTemplate, value);
 				// let tempValue = getValueByPath(prop.src, prop.property);
@@ -161,8 +161,8 @@ export class ComponentRender<T> {
 			}
 		}
 		let triggerTemplate: Function | undefined;
-		Object.keys(propSrcs).forEach(propTemplate => {
-			const prop = propSrcs[propTemplate];
+		Object.keys(propSrc).forEach(propTemplate => {
+			const prop = propSrc[propTemplate];
 			let subject1: any;
 			if (isHTMLComponent(prop.src)) {
 				subject1 = prop.src._model;
@@ -186,8 +186,10 @@ export class ComponentRender<T> {
 		if (this.componentRef.template) {
 			if (this.componentRef.template instanceof JsxAttrComponent) {
 				this.template = this.componentRef.template;
-			} else {
+			} else if (typeof this.componentRef.template === 'function') {
 				this.template = jsxAttrComponentBuilder(this.componentRef.template(this.basicView._model));
+			} else {
+				this.template = jsxAttrComponentBuilder(this.componentRef.template);
 			}
 
 			this.defineElementNameKey(this.template);
