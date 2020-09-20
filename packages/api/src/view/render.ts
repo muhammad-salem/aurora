@@ -337,8 +337,8 @@ export class ComponentRender<T> {
 		});
 		attr.attr.forEach((attrValue, attrName) => {
 			const isAttr = hasAttr(element, attrName);
-			this.initElementData(element, attrName, attrValue as string, isAttr);
-
+			// this.initElementData(element, attrName, attrValue as string, isAttr);
+			this.attrTemplateHandler(element, attrName, attrValue as string, isAttr);
 			if (attrValue === false) {
 				element.removeAttribute(attrName);
 			} else if (attrValue === true) {
