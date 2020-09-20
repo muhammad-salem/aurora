@@ -16,8 +16,8 @@
     "do:publish-no-tag": "yarn build:prod && lerna publish --no-git-tag-version",
     "do:publish-no-push": "yarn build:prod && lerna publish --no-push",
     "do:publish": "yarn build:prod && lerna publish",
-    "update-config": "./tasks/update-config",
-    "local-npm": "./tasks/run-local-npm",
-    "local-publish": "./tasks/publish-local"
+    "update:config": "./tasks/update-config",
+    "local:npm": "./tasks/run-local-npm",
+    "local:publish": "./tasks/publish-local"
   }
 }
