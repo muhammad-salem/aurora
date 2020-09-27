@@ -3,303 +3,311 @@
  * value and html are alias for the same content as the default, they should be equals.
  */
 declare module '*.html' {
-    export const promise: Promise<string>;
-    export const html: string;
-    export const value: string;
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value, style and css are alias for the same content as the default, they should be equals.
  */
 declare module '*.css' {
-    export const promise: Promise<string>;
-    export const css: string;
-    export const style: string;
-    export const value: string;
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value, text and txt are alias for the same content as the default, they should be equals.
  */
 declare module '*.txt' {
-    export const promise: Promise<string>;
-    export const txt: string;
-    export const text: string;
-    export const value: string;
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and json are alias for the same content as the default, they should be equals.
  */
 declare module '*.json' {
-    export const promise: Promise<{ [key: string]: any }>;
-    export const json: { [key: string]: any };
-    export const value: { [key: string]: any };
     export default value;
+    export const value: { [key: string]: any };
+    export const url: string;
+    export const promise: Promise<{ [key: string]: any }>;
 }
 
 declare module '*.formData' {
-    export const promise: Promise<FormData>;
-    export const formData: FormData;
-    export const value: FormData;
     export default value;
+    export const value: FormData;
+    export const url: string;
+    export const promise: Promise<FormData>;
 }
 
 declare module '*.blob' {
-    export const promise: Promise<Blob>;
-    export const blob: Blob;
-    export const value: Blob;
     export default value;
+    export const value: Blob;
+    export const url: string;
+    export const promise: Promise<Blob>;
 }
 
 declare module '*.buf' {
-    export const promise: Promise<Uint8Array>;
-    export const value: Uint8Array;
     export default value;
+    export const value: Uint8Array;
+    export const url: string;
+    export const promise: Promise<Uint8Array>;
 }
 
 declare module '*.buff' {
-    export const promise: Promise<ArrayBuffer>;
-    export const blob: ArrayBuffer;
-    export const value: ArrayBuffer;
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
 
 declare module '*.b64' {
-    export const promise: Promise<string>;
-    export const value: string;
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
+}
+
+declare module '*.pdf' {
+    export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and apng are alias for the same content as the default, they should be equals.
  */
-declare module "*.apng" {
-    export const promise: Promise<string>;
-    export const apng: string;
-    export const value: string;
+declare module '*.apng' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and bmp are alias for the same content as the default, they should be equals.
  */
-declare module "*.bmp" {
-    export const promise: Promise<string>;
-    export const bmp: string;
-    export const value: string;
+declare module '*.bmp' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and gif are alias for the same content as the default, they should be equals.
  */
-declare module "*.gif" {
-    export const promise: Promise<string>;
-    export const gif: string;
-    export const value: string;
+declare module '*.gif' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and ico are alias for the same content as the default, they should be equals.
  */
-declare module "*.ico" {
-    export const promise: Promise<string>;
-    export const ico: string;
-    export const value: string;
+declare module '*.ico' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and cur are alias for the same content as the default, they should be equals.
  */
-declare module "*.cur" {
-    export const promise: Promise<string>;
-    export const cur: string;
-    export const value: string;
+declare module '*.cur' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and jpg are alias for the same content as the default, they should be equals.
  */
-declare module "*.jpg" {
-    export const promise: Promise<string>;
-    export const jpg: string;
-    export const value: string;
+declare module '*.jpg' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and jpeg are alias for the same content as the default, they should be equals.
  */
-declare module "*.jpeg" {
-    export const promise: Promise<string>;
-    export const jpeg: string;
-    export const value: string;
+declare module '*.jpeg' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and jfif are alias for the same content as the default, they should be equals.
  */
-declare module "*.jfif" {
-    export const promise: Promise<string>;
-    export const jfif: string;
-    export const value: string;
+declare module '*.jfif' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and pjpeg are alias for the same content as the default, they should be equals.
  */
-declare module "*.pjpeg" {
-    export const promise: Promise<string>;
-    export const pjpeg: string;
-    export const value: string;
+declare module '*.pjpeg' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and pjp are alias for the same content as the default, they should be equals.
  */
-declare module "*.pjp" {
-    export const promise: Promise<string>;
-    export const pjp: string;
-    export const value: string;
+declare module '*.pjp' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and png are alias for the same content as the default, they should be equals.
  */
-declare module "*.png" {
-    export const promise: Promise<string>;
-    export const png: string;
-    export const value: string;
+declare module '*.png' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and svg are alias for the same content as the default, they should be equals.
  */
-declare module "*.svg" {
-    export const promise: Promise<string>;
-    export const svg: string;
-    export const value: string;
+declare module '*.svg' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and tif are alias for the same content as the default, they should be equals.
  */
-declare module "*.tif" {
-    export const promise: Promise<string>;
-    export const tif: string;
-    export const value: string;
+declare module '*.tif' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and tiff are alias for the same content as the default, they should be equals.
  */
-declare module "*.tiff" {
-    export const promise: Promise<string>;
-    export const tiff: string;
-    export const value: string;
+declare module '*.tiff' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 /**
  * value and webp are alias for the same content as the default, they should be equals.
  */
-declare module "*.webp" {
-    export const promise: Promise<string>;
-    export const webp: string;
-    export const value: string;
+declare module '*.webp' {
     export default value;
+    export const value: string;
+    export const url: string;
+    export const promise: Promise<string>;
 }
 
 // audio extension
 
-declare module "*.3gp" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const tgp: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.3gp' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.flac" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const flac: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.flac' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.mpg" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const mpg: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.mpg' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.mpeg" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const mpg: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.mpeg' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.mp3" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const mp3: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.mp3' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.mp4" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const mp4: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.mp4' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.m4a" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const m4a: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.m4a' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.oga" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const oga: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.oga' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.ogg" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const ogg: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.ogg' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.wav" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const wav: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+declare module '*.wav' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
 
-declare module "*.webm" {
-    export const promise: Promise<AudioBufferSourceNode>;
-    export const webm: AudioBufferSourceNode;
-    export const value: AudioBufferSourceNode;
+
+declare module '*.webm' {
     export default value;
+    export const value: ArrayBuffer;
+    export const url: string;
+    export const promise: Promise<ArrayBuffer>;
 }
