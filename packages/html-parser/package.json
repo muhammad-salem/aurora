@@ -18,7 +18,7 @@
     "@aurorats/jsx": "^0.1.11"
   },
   "devDependencies": {
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.3"
   },
   "scripts": {
     "build": "tsc --build --verbose"

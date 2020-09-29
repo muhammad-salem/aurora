@@ -19,7 +19,8 @@
     "tslib": "^2.0.1"
   },
   "devDependencies": {
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.3",
+    "@aurorats/esmpack": "^0.1.6"
   },
   "scripts": {
     "build": "tsc --build --verbose"
