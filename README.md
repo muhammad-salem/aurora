@@ -53,7 +53,7 @@ yarn add @aurorats/core
 | camelCase Property Naming | ✓ | ✓ |
 | lowercase for root element Property Naming | ✓ | ✓ |
 
-## Libary Features
+## Library Features
 
 | Features | Aurora |
 | ------- | ------- |
@@ -102,7 +102,7 @@ yarn add @aurorats/core
 | [Extending native HTML elements][extend-native] | ✓ |
 | [Extending a Custom Element][extend-custom] | TO:DO |
 | [Two Component On Same Model Class][two-component] | ✓ |
-| [Two Component Share Same Model Instanse][two-component] | TO:DO |
+| [Two Component Share Same Model Instance][two-component] | TO:DO |
 
 ## Shadow DOM standards
 
@@ -118,7 +118,7 @@ yarn add @aurorats/core
 | Features | Aurora |
 | ------- | ------- |
 | [Load template by ID from document][template-id] | ✓ |
-| As Normal Cutom Element | ✓ |
+| As Normal Custom Element | ✓ |
 | As Shadow DOM Element | ✓ |
 
 
@@ -261,7 +261,7 @@ export class RootApp implements OnInit {
     }
 
     saveAction(data: any) {
-        console.log('tage: rootApp', data);
+        console.log('tag: rootApp', data);
     }
 
 }
