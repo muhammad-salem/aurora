@@ -319,7 +319,7 @@ export class FunctionNode implements NodeExpression {
     }
     get(context: object) {
         let funCallBack = this.func.get(context) as Function;
-        let value = funCallBack(...this.params.map(param => param.get(context)));
+        let value = funCallBack.call(context, ...this.params.map(param => param.get(context)));
         return value;
     }
     toString(): string {
