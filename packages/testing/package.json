@@ -7,6 +7,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "type": "module",
   "files": [
     "dist"
   ],
@@ -23,7 +24,8 @@
     "@aurorats/esmpack": "^0.1.6"
   },
   "scripts": {
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "esmpack:watch": "esmpack -w"
   },
   "gitHead": "1b166728c00e969d9c6f775c16b0f265fe7c3a41"
 }
