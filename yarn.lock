@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aurorats/esmpack@^0.1.6":
-  version "0.1.6"
-  resolved "https://registry.npmjs.org/@aurorats/esmpack/-/esmpack-0.1.6.tgz#6620646abe08ae704a80b650d594756dff853d28"
-  integrity sha512-arpf0pcdP067I1JdEMOnf81wrYj2qoczrjZP8FbF8WLECcSRlZYCXe2vYME2iUrRWK+HioDFEeCwOwwdP1H8lQ==
+"@aurorats/esmpack@^0.1.7":
+  version "0.1.7"
+  resolved "https://registry.npmjs.org/@aurorats/esmpack/-/esmpack-0.1.7.tgz#a0cbd4e809ff77b84184258dd6f093d597ad727a"
+  integrity sha512-SH3SK3/LppvwwiGH1O/1++wDK/TFUzM2dfjqmHm+2A0gsH3vh6HV9Q2keV4EG+qtBlk+Zg01qHmQlkMdqFZTSA==
   dependencies:
     chokidar "^3.4.2"
     glob "^7.1.6"
