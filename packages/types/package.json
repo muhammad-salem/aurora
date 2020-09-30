@@ -16,5 +16,6 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "gitHead": "e54bf0309243bcd0797af42547f6438990eed5a3"
 }

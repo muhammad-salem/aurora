@@ -31,5 +31,5 @@
   "scripts": {
     "build": "tsc --build --verbose"
   },
-  "gitHead": "1b166728c00e969d9c6f775c16b0f265fe7c3a41"
+  "gitHead": "e54bf0309243bcd0797af42547f6438990eed5a3"
 }
