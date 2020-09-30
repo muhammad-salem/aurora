@@ -11,11 +11,10 @@
   "scripts": {
     "clean": "rimraf ./packages/**/{dist,tsconfig.tsbuildinfo}",
     "build": "yarn clean && tsc --build -v",
-    "build:watch": "yarn clean && tsc --build -v -w",
-    "do:publish-no-git": "yarn build:prod && lerna publish --no-git-tag-version --no-push",
-    "do:publish-no-tag": "yarn build:prod && lerna publish --no-git-tag-version",
-    "do:publish-no-push": "yarn build:prod && lerna publish --no-push",
-    "do:publish": "yarn build:prod && lerna publish",
+    "do:publish-no-git": "yarn build && lerna publish --no-git-tag-version --no-push",
+    "do:publish-no-tag": "yarn build && lerna publish --no-git-tag-version",
+    "do:publish-no-push": "yarn build && lerna publish --no-push",
+    "do:publish": "yarn build && lerna publish",
     "update:config": "./tasks/update-config",
     "local:npm": "./tasks/run-local-npm",
     "local:publish": "./tasks/publish-local"
