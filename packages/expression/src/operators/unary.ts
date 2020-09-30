@@ -191,7 +191,7 @@ export class FunctionExpression implements NodeExpression {
     get(context: object) {
         let parameters = this.args.map(param => param.get(context));
         let funCallBack = this.funcName.get(context) as Function;
-        let value = funCallBack(...parameters);
+        let value = funCallBack.call(context, ...parameters);
         return value;
     }
     toString(): string {
