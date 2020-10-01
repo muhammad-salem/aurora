@@ -159,7 +159,7 @@ export class ConditionalOperators implements NodeExpression {
 export class DeleteOperators implements NodeExpression {
 
     static Operators = ['delete'];
-    static RegexOperators = [/delete\b/.source];
+    static RegexOperators = [/^delete\b/.source];
 
     static parse(tokens: (NodeExpression | string)[]) {
         for (let i = -1; (i = tokens.indexOf('delete', i + 1)) > -1;) {
@@ -179,6 +179,32 @@ export class DeleteOperators implements NodeExpression {
     }
     toString() {
         return `(delete ${this.node.toString()})`;
+    }
+}
+
+export class TypeOfOperator implements NodeExpression {
+
+    static Operators = ['typeof'];
+    static RegexOperators = [/^typeof\b/.source];
+
+    static parse(tokens: (NodeExpression | string)[]) {
+        for (let i = -1; (i = tokens.indexOf('typeof', i + 1)) > -1;) {
+            let post = tokens[i + 1];
+            if (typeof post === 'object') {
+                tokens.splice(i, 2, new DeleteOperators(post));
+            }
+        }
+    }
+
+    constructor(public node: NodeExpression) { }
+    set(context: object, value: any) {
+        throw new Error('TypeOfOperator#set() has no implementation.');
+    }
+    get(context: object) {
+        return typeof this.node.get(context);
+    }
+    toString() {
+        return `(typeof ${this.node.toString()})`;
     }
 }
 

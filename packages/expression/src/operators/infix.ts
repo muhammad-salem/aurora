@@ -590,7 +590,7 @@ export class RelationalOperators extends InfixOperators {
     };
 
     static Operators = Object.keys(RelationalOperators.Evaluations);
-    static RegexOperator = [/in\b|instanceof\b/g.source];
+    static RegexOperator = [/^in\b|instanceof\b/g.source];
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(RelationalOperators.Operators.includes(op))) {
