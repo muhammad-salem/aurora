@@ -159,6 +159,7 @@ export class ConditionalOperators implements NodeExpression {
 export class DeleteOperators implements NodeExpression {
 
     static Operators = ['delete'];
+    static RegexOperators = [/delete\b/.source];
 
     static parse(tokens: (NodeExpression | string)[]) {
         for (let i = -1; (i = tokens.indexOf('delete', i + 1)) > -1;) {
