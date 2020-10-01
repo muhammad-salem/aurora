@@ -81,7 +81,7 @@ export class NavigationNode implements NodeExpression {
     }
 }
 
-export type TokenReducier = (tokens: (string | NodeExpression)[]) => NodeExpression[];
+export type TokenReducer = (tokens: (string | NodeExpression)[]) => NodeExpression[];
 export type TokenAnalysis = (tokens: (string | NodeExpression)[]) => NodeExpression;
 
 
@@ -585,12 +585,12 @@ export class LogicalOperators extends InfixOperators {
 export class RelationalOperators extends InfixOperators {
 
     static Evaluations: Evaluate = {
-
         'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
         'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; }
     };
 
     static Operators = Object.keys(RelationalOperators.Evaluations);
+    static RegexOperator = [/in\b|instanceof\b/g.source];
 
     constructor(op: string, left: NodeExpression, right: NodeExpression) {
         if (!(RelationalOperators.Operators.includes(op))) {
@@ -625,6 +625,24 @@ export class ArrayCommaOperators extends InfixOperators {
             throw new Error(`[${op}]: operation has no implementation.`);
         }
         super(op, left, right, ArrayCommaOperators.Evaluations[op]);
+    }
+}
+
+export class PipelineOperator implements NodeExpression {
+
+    static Operators = ['|>'];
+
+    constructor(public op: string, public param: NodeExpression, public func: NodeExpression) { }
+    set(context: object, value: any) {
+        throw new Error(`TernaryNode#set() has no implementation.`);
+    }
+    get(context: object) {
+        let funCallBack = this.func.get(context) as Function;
+        let value = funCallBack.call(context, this.param.get(context));
+        return value;
+    }
+    toString(): string {
+        return `(${this.param.toString()}) |> (${this.func.toString()})`;
     }
 }
 
