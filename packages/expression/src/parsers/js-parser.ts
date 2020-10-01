@@ -1,5 +1,5 @@
 import {
-    IncrementDecrementOperators, UnaryOperators, ConditionalOperators
+    IncrementDecrementOperators, UnaryOperators, ConditionalOperators, TypeOfOperator
 } from '../operators/unary.js';
 import {
     ArithmeticOperators, ArrayCommaOperators, ArrayOperator,
@@ -43,7 +43,8 @@ const tokenParser = new RegExp([
         UnaryOperators.Operators,
         ConditionalOperators.Operators,
         // RelationalOperators.Operators,
-        StatementNode.Operators
+        StatementNode.Operators,
+        TypeOfOperator.Operators
         // DeleteOperators.Operators
     ]
         .flatMap(item => item)
@@ -79,6 +80,7 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
     IncrementDecrementOperators.parse(tokens);
     UnaryOperators.parse(tokens);
     ConditionalOperators.parse(tokens);
+    TypeOfOperator.parse(tokens);
     // DeleteOperators.parse(tokens);
 
     TernaryNode.parse(tokens);
