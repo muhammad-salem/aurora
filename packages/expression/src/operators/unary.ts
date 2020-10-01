@@ -28,7 +28,8 @@
  * x ? y:z;
  */
 
-import { NodeExpression } from '../expression.js';
+import { NodeExpression, ValueNode } from '../expression.js';
+import { MemberNode } from './infix.js';
 
 export enum UnaryType {
     PREFIX,
@@ -99,8 +100,8 @@ export class UnaryOperators implements NodeExpression {
         '~': (value: number) => { return ~value; },
         '!': (value: any) => { return !value; },
         // // 'delete': (value: any) => { return delete value; },
-        'typeof': (value: any) => { return typeof value; },
-        'void': (value: any) => { return void value; },
+        // // 'typeof': (value: any) => { return typeof value; },
+        // // 'void': (value: any) => { return void value; },
     };
 
     static Operators = Object.keys(UnaryOperators.Evaluations);
@@ -156,55 +157,61 @@ export class ConditionalOperators implements NodeExpression {
     }
 }
 
-export class DeleteOperators implements NodeExpression {
+export class LiteralUnaryOperators implements NodeExpression {
 
-    static Operators = ['delete'];
-    static RegexOperators = [/^delete\b/.source];
+    static Operators = ['delete', 'typeof', 'void'];
+    static RegexOperators = [/^delete|typeof|void\b/.source];
 
-    static parse(tokens: (NodeExpression | string)[]) {
-        for (let i = -1; (i = tokens.indexOf('delete', i + 1)) > -1;) {
-            let post = tokens[i + 1];
-            if (typeof post === 'object') {
-                tokens.splice(i, 2, new DeleteOperators(post));
+    static parse(tokens: (NodeExpression | string)[], ignore?: string[]) {
+        LiteralUnaryOperators.Operators.forEach(op => {
+            if (ignore && ignore.includes(op)) {
+                return;
             }
-        }
+            for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
+                let pre = tokens[i - 1], post = tokens[i + 1];
+                if (typeof pre === 'object' && typeof post === 'object') {
+
+                } else if (typeof post === 'object') {
+                    tokens.splice(i, 2, new LiteralUnaryOperators(op, post));
+                }
+            }
+        });
     }
 
-    constructor(public node: NodeExpression) { }
-    set(context: object, value: any) {
-        throw new Error('DeleteOperators#set() has no implementation.');
-    }
-    get(context: object) {
-        return Reflect.deleteProperty(context, this.node.get(context));
-    }
+    constructor(public op: string, public node: NodeExpression) { }
     toString() {
-        return `(delete ${this.node.toString()})`;
+        return `${this.op} ${this.node.toString()}`;
     }
-}
 
-export class TypeOfOperator implements NodeExpression {
+    set(context: object, value: any) {
+        throw new Error('LiteralUnaryOperators#set() has no implementation.');
+    }
 
-    static Operators = ['typeof'];
-    static RegexOperators = [/^typeof\b/.source];
-
-    static parse(tokens: (NodeExpression | string)[]) {
-        for (let i = -1; (i = tokens.indexOf('typeof', i + 1)) > -1;) {
-            let post = tokens[i + 1];
-            if (typeof post === 'object') {
-                tokens.splice(i, 2, new DeleteOperators(post));
-            }
+    get(context: object) {
+        switch (this.op) {
+            case 'delete': return this.getDelete(context);
+            case 'typeof': return this.getTypeof(context);
+            case 'void': return this.getVoid(context);
         }
     }
 
-    constructor(public node: NodeExpression) { }
-    set(context: object, value: any) {
-        throw new Error('TypeOfOperator#set() has no implementation.');
+    private getVoid(context: object) {
+        return void this.node.get(context);
     }
-    get(context: object) {
+    private getTypeof(context: object) {
         return typeof this.node.get(context);
     }
-    toString() {
-        return `(typeof ${this.node.toString()})`;
+    private getDelete(context: object) {
+        throw new Error('LiteralUnaryOperators.delete#get() has no implementation.');
+        // if (this.node instanceof MemberNode) {
+        //     if (this.node.right instanceof ValueNode) {
+        //         let parent = this.node.left.get(context);
+        //         return Reflect.deleteProperty(parent, this.node.right.get(context) as string | number);
+        //     } else {
+        //         // loop to get to an end of the chain
+        //     }
+        // }
+        // return Reflect.deleteProperty(context, this.node.get(context));
     }
 }
 
