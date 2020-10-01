@@ -19,13 +19,13 @@ export interface PipeOptions {
 export interface ComponentOptions<T = Function> {
 	selector: string;
 	/**
-	 * add html file url path to featch,
-	 * templateUrl had prourity than template, and will override it.
+	 * add html file url path to fetch,
+	 * templateUrl had propriety than template, and will override it.
 	 *
-	 * Can provide file name as "persin-view.html" will resolved 
+	 * Can provide file name as "person-view.html" will resolved 
 	 * as 'http://site-address.org/persin-view.html',
 	 * 
-	 * OR as an object { moduleMeta: import.meta, filename: 'persin-edit.html' }
+	 * OR as an object { moduleMeta: import.meta, filename: 'person-edit.html' }
 	 *  let (import.meta = '/person/person.js') will resolved 
 	 * as 'http://site-address.org/person/person-edit.html',
 	 * 
@@ -42,7 +42,7 @@ export interface ComponentOptions<T = Function> {
 	 * template: typeof 'string' ==> html template,
 	 * 			 TypeOf 'JSXRender<T>' ==> JSX, create factory
 	 * 	if template === null || undefined ==> it had nothing to render, 
-	 * and may be inhert from an html element
+	 * and may be inherit from an html element
 	 * 				
 	 */
 	template?: string | JsxAttrComponent | JSXRender<T>;
