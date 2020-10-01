@@ -1,12 +1,14 @@
 import {
-    IncrementDecrementOperators, UnaryOperators, ConditionalOperators, TypeOfOperator
+    IncrementDecrementOperators, UnaryOperators,
+    ConditionalOperators, LiteralUnaryOperators
 } from '../operators/unary.js';
 import {
     ArithmeticOperators, ArrayCommaOperators, ArrayOperator,
     AssignmentNode, BitwiseOperators, ComparisonOperators,
     FunctionNode, GroupingOperator, LogicalAssignmentNode,
     LogicalOperators, MemberNode, NavigationNode, ObjectOperator,
-    parseInfix, PipelineOperator, RelationalOperators, StatementNode, TernaryNode
+    parseInfix, PipelineOperator, RelationalOperators, StatementNode,
+    TernaryNode
 } from '../operators/infix.js';
 import { NodeExpression } from '../expression.js';
 import { escapeForRegex, generateTokens } from './parser.js';
@@ -42,10 +44,7 @@ const tokenParser = new RegExp([
         IncrementDecrementOperators.Operators,
         UnaryOperators.Operators,
         ConditionalOperators.Operators,
-        // RelationalOperators.Operators,
         StatementNode.Operators,
-        TypeOfOperator.Operators
-        // DeleteOperators.Operators
     ]
         .flatMap(item => item)
         .filter((value: string, index: number, array: string[]) => {
@@ -54,7 +53,7 @@ const tokenParser = new RegExp([
         .sort((a, b) => b.length - a.length) //so that ">=" is added before "=" and ">"
         .map(escapeForRegex)
         .concat(RelationalOperators.RegexOperator)
-        // .concat(DeleteOperators.RegexOperators)
+        .concat(LiteralUnaryOperators.RegexOperators)
         .join('|'),
 
     //properties
@@ -80,8 +79,7 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
     IncrementDecrementOperators.parse(tokens);
     UnaryOperators.parse(tokens);
     ConditionalOperators.parse(tokens);
-    TypeOfOperator.parse(tokens);
-    // DeleteOperators.parse(tokens);
+    LiteralUnaryOperators.parse(tokens);
 
     TernaryNode.parse(tokens);
 
