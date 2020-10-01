@@ -1,4 +1,4 @@
-import { NodeExpression, parseHtmlExpression } from '@aurorats/expression';
+import { NodeExpression, parseJSExpression } from '@aurorats/expression';
 import {
 	AttrDescription, isJsxComponentWithElement, JsxAttrComponent,
 	jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory
@@ -44,7 +44,7 @@ export class ComponentRender<T> {
 	}
 
 	getPropertySource(viewProperty: string): PropertySource {
-		let expression = parseHtmlExpression(viewProperty);
+		let expression = parseJSExpression(viewProperty);
 		let input = this.basicView.getInputStartWith(viewProperty);
 		let dotIndex = viewProperty.indexOf('.');
 		let modelProperty = viewProperty;
@@ -196,9 +196,9 @@ export class ComponentRender<T> {
 
 			this.componentRef.viewChild.forEach(view => {
 				// support for string selector 
-				let selctorName: string = view.selector as string;
-				if (Reflect.has(this.viewChildMap, selctorName)) {
-					Reflect.set(this.basicView._model, view.modelName, this.viewChildMap[selctorName]);
+				let selectorName: string = view.selector as string;
+				if (Reflect.has(this.viewChildMap, selectorName)) {
+					Reflect.set(this.basicView._model, view.modelName, this.viewChildMap[selectorName]);
 				}
 			});
 			let rootRef: HTMLElement | ShadowRoot;
@@ -470,10 +470,9 @@ export class ComponentRender<T> {
 		// 	this.addNativeEventListener(this.basicView, eventName, eventCallback);
 		// }
 	}
-	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcallback: Function) {
+	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
-			// funcallback(event);
-			funcallback.call(this.basicView._model, event);
+			funcCallback.call(this.basicView._model, event);
 		});
 	}
 }
