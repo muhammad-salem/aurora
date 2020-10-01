@@ -4,13 +4,14 @@ import {
 import {
     ArithmeticOperators, ArrayCommaOperators, ArrayOperator,
     AssignmentNode, BitwiseOperators, ComparisonOperators,
-    FunctionNode, GroupingOperator, LogicalAssignmentNode, LogicalOperators,
-    MemberNode, NavigationNode, ObjectOperator, parseAddSub, parseInfix, RelationalOperators, StatementNode, TernaryNode
+    FunctionNode, GroupingOperator, LogicalAssignmentNode,
+    LogicalOperators, MemberNode, NavigationNode, ObjectOperator,
+    parseInfix, PipelineOperator, RelationalOperators, StatementNode, TernaryNode
 } from '../operators/infix.js';
-import { NodeExpression, PropertyNode, ValueNode } from '../expression.js';
+import { NodeExpression } from '../expression.js';
 import { escapeForRegex, generateTokens } from './parser.js';
 
-//dynamically build my parsing regex:
+//dynamically build js parsing regex:
 const tokenParser = new RegExp([
     //numbers
     /\d+(?:\.\d*)?|\.\d+/.source,
@@ -30,17 +31,18 @@ const tokenParser = new RegExp([
         ArrayOperator.Operators,
         TernaryNode.Operators,
         FunctionNode.Operators,
+        PipelineOperator.Operators,
         AssignmentNode.Operators,
         LogicalAssignmentNode.Operators,
         ComparisonOperators.Operators,
         ArithmeticOperators.Operators,
         BitwiseOperators.Operators,
         LogicalOperators.Operators,
-        RelationalOperators.Operators,
         ArrayCommaOperators.Operators,
         IncrementDecrementOperators.Operators,
         UnaryOperators.Operators,
         ConditionalOperators.Operators,
+        // RelationalOperators.Operators,
         StatementNode.Operators
         // DeleteOperators.Operators
     ]
@@ -50,11 +52,13 @@ const tokenParser = new RegExp([
         })
         .sort((a, b) => b.length - a.length) //so that ">=" is added before "=" and ">"
         .map(escapeForRegex)
+        .concat(RelationalOperators.RegexOperator)
+        // .concat(DeleteOperators.RegexOperators)
         .join('|'),
 
     //properties
     //has to be after the operators
-    /[a-zA-Z$_][a-zA-Z0-9$_]*/.source,
+    /[a-zA-Z$_ɵ][a-zA-Z0-9$_]*/.source,
 
     //remaining (non-whitespace-)chars, just in case
     //has to be at the end
@@ -68,8 +72,6 @@ function oneTimeProcess(tokens: (NodeExpression | string)[]): (NodeExpression | 
     return tokens;
 }
 
-const specialCase = ['+', '-'];
-
 function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
 
     MemberNode.parseBracketMember(tokens);
@@ -81,22 +83,18 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
 
     TernaryNode.parse(tokens);
 
-    // parseAddSub(tokens);
-    // parseAddSub(tokens);
-
-
     parseInfix(ArithmeticOperators, tokens);
     parseInfix(ComparisonOperators, tokens);
     parseInfix(BitwiseOperators, tokens);
     parseInfix(LogicalAssignmentNode, tokens);
     parseInfix(LogicalOperators, tokens);
     parseInfix(RelationalOperators, tokens);
+    parseInfix(PipelineOperator, tokens);
     parseInfix(ArrayCommaOperators, tokens);
     parseInfix(AssignmentNode, tokens);
 
     return tokens[0] as NodeExpression;
 }
-
 
 export function parseJSExpression(str: string) {
     let tokens: (NodeExpression | string)[] = generateTokens(str, tokenParser);
