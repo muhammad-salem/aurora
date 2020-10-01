@@ -457,9 +457,17 @@ export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, 
 
 }
 
-export function getViewClass<T>(modelClass: TypeOf<T>, selector: string): TypeOf<HTMLComponent<T>> | undefined {
+export function ComponentView<T>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
   if (isComponentModelClass(modelClass)) {
-    let viewClassName = modelClass.component[selector];
+    let viewClassName: string;
+    if (selector) {
+      viewClassName = modelClass.component[selector];
+      if (!viewClassName) {
+        throw new Error(`${modelClass.name} doesn't have ${selector} as view`);
+      }
+    } else {
+      viewClassName = Object.keys(modelClass.component)[0];
+    }
     return Reflect.get(modelClass, viewClassName);
   }
 }
