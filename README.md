@@ -36,6 +36,22 @@ npm i --save @aurorats/core
 yarn add @aurorats/core
 ```
 
+in your `tsconfig.json` add 
+
+```json
+{
+    "extends": "@aurorats/core/tsconfig.compilerOption.json",
+}
+```
+
+in your `index.ts` file add type reference for `@aurorats/types`
+
+```ts
+/// <reference types="@aurorats/types" />
+```
+
+see test for more help [test](https://github.com/aurorats/aurora/tree/master/test)
+
 ## 'HTML Template' and 'JSX' Features
 
 | Support | HTML Template| JSX |
@@ -141,7 +157,7 @@ yarn add @aurorats/core
 
 ### `[JSX and HTML] -- template parser example`
 
-``` typescript
+```tsx
 
 export interface DataModel {
     name: string;
@@ -269,12 +285,12 @@ export class RootApp implements OnInit {
 
 in index.html add:
 
- ```html
+```html
     <body>
         <root-app></root-app>
         <script type="module" src="path-to-main-file/index.js"></script>
     </body>
- ```
+```
 
 #### how to build
 
