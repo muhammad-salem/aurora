@@ -1,0 +1,25 @@
+<div>
+    {{appVersion}}
+    {{appName}}
+</div>
+
+<h1 [textContent]="ddd" [name]="text"></h1>
+
+<person-edit #personEdit [(person)]="person1" (save)="printPerson($event)"></person-edit>
+
+<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
+
+<div class="row">
+    <div class="col-3">
+        <person-view #pm1 [(person)]="person1" name="dddddddd" age="34" allowed></person-view>
+    </div>
+    <div class="col-3">
+        <person-view #pm2 person="{{person2}}" name="{{name}}" bind-age="years"></person-view>
+    </div>
+    <div class="col-3">
+        <person-view #pm3 person="{{person3}}" name="jone" age="25"></person-view>
+    </div>
+    <div class="col-3">
+        <person-view #pm4 person="{{person4}}" name="alex" age="29"></person-view>
+    </div>
+</div>
