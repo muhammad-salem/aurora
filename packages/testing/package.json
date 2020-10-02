@@ -11,6 +11,7 @@
   "files": [
     "dist"
   ],
+  "private": true,
   "publishConfig": {
     "access": "restricted"
   },
