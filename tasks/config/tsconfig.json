@@ -1,17 +1,18 @@
 {
-	"extends": "../core/tsconfig.compilerOption.json",
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "dist",
-		"rootDir": "src",
-		"composite": true
+		"outDir": "../../packages/package_name",
+		"rootDir": ".",
+		"composite": true,
+		"tsBuildInfoFile": "./build.info"
 	},
 	"include": [
-		"src/**/*.ts",
-		"src/**/*.tsx"
+		"**/*.ts",
+		"**/*.tsx"
 	],
 	"files": [
-		"src/index.ts"
+		"index.ts"
 	],
 	"compileOnSave": true
 }
