@@ -105,6 +105,8 @@ dist
 
 ## project 
 /src/**/*.js
+/packages/**/*.js
+/src/*/build.info
 **/*.d.ts
 **/*.map
 .idea
