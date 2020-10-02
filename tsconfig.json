@@ -1,23 +1,23 @@
 {
 	"references": [
-		{ "path": "packages/types" },
-		{ "path": "packages/metadata" },
-		{ "path": "packages/element" },
-		{ "path": "packages/expression" },
-		{ "path": "packages/jsx" },
-		{ "path": "packages/html-parser" },
-		{ "path": "packages/api" },
-		{ "path": "packages/http" },
-		{ "path": "packages/pipe" },
-		{ "path": "packages/directive" },
-		{ "path": "packages/forms" },
-		{ "path": "packages/router" },
-		{ "path": "packages/core" },
-		{ "path": "packages/testing" }
+		{ "path": "src/types" },
+		{ "path": "src/metadata" },
+		{ "path": "src/element" },
+		{ "path": "src/expression" },
+		{ "path": "src/jsx" },
+		{ "path": "src/html-parser" },
+		{ "path": "src/api" },
+		{ "path": "src/http" },
+		{ "path": "src/pipe" },
+		{ "path": "src/directive" },
+		{ "path": "src/forms" },
+		{ "path": "src/router" },
+		{ "path": "src/core" },
+		{ "path": "src/testing" }
 	],
 	"compilerOptions": {
 		"composite": true
 	},
-	"files": [],
+	"files": []
 }
 
