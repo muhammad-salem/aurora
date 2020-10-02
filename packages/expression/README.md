@@ -13,9 +13,9 @@ yarn add @aurorats/expression
 ```
 
 
-## Exmaple
-```expressioncripe
-import { NodeExpression, parseHtmlExpression } from '@aurorats/expression';
+## Example
+```ts
+import { NodeExpression, parseJSExpression } from '@aurorats/expression';
 
 let context:{[key: string]: any} = {
     a: 6,
@@ -28,13 +28,13 @@ let context:{[key: string]: any} = {
 };
 let exp = `a + b === g.c + g.d`;
 
-let expNode:NodeExpression = parseHtmlExpression(exp);
+let expNode:NodeExpression = parseJSExpression(exp);
 
 console.log(expNode.toString());
 console.log(expNode.get(context));
 
 exp = `c = a + g.d`;
-expNode = parseHtmlExpression(exp);
+expNode = parseJSExpression(exp);
 
 console.log(expNode.get(context));
 console.log(context.c);
