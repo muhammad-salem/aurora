@@ -1,5 +1,10 @@
 {
-	"extends": "../core/tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../tsconfig.json"
+		}
+	],
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"outDir": "dist",

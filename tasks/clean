@@ -2,15 +2,13 @@
 # set -e
 
 for packageDir in packages/* ; do
-    echo "package $packageDir"
     for sub in "$packageDir"/** ; do
         if [[ !($sub == *.json ||  $sub == *.md) ]]
         then
-            echo "sub $sub"
             rm -rf $sub
         fi
     done
 done
 
 rm -rf ./src/*/build.info
-rm -rf src/testing/{dist,public/web_modules}
+rm -rf test/{dist,build.info,public/web_modules}

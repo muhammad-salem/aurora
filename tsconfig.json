@@ -12,12 +12,10 @@
 		{ "path": "src/directive" },
 		{ "path": "src/forms" },
 		{ "path": "src/router" },
-		{ "path": "src/core" },
-		{ "path": "src/testing" }
+		{ "path": "src/core" }
 	],
 	"compilerOptions": {
 		"composite": true
 	},
 	"files": []
 }
-
