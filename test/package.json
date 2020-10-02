@@ -1,7 +1,7 @@
 {
-  "name": "@aurorats/testing",
+  "name": "@aurorats/test",
   "version": "0.1.11",
-  "description": "Aurora testing, all the test apps, used while building this lib",
+  "description": "Aurora test, all the test apps, used while building this lib",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
   "main": "./dist/index.js",
