@@ -4,6 +4,7 @@
   "useWorkspaces": true,
   "command": {
     "publish": {
+      "access": "public",
       "verifyAccess": false
     }
   }
