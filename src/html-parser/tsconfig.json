@@ -1,0 +1,18 @@
+{
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"outDir": "../../packages/html-parser",
+		"rootDir": ".",
+		"composite": true,
+		"tsBuildInfoFile": "./build.info"
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.tsx"
+	],
+	"files": [
+		"index.ts"
+	],
+	"compileOnSave": true
+}
