@@ -28,8 +28,8 @@
  * x ? y:z;
  */
 
-import { NodeExpression, ValueNode } from '../expression.js';
-import { MemberNode } from './infix.js';
+import { NodeExpression, PropertyNode } from '../expression.js';
+import { MemberNode, NavigationNode } from './infix.js';
 
 export enum UnaryType {
     PREFIX,
@@ -203,13 +203,15 @@ export class LiteralUnaryOperators implements NodeExpression {
     }
     private getDelete(context: object) {
         throw new Error('LiteralUnaryOperators.delete#get() has no implementation.');
-        // if (this.node instanceof MemberNode) {
+        // if (this.node instanceof MemberNode || this.node instanceof NavigationNode) {
         //     if (this.node.right instanceof ValueNode) {
         //         let parent = this.node.left.get(context);
         //         return Reflect.deleteProperty(parent, this.node.right.get(context) as string | number);
         //     } else {
         //         // loop to get to an end of the chain
         //     }
+        // } else if (this.node instanceof PropertyNode) {
+        //     return Reflect.deleteProperty(context, this.node.get(context));
         // }
         // return Reflect.deleteProperty(context, this.node.get(context));
     }
@@ -225,7 +227,13 @@ export class FunctionExpression implements NodeExpression {
     get(context: object) {
         let parameters = this.args.map(param => param.get(context));
         let funCallBack = this.funcName.get(context) as Function;
-        let value = funCallBack.call(context, ...parameters);
+        let funcThis: any;
+        if (this.funcName instanceof MemberNode || this.funcName instanceof NavigationNode) {
+            funcThis = this.funcName.left.get(context);
+        } else if (this.funcName instanceof PropertyNode) {
+            funcThis = context;
+        }
+        let value = funCallBack.call(funcThis, ...parameters);
         return value;
     }
     toString(): string {
@@ -233,4 +241,3 @@ export class FunctionExpression implements NodeExpression {
         return `${this.funcName.toString()}(${argsStr})`;
     }
 }
-
