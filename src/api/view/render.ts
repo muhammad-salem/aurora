@@ -1,4 +1,4 @@
-import { NodeExpression, parseJSExpression } from '@aurorats/expression';
+import { AssignmentNode, NodeExpression, parseJSExpression } from '@aurorats/expression';
 import {
 	AttrDescription, isJsxComponentWithElement, JsxAttrComponent,
 	jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory
@@ -9,7 +9,6 @@ import { isOnInit } from '../component/lifecycle.js';
 import { defineModel, isModel, Model, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import { dependencyInjector } from '../providers/injector.js';
 import { ClassRegistry } from '../providers/provider.js';
-import { setValueByPath, updateAttribute, updateValue } from '../utils/utils.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { ElementMutation } from './mutation.js';
@@ -75,39 +74,51 @@ export class ComponentRender<T> {
 
 	initElementData(element: HTMLElement, elementAttr: string, viewProperty: string, isAttr: boolean) {
 		const propertySrc = this.getPropertySource(viewProperty);
+		let exp: string;
 		if (isAttr) {
-			updateAttribute(element, elementAttr, propertySrc.src, propertySrc.property);
+			exp = `element.setAttribute('${elementAttr}', model.${viewProperty})`;
 		} else {
-			updateValue(element, elementAttr, propertySrc.src, propertySrc.property);
+			exp = `element.${elementAttr} = model.${viewProperty}`;
 		}
-	}
-
-	updateElementData(element: HTMLElement | Text | Object, elementAttr: string, propertySrc: PropertySource) {
-		updateValue(element, elementAttr, propertySrc.src, propertySrc.property);
-	}
-
-	updateViewData(element: HTMLElement, elementAttr: string, propertySrc: PropertySource) {
-		updateValue(propertySrc.src, propertySrc.property, element, elementAttr);
+		let expNodeDown = parseJSExpression(exp);
+		let context = {
+			element: element,
+			model: propertySrc.src
+		};
+		expNodeDown.get(context);
 	}
 
 	bind1Way(element: HTMLElement, elementAttr: string, viewProperty: string) {
+		let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`);
 		const propertySrc = this.getPropertySource(viewProperty);
+		let context = {
+			element: element,
+			model: propertySrc.src
+		};
 		let callback1 = () => {
-			this.updateElementData(element, elementAttr, propertySrc);
+			expNodeDown.get(context);
 		};
 		subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
+		expNodeDown.get(context);
 	}
 
 	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string) {
+
+		let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`) as AssignmentNode;
+		let expNodeUp = new AssignmentNode('=', expNodeDown.right, expNodeDown.left);
 		const propertySrc = this.getPropertySource(viewProperty);
+		let context = {
+			element: element,
+			model: propertySrc.src
+		};
 		const callback2 = () => {
-			this.updateViewData(element, elementAttr, propertySrc);
+			expNodeUp.get(context);
 		};
 		const callback1 = () => {
-			this.updateElementData(element, elementAttr, propertySrc);
+			expNodeDown.get(context);
 		};
 		subscribe2way(propertySrc.src, propertySrc.property, element, elementAttr, callback1, callback2);
-
+		expNodeDown.get(context);
 		const changeEventName = getChangeEventName(element, elementAttr);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {
@@ -131,33 +142,28 @@ export class ComponentRender<T> {
 	}
 
 	attrTemplateHandler(element: HTMLElement | Text, elementAttr: string, viewProperty: string, isAttr?: boolean) {
-		// console.log('attrTemplateHandler', arguments, this);
 		const result = [...viewProperty.matchAll(this.templateRegExp)];
 		if (result.length === 0) {
 			return;
 		}
 		const propSrc: { [match: string]: PropertySource } = {};
 		result.forEach(match => propSrc[match[0]] = this.getPropertySource(match[1]));
-
-		// console.log(result);
-		// console.log(propSrc);
 		const handler = () => {
 			let renderText = viewProperty;
 			Object.keys(propSrc).forEach(propTemplate => {
 				const prop = propSrc[propTemplate];
 				let value = prop.expression.get(prop.src);
 				renderText = renderText.replace(propTemplate, value);
-				// let tempValue = getValueByPath(prop.src, prop.property);
-				// if (typeof tempValue === 'function') {
-				// 	// tempValue = tempValue.call(this.basicView._model);
-				// 	tempValue = tempValue.call(prop.src);
-				// }
-				// renderText = renderText.replace(propTemplate, tempValue);
 			});
 			if (isAttr && element instanceof HTMLElement) {
 				element.setAttribute(elementAttr, renderText);
 			} else {
-				setValueByPath(element, elementAttr, renderText);
+				let expNodeDown = parseJSExpression(`element.${elementAttr} = obj`);
+				let context = {
+					element: element,
+					obj: renderText
+				};
+				expNodeDown.get(context);
 			}
 		}
 		let triggerTemplate: Function | undefined;
@@ -227,7 +233,6 @@ export class ComponentRender<T> {
 			return;
 		}
 		let elName = component.attributes?.elementName;
-		// console.log('viewChildMap', elName, component);
 		if (elName) {
 			const element = this.createElementByTagName(
 				component.tagName,
@@ -316,20 +321,24 @@ export class ComponentRender<T> {
 	// abstract initAttribute(element: HTMLElement, propertyKey: string, propertyValue: any): void;
 	initAttribute(element: HTMLElement, attr: AttrDescription): void {
 		attr.property.forEach((attrValue, attrName) => {
-			const isAttr = hasAttr(element, attrName);
-			this.initElementData(element, attrName, attrValue, isAttr);
+			// const isAttr = hasAttr(element, attrName);
+			// this.initElementData(element, attrName, attrValue, isAttr);
 			this.bind2Way(element, attrName, attrValue);
 		});
-		attr.expression.forEach((attrValue, attrName) => {
-			const isAttr = hasAttr(element, attrName);
-			this.initElementData(element, attrName, attrValue, isAttr);
-			this.bind1Way(element, attrName, attrValue);
-			// console.log('expression', attrValue, attrName);
 
-			// this.attrTemplateHandler(element, attrName, `{{${attrValue}}}`, isAttr);
+		attr.expression.forEach((attrValue, attrName) => {
+			// const isAttr = hasAttr(element, attrName);
+			// this.initElementData(element, attrName, attrValue, isAttr);
+			this.bind1Way(element, attrName, attrValue);
 		});
 		attr.objects.forEach((attrValue, attrName) => {
-			setValueByPath(element, attrName, attrValue);
+			let expNodeDown = parseJSExpression(`element.${attrName} = obj`);
+			let context = {
+				element: element,
+				obj: attrValue
+			};
+			expNodeDown.get(context);
+			// setValueByPath(element, attrName, attrValue);
 		});
 		attr.lessBinding.forEach((attrValue, attrName) => {
 			const isAttr = hasAttr(element, attrName);
