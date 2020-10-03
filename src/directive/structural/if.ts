@@ -3,6 +3,7 @@ import {
 	ComponentRender, Directive, OnInit,
 	StructuralDirective, subscribe1way
 } from '@aurorats/api';
+import { parseJSExpression } from '@aurorats/expression';
 
 
 @Directive({
@@ -25,8 +26,13 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 		console.log('IfDirective#onInit()');
 		this.element = this.render.createElement(this.component) as HTMLElement;
 		const propertySrc = this.render.getPropertySource(this.statement);
+		let expNodeDown = parseJSExpression(`element.condition = model.${this.statement}`);
+		let context = {
+			element: this,
+			model: propertySrc.src
+		};
 		let callback1 = () => {
-			this.render.updateElementData(this, 'condition', propertySrc);
+			expNodeDown.get(context);
 			this._updateView();
 		};
 		subscribe1way(propertySrc.src, propertySrc.property, this, 'condition', callback1);
