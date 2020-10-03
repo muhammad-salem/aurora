@@ -39,7 +39,7 @@ export function defineModel(object: any): void {
     }
 }
 
-export function subscribe2way(obj1: any, obj1ChildName: string, obj2: any, obj2ChildName: string, callback1?: Function, callback2?: Function) {
+export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1?: Function, callback2?: Function) {
 
     let subject1: any, subject2: any;
     if (isHTMLComponent(obj1)) {
@@ -56,27 +56,27 @@ export function subscribe2way(obj1: any, obj1ChildName: string, obj2: any, obj2C
     defineModel(subject1);
     defineModel(subject2);
 
-    subject1.subscribeModel(obj1ChildName, (source: any[]) => {
+    subject1.subscribeModel(obj1PropName, (source: any[]) => {
         if (callback1) {
             callback1();
         }
         // updateValue(obj1, obj1ChildName, obj2, obj2ChildName);
         if (!source.includes(subject2) && isModel(subject2)) {
-            subject2.emitChangeModel(obj2ChildName, source);
+            subject2.emitChangeModel(obj2PropName, source);
         }
     });
-    subject2.subscribeModel(obj2ChildName, (source: any[]) => {
+    subject2.subscribeModel(obj2PropName, (source: any[]) => {
         if (callback2) {
             callback2();
         }
         // updateValue(obj2, obj2ChildName, obj1, obj1ChildName);
         if (!source.includes(subject1) && isModel(subject1)) {
-            subject1.emitChangeModel(obj1ChildName, source);
+            subject1.emitChangeModel(obj1PropName, source);
         }
     });
 }
 
-export function subscribe1way(obj1: any, obj1ChildName: string, obj2: any, obj2ChildName: string, callback?: Function) {
+export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback?: Function) {
 
     let subject1: any, subject2: any;
     if (isHTMLComponent(obj1)) {
@@ -93,13 +93,13 @@ export function subscribe1way(obj1: any, obj1ChildName: string, obj2: any, obj2C
     defineModel(subject1);
     defineModel(subject2);
 
-    subject1.subscribeModel(obj1ChildName, (source: any[]) => {
+    subject1.subscribeModel(obj1PropName, (source: any[]) => {
         if (callback) {
             callback();
         }
         // updateValue(obj1, obj1ChildName, obj2, obj2ChildName);
         if (!source.includes(subject2) && isModel(subject2)) {
-            subject2.emitChangeModel(obj2ChildName, source);
+            subject2.emitChangeModel(obj2PropName, source);
         }
     });
 }
