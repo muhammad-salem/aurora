@@ -1,7 +1,7 @@
 declare global {
 	export namespace JSX {
 		interface IntrinsicElements {
-			[elemName: string]: 'fragment' | 'comment' | any;
+			[elemName: string]: 'fragment' | 'comment' | 'directive' | any;
 		}
 	}
 }
