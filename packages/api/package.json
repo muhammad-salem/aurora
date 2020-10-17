@@ -17,9 +17,9 @@
   "dependencies": {
     "@aurorats/element": "^0.1.11",
     "@aurorats/expression": "^0.1.11",
-    "@aurorats/html-parser": "^0.1.11",
-    "@aurorats/jsx": "^0.1.11",
     "@aurorats/metadata": "^0.1.11",
+    "@aurorats/jsx": "^0.1.11",
+    "@aurorats/html-parser": "^0.1.11",
     "tslib": "^2.0.1"
   },
   "devDependencies": {
