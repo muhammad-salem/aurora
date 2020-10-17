@@ -1,4 +1,12 @@
 
+export interface TypeOf<T> extends Function {
+	new(...values: any): T;
+}
+
+export interface HTMLType extends TypeOf<HTMLElement> {
+	prototype: HTMLElement;
+}
+
 function keyFor(keys: string[], paramPath: string): string | false {
 	for (let i = 0; i < keys.length; i++) {
 		if (paramPath.startsWith(keys[i])) {
