@@ -1,4 +1,4 @@
-import { JsxAttrComponent } from '@aurorats/jsx';
+import { DirectiveNode } from '@aurorats/jsx';
 import { ComponentRender } from '../view/render.js';
 
 /**
@@ -8,13 +8,12 @@ export class StructuralDirective<T> {
     constructor(
         protected render: ComponentRender<T>,
         protected comment: Comment,
-        protected statement: string,
-        protected component: JsxAttrComponent
+        protected directive: DirectiveNode
     ) { }
 }
 
 /**
- * An attributes directive selector as '[if]'
+ * An attributes directive selector as '[class] [style]'
  */
 export class AttributeDirective<T> {
     constructor(protected render: ComponentRender<T>, ...values: any[]) { }
