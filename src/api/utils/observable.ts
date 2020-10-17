@@ -1,9 +1,4 @@
 
-interface ObservedCallback {
-    oldValue?: any;
-    callbackArray: Function[];
-}
-
 export class Observable {
 
     private subscribers: Map<string, Function[]> = new Map();
