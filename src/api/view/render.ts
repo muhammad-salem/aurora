@@ -1,12 +1,17 @@
 import { AssignmentNode, NodeExpression, parseJSExpression } from '@aurorats/expression';
 import {
-	AttrDescription, isJsxComponentWithElement, JsxAttrComponent,
-	jsxAttrComponentBuilder, jsxComponentAttrHandler, JsxFactory
+	Aurora, AuroraChild, AuroraNode, CommentNode,
+	DirectiveNode, ElementNode, FragmentNode,
+	LiveText, ParentNode, TextNode
 } from '@aurorats/jsx';
+import { isTagNameNative, isValidCustomElementName } from '@aurorats/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
-import { defineModel, isModel, Model, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import {
+	defineModel, isModel, Model,
+	subscribe1way, subscribe2way
+} from '../model/change-detection.js';
 import { dependencyInjector } from '../providers/injector.js';
 import { ClassRegistry } from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
@@ -26,25 +31,320 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 }
 
 interface PropertySource {
-	property: string, src: object, expression: NodeExpression
+	property: string, src: object, expression?: NodeExpression;
 }
 
 export class ComponentRender<T> {
 	componentRef: ComponentRef<T>
-	template: JsxAttrComponent;
+	template: AuroraNode;
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
 
-	viewChildMap: { [name: string]: any } = {};
+	viewChildMap: { [name: string]: any };
 
-	constructor(public basicView: HTMLComponent<T>) {
-		this.componentRef = basicView.getComponentRef();
+	constructor(public view: HTMLComponent<T>) {
+		this.componentRef = view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
 	}
 
+	initView(): void {
+		if (this.componentRef.template) {
+			if (typeof this.componentRef.template === 'function') {
+				this.template = this.componentRef.template(this.view._model);
+			} else {
+				this.template = this.componentRef.template;
+			}
+
+			this.viewChildMap = {};
+			if (!(this.template instanceof CommentNode)) {
+
+				this.defineElementNameKey(this.template);
+			}
+
+			this.componentRef.viewChild.forEach(view => {
+				// support for string selector 
+				let selectorName: string = view.selector as string;
+				if (Reflect.has(this.viewChildMap, selectorName)) {
+					Reflect.set(this.view._model, view.modelName, this.viewChildMap[selectorName]);
+				}
+			});
+
+			let rootRef: HTMLElement | ShadowRoot;
+			if (this.componentRef.isShadowDom) {
+				if (this.view.shadowRoot /* OPEN MODE */) {
+					rootRef = this.view.shadowRoot;
+				} else /* CLOSED MODE*/ {
+					rootRef = Reflect.get(this.view, '_shadowRoot') as ShadowRoot;
+					Reflect.deleteProperty(this.view, '_shadowRoot');
+				}
+			} else {
+				rootRef = this.view;
+			}
+			this.appendChildToParent(rootRef, this.template);
+		}
+	}
+
+	initHostListener(): void {
+		this.componentRef.hostListeners?.forEach(
+			listener => this.handelHostListener(listener)
+		);
+	}
+
+	handelHostListener(listener: ListenerRef) {
+		let eventName: string = listener.eventName,
+			source: HTMLElement | Window,
+			eventCallback: Function = this.view._model[listener.modelCallbackName];
+		if (listener.eventName.includes(':')) {
+			const eventSource = eventName.substring(0, eventName.indexOf(':'));
+			eventName = eventName.substring(eventName.indexOf(':') + 1);
+			if ('window' === eventSource.toLowerCase()) {
+				source = window;
+				this.addNativeEventListener(source, eventName, eventCallback);
+				return;
+			} else if (eventSource in this.view) {
+				source = Reflect.get(this.view, eventSource);
+				if (!Reflect.has(source, '_model')) {
+					this.addNativeEventListener(source, eventName, eventCallback);
+					return;
+				}
+			} else {
+				source = this.view;
+			}
+		} else {
+			source = this.view;
+		}
+		const sourceModel = Reflect.get(source, '_model');
+		const output = dependencyInjector
+			.getInstance(ClassRegistry)
+			.hasOutput(sourceModel, eventName);
+		if (output) {
+			(sourceModel[(output as PropertyRef).modelProperty] as EventEmitter<any>).subscribe((value: any) => {
+				eventCallback.call(sourceModel, value);
+			});
+		}
+		else if (Reflect.has(source, 'on' + eventName)) {
+			this.addNativeEventListener(source, eventName, eventCallback);
+		}
+		// else if (this.componentRef.encapsulation === 'template' && !this.basicView.hasParentComponent()) {
+		// 	this.addNativeEventListener(this.basicView, eventName, eventCallback);
+		// }
+	}
+
+	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
+		source.addEventListener(eventName, (event: Event) => {
+			funcCallback.call(this.view._model, event);
+		});
+	}
+
+	defineElementNameKey(component: AuroraNode) {
+		if (component instanceof DirectiveNode || component instanceof CommentNode) {
+			return;
+		}
+		if (component instanceof ElementNode) {
+			if (Aurora.DirectiveTag === component.tagName.toLowerCase()) {
+				return;
+			}
+			if (component.templateRefName) {
+				const element = this.createElementByTagName(component);
+				Reflect.set(this.view, component.templateRefName.attrName, element);
+				this.viewChildMap[component.templateRefName.attrName] = element;
+			}
+		}
+		if (component instanceof ParentNode && component.children) {
+			component.children.forEach(child => {
+				if ((child instanceof ElementNode && Aurora.DirectiveTag !== child.tagName.toLowerCase())
+					|| child instanceof FragmentNode) {
+					this.defineElementNameKey(child);
+				}
+			});
+		}
+	}
+
+	getElementByName(name: string) {
+		return Reflect.get(this.view, name);
+	}
+
+	createDirective(directive: DirectiveNode): Comment {
+		let comment = document.createComment(`${directive.directiveName}=${directive.directiveValue}`);
+		const directiveRef = dependencyInjector.getInstance(ClassRegistry).getDirectiveRef<T>(directive.directiveName);
+		if (directiveRef) {
+			// structural directive selector as '*if'
+			const structural = new directiveRef.modelClass(this, comment, directive);
+			if (directive.templateRefName) {
+				Reflect.set(this.view, directive.templateRefName.attrName, structural);
+				this.viewChildMap[directive.templateRefName.attrName] = structural;
+			}
+			if (isOnInit(structural)) {
+				structural.onInit();
+			}
+			// 
+		} else {
+			// didn't fond directive or it didn't defined yet.
+		}
+		return comment;
+	}
+
+	createComment(comment: CommentNode): Comment {
+		return document.createComment(`${comment.comment}`);
+	}
+
+	createText(text: TextNode): Text {
+		return new Text(text.textValue);
+	}
+
+	createLiveText(text: LiveText): Text {
+		let expression = parseJSExpression(text.textValue);
+		let textValue = expression.get(this.view._model);
+		let live = new Text(textValue);
+		//TODO watch model change for expression
+		// this.watchModelChange(live, 'textContent', expression);
+		// this.attrTemplateHandler(element, tempAttr.attrName, `{{${text.textValue}}}`);
+		this.bind1Way(live, 'textContent', text.textValue);
+		return live;
+	}
+
+	createDocumentFragment(node: FragmentNode): DocumentFragment {
+		let fragment = document.createDocumentFragment();
+		node.children.forEach(child => this.appendChildToParent(fragment, child));
+		return fragment;
+	}
+
+	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode) {
+		if (child instanceof ElementNode) {
+			parent.append(this.createElement(child));
+		} else if (child instanceof DirectiveNode) {
+			parent.append(this.createDirective(child));
+		} else if (child instanceof TextNode) {
+			parent.append(this.createText(child));
+		} else if (child instanceof LiveText) {
+			parent.append(this.createLiveText(child));
+		} else if (child instanceof CommentNode) {
+			parent.append(this.createComment(child));
+		} else if (child instanceof FragmentNode) {
+			parent.append(this.createDocumentFragment(child));
+		}
+	}
+
+	createElementByTagName(node: ElementNode): HTMLElement {
+		let element: HTMLElement;
+		if (isValidCustomElementName(node.tagName)) {
+			element = document.createElement(node.tagName);
+			if (element.constructor.name === 'HTMLElement') {
+				customElements.whenDefined(node.tagName).then(() => {
+					customElements.upgrade(element);
+					let ViewClass = customElements.get(node.tagName);
+					if (!(element instanceof ViewClass)) {
+						const newChild = this.createElement(node);
+						element.replaceWith(newChild);
+					}
+				});
+			}
+		} else if (isTagNameNative(node.tagName)) {
+			// native tags // and custom tags can be used her
+			element = document.createElement(node.tagName, node.is ? { is: node.is } : undefined);
+		} else {
+			// html unknown element
+			element = document.createElement(node.tagName);
+		}
+		if (isHTMLComponent(element)) {
+			element.setParentComponent(this.view);
+		}
+		return element;
+	}
+
+	createElement(node: ElementNode): HTMLElement {
+		let element: HTMLElement;
+		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
+			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
+		} else {
+			element = this.createElementByTagName(node);
+		}
+
+		this.initAttribute(element, node);
+
+		if (node.children) {
+			for (const child of node.children) {
+				this.appendChildToParent(element, child);
+			}
+		}
+		return element;
+	}
+
+	initAttribute(element: HTMLElement, node: ElementNode): void {
+		if (node.attributes) {
+			node.attributes.forEach(attr => {
+				const isAttr = hasAttr(element, attr.attrName);
+				// this.initElementData(element, attr.attrName, attr.attrValue as string, isAttr);
+				if (isAttr) {
+					if (attr.attrValue === false) {
+						element.removeAttribute(attr.attrName);
+					} else if (attr.attrValue === true) {
+						element.setAttribute(attr.attrName, '');
+					} else {
+						element.setAttribute(attr.attrName, attr.attrValue as string);
+					}
+				} else {
+					Reflect.set(element, attr.attrName, attr.attrValue);
+				}
+			});
+		}
+		// let twoWayBinding: string[] = [];
+		if (node.inputs) {
+			node.inputs.forEach(attr => {
+				//TODO check for attribute directive,find sources from expression
+				this.bind1Way(element, attr.attrName, attr.sourceValue);
+			});
+		}
+		if (node.outputs && false) {
+			node.outputs.forEach(event => {
+				let listener: Function;
+				/**
+				 * <a (click)="onClick()"></a>
+				 * <a onclick="onClick()"></a>
+				 * <input [(value)]="person.name" />
+				 * <input (value)="person.name = $event" />
+				 */
+				if (typeof event.sourceHandler === 'string') {
+					let expression = parseJSExpression(event.sourceHandler);
+					// this.view.addEventListener(event.eventName, ($event) => {
+					// 	expression.get({
+					// 		$event: $event,
+					// 		model: this.view._model
+					// 	});
+					// });
+					listener = expression.get(this.view._model);
+				} else /* if (typeof event.sourceHandler === 'function')*/ {
+					// let eventName: keyof HTMLElementEventMap = event.eventName;
+					listener = event.sourceHandler;
+				}
+				this.view.addEventListener(event.eventName as any, listener as any);
+
+			});
+		}
+		if (node.templateAttrs) {
+			node.templateAttrs.forEach(tempAttr => {
+				const isAttr = hasAttr(element, tempAttr.attrName);
+				// this.initElementData(element, attrName, attrValue as string, isAttr);
+				this.attrTemplateHandler(element, tempAttr.attrName, tempAttr.sourceValue, isAttr);
+			});
+		}
+	}
+
+	getEntrySource(entry: string, suggest?: any): any {
+		// let input = this.view.getInput(entry);
+		if (suggest && Reflect.has(suggest, entry)) {
+			return suggest;
+		} else if (Reflect.has(this.view, entry)) {
+			return this.view;
+		} else if (Reflect.has(this.view._model, entry)) {
+			return this.view._model;
+		}
+		// search in directives and pipes
+		return window;
+	}
+
 	getPropertySource(viewProperty: string): PropertySource {
-		let expression = parseJSExpression(viewProperty);
-		let input = this.basicView.getInputStartWith(viewProperty);
+		let input = this.view.getInputStartWith(viewProperty);
 		let dotIndex = viewProperty.indexOf('.');
 		let modelProperty = viewProperty;
 		if (dotIndex > 0 && input) {
@@ -56,8 +356,8 @@ export class ComponentRender<T> {
 		if (dotIndex > 0) {
 			parent = viewProperty.substring(0, dotIndex);
 		}
-		if (Reflect.has(this.basicView, parent)) {
-			// parent = Reflect.get(this.basicView, parent);
+		if (Reflect.has(this.view, parent)) {
+			// parent = Reflect.get(this.view, parent);
 			// /**
 			//  * case of element reference
 			//  * <root-app>
@@ -67,9 +367,9 @@ export class ComponentRender<T> {
 			// if (parent instanceof HTMLElement) {
 			// 	return { property: modelProperty.substring(dotIndex + 1), src: parent, expression };
 			// }
-			return { property: modelProperty, src: this.basicView, expression };
+			return { property: modelProperty, src: this.view };
 		}
-		return { property: modelProperty, src: this.basicView._model, expression };
+		return { property: modelProperty, src: this.view._model };
 	}
 
 	initElementData(element: HTMLElement, elementAttr: string, viewProperty: string, isAttr: boolean) {
@@ -78,7 +378,7 @@ export class ComponentRender<T> {
 		if (isAttr) {
 			exp = `element.setAttribute('${elementAttr}', model.${viewProperty})`;
 		} else {
-			exp = `element.${elementAttr} = model.${viewProperty}`;
+			exp = `element['${elementAttr}'] = model.${viewProperty}`;
 		}
 		let expNodeDown = parseJSExpression(exp);
 		let context = {
@@ -88,7 +388,14 @@ export class ComponentRender<T> {
 		expNodeDown.get(context);
 	}
 
-	bind1Way(element: HTMLElement, elementAttr: string, viewProperty: string) {
+	__log(exp: string) {
+		let expNode = parseJSExpression(exp);
+		console.log(expNode.toString(), exp, expNode.entry(), expNode);
+	}
+
+	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string) {
+		this.__log(elementAttr);
+		this.__log(viewProperty);
 		let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`);
 		const propertySrc = this.getPropertySource(viewProperty);
 		let context = {
@@ -147,12 +454,15 @@ export class ComponentRender<T> {
 			return;
 		}
 		const propSrc: { [match: string]: PropertySource } = {};
-		result.forEach(match => propSrc[match[0]] = this.getPropertySource(match[1]));
+		result.forEach(match => {
+			propSrc[match[0]] = this.getPropertySource(match[1]);
+			propSrc[match[0]].expression = parseJSExpression(match[1]);
+		});
 		const handler = () => {
 			let renderText = viewProperty;
 			Object.keys(propSrc).forEach(propTemplate => {
 				const prop = propSrc[propTemplate];
-				let value = prop.expression.get(prop.src);
+				let value = prop.expression?.get(prop.src);
 				renderText = renderText.replace(propTemplate, value);
 			});
 			if (isAttr && element instanceof HTMLElement) {
@@ -188,300 +498,4 @@ export class ComponentRender<T> {
 		}
 	}
 
-	initView(): void {
-		if (this.componentRef.template) {
-			if (this.componentRef.template instanceof JsxAttrComponent) {
-				this.template = this.componentRef.template;
-			} else if (typeof this.componentRef.template === 'function') {
-				this.template = jsxAttrComponentBuilder(this.componentRef.template(this.basicView._model));
-			} else {
-				this.template = jsxAttrComponentBuilder(this.componentRef.template);
-			}
-
-			this.defineElementNameKey(this.template);
-
-			this.componentRef.viewChild.forEach(view => {
-				// support for string selector 
-				let selectorName: string = view.selector as string;
-				if (Reflect.has(this.viewChildMap, selectorName)) {
-					Reflect.set(this.basicView._model, view.modelName, this.viewChildMap[selectorName]);
-				}
-			});
-			let rootRef: HTMLElement | ShadowRoot;
-			if (this.componentRef.isShadowDom) {
-				if (this.basicView.shadowRoot /* OPEN MODE */) {
-					rootRef = this.basicView.shadowRoot;
-				} else /* CLOSED MODE*/ {
-					rootRef = Reflect.get(this.basicView, '_shadowRoot') as ShadowRoot;
-					Reflect.deleteProperty(this.basicView, '_shadowRoot');
-				}
-			} else {
-				rootRef = this.basicView;
-			}
-			rootRef.appendChild(this.createElement(this.template));
-		}
-	}
-
-	initHostListener(): void {
-		this.componentRef.hostListeners?.forEach(
-			listener => this.handelHostListener(listener)
-		);
-	}
-
-	defineElementNameKey(component: JsxAttrComponent) {
-		if (component.tagName === JsxFactory.Directive) {
-			return;
-		}
-		let elName = component.attributes?.elementName;
-		if (elName) {
-			const element = this.createElementByTagName(
-				component.tagName,
-				component.attributes?.is,
-				component.attributes?.comment
-			);
-			Reflect.set(this.basicView, elName, element);
-			this.viewChildMap.elName = element;
-		}
-		if (component.children) {
-			component.children
-				.forEach(child => {
-					if (typeof child === 'string') {
-						return child;
-					}
-					else {
-						return this.defineElementNameKey(child);
-					}
-				});
-		}
-	}
-
-	getElementByName(name: string) {
-		return Reflect.get(this.basicView, name);
-	}
-
-	createElement(viewTemplate: JsxAttrComponent): HTMLElement | DocumentFragment | Comment {
-		let element: HTMLElement | DocumentFragment | Comment;
-		if (isJsxComponentWithElement(viewTemplate)) {
-			element = viewTemplate.element
-		}
-		else if (JsxFactory.Directive === viewTemplate.tagName.toLowerCase() && viewTemplate.attributes?.directive) {
-			let directiveName: string = viewTemplate.attributes.directive;
-			let directiveValue = viewTemplate.attributes.directiveValue;
-			let component = viewTemplate.attributes.comment;
-			element = document.createComment(`${directiveName}=${directiveValue}`);
-			const directiveRef = dependencyInjector
-				.getInstance(ClassRegistry)
-				.getDirectiveRef<T>(viewTemplate.attributes.directiveName);
-			if (directiveRef) {
-
-				if (directiveName.startsWith('*')) {
-					// structural directive selector as '*if'
-					// const directiveClass = directiveRef.modelClass as TypeOf<StructuralDirective<T>>;
-					const directive = new directiveRef.modelClass(
-						this,
-						element,
-						directiveValue,
-						component);
-					if (isOnInit(directive)) {
-						directive.onInit();
-					}
-
-					Reflect.set(this.basicView, viewTemplate.attributes.directiveName, directive);
-
-				} else {
-					// attributes directive selector as '[class]'
-				}
-			} else {
-				// didn't fond directive or it not yet defined
-			}
-		}
-		else {
-			element = this.createElementByTagName(
-				viewTemplate.tagName,
-				viewTemplate.attributes?.is,
-				viewTemplate.attributes?.comment
-			);
-		}
-
-		if (element instanceof Comment) {
-			return element;
-		}
-
-		if (viewTemplate.attributes && viewTemplate.tagName !== JsxFactory.Fragment) {
-			this.initAttribute(<HTMLElement>element, viewTemplate.attributes);
-		}
-		if (viewTemplate.children && viewTemplate.children.length > 0) {
-			for (const child of viewTemplate.children) {
-				this.appendChild(element, child);
-			}
-		}
-		return element;
-	}
-
-	// abstract initAttribute(element: HTMLElement, propertyKey: string, propertyValue: any): void;
-	initAttribute(element: HTMLElement, attr: AttrDescription): void {
-		attr.property.forEach((attrValue, attrName) => {
-			// const isAttr = hasAttr(element, attrName);
-			// this.initElementData(element, attrName, attrValue, isAttr);
-			this.bind2Way(element, attrName, attrValue);
-		});
-
-		attr.expression.forEach((attrValue, attrName) => {
-			// const isAttr = hasAttr(element, attrName);
-			// this.initElementData(element, attrName, attrValue, isAttr);
-			this.bind1Way(element, attrName, attrValue);
-		});
-		attr.objects.forEach((attrValue, attrName) => {
-			let expNodeDown = parseJSExpression(`element.${attrName} = obj`);
-			let context = {
-				element: element,
-				obj: attrValue
-			};
-			expNodeDown.get(context);
-			// setValueByPath(element, attrName, attrValue);
-		});
-		attr.lessBinding.forEach((attrValue, attrName) => {
-			const isAttr = hasAttr(element, attrName);
-			this.initElementData(element, attrName, attrValue, isAttr);
-		});
-		attr.attr.forEach((attrValue, attrName) => {
-			const isAttr = hasAttr(element, attrName);
-			// this.initElementData(element, attrName, attrValue as string, isAttr);
-			this.attrTemplateHandler(element, attrName, attrValue as string, isAttr);
-			if (attrValue === false) {
-				element.removeAttribute(attrName);
-			} else if (attrValue === true) {
-				element.setAttribute(attrName, '');
-			} else {
-				element.setAttribute(attrName, attrValue);
-			}
-		});
-		attr.template.forEach((attrValue, attrName) => {
-			// const isAttr = hasAttr(element, attrName);
-			// this.attrTemplateHandler(element, attrName, attrValue, isAttr);
-		});
-	}
-
-	createElementByTagName(tagName: string, is?: string, comment?: string): HTMLElement | DocumentFragment | Comment {
-		if (JsxFactory.Fragment === tagName.toLowerCase()) {
-			return document.createDocumentFragment();
-		}
-		if ('comment' === tagName.toLowerCase()) {
-			if (!comment) {
-				comment = '//'
-			}
-			return document.createComment(comment);
-		}
-
-		let element: HTMLElement;
-		if (tagName.includes('-')) {
-			let ViewClass = customElements.get(tagName);
-			if (ViewClass) {
-				element = new ViewClass();
-			}
-			else {
-				element = document.createElement(tagName);
-				customElements.whenDefined(tagName).then(() => {
-					customElements.upgrade(element);
-					ViewClass = customElements.get(tagName);
-					if (!(element instanceof ViewClass)) {
-						const attrComponent = new JsxAttrComponent(tagName);
-						const attributes = {};
-						[].slice.call(element.attributes).forEach((attr: Attr) => {
-							Reflect.set(attributes, attr.name, attr.value);
-						});
-						attrComponent.attributes = jsxComponentAttrHandler(attributes);
-
-						const newChild = this.createElement(attrComponent);
-						// const newChild = new ViewClass();
-						// [].slice.call(element.attributes).forEach((attr: Attr) => {
-						// 	newChild.setAttribute(attr.name, attr.value);
-						// });
-						// element.parentElement?.replaceChild(newChild, element);
-						element.replaceWith(newChild);
-					}
-				});
-			}
-			// const registry: ClassRegistry = dependencyInjector.getInstance(ClassRegistry);
-			// const componentRef = registry.getComponentRef<any>(tagName);
-
-			// if (componentRef) {
-			// 	if (componentRef.extend.classRef !== HTMLElement) {
-			// 		element = document.createElement(componentRef.extend.name as string, { is: tagName });
-			// 		// element.setAttribute('is', tagName);
-			// 	} else {
-			// 		element = new componentRef.viewClass();
-			// 	}
-			// } else {
-			// 	element = document.createElement(tagName, { is: tagName });
-			// }
-		}
-		else {
-			// native tags // and custom tags can be used her
-			element = document.createElement(tagName, is ? { is } : undefined);
-		}
-		if (isHTMLComponent(element)) {
-			element.setParentComponent(this.basicView);
-		}
-		return element;
-	}
-
-	appendChild(parent: Node, child: string | JsxAttrComponent) {
-		if (child instanceof JsxAttrComponent) {
-			parent.appendChild(this.createElement(child));
-		} else {
-			this.appendTextNode(parent, String(child));
-		}
-	}
-
-	appendTextNode(parent: Node, child: string) {
-		var node = document.createTextNode(child);
-		parent.appendChild(node);
-		this.attrTemplateHandler(node, 'textContent', child);
-	}
-
-	handelHostListener(listener: ListenerRef) {
-		let eventName: string = listener.eventName,
-			source: HTMLElement | Window,
-			eventCallback: Function = this.basicView._model[listener.modelCallbackName];
-		if (listener.eventName.includes(':')) {
-			const eventSource = eventName.substring(0, eventName.indexOf(':'));
-			eventName = eventName.substring(eventName.indexOf(':') + 1);
-			if ('window' === eventSource.toLowerCase()) {
-				source = window;
-				this.addNativeEventListener(source, eventName, eventCallback);
-				return;
-			} else if (eventSource in this.basicView) {
-				source = Reflect.get(this.basicView, eventSource);
-				if (!Reflect.has(source, '_model')) {
-					this.addNativeEventListener(source, eventName, eventCallback);
-					return;
-				}
-			} else {
-				source = this.basicView;
-			}
-		} else {
-			source = this.basicView;
-		}
-		const sourceModel = Reflect.get(source, '_model');
-		const output = dependencyInjector
-			.getInstance(ClassRegistry)
-			.hasOutput(sourceModel, eventName);
-		if (output) {
-			(sourceModel[(output as PropertyRef).modelProperty] as EventEmitter<any>).subscribe((value: any) => {
-				eventCallback.call(sourceModel, value);
-			});
-		}
-		else if (Reflect.has(source, 'on' + eventName)) {
-			this.addNativeEventListener(source, eventName, eventCallback);
-		}
-		// else if (this.componentRef.encapsulation === 'template' && !this.basicView.hasParentComponent()) {
-		// 	this.addNativeEventListener(this.basicView, eventName, eventCallback);
-		// }
-	}
-	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
-		source.addEventListener(eventName, (event: Event) => {
-			funcCallback.call(this.basicView._model, event);
-		});
-	}
 }
