@@ -1,6 +1,5 @@
-import { JsxAttrComponent } from '@aurorats/jsx';
 import {
-    Component, ComponentRender, Directive,
+    Component, Directive,
     Input, OnInit, StructuralDirective
 } from '@aurorats/api';
 
@@ -40,14 +39,6 @@ class ItemOfComponent {
     selector: '*for, [forOf]',
 })
 export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
-
-    constructor(
-        render: ComponentRender<T>,
-        comment: Comment,
-        value: string,
-        component: JsxAttrComponent) {
-        super(render, comment, value, component);
-    }
 
     onInit(): void {
         console.log('ForDirective#onInit()');
