@@ -19,7 +19,7 @@
     "strictPropertyInitialization": false,
     "removeComments": true,
     "jsx": "react",
-    "jsxFactory": "JsxFactory.createElement",
-    "jsxFragmentFactory": "JsxFactory.Fragment"
+    "jsxFactory": "Aurora.createElement",
+    "jsxFragmentFactory": "Aurora.Fragment"
   }
 }
