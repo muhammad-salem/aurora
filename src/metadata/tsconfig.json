@@ -1,5 +1,5 @@
 {
-	"extends": "@aurorats/core/tsconfig.compilerOption.json",
+	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"outDir": "../../packages/metadata",
