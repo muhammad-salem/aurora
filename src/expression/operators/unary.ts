@@ -81,6 +81,9 @@ export class IncrementDecrementOperators implements NodeExpression {
         }
         return value;
     }
+    entry(): string[] {
+        return this.node.entry();
+    }
     toString() {
         let str: string;
         if (this.unaryType === UnaryType.POSTFIX) {
@@ -130,6 +133,9 @@ export class UnaryOperators implements NodeExpression {
         let value = this.node.get(context);
         return UnaryOperators.Evaluations[this.op](value);
     }
+    entry(): string[] {
+        return this.node.entry();
+    }
     toString() {
         return `${this.op}${this.node.toString()}`;
     }
@@ -151,6 +157,9 @@ export class ConditionalOperators implements NodeExpression {
     }
     get(context: object) {
         return this.condition.get(context) || false;
+    }
+    entry(): string[] {
+        return this.condition.entry();
     }
     toString() {
         return `(${this.condition.toString()})?`;
@@ -182,11 +191,12 @@ export class LiteralUnaryOperators implements NodeExpression {
     toString() {
         return `${this.op} ${this.node.toString()}`;
     }
-
     set(context: object, value: any) {
         throw new Error('LiteralUnaryOperators#set() has no implementation.');
     }
-
+    entry(): string[] {
+        return this.node.entry();
+    }
     get(context: object) {
         switch (this.op) {
             case 'delete': return this.getDelete(context);
@@ -235,6 +245,9 @@ export class FunctionExpression implements NodeExpression {
         }
         let value = funCallBack.call(funcThis, ...parameters);
         return value;
+    }
+    entry(): string[] {
+        return [...this.funcName.entry(), ...this.args.flatMap(arg => arg.entry())];
     }
     toString(): string {
         const argsStr = this.args.map(param => param.toString()).join(', ');

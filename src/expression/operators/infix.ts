@@ -48,6 +48,9 @@ export class MemberNode implements NodeExpression {
             return this.left.get(context)[this.right.get(context)];
         }
     }
+    entry(): string[] {
+        return this.left.entry();
+    }
     toString() {
         let str: string;
         if (this.op === '.') {
@@ -75,6 +78,9 @@ export class NavigationNode implements NodeExpression {
     }
     get(context: object) {
         return this.right.get(this.left.get(context));
+    }
+    entry(): string[] {
+        return this.left.entry();
     }
     toString() {
         return `${this.left.toString()}?.${this.right.toString()}`;
@@ -143,6 +149,9 @@ export class GroupingOperator implements NodeExpression {
     get(context: object) {
         return this.node.get(context);
     }
+    entry(): string[] {
+        return this.node.entry();
+    }
     toString() {
         return `(${this.node.toString()})`;
     }
@@ -205,6 +214,9 @@ export class ObjectOperator implements NodeExpression {
         });
         return this.proxy;
     }
+    entry(): string[] {
+        return Object.keys(this.props).flatMap(key => this.props[key].entry());
+    }
     toString() {
         return `[${Object.keys(this.props)
             .map(key => `"${key}":${this.props[key].toString()}`)
@@ -263,6 +275,9 @@ export class ArrayOperator implements NodeExpression {
     get(context: object) {
         return this.nodes.map(node => node.get(context));
     }
+    entry(): string[] {
+        return this.nodes.flatMap(node => node.entry());
+    }
     toString() {
         return `[${this.nodes.map(node => node.toString()).join(', ')}]`;
     }
@@ -304,6 +319,9 @@ export class TernaryNode implements NodeExpression {
     get(context: object) {
         return this.conditional.get(context) ? this.right.get(context) : this.left.get(context);
     }
+    entry(): string[] {
+        return [...this.conditional.entry(), ...this.left.entry(), ...this.right.entry()];
+    }
     toString() {
         return `${this.conditional.toString()} (${this.left.toString()}):(${this.right.toString()})`;
     }
@@ -321,6 +339,9 @@ export class FunctionNode implements NodeExpression {
         let funCallBack = this.func.get(context) as Function;
         let value = funCallBack.call(context, ...this.params.map(param => param.get(context)));
         return value;
+    }
+    entry(): string[] {
+        return [...this.func.entry(), ...this.params.flatMap(param => param.entry())];
     }
     toString(): string {
         return `${this.func.toString()}(${this.params.map(param => param.toString()).join(', ')})`;
@@ -349,6 +370,9 @@ export class StatementNode implements NodeExpression {
         this.nodes.forEach(node => value = node.get(context));
         return value;
     }
+    entry(): string[] {
+        return this.nodes.flatMap(node => node.entry());
+    }
     toString(): string {
         return this.nodes.map(node => node.toString()).join('; ');
     }
@@ -366,6 +390,10 @@ export interface Evaluate {
 
 export abstract class InfixOperators implements NodeExpression {
     constructor(public op: string, public left: NodeExpression, public right: NodeExpression, public callback: EvaluateCallback) { }
+
+    set(context: object, value: any) {
+        throw new Error(`${this.constructor.name}#set() has no implementation.`);
+    }
     get(context: object): boolean {
         const evalNode: EvaluateNode = {
             left: this.left.get(context),
@@ -373,11 +401,11 @@ export abstract class InfixOperators implements NodeExpression {
         };
         return this.callback(evalNode);
     }
+    entry(): string[] {
+        return [...this.left.entry(), ...this.right.entry()];
+    }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
-    }
-    set(context: object, value: any) {
-        throw new Error(`${this.constructor.name}#set() has no implementation.`);
     }
 }
 
@@ -424,6 +452,9 @@ export class AssignmentNode implements NodeExpression {
         const value = AssignmentNode.Evaluations[this.op](evalNode);
         this.set(context, value);
         return value;
+    }
+    entry(): string[] {
+        return [...this.left.entry(), ...this.right.entry()];
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
@@ -476,6 +507,9 @@ export class LogicalAssignmentNode implements NodeExpression {
     get(context: object) {
         return LogicalAssignmentNode.Evaluations[this.op](this, context);
     }
+    entry(): string[] {
+        return [...this.left.entry(), ...this.right.entry()];
+    }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
     }
@@ -489,7 +523,7 @@ export class ComparisonOperators extends InfixOperators {
         '==': (evalNode: EvaluateNode) => { return evalNode.left == evalNode.right; },
         '===': (evalNode: EvaluateNode) => { return evalNode.left === evalNode.right; },
         '!=': (evalNode: EvaluateNode) => { return evalNode.left != evalNode.right; },
-        '!===': (evalNode: EvaluateNode) => { return evalNode.left !== evalNode.right; },
+        '!==': (evalNode: EvaluateNode) => { return evalNode.left !== evalNode.right; },
 
         '>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
         '>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
@@ -598,6 +632,12 @@ export class RelationalOperators extends InfixOperators {
         }
         super(op, left, right, RelationalOperators.Evaluations[op]);
     }
+    /**
+     * the class Function is not going to be reported her.
+     */
+    entry(): string[] {
+        return this.left.entry();
+    }
 }
 
 export class ArrayCommaOperators extends InfixOperators {
@@ -640,6 +680,9 @@ export class PipelineOperator implements NodeExpression {
         let funCallBack = this.func.get(context) as Function;
         let value = funCallBack.call(context, this.param.get(context));
         return value;
+    }
+    entry(): string[] {
+        return [...this.func.entry(), ...this.param.entry()];
     }
     toString(): string {
         return `(${this.param.toString()}) |> (${this.func.toString()})`;

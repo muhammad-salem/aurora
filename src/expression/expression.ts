@@ -2,6 +2,7 @@
 export interface NodeExpression {
     set(context: object, value: any): any;
     get(context: object): any;
+    entry(): string[];
     toString(): string;
 }
 
@@ -18,6 +19,9 @@ export class ValueNode implements NodeExpression {
     get(context: object) {
         return this.value;
     }
+    entry(): string[] {
+        return [];
+    }
     toString(): string {
         if (typeof this.value === 'string') {
             return `"${this.value}"`;
@@ -33,7 +37,10 @@ export class PropertyNode implements NodeExpression {
         return value;
     }
     get(context: { [key: string]: any }) {
-        return context[this.property];;
+        return context[this.property];
+    }
+    entry(): string[] {
+        return [this.property];
     }
     toString(): string {
         return this.property;
