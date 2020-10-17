@@ -1,2 +1,2 @@
-export * from './string-parser.js';
-export * from './template-parser.js';
+export * from './node/html-parser.js';
+export * from './template/template-parser.js';
