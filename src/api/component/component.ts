@@ -1,16 +1,15 @@
 
-import { JsxAttrComponent, JSXRender } from '@aurorats/jsx';
-import { findByModelClassOrCreat, setBootstrapTagNameMetadata as setBootstrapTagNameMetadata } from '@aurorats/metadata';
+import { AuroraNode, AuroraRenderNode } from '@aurorats/jsx';
+import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@aurorats/metadata';
 import { findByTagName, Tag } from '@aurorats/element';
-import { htmlTemplateToJSXRender } from '@aurorats/html-parser';
+import { htmlParser, templateParser } from '@aurorats/html-parser';
 
 import { HTMLComponent } from './custom-element.js';
 import { dependencyInjector } from '../providers/injector.js';
 import { ClassRegistry } from '../providers/provider.js';
-import { toJsxAttrComponent } from '../parser/html-template-parser.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
-import { TypeOf } from '../utils/types.js';
+import { TypeOf } from '../utils/utils.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
@@ -65,7 +64,7 @@ export interface DirectiveRef<T> {
 
 export interface ComponentRef<T> {
 	selector: string;
-	template: JSXRender<T> | JsxAttrComponent;
+	template: AuroraNode | AuroraRenderNode<T>;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
@@ -171,15 +170,13 @@ export class Components {
 		componentRef.extend = findByTagName(opts.extend);
 
 		if (typeof componentRef.template === 'string' && componentRef.template) {
-			componentRef.template = toJsxAttrComponent(componentRef.template);
-			// componentRef.template = toJSXRender(componentRef.template);
-			// componentRef.template = htmlTemplateToJSXRender(componentRef.template);
+			componentRef.template = htmlParser.toAuroraRootNode(componentRef.template);
 		}
 
 		if (!componentRef.template && /template/g.test(componentRef.encapsulation)) {
 			const template = document.querySelector('#' + componentRef.selector);
 			if (template && template instanceof HTMLTemplateElement) {
-				componentRef.template = htmlTemplateToJSXRender(template);
+				componentRef.template = templateParser.parse(template);
 			} else {
 				// didn't find this template in 'index.html' document
 			}
