@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": true,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.suggest.statusBar.visible": true,
+    "editor.suggestSelection": "first",
+    "workbench.editor.highlightModifiedTabs": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "editor.suggest.insertMode": "replace",
+    "editor.suggest.localityBonus": true
+}
