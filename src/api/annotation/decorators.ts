@@ -1,5 +1,5 @@
-import { JsxAttrComponent, JSXRender } from '@aurorats/jsx';
-import { TypeOf } from '../utils/types.js';
+import { AuroraNode, AuroraRenderNode } from '@aurorats/jsx';
+import { TypeOf } from '../utils/utils.js';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
@@ -17,7 +17,13 @@ export interface PipeOptions {
 }
 
 export interface ComponentOptions<T = Function> {
+	/**
+	 * a tag name for the component,
+	 * if the tag name is valid custom element name, the view class will be a custom element,
+	 * otherwise an HTMLUnknownElement will be created
+	 */
 	selector: string;
+
 	/**
 	 * add html file url path to fetch,
 	 * templateUrl had propriety than template, and will override it.
@@ -39,13 +45,16 @@ export interface ComponentOptions<T = Function> {
 	 */
 	templateUrl?: TemplateUrl | string;
 	/**
-	 * template: typeof 'string' ==> html template,
-	 * 			 TypeOf 'JSXRender<T>' ==> JSX, create factory
+	 * template: typeof 'string' ==> html string,
+	 * 			 TypeOf 'AuroraRootRenderNode<T>' ==> JSX, create factory
 	 * 	if template === null || undefined ==> it had nothing to render, 
 	 * and may be inherit from an html element
+	 * 
+	 * 2 possible way to write a template, as inline string, represent a a valid html, 
+	 * or us aurora jsx factory 
 	 * 				
 	 */
-	template?: string | JsxAttrComponent | JSXRender<T>;
+	template?: string | AuroraNode | AuroraRenderNode<T>;
 	/**
 	 * style for this element
 	 */
