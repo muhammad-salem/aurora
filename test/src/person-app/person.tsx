@@ -1,6 +1,6 @@
 import {
-    Component, EventEmitter, HostBinding, HostListener,
-    Input, JsxFactory, OnInit, Optional, Output, SelfSkip, Service,
+    Aurora, Component, EventEmitter, HostBinding, HostListener,
+    Input, OnInit, Optional, Output, SelfSkip, Service,
     View, ViewChild, ViewChildren
 } from '@aurorats/core';
 
@@ -112,7 +112,7 @@ export class PersonModel implements OnInit {
             <form #form >
                 <input if="show" type="text" $value="$person.name" />
                 <input type="number" $value="$person.age" />
-                <input type="button" onclick={printPerson} value="Save" />
+                <input type="button" onClick={printPerson} value="Save" />
             </form >
         );
     }
