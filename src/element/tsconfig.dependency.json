@@ -1,0 +1,4 @@
+{
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
+	"references": []
+}

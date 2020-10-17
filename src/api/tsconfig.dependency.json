@@ -1,0 +1,20 @@
+{
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../element/tsconfig.json"
+		},
+		{
+			"path": "../expression/tsconfig.json"
+		},
+		{
+			"path": "../metadata/tsconfig.json"
+		},
+		{
+			"path": "../jsx/tsconfig.json"
+		},
+		{
+			"path": "../html-parser/tsconfig.json"
+		}
+	]
+}

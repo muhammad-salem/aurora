@@ -1,0 +1,41 @@
+{
+	"extends": "@aurorats/core/tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../element/tsconfig.json"
+		},
+		{
+			"path": "../expression/tsconfig.json"
+		},
+		{
+			"path": "../metadata/tsconfig.json"
+		},
+		{
+			"path": "../jsx/tsconfig.json"
+		},
+		{
+			"path": "../html-parser/tsconfig.json"
+		},
+		{
+			"path": "../api/tsconfig.json"
+		},
+		{
+			"path": "../directive/tsconfig.json"
+		},
+		{
+			"path": "../forms/tsconfig.json"
+		},
+		{
+			"path": "../http/tsconfig.json"
+		},
+		{
+			"path": "../pipe/tsconfig.json"
+		},
+		{
+			"path": "../router/tsconfig.json"
+		},
+		{
+			"path": "../types/tsconfig.json"
+		}
+	]
+}
