@@ -1,4 +1,7 @@
-import { AssignmentNode, NodeExpression, parseJSExpression } from '@aurorats/expression';
+import {
+	AssignmentNode, NodeExpression,
+	parseJSExpression
+} from '@aurorats/expression';
 import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
@@ -273,6 +276,12 @@ export class ComponentRender<T> {
 	initAttribute(element: HTMLElement, node: ElementNode): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
+				/**
+				 * <input id="23" name="person-name" onchange="onPersonNameChange($event)" />
+				 * <a onclick="onLinkClick()"></a>
+				 * <a onClick="onLinkClick()"></a>
+				 */
+				console.log('name', attr.attrName);
 				const isAttr = hasAttr(element, attr.attrName);
 				// this.initElementData(element, attr.attrName, attr.attrValue as string, isAttr);
 				if (isAttr) {
@@ -284,7 +293,24 @@ export class ComponentRender<T> {
 						element.setAttribute(attr.attrName, attr.attrValue as string);
 					}
 				} else {
-					Reflect.set(element, attr.attrName, attr.attrValue);
+					if (attr.attrName.startsWith('on') && typeof attr.attrValue === 'string') {
+						let func = parseJSExpression(attr.attrValue);
+						element.addEventListener(attr.attrName.substring(2), event => {
+							let contextProxy = new Proxy(this.view._model, {
+								get: (target: any, p: PropertyKey, receiver: any) => {
+									console.log(p);
+									if (p === '$event') {
+										return event;
+									}
+									Reflect.get(target, p, receiver);
+								}
+							});
+							func.get(contextProxy);
+						});
+					} else {
+						Reflect.set(element, attr.attrName, attr.attrValue);
+					}
+
 				}
 			});
 		}
@@ -295,12 +321,11 @@ export class ComponentRender<T> {
 				this.bind1Way(element, attr.attrName, attr.sourceValue);
 			});
 		}
-		if (node.outputs && false) {
+		if (node.outputs) {
 			node.outputs.forEach(event => {
 				let listener: Function;
 				/**
-				 * <a (click)="onClick()"></a>
-				 * <a onclick="onClick()"></a>
+				 * <a (click)="onLinkClick()"></a>
 				 * <input [(value)]="person.name" />
 				 * <input (value)="person.name = $event" />
 				 */
@@ -318,7 +343,6 @@ export class ComponentRender<T> {
 					listener = event.sourceHandler;
 				}
 				this.view.addEventListener(event.eventName as any, listener as any);
-
 			});
 		}
 		if (node.templateAttrs) {
