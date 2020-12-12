@@ -49,7 +49,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 			},
 			set(value: any) {
 				this._model[input.modelProperty] = value;
-				this._setAttributeNative(input.viewAttribute, value);
+				// this._setAttributeNative(input.viewAttribute, value);
 				// this._model.emitChangeModel(input.modelProperty);
 				if (parentProperty?.set) {
 					parentProperty.set.call(this, value);

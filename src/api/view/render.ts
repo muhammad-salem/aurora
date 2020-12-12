@@ -1,7 +1,4 @@
-import {
-	AssignmentNode, NodeExpression,
-	parseJSExpression
-} from '@aurorats/expression';
+import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression, PropertyNode } from '@aurorats/expression';
 import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
@@ -11,10 +8,7 @@ import { isTagNameNative, isValidCustomElementName } from '@aurorats/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
-import {
-	defineModel, isModel, Model,
-	subscribe1way, subscribe2way
-} from '../model/change-detection.js';
+import { defineModel, isModel, Model, SourceFollwerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import { dependencyInjector } from '../providers/injector.js';
 import { ClassRegistry } from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
@@ -34,7 +28,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 }
 
 interface PropertySource {
-	property: string, src: object, expression?: NodeExpression;
+	property: string, src: any, expression?: NodeExpression;
 }
 
 export class ComponentRender<T> {
@@ -318,6 +312,7 @@ export class ComponentRender<T> {
 		if (node.inputs) {
 			node.inputs.forEach(attr => {
 				//TODO check for attribute directive,find sources from expression
+				// this.bind2Way(element, attr.attrName, attr.sourceValue);
 				this.bind1Way(element, attr.attrName, attr.sourceValue);
 			});
 		}
@@ -417,39 +412,122 @@ export class ComponentRender<T> {
 		console.log(expNode.toString(), exp, expNode.entry(), expNode);
 	}
 
+	// bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string) {
+	// 	// this.__log(elementAttr);
+	// 	// this.__log(viewProperty);
+	// 	let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`);
+	// 	const propertySrc = this.getPropertySource(viewProperty);
+	// 	let context = {
+	// 		element: element,
+	// 		model: propertySrc.src
+	// 	};
+	// 	let callback1: SourceFollwerCallback = (stack: any[]) => {
+	// 		expNodeDown.get(context);
+	// 	};
+	// 	subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
+	// 	expNodeDown.get(context);
+	// }
+
 	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string) {
 		this.__log(elementAttr);
 		this.__log(viewProperty);
-		let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`);
-		const propertySrc = this.getPropertySource(viewProperty);
+
+		let thisElement = new PropertyNode('this');
+		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
+		let rightNode = parseJSExpression(viewProperty);
+		let forwardData = new AssignmentNode('=', leftNode, rightNode);
+
+		const entries = rightNode.entry().map(key => this.getPropertySource(key));
+
 		let context = {
-			element: element,
-			model: propertySrc.src
+			this: element,
+			// css: element.style,
+			// class: element.className,
+			model: this.view._model,
+			view: this.view,
+			// class: element.classList,
+			// for securtity resons
+			// window: window,
 		};
-		let callback1 = () => {
-			expNodeDown.get(context);
+		// let selfRender = this;
+		let proxyContext = new Proxy<typeof context>(context, {
+			get(target: typeof context, p: PropertyKey, receiver: any): any {
+				// const propertySrc = selfRender.getPropertySource(p as string);
+				if (p === 'this') {
+					return target.this;
+				}
+				const propertySrc = entries.find(src => src.property === p as string);
+				return propertySrc?.src[p];
+				// return entries[p as string].src[p as string];
+			},
+			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
+				const propertySrc = entries.find(src => src.property === p as string);
+				return Reflect.set(propertySrc?.src, p, value);
+			}
+		});
+
+		const callback1: SourceFollwerCallback = (stack: any[]) => {
+			forwardData.get(proxyContext);
 		};
-		subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
-		expNodeDown.get(context);
+
+		entries.forEach(propertySrc => {
+			subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
+		});
+
+		forwardData.get(proxyContext);
 	}
 
 	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string) {
+		this.__log(elementAttr);
+		this.__log(viewProperty);
 
-		let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`) as AssignmentNode;
-		let expNodeUp = new AssignmentNode('=', expNodeDown.right, expNodeDown.left);
-		const propertySrc = this.getPropertySource(viewProperty);
+		let thisElement = new PropertyNode('this');
+		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
+		let rightNode = parseJSExpression(viewProperty);
+		let forwardData = new AssignmentNode('=', leftNode, rightNode);
+		let backwardData = new AssignmentNode('=', rightNode, leftNode);
+
+		const entries = rightNode.entry().map(key => this.getPropertySource(key));
+
 		let context = {
-			element: element,
-			model: propertySrc.src
+			this: element,
+			css: element.style,
+			class: element.className,
+			model: this.view._model,
+			view: this.view,
+			// class: element.classList,
+			// for securtity resons
+			// window: window,
 		};
-		const callback2 = () => {
-			expNodeUp.get(context);
+		// let selfRender = this;
+		let proxyContext = new Proxy<typeof context>(context, {
+			get(target: typeof context, p: PropertyKey, receiver: any): any {
+				// const propertySrc = selfRender.getPropertySource(p as string);
+				if (p === 'this') {
+					return target.this;
+				}
+				const propertySrc = entries.find(src => src.property === p as string);
+				return propertySrc?.src[p];
+				// return entries[p as string].src[p as string];
+			},
+			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
+				const propertySrc = entries.find(src => src.property === p as string);
+				return Reflect.set(propertySrc?.src, p, value);
+			}
+		});
+
+		const callback1: SourceFollwerCallback = (stack: any[]) => {
+			forwardData.get(proxyContext);
 		};
-		const callback1 = () => {
-			expNodeDown.get(context);
+		const callback2: SourceFollwerCallback = (stack: any[]) => {
+			backwardData.get(proxyContext);
 		};
-		subscribe2way(propertySrc.src, propertySrc.property, element, elementAttr, callback1, callback2);
-		expNodeDown.get(context);
+
+		entries.forEach(propertySrc => {
+			subscribe2way(propertySrc.src, propertySrc.property, element, elementAttr, callback1, callback2);
+		});
+
+		forwardData.get(proxyContext);
 		const changeEventName = getChangeEventName(element, elementAttr);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {
