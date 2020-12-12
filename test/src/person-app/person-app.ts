@@ -10,6 +10,8 @@ export class PersonApp {
     @Input()
     appVersion: string = '20.9.29';
 
+    title = 'Testing Components';
+
     @Input()
     appName = 'testing framework';
 
