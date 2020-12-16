@@ -7,9 +7,9 @@
 
 <person-edit #personEdit [(person)]="person1" (save)="printPerson($event)"></person-edit>
 
-<progress-bar [(value)]="person2.age" min="0" max="100"></progress-bar>
+<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
 
-<progress-bar *if="person3.age !== 80" [(value)]="person4.age" min="0" max="100"></progress-bar>
+<progress-bar *if="person1.age > 35" [(value)]="person1.age" min="0" max="100"></progress-bar>
 
 <div class="row">
     <div class="col-3">
