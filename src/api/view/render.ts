@@ -122,9 +122,12 @@ export class ComponentRender<T> {
 		else if (Reflect.has(source, 'on' + eventName)) {
 			this.addNativeEventListener(source, eventName, eventCallback);
 		}
-		// else if (this.componentRef.encapsulation === 'template' && !this.basicView.hasParentComponent()) {
-		// 	this.addNativeEventListener(this.basicView, eventName, eventCallback);
+		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
+		// 	this.addNativeEventListener(this.view, eventName, eventCallback);
 		// }
+		else if (eventName in this.view._model) {
+			this.addNativeEventListener(this.view, eventName, eventCallback);
+		}
 	}
 
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
@@ -308,11 +311,16 @@ export class ComponentRender<T> {
 				}
 			});
 		}
-		// let twoWayBinding: string[] = [];
+
+		if (node.twoWayBinding) {
+			node.twoWayBinding.forEach(attr => {
+				//TODO check for attribute directive, find sources from expression
+				this.bind2Way(element, attr.attrName, attr.sourceValue);
+				// this.bind1Way(element, attr.attrName, attr.sourceValue);
+			});
+		}
 		if (node.inputs) {
 			node.inputs.forEach(attr => {
-				//TODO check for attribute directive,find sources from expression
-				// this.bind2Way(element, attr.attrName, attr.sourceValue);
 				this.bind1Way(element, attr.attrName, attr.sourceValue);
 			});
 		}
@@ -322,7 +330,10 @@ export class ComponentRender<T> {
 				/**
 				 * <a (click)="onLinkClick()"></a>
 				 * <input [(value)]="person.name" />
-				 * <input (value)="person.name = $event" />
+				 * <input (value)="person.name" />
+				 * <!-- <input (value)="person.name = $event" /> -->
+				 * 
+				 * TODO diff of event listener and back-way data binding
 				 */
 				if (typeof event.sourceHandler === 'string') {
 					let expression = parseJSExpression(event.sourceHandler);
