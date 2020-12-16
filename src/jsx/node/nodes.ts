@@ -100,6 +100,11 @@ export class BaseNode extends ParentNode {
     outputs: LiveEvent[];
 
     /**
+     * hold the name of attributes marked for 2 way data binding
+     */
+    twoWayBinding: LiveAttribute[];
+
+    /**
      * directive attribute
      */
     templateAttrs: LiveAttribute[];
@@ -132,21 +137,20 @@ export class BaseNode extends ParentNode {
         }
     }
 
+    addTwoWayBinding(eventName: string, handlerSource: string) {
+        if (this.twoWayBinding) {
+            this.twoWayBinding.push(new LiveAttribute(eventName, handlerSource));
+        } else {
+            this.twoWayBinding = [new LiveAttribute(eventName, handlerSource)];
+        }
+    }
+
     addTemplateAttr(attrName: string, valueSource: string) {
         if (this.templateAttrs) {
             this.templateAttrs.push(new LiveAttribute(attrName, valueSource));
         } else {
             this.templateAttrs = [new LiveAttribute(attrName, valueSource)];
         }
-    }
-
-    isTwoWayBinding(attr: string) {
-        if (this.inputs.find(prop => prop.attrName === attr)) {
-            if (this.outputs.find(prop => prop.eventName === attr)) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }
