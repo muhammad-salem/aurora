@@ -27,7 +27,7 @@ export class NodeParser {
 
     private propertyName: string;
     private propertyValue: string;
-    private propType: 'attr' | 'ref-name' | 'input' | 'output' | 'both';
+    private propType: 'attr' | 'ref-name' | 'input' | 'output' | 'two-way';
 
     parse(html: string)/*: AuroraNode*/ {
         this.reset();
@@ -202,7 +202,7 @@ export class NodeParser {
 
     private parseInputOutput(token: string) {
         if (/\(/.test(token)) {
-            this.propType = 'both';
+            this.propType = 'two-way';
             return this.parseInputOutput;
         }
         else if (/\)|\]|=/.test(token)) {
@@ -227,9 +227,8 @@ export class NodeParser {
                 case 'output':
                     this.currentNode.addOutput(this.propertyName, this.propertyValue);
                     break;
-                case 'both':
-                    this.currentNode.addInput(this.propertyName, this.propertyValue);
-                    this.currentNode.addOutput(this.propertyValue, this.propertyName);
+                case 'two-way':
+                    this.currentNode.addTwoWayBinding(this.propertyName, this.propertyValue);
                     break;
                 case 'ref-name':
                     this.currentNode.setTemplateRefName(this.propertyName, this.propertyValue);
@@ -337,34 +336,17 @@ export class HTMLParser {
                 if (node.attributes) {
                     attrs += node.attributes.map(attr => `${attr.attrName}="${attr.attrValue}"`).join(' ') + ' ';
                 }
-
-                if (node.inputs && node.outputs) {
-                    let twoWay: string[] = [];
-                    attrs += node.inputs.map(attr => {
-                        if (node.isTwoWayBinding(attr.attrName)) {
-                            twoWay.push(attr.attrName);
-                            return `[(${attr.attrName})]="${attr.sourceValue}"`;
-                        } else {
-                            return `[${attr.attrName}]="${attr.sourceValue}"`;
-                        }
-                    }).join(' ') + ' ';
-                    attrs += node.outputs.map(attr => {
-                        if (twoWay.includes(attr.eventName)) {
-                            return '';
-                        } else {
-                            return `(${attr.eventName})="${attr.sourceHandler}"`;
-                        }
-                    }).join(' ') + ' ';
+                if (node.twoWayBinding) {
+                    attrs += node.twoWayBinding.map(attr => `[(${attr.attrName})]="${attr.sourceValue}"`).join(' ').concat(' ');
                 }
-                else if (node.inputs) {
-                    attrs += node.inputs.map(attr => `[${attr.attrName}]="${attr.sourceValue}"`).join(' ') + ' ';
+                if (node.inputs) {
+                    attrs += node.inputs.map(attr => `[${attr.attrName}]="${attr.sourceValue}"`).join(' ').concat(' ');
                 }
-                else if (node.outputs) {
-                    attrs += node.outputs.map(attr => `(${attr.eventName})="${attr.sourceHandler}"`).join(' ') + ' ';
+                if (node.outputs) {
+                    attrs += node.outputs.map(attr => `(${attr.eventName})="${attr.sourceHandler}"`).join(' ').concat(' ');
                 }
-
                 if (node.templateAttrs) {
-                    attrs += node.templateAttrs.map(attr => `${attr.attrName}="${attr.sourceValue}"`).join(' ') + ' ';
+                    attrs += node.templateAttrs.map(attr => `${attr.attrName}="${attr.sourceValue}"`).join(' ').concat(' ');
                 }
                 if (isEmptyElement(node.tagName)) {
                     if (attrs) {
