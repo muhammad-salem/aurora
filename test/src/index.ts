@@ -9,6 +9,8 @@ export * from './app-root/app-root-component.js';
 export * from './person-app/person';
 export * from './person-app/person-app';
 
+export * from './two-way/binding-2-way';
+
 import { AppRoot } from './app-root/app-root-component';
 
 // let appRoot = new AppRoot();
@@ -19,6 +21,7 @@ import { AppRoot } from './app-root/app-root-component';
 let appRoot = document.getElementById('app-root') as HTMLComponent<AppRoot>;
 
 appRoot._model.appSelector = [
-    'person-app'
+    'person-app',
+    'bind-2way'
 ];
 document.body.append(appRoot);
