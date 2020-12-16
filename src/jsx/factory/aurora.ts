@@ -131,15 +131,13 @@ export namespace Aurora {
         else if (attrName.startsWith('[(')) {
             // [(attr)]="modelProperty"
             attrName = attrName.substring(2, attrName.length - 2);
-            element.addInput(attrName, value as string);
-            element.addOutput(attrName, value as string);
+            element.addTwoWayBinding(attrName, value as string);
         }
         else if (attrName.startsWith('$') && typeof value === 'string' && value.startsWith('$')) {
             // $attr="$viewProperty" 
             attrName = attrName.substring(1);
             value = value.substring(1);
-            element.addInput(attrName, value as string);
-            element.addOutput(attrName, value as string);
+            element.addTwoWayBinding(attrName, value as string);
         }
         else if (attrName.startsWith('[')) {
             // [attr]="modelProperty"
