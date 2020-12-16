@@ -164,8 +164,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 
-	createDirective(directive: DirectiveNode): Comment {
-		let comment = document.createComment(`${directive.directiveName}=${directive.directiveValue}`);
+	createDirective(directive: DirectiveNode, comment: Comment): void {
 		const directiveRef = dependencyInjector.getInstance(ClassRegistry).getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector as '*if'
@@ -181,7 +180,6 @@ export class ComponentRender<T> {
 		} else {
 			// didn't fond directive or it didn't defined yet.
 		}
-		return comment;
 	}
 
 	createComment(comment: CommentNode): Comment {
@@ -213,7 +211,9 @@ export class ComponentRender<T> {
 		if (child instanceof ElementNode) {
 			parent.append(this.createElement(child));
 		} else if (child instanceof DirectiveNode) {
-			parent.append(this.createDirective(child));
+			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
+			parent.append(comment);
+			this.createDirective(child, comment);
 		} else if (child instanceof TextNode) {
 			parent.append(this.createText(child));
 		} else if (child instanceof LiveText) {
