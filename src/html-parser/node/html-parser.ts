@@ -23,6 +23,9 @@ export class NodeParser {
         return this.stackTrace[this.stackTrace.length - 1] as ElementNode;
     }
 
+    private commentOpenCount = 0;
+    private commentCloseCount = 0;
+
     private tempText: string;
 
     private propertyName: string;
@@ -51,6 +54,8 @@ export class NodeParser {
         this.childStack = [];
         this.stackTrace = [];
         this.propType = 'attr';
+        this.commentOpenCount = 0;
+        this.commentCloseCount = 0;
         this.stateFn = this.parseText;
         this.propertyName = this.propertyValue = this.tempText = '';
     }
@@ -73,6 +78,8 @@ export class NodeParser {
             return this.parseCloseTag;
         }
         if (token === '!') {
+            this.commentOpenCount = 0;
+            this.commentCloseCount = 0;
             return this.parseComment;
         }
         this.index--;
@@ -81,13 +88,26 @@ export class NodeParser {
 
     private parseComment(token: string) {
         if (token === '-') {
+            if (this.commentOpenCount < 2) {
+                this.commentOpenCount++;
+            } else {
+                this.commentCloseCount++;
+            }
             return this.parseComment;
         }
-        else if (token === '>') {
+        else if (token === '>' && this.commentCloseCount === 2) {
             this.stackTrace.push(new CommentNode(this.tempText.trim()));
             this.popElement();
             this.tempText = '';
+            this.commentOpenCount = 0;
+            this.commentCloseCount = 0;
             return this.parseText;
+        }
+        if (this.commentCloseCount > 0) {
+            for (let i = 0; i < this.commentCloseCount; i++) {
+                this.tempText += '-';
+            }
+            this.commentCloseCount = 0;
         }
         this.tempText += token;
         return this.parseComment;
