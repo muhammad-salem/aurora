@@ -16,7 +16,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	element: HTMLElement;
 
 	onInit(): void {
-		console.log(`${this.directive.directiveName}="${this.directive.directiveValue}"`);
+		// console.log(`${this.directive.directiveName}="${this.directive.directiveValue}"`);
 		let conditionNode = parseJSExpression(this.directive.directiveValue);
 		const entries = conditionNode.entry().map(key => this.render.getPropertySource(key));
 		let context = {};
