@@ -1,13 +1,17 @@
-# Aurora Testing
+# Aurora Teat Package
 
-Aurora testing, all the test apps, used while building this lib
+Test App used to test Aurora while development
 
-## `Install`
-
-```bash
-npm i --save @aurorats/testing
-```
+#### how to build test app
 
 ```bash
-yarn add @aurorats/testing
+git clone https://github.com/aurorats/aurora.git
+cd aurora
+yarn install
+yarn clean && tsc -b -v test/
+cd test
+esmpack
+cd public
+# npm i -g serve
+serve
 ```
