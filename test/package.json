@@ -22,11 +22,10 @@
   },
   "devDependencies": {
     "@aurorats/esmpack": "^0.1.8",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.3"
   },
   "scripts": {
     "build": "tsc --build --verbose",
     "esmpack:watch": "esmpack -w"
-  },
-  "gitHead": "e54bf0309243bcd0797af42547f6438990eed5a3"
+  }
 }
