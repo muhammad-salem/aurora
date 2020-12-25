@@ -193,12 +193,17 @@ export class ComponentRender<T> {
 	createLiveText(text: LiveText): Text {
 		let expression = parseJSExpression(text.textValue);
 		let textValue = expression.get(this.view._model);
-		let live = new Text(textValue);
+		let liveText = new Text(textValue);
 		//TODO watch model change for expression
-		// this.watchModelChange(live, 'textContent', expression);
-		// this.attrTemplateHandler(element, tempAttr.attrName, `{{${text.textValue}}}`);
-		this.bind1Way(live, 'textContent', text.textValue);
-		return live;
+		// this.bind1Way(live, 'textContent', text.textValue);
+		const callback1: SourceFollwerCallback = (stack: any[]) => {
+			liveText.textContent = expression.get(this.view._model);
+		};
+		const entries = expression.entry().map(key => this.getPropertySource(key));
+		entries.forEach(propertySrc => {
+			subscribe1way(propertySrc.src, propertySrc.property, liveText, 'textContent', callback1);
+		});
+		return liveText;
 	}
 
 	createDocumentFragment(node: FragmentNode): DocumentFragment {
