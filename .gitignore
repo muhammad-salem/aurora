@@ -112,3 +112,4 @@ dist
 .idea
 .verdaccio
 **/web_modules/
+yarn.lock
