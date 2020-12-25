@@ -210,10 +210,12 @@ export class NodeParser {
         } else if (/\s/.test(token)) {
             this.currentNode.setTemplateRefName(this.tempText, '');
             this.propertyName = this.tempText = '';
+            this.propType = 'attr';
             return this.parsePropertyName;
         } else if (/>/.test(token)) {
             this.currentNode.setTemplateRefName(this.tempText, '');
             this.propertyName = this.tempText = '';
+            this.propType = 'attr';
             return this.parseText;
         }
         this.tempText += token;
