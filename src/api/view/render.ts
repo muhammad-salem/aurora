@@ -27,7 +27,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 	return elementAttr;
 }
 
-interface PropertySource {
+export interface PropertySource {
 	property: string, src: any, expression?: NodeExpression;
 }
 
@@ -164,7 +164,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 
-	createDirective(directive: DirectiveNode, comment: Comment): void {
+	createDirective(directive: DirectiveNode, comment: Comment, additionalSources?: PropertySource[]): void {
 		const directiveRef = dependencyInjector.getInstance(ClassRegistry).getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector as '*if'
@@ -190,43 +190,33 @@ export class ComponentRender<T> {
 		return new Text(text.textValue);
 	}
 
-	createLiveText(text: LiveText): Text {
-		let expression = parseJSExpression(text.textValue);
-		let textValue = expression.get(this.view._model);
-		let liveText = new Text(textValue);
-		//TODO watch model change for expression
-		// this.bind1Way(live, 'textContent', text.textValue);
-		const callback1: SourceFollwerCallback = (stack: any[]) => {
-			liveText.textContent = expression.get(this.view._model);
-		};
-		const entries = expression.entry().map(key => this.getPropertySource(key));
-		entries.forEach(propertySrc => {
-			subscribe1way(propertySrc.src, propertySrc.property, liveText, 'textContent', callback1);
-		});
+	createLiveText(text: LiveText, additionalSources?: PropertySource[]): Text {
+		const liveText = new Text('');
+		this.bind1Way(liveText, 'textContent', text.textValue, additionalSources);
 		return liveText;
 	}
 
-	createDocumentFragment(node: FragmentNode): DocumentFragment {
+	createDocumentFragment(node: FragmentNode, additionalSources?: PropertySource[]): DocumentFragment {
 		let fragment = document.createDocumentFragment();
-		node.children.forEach(child => this.appendChildToParent(fragment, child));
+		node.children.forEach(child => this.appendChildToParent(fragment, child), additionalSources);
 		return fragment;
 	}
 
-	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode) {
+	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode, additionalSources?: PropertySource[]) {
 		if (child instanceof ElementNode) {
-			parent.append(this.createElement(child));
+			parent.append(this.createElement(child, additionalSources));
 		} else if (child instanceof DirectiveNode) {
 			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
 			parent.append(comment);
-			this.createDirective(child, comment);
+			this.createDirective(child, comment, additionalSources);
 		} else if (child instanceof TextNode) {
 			parent.append(this.createText(child));
 		} else if (child instanceof LiveText) {
-			parent.append(this.createLiveText(child));
+			parent.append(this.createLiveText(child, additionalSources));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
 		} else if (child instanceof FragmentNode) {
-			parent.append(this.createDocumentFragment(child));
+			parent.append(this.createDocumentFragment(child, additionalSources));
 		}
 	}
 
@@ -257,7 +247,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	createElement(node: ElementNode): HTMLElement {
+	createElement(node: ElementNode, additionalSources?: PropertySource[]): HTMLElement {
 		let element: HTMLElement;
 		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
 			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
@@ -265,17 +255,17 @@ export class ComponentRender<T> {
 			element = this.createElementByTagName(node);
 		}
 
-		this.initAttribute(element, node);
+		this.initAttribute(element, node, additionalSources);
 
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child);
+				this.appendChildToParent(element, child, additionalSources);
 			}
 		}
 		return element;
 	}
 
-	initAttribute(element: HTMLElement, node: ElementNode): void {
+	initAttribute(element: HTMLElement, node: ElementNode, additionalSources?: PropertySource[]): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
@@ -283,7 +273,7 @@ export class ComponentRender<T> {
 				 * <a onclick="onLinkClick()"></a>
 				 * <a onClick="onLinkClick()"></a>
 				 */
-				console.log('name', attr.attrName);
+				// console.log('name', attr.attrName);
 				const isAttr = hasAttr(element, attr.attrName);
 				// this.initElementData(element, attr.attrName, attr.attrValue as string, isAttr);
 				if (isAttr) {
@@ -300,11 +290,11 @@ export class ComponentRender<T> {
 						element.addEventListener(attr.attrName.substring(2), event => {
 							let contextProxy = new Proxy(this.view._model, {
 								get: (target: any, p: PropertyKey, receiver: any) => {
-									console.log(p);
+									// console.log(p);
 									if (p === '$event') {
 										return event;
 									}
-									Reflect.get(target, p, receiver);
+									return Reflect.get(target, p, receiver);
 								}
 							});
 							func.get(contextProxy);
@@ -320,13 +310,12 @@ export class ComponentRender<T> {
 		if (node.twoWayBinding) {
 			node.twoWayBinding.forEach(attr => {
 				//TODO check for attribute directive, find sources from expression
-				this.bind2Way(element, attr.attrName, attr.sourceValue);
-				// this.bind1Way(element, attr.attrName, attr.sourceValue);
+				this.bind2Way(element, attr.attrName, attr.sourceValue, additionalSources);
 			});
 		}
 		if (node.inputs) {
 			node.inputs.forEach(attr => {
-				this.bind1Way(element, attr.attrName, attr.sourceValue);
+				this.bind1Way(element, attr.attrName, attr.sourceValue, additionalSources);
 			});
 		}
 		if (node.outputs) {
@@ -378,7 +367,7 @@ export class ComponentRender<T> {
 		return window;
 	}
 
-	getPropertySource(viewProperty: string): PropertySource {
+	getPropertySource(viewProperty: string): PropertySource | undefined {
 		let input = this.view.getInputStartWith(viewProperty);
 		let dotIndex = viewProperty.indexOf('.');
 		let modelProperty = viewProperty;
@@ -404,11 +393,16 @@ export class ComponentRender<T> {
 			// }
 			return { property: modelProperty, src: this.view };
 		}
-		return { property: modelProperty, src: this.view._model };
+		else if (Reflect.has(this.view._model, parent)) {
+			return { property: modelProperty, src: this.view._model };
+		}
 	}
 
 	initElementData(element: HTMLElement, elementAttr: string, viewProperty: string, isAttr: boolean) {
 		const propertySrc = this.getPropertySource(viewProperty);
+		if (!propertySrc) {
+			return;
+		}
 		let exp: string;
 		if (isAttr) {
 			exp = `element.setAttribute('${elementAttr}', model.${viewProperty})`;
@@ -423,58 +417,36 @@ export class ComponentRender<T> {
 		expNodeDown.get(context);
 	}
 
-	__log(exp: string) {
-		let expNode = parseJSExpression(exp);
-		console.log(expNode.toString(), exp, expNode.entry(), expNode);
-	}
 
-	// bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string) {
-	// 	// this.__log(elementAttr);
-	// 	// this.__log(viewProperty);
-	// 	let expNodeDown = parseJSExpression(`element.${elementAttr} = model.${viewProperty}`);
-	// 	const propertySrc = this.getPropertySource(viewProperty);
-	// 	let context = {
-	// 		element: element,
-	// 		model: propertySrc.src
-	// 	};
-	// 	let callback1: SourceFollwerCallback = (stack: any[]) => {
-	// 		expNodeDown.get(context);
-	// 	};
-	// 	subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
-	// 	expNodeDown.get(context);
-	// }
-
-	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string) {
-		this.__log(elementAttr);
-		this.__log(viewProperty);
-
+	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string, additionalSources?: PropertySource[]) {
 		let thisElement = new PropertyNode('this');
 		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
 		let rightNode = parseJSExpression(viewProperty);
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 
-		const entries = rightNode.entry().map(key => this.getPropertySource(key));
-
-		let context = {
-			this: element,
-			// css: element.style,
-			// class: element.className,
-			model: this.view._model,
-			view: this.view,
-			// class: element.classList,
-			// for securtity resons
-			// window: window,
-		};
-		// let selfRender = this;
-		let proxyContext = new Proxy<typeof context>(context, {
+		const entries = rightNode.entry().map(key => this.getPropertySource(key)).filter(source => source) as PropertySource[];
+		if (additionalSources) {
+			entries.push(...additionalSources);
+		}
+		const context = Object.create(null);
+		const thisRender = this;
+		const proxyContext = new Proxy<typeof context>(context, {
 			get(target: typeof context, p: PropertyKey, receiver: any): any {
-				// const propertySrc = selfRender.getPropertySource(p as string);
 				if (p === 'this') {
-					return target.this;
+					return element;
 				}
-				const propertySrc = entries.find(src => src.property === p as string);
-				return propertySrc?.src[p];
-				// return entries[p as string].src[p as string];
+				let propertySrc = entries.find(src => src.property === p as string);
+				if (!propertySrc) {
+					propertySrc = thisRender.getPropertySource(p as string);
+					if (!propertySrc) {
+						// TODO should return value
+						return;
+					}
+				}
+				if (p in propertySrc.src) {
+					return propertySrc.src[p];
+				}
+				return propertySrc.src;
 			},
 			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
 				const propertySrc = entries.find(src => src.property === p as string);
@@ -493,9 +465,7 @@ export class ComponentRender<T> {
 		forwardData.get(proxyContext);
 	}
 
-	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string) {
-		this.__log(elementAttr);
-		this.__log(viewProperty);
+	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string, additionalSources?: PropertySource[]) {
 
 		let thisElement = new PropertyNode('this');
 		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
@@ -503,28 +473,29 @@ export class ComponentRender<T> {
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 		let backwardData = new AssignmentNode('=', rightNode, leftNode);
 
-		const entries = rightNode.entry().map(key => this.getPropertySource(key));
-
-		let context = {
-			this: element,
-			css: element.style,
-			class: element.className,
-			model: this.view._model,
-			view: this.view,
-			// class: element.classList,
-			// for securtity resons
-			// window: window,
-		};
-		// let selfRender = this;
-		let proxyContext = new Proxy<typeof context>(context, {
+		const entries = rightNode.entry().map(key => this.getPropertySource(key)).filter(source => source) as PropertySource[];
+		if (additionalSources) {
+			entries.push(...additionalSources);
+		}
+		const context = Object.create(null);
+		const thisRender = this;
+		const proxyContext = new Proxy<typeof context>(context, {
 			get(target: typeof context, p: PropertyKey, receiver: any): any {
-				// const propertySrc = selfRender.getPropertySource(p as string);
 				if (p === 'this') {
-					return target.this;
+					return element;
 				}
-				const propertySrc = entries.find(src => src.property === p as string);
-				return propertySrc?.src[p];
-				// return entries[p as string].src[p as string];
+				let propertySrc = entries.find(src => src.property === p as string);
+				if (!propertySrc) {
+					propertySrc = thisRender.getPropertySource(p as string);
+					if (!propertySrc) {
+						// TODO should return value
+						return;
+					}
+				}
+				if (p in propertySrc.src) {
+					return propertySrc.src[p];
+				}
+				return propertySrc.src;
 			},
 			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
 				const propertySrc = entries.find(src => src.property === p as string);
@@ -573,7 +544,7 @@ export class ComponentRender<T> {
 		}
 		const propSrc: { [match: string]: PropertySource } = {};
 		result.forEach(match => {
-			propSrc[match[0]] = this.getPropertySource(match[1]);
+			propSrc[match[0]] = this.getPropertySource(match[1]) as PropertySource;
 			propSrc[match[0]].expression = parseJSExpression(match[1]);
 		});
 		const handler = () => {
