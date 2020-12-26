@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/element",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Aurora element, hold info about HTMLElements class, attributes and tag name",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",

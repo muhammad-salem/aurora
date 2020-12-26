@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/test",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Aurora test, all the test apps, used while building this lib",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
@@ -16,7 +16,7 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@aurorats/core": "^0.1.11",
+    "@aurorats/core": "^0.1.12",
     "bootstrap": "^5.0.0-alpha1",
     "tslib": "^2.0.3"
   },

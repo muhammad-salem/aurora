@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/forms",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Aurora forms, deal with input elements and form",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/api": "^0.1.11",
+    "@aurorats/api": "^0.1.12",
     "tslib": "^2.0.3"
   },
   "devDependencies": {

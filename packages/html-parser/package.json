@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/html-parser",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Aurora HTML parser, parse an html string or file to jsx component",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
@@ -15,8 +15,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/element": "^0.1.11",
-    "@aurorats/jsx": "^0.1.11"
+    "@aurorats/element": "^0.1.12",
+    "@aurorats/jsx": "^0.1.12"
   },
   "devDependencies": {
     "typescript": "^4.1.3"

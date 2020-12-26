@@ -1,6 +1,6 @@
 {
   "name": "@aurorats/pipe",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Aurora pipe, build-in pipes for aurora lib, like json, translate, async, etc...",
   "license": "MIT",
   "homepage": "https://github.com/aurorats/aurora",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/api": "^0.1.11",
+    "@aurorats/api": "^0.1.12",
     "tslib": "^2.0.3"
   },
   "devDependencies": {
