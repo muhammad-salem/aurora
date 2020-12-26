@@ -1,8 +1,7 @@
 import { ElementNode } from '@aurorats/jsx';
 import {
-	Directive, OnInit,
-	SourceFollwerCallback,
-	StructuralDirective, subscribe1way
+	Directive, OnInit, PropertySource,
+	SourceFollwerCallback, StructuralDirective, subscribe1way
 } from '@aurorats/api';
 import { parseJSExpression } from '@aurorats/expression';
 
@@ -16,11 +15,10 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	element: HTMLElement;
 
 	onInit(): void {
-		// console.log(`${this.directive.directiveName}="${this.directive.directiveValue}"`);
-		let conditionNode = parseJSExpression(this.directive.directiveValue);
-		const entries = conditionNode.entry().map(key => this.render.getPropertySource(key));
-		let context = {};
-		let proxyContext = new Proxy<typeof context>(context, {
+		const conditionNode = parseJSExpression(this.directive.directiveValue);
+		const entries = conditionNode.entry().map(key => this.render.getPropertySource(key)).filter(source => source) as PropertySource[];
+		const context = {};
+		const proxyContext = new Proxy<typeof context>(context, {
 			get(target: typeof context, p: PropertyKey, receiver: any): any {
 				const propertySrc = entries.find(src => src.property === p as string);
 				return propertySrc?.src[p];
