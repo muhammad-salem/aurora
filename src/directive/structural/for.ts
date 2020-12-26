@@ -36,12 +36,31 @@ class ItemOfComponent {
 }
 
 @Directive({
-    selector: '*for, [forOf]',
+    selector: '*for',
 })
 export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 
+    lastElement: HTMLElement | Comment;
+
     onInit(): void {
-        console.log('ForDirective#onInit()');
+        console.log(`${this.directive.directiveName}="${this.directive.directiveValue}"`);
+
+        // this.lastElement = this.comment;
+
+        // // hard coded example 'let person of people'
+
+        // let arrayExpression = parseJSExpression('people');
+
+        // let array = arrayExpression.get(this.render.view._model) as any[];
+        // for (const item of array) {
+        //     const additionalSources: PropertySource[] = [{
+        //         property: 'person',
+        //         src: item
+        //     }];
+        //     const element = this.render.createElement(this.directive.children[0] as ElementNode, additionalSources);
+        //     this.lastElement.after(element);
+        //     this.lastElement = element;
+        // }
     }
 
 }
