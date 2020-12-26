@@ -74,7 +74,7 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 | Features | Aurora |
 | ------- | ------- |
 | ES Module | ✓ |
-| JavaScript | TO:DO |
+| JavaScript API | TO:DO |
 | Dependency Injection |  TO:DO |
 | Component| ✓ |
 | Directives | ✓ |
@@ -300,3 +300,5 @@ cd aurora
 yarn install
 yarn build
 ```
+
+see test app for full example https://github.com/aurorats/aurora/tree/master/test

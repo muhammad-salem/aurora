@@ -1,4 +1,22 @@
-# Aurora Core
+# Aurora
+
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![LICENSE][license-img]][license-url]
+![npm-dependencies][npm-dep-url]
+[![lerna][lerna-img]][lerna-url]
+![GitHub contributors][contributors]
+
+[npm-image]: https://img.shields.io/npm/v/@aurorats/core.svg
+[npm-url]: https://npmjs.org/package/@aurorats/core
+[downloads-image]: https://img.shields.io/npm/dt/@aurorats/core
+[downloads-url]: https://npmjs.org/package/@aurorats/core
+[license-img]: https://img.shields.io/github/license/aurorats/aurora
+[license-url]: https://github.com/aurorats/aurora/blob/master/LICENSE
+[npm-dep-url]: https://img.shields.io/david/aurorats/aurora.svg?maxAge=2592000
+[lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
+[lerna-url]: https://lerna.js.org/
+[contributors]: https://img.shields.io/github/contributors/aurorats/aurora
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
  - Template can be a JSX template or  HTML template.
@@ -18,6 +36,22 @@ npm i --save @aurorats/core
 yarn add @aurorats/core
 ```
 
+in your `tsconfig.json` add 
+
+```json
+{
+    "extends": "@aurorats/core/tsconfig.compilerOption.json",
+}
+```
+
+in your `index.ts` file add type reference for `@aurorats/types`
+
+```ts
+/// <reference types="@aurorats/types" />
+```
+
+see test for more help [test](https://github.com/aurorats/aurora/tree/master/test)
+
 ## 'HTML Template' and 'JSX' Features
 
 | Support | HTML Template| JSX |
@@ -35,12 +69,12 @@ yarn add @aurorats/core
 | camelCase Property Naming | ✓ | ✓ |
 | lowercase for root element Property Naming | ✓ | ✓ |
 
-## Libary Features
+## Library Features
 
 | Features | Aurora |
 | ------- | ------- |
 | ES Module | ✓ |
-| JavaScript | TO:DO |
+| JavaScript API | TO:DO |
 | Dependency Injection |  TO:DO |
 | Component| ✓ |
 | Directives | ✓ |
@@ -84,7 +118,7 @@ yarn add @aurorats/core
 | [Extending native HTML elements][extend-native] | ✓ |
 | [Extending a Custom Element][extend-custom] | TO:DO |
 | [Two Component On Same Model Class][two-component] | ✓ |
-| [Two Component Share Same Model Instanse][two-component] | TO:DO |
+| [Two Component Share Same Model Instance][two-component] | TO:DO |
 
 ## Shadow DOM standards
 
@@ -100,7 +134,7 @@ yarn add @aurorats/core
 | Features | Aurora |
 | ------- | ------- |
 | [Load template by ID from document][template-id] | ✓ |
-| As Normal Cutom Element | ✓ |
+| As Normal Custom Element | ✓ |
 | As Shadow DOM Element | ✓ |
 
 
@@ -123,7 +157,7 @@ yarn add @aurorats/core
 
 ### `[JSX and HTML] -- template parser example`
 
-``` typescript
+```tsx
 
 export interface DataModel {
     name: string;
@@ -243,7 +277,7 @@ export class RootApp implements OnInit {
     }
 
     saveAction(data: any) {
-        console.log('tage: rootApp', data);
+        console.log('tag: rootApp', data);
     }
 
 }
@@ -251,12 +285,12 @@ export class RootApp implements OnInit {
 
 in index.html add:
 
- ```html
+```html
     <body>
         <root-app></root-app>
         <script type="module" src="path-to-main-file/index.js"></script>
     </body>
- ```
+```
 
 #### how to build
 
@@ -266,3 +300,5 @@ cd aurora
 yarn install
 yarn build
 ```
+
+see test app for full example https://github.com/aurorats/aurora/tree/master/test
