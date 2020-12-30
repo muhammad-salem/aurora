@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@aurorats/core": "^0.1.12",
-    "bootstrap": "^5.0.0-alpha1",
+    "bootstrap": "^v5.0.0-beta1",
     "tslib": "^2.0.3"
   },
   "devDependencies": {
