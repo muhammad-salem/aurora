@@ -9,11 +9,11 @@ import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
 import { defineModel, isModel, Model, SourceFollwerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
-import { dependencyInjector } from '../providers/injector.js';
-import { ClassRegistry } from '../providers/provider.js';
+import ClassRegistryProvider from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { ElementMutation } from './mutation.js';
+import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 	if (elementAttr === 'value') {
@@ -111,9 +111,7 @@ export class ComponentRender<T> {
 			source = this.view;
 		}
 		const sourceModel = Reflect.get(source, '_model');
-		const output = dependencyInjector
-			.getInstance(ClassRegistry)
-			.hasOutput(sourceModel, eventName);
+		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
 		if (output) {
 			(sourceModel[(output as PropertyRef).modelProperty] as EventEmitter<any>).subscribe((value: any) => {
 				eventCallback.call(sourceModel, value);
@@ -165,7 +163,7 @@ export class ComponentRender<T> {
 	}
 
 	createDirective(directive: DirectiveNode, comment: Comment, additionalSources?: PropertySource[]): void {
-		const directiveRef = dependencyInjector.getInstance(ClassRegistry).getDirectiveRef<T>(directive.directiveName);
+		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector as '*if'
 			const structural = new directiveRef.modelClass(this, comment, directive);
