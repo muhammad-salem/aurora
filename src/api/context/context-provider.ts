@@ -1,8 +1,18 @@
-
-
 export type ContextDescriptorRef = { [key: string]: any };
 
-export class ContextProvider<T extends ContextDescriptorRef> {
+export interface ContextProvider<T> {
+    next?: ContextProvider<any>;
+    getContext(entityName: string): ContextProvider<any> | undefined;
+    getProvider(entityName: string): {} | undefined;
+}
+
+export function isContextProvider<T>(obj: any): obj is ContextProvider<T> {
+    return Reflect.has(obj, 'context')
+        && Reflect.has(obj.__proto__, 'getContext')
+        && Reflect.has(obj.__proto__, 'getProvider');
+}
+
+export class ContextProviderImpl<T extends ContextDescriptorRef> implements ContextProvider<T>{
     constructor(public context: T, public next?: ContextProvider<any>) { }
     getContext(entityName: string): ContextProvider<any> | undefined {
         if (entityName in this.context) {
@@ -27,20 +37,14 @@ export class ContextProvider<T extends ContextDescriptorRef> {
     }
 }
 
-function isContextProvider<T>(obj: any): obj is ContextProvider<T> {
-    return Reflect.has(obj, 'context')
-        && Reflect.has(obj.__proto__, 'getContext')
-        && Reflect.has(obj.__proto__, 'getProvider');
-}
-
-export function createContextProviders(...providers: ContextDescriptorRef[]): ContextProvider<ContextDescriptorRef> {
+export function createContextProviders<T>(...providers: ContextDescriptorRef[]): ContextProvider<T> {
     if (!providers || providers.length === 0) {
-        return new ContextProvider(window);
+        return new ContextProviderImpl(window);
     }
-    let lastContext = new ContextProvider(providers[0]);
+    let lastContext = new ContextProviderImpl(providers[0]);
     for (let i = 1; i < providers.length; i++) {
         const element = providers[i];
-        lastContext = new ContextProvider(element, lastContext);
+        lastContext = new ContextProviderImpl(element, lastContext);
     }
     return lastContext;
 }
@@ -48,7 +52,7 @@ export function createContextProviders(...providers: ContextDescriptorRef[]): Co
 export function appendContextProviders(lastContext: ContextProvider<ContextDescriptorRef>, ...providers: ContextDescriptorRef[]): ContextProvider<ContextDescriptorRef> {
     for (let i = 0; i < providers.length; i++) {
         const element = providers[i];
-        lastContext = new ContextProvider(element, lastContext);
+        lastContext = new ContextProviderImpl(element, lastContext);
     }
     return lastContext;
 }
@@ -60,13 +64,13 @@ export function getContext(provider: ContextDescriptorRef | ContextProvider<Cont
         }
         return provider;
     } else {
-        return new ContextProvider(provider, next);
+        return new ContextProviderImpl(provider, next);
     }
 }
 
 export function mergeContextProviders(...providers: (ContextDescriptorRef | ContextProvider<ContextDescriptorRef>)[]): ContextProvider<ContextDescriptorRef> {
     if (!providers || providers.length === 0) {
-        return new ContextProvider(window);
+        return new ContextProviderImpl(window);
     }
     let lastContext = getContext(providers[0]);
     for (let i = 1; i < providers.length; i++) {
@@ -74,4 +78,3 @@ export function mergeContextProviders(...providers: (ContextDescriptorRef | Cont
     }
     return lastContext;
 }
-
