@@ -1,6 +1,6 @@
 import { PropertyNode } from '@aurorats/expression';
-import { createContextProviders } from '../context/context-provider.js';
+import { ContextProviderImpl } from '../context/context-provider.js';
 
-export const WindowContextProvider = createContextProviders<Window>(window);
+export const WINDOW_CONTEXT_PROVIDER = new ContextProviderImpl<Window>(window);
 
-export const ThisNode = new PropertyNode('this');
+export const THIS_PROPERTY = new PropertyNode('this');
