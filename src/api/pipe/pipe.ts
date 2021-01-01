@@ -32,7 +32,7 @@ export class PipeContextProvider<T extends ContextDescriptorRef, U extends Conte
             this.pipeCacheMap.set(pipeRef.name, cachedPipe);
             return cachedPipe.transform.bind(cachedPipe);
         }
-        throw new Error("Pipe Not Found");
+        throw new Error(`no pipe found for ${entityName}.`);
     }
 }
 
