@@ -1,5 +1,4 @@
-import { WindowContextProvider } from '../global/global-constant.js';
-import { ContextProvider } from '../context/context-provider.js';
+import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
 import ClassRegistryProvider from '../providers/provider.js';
 
 /**
@@ -17,31 +16,23 @@ export function isPipeTransform<T extends any, U extends any>(obj: any): obj is 
     return Reflect.has(obj.__proto__, 'transform');
 }
 
-export class PipeContextProvider<T extends any, U extends any> implements ContextProvider<PipeTransform<T, U>> {
-    next = WindowContextProvider;
+export class PipeContextProvider<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<PipeTransform<T, U>> {
     pipeCacheMap: Map<string, PipeTransform<T, U>> = new Map();
-    getContext(entityName: string): ContextProvider<any> | undefined {
-        if (this.pipeCacheMap.has(entityName)) {
-            return this;
-        }
-        const pipeRef = ClassRegistryProvider.getPipe<any>(entityName);
-        if (pipeRef) {
-            return this;
-        }
-        return this.next.getContext(entityName);
+    hasProvider(entityName: string): boolean {
+        return this.pipeCacheMap.has(entityName) || ClassRegistryProvider.getPipe<any>(entityName) !== undefined;
     }
-    getProvider(entityName: string): {} | undefined {
-        if (this.pipeCacheMap.has(entityName)) {
-            const cachedPipe = this.pipeCacheMap.get(entityName);
-            return cachedPipe?.transform.bind(cachedPipe);
+    getProvider(entityName: string): ContextDescriptorRef {
+        let cachedPipe: PipeTransform<T, U> | undefined;
+        if (cachedPipe = this.pipeCacheMap.get(entityName)) {
+            return cachedPipe.transform.bind(cachedPipe);
         }
         const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<T, U>>(entityName);
         if (pipeRef) {
-            const cachedPipe = new pipeRef.modelClass();
+            cachedPipe = new pipeRef.modelClass();
             this.pipeCacheMap.set(pipeRef.name, cachedPipe);
             return cachedPipe.transform.bind(cachedPipe);
         }
-        return this.next.getProvider(entityName);
+        throw new Error("Pipe Not Found");
     }
 }
 
