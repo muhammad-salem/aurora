@@ -321,7 +321,7 @@ export class ComponentRender<T> {
 			node.outputs.forEach(event => {
 				let listener: Function;
 				/**
-				 * <a (click)="onLinkClick()"></a>
+				 * <a (click)="onLinkClick($event)"></a>
 				 * <input [(value)]="person.name" />
 				 * <input (value)="person.name" />
 				 * <!-- <input (value)="person.name = $event" /> -->
@@ -330,13 +330,9 @@ export class ComponentRender<T> {
 				 */
 				if (typeof event.sourceHandler === 'string') {
 					let expression = parseJSExpression(event.sourceHandler);
-					// this.view.addEventListener(event.eventName, ($event) => {
-					// 	expression.get({
-					// 		$event: $event,
-					// 		model: this.view._model
-					// 	});
-					// });
-					listener = expression.get(this.view._model);
+					listener = (event: Event) => {
+						expression.get(this.view._model);
+					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
 					listener = event.sourceHandler;
@@ -408,7 +404,7 @@ export class ComponentRender<T> {
 			forwardData.get(proxyContext);
 		};
 		propertyMaps.forEach(propertyMap => {
-			subscribe1way(propertyMap.provider, propertyMap.entityName as string, element, elementAttr, callback1);
+			subscribe1way(propertyMap.provider.context, propertyMap.entityName as string, element, elementAttr, callback1);
 		});
 		callback1([]);
 	}
@@ -430,7 +426,7 @@ export class ComponentRender<T> {
 		};
 
 		propertyMaps.forEach(propertyMap => {
-			subscribe2way(propertyMap.provider, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			subscribe2way(propertyMap.provider.context, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
 		});
 
 		callback1([]);
@@ -484,7 +480,7 @@ export class ComponentRender<T> {
 		templateMap.flatMap(template => template.propertyMap)
 			.filter((value, index, array) => index === array.indexOf(value))
 			.forEach(property => {
-				subscribe1way(property.provider, property.entityName as string, element, elementAttr, handler);
+				subscribe1way(property.provider.context, property.entityName as string, element, elementAttr, handler);
 			});
 		handler();
 	}

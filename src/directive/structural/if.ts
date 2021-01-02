@@ -26,7 +26,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 		};
 
 		propertyMaps.forEach(property => {
-			subscribe1way(property.provider, property.entityName as string, this, 'condition', callback1);
+			subscribe1way(property.provider.context, property.entityName as string, this, 'condition', callback1);
 		});
 
 		callback1([]);
