@@ -353,8 +353,8 @@ export class ComponentRender<T> {
 	}
 
 	createProxyObject(propertyMaps: PropertyMap[], contextStack: ContextStack<ContextDescriptorRef>, thisRef?: object) {
-		const contextProxy = new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, {
-			get(propertyKey: PropertyKey): any {
+		const proxyHandler: ProxyHandler<typeof DUMMY_PROXY_TARGET> = {
+			get(target: typeof DUMMY_PROXY_TARGET, propertyKey: PropertyKey, receiver: any): any {
 				if (propertyKey === 'this') {
 					return thisRef;
 				}
@@ -368,12 +368,9 @@ export class ComponentRender<T> {
 						return;
 					}
 				}
-				if (propertyKey in propertyMap.provider.context) {
-					return propertyMap.provider[propertyKey as string];
-				}
-				return propertyMap.provider.context;
+				return propertyMap.provider.getProvider(propertyKey);
 			},
-			set(propertyKey: PropertyKey, value: any): boolean {
+			set(target: typeof DUMMY_PROXY_TARGET, propertyKey: PropertyKey, value: any): boolean {
 				let propertyMap = propertyMaps.find(src => src.entityName === propertyKey as string);
 				if (propertyMap?.provider) {
 					return Reflect.set(propertyMap.provider, propertyKey, value);
@@ -386,8 +383,8 @@ export class ComponentRender<T> {
 				}
 				return false;
 			}
-		});
-		return contextProxy;
+		};
+		return new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, proxyHandler);
 	}
 
 	getPropertyMaps(node: NodeExpression, contextStack: ContextStack<ContextDescriptorRef>) {
