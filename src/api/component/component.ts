@@ -5,8 +5,7 @@ import { findByTagName, Tag } from '@aurorats/element';
 import { htmlParser, templateParser } from '@aurorats/html-parser';
 
 import { HTMLComponent } from './custom-element.js';
-import { dependencyInjector } from '../providers/injector.js';
-import { ClassRegistry } from '../providers/provider.js';
+import ClassRegistryProvider from '../providers/provider.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
 import { TypeOf } from '../utils/utils.js';
@@ -41,6 +40,7 @@ export interface BootstrapMetadata {
 export interface ServiceRef<T> {
 	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
 	modelClass: TypeOf<T>;
+	name: string;
 }
 
 export interface PipeRef<T> {
@@ -141,7 +141,7 @@ export class Components {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
 		bootstrap.modelClass = modelClass;
-		dependencyInjector.getInstance(ClassRegistry).registerDirective(modelClass);
+		ClassRegistryProvider.registerDirective(modelClass);
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {
@@ -149,7 +149,8 @@ export class Components {
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
-		dependencyInjector.getInstance(ClassRegistry).registerPipe(modelClass);
+		bootstrap.modelClass = modelClass;
+		ClassRegistryProvider.registerPipe(modelClass);
 	}
 
 	static defineService(modelClass: Function, opts: ServiceOptions) {
@@ -157,7 +158,9 @@ export class Components {
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
-		dependencyInjector.getInstance(ClassRegistry).registerService(modelClass);
+		bootstrap.modelClass = modelClass;
+		bootstrap.name = modelClass.name;
+		ClassRegistryProvider.registerService(modelClass);
 	}
 
 	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
@@ -198,10 +201,8 @@ export class Components {
 		const componentRefName = componentRef.viewClass.name + 'ComponentRef';
 		setBootstrapTagNameMetadata(modelClass, componentRefName, componentRef);
 
-		dependencyInjector.getInstance(ClassRegistry).registerComponent(modelClass);
-		dependencyInjector
-			.getInstance(ClassRegistry)
-			.registerView(bootstrap.viewClass);
+		ClassRegistryProvider.registerComponent(modelClass);
+		ClassRegistryProvider.registerView(bootstrap.viewClass);
 		// setBootstrapMetadata(modelClass.prototype, componentRef);
 
 		const options: ElementDefinitionOptions = {};

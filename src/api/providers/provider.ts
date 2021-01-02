@@ -1,6 +1,6 @@
 
 import { getBootstrapMetadata } from '@aurorats/metadata';
-import { ComponentRef, DirectiveRef, PropertyRef } from '../component/component.js';
+import { ComponentRef, DirectiveRef, PipeRef, PropertyRef, ServiceRef } from '../component/component.js';
 
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 
@@ -95,5 +95,29 @@ export class ClassRegistry {
 				return directiveRef;
 			}
 		}
+		return undefined;
+	}
+
+	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
+		for (const pipeClass of this.pipeSet) {
+			const pipeRef: PipeRef<T> = getBootstrapMetadata(pipeClass.prototype);
+			if (pipeRef.name === pipeName) {
+				return pipeRef;
+			}
+		}
+		return undefined;
+	}
+
+	getService<T>(servicName: string): ServiceRef<T> | undefined {
+		for (const servicClass of this.serviceSet) {
+			const servicRef: ServiceRef<T> = getBootstrapMetadata(servicClass.prototype);
+			if (servicRef.name === servicName) {
+				return servicRef;
+			}
+		}
+		return undefined;
 	}
 }
+
+export const ClassRegistryProvider = new ClassRegistry();
+export default ClassRegistryProvider;

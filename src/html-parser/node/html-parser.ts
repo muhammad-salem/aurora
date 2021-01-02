@@ -2,7 +2,7 @@ import { isEmptyElement } from '@aurorats/element';
 import {
     ElementNode, CommentNode, parseTextChild,
     TextNode, LiveText, FragmentNode,
-    DirectiveNode, AuroraNode, AuroraChild
+    DirectiveNode, AuroraNode, AuroraChild, TextAttribute
 } from '@aurorats/jsx';
 
 type Token = (token: string) => Token;
@@ -307,10 +307,19 @@ export class NodeParser {
 
     checkNode(node: ElementNode): ElementNode | DirectiveNode {
         if (node.attributes) {
-            let temp = node.attributes.find(attr => attr.attrName === 'is');
+            let temp: TextAttribute | TextAttribute[] | undefined = node.attributes.find(attr => attr.attrName === 'is');
             if (temp) {
                 node.attributes.splice(node.attributes.indexOf(temp), 1);
                 node.is = temp.attrValue as string;
+            }
+            temp = node.attributes.filter(attr => {
+                return typeof attr.attrValue === 'string' && (/\{\{|\}\}/g).test(attr.attrValue);
+            });
+            if (temp) {
+                temp.forEach(templateAttrs => {
+                    node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+                    node.addTemplateAttr(templateAttrs.attrName, templateAttrs.attrValue as string);
+                });
             }
             temp = node.attributes.find(attr => attr.attrName?.startsWith('*'));
             if (temp) {

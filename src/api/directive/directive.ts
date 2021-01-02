@@ -1,4 +1,5 @@
 import { DirectiveNode } from '@aurorats/jsx';
+import { ContextDescriptorRef, ContextStack } from '../context/context-provider.js';
 import { ComponentRender } from '../view/render.js';
 
 /**
@@ -8,7 +9,8 @@ export class StructuralDirective<T> {
     constructor(
         protected render: ComponentRender<T>,
         protected comment: Comment,
-        protected directive: DirectiveNode
+        protected directive: DirectiveNode,
+        protected parentContextStack: ContextStack<ContextDescriptorRef>
     ) { }
 }
 

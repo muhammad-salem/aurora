@@ -1,12 +1,8 @@
-<div>
-    {{person.name}}
-    {{person.age}}
-</div>
 <p id="p-name" #nameArea class="{{className}}" onclick="onResize()">
-    Your name is {{name}}
+    Person name is {{person.name}}
 </p>
-<p id="p-age" #ageArea>your age is: {{years}}, born in Year of {{yearOfBirth()}}</p>
-<div if="id===1">
-    Dummy Test
+<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth()}}</p>
+<div *if="person.age >= 18">
+    Can have licence
     <p>Data</p>
 </div>
