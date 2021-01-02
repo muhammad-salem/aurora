@@ -16,7 +16,7 @@ export function isContextProvider<T>(obj: any): obj is ContextProvider<T> {
 export class ContextProviderImpl<T extends ContextDescriptorRef> implements ContextProvider<T>{
     constructor(public context: T) { }
     hasProvider(entityName: string): boolean {
-        return Reflect.has(this.context, entityName) || Reflect.has(this.context.__proto__, entityName);
+        return entityName in this.context;
     }
     getProvider(entityName: string): ContextDescriptorRef {
         return this.context[entityName];
