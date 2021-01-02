@@ -47,9 +47,9 @@ export function defineModel(object: any): Model {
     return object as Model;
 }
 
-export type SourceFollwerCallback = (stack: any[]) => void;
+export type SourceFollowerCallback = (stack: any[]) => void;
 
-export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback?: SourceFollwerCallback) {
+export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback?: SourceFollowerCallback) {
     let subject1 = defineModel(isHTMLComponent(obj1) ? obj1._model : obj1);
     let subject2 = defineModel(isHTMLComponent(obj2) ? obj2._model : obj2);
     subject1.subscribeModel(obj1PropName, (stack: any[]) => {
@@ -63,7 +63,7 @@ export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2Prop
     });
 }
 
-export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1?: SourceFollwerCallback, callback2?: SourceFollwerCallback) {
+export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1?: SourceFollowerCallback, callback2?: SourceFollowerCallback) {
     let subject1 = defineModel(isHTMLComponent(obj1) ? obj1._model : obj1);
     let subject2 = defineModel(isHTMLComponent(obj2) ? obj2._model : obj2);
     subject1.subscribeModel(obj1PropName, (source: any[]) => {
