@@ -28,8 +28,6 @@ export interface Person {
 })
 export class PersonModel implements OnInit {
 
-    @Input() name: string;
-    @Input('age') years: number = 87;
     @Input()
     person: Person = {
         name: 'Delilah',
@@ -59,9 +57,7 @@ export class PersonModel implements OnInit {
     @HostBinding('class.invalid')
     invalid: boolean;
 
-    constructor(@Optional() private service: LogService) {
-        this.name = 'ahmed';
-    }
+    constructor(@Optional() private service: LogService) { }
 
     onInit(): void {
         console.log('onInit', this);
@@ -69,7 +65,7 @@ export class PersonModel implements OnInit {
     }
 
     yearOfBirth() {
-        return 2020 - this.years;
+        return 2020 - this.person.age;
     }
 
 
