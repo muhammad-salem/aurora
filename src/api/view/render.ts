@@ -1,4 +1,4 @@
-import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression, PropertyNode } from '@aurorats/expression';
+import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@aurorats/expression';
 import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
@@ -8,12 +8,14 @@ import { isTagNameNative, isValidCustomElementName } from '@aurorats/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
-import { defineModel, isModel, Model, SourceFollwerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import { isModel, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import ClassRegistryProvider from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { ElementMutation } from './mutation.js';
-import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
+import { ContextDescriptorRef, ContextStack, mergeContextProviders, PropertyMap, TemplatePropertyMap } from '../context/context-provider.js';
+import PIPE_CONTEXT_PROVIDER from '../pipe/pipe.js';
+import { DUMMY_PROXY_TARGET, THIS_PROPERTY, WINDOW_CONTEXT_PROVIDER } from '../global/global-constant.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 	if (elementAttr === 'value') {
@@ -27,11 +29,8 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 	return elementAttr;
 }
 
-export interface PropertySource {
-	property: string, src: any, expression?: NodeExpression;
-}
-
 export class ComponentRender<T> {
+
 	componentRef: ComponentRef<T>
 	template: AuroraNode;
 	templateRegExp: RegExp;
@@ -39,9 +38,12 @@ export class ComponentRender<T> {
 
 	viewChildMap: { [name: string]: any };
 
+	contextStack: ContextStack<ContextDescriptorRef>;
+
 	constructor(public view: HTMLComponent<T>) {
-		this.componentRef = view.getComponentRef();
+		this.componentRef = this.view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
+		this.contextStack = mergeContextProviders<ContextDescriptorRef>(WINDOW_CONTEXT_PROVIDER, PIPE_CONTEXT_PROVIDER, this.view, this.view._model);
 	}
 
 	initView(): void {
@@ -55,7 +57,7 @@ export class ComponentRender<T> {
 			this.viewChildMap = {};
 			if (!(this.template instanceof CommentNode)) {
 
-				this.defineElementNameKey(this.template);
+				this.defineElementNameKey(this.template, this.contextStack);
 			}
 
 			this.componentRef.viewChild.forEach(view => {
@@ -77,7 +79,7 @@ export class ComponentRender<T> {
 			} else {
 				rootRef = this.view;
 			}
-			this.appendChildToParent(rootRef, this.template);
+			this.appendChildToParent(rootRef, this.template, this.contextStack);
 		}
 	}
 
@@ -134,7 +136,7 @@ export class ComponentRender<T> {
 		});
 	}
 
-	defineElementNameKey(component: AuroraNode) {
+	defineElementNameKey(component: AuroraNode, contextStack: ContextStack<ContextDescriptorRef>) {
 		if (component instanceof DirectiveNode || component instanceof CommentNode) {
 			return;
 		}
@@ -143,7 +145,7 @@ export class ComponentRender<T> {
 				return;
 			}
 			if (component.templateRefName) {
-				const element = this.createElementByTagName(component);
+				const element = this.createElementByTagName(component, contextStack);
 				Reflect.set(this.view, component.templateRefName.attrName, element);
 				this.viewChildMap[component.templateRefName.attrName] = element;
 			}
@@ -152,7 +154,7 @@ export class ComponentRender<T> {
 			component.children.forEach(child => {
 				if ((child instanceof ElementNode && Aurora.DirectiveTag !== child.tagName.toLowerCase())
 					|| child instanceof FragmentNode) {
-					this.defineElementNameKey(child);
+					this.defineElementNameKey(child, contextStack);
 				}
 			});
 		}
@@ -162,11 +164,11 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 
-	createDirective(directive: DirectiveNode, comment: Comment, additionalSources?: PropertySource[]): void {
+	createDirective(directive: DirectiveNode, comment: Comment, contextStack: ContextStack<ContextDescriptorRef>): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
-			// structural directive selector as '*if'
-			const structural = new directiveRef.modelClass(this, comment, directive);
+			// structural directive selector
+			const structural = new directiveRef.modelClass(this, comment, directive, contextStack);
 			if (directive.templateRefName) {
 				Reflect.set(this.view, directive.templateRefName.attrName, structural);
 				this.viewChildMap[directive.templateRefName.attrName] = structural;
@@ -188,37 +190,37 @@ export class ComponentRender<T> {
 		return new Text(text.textValue);
 	}
 
-	createLiveText(text: LiveText, additionalSources?: PropertySource[]): Text {
+	createLiveText(text: LiveText, contextStack: ContextStack<ContextDescriptorRef>): Text {
 		const liveText = new Text('');
-		this.bind1Way(liveText, 'textContent', text.textValue, additionalSources);
+		this.bind1Way(liveText, 'textContent', text.textValue, contextStack);
 		return liveText;
 	}
 
-	createDocumentFragment(node: FragmentNode, additionalSources?: PropertySource[]): DocumentFragment {
+	createDocumentFragment(node: FragmentNode, contextStack: ContextStack<ContextDescriptorRef>): DocumentFragment {
 		let fragment = document.createDocumentFragment();
-		node.children.forEach(child => this.appendChildToParent(fragment, child), additionalSources);
+		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
 
-	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode, additionalSources?: PropertySource[]) {
+	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode, contextStack: ContextStack<ContextDescriptorRef>) {
 		if (child instanceof ElementNode) {
-			parent.append(this.createElement(child, additionalSources));
+			parent.append(this.createElement(child, contextStack));
 		} else if (child instanceof DirectiveNode) {
 			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
 			parent.append(comment);
-			this.createDirective(child, comment, additionalSources);
+			this.createDirective(child, comment, contextStack);
 		} else if (child instanceof TextNode) {
 			parent.append(this.createText(child));
 		} else if (child instanceof LiveText) {
-			parent.append(this.createLiveText(child, additionalSources));
+			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
 		} else if (child instanceof FragmentNode) {
-			parent.append(this.createDocumentFragment(child, additionalSources));
+			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
 
-	createElementByTagName(node: ElementNode): HTMLElement {
+	createElementByTagName(node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			element = document.createElement(node.tagName);
@@ -227,7 +229,7 @@ export class ComponentRender<T> {
 					customElements.upgrade(element);
 					let ViewClass = customElements.get(node.tagName);
 					if (!(element instanceof ViewClass)) {
-						const newChild = this.createElement(node);
+						const newChild = this.createElement(node, contextStack);
 						element.replaceWith(newChild);
 					}
 				});
@@ -245,25 +247,25 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	createElement(node: ElementNode, additionalSources?: PropertySource[]): HTMLElement {
+	createElement(node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
 			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
 		} else {
-			element = this.createElementByTagName(node);
+			element = this.createElementByTagName(node, contextStack);
 		}
 
-		this.initAttribute(element, node, additionalSources);
+		this.initAttribute(element, node, contextStack);
 
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child, additionalSources);
+				this.appendChildToParent(element, child, contextStack);
 			}
 		}
 		return element;
 	}
 
-	initAttribute(element: HTMLElement, node: ElementNode, additionalSources?: PropertySource[]): void {
+	initAttribute(element: HTMLElement, node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
@@ -273,7 +275,6 @@ export class ComponentRender<T> {
 				 */
 				// console.log('name', attr.attrName);
 				const isAttr = hasAttr(element, attr.attrName);
-				// this.initElementData(element, attr.attrName, attr.attrValue as string, isAttr);
 				if (isAttr) {
 					if (attr.attrValue === false) {
 						element.removeAttribute(attr.attrName);
@@ -308,12 +309,12 @@ export class ComponentRender<T> {
 		if (node.twoWayBinding) {
 			node.twoWayBinding.forEach(attr => {
 				//TODO check for attribute directive, find sources from expression
-				this.bind2Way(element, attr.attrName, attr.sourceValue, additionalSources);
+				this.bind2Way(element, attr.attrName, attr.sourceValue, contextStack);
 			});
 		}
 		if (node.inputs) {
 			node.inputs.forEach(attr => {
-				this.bind1Way(element, attr.attrName, attr.sourceValue, additionalSources);
+				this.bind1Way(element, attr.attrName, attr.sourceValue, contextStack);
 			});
 		}
 		if (node.outputs) {
@@ -346,173 +347,96 @@ export class ComponentRender<T> {
 		if (node.templateAttrs) {
 			node.templateAttrs.forEach(tempAttr => {
 				const isAttr = hasAttr(element, tempAttr.attrName);
-				// this.initElementData(element, attrName, attrValue as string, isAttr);
-				this.attrTemplateHandler(element, tempAttr.attrName, tempAttr.sourceValue, isAttr);
+				this.attrTemplateHandler(element, tempAttr.attrName, tempAttr.sourceValue, isAttr, contextStack);
 			});
 		}
 	}
 
-	getEntrySource(entry: string, suggest?: any): any {
-		// let input = this.view.getInput(entry);
-		if (suggest && Reflect.has(suggest, entry)) {
-			return suggest;
-		} else if (Reflect.has(this.view, entry)) {
-			return this.view;
-		} else if (Reflect.has(this.view._model, entry)) {
-			return this.view._model;
-		}
-		// search in directives and pipes
-		return window;
-	}
-
-	getPropertySource(viewProperty: string): PropertySource | undefined {
-		let input = this.view.getInputStartWith(viewProperty);
-		let dotIndex = viewProperty.indexOf('.');
-		let modelProperty = viewProperty;
-		if (dotIndex > 0 && input) {
-			modelProperty = input.modelProperty + viewProperty.substring(dotIndex);
-		} else if (input) {
-			modelProperty = input.modelProperty;
-		}
-		let parent: any = viewProperty;
-		if (dotIndex > 0) {
-			parent = viewProperty.substring(0, dotIndex);
-		}
-		if (Reflect.has(this.view, parent)) {
-			// parent = Reflect.get(this.view, parent);
-			// /**
-			//  * case of element reference
-			//  * <root-app>
-			//  * 	<app-tag #element-name ></app-tag>
-			//  * </root-app>
-			//  */
-			// if (parent instanceof HTMLElement) {
-			// 	return { property: modelProperty.substring(dotIndex + 1), src: parent, expression };
-			// }
-			return { property: modelProperty, src: this.view };
-		}
-		else if (Reflect.has(this.view._model, parent)) {
-			return { property: modelProperty, src: this.view._model };
-		}
-	}
-
-	initElementData(element: HTMLElement, elementAttr: string, viewProperty: string, isAttr: boolean) {
-		const propertySrc = this.getPropertySource(viewProperty);
-		if (!propertySrc) {
-			return;
-		}
-		let exp: string;
-		if (isAttr) {
-			exp = `element.setAttribute('${elementAttr}', model.${viewProperty})`;
-		} else {
-			exp = `element['${elementAttr}'] = model.${viewProperty}`;
-		}
-		let expNodeDown = parseJSExpression(exp);
-		let context = {
-			element: element,
-			model: propertySrc.src
-		};
-		expNodeDown.get(context);
-	}
-
-
-	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string, additionalSources?: PropertySource[]) {
-		let thisElement = new PropertyNode('this');
-		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
-		let rightNode = parseJSExpression(viewProperty);
-		let forwardData = new AssignmentNode('=', leftNode, rightNode);
-
-		const entries = rightNode.entry().map(key => this.getPropertySource(key)).filter(source => source) as PropertySource[];
-		if (additionalSources) {
-			entries.push(...additionalSources);
-		}
-		const context = Object.create(null);
-		const thisRender = this;
-		const proxyContext = new Proxy<typeof context>(context, {
-			get(target: typeof context, p: PropertyKey, receiver: any): any {
-				if (p === 'this') {
-					return element;
+	createProxyObject(propertyMaps: PropertyMap[], contextStack: ContextStack<ContextDescriptorRef>, thisRef?: object) {
+		const contextProxy = new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, {
+			get(propertyKey: PropertyKey): any {
+				if (propertyKey === 'this') {
+					return thisRef;
 				}
-				let propertySrc = entries.find(src => src.property === p as string);
-				if (!propertySrc) {
-					propertySrc = thisRender.getPropertySource(p as string);
-					if (!propertySrc) {
+				let propertyMap = propertyMaps.find(prop => prop.entityName === propertyKey as string);
+				if (!propertyMap) {
+					propertyMap = { entityName: propertyKey, provider: contextStack.findContext(propertyKey as string) } as PropertyMap;
+					if (propertyMap.provider) {
+						propertyMaps.push(propertyMap);
+					} else {
 						// TODO should return value
 						return;
 					}
 				}
-				if (p in propertySrc.src) {
-					return propertySrc.src[p];
+				if (propertyKey in propertyMap.provider.context) {
+					return propertyMap.provider[propertyKey as string];
 				}
-				return propertySrc.src;
+				return propertyMap.provider.context;
 			},
-			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
-				const propertySrc = entries.find(src => src.property === p as string);
-				return Reflect.set(propertySrc?.src, p, value);
+			set(propertyKey: PropertyKey, value: any): boolean {
+				let propertyMap = propertyMaps.find(src => src.entityName === propertyKey as string);
+				if (propertyMap?.provider) {
+					return Reflect.set(propertyMap.provider, propertyKey, value);
+				} else {
+					propertyMap = { entityName: propertyKey, provider: contextStack.findContext(propertyKey as string) } as PropertyMap;
+					if (propertyMap.provider) {
+						propertyMaps.push(propertyMap);
+						return Reflect.set(propertyMap.provider.context, propertyKey, value);
+					}
+				}
+				return false;
 			}
 		});
-
-		const callback1: SourceFollwerCallback = (stack: any[]) => {
-			forwardData.get(proxyContext);
-		};
-
-		entries.forEach(propertySrc => {
-			subscribe1way(propertySrc.src, propertySrc.property, element, elementAttr, callback1);
-		});
-
-		forwardData.get(proxyContext);
+		return contextProxy;
 	}
 
-	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string, additionalSources?: PropertySource[]) {
+	getPropertyMaps(node: NodeExpression, contextStack: ContextStack<ContextDescriptorRef>) {
+		return this.mapPropertyWithProvider(node.entry(), contextStack);
+	}
 
-		let thisElement = new PropertyNode('this');
-		let leftNode = new MemberNode('.', thisElement, parseJSExpression(elementAttr));
+	mapPropertyWithProvider(entries: string[], contextStack: ContextStack<ContextDescriptorRef>) {
+		const propertyMaps = entries
+			.map(entityName => { return { entityName: entityName, provider: contextStack.findContext(entityName) } as PropertyMap; })
+			.filter(source => source);
+		return propertyMaps;
+	}
+
+	bind1Way(element: HTMLElement | Text, elementAttr: string, viewProperty: string, contextStack: ContextStack<ContextDescriptorRef>) {
+		let leftNode = new MemberNode('.', THIS_PROPERTY, parseJSExpression(elementAttr));
+		let rightNode = parseJSExpression(viewProperty);
+		let forwardData = new AssignmentNode('=', leftNode, rightNode);
+		const propertyMaps = this.getPropertyMaps(rightNode, contextStack);
+		const proxyContext = this.createProxyObject(propertyMaps, contextStack, element);
+		const callback1: SourceFollowerCallback = () => {
+			forwardData.get(proxyContext);
+		};
+		propertyMaps.forEach(propertyMap => {
+			subscribe1way(propertyMap.provider, propertyMap.entityName as string, element, elementAttr, callback1);
+		});
+		callback1([]);
+	}
+
+	bind2Way(element: HTMLElement, elementAttr: string, viewProperty: string, contextStack: ContextStack<ContextDescriptorRef>) {
+		let leftNode = new MemberNode('.', THIS_PROPERTY, parseJSExpression(elementAttr));
 		let rightNode = parseJSExpression(viewProperty);
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 		let backwardData = new AssignmentNode('=', rightNode, leftNode);
 
-		const entries = rightNode.entry().map(key => this.getPropertySource(key)).filter(source => source) as PropertySource[];
-		if (additionalSources) {
-			entries.push(...additionalSources);
-		}
-		const context = Object.create(null);
-		const thisRender = this;
-		const proxyContext = new Proxy<typeof context>(context, {
-			get(target: typeof context, p: PropertyKey, receiver: any): any {
-				if (p === 'this') {
-					return element;
-				}
-				let propertySrc = entries.find(src => src.property === p as string);
-				if (!propertySrc) {
-					propertySrc = thisRender.getPropertySource(p as string);
-					if (!propertySrc) {
-						// TODO should return value
-						return;
-					}
-				}
-				if (p in propertySrc.src) {
-					return propertySrc.src[p];
-				}
-				return propertySrc.src;
-			},
-			set(target: typeof context, p: PropertyKey, value: any, receiver: any): boolean {
-				const propertySrc = entries.find(src => src.property === p as string);
-				return Reflect.set(propertySrc?.src, p, value);
-			}
-		});
+		const propertyMaps = this.getPropertyMaps(rightNode, contextStack);
+		const proxyContext = this.createProxyObject(propertyMaps, contextStack, element);
 
-		const callback1: SourceFollwerCallback = (stack: any[]) => {
+		const callback1: SourceFollowerCallback = () => {
 			forwardData.get(proxyContext);
 		};
-		const callback2: SourceFollwerCallback = (stack: any[]) => {
+		const callback2: SourceFollowerCallback = () => {
 			backwardData.get(proxyContext);
 		};
 
-		entries.forEach(propertySrc => {
-			subscribe2way(propertySrc.src, propertySrc.property, element, elementAttr, callback1, callback2);
+		propertyMaps.forEach(propertyMap => {
+			subscribe2way(propertyMap.provider, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
 		});
 
-		forwardData.get(proxyContext);
+		callback1([]);
 		const changeEventName = getChangeEventName(element, elementAttr);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {
@@ -535,54 +459,37 @@ export class ComponentRender<T> {
 		}
 	}
 
-	attrTemplateHandler(element: HTMLElement | Text, elementAttr: string, viewProperty: string, isAttr?: boolean) {
+	attrTemplateHandler(element: HTMLElement | Text, elementAttr: string, viewProperty: Readonly<string>, isAttr: boolean = false, contextStack: ContextStack<ContextDescriptorRef>) {
 		const result = [...viewProperty.matchAll(this.templateRegExp)];
 		if (result.length === 0) {
 			return;
 		}
-		const propSrc: { [match: string]: PropertySource } = {};
-		result.forEach(match => {
-			propSrc[match[0]] = this.getPropertySource(match[1]) as PropertySource;
-			propSrc[match[0]].expression = parseJSExpression(match[1]);
+		const templateMap: TemplatePropertyMap[] = result.map(match => {
+			const template = match[0];
+			const expression = parseJSExpression(match[1]);
+			const propertyMap = this.getPropertyMaps(expression, contextStack);
+			const context = this.createProxyObject(propertyMap, contextStack, element);
+			return { template, expression, propertyMap, context };
 		});
 		const handler = () => {
 			let renderText = viewProperty;
-			Object.keys(propSrc).forEach(propTemplate => {
-				const prop = propSrc[propTemplate];
-				let value = prop.expression?.get(prop.src);
-				renderText = renderText.replace(propTemplate, value);
+			templateMap.forEach(prop => {
+				let value = prop.expression.get(prop.context);
+				renderText = renderText.replace(prop.template, value);
 			});
 			if (isAttr && element instanceof HTMLElement) {
 				element.setAttribute(elementAttr, renderText);
 			} else {
-				let expNodeDown = parseJSExpression(`element.${elementAttr} = obj`);
-				let context = {
-					element: element,
-					obj: renderText
-				};
-				expNodeDown.get(context);
+				Reflect.set(element, elementAttr, renderText);
 			}
 		}
-		let triggerTemplate: Function | undefined;
-		Object.keys(propSrc).forEach(propTemplate => {
-			const prop = propSrc[propTemplate];
-			let subject1: any;
-			if (isHTMLComponent(prop.src)) {
-				subject1 = prop.src._model;
-			} else {
-				subject1 = prop.src;
-			}
-			defineModel(subject1);
-			(subject1 as Model).subscribeModel(prop.property, handler);
-			if (!triggerTemplate) {
-				triggerTemplate = () => {
-					(subject1 as Model).emitChangeModel(prop.property);
-				};
-			}
-		});
-		if (triggerTemplate) {
-			triggerTemplate();
-		}
+
+		templateMap.flatMap(template => template.propertyMap)
+			.filter((value, index, array) => index === array.indexOf(value))
+			.forEach(property => {
+				subscribe1way(property.provider, property.entityName as string, element, elementAttr, handler);
+			});
+		handler();
 	}
 
 }
