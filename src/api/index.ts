@@ -8,6 +8,7 @@ export * from './component/lifecycle.js';
 export * from './context/context-provider.js';
 export * from './directive/directive.js';
 export * from './model/change-detection.js';
+export * from './pipe/pipe.js';
 export * from './providers/injector.js';
 export * from './providers/provider.js';
 export * from './utils/elements-util.js';
