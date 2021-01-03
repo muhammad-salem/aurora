@@ -356,7 +356,7 @@ export class ComponentRender<T> {
 				}
 				let propertyMap = propertyMaps.find(prop => prop.entityName === propertyKey as string);
 				if (!propertyMap) {
-					propertyMap = { entityName: propertyKey, provider: contextStack.findContext(propertyKey as string) } as PropertyMap;
+					propertyMap = { entityName: propertyKey, provider: contextStack.findContextProvider(propertyKey as string) } as PropertyMap;
 					if (propertyMap.provider) {
 						propertyMaps.push(propertyMap);
 					} else {
@@ -364,32 +364,29 @@ export class ComponentRender<T> {
 						return;
 					}
 				}
-				return propertyMap.provider.getProvider(propertyKey);
+				return propertyMap.provider.getContextValue(propertyKey);
 			},
 			set(target: typeof DUMMY_PROXY_TARGET, propertyKey: PropertyKey, value: any): boolean {
 				let propertyMap = propertyMaps.find(src => src.entityName === propertyKey as string);
-				if (propertyMap?.provider) {
-					return Reflect.set(propertyMap.provider, propertyKey, value);
-				} else {
-					propertyMap = { entityName: propertyKey, provider: contextStack.findContext(propertyKey as string) } as PropertyMap;
+				if (!propertyMap?.provider) {
+					propertyMap = { entityName: propertyKey, provider: contextStack.findContextProvider(propertyKey as string) } as PropertyMap;
 					if (propertyMap.provider) {
 						propertyMaps.push(propertyMap);
-						return Reflect.set(propertyMap.provider.context, propertyKey, value);
 					}
 				}
-				return false;
+				return propertyMap?.provider.setContextValue(propertyKey, value);
 			}
 		};
 		return new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, proxyHandler);
 	}
 
-	getPropertyMaps(node: NodeExpression, contextStack: ContextStack<ContextDescriptorRef>) {
+	getPropertyMaps(node: NodeExpression, contextStack: ContextStack<ContextDescriptorRef>): PropertyMap[] {
 		return this.mapPropertyWithProvider(node.entry(), contextStack);
 	}
 
-	mapPropertyWithProvider(entries: string[], contextStack: ContextStack<ContextDescriptorRef>) {
+	mapPropertyWithProvider(entries: string[], contextStack: ContextStack<ContextDescriptorRef>): PropertyMap[] {
 		const propertyMaps = entries
-			.map(entityName => { return { entityName: entityName, provider: contextStack.findContext(entityName) } as PropertyMap; })
+			.map(entityName => { return { entityName: entityName, provider: contextStack.findContextProvider(entityName) } as PropertyMap; })
 			.filter(source => source);
 		return propertyMaps;
 	}
@@ -404,7 +401,7 @@ export class ComponentRender<T> {
 			forwardData.get(proxyContext);
 		};
 		propertyMaps.forEach(propertyMap => {
-			subscribe1way(propertyMap.provider.context, propertyMap.entityName as string, element, elementAttr, callback1);
+			subscribe1way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1);
 		});
 		callback1([]);
 	}
@@ -426,7 +423,7 @@ export class ComponentRender<T> {
 		};
 
 		propertyMaps.forEach(propertyMap => {
-			subscribe2way(propertyMap.provider.context, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			subscribe2way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1, callback2);
 		});
 
 		callback1([]);
@@ -480,7 +477,7 @@ export class ComponentRender<T> {
 		templateMap.flatMap(template => template.propertyMap)
 			.filter((value, index, array) => index === array.indexOf(value))
 			.forEach(property => {
-				subscribe1way(property.provider.context, property.entityName as string, element, elementAttr, handler);
+				subscribe1way(property.provider.getContext(), property.entityName as string, element, elementAttr, handler);
 			});
 		handler();
 	}
