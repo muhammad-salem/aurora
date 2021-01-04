@@ -364,7 +364,7 @@ export class ComponentRender<T> {
 						return;
 					}
 				}
-				return propertyMap.provider.getContextValue(propertyKey);
+				return propertyMap.provider.getContextValue(propertyKey as string);
 			},
 			set(target: typeof DUMMY_PROXY_TARGET, propertyKey: PropertyKey, value: any): boolean {
 				let propertyMap = propertyMaps.find(src => src.entityName === propertyKey as string);
@@ -374,7 +374,7 @@ export class ComponentRender<T> {
 						propertyMaps.push(propertyMap);
 					}
 				}
-				return propertyMap?.provider.setContextValue(propertyKey, value);
+				return propertyMap?.provider.setContextValue(propertyKey as string, value);
 			}
 		};
 		return new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, proxyHandler);
@@ -401,7 +401,10 @@ export class ComponentRender<T> {
 			forwardData.get(proxyContext);
 		};
 		propertyMaps.forEach(propertyMap => {
-			subscribe1way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1);
+			const context = propertyMap.provider.getContext(propertyMap.entityName);
+			if (context) {
+				subscribe1way(context, propertyMap.entityName as string, element, elementAttr, callback1);
+			}
 		});
 		callback1([]);
 	}
@@ -423,7 +426,10 @@ export class ComponentRender<T> {
 		};
 
 		propertyMaps.forEach(propertyMap => {
-			subscribe2way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			const context = propertyMap.provider.getContext(propertyMap.entityName);
+			if (context) {
+				subscribe2way(context, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			}
 		});
 
 		callback1([]);
@@ -476,8 +482,11 @@ export class ComponentRender<T> {
 
 		templateMap.flatMap(template => template.propertyMap)
 			.filter((value, index, array) => index === array.indexOf(value))
-			.forEach(property => {
-				subscribe1way(property.provider.getContext(), property.entityName as string, element, elementAttr, handler);
+			.forEach(propertyMap => {
+				const context = propertyMap.provider.getContext(propertyMap.entityName);
+				if (context) {
+					subscribe1way(context, propertyMap.entityName as string, element, elementAttr, handler);
+				}
 			});
 		handler();
 	}
