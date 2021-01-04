@@ -12,6 +12,7 @@ export * from './person-app/person-app';
 export * from './two-way/binding-2-way';
 
 import { AppRoot } from './app-root/app-root-component';
+import './pipe-app/pipe-test';
 
 // let appRoot = new AppRoot();
 // appRoot.appSelector = [
@@ -22,6 +23,7 @@ let appRoot = document.getElementById('app-root') as HTMLComponent<AppRoot>;
 
 appRoot._model.appSelector = [
     'person-app',
-    'bind-2way'
+    'bind-2way',
+    'pipe-app'
 ];
 document.body.append(appRoot);
