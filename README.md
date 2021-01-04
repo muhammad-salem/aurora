@@ -78,7 +78,7 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 | Dependency Injection |  TO:DO |
 | Component| ✓ |
 | Directives | ✓ |
-| Pipes | TO:DO |
+| Pipes | ✓ |
 | Services | TO:DO |
 | Lifecycle | ✓ |
 | @Input | ✓ |
@@ -90,13 +90,37 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 | @ViewChildren | TO:DO |
 | @SelfSkip | TO:DO |
 | @Optional | TO:DO |
-| *if Directive | ✓ |
-| *for Directive | TO:DO |
-| *switch Directive | TO:DO |
 | [Annotation/Decorators reflect-metadata][metadata] | ✓ |
 | XSS (cross-site-scripting) | TO:DO |
 
 [metadata]: https://github.com/rbuckton/reflect-metadata
+
+## Built-in Directive
+
+| Pipe | Available |
+| ------- | ------- |
+| *if Directive | ✓ |
+| *for Directive | TO:DO |
+| *switch Directive | TO:DO |
+
+## Built-in Pipes
+
+| Pipe | Available |
+| ------- | ------- |
+| async | TO:DO |
+| date | TO:DO |
+| lowercase | ✓ |
+| titlecase | ✓ |
+| uppercase | ✓ |
+| json | ✓ |
+| keyvalue | ✓ |
+| slice | TO:DO |
+| currency | TO:DO |
+| number | TO:DO |
+| percent | TO:DO |
+| i18nPlural | TO:DO |
+| i18nSelect | TO:DO |
+
 
 ## Web Component standards
 
