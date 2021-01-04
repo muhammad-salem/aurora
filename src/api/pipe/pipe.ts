@@ -18,19 +18,10 @@ export function isPipeTransform<T extends any, U extends any>(obj: any): obj is 
 
 export class PipeContextProvider<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<PipeTransform<T, U>> {
     pipeCacheMap: Map<string, PipeTransform<T, U>> = new Map();
-    getContext(): PipeTransform<T, U> {
-        throw new Error("Pipes provider has context.");
+    getContext(entityName: string): undefined {
+        return void 0;
     }
-    getContextValue(entityName: PropertyKey): any {
-        throw new Error("Pipes provider has no get implementation.");
-    }
-    setContextValue(entityName: PropertyKey, value: any): boolean {
-        throw new Error("Pipes provider has no set implementation.");
-    }
-    hasProvider(entityName: string): boolean {
-        return this.pipeCacheMap.has(entityName) || ClassRegistryProvider.getPipe<any>(entityName) !== undefined;
-    }
-    getProvider(entityName: string) {
+    getContextValue(entityName: string): any {
         let cachedPipe: PipeTransform<T, U> | undefined;
         if (cachedPipe = this.pipeCacheMap.get(entityName)) {
             return cachedPipe.transform.bind(cachedPipe);
@@ -42,6 +33,12 @@ export class PipeContextProvider<T extends ContextDescriptorRef, U extends Conte
             return cachedPipe.transform.bind(cachedPipe);
         }
         throw new Error(`no pipe found for ${entityName}.`);
+    }
+    setContextValue(entityName: PropertyKey, value: any): boolean {
+        throw new Error("Pipes provider has no set implementation.");
+    }
+    hasContext(entityName: string): boolean {
+        return this.pipeCacheMap.has(entityName) || ClassRegistryProvider.getPipe<any>(entityName) !== undefined;
     }
 }
 
