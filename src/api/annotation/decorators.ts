@@ -8,12 +8,11 @@ export interface DirectiveOptions {
 }
 
 export interface ServiceOptions {
-	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any' | null;
+	provideIn?: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
 }
 
 export interface PipeOptions {
 	name: string;
-	pure: boolean;
 }
 
 export interface ComponentOptions<T = Function> {

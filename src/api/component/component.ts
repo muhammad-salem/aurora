@@ -45,7 +45,6 @@ export interface ServiceRef<T> {
 
 export interface PipeRef<T> {
 	name: string;
-	pure: boolean;
 	modelClass: TypeOf<T>;
 }
 export interface DirectiveRef<T> {
