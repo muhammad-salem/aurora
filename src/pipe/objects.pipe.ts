@@ -1,5 +1,14 @@
 import { Pipe, PipeTransform } from '@aurorats/api';
 
+@Pipe({
+    name: 'json'
+})
+export class JSONPipe implements PipeTransform<object, string>{
+    transform(obj: object): string {
+        return JSON.stringify(obj);
+    }
+}
+
 type StringKey<V> = { [key: string]: V };
 type NumberKey<V> = { [key: number]: V };
 
