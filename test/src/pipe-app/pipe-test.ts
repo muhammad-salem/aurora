@@ -1,9 +1,11 @@
 import { Component } from '@aurorats/core';
+import { interval } from 'rxjs';
 
 @Component({
     selector: 'pipe-app',
     template: `
     <div>
+        <p>{{observable |> async}}</p>
         <p>{{text}}</p>
         <p>{{text |> lowercase}}</p>
         <p>{{text |> uppercase}}</p>
@@ -34,5 +36,7 @@ export class PipeTestApp {
     };
     keyValueArray = [200, 300];
     keyValueMap = new Map<number, number | string>([[1, 400], [2, 500], [3, 'B200']]);
+
+    observable = interval(1000);
 
 }
