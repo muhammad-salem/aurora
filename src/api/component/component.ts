@@ -45,6 +45,7 @@ export interface ServiceRef<T> {
 
 export interface PipeRef<T> {
 	name: string;
+	asynchronous?: boolean;
 	modelClass: TypeOf<T>;
 }
 export interface DirectiveRef<T> {
