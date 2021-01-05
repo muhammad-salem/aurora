@@ -99,15 +99,19 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 
 | Pipe | Available |
 | ------- | ------- |
-| *if Directive | ✓ |
-| *for Directive | TO:DO |
-| *switch Directive | TO:DO |
+| *if | ✓ |
+| *for | TO:DO |
+| *switch | TO:DO |
+| *class | TO:DO |
+| *style | TO:DO |
+| *switch | TO:DO |
+| *switch | TO:DO |
 
 ## Built-in Pipes
 
 | Pipe | Available |
 | ------- | ------- |
-| async | TO:DO |
+| async | ✓ |
 | date | TO:DO |
 | lowercase | ✓ |
 | titlecase | ✓ |
