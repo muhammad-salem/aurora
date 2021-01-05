@@ -1,36 +1,36 @@
-import { EventEmitter, Model, OnDestroy, Pipe, PipeTransform } from '@aurorats/api';
+import { Model, OnDestroy, Pipe, PipeTransform } from '@aurorats/api';
 
-export interface Observer<T> {
+interface Observer<T> {
     complete: () => void;
     error: (err: any) => void;
     next: (value: T) => void;
 }
 
-export interface UnaryFunction<T, R> {
+interface UnaryFunction<T, R> {
     (source: T): R;
 }
 
-export interface OperatorFunction<T, R> extends UnaryFunction<Observable<T>, Observable<R>> { }
+interface OperatorFunction<T, R> extends UnaryFunction<Observable<T>, Observable<R>> { }
 
-export interface Unsubscribable {
+interface Unsubscribable {
     unsubscribe(): void;
 }
 
-export type TeardownLogic = Subscription | Unsubscribable | (() => void) | void;
+type TeardownLogic = Subscription | Unsubscribable | (() => void) | void;
 
-export interface SubscriptionLike extends Unsubscribable {
+interface SubscriptionLike extends Unsubscribable {
     readonly closed: boolean;
     unsubscribe(): void;
 }
 
-export interface Subscription extends SubscriptionLike {
+interface Subscription extends SubscriptionLike {
     closed: boolean;
     add(teardown: TeardownLogic): void;
     remove(teardown: Exclude<TeardownLogic, void>): void;
     unsubscribe(): void;
 }
 
-export interface Observable<T> extends Subscribable<T> {
+interface Observable<T> extends Subscribable<T> {
     forEach(next: (value: T) => void): Promise<void>;
     forEach(next: (value: T) => void, promiseCtor: PromiseConstructorLike): Promise<void>;
     pipe(): Observable<T>;
@@ -55,10 +55,39 @@ export interface Observable<T> extends Subscribable<T> {
 }
 
 
-export interface Subscribable<T> {
+interface Subscribable<T> {
     subscribe(observer: Partial<Observer<T>>): Unsubscribable;
 }
 
+interface Subscriber<T> extends Subscription, Observer<T> {
+    complete(): void;
+    error(err?: any): void;
+    next(value?: T): void;
+    unsubscribe(): void;
+}
+interface Operator<T, R> {
+    call(subscriber: Subscriber<R>, source: any): TeardownLogic;
+}
+
+interface Subject<T> extends Observable<T>, SubscriptionLike {
+    closed: boolean;
+    hasError: boolean;
+    isStopped: boolean;
+    observers: Observer<T>[];
+    thrownError: any;
+    asObservable(): Observable<T>;
+    complete(): void;
+    error(err: any): void;
+    lift<R>(operator: Operator<T, R>): Observable<R>;
+    next(value: T): void;
+    unsubscribe(): void;
+}
+interface EventEmitter<T> extends Subject<T> {
+    __isAsync: boolean;
+    new(isAsync?: boolean): EventEmitter<T>;
+    emit(value?: T): void;
+    subscribe(generatorOrNext?: any, error?: any, complete?: any): Subscription;
+}
 
 interface SubscriptionStrategy {
     createSubscription(async: Subscribable<any> | Promise<any>, updateLatestValue: any): Unsubscribable
@@ -98,16 +127,18 @@ class PromiseStrategy implements SubscriptionStrategy {
     onDestroy(subscription: Promise<any>): void { }
 }
 
-export function isPromise<T = any>(obj: any): obj is Promise<T> {
+function isPromise<T = any>(obj: any): obj is Promise<T> {
     // allow any Promise/A+ compliant thenable.
     // It's up to the caller to ensure that obj.then conforms to the spec
     return !!obj && typeof obj.then === 'function';
 }
 
+type CanSubscribe<T> = Subscribable<T> | Observable<T> | EventEmitter<T>;
+
 /**
  * Determine if the argument is a Subscribable
  */
-export function isSubscribable(obj: any | Subscribable<any>): obj is Subscribable<any> {
+function isSubscribable<T>(obj: any | CanSubscribe<T>): obj is CanSubscribe<T> {
     return !!obj && typeof obj.subscribe === 'function';
 }
 
@@ -116,33 +147,32 @@ const _subscribableStrategy = new SubscribableStrategy();
 
 
 @Pipe({ name: 'async', asynchronous: true })
-export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Subscribable<T> | Promise<T> | null | undefined, T | null> {
+export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> {
     private _latestValue: any = null;
 
     private _subscription: Unsubscribable | Promise<any> | null = null;
-    private _obj: Subscribable<any> | Promise<any> | EventEmitter<any> | null = null;
+    private _obj: Subscribable<any> | Observable<T> | EventEmitter<T> | Promise<any> | null = null;
     private _strategy: SubscriptionStrategy = null!;
 
     constructor() { }
-    __observable: { [key: string]: Function[]; } = {};
+    __observable: { [key: string]: Function[]; } = {
+        async: []
+    };
     subscribeModel(eventName: string, callback: Function): void {
         if (typeof callback !== 'function') {
             return;
         }
-        this.__observable[eventName] = this.__observable[eventName] || [];
+        if ('async' !== eventName) {
+            return;
+        }
         this.__observable[eventName].push(callback);
     }
-    emitChangeModel(eventName: string, source?: any[]): void {
-        if (!source) {
-            source = [this];
-        } else {
-            source.push(this);
+    emitChangeModel(eventName: string): void {
+        if ('async' !== eventName) {
+            return;
         }
-        const calls = Object.keys(this.__observable)
-            .filter(key => key.startsWith(eventName) || eventName.startsWith(key));
-        calls.forEach(key => {
-            this.__observable[key].forEach(callback => callback.call(this, source));
-        });
+        const source = [this];
+        this.__observable['async'].forEach(callback => callback.call(this, source));
     }
 
     onDestroy(): void {
@@ -151,10 +181,10 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Subscribabl
         }
     }
 
-    transform<T>(obj: Subscribable<T> | Promise<T>): T | null;
-    transform<T>(obj: null | undefined): null;
-    transform<T>(obj: Subscribable<T> | Promise<T> | null | undefined): T | null;
-    transform<T>(obj: Subscribable<T> | Promise<T> | null | undefined): T | null {
+    transform(obj: Subscribable<T> | Observable<T> | EventEmitter<T> | Promise<T>): T | null;
+    transform(obj: null | undefined): null;
+    transform(obj: Subscribable<T> | Observable<T> | EventEmitter<T> | Promise<T> | null | undefined): T | null;
+    transform(obj: Subscribable<T> | Observable<T> | EventEmitter<T> | Promise<T> | null | undefined): T | null {
         if (!this._obj) {
             if (obj) {
                 this._subscribe(obj);
@@ -170,14 +200,14 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Subscribabl
         return this._latestValue;
     }
 
-    private _subscribe(obj: Subscribable<any> | Promise<any> | EventEmitter<any>): void {
+    private _subscribe(obj: Subscribable<any> | Observable<T> | Promise<any>): void {
         this._obj = obj;
         this._strategy = this._selectStrategy(obj);
         this._subscription = this._strategy.createSubscription(
             obj, (value: Object) => this._updateLatestValue(obj, value));
     }
 
-    private _selectStrategy(obj: Subscribable<any> | Promise<any> | EventEmitter<any>): any {
+    private _selectStrategy(obj: Subscribable<any> | Observable<T> | Promise<any>): any {
         if (isPromise(obj)) {
             return _promiseStrategy;
         }
@@ -200,10 +230,6 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Subscribabl
         if (async === this._obj) {
             this._latestValue = value;
             this.emitChangeModel('async');
-            // this._ref.markForCheck();
         }
     }
 }
-
-
-Reflect.set(window, 'AsyncPipe', AsyncPipe);
