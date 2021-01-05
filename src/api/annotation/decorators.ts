@@ -13,6 +13,7 @@ export interface ServiceOptions {
 
 export interface PipeOptions {
 	name: string;
+	asynchronous?: boolean;
 }
 
 export interface ComponentOptions<T = Function> {
