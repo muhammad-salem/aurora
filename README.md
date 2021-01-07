@@ -71,99 +71,83 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 
 ## Library Features
 
-| Features | Aurora |
-| ------- | ------- |
-| ES Module | ✓ |
-| JavaScript API | TO:DO |
-| Dependency Injection |  TO:DO |
-| Component| ✓ |
-| Directives | ✓ |
-| Pipes | ✓ |
-| Services | TO:DO |
-| Lifecycle | ✓ |
-| @Input | ✓ |
-| @Output | ✓ |
-| @View | ✓ |
-| @HostListener | ✓ |
-| @ViewChild | ✓ |
-| @HostBinding | TO:DO |
-| @ViewChildren | TO:DO |
-| @SelfSkip | TO:DO |
-| @Optional | TO:DO |
-| [Annotation/Decorators reflect-metadata][metadata] | ✓ |
-| XSS (cross-site-scripting) | TO:DO |
+- [x] ES Module
+- [ ] JavaScript API
+- [ ] Dependency Injection
+- [x] Component
+- [x] Directives
+- [x] Pipes
+- [ ] Services
+- [x] Lifecycle
+- [x] @Input
+- [x] @Output
+- [x] @View
+- [x] @HostListener
+- [x] @ViewChild
+- [ ] @HostBinding
+- [ ] @ViewChildren
+- [ ] @SelfSkip
+- [ ] @Optional
+- [x] [Annotation/Decorators reflect-metadata][metadata]
+- [ ] XSS (cross-site-scripting)
 
 [metadata]: https://github.com/rbuckton/reflect-metadata
 
 ## Built-in Directive
 
-| Pipe | Available |
-| ------- | ------- |
-| *if | ✓ |
-| *for | TO:DO |
-| *switch | TO:DO |
-| *class | TO:DO |
-| *style | TO:DO |
-| *switch | TO:DO |
-| *switch | TO:DO |
+- [x] *if
+- [ ] *for
+- [ ] *switch
+- [ ] *class
+- [ ] *style
 
-## Built-in Pipes
+## Built-in Pipes ( Pipeline operator '|>' )
 
-| Pipe | Available |
-| ------- | ------- |
-| async | ✓ |
-| date | TO:DO |
-| lowercase | ✓ |
-| titlecase | ✓ |
-| uppercase | ✓ |
-| json | ✓ |
-| keyvalue | ✓ |
-| slice | TO:DO |
-| currency | TO:DO |
-| number | TO:DO |
-| percent | TO:DO |
-| i18nPlural | TO:DO |
-| i18nSelect | TO:DO |
+- [x] async
+- [ ] date
+- [x] lowercase
+- [x] titlecase
+- [x] uppercase
+- [x] json
+- [x] keyvalue
+- [ ] slice
+- [ ] currency
+- [ ] number
+- [ ] percent
+- [ ] i18nPlural
+- [ ] i18nSelect
 
 
 ## Web Component standards
 
-| Standards  | Support |
-| ------- | ------- |
-| [Custom Elements][custom]  | ✓ |
-| [Shadow DOM][shadow] | ✓ |
-| [HTML Templates Element][template]| ✓ |
-| [HTML Templates Element with Shadow DOM][template]| ✓ |
+- [x]  [Custom Elements][custom]
+- [x]  [Shadow DOM][shadow]
+- [x]  [HTML Templates Element][template]
+- [x]  [HTML Templates Element with Shadow DOM][template]
 
 ## Custom Elements standards
 
-| Features | Aurora |
-| ------- | ------- |
-| [Reflecting Properties to Attributes][attr-props] | ✓ |
-| [Observing Changes to Attributes][observ-attr] | ✓ |
-| [Element Upgrades][elem-upgrd] | ✓ |
-| [Styling a Custom Element][style] | TO:DO |
-| [Extending native HTML elements][extend-native] | ✓ |
-| [Extending a Custom Element][extend-custom] | TO:DO |
-| [Two Component On Same Model Class][two-component] | ✓ |
-| [Two Component Share Same Model Instance][two-component] | TO:DO |
+- [x] [Reflecting Properties to Attributes][attr-props]
+- [x] [Observing Changes to Attributes][observ-attr]
+- [x] [Element Upgrades][elem-upgrd]
+- [ ] [Styling a Custom Element][style]
+- [x] [Extending native HTML elements][extend-native]
+- [ ] [Extending a Custom Element][extend-custom]
+- [x] [Two Component On Same Model Class][two-component]
+- [ ] [Two Component Share Same Model Instance][two-component]
 
 ## Shadow DOM standards
 
-| Features | Aurora |
-| ------- | ------- |
-| [Open Mode][shadow-mode-open] | ✓ |
-| [Closed Mode][shadow-mode-closed] | ✓ |
-| [delegatesFocus][shadow-focus] | ✓ |
-| [Shadow DOM event model][shadow-event] | ✓ |
+- [x] [Open Mode][shadow-mode-open]
+- [x] [Closed Mode][shadow-mode-closed]
+- [x] [delegatesFocus][shadow-focus]
+- [x] [Shadow DOM event model][shadow-event]
 
 ## HTML Templates Element standards
 
-| Features | Aurora |
-| ------- | ------- |
-| [Load template by ID from document][template-id] | ✓ |
-| As Normal Custom Element | ✓ |
-| As Shadow DOM Element | ✓ |
+- [x] [Load template by ID from document][template-id]
+- [x] As Normal Custom Element
+- [x] As Shadow DOM Element
 
 
 [attr-props]: https://developers.google.com/web/fundamentals/web-components/customelements#reflectattr
