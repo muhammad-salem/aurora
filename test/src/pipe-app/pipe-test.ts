@@ -8,14 +8,15 @@ import { interval } from 'rxjs';
         <p>{{observable |> async}}</p>
         <p>{{text}}</p>
         <p>{{text |> lowercase}}</p>
-        <p>{{text |> uppercase}}</p>
         <p>{{text |> titlecase}}</p>
+        <p>{{text |> uppercase}}</p>
         <p>{{obj |> json}}</p>
         <p>{{keyValueObject |> json}}</p> - <p>{{keyValueObject |> keyvalue |> json}}</p>
         <p>{{keyValueArray |> json}}</p> - <p>{{keyValueArray |> keyvalue |> json}}</p>
         <p>{{keyValueMap |> json}}</p> - <p>{{keyValueMap |> keyvalue |> json}}</p>
         <p>{{array |> slice:2:3}}</p>
         <p>{{slice(array, 1, 3)}}</p>
+        <p>{{3345.54645 |> Math.trunc}}</p>
     </div>
     `
 })
