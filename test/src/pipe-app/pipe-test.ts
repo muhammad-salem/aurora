@@ -14,12 +14,14 @@ import { interval } from 'rxjs';
         <p>{{keyValueObject |> json}}</p> - <p>{{keyValueObject |> keyvalue |> json}}</p>
         <p>{{keyValueArray |> json}}</p> - <p>{{keyValueArray |> keyvalue |> json}}</p>
         <p>{{keyValueMap |> json}}</p> - <p>{{keyValueMap |> keyvalue |> json}}</p>
+        <p>{{array |> slice:2:3}}</p>
+        <p>{{slice(array, 1, 3)}}</p>
     </div>
     `
 })
 export class PipeTestApp {
 
-    text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet, magna eu consectetur aliquam, leo dolor aliquam enim, sit amet faucibus tellus neque vitae erat. Morbi eget enim velit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+    text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet.';
     obj = {
         a: [1, 2, 3],
         b: 'property b',
@@ -38,5 +40,7 @@ export class PipeTestApp {
     keyValueMap = new Map<number, number | string>([[1, 400], [2, 500], [3, 'B200']]);
 
     observable = interval(1000);
+
+    array = ['a', 'b', 'c', 'd'];
 
 }
