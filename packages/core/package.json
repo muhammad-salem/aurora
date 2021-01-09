@@ -22,12 +22,38 @@
     "@aurorats/pipe": "^0.1.12",
     "@aurorats/router": "^0.1.12",
     "@aurorats/types": "^0.1.12",
-    "tslib": "^2.0.3"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "typescript": "^4.1.3"
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "custom-elements",
+    "dependency-injection",
+    "reflect-metadata",
+    "services",
+    "component",
+    "directive",
+    "pipes",
+    "forms",
+    "template-syntax",
+    "template-expression",
+    "http-client",
+    "http",
+    "html-parser",
+    "parser",
+    "jsx",
+    "jsx-factory",
+    "routers",
+    "js-parser",
+    "elements-info",
+    "element",
+    "interceptor",
+    "shadow-dom",
+    "typescript"
+  ]
 }

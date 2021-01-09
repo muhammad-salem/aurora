@@ -1,22 +1,36 @@
 import { Component, HostListener } from '@aurorats/core';
+import { interval } from 'rxjs';
 
 @Component({
     selector: 'bind-2way',
+    extend: 'div',
     template: `
-    <input type="text" [(value)]="data" />
+    <div class="row">
+        <input class="col-sm-12" type="text" [(value)]="data1" />
+        <div class="col-sm-12">{{data1 + ' ' + timer |> async}}</div>
+    </div>
+    <div class="row">
+        <input class="col-sm-12" type="text" [(value)]="data2" />
+        <div class="col-sm-12">{{data2 |> lowercase + ' ' + timer |> async}}</div>
+    </div>
     <hr />
-    <input type="text" [(value)]="data" />
-    <hr />
-    <div [textContent]="data + ' ' + data"></div>
     `
 })
 export class Binding2Way {
 
-    data = '2 way binding';
+    data1 = 'two way data binding';
+    data2 = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet';
 
-    @HostListener('data')
-    onDataChange() {
-        console.log(`data change ==> ${this.data}`);
+    timer = interval(1000);
+
+    @HostListener('data1')
+    onDataOneChange() {
+        console.log(`onDataOneChange ==> ${this.data1}`);
+    }
+
+    @HostListener('data2')
+    onDataTwoChange() {
+        console.log(`onDataTwoChange  ==> ${this.data2}`);
     }
 
 }

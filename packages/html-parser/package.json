@@ -23,5 +23,13 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "html-parser",
+    "node-html-parser",
+    "html",
+    "parser",
+    "typescript"
+  ]
 }
