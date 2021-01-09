@@ -27,5 +27,31 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "custom-elements",
+    "dependency-injection",
+    "reflect-metadata",
+    "services",
+    "component",
+    "directive",
+    "pipes",
+    "forms",
+    "template-syntax",
+    "template-expression",
+    "http-client",
+    "http",
+    "html-parser",
+    "parser",
+    "jsx",
+    "jsx-factory",
+    "routers",
+    "js-parser",
+    "elements-info",
+    "element",
+    "interceptor",
+    "shadow-dom",
+    "typescript"
+  ]
 }

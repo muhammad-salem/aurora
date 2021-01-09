@@ -19,5 +19,10 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "reflect-metadata",
+    "typescript"
+  ]
 }

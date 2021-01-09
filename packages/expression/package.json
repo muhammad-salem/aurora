@@ -19,5 +19,11 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "template-syntax",
+    "template-expression",
+    "typescript"
+  ]
 }

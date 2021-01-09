@@ -23,5 +23,13 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "custom-elements",
+    "forms",
+    "component",
+    "shadow-dom",
+    "typescript"
+  ]
 }

@@ -23,5 +23,11 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "custom-elements",
+    "routers",
+    "typescript"
+  ]
 }

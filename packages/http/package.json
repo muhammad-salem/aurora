@@ -23,5 +23,12 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "http-client",
+    "http",
+    "interceptor",
+    "typescript"
+  ]
 }
