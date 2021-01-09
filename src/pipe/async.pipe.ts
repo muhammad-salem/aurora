@@ -90,8 +90,7 @@ interface EventEmitter<T> extends Subject<T> {
 }
 
 interface SubscriptionStrategy {
-    createSubscription(async: Subscribable<any> | Promise<any>, updateLatestValue: any): Unsubscribable
-        | Promise<any>;
+    createSubscription(async: Subscribable<any> | Promise<any>, updateLatestValue: any): Unsubscribable | Promise<any>;
     dispose(subscription: Unsubscribable | Promise<any>): void;
     onDestroy(subscription: Unsubscribable | Promise<any>): void;
 }
@@ -203,8 +202,7 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Observable<
     private _subscribe(obj: Subscribable<any> | Observable<T> | Promise<any>): void {
         this._obj = obj;
         this._strategy = this._selectStrategy(obj);
-        this._subscription = this._strategy.createSubscription(
-            obj, (value: Object) => this._updateLatestValue(obj, value));
+        this._subscription = this._strategy.createSubscription(obj, (value: Object) => this._updateLatestValue(obj, value));
     }
 
     private _selectStrategy(obj: Subscribable<any> | Observable<T> | Promise<any>): any {
