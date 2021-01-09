@@ -20,16 +20,16 @@ export class AppRoot {
         this.appSelector = selectors;
         if (typeof this.appSelector === 'string') {
             this.apps = this.appSelector.split(',')
-                .map(tag => tag.trim())
-                .map(tag => `<${tag} ></${tag}>`)
+                .map(selector => selector.trim())
+                .map(selector => `<${selector} ></${selector}>`)
                 .join('\n');
         } else if (Array.isArray(this.appSelector)) {
             this.apps = this.appSelector
-                .map(tagRef => {
-                    if (typeof tagRef === 'string') {
-                        return `<${tagRef} ></${tagRef}>`;
+                .map(selector => {
+                    if (typeof selector === 'string') {
+                        return `<${selector} ></${selector}>`;
                     } else {
-                        return `<${tagRef.tag} ${tagRef.is ? 'is="' + tagRef.is + '"' : ''}></${tagRef.tag}>`;
+                        return `<${selector.tag} ${selector.is ? 'is="' + selector.is + '"' : ''}></${selector.tag}>`;
                     }
                 })
                 .join('\n');
