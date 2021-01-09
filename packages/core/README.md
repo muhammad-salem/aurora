@@ -110,7 +110,7 @@ see test for more help [test](https://github.com/aurorats/aurora/tree/master/tes
 - [x] uppercase
 - [x] json
 - [x] keyvalue
-- [ ] slice
+- [x] slice
 - [ ] currency
 - [ ] number
 - [ ] percent
