@@ -20,7 +20,7 @@
     "@aurorats/html-parser": "^0.1.12",
     "@aurorats/jsx": "^0.1.12",
     "@aurorats/metadata": "^0.1.12",
-    "tslib": "^2.0.3"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "typescript": "^4.1.3"

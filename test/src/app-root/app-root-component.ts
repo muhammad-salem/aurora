@@ -1,31 +1,42 @@
-import { AfterViewInit, Component, HTMLComponent, Input, View } from '@aurorats/core';
+import { Component, HTMLComponent, Input, isModel, View } from '@aurorats/core';
 
+export type AppSelector = string | (string | { tag: string, is?: string })[]
 
 @Component({
-    selector: 'app-root'
+    selector: 'app-root',
+    template: `<div [innerHTML]="apps"></div>`
 })
-export class AppRoot implements AfterViewInit {
+export class AppRoot {
 
     @Input('selector')
-    appSelector: string | string[];
+    appSelector: AppSelector;
+
+    apps: string = 'no apps provided';
 
     @View()
     view: HTMLComponent<AppRoot>;
 
-    afterViewInit() {
-        let apps: string = 'no apps provided';
+    setAppSelector(selectors: AppSelector) {
+        this.appSelector = selectors;
         if (typeof this.appSelector === 'string') {
-            apps = this.appSelector.split(',')
+            this.apps = this.appSelector.split(',')
                 .map(tag => tag.trim())
                 .map(tag => `<${tag} ></${tag}>`)
                 .join('\n');
         } else if (Array.isArray(this.appSelector)) {
-            apps = this.appSelector
-                .map(tag => tag.trim())
-                .map(tag => `<${tag} ></${tag}>`)
+            this.apps = this.appSelector
+                .map(tagRef => {
+                    if (typeof tagRef === 'string') {
+                        return `<${tagRef} ></${tagRef}>`;
+                    } else {
+                        return `<${tagRef.tag} ${tagRef.is ? 'is="' + tagRef.is + '"' : ''}></${tagRef.tag}>`;
+                    }
+                })
                 .join('\n');
         }
-        this.view.innerHTML = apps;
-    }
 
+        if (isModel(this)) {
+            this.emitChangeModel('apps');
+        }
+    }
 }

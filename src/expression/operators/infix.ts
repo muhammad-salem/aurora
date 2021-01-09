@@ -288,17 +288,12 @@ export class TernaryNode implements NodeExpression {
     static Operators = [':'];
 
     static parse(tokens: (NodeExpression | string)[], objectNode?: ObjectOperator) {
-        for (let i = 1; (i = tokens.indexOf(':', i - 1)) > -1;) {
-            let pre = tokens[i - 1], post = tokens[i + 1];
-            let conditional = tokens[i - 2];
-            function createTernaryNode() {
-                let ternary = new TernaryNode(conditional as ConditionalOperators, pre as NodeExpression, post as NodeExpression);
+        for (let i = 1; (i = tokens.indexOf(TernaryNode.Operators[0], i - 1)) > -1;) {
+            const pre = tokens[i - 1], post = tokens[i + 1], operation = tokens[i - 2];
+            if ((operation instanceof ConditionalOperators)
+                || (operation instanceof GroupingOperator && operation.node instanceof ConditionalOperators)) {
+                const ternary = new TernaryNode(operation as ConditionalOperators, pre as NodeExpression, post as NodeExpression);
                 tokens.splice(i - 2, 4, ternary);
-            }
-            if (conditional instanceof ConditionalOperators) {
-                createTernaryNode();
-            } else if (conditional instanceof GroupingOperator && conditional.node instanceof ConditionalOperators) {
-                createTernaryNode();
             } else if (objectNode && typeof pre === 'object' && typeof post === 'object') {
                 if (pre instanceof PropertyNode) {
                     objectNode.addProperty(pre.property, post);
@@ -306,7 +301,26 @@ export class TernaryNode implements NodeExpression {
                     objectNode.addProperty(pre.value as string, post);
                 }
                 tokens.splice(i - 1, 3);
-            } else {
+            } else if (pre instanceof PipelineOperator && typeof post === 'object') {
+                let pipe = pre;
+                pipe.args = [post];
+                let index = i + 2;
+                let temp: string | NodeExpression;
+                for (; index < tokens.length; index++) {
+                    if (tokens[index] === TernaryNode.Operators[0]) {
+                        index++;
+                        temp = tokens[index];
+                        if (typeof temp === 'object') {
+                            pipe.args.push(temp);
+                            continue;
+                        }
+                    }
+                    index--;
+                    break;
+                }
+                tokens.splice(i, Math.min(tokens.length, index));
+            }
+            else {
                 throw new Error(`didn't found any ConditionalOperators`);
             }
         }
@@ -392,7 +406,7 @@ export abstract class InfixOperators implements NodeExpression {
     constructor(public op: string, public left: NodeExpression, public right: NodeExpression, public callback: EvaluateCallback) { }
 
     set(context: object, value: any) {
-        throw new Error(`${this.constructor.name}#set() has no implementation.`);
+        throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
     }
     get(context: object): boolean {
         const evalNode: EvaluateNode = {
@@ -672,20 +686,22 @@ export class PipelineOperator implements NodeExpression {
 
     static Operators = ['|>'];
 
+    public args: NodeExpression[] = [];
+
     constructor(public op: string, public param: NodeExpression, public func: NodeExpression) { }
     set(context: object, value: any) {
         throw new Error(`TernaryNode#set() has no implementation.`);
     }
     get(context: object) {
         let funCallBack = this.func.get(context) as Function;
-        let value = funCallBack.call(context, this.param.get(context));
+        let value = funCallBack.call(context, this.param.get(context), ...this.args.map(arg => arg.get(context)));
         return value;
     }
     entry(): string[] {
-        return [...this.func.entry(), ...this.param.entry()];
+        return [...this.func.entry(), ...this.param.entry(), ...this.args.flatMap(arg => arg.entry())];
     }
     toString(): string {
-        return `(${this.param.toString()}) |> (${this.func.toString()})`;
+        return `${this.param.toString()} |> ${this.func.toString()}${this.args.flatMap(arg => `:${arg.toString()}`).join('')}`;
     }
 }
 
