@@ -406,7 +406,7 @@ export abstract class InfixOperators implements NodeExpression {
     constructor(public op: string, public left: NodeExpression, public right: NodeExpression, public callback: EvaluateCallback) { }
 
     set(context: object, value: any) {
-        throw new Error(`${this.constructor.name}#set() has no implementation.`);
+        throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
     }
     get(context: object): boolean {
         const evalNode: EvaluateNode = {
