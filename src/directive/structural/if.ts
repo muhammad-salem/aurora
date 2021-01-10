@@ -25,8 +25,11 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 			stack.push(this);
 		};
 
-		propertyMaps.forEach(property => {
-			subscribe1way(property.provider.context, property.entityName as string, this, 'condition', callback1);
+		propertyMaps.forEach(propertyMap => {
+			const context = propertyMap.provider.getContext(propertyMap.entityName);
+			if (context) {
+				subscribe1way(context, propertyMap.entityName as string, this, 'condition', callback1);
+			}
 		});
 
 		callback1([]);

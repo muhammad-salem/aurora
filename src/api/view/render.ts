@@ -14,7 +14,7 @@ import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.j
 import { hasAttr } from '../utils/elements-util.js';
 import { ElementMutation } from './mutation.js';
 import { ContextDescriptorRef, ContextStack, mergeContextProviders, PropertyMap, TemplatePropertyMap } from '../context/context-provider.js';
-import PIPE_CONTEXT_PROVIDER from '../pipe/pipe.js';
+import { AsyncPipeContext, ASYNC_PIPE_CONTEXT_PROVIDER, PIPE_CONTEXT_PROVIDER } from '../pipe/pipe.js';
 import { DUMMY_PROXY_TARGET, THIS_PROPERTY, WINDOW_CONTEXT_PROVIDER } from '../global/global-constant.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): string {
@@ -43,7 +43,7 @@ export class ComponentRender<T> {
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
-		this.contextStack = mergeContextProviders<ContextDescriptorRef>(WINDOW_CONTEXT_PROVIDER, PIPE_CONTEXT_PROVIDER, this.view, this.view._model);
+		this.contextStack = mergeContextProviders<ContextDescriptorRef>(WINDOW_CONTEXT_PROVIDER, PIPE_CONTEXT_PROVIDER, ASYNC_PIPE_CONTEXT_PROVIDER, this.view, this.view._model);
 	}
 
 	initView(): void {
@@ -364,7 +364,7 @@ export class ComponentRender<T> {
 						return;
 					}
 				}
-				return propertyMap.provider.getContextValue(propertyKey);
+				return propertyMap.provider.getContextValue(propertyKey as string);
 			},
 			set(target: typeof DUMMY_PROXY_TARGET, propertyKey: PropertyKey, value: any): boolean {
 				let propertyMap = propertyMaps.find(src => src.entityName === propertyKey as string);
@@ -374,7 +374,7 @@ export class ComponentRender<T> {
 						propertyMaps.push(propertyMap);
 					}
 				}
-				return propertyMap?.provider.setContextValue(propertyKey, value);
+				return propertyMap?.provider.setContextValue(propertyKey as string, value);
 			}
 		};
 		return new Proxy<typeof DUMMY_PROXY_TARGET>(DUMMY_PROXY_TARGET, proxyHandler);
@@ -387,7 +387,13 @@ export class ComponentRender<T> {
 	mapPropertyWithProvider(entries: string[], contextStack: ContextStack<ContextDescriptorRef>): PropertyMap[] {
 		const propertyMaps = entries
 			.map(entityName => { return { entityName: entityName, provider: contextStack.findContextProvider(entityName) } as PropertyMap; })
-			.filter(source => source);
+			.filter(source => source)
+			.map(prop => {
+				if (prop.provider === ASYNC_PIPE_CONTEXT_PROVIDER) {
+					prop.provider = prop.provider.getContext(prop.entityName) as AsyncPipeContext<any, any>;
+				}
+				return prop;
+			});
 		return propertyMaps;
 	}
 
@@ -401,7 +407,10 @@ export class ComponentRender<T> {
 			forwardData.get(proxyContext);
 		};
 		propertyMaps.forEach(propertyMap => {
-			subscribe1way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1);
+			const context = propertyMap.provider.getContext(propertyMap.entityName);
+			if (context) {
+				subscribe1way(context, propertyMap.entityName as string, element, elementAttr, callback1);
+			}
 		});
 		callback1([]);
 	}
@@ -423,7 +432,10 @@ export class ComponentRender<T> {
 		};
 
 		propertyMaps.forEach(propertyMap => {
-			subscribe2way(propertyMap.provider.getContext(), propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			const context = propertyMap.provider.getContext(propertyMap.entityName);
+			if (context) {
+				subscribe2way(context, propertyMap.entityName as string, element, elementAttr, callback1, callback2);
+			}
 		});
 
 		callback1([]);
@@ -476,8 +488,11 @@ export class ComponentRender<T> {
 
 		templateMap.flatMap(template => template.propertyMap)
 			.filter((value, index, array) => index === array.indexOf(value))
-			.forEach(property => {
-				subscribe1way(property.provider.getContext(), property.entityName as string, element, elementAttr, handler);
+			.forEach(propertyMap => {
+				const context = propertyMap.provider.getContext(propertyMap.entityName);
+				if (context) {
+					subscribe1way(context, propertyMap.entityName as string, element, elementAttr, handler);
+				}
 			});
 		handler();
 	}

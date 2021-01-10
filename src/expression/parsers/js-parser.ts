@@ -80,6 +80,7 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
     UnaryOperators.parse(tokens);
     ConditionalOperators.parse(tokens);
     LiteralUnaryOperators.parse(tokens);
+    parseInfix(PipelineOperator, tokens);
 
     TernaryNode.parse(tokens);
 
@@ -89,7 +90,6 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
     parseInfix(LogicalAssignmentNode, tokens);
     parseInfix(LogicalOperators, tokens);
     parseInfix(RelationalOperators, tokens);
-    parseInfix(PipelineOperator, tokens);
     parseInfix(ArrayCommaOperators, tokens);
     parseInfix(AssignmentNode, tokens);
 

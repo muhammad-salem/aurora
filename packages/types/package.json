@@ -16,5 +16,10 @@
   },
   "scripts": {
     "build": "tsc --build --verbose"
-  }
+  },
+  "keywords": [
+    "aurora",
+    "custom-elements",
+    "typescript"
+  ]
 }
