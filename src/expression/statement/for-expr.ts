@@ -1,22 +1,62 @@
-import { NodeExpression } from '../expression.js';
-import { Evaluate, EvaluateNode, InfixOperators } from '../operators/infix.js';
+import { NodeExpression, PropertyNode } from '../expression.js';
 
+export class DeclareVariableOperator implements NodeExpression {
 
-export class CommaOperators extends InfixOperators {
+    static Operators: string[] = ['var', 'let', 'const'];
 
-    static Evaluations: Evaluate = {
-        /**
-         * for (let i = 0, j = 9; i < 10; i++, j--)
-         */
-        ',': (evalNode: EvaluateNode) => { return evalNode.left, evalNode.right; },
-    };
+    constructor(public op: string, public propertyName: PropertyNode) { }
 
-    static Operators = Object.keys(CommaOperators.Evaluations);
+    set(context: object, value: any) {
+        Reflect.set(context, this.propertyName.get(context), value);
+    }
+    get(context: object) {
+        return Reflect.get(context, this.propertyName.get(context));
+    }
+    entry(): string[] {
+        return [];
+    }
+    toString(): string {
+        return `${this.op} ${this.propertyName.toString()}`;
+    }
+}
 
-    constructor(op: string, left: NodeExpression, right: NodeExpression) {
-        if (!(op in CommaOperators.Operators)) {
-            throw new Error(`[${op}]: operation has no implementation.`);
-        }
-        super(op, left, right, CommaOperators.Evaluations[op]);
+export class AliasedOperator implements NodeExpression {
+
+    static Operator: string = 'as';
+
+    constructor(public localProperty: PropertyNode, public aliasedProperty: PropertyNode) { }
+
+    set(context: object, value: any) {
+        // Object.defineProperty(context, this.aliasedProperty.toString(), { value });
+        Reflect.set(context, this.aliasedProperty.get(context), value);
+    }
+    get(context: object) {
+        return Reflect.get(context, this.aliasedProperty.get(context));
+    }
+    entry(): string[] {
+        return this.aliasedProperty.entry();
+    }
+    toString(): string {
+        return `${this.localProperty.toString()} ${AliasedOperator.Operator} ${this.aliasedProperty.toString()}`;
+    }
+}
+
+export class OfItemsOperator implements NodeExpression {
+
+    static Operator: string = 'of';
+
+    constructor(public items: PropertyNode) { }
+
+    set(context: object, value: any) {
+        Reflect.set(context, this.items.get(context), value);
+    }
+    get(context: object) {
+        return Reflect.get(context, this.items.get(context));
+    }
+    entry(): string[] {
+        return this.items.entry();
+    }
+    toString(): string {
+        return `${OfItemsOperator.Operator} ${this.items.toString()}`;
     }
 }
