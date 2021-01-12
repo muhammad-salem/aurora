@@ -1,9 +1,9 @@
 {
-  "name": "@aurorats/api",
+  "name": "@ibyar/api",
   "version": "0.1.12",
   "description": "Implements Aurora's core functionality, low-level services, and utilities",
   "license": "MIT",
-  "homepage": "https://github.com/aurorats/aurora",
+  "homepage": "https://github.com/ibyar/aurora",
   "main": "./index.js",
   "module": "./index.js",
   "types": "./index.d.ts",
@@ -15,11 +15,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/element": "^0.1.12",
-    "@aurorats/expression": "^0.1.12",
-    "@aurorats/html-parser": "^0.1.12",
-    "@aurorats/jsx": "^0.1.12",
-    "@aurorats/metadata": "^0.1.12",
+    "@ibyar/element": "^0.1.12",
+    "@ibyar/expression": "^0.1.12",
+    "@ibyar/html-parser": "^0.1.12",
+    "@ibyar/jsx": "^0.1.12",
+    "@ibyar/metadata": "^0.1.12",
     "tslib": "^2.1.0"
   },
   "devDependencies": {
@@ -30,6 +30,7 @@
   },
   "keywords": [
     "aurora",
+    "ibyar",
     "custom-elements",
     "dependency-injection",
     "reflect-metadata",

@@ -1,9 +1,9 @@
 {
-  "name": "@aurorats/forms",
+  "name": "@ibyar/forms",
   "version": "0.1.12",
   "description": "Aurora forms, deal with input elements and form",
   "license": "MIT",
-  "homepage": "https://github.com/aurorats/aurora",
+  "homepage": "https://github.com/ibyar/aurora",
   "main": "./index.js",
   "module": "./index.js",
   "types": "./index.d.ts",
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurorats/api": "^0.1.12",
+    "@ibyar/api": "^0.1.12",
     "tslib": "^2.1.0"
   },
   "devDependencies": {
@@ -26,6 +26,7 @@
   },
   "keywords": [
     "aurora",
+    "ibyar",
     "custom-elements",
     "forms",
     "component",
