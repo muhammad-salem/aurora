@@ -4,7 +4,18 @@ export class DeclareVariableOperator implements NodeExpression {
 
     static Operators: string[] = ['var', 'let', 'const'];
 
-    constructor(public op: string, public propertyName: PropertyNode) { }
+    static parser(tokens: (NodeExpression | string)[]): void {
+        DeclareVariableOperator.Operators.forEach(op => {
+            for (let i = 1; (i = tokens.indexOf(op, i - 1)) > -1;) {
+                const propertyName = tokens[i + 1];
+                if (typeof propertyName === 'object') {
+                    tokens.splice(i, 2, new DeclareVariableOperator(op, propertyName));
+                }
+            }
+        });
+    }
+
+    constructor(public op: string, public propertyName: NodeExpression) { }
 
     set(context: object, value: any) {
         Reflect.set(context, this.propertyName.get(context), value);
@@ -22,9 +33,20 @@ export class DeclareVariableOperator implements NodeExpression {
 
 export class AliasedOperator implements NodeExpression {
 
-    static Operator: string = 'as';
+    static Operators: string[] = ['as'];
 
-    constructor(public localProperty: PropertyNode, public aliasedProperty: PropertyNode) { }
+    static parser(tokens: (NodeExpression | string)[]): void {
+        AliasedOperator.Operators.forEach(op => {
+            for (let i = 1; (i = tokens.indexOf(op, i - 1)) > -1;) {
+                let pre = tokens[i - 1], post = tokens[i + 1];
+                if (typeof pre === 'object' && typeof post === 'object') {
+                    tokens.splice(i - 1, 3, new AliasedOperator(pre, post));
+                }
+            }
+        });
+    }
+
+    constructor(public localProperty: NodeExpression, public aliasedProperty: NodeExpression) { }
 
     set(context: object, value: any) {
         // Object.defineProperty(context, this.aliasedProperty.toString(), { value });
@@ -37,15 +59,26 @@ export class AliasedOperator implements NodeExpression {
         return this.aliasedProperty.entry();
     }
     toString(): string {
-        return `${this.localProperty.toString()} ${AliasedOperator.Operator} ${this.aliasedProperty.toString()}`;
+        return `${this.localProperty.toString()} ${AliasedOperator.Operators[0]} ${this.aliasedProperty.toString()}`;
     }
 }
 
 export class OfItemsOperator implements NodeExpression {
 
-    static Operator: string = 'of';
+    static Operators: string[] = ['of'];
 
-    constructor(public items: PropertyNode) { }
+    static parser(tokens: (NodeExpression | string)[]): void {
+        OfItemsOperator.Operators.forEach(op => {
+            for (let i = 1; (i = tokens.indexOf(op, i - 1)) > -1;) {
+                const propertyName = tokens[i + 1];
+                if (typeof propertyName === 'object') {
+                    tokens.splice(i, 2, new OfItemsOperator(propertyName));
+                }
+            }
+        });
+    }
+
+    constructor(public items: NodeExpression) { }
 
     set(context: object, value: any) {
         Reflect.set(context, this.items.get(context), value);
@@ -57,6 +90,6 @@ export class OfItemsOperator implements NodeExpression {
         return this.items.entry();
     }
     toString(): string {
-        return `${OfItemsOperator.Operator} ${this.items.toString()}`;
+        return `${OfItemsOperator.Operators[0]} ${this.items.toString()}`;
     }
 }
