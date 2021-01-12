@@ -1,4 +1,4 @@
-import { hasNativeAttr } from '@aurorats/element';
+import { hasNativeAttr } from '@ibyar/element';
 import { ComponentRef } from '../component/component.js';
 import { isHTMLComponent } from '../component/custom-element.js';
 

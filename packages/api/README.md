@@ -10,10 +10,10 @@ Implements Aurora's core functionality, low-level services, and utilities.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/api
+npm i --save @ibyar/api
 ```
 
 ``` bash
-yarn add @aurorats/api
+yarn add @ibyar/api
 ```
 

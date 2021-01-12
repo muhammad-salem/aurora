@@ -5,17 +5,17 @@ Aurora expression, an template expression evaluation.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/expression
+npm i --save @ibyar/expression
 ```
 
 ``` bash
-yarn add @aurorats/expression
+yarn add @ibyar/expression
 ```
 
 
 ## Example
 ```ts
-import { NodeExpression, parseJSExpression } from '@aurorats/expression';
+import { NodeExpression, parseJSExpression } from '@ibyar/expression';
 
 let context:{[key: string]: any} = {
     a: 6,

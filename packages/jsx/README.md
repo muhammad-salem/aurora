@@ -5,9 +5,9 @@ Aurora jsx, has jsx factory, to build and collect tag name, attr and children fo
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/jsx
+npm i --save @ibyar/jsx
 ```
 
 ``` bash
-yarn add @aurorats/jsx
+yarn add @ibyar/jsx
 ```

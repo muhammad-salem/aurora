@@ -2,7 +2,7 @@ import {
     Aurora, AuroraChild, AuroraNode, CommentNode,
     ElementNode, FragmentNode, parseTextChild,
     TextNode
-} from '@aurorats/jsx';
+} from '@ibyar/jsx';
 
 
 export class TemplateParser {

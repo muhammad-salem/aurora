@@ -1,8 +1,8 @@
 
-import { AuroraNode, AuroraRenderNode } from '@aurorats/jsx';
-import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@aurorats/metadata';
-import { findByTagName, Tag } from '@aurorats/element';
-import { htmlParser, templateParser } from '@aurorats/html-parser';
+import { AuroraNode, AuroraRenderNode } from '@ibyar/jsx';
+import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
+import { findByTagName, Tag } from '@ibyar/element';
+import { htmlParser, templateParser } from '@ibyar/html-parser';
 
 import { HTMLComponent } from './custom-element.js';
 import ClassRegistryProvider from '../providers/provider.js';

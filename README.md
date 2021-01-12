@@ -7,16 +7,16 @@
 [![lerna][lerna-img]][lerna-url]
 ![GitHub contributors][contributors]
 
-[npm-image]: https://img.shields.io/npm/v/@aurorats/core.svg
-[npm-url]: https://npmjs.org/package/@aurorats/core
-[downloads-image]: https://img.shields.io/npm/dt/@aurorats/core
-[downloads-url]: https://npmjs.org/package/@aurorats/core
-[license-img]: https://img.shields.io/github/license/aurorats/aurora
-[license-url]: https://github.com/aurorats/aurora/blob/master/LICENSE
-[npm-dep-url]: https://img.shields.io/david/aurorats/aurora.svg?maxAge=2592000
+[npm-image]: https://img.shields.io/npm/v/@ibyar/aurora.svg
+[npm-url]: https://npmjs.org/package/@ibyar/aurora
+[downloads-image]: https://img.shields.io/npm/dt/@ibyar/aurora
+[downloads-url]: https://npmjs.org/package/@ibyar/aurora
+[license-img]: https://img.shields.io/github/license/ibyar/aurora
+[license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
+[npm-dep-url]: https://img.shields.io/david/ibyar/aurora.svg?maxAge=2592000
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
-[contributors]: https://img.shields.io/github/contributors/aurorats/aurora
+[contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
  - Template can be a JSX template or  HTML template.
@@ -29,28 +29,28 @@ No need for Virtual Dom.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/core
+npm i --save @ibyar/aurora
 ```
 
 ``` bash
-yarn add @aurorats/core
+yarn add @ibyar/aurora
 ```
 
 in your `tsconfig.json` add 
 
 ```json
 {
-    "extends": "@aurorats/core/tsconfig.compilerOption.json",
+    "extends": "@ibyar/aurora/tsconfig.compilerOption.json",
 }
 ```
 
-in your `index.ts` file add type reference for `@aurorats/types`
+in your `index.ts` file add type reference for `@ibyar/types`
 
 ```ts
-/// <reference types="@aurorats/types" />
+/// <reference types="@ibyar/types" />
 ```
 
-see test for more help [test](https://github.com/aurorats/aurora/tree/master/test)
+see test for more help [test](https://github.com/ibyar/aurora/tree/master/test)
 
 ## 'HTML Template' and 'JSX' Features
 
@@ -218,8 +218,8 @@ export class AppView {
                 <input id="appName" type="text" [(value)]="editData.name"/>
             </div>
             <div class="mb-3" >
-                <label for="appversin" class="form-label" > Version </label>
-                <input id="appversin" type="number" [(value)]="editData.version"/>
+                <label for="app-version" class="form-label" > Version </label>
+                <input id="app-version" type="number" [(value)]="editData.version"/>
             </div>
 
             <div class="mb-3" >
@@ -307,10 +307,10 @@ in index.html add:
 #### how to build
 
 ```bash
-git clone https://github.com/aurorats/aurora.git
+git clone https://github.com/ibyar/aurora.git
 cd aurora
 yarn install
 yarn build
 ```
 
-see test app for full example https://github.com/aurorats/aurora/tree/master/test
+see test app for full example https://github.com/ibyar/aurora/tree/master/test

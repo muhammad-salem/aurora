@@ -1,9 +1,9 @@
-import { ElementNode } from '@aurorats/jsx';
+import { ElementNode } from '@ibyar/jsx';
 import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
-} from '@aurorats/api';
-import { parseJSExpression } from '@aurorats/expression';
+} from '@ibyar/api';
+import { parseJSExpression } from '@ibyar/expression';
 
 
 @Directive({

@@ -1,13 +1,13 @@
 # Aurora Metadata
 
-Aurora metadata, basic functionality to save and load type metadate at runtime.
+Aurora metadata, basic functionality to save and load type metadata at runtime.
 
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/metadata
+npm i --save @ibyar/metadata
 ```
 
 ``` bash
-yarn add @aurorats/metadata
+yarn add @ibyar/metadata
 ```

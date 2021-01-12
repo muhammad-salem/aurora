@@ -5,17 +5,17 @@ Aurora HTML parser, parse an html string or file to jsx component.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/html-parser
+npm i --save @ibyar/html-parser
 ```
 
 ``` bash
-yarn add @aurorats/html-parser
+yarn add @ibyar/html-parser
 ```
 
 ## Example
 
-```html-parsercripe
-import { toJsxAttrComponent } from '@aurorats/html-parser';
+```ts
+import { toJsxAttrComponent } from '@ibyar/html-parser';
 
 let template = 
 `<div name="data-div">

@@ -2,7 +2,7 @@
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "../../packages/core",
+		"outDir": "../../packages/aurora",
 		"rootDir": ".",
 		"composite": true,
 		"tsBuildInfoFile": "./build.info"

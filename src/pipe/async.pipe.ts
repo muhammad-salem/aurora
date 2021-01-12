@@ -1,4 +1,4 @@
-import { Model, OnDestroy, Pipe, PipeTransform } from '@aurorats/api';
+import { Model, OnDestroy, Pipe, PipeTransform } from '@ibyar/api';
 
 interface Observer<T> {
     complete: () => void;

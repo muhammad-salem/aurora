@@ -5,9 +5,9 @@ Aurora pipe, build-in pipes for aurora lib, like json, translate, async, etc...
 ## `Install`
 
 ```bash
-npm i --save @aurorats/pipe
+npm i --save @ibyar/pipe
 ```
 
 ```bash
-yarn add @aurorats/pipe
+yarn add @ibyar/pipe
 ```

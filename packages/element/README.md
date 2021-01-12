@@ -5,18 +5,18 @@ Aurora element, hold info about HTMLElements class, attributes and tag name.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/element
+npm i --save @ibyar/element
 ```
 
 ``` bash
-yarn add @aurorats/element
+yarn add @ibyar/element
 ```
 
 
 ## Exmaple
 
-```elementcripe
-import { hasNativeAttr } from '@aurorats/element';
+```ts
+import { hasNativeAttr } from '@ibyar/element';
 
 let div = document.createElement('div');
 console.log(hasNativeAttr(div, 'for'));

@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@aurorats/core';
+import { Component, HostListener } from '@ibyar/aurora';
 import { interval } from 'rxjs';
 
 @Component({

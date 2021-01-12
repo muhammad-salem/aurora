@@ -1,10 +1,10 @@
-import { Directive, OnInit, StructuralDirective } from '@aurorats/api';
+import { Directive, OnInit, StructuralDirective } from '@ibyar/api';
 import {
     AliasedOperator, ArrayOperator, AssignmentNode, DeclareVariableOperator,
     generateTokenParser, generateTokens, GroupingOperator, MemberNode,
     NavigationNode, NodeExpression, ObjectOperator, OfItemsOperator,
     parseTokens, PipelineOperator, StatementNode, TernaryNode
-} from '@aurorats/expression';
+} from '@ibyar/expression';
 
 
 const tokenParser = generateTokenParser([
