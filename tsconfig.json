@@ -12,7 +12,7 @@
 		{ "path": "src/directive" },
 		{ "path": "src/forms" },
 		{ "path": "src/router" },
-		{ "path": "src/core" }
+		{ "path": "src/aurora" }
 	],
 	"compilerOptions": {
 		"composite": true
