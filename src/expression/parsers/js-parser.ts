@@ -12,6 +12,7 @@ import {
 } from '../operators/infix.js';
 import { NodeExpression } from '../expression.js';
 import { generateTokenParser, generateTokens } from './parser.js';
+import { AliasedOperator, DeclareVariableOperator, OfItemsOperator } from '../statement/for-expr.js';
 
 
 const tokenParser = generateTokenParser(
@@ -70,15 +71,34 @@ function tokenAnalysis(tokens: (string | NodeExpression)[]): NodeExpression {
     parseInfix(ArrayCommaOperators, tokens);
     parseInfix(AssignmentNode, tokens);
 
+    DeclareVariableOperator.parser(tokens);
+    AliasedOperator.parser(tokens);
+    OfItemsOperator.parser(tokens);
+
+    // if (tokens.length > 1) {
+    //     throw new Error(`expression should be with length 1, tokens = ${tokens}`);
+    // }
     return tokens[0] as NodeExpression;
 }
 
-export function parseJSExpression(str: string) {
-    let tokens: (NodeExpression | string)[] = generateTokens(str, tokenParser);
+export function parseTokens(tokens: (NodeExpression | string)[]) {
     oneTimeProcess(tokens);
     GroupingOperator.parse(tokens, tokenAnalysis);
     ObjectOperator.parse(tokens);
     tokenAnalysis(tokens);
     StatementNode.parse(tokens);
+    return tokens;
+}
+
+export function parseJSExpressionByRegex(str: string, regex: RegExp) {
+    let tokens: (NodeExpression | string)[] = generateTokens(str, regex);
+    return parseTokens(tokens);
+}
+
+export function parseJSExpression(str: string) {
+    let tokens = parseJSExpressionByRegex(str, tokenParser);
+    if (tokens.length > 1) {
+        throw new Error(`expression should be with length 1, exp = ${str}`);
+    }
     return tokens[0] as NodeExpression;
 }
