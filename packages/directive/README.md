@@ -5,9 +5,9 @@ Aurora directive had the built-in directives for aurora project.
 ## `Install`
 
 ``` bash
-npm i --save @aurorats/directive
+npm i --save @ibyar/directive
 ```
 
 ``` bash
-yarn add @aurorats/directive
+yarn add @ibyar/directive
 ```

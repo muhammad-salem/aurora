@@ -1,13 +1,13 @@
 # Aurora Router
 
-Aurora router, rounter configuration and setup
+Aurora router, router configuration and setup
 
 ## `Install`
 
 ```bash
-npm i --save @aurorats/router
+npm i --save @ibyar/router
 ```
 
 ```bash
-yarn add @aurorats/router
+yarn add @ibyar/router
 ```
