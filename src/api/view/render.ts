@@ -1,10 +1,10 @@
-import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@aurorats/expression';
+import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@ibyar/expression';
 import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
 	LiveText, ParentNode, TextNode
-} from '@aurorats/jsx';
-import { isTagNameNative, isValidCustomElementName } from '@aurorats/element';
+} from '@ibyar/jsx';
+import { isTagNameNative, isValidCustomElementName } from '@ibyar/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';

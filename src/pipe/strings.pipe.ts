@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@aurorats/api';
+import { Pipe, PipeTransform } from '@ibyar/api';
 
 @Pipe({
     name: 'lowercase'

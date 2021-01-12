@@ -1,4 +1,4 @@
-import { DirectiveNode } from '@aurorats/jsx';
+import { DirectiveNode } from '@ibyar/jsx';
 import { ContextDescriptorRef, ContextStack } from '../context/context-provider.js';
 import { ComponentRender } from '../view/render.js';
 

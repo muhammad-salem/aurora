@@ -1,4 +1,4 @@
-/// <reference types="@aurorats/metadata" />
+/// <reference types="@ibyar/metadata" />
 
 export interface Constructable<T = any> {
 	new(...params: any[]): T;

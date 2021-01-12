@@ -1,7 +1,7 @@
 import {
     Component, Directive,
     Input, OnInit, StructuralDirective
-} from '@aurorats/api';
+} from '@ibyar/api';
 
 
 interface ModelInfo {

@@ -1,9 +1,9 @@
-import { isEmptyElement } from '@aurorats/element';
+import { isEmptyElement } from '@ibyar/element';
 import {
     ElementNode, CommentNode, parseTextChild,
     TextNode, LiveText, FragmentNode,
     DirectiveNode, AuroraNode, AuroraChild, TextAttribute
-} from '@aurorats/jsx';
+} from '@ibyar/jsx';
 
 type Token = (token: string) => Token;
 

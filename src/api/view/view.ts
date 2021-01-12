@@ -1,4 +1,4 @@
-import { isFormElement } from '@aurorats/element';
+import { isFormElement } from '@ibyar/element';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';

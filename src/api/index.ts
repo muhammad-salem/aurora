@@ -1,4 +1,4 @@
-/// <reference types='@aurorats/metadata' />
+/// <reference types='@ibyar/metadata' />
 
 export * from './annotation/decorators.js';
 export * from './component/component.js';
