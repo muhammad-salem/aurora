@@ -1,4 +1,4 @@
-import { Aurora } from '@aurorats/core';
+import { Aurora } from '@ibyar/core';
 
 
 

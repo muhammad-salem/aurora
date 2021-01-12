@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener } from '@aurorats/core';
+import { Component, Input, View, HostListener } from '@ibyar/core';
 import { Person, PersonModel } from './person';
 import { url as templateUrl } from './person-app.html';
 

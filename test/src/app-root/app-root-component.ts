@@ -1,4 +1,4 @@
-import { Component, HTMLComponent, Input, isModel, View } from '@aurorats/core';
+import { Component, HTMLComponent, Input, isModel, View } from '@ibyar/core';
 
 export type AppSelector = string | (string | { tag: string, is?: string })[]
 
