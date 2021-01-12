@@ -10,7 +10,7 @@ uplinks:
   npmjs:
     url: https://registry.npmjs.org/
 packages:
-  '@aurorats/*':
+  '@ibyar/*':
     access: $all
     publish: $all
     unpublish: $all
