@@ -1,4 +1,4 @@
-import { Component, Input } from '@aurorats/api';
+import { Component, Input } from '@ibyar/api';
 export class Router {
 
 }
