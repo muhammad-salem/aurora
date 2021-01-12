@@ -1,4 +1,4 @@
-import { Component } from '@ibyar/core';
+import { Component } from '@ibyar/aurora';
 import { interval } from 'rxjs';
 
 @Component({

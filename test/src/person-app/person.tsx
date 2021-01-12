@@ -2,7 +2,7 @@ import {
     Aurora, Component, EventEmitter, HostBinding, HostListener,
     Input, OnInit, Optional, Output, SelfSkip, Service,
     View, ViewChild, ViewChildren
-} from '@ibyar/core';
+} from '@ibyar/aurora';
 
 import { url as personViewURL } from './person-view.html';
 

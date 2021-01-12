@@ -7,10 +7,10 @@
 [![lerna][lerna-img]][lerna-url]
 ![GitHub contributors][contributors]
 
-[npm-image]: https://img.shields.io/npm/v/@ibyar/core.svg
-[npm-url]: https://npmjs.org/package/@ibyar/core
-[downloads-image]: https://img.shields.io/npm/dt/@ibyar/core
-[downloads-url]: https://npmjs.org/package/@ibyar/core
+[npm-image]: https://img.shields.io/npm/v/@ibyar/aurora.svg
+[npm-url]: https://npmjs.org/package/@ibyar/aurora
+[downloads-image]: https://img.shields.io/npm/dt/@ibyar/aurora
+[downloads-url]: https://npmjs.org/package/@ibyar/aurora
 [license-img]: https://img.shields.io/github/license/ibyar/aurora
 [license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
 [npm-dep-url]: https://img.shields.io/david/ibyar/aurora.svg?maxAge=2592000
@@ -29,18 +29,18 @@ No need for Virtual Dom.
 ## `Install`
 
 ``` bash
-npm i --save @ibyar/core
+npm i --save @ibyar/aurora
 ```
 
 ``` bash
-yarn add @ibyar/core
+yarn add @ibyar/aurora
 ```
 
 in your `tsconfig.json` add 
 
 ```json
 {
-    "extends": "@ibyar/core/tsconfig.compilerOption.json",
+    "extends": "@ibyar/aurora/tsconfig.compilerOption.json",
 }
 ```
 

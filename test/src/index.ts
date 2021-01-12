@@ -1,6 +1,6 @@
 /// <reference types="@ibyar/types" />
 
-import { HTMLComponent } from '@ibyar/core';
+import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';
 export * from './app-root/app-root-component.js';
 
