@@ -16,13 +16,13 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@ibyar/core": "^0.1.12",
+    "@ibyar/aurora": "^0.1.12",
     "bootstrap": "^v5.0.0-beta1",
     "rxjs": "^6.6.3",
     "tslib": "^2.0.3"
   },
   "devDependencies": {
-    "@ibyar/esmpack": "^0.1.8",
+    "@ibyar/esmpack": "^0.1.9",
     "typescript": "^4.1.3"
   },
   "scripts": {
