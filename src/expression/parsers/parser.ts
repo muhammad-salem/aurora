@@ -40,3 +40,40 @@ export function generateTokens(str: string, tokenParser: RegExp): (NodeExpressio
     });
     return tokens;
 }
+
+export function generateTokenParser(operators: string[][], concatRegex: string[]): RegExp {
+
+
+    //dynamically build js parsing regex:
+    const pattern = [
+        //numbers
+        /\d+(?:\.\d*)?|\.\d+/.source,
+
+        //string-literal
+        /["](?:\\[\s\S]|[^"])+["]|['](?:\\[\s\S]|[^'])+[']/.source,
+
+        //booleans
+        "true|false",
+
+        //operators
+        operators
+            .flatMap(item => item)
+            .filter((value: string, index: number, array: string[]) => {
+                return array.indexOf(value) === index;
+            })
+            .sort((a, b) => b.length - a.length) //so that ">=" is added before "=" and ">"
+            .map(escapeForRegex)
+            .concat(concatRegex ? concatRegex : [])
+            .join('|'),
+
+        //properties
+        //has to be after the operators
+        /[a-zA-Z$_ɵ][a-zA-Z0-9$_]*/.source,
+
+        //remaining (non-whitespace-)chars, just in case
+        //has to be at the end
+        /\S/.source
+    ].map(s => `(${s})`).join('|');
+
+    return new RegExp(pattern, 'g');
+}

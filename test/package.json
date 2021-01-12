@@ -19,7 +19,7 @@
     "@aurorats/core": "^0.1.12",
     "bootstrap": "^v5.0.0-beta1",
     "rxjs": "^6.6.3",
-    "tslib": "^2.0.3"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "@aurorats/esmpack": "^0.1.8",
