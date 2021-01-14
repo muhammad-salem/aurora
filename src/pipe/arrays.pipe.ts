@@ -61,7 +61,7 @@ export class SlicePipe<T> implements PipeTransform<Array<T>, Array<T>> {
         if (value == null) return null;
 
         if (!this.supports(value)) {
-            throw Error(`InvalidPipeArgument: '${value}' for pipe '${SlicePipe}'`);
+            throw Error(`InvalidPipeArgument: '${value}' of '${SlicePipe.name}' pipe`);
         }
 
         return value.slice(start, end);

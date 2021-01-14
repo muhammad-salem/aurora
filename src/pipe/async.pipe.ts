@@ -214,7 +214,7 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Observable<
             return _subscribableStrategy;
         }
 
-        throw Error(`InvalidPipeArgument: '${AsyncPipe}' for pipe '${obj}'`);
+        throw Error(`InvalidPipeArgument: '${AsyncPipe.name}' for pipe '${obj}'`);
     }
 
     private _dispose(): void {

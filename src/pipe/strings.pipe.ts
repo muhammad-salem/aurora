@@ -11,7 +11,7 @@ export class LowerCasePipe implements PipeTransform<string, string> {
     transform(value: string | null | undefined): string | null {
         if (value == null) return null;
         if (typeof value !== 'string') {
-            throw Error(`InvalidPipeArgument: '${value}' for pipe '${LowerCasePipe}'`);
+            throw Error(`InvalidPipeArgument: '${value}' of '${LowerCasePipe.name}' pipe`);
         }
         return value.toLowerCase();
     }
@@ -29,7 +29,7 @@ export class UpperCasePipe implements PipeTransform<string, string> {
     transform(value: string | null | undefined): string | null {
         if (value == null) return null;
         if (typeof value !== 'string') {
-            throw Error(`InvalidPipeArgument: '${value}' for pipe '${UpperCasePipe}'`);
+            throw Error(`InvalidPipeArgument: '${value}' of '${UpperCasePipe.name}' pipe`);
         }
         return value.toUpperCase();
     }
@@ -48,7 +48,7 @@ export class TitleCasePipe implements PipeTransform<string, string> {
     transform(value: string | null | undefined): string | null {
         if (value == null) return null;
         if (typeof value !== 'string') {
-            throw Error(`InvalidPipeArgument: '${value}' for pipe '${TitleCasePipe}'`);
+            throw Error(`InvalidPipeArgument: '${value}' of '${TitleCasePipe.name}' pipe`);
         }
         return value.replace(unicodeWordMatch, (txt => txt[0].toUpperCase() + txt.substr(1).toLowerCase()));
     }
