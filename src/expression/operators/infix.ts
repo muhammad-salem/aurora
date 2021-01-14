@@ -51,6 +51,10 @@ export class MemberNode implements NodeExpression {
     entry(): string[] {
         return this.left.entry();
     }
+    event(parent?: string): string[] {
+        parent ||= '';
+        return [parent + this.toString()];
+    }
     toString() {
         let str: string;
         if (this.op === '.') {
@@ -81,6 +85,10 @@ export class NavigationNode implements NodeExpression {
     }
     entry(): string[] {
         return this.left.entry();
+    }
+    event(parent?: string): string[] {
+        parent ||= '';
+        return [parent + this.toString()];
     }
     toString() {
         return `${this.left.toString()}?.${this.right.toString()}`;
@@ -152,6 +160,9 @@ export class GroupingOperator implements NodeExpression {
     entry(): string[] {
         return this.node.entry();
     }
+    event(parent?: string): string[] {
+        return this.node.event(parent);
+    }
     toString() {
         return `(${this.node.toString()})`;
     }
@@ -196,6 +207,7 @@ export class ObjectOperator implements NodeExpression {
     private model: { [key: string]: any };
     private proxy: any;
 
+    /** TODO fix shared model and proxy issue */
     constructor() {
         this.model = {};
         this.proxy = new Proxy(this.model, {
@@ -216,6 +228,9 @@ export class ObjectOperator implements NodeExpression {
     }
     entry(): string[] {
         return Object.keys(this.props).flatMap(key => this.props[key].entry());
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString() {
         return `[${Object.keys(this.props)
@@ -278,6 +293,9 @@ export class ArrayOperator implements NodeExpression {
     entry(): string[] {
         return this.nodes.flatMap(node => node.entry());
     }
+    event(parent?: string): string[] {
+        return [];
+    }
     toString() {
         return `[${this.nodes.map(node => node.toString()).join(', ')}]`;
     }
@@ -336,6 +354,9 @@ export class TernaryNode implements NodeExpression {
     entry(): string[] {
         return [...this.conditional.entry(), ...this.left.entry(), ...this.right.entry()];
     }
+    event(parent?: string): string[] {
+        return [];
+    }
     toString() {
         return `${this.conditional.toString()} (${this.left.toString()}):(${this.right.toString()})`;
     }
@@ -356,6 +377,9 @@ export class FunctionNode implements NodeExpression {
     }
     entry(): string[] {
         return [...this.func.entry(), ...this.params.flatMap(param => param.entry())];
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString(): string {
         return `${this.func.toString()}(${this.params.map(param => param.toString()).join(', ')})`;
@@ -387,6 +411,9 @@ export class StatementNode implements NodeExpression {
     entry(): string[] {
         return this.nodes.flatMap(node => node.entry());
     }
+    event(parent?: string): string[] {
+        return [];
+    }
     toString(): string {
         return this.nodes.map(node => node.toString()).join('; ');
     }
@@ -417,6 +444,9 @@ export abstract class InfixOperators implements NodeExpression {
     }
     entry(): string[] {
         return [...this.left.entry(), ...this.right.entry()];
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
@@ -469,6 +499,10 @@ export class AssignmentNode implements NodeExpression {
     }
     entry(): string[] {
         return [...this.left.entry(), ...this.right.entry()];
+    }
+    event(parent?: string): string[] {
+        parent ||= '';
+        return [parent + this.left.toString()];
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
@@ -523,6 +557,10 @@ export class LogicalAssignmentNode implements NodeExpression {
     }
     entry(): string[] {
         return [...this.left.entry(), ...this.right.entry()];
+    }
+    event(parent?: string): string[] {
+        parent ||= '';
+        return [parent + this.left.toString()];
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
@@ -699,6 +737,9 @@ export class PipelineOperator implements NodeExpression {
     }
     entry(): string[] {
         return [...this.func.entry(), ...this.param.entry(), ...this.args.flatMap(arg => arg.entry())];
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString(): string {
         return `${this.param.toString()} |> ${this.func.toString()}${this.args.flatMap(arg => `:${arg.toString()}`).join('')}`;

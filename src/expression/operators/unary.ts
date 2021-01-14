@@ -84,6 +84,9 @@ export class IncrementDecrementOperators implements NodeExpression {
     entry(): string[] {
         return this.node.entry();
     }
+    event(parent?: string): string[] {
+        return this.node.event();
+    }
     toString() {
         let str: string;
         if (this.unaryType === UnaryType.POSTFIX) {
@@ -136,6 +139,9 @@ export class UnaryOperators implements NodeExpression {
     entry(): string[] {
         return this.node.entry();
     }
+    event(parent?: string): string[] {
+        return this.node.event();
+    }
     toString() {
         return `${this.op}${this.node.toString()}`;
     }
@@ -160,6 +166,9 @@ export class ConditionalOperators implements NodeExpression {
     }
     entry(): string[] {
         return this.condition.entry();
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString() {
         return `(${this.condition.toString()})?`;
@@ -196,6 +205,12 @@ export class LiteralUnaryOperators implements NodeExpression {
     }
     entry(): string[] {
         return this.node.entry();
+    }
+    event(parent?: string): string[] {
+        if (this.op === 'delete') {
+            return this.node.event();
+        }
+        return [];
     }
     get(context: object) {
         switch (this.op) {
@@ -248,6 +263,9 @@ export class FunctionExpression implements NodeExpression {
     }
     entry(): string[] {
         return [...this.funcName.entry(), ...this.args.flatMap(arg => arg.entry())];
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString(): string {
         const argsStr = this.args.map(param => param.toString()).join(', ');

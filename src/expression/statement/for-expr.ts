@@ -26,6 +26,9 @@ export class DeclareVariableOperator implements NodeExpression {
     entry(): string[] {
         return [];
     }
+    event(parent?: string): string[] {
+        return [this.propertyName.toString()];
+    }
     toString(): string {
         return `${this.op} ${this.propertyName.toString()}`;
     }
@@ -58,6 +61,9 @@ export class AliasedOperator implements NodeExpression {
     entry(): string[] {
         return this.aliasedProperty.entry();
     }
+    event(parent?: string): string[] {
+        return [];
+    }
     toString(): string {
         return `${this.localProperty.toString()} ${AliasedOperator.Operators[0]} ${this.aliasedProperty.toString()}`;
     }
@@ -88,6 +94,9 @@ export class OfItemsOperator implements NodeExpression {
     }
     entry(): string[] {
         return this.items.entry();
+    }
+    event(parent?: string): string[] {
+        return [];
     }
     toString(): string {
         return `${OfItemsOperator.Operators[0]} ${this.items.toString()}`;
