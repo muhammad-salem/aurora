@@ -3,6 +3,7 @@ export interface NodeExpression {
     set(context: object, value: any): any;
     get(context: object): any;
     entry(): string[];
+    event(parent?: string): string[];
     toString(): string;
 }
 
@@ -20,6 +21,9 @@ export class ValueNode implements NodeExpression {
         return this.value;
     }
     entry(): string[] {
+        return [];
+    }
+    event(parent?: string): string[] {
         return [];
     }
     toString(): string {
@@ -41,6 +45,10 @@ export class PropertyNode implements NodeExpression {
     }
     entry(): string[] {
         return [this.property];
+    }
+    event(parent?: string): string[] {
+        parent ||= '';
+        return [parent + this.toString()];
     }
     toString(): string {
         return this.property;
