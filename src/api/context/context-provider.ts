@@ -32,7 +32,14 @@ export class ContextProviderImpl<T extends ContextDescriptorRef> implements Cont
     }
 }
 
-export type ContextStack<T> = Array<ContextProvider<T>> & { findContextProvider(entityName: string): ContextProvider<T> | undefined; };
+export type ContextStack<T> = Array<ContextProvider<T>> & {
+    /**
+     * search providers for by entity name,
+     * if can't found the stack should return the first provider
+     * @param entityName 
+     */
+    findContextProvider(entityName: string): ContextProvider<T>;
+};
 
 export interface PropertyMap {
     entityName: string;
@@ -51,8 +58,8 @@ export interface TemplatePropertyMap {
  */
 export class ContextStackImpl<T extends ContextDescriptorRef> extends Array<ContextProvider<T>> implements ContextStack<T> {
 
-    findContextProvider(entityName: string): ContextProvider<T> | undefined {
-        return this.find(context => context.hasContext(entityName));
+    findContextProvider(entityName: string): ContextProvider<T> {
+        return this.find(context => context.hasContext(entityName)) || this[0];
     }
 
 }
