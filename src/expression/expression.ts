@@ -24,7 +24,7 @@ export class ValueNode implements NodeExpression {
         return [];
     }
     event(parent?: string): string[] {
-        return [];
+        return [this.toString()];
     }
     toString(): string {
         if (typeof this.value === 'string') {

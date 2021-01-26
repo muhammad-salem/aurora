@@ -85,7 +85,7 @@ export class IncrementDecrementOperators implements NodeExpression {
         return this.node.entry();
     }
     event(parent?: string): string[] {
-        return this.node.event();
+        return this.node.event(parent);
     }
     toString() {
         let str: string;
@@ -140,7 +140,7 @@ export class UnaryOperators implements NodeExpression {
         return this.node.entry();
     }
     event(parent?: string): string[] {
-        return this.node.event();
+        return [];
     }
     toString() {
         return `${this.op}${this.node.toString()}`;
@@ -208,7 +208,7 @@ export class LiteralUnaryOperators implements NodeExpression {
     }
     event(parent?: string): string[] {
         if (this.op === 'delete') {
-            return this.node.event();
+            return this.node.event(parent);
         }
         return [];
     }

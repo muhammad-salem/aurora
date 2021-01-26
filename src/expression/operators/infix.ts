@@ -53,7 +53,12 @@ export class MemberNode implements NodeExpression {
     }
     event(parent?: string): string[] {
         parent ||= '';
-        return [parent + this.toString()];
+        if (this.op === '.') {
+            parent += this.left.toString() + '.';
+            return this.right.event(parent);
+        } else {
+            return [`${parent}${this.left.event(parent)}[${this.right.event()}]`];
+        }
     }
     toString() {
         let str: string;
@@ -88,7 +93,8 @@ export class NavigationNode implements NodeExpression {
     }
     event(parent?: string): string[] {
         parent ||= '';
-        return [parent + this.toString()];
+        parent += this.left.toString() + '?.';
+        return this.right.event(parent);
     }
     toString() {
         return `${this.left.toString()}?.${this.right.toString()}`;
@@ -412,7 +418,7 @@ export class StatementNode implements NodeExpression {
         return this.nodes.flatMap(node => node.entry());
     }
     event(parent?: string): string[] {
-        return [];
+        return this.nodes.flatMap(node => node.event(parent));
     }
     toString(): string {
         return this.nodes.map(node => node.toString()).join('; ');
@@ -501,8 +507,7 @@ export class AssignmentNode implements NodeExpression {
         return [...this.left.entry(), ...this.right.entry()];
     }
     event(parent?: string): string[] {
-        parent ||= '';
-        return [parent + this.left.toString()];
+        return this.left.event(parent);
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
@@ -559,8 +564,7 @@ export class LogicalAssignmentNode implements NodeExpression {
         return [...this.left.entry(), ...this.right.entry()];
     }
     event(parent?: string): string[] {
-        parent ||= '';
-        return [parent + this.left.toString()];
+        return this.left.event(parent);
     }
     toString() {
         return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
