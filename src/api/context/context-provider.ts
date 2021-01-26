@@ -10,10 +10,10 @@ export interface ContextProvider<T extends ContextDescriptorRef> {
 }
 
 export function isContextProvider<T>(obj: any): obj is ContextProvider<T> {
-    return Reflect.has(obj.__proto__, 'getContext')
-        && Reflect.has(obj.__proto__, 'hasContext')
-        && Reflect.has(obj.__proto__, 'getContextValue')
-        && Reflect.has(obj.__proto__, 'setContextValue');
+    return Reflect.has(Object.getPrototypeOf(obj), 'getContext')
+        && Reflect.has(Object.getPrototypeOf(obj), 'hasContext')
+        && Reflect.has(Object.getPrototypeOf(obj), 'getContextValue')
+        && Reflect.has(Object.getPrototypeOf(obj), 'setContextValue');
 }
 
 export class ContextProviderImpl<T extends ContextDescriptorRef> implements ContextProvider<T>{

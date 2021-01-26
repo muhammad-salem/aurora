@@ -14,7 +14,7 @@ export interface PipeTransform<T, U> {
 }
 
 export function isPipeTransform<T extends any, U extends any>(obj: any): obj is PipeTransform<T, U> {
-    return Reflect.has(obj.__proto__, 'transform');
+    return Reflect.has(Object.getPrototypeOf(obj), 'transform');
 }
 
 export class PipeContextProvider<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<PipeTransform<T, U>> {
