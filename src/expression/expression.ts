@@ -8,9 +8,11 @@ export interface NodeExpression {
 }
 
 export class ValueNode implements NodeExpression {
+    private quota: string;
     constructor(public value: string | number | boolean) {
-        if (typeof value === 'string' && value.startsWith(`'`) && value.endsWith(`'`)) {
-            value = `"${value.substring(1, value.length - 1)}"`
+        if (typeof value === 'string') {
+            this.quota = value.substring(0, 1);
+            value = `"${value.substring(1, value.length - 1)}"`;
         }
         this.value = JSON.parse(value as string);
     }
@@ -28,7 +30,7 @@ export class ValueNode implements NodeExpression {
     }
     toString(): string {
         if (typeof this.value === 'string') {
-            return `"${this.value}"`;
+            return `${this.quota}${this.value}${this.quota}`;
         }
         return String(this.value);
     }
