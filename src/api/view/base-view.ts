@@ -1,7 +1,10 @@
-import { isAfterContentChecked, isAfterContentInit, isAfterViewChecked, isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit } from '../component/lifecycle.js';
-import { TypeOf } from '../utils/utils.js';
+import type { TypeOf } from '../utils/typeof.js';
+import {
+    isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
+    isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
+} from '../component/lifecycle.js';
 import { ComponentRef, PropertyRef } from '../component/component.js';
-import { BaseComponent, CustomElement, CustomFormElement, HTMLComponent, HTMLFormElement, HTMLFormElementComponent } from '../component/custom-element.js';
+import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { defineModel, isModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';

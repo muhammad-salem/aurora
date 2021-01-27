@@ -1,5 +1,5 @@
+import type { TypeOf } from '../utils/typeof.js';
 import { AuroraNode, AuroraRenderNode } from '@ibyar/jsx';
-import { TypeOf } from '../utils/utils.js';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 

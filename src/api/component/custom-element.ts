@@ -1,7 +1,7 @@
+import type { TypeOf } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
 import { Model } from '../model/change-detection.js';
-import { TypeOf } from '../utils/utils.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;

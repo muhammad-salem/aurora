@@ -1,4 +1,4 @@
-
+import type { TypeOf } from '../utils/typeof.js';
 import { AuroraNode, AuroraRenderNode } from '@ibyar/jsx';
 import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
 import { findByTagName, Tag } from '@ibyar/element';
@@ -8,7 +8,6 @@ import { HTMLComponent } from './custom-element.js';
 import ClassRegistryProvider from '../providers/provider.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
-import { TypeOf } from '../utils/utils.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
