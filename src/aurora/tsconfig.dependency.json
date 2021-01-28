@@ -20,7 +20,7 @@
 			"path": "../api/tsconfig.json"
 		},
 		{
-			"path": "../directive/tsconfig.json"
+			"path": "../directives/tsconfig.json"
 		},
 		{
 			"path": "../forms/tsconfig.json"
@@ -29,7 +29,7 @@
 			"path": "../http/tsconfig.json"
 		},
 		{
-			"path": "../pipe/tsconfig.json"
+			"path": "../pipes/tsconfig.json"
 		},
 		{
 			"path": "../router/tsconfig.json"

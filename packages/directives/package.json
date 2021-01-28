@@ -1,7 +1,7 @@
 {
-  "name": "@ibyar/pipe",
+  "name": "@ibyar/directives",
   "version": "0.1.12",
-  "description": "Aurora pipe, build-in pipes for aurora lib, like json, translate, async, etc...",
+  "description": "Aurora directives had the built-in directives for aurora project",
   "license": "MIT",
   "homepage": "https://github.com/ibyar/aurora",
   "main": "./index.js",
@@ -27,9 +27,7 @@
   "keywords": [
     "aurora",
     "ibyar",
-    "custom-elements",
-    "pipes",
-    "async",
+    "directives",
     "typescript"
   ]
 }
