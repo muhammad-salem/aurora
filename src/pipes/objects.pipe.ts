@@ -4,8 +4,9 @@ import { Pipe, PipeTransform } from '@ibyar/api';
     name: 'json'
 })
 export class JSONPipe implements PipeTransform<object, string>{
-    transform(obj: object): string {
-        return JSON.stringify(obj);
+    transform(obj: object, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
+        console.log(arguments);
+        return JSON.stringify(obj, replacer, space);
     }
 }
 
