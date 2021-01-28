@@ -7,11 +7,11 @@ import { interval } from 'rxjs';
     template: `
     <div class="row">
         <input class="col-sm-12" type="text" [(value)]="data1" />
-        <div class="col-sm-12">{{data1 + ' ' + timer |> async}}</div>
+        <pre class="col-sm-12">{{data1 + ' ' + timer |> async}}</pre>
     </div>
     <div class="row">
         <input class="col-sm-12" type="text" [(value)]="data2" />
-        <div class="col-sm-12">{{data2 |> lowercase + ' ' + timer |> async}}</div>
+        <pre class="col-sm-12">{{data2 |> lowercase + ' ' + timer |> async}}</pre>
     </div>
     <hr />
     `
