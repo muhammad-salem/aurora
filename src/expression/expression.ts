@@ -28,9 +28,14 @@ export class PropertyNode implements NodeExpression {
 }
 
 export class ValueNode implements NodeExpression {
+    #quote: string;
     #value: string | number;
     constructor(value: string | number) {
-        this.#value = value;
+        if (typeof value === 'string') {
+            this.#quote = value.substring(0, 1);
+            value = `"${value.substring(1, value.length - 1)}"`;
+        }
+        this.#value = JSON.parse(value as string);
     }
     set() {
         throw new Error("ValueNode#set() has no implementation.");
@@ -45,6 +50,9 @@ export class ValueNode implements NodeExpression {
         return [];
     }
     toString(): string {
+        if (typeof this.#value === 'string') {
+            return `${this.#quote}${this.#value}${this.#quote}`;
+        }
         return String(this.#value);
     }
 }
