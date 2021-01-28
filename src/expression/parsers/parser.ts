@@ -1,9 +1,16 @@
-import { NodeExpression, PropertyNode, ValueNode } from '../expression.js';
+import {
+    FalseNode, NodeExpression, NullNode,
+    PropertyNode, TrueNode, UndefinedNode, ValueNode
+} from '../expression.js';
 
 
 export function escapeForRegex(str: string): string {
     return String(str).replace(/[.*+?^=!:${}()|[\]\/\\]/g, '\\$&');
 }
+
+const NULL = String(null);
+const TRUE = String(true);
+// const UNDEFINED = String(undefined);
 
 export function generateTokens(str: string, tokenParser: RegExp): (NodeExpression | string)[] {
     let tokens: (NodeExpression | string)[] = [];
@@ -13,20 +20,32 @@ export function generateTokens(str: string, tokenParser: RegExp): (NodeExpressio
         const num: string = args[0];
         const str: string = args[1];
         const bool: string = args[2];
-        const op: string = args[3];
-        const property: string = args[4];
-        // const whitespace: number = args[5];
-        // const index: number = args[6];
-        // const template: string = args[7];
+        const undefinedAndNull: string = args[3];
+        const op: string = args[4];
+        const property: string = args[5];
+        // const whitespace: number = args[6];
+        // const index: number = args[7];
+        // const template: string = args[8];
 
         // console.log(args);
 
         if (num) {
+            console.log(num);
             token = new ValueNode(+num);
         } else if (str) {
             token = new ValueNode(str);
         } else if (bool) {
-            token = new ValueNode(bool === "true");
+            if (TRUE === bool) {
+                token = TrueNode;
+            } else {
+                token = FalseNode;
+            }
+        } else if (undefinedAndNull) {
+            if (NULL === undefinedAndNull) {
+                token = NullNode;
+            } else {
+                token = UndefinedNode;
+            }
         } else if (property) {
             token = new PropertyNode(property);
         }
@@ -55,6 +74,9 @@ export function generateTokenParser(operators: string[][], concatRegex: string[]
         //booleans
         "true|false",
 
+        //primitive values
+        "null|undefined",
+
         //operators
         operators
             .flatMap(item => item)
@@ -63,7 +85,7 @@ export function generateTokenParser(operators: string[][], concatRegex: string[]
             })
             .sort((a, b) => b.length - a.length) //so that ">=" is added before "=" and ">"
             .map(escapeForRegex)
-            .concat(concatRegex ? concatRegex : [])
+            .concat(concatRegex || [])
             .join('|'),
 
         //properties

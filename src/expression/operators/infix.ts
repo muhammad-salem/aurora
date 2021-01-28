@@ -184,7 +184,7 @@ export class ObjectOperator implements NodeExpression {
                 if (pre instanceof PropertyNode) {
                     objectNode.addProperty(pre.property, post);
                 } else if (pre instanceof ValueNode) {
-                    objectNode.addProperty(pre.value as string, pre);
+                    objectNode.addProperty(pre.get(), pre);
                 } else {
                     continue;
                 }
@@ -322,7 +322,7 @@ export class TernaryNode implements NodeExpression {
                 if (pre instanceof PropertyNode) {
                     objectNode.addProperty(pre.property, post);
                 } else if (pre instanceof ValueNode) {
-                    objectNode.addProperty(pre.value as string, post);
+                    objectNode.addProperty(pre.get(), post);
                 }
                 tokens.splice(i - 1, 3);
             } else if (pre instanceof PipelineOperator && typeof post === 'object') {
