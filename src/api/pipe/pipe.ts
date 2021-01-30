@@ -1,4 +1,3 @@
-import { defineModel, Model } from 'model/change-detection.js';
 import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
 import ClassRegistryProvider from '../providers/provider.js';
 
