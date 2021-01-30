@@ -374,7 +374,7 @@ export class FunctionNode implements NodeExpression {
 
     constructor(public func: NodeExpression, public params: NodeExpression[]) { }
     set(context: object, value: any) {
-        throw new Error(`TernaryNode#set() has no implementation.`);
+        throw new Error(`FunctionNode#set() has no implementation.`);
     }
     get(context: object) {
         let funCallBack = this.func.get(context) as Function;
