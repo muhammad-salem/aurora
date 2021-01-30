@@ -5,10 +5,20 @@ import { Pipe, PipeTransform } from '@ibyar/api';
 })
 export class JSONPipe implements PipeTransform<object, string>{
     transform(obj: object, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
-        console.log(arguments);
         return JSON.stringify(obj, replacer, space);
     }
 }
+
+
+@Pipe({
+    name: 'toJson'
+})
+export class ToJSONPipe implements PipeTransform<string, any>{
+    transform(text: string, reviver?: ((this: any, key: string, value: any) => any)): any {
+        return JSON.parse(text, reviver);
+    }
+}
+
 
 type StringKey<V> = { [key: string]: V };
 type NumberKey<V> = { [key: number]: V };
