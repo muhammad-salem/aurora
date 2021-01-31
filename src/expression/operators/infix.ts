@@ -732,7 +732,7 @@ export class PipelineOperator implements NodeExpression {
 
     constructor(public op: string, public param: NodeExpression, public func: NodeExpression) { }
     set(context: object, value: any) {
-        throw new Error(`TernaryNode#set() has no implementation.`);
+        throw new Error(`PipelineOperator#set() has no implementation.`);
     }
     get(context: object) {
         let funCallBack = this.func.get(context) as Function;
