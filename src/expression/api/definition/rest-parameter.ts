@@ -1,8 +1,8 @@
+import { AbstractExpressionNode } from 'api/abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 
 @Deserializer()
-export class RestParameter implements ExpressionNode {
+export class RestParameter extends AbstractExpressionNode {
 
     static KEYWORDS = ['...'];
 
@@ -10,7 +10,9 @@ export class RestParameter implements ExpressionNode {
         return new RestParameter(nodeExp.arrayName);
     }
 
-    constructor(private arrayName: string) { }
+    constructor(private arrayName: string) {
+        super();
+    }
 
     /**
      * 
@@ -45,15 +47,8 @@ export class RestParameter implements ExpressionNode {
         return `...${this.arrayName}`;
     }
 
-    toJSON(key?: string): NodeJsonType {
-        return {
-            type: RestParameter.name,
-            node: { node: this.arrayName }
-        };
-    }
-
-    getClass(): NodeExpressionClass<RestParameter> {
-        return RestParameter;
+    toJson(): object {
+        return { arrayName: this.arrayName };
     }
 
 }

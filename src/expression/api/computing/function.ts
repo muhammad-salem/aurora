@@ -1,18 +1,17 @@
-import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import type { ExpressionNode } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadSyntax } from './spread-syntax.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer()
-export class FunctionExecNode implements ExpressionNode {
+export class FunctionExecNode extends AbstractExpressionNode {
 
     static fromJSON(node: FunctionExecNode): FunctionExecNode {
         return new FunctionExecNode(node.func, node.params);
     }
 
-    constructor(private func: ExpressionNode, private params: ExpressionNode[]) { }
-
-    getClass(): NodeExpressionClass<FunctionExecNode> {
-        return FunctionExecNode;
+    constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
+        super();
     }
 
     set(context: object, value: any) {
@@ -52,13 +51,11 @@ export class FunctionExecNode implements ExpressionNode {
         return `${this.func.toString()}(${this.params.map(param => param.toString()).join(', ')})`;
     }
 
-    toJSON(): NodeJsonType {
+    toJson(): object {
         return {
-            type: FunctionExecNode.name,
-            node: {
-                func: this.func,
-                params: this.params.map(param => param.toJSON())
-            }
+            func: this.func.toJSON(),
+            params: this.params.map(param => param.toJSON())
         };
     }
+
 }

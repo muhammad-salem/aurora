@@ -1,10 +1,11 @@
+import type { ExpressionNode } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import { RestParameter } from './rest-parameter.js';
 import { PropertyNode, ValueNode } from './values.js';
 
 @Deserializer()
-export class FunctionDefinitionNode implements ExpressionNode {
+export class FunctionDefinitionNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['function', '=>'];
 
@@ -24,10 +25,8 @@ export class FunctionDefinitionNode implements ExpressionNode {
         private restParamter?: RestParameter,
         private isArrow: boolean = false,
         private funcName?: ValueNode
-    ) { }
-
-    getClass(): NodeExpressionClass<FunctionDefinitionNode> {
-        return FunctionDefinitionNode;
+    ) {
+        super();
     }
 
     set(context: object, value: Function) {
@@ -68,10 +67,8 @@ export class FunctionDefinitionNode implements ExpressionNode {
 
     }
 
-    toJSON(): NodeJsonType {
-        return {
-            type: FunctionDefinitionNode.name,
-            node: { value: this.toString() }
-        };
+    toJson(): object {
+        return { value: this.toString() };
     }
+
 }

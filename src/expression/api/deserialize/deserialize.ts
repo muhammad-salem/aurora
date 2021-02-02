@@ -1,14 +1,27 @@
 import type { ExpDeserializer, ExpressionNode, NodeExpressionClass } from '../expression.js';
 
-const ClassMap: Map<string, NodeExpressionClass<ExpressionNode>> = new Map();
+type FromJSON = (node: ExpressionNode, serializer: ExpDeserializer) => ExpressionNode;
 
-export const nodeDeserializer: ExpDeserializer = (node) => {
-    return ClassMap.get(node.type)!.fromJSON(node.node as any, nodeDeserializer);
+const DeserializerMap: Map<string, FromJSON> = new Map();
+
+/**
+ * The Expression pDeserializer function
+ * convert from json expression `JSON.stringify(node)` to `ExpressionNode`
+ * @param node as type `NodeJsonType` 
+ * @returns ExpressionNode
+ */
+export const fromJsonExpression: ExpDeserializer = (node) => {
+    const fromJSON = DeserializerMap.get(node.type);
+    if (fromJSON) {
+        return fromJSON(node.node as any, fromJsonExpression);
+    } else {
+        throw new Error(`Couldn't find Expression class for name: ${node.type}.`);
+    }
 };
 
 export function Deserializer(): Function {
     return (target: NodeExpressionClass<ExpressionNode>) => {
-        ClassMap.set(target.name, target);
+        DeserializerMap.set(target.name, target.fromJSON);
         return target;
     };
 }

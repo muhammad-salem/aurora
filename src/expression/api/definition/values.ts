@@ -1,17 +1,15 @@
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 
 @Deserializer()
-export class PropertyNode implements ExpressionNode {
+export class PropertyNode extends AbstractExpressionNode {
 
     static fromJSON(node: PropertyNode): PropertyNode {
         return new PropertyNode(node.property);
     }
 
-    constructor(private property: string | number) { }
-
-    getClass(): NodeExpressionClass<PropertyNode> {
-        return PropertyNode;
+    constructor(private property: string | number) {
+        super();
     }
 
     set(context: object, value: any) {
@@ -35,16 +33,13 @@ export class PropertyNode implements ExpressionNode {
         return String(this.property);
     }
 
-    toJSON(): NodeJsonType {
-        return {
-            type: PropertyNode.name,
-            node: { property: this.property }
-        };
+    toJson(): object {
+        return { property: this.property };
     }
 }
 
 @Deserializer()
-export class ValueNode implements ExpressionNode {
+export class ValueNode extends AbstractExpressionNode {
 
     static fromJSON(node: ValueNode): ValueNode {
         return new ValueNode(node.value);
@@ -53,15 +48,12 @@ export class ValueNode implements ExpressionNode {
     private quote: string;
 
     constructor(private value: string | number) {
+        super();
         if (typeof value === 'string') {
             this.quote = value.substring(0, 1);
             value = `"${value.substring(1, value.length - 1)}"`;
         }
         this.value = JSON.parse(value as string);
-    }
-
-    getClass(): NodeExpressionClass<ValueNode> {
-        return ValueNode;
     }
 
     set() {
@@ -87,14 +79,14 @@ export class ValueNode implements ExpressionNode {
         return String(this.value);
     }
 
-    toJSON(): NodeJsonType {
+    toJson(): object {
         let node: { value: string | number };
         if (typeof this.value === 'string') {
             node = { value: `${this.quote}${this.value}${this.quote}` };
         } else {
             node = { value: this.value };
         }
-        return { type: ValueNode.name, node };
+        return node;
     }
 }
 
@@ -105,7 +97,7 @@ export const UNDEFINED = String(undefined);
 
 
 @Deserializer()
-export class NativeValueNode implements ExpressionNode {
+export class NativeValueNode extends AbstractExpressionNode {
 
     static fromJSON(node: NativeValueNode): NativeValueNode {
         switch (String(node.value)) {
@@ -118,11 +110,8 @@ export class NativeValueNode implements ExpressionNode {
     }
 
     constructor(private value: true | false | null | undefined | bigint) {
+        super();
         this.value = this.value;
-    }
-
-    getClass(): NodeExpressionClass<NativeValueNode> {
-        return NativeValueNode;
     }
 
     set() {
@@ -145,12 +134,10 @@ export class NativeValueNode implements ExpressionNode {
         return String(this.value);
     }
 
-    toJSON(): NodeJsonType {
-        return {
-            type: NativeValueNode.name,
-            node: { value: this.toString() }
-        };
+    toJson(): object {
+        return { value: this.toString() };
     }
+
 }
 
 export const NullNode = Object.freeze(new NativeValueNode(null));

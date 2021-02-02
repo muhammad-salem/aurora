@@ -1,8 +1,9 @@
+import type { ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
 
 @Deserializer()
-export class PropertyAccessors implements ExpressionNode {
+export class PropertyAccessors extends AbstractExpressionNode {
 
     static KEYWORDS = [
         /**
@@ -19,10 +20,8 @@ export class PropertyAccessors implements ExpressionNode {
         return new PropertyAccessors(node.op, node.left, node.right);
     }
 
-    constructor(private op: string, private left: ExpressionNode, private right: ExpressionNode) { }
-
-    getClass(): NodeExpressionClass<PropertyAccessors> {
-        return PropertyAccessors;
+    constructor(private op: string, private left: ExpressionNode, private right: ExpressionNode) {
+        super();
     }
 
     set(context: object, value: any) {
@@ -63,14 +62,11 @@ export class PropertyAccessors implements ExpressionNode {
         }
     }
 
-    toJSON(): NodeJsonType {
+    toJson(): object {
         return {
-            type: PropertyAccessors.name,
-            node: {
-                op: this.op,
-                left: this.left.toJSON(),
-                right: this.right.toJSON()
-            }
+            op: this.op,
+            left: this.left.toJSON(),
+            right: this.right.toJSON()
         };
     }
 

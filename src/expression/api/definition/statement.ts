@@ -1,20 +1,19 @@
+import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 
 @Deserializer()
-export class StatementNode implements ExpressionNode {
+export class StatementNode extends AbstractExpressionNode {
 
     static KEYWORDS = [';'];
 
     static fromJSON(node: StatementNode, deserializer: ExpDeserializer): StatementNode {
-        const nodes = node.nodes.map(line => deserializer(line as any));
-        return new StatementNode(node.nodes);
+        const nodes = node.lines.map(line => deserializer(line as any));
+        return new StatementNode(node.lines);
     }
 
-    constructor(private nodes: ExpressionNode[]) { }
-
-    getClass(): NodeExpressionClass<StatementNode> {
-        return StatementNode;
+    constructor(private lines: ExpressionNode[]) {
+        super();
     }
 
     set(context: object, value: any) {
@@ -23,27 +22,24 @@ export class StatementNode implements ExpressionNode {
 
     get(context: object) {
         let value;
-        this.nodes.forEach(node => value = node.get(context));
+        this.lines.forEach(node => value = node.get(context));
         return value;
     }
 
     entry(): string[] {
-        return this.nodes.flatMap(node => node.entry());
+        return this.lines.flatMap(node => node.entry());
     }
 
     event(parent?: string): string[] {
-        return this.nodes.flatMap(node => node.event(parent));
+        return this.lines.flatMap(node => node.event(parent));
     }
 
     toString(): string {
-        return this.nodes.map(node => node.toString()).join('; ');
+        return this.lines.map(node => node.toString()).join('; ');
     }
 
-    toJSON(): NodeJsonType {
-        return {
-            type: StatementNode.name,
-            node: { nodes: this.nodes.map(node => node.toJSON()) }
-        };
+    toJson(): object {
+        return { lines: this.lines.map(line => line.toJSON()) };
     }
 
 }

@@ -1,8 +1,9 @@
+import type { ExpressionNode } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 
 @Deserializer()
-export class SpreadSyntax implements ExpressionNode {
+export class SpreadSyntax extends AbstractExpressionNode {
 
     static KEYWORDS = ['...'];
 
@@ -10,7 +11,9 @@ export class SpreadSyntax implements ExpressionNode {
         return new SpreadSyntax(nodeExp.node);
     }
 
-    constructor(private node: ExpressionNode) { }
+    constructor(private node: ExpressionNode) {
+        super();
+    }
 
     set(context: object, value: any) {
         throw new Error('SpreadSyntax.set() Method has no implementation.');
@@ -63,15 +66,8 @@ export class SpreadSyntax implements ExpressionNode {
         return `...${this.node.toString()}`;
     }
 
-    toJSON(key?: string): NodeJsonType {
-        return {
-            type: SpreadSyntax.name,
-            node: { node: this.node.toJSON() }
-        };
-    }
-
-    getClass(): NodeExpressionClass<SpreadSyntax> {
-        return SpreadSyntax;
+    toJson(): object {
+        return { node: this.node.toJSON() };
     }
 
 }

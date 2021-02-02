@@ -6,7 +6,6 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export class DestructuringAssignmentNode extends AbstractExpressionNode {
 
     static fromJSON(node: DestructuringAssignmentNode, serializer: ExpDeserializer): DestructuringAssignmentNode {
-
         return new DestructuringAssignmentNode(
             node.keys.map(key => serializer(key as any)),
             serializer(node.arrayOrObject as any),
