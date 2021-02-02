@@ -21,10 +21,6 @@
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
  - Template can be a JSX template or  HTML template.
 
-```text
-Render Once, Update Properties On Change.
-No need for Virtual Dom.
-```
 
 ## `Install`
 
