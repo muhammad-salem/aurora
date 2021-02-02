@@ -1,4 +1,4 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -6,14 +6,13 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer()
 export class BinaryLogicalNode extends InfixExpressionNode {
 
-    static fromJSON(node: BinaryLogicalNode, serializer: ExpDeserializer): BinaryLogicalNode {
+    static fromJSON(node: BinaryLogicalNode, deserializer: ExpressionDeserializer): BinaryLogicalNode {
         return new BinaryLogicalNode(
             node.op,
-            serializer(node.left as any),
-            serializer(node.right as any)
+            deserializer(node.left as any),
+            deserializer(node.right as any)
         );
     }
-
 
     static Evaluations: { [key: string]: (exp: BinaryLogicalNode, context: any) => any } = {
 
@@ -62,20 +61,20 @@ export class BinaryLogicalNode extends InfixExpressionNode {
     evalNode() {
         throw new Error('no need for this method in LogicalNode class');
     }
+
 }
 
 
 @Deserializer()
 export class LogicalAssignmentNode extends InfixExpressionNode {
 
-    static fromJSON(node: LogicalAssignmentNode, serializer: ExpDeserializer): LogicalAssignmentNode {
+    static fromJSON(node: LogicalAssignmentNode, deserializer: ExpressionDeserializer): LogicalAssignmentNode {
         return new LogicalAssignmentNode(
             node.op,
-            serializer(node.left as any),
-            serializer(node.right as any)
+            deserializer(node.left as any),
+            deserializer(node.right as any)
         );
     }
-
 
     static Evaluations: { [key: string]: (exp: LogicalAssignmentNode, context: any) => any } = {
 
@@ -124,4 +123,5 @@ export class LogicalAssignmentNode extends InfixExpressionNode {
     evalNode() {
         throw new Error('no need for this method in LogicalNode class');
     }
+
 }

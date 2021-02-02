@@ -1,7 +1,7 @@
-import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import type { OperatorPosition } from './types.js';
-
+import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 @Deserializer()
 export class IncrementDecrementNode implements ExpressionNode {
 
@@ -12,8 +12,8 @@ export class IncrementDecrementNode implements ExpressionNode {
 
     static KEYWORDS = Object.keys(IncrementDecrementNode.Evaluations);
 
-    static fromJSON(node: IncrementDecrementNode, serializer: ExpDeserializer): IncrementDecrementNode {
-        return new IncrementDecrementNode(node.op, serializer(node.node as any), node.position);
+    static fromJSON(node: IncrementDecrementNode, deserializer: ExpressionDeserializer): IncrementDecrementNode {
+        return new IncrementDecrementNode(node.op, deserializer(node.node as any), node.position);
     }
 
     constructor(private op: '++' | '--', private node: ExpressionNode, private position: OperatorPosition) { }
@@ -22,14 +22,14 @@ export class IncrementDecrementNode implements ExpressionNode {
         return IncrementDecrementNode;
     }
 
-    set(context: object, value: any) {
-        this.node.set(context, value);
+    set(stack: ScopedStack, value: any) {
+        this.node.set(stack, value);
     }
 
-    get(context: object) {
-        let value = this.node.get(context);
+    get(stack: ScopedStack) {
+        let value = this.node.get(stack);
         let opValue = IncrementDecrementNode.Evaluations[this.op](value);
-        this.set(context, opValue);
+        this.set(stack, opValue);
         if (this.position === 'PREFIX') {
             value = opValue;
         }

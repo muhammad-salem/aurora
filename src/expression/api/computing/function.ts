@@ -1,4 +1,5 @@
-import type { ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadSyntax } from './spread-syntax.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -6,24 +7,24 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer()
 export class FunctionExecNode extends AbstractExpressionNode {
 
-    static fromJSON(node: FunctionExecNode): FunctionExecNode {
-        return new FunctionExecNode(node.func, node.params);
+    static fromJSON(node: FunctionExecNode, deserializer: ExpressionDeserializer): FunctionExecNode {
+        return new FunctionExecNode(deserializer(node.func as any), node.params.map(param => deserializer(param as any)));
     }
 
     constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
         super();
     }
 
-    set(context: object, value: any) {
+    set(stack: ScopedStack, value: any) {
         throw new Error(`FunctionExecNode#set() has no implementation.`);
     }
 
-    get(context: object) {
-        const funCallBack = this.func.get(context) as Function;
+    get(stack: ScopedStack,) {
+        const funCallBack = this.func.get(stack) as Function;
         const argArray: any[] = [];
         this.params.forEach(param => {
             if (param instanceof SpreadSyntax) {
-                const spreadObj = param.get(context);
+                const spreadObj = param.get(stack);
                 if (Array.isArray(spreadObj)) {
                     spreadObj.forEach(arg => argArray.push(arg));
                 } else {
@@ -32,10 +33,10 @@ export class FunctionExecNode extends AbstractExpressionNode {
                     throw new Error('a function support only spread array syntax');
                 }
             } else {
-                argArray.push(param.get(context));
+                argArray.push(param.get(stack));
             }
         });
-        const value = funCallBack.call(context, ...argArray);
+        const value = funCallBack.call(this.func.getThis?.(stack), ...argArray);
         return value;
     }
 

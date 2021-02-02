@@ -1,13 +1,14 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class StatementNode extends AbstractExpressionNode {
 
     static KEYWORDS = [';'];
 
-    static fromJSON(node: StatementNode, deserializer: ExpDeserializer): StatementNode {
+    static fromJSON(node: StatementNode, deserializer: ExpressionDeserializer): StatementNode {
         const nodes = node.lines.map(line => deserializer(line as any));
         return new StatementNode(node.lines);
     }
@@ -16,13 +17,13 @@ export class StatementNode extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object, value: any) {
+    set(stack: ScopedStack, value: any) {
         throw new Error(`StatementNode#set() has no implementation.`);
     }
 
-    get(context: object) {
+    get(stack: ScopedStack) {
         let value;
-        this.lines.forEach(node => value = node.get(context));
+        this.lines.forEach(node => value = node.get(stack));
         return value;
     }
 

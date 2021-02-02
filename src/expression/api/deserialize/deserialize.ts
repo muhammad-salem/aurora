@@ -1,6 +1,6 @@
-import type { ExpDeserializer, ExpressionNode, NodeExpressionClass } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass } from '../expression.js';
 
-type FromJSON = (node: ExpressionNode, serializer: ExpDeserializer) => ExpressionNode;
+type FromJSON = (node: ExpressionNode, deserializer: ExpressionDeserializer) => ExpressionNode;
 
 const DeserializerMap: Map<string, FromJSON> = new Map();
 
@@ -10,7 +10,7 @@ const DeserializerMap: Map<string, FromJSON> = new Map();
  * @param node as type `NodeJsonType` 
  * @returns ExpressionNode
  */
-export const fromJsonExpression: ExpDeserializer = (node) => {
+export const fromJsonExpression: ExpressionDeserializer = (node) => {
     const fromJSON = DeserializerMap.get(node.type);
     if (fromJSON) {
         return fromJSON(node.node as any, fromJsonExpression);

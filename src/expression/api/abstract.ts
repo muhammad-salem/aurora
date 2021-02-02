@@ -1,9 +1,10 @@
-import type { ExpDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
+import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
 import type { EvaluateNode } from './operators/types.js';
+import type { ScopedStack } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
-    static fromJSON(node: ExpressionNode, serializer: ExpDeserializer): ExpressionNode {
-        return serializer(node as any);
+    static fromJSON(node: ExpressionNode, deserializer: ExpressionDeserializer): ExpressionNode {
+        return deserializer(node as any);
     }
     getClass(): NodeExpressionClass<ExpressionNode> {
         return this.constructor as NodeExpressionClass<ExpressionNode>;
@@ -14,8 +15,8 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
             node: this.toJson(key)
         };
     }
-    abstract set(context: object, value: any): any;
-    abstract get(context: object): any;
+    abstract set(stack: ScopedStack, value: any): any;
+    abstract get(stack: ScopedStack): any;
     abstract entry(): string[];
     abstract event(parent?: string): string[];
     abstract toString(): string;
@@ -31,10 +32,10 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
     set(context: object, value: any) {
         throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
     }
-    get(context: object): boolean {
+    get(stack: ScopedStack): boolean {
         const evalNode: EvaluateNode = {
-            left: this.left.get(context),
-            right: this.right.get(context)
+            left: this.left.get(stack),
+            right: this.right.get(stack)
         };
         return this.evalNode(evalNode);
     }

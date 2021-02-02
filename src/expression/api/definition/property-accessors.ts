@@ -1,6 +1,7 @@
 import type { ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class PropertyAccessors extends AbstractExpressionNode {
@@ -24,20 +25,20 @@ export class PropertyAccessors extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object, value: any) {
+    set(stack: ScopedStack, value: any) {
+        return this.right.set(this.left.get(stack), value);
+    }
+
+    get(stack: ScopedStack) {
         if (this.op === '.') {
-            return this.right.set(this.left.get(context), value);
+            return this.right.get(this.left.get(stack));
         } else {
-            return this.left.get(context)[this.right.get(context)] = value;
+            return this.left.get(stack)[this.right.get(stack)];
         }
     }
 
-    get(context: object) {
-        if (this.op === '.') {
-            return this.right.get(this.left.get(context));
-        } else {
-            return this.left.get(context)[this.right.get(context)];
-        }
+    getThis(stack: ScopedStack): any {
+        return this.left.get(stack);
     }
 
     entry(): string[] {

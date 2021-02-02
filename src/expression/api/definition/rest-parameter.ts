@@ -1,5 +1,6 @@
-import { AbstractExpressionNode } from 'api/abstract.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class RestParameter extends AbstractExpressionNode {
@@ -19,16 +20,16 @@ export class RestParameter extends AbstractExpressionNode {
      * @param context execution stack/scope context
      * @param value any paramter
      */
-    set(context: object, value: any) {
-        Reflect.set(context, this.arrayName, value);
+    set(stack: ScopedStack, value: any) {
+        return stack.localScop.set(this.arrayName, value) ? value : void 0;
     }
 
     /**
-     * is used when define a function
+     * used when define a function
      * @param context execution stack/scope context
      */
-    get(context: any[]) {
-        return Reflect.get(context, this.arrayName);
+    get(stack: ScopedStack) {
+        return stack.localScop.get(this.arrayName);
     }
 
     applyParams(context: any, ...params: any[]) {

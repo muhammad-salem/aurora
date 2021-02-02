@@ -1,15 +1,16 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class DestructuringAssignmentNode extends AbstractExpressionNode {
 
-    static fromJSON(node: DestructuringAssignmentNode, serializer: ExpDeserializer): DestructuringAssignmentNode {
+    static fromJSON(node: DestructuringAssignmentNode, deserializer: ExpressionDeserializer): DestructuringAssignmentNode {
         return new DestructuringAssignmentNode(
-            node.keys.map(key => serializer(key as any)),
-            serializer(node.arrayOrObject as any),
-            node.restKey ? serializer(node.restKey as any) : void 0
+            node.keys.map(key => deserializer(key as any)),
+            deserializer(node.arrayOrObject as any),
+            node.restKey ? deserializer(node.restKey as any) : void 0
         );
     }
 
@@ -17,19 +18,19 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object) {
-        const value = this.arrayOrObject.get(context);
+    set(stack: ScopedStack) {
+        const value = this.arrayOrObject.get(stack);
         if (Array.isArray(value)) {
             let lastIndex = -1;
             this.keys.forEach((key, index) => {
                 lastIndex = index;
-                key.set(context, value[index]);
+                key.set(stack, value[index]);
             });
-            this.restKey?.set(context, value.slice(++lastIndex));
+            this.restKey?.set(stack, value.slice(++lastIndex));
         } else if (Symbol.iterator in value) {
             const iterator: Iterator<any> = value[Symbol.iterator]();
             this.keys.forEach((key, index) => {
-                key.set(context, iterator.next().value);
+                key.set(stack, iterator.next().value);
             });
             if (this.restKey) {
                 const restValues: any[] = [];
@@ -41,18 +42,18 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
                     }
                     restValues.push(result.value);
                 }
-                this.restKey.set(context, restValues);
+                this.restKey.set(stack, restValues);
             }
 
         } else if (typeof value === 'object') {
             const destructedKeys: string[] = [];
             this.keys.forEach(key => {
-                const propName = key.get(context);
-                key.set(context, value[propName]);
+                const propName = key.get(stack);
+                key.set(stack, value[propName]);
                 destructedKeys.push(propName);
             });
             if (this.restKey) {
-                this.restKey?.set(context, Object.keys(value)
+                this.restKey?.set(stack, Object.keys(value)
                     .filter(propName => !destructedKeys.includes(propName))
                     .reduce((obj, propName) => {
                         obj[propName] = value[propName];
@@ -63,8 +64,8 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
         return value;
     }
 
-    get(context: object) {
-        return this.set(context);
+    get(stack: ScopedStack) {
+        return this.set(stack);
     }
 
     entry(): string[] {

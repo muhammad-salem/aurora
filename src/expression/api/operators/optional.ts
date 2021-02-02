@@ -1,32 +1,37 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class OptionalChainingNode extends AbstractExpressionNode {
 
-    static fromJSON(node: OptionalChainingNode, serializer: ExpDeserializer): OptionalChainingNode {
-        return new OptionalChainingNode(serializer(node.optional as any), serializer(node.property as any));
+    static fromJSON(node: OptionalChainingNode, deserializer: ExpressionDeserializer): OptionalChainingNode {
+        return new OptionalChainingNode(deserializer(node.optional as any), deserializer(node.property as any));
     }
 
     constructor(private optional: ExpressionNode, private property: ExpressionNode) {
         super();
     }
 
-    set(context: object, value: any) {
-        const object = this.optional.get(context);
+    set(stack: ScopedStack, value: any) {
+        const object = this.optional.get(stack);
         if (object === null || object === undefined) {
             return undefined
         }
         return this.property.set(object, value);
     }
 
-    get(context: object) {
-        const object = this.optional.get(context);
+    get(stack: ScopedStack) {
+        const object = this.optional.get(stack);
         if (object === null || object === undefined) {
             return undefined
         }
         return this.property.get(object);
+    }
+
+    getThis(stack: ScopedStack): any {
+        return this.optional.get(stack);
     }
 
     entry(): string[] {

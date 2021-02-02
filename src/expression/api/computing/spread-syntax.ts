@@ -1,6 +1,7 @@
 import type { ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class SpreadSyntax extends AbstractExpressionNode {
@@ -15,12 +16,12 @@ export class SpreadSyntax extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object, value: any) {
+    set(stack: ScopedStack, value: any) {
         throw new Error('SpreadSyntax.set() Method has no implementation.');
     }
 
-    get(context: object): any[] | { [k: string]: any } {
-        const object = this.node.get(context);
+    get(stack: ScopedStack): any[] | { [k: string]: any } {
+        const object = this.node.get(stack);
         if (Array.isArray(object)) {
             return this.getArray(object);
         } else if (Reflect.has(object, Symbol.iterator)) {

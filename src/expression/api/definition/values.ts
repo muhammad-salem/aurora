@@ -1,5 +1,7 @@
-import { AbstractExpressionNode } from '../abstract.js';
+
 import { Deserializer } from '../deserialize/deserialize.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class PropertyNode extends AbstractExpressionNode {
@@ -12,13 +14,12 @@ export class PropertyNode extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object, value: any) {
-        Reflect.set(context, this.property, value);
-        return value;
+    set(stack: ScopedStack, value: any) {
+        return stack.set(this.property, value) ? value : void 0;
     }
 
-    get(context: { [key: string]: any }) {
-        return context[this.property];
+    get(stack: ScopedStack) {
+        return stack.get(this.property);
     }
 
     entry(): string[] {

@@ -1,9 +1,11 @@
+import type { ScopedStack } from './scope.js';
 
 export type NodeJsonType = { type: string, node: { [key: string]: any } };
 
 export interface ExpressionNode {
-    set(context: object, value: any): any;
-    get(context: object): any;
+    set(stack: ScopedStack, value: any): any;
+    get(stack: ScopedStack): any;
+    getThis?(stack: ScopedStack): any;
     entry(): string[];
     event(parent?: string): string[];
     toString(): string;
@@ -15,7 +17,7 @@ interface TypeOf<T> {
     new(...params: any[]): T;
 }
 
-export type ExpDeserializer = (node: NodeJsonType) => ExpressionNode;
+export type ExpressionDeserializer = (node: NodeJsonType) => ExpressionNode;
 
 /**
  * this is how to:
@@ -23,6 +25,6 @@ export type ExpDeserializer = (node: NodeJsonType) => ExpressionNode;
  */
 export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
     KEYWORDS?: string[];
-    fromJSON(node: T, serializer: ExpDeserializer): T;
+    fromJSON(node: T, deserializer: ExpressionDeserializer): T;
 }
 

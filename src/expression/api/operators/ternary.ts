@@ -1,32 +1,37 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
-
+import { ScopedStack } from '../scope.js';
 
 export class TernaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: TernaryNode, serializer: ExpDeserializer): TernaryNode {
+    static fromJSON(node: TernaryNode, deserializer: ExpressionDeserializer): TernaryNode {
         return new TernaryNode(
-            serializer(node.logical as any),
-            serializer(node.ifTrue as any),
-            serializer(node.ifFalse as any)
+            deserializer(node.logical as any),
+            deserializer(node.ifTrue as any),
+            deserializer(node.ifFalse as any)
         );
     }
 
     constructor(private logical: ExpressionNode, private ifTrue: ExpressionNode, private ifFalse: ExpressionNode) {
         super();
     }
-    set(context: object, value: any) {
+
+    set(stack: ScopedStack, value: any) {
         throw new Error(`TernaryNode#set() has no implementation.`);
     }
-    get(context: object) {
-        return this.logical.get(context) ? this.ifFalse.get(context) : this.ifTrue.get(context);
+
+    get(stack: ScopedStack) {
+        return this.logical.get(stack) ? this.ifFalse.get(stack) : this.ifTrue.get(stack);
     }
+
     entry(): string[] {
         return [...this.logical.entry(), ...this.ifTrue.entry(), ...this.ifFalse.entry()];
     }
+
     event(parent?: string): string[] {
         return [];
     }
+
     toString() {
         return `${this.logical.toString()} (${this.ifTrue.toString()}):(${this.ifFalse.toString()})`;
     }

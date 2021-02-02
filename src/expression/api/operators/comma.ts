@@ -1,26 +1,27 @@
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer()
 export class CommaNode extends AbstractExpressionNode {
 
-    static fromJSON(node: CommaNode, serializer: ExpDeserializer): CommaNode {
-        return new CommaNode(node.expressions.map(expression => serializer(expression as any)));
+    static fromJSON(node: CommaNode, deserializer: ExpressionDeserializer): CommaNode {
+        return new CommaNode(node.expressions.map(expression => deserializer(expression as any)));
     }
 
     constructor(private expressions: ExpressionNode[]) {
         super();
     }
 
-    set(context: object) {
-        return this.expressions
-            .map(expression => expression.get(context))
-            .find((value, index, array) => index = array.length - 1);
+    set(stack: ScopedStack) {
+        let value;
+        this.expressions.forEach(expression => value = expression.get(stack))
+        return value;
     }
 
-    get(context: object) {
-        return this.set(context);
+    get(stack: ScopedStack) {
+        return this.set(stack);
     }
 
     entry(): string[] {

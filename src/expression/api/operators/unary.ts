@@ -1,11 +1,12 @@
+import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
-
+import { AbstractExpressionNode } from '../abstract.js';
+import { ScopedStack } from '../scope.js';
 @Deserializer()
-export class UnaryNode implements ExpressionNode {
+export class UnaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: UnaryNode, serializer: ExpDeserializer): UnaryNode {
-        return new UnaryNode(node.op, serializer(node.node as any));
+    static fromJSON(node: UnaryNode, deserializer: ExpressionDeserializer): UnaryNode {
+        return new UnaryNode(node.op, deserializer(node.node as any));
     }
 
     static Evaluations: { [key: string]: (value: any) => any } = {
@@ -20,18 +21,16 @@ export class UnaryNode implements ExpressionNode {
 
     static KEYWORDS = Object.keys(UnaryNode.Evaluations);
 
-    constructor(private op: string, private node: ExpressionNode) { }
-
-    getClass(): NodeExpressionClass<UnaryNode> {
-        return UnaryNode;
+    constructor(private op: string, private node: ExpressionNode) {
+        super();
     }
 
-    set(context: object, value: any) {
-        return this.node.set(context, value);
+    set(stack: ScopedStack, value: any) {
+        return this.node.set(stack, value);
     }
 
-    get(context: object) {
-        let value = this.node.get(context);
+    get(stack: ScopedStack) {
+        let value = this.node.get(stack);
         return UnaryNode.Evaluations[this.op](value);
     }
 
@@ -47,13 +46,10 @@ export class UnaryNode implements ExpressionNode {
         return `${this.op}${this.node.toString()}`;
     }
 
-    toJSON(): NodeJsonType {
+    toJson(): object {
         return {
-            type: UnaryNode.name,
-            node: {
-                op: this.op,
-                node: this.node.toJSON()
-            }
+            op: this.op,
+            node: this.node.toJSON()
         };
     }
 
@@ -61,21 +57,20 @@ export class UnaryNode implements ExpressionNode {
 
 
 @Deserializer()
-export class LiteralUnaryNode implements ExpressionNode {
+export class LiteralUnaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: LiteralUnaryNode, serializer: ExpDeserializer): LiteralUnaryNode {
+    static fromJSON(node: LiteralUnaryNode, serializer: ExpressionDeserializer): LiteralUnaryNode {
         return new LiteralUnaryNode(node.op, serializer(node.node as any));
     }
 
     static KEYWORDS = ['delete', 'typeof', 'void'];
 
-    constructor(private op: string, private node: ExpressionNode) { }
-    getClass(): NodeExpressionClass<LiteralUnaryNode> {
-        return LiteralUnaryNode;
+    constructor(private op: string, private node: ExpressionNode) {
+        super();
     }
 
-    set(context: object, value: any) {
-        throw new Error('LiteralUnaryOperators#set() has no implementation.');
+    set(stack: ScopedStack, value: any) {
+        throw new Error('LiteralUnaryNode#set() has no implementation.');
     }
 
     entry(): string[] {
@@ -89,46 +84,35 @@ export class LiteralUnaryNode implements ExpressionNode {
         return [];
     }
 
-    get(context: object) {
+    get(stack: ScopedStack) {
         switch (this.op) {
-            case 'delete': return this.getDelete(context);
-            case 'typeof': return this.getTypeof(context);
-            case 'void': return this.getVoid(context);
+            case 'delete': return this.getDelete(stack);
+            case 'typeof': return this.getTypeof(stack);
+            case 'void': return this.getVoid(stack);
         }
     }
 
-    private getVoid(context: object) {
-        return void this.node.get(context);
+    private getVoid(stack: ScopedStack) {
+        return void this.node.get(stack);
     }
-    private getTypeof(context: object) {
-        return typeof this.node.get(context);
+    private getTypeof(stack: ScopedStack) {
+        return typeof this.node.get(stack);
     }
-    private getDelete(context: object) {
-        throw new Error('LiteralUnaryOperators.delete#get() has no implementation yet.');
-        // if (this.node instanceof MemberNode || this.node instanceof NavigationNode) {
-        //     if (this.node.right instanceof ValueNode) {
-        //         let parent = this.node.left.get(context);
-        //         return Reflect.deleteProperty(parent, this.node.right.get(context) as string | number);
-        //     } else {
-        //         // loop to get to an end of the chain
-        //     }
-        // } else if (this.node instanceof PropertyNode) {
-        //     return Reflect.deleteProperty(context, this.node.get(context));
-        // }
-        // return Reflect.deleteProperty(context, this.node.get(context));
+    private getDelete(stack: ScopedStack) {
+        const thisNode = this.node.getThis?.(stack);
+        if (thisNode) {
+            delete thisNode[this.node.toString()];
+        }
     }
 
     toString() {
         return `${this.op} ${this.node.toString()}`;
     }
 
-    toJSON(): NodeJsonType {
+    toJson(): object {
         return {
-            type: UnaryNode.name,
-            node: {
-                op: this.op,
-                node: this.node.toJSON()
-            }
+            op: this.op,
+            node: this.node.toJSON()
         };
     }
 

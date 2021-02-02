@@ -1,16 +1,16 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { ExpDeserializer, ExpressionNode } from '../expression.js';
+import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer()
 export class RelationalNode extends InfixExpressionNode {
 
-    static fromJSON(node: RelationalNode, serializer: ExpDeserializer): RelationalNode {
+    static fromJSON(node: RelationalNode, deserializer: ExpressionDeserializer): RelationalNode {
         return new RelationalNode(
             node.op,
-            serializer(node.left as any),
-            serializer(node.right as any)
+            deserializer(node.left as any),
+            deserializer(node.right as any)
         );
     }
 
