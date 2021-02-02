@@ -141,8 +141,8 @@ export class NativeValueNode extends AbstractExpressionNode {
 
 }
 
-export const NullNode = Object.freeze(new NativeValueNode(null));
-export const UndefinedNode = Object.freeze(new NativeValueNode(undefined));
-export const TrueNode = Object.freeze(new NativeValueNode(true));
-export const FalseNode = Object.freeze(new NativeValueNode(false));
-export const ThisNode = Object.freeze(new PropertyNode('this'));
+export const NullNode = Object.freeze(new NativeValueNode(null)) as NativeValueNode;
+export const UndefinedNode = Object.freeze(new NativeValueNode(undefined)) as NativeValueNode;
+export const TrueNode = Object.freeze(new NativeValueNode(true)) as NativeValueNode;
+export const FalseNode = Object.freeze(new NativeValueNode(false)) as NativeValueNode;
+export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
