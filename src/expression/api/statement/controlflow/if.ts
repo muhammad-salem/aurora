@@ -1,7 +1,7 @@
 import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { ScopedStack } from '../../scope.js';
 
 /**
  * The if statement executes a statement if a specified condition is truthy.
@@ -32,6 +32,7 @@ export class IfElseNode extends AbstractExpressionNode {
     }
 
     get(stack: ScopedStack) {
+        stack = stack.newStack();
         const condition = this.condition.get(stack);
         if (condition) {
             return this.statement.get(stack);
@@ -54,7 +55,10 @@ export class IfElseNode extends AbstractExpressionNode {
     }
 
     toJson(): object {
-        return {};
+        return {
+            condition: this.condition.toJSON(),
+            statement: this.statement.toJSON()
+        };
     }
 
 }

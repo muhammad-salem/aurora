@@ -6,82 +6,35 @@ import { ScopedStack } from '../../scope.js';
  * The break statement terminates the current loop, switch, or label statement
  * and transfers program control to the statement following the terminated statement.
  * 
- */
-@Deserializer()
-export class BreakNode extends AbstractExpressionNode {
-
-    static KEYWORDS = ['break'];
-
-    static INSTANCE = Object.freeze(new BreakNode()) as BreakNode;
-
-    static fromJSON(node: BreakNode): BreakNode {
-        if (BreakNode.INSTANCE) {
-            return BreakNode.INSTANCE;
-        }
-        return BreakNode.INSTANCE = new BreakNode();
-    }
-
-    private break = BreakNode.KEYWORDS[0];
-
-    constructor() {
-        super();
-    }
-
-    set(stack: ScopedStack, value: any) {
-        throw new Error(`BreakNode#set() has no implementation.`);
-    }
-
-    get(stack: ScopedStack) {
-        return this.break;
-    }
-
-    entry(): string[] {
-        return [];
-    }
-
-    event(parent?: string): string[] {
-        return [];
-    }
-
-    toString(): string {
-        return this.break;
-    }
-
-    toJson(): object {
-        return { break: this.break };
-    }
-
-}
-
-
-/**
  * The continue statement terminates execution of the statements in the current iteration of the current or labeled loop,
  * and continues execution of the loop with the next iteration.
  *
  */
 @Deserializer()
-export class ContinueNode extends AbstractExpressionNode {
+export class TerminateNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['continue'];
+    static KEYWORDS = ['break', 'continue'];
 
-    static INSTANCE = Object.freeze(new ContinueNode()) as ContinueNode;
+    static readonly BreakSymbol = Symbol.for('break');
+    static readonly ContinueSymbol = Symbol.for('continue');
 
-    static fromJSON(node: ContinueNode): ContinueNode {
-        return node.labeled ? new ContinueNode(node.labeled) : ContinueNode.INSTANCE;
+    static readonly BREAK_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.BreakSymbol)) as TerminateNode;
+    static readonly CONTINUE_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.ContinueSymbol)) as TerminateNode;
+
+    static fromJSON(node: TerminateNode): TerminateNode {
+        return String(node.symbol) === 'break' ? TerminateNode.BREAK_INSTANCE : TerminateNode.CONTINUE_INSTANCE;
     }
 
-    private continue = ContinueNode.KEYWORDS[0];
-
-    constructor(private labeled?: string) {
+    constructor(private symbol: Symbol) {
         super();
     }
 
     set(stack: ScopedStack, value: any) {
-        throw new Error(`ContinueNode#set() has no implementation.`);
+        throw new Error(`TerminateNode#set() has no implementation.`);
     }
 
     get(stack: ScopedStack) {
-        return this.continue + this.labeled ? (' ' + this.labeled) : '';
+        return this.symbol;
     }
 
     entry(): string[] {
@@ -93,14 +46,11 @@ export class ContinueNode extends AbstractExpressionNode {
     }
 
     toString(): string {
-        return this.continue + this.labeled ? (' ' + this.labeled) : '';
+        return this.symbol.description!;
     }
 
     toJson(): object {
-        return {
-            continue: this.continue,
-            labeled: this.labeled
-        };
+        return { symbol: this.symbol.description };
     }
 
 }
