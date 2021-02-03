@@ -77,7 +77,7 @@ export class ForNode extends AbstractExpressionNode {
 @Deserializer()
 export class ForOfNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['for'];
+    static KEYWORDS = ['for', 'of'];
 
     static fromJSON(node: ForOfNode, deserializer: ExpressionDeserializer): ForOfNode {
         return new ForOfNode(
@@ -143,7 +143,7 @@ export class ForOfNode extends AbstractExpressionNode {
 @Deserializer()
 export class ForInNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['for'];
+    static KEYWORDS = ['for', 'in'];
 
     static fromJSON(node: ForInNode, deserializer: ExpressionDeserializer): ForInNode {
         return new ForInNode(
@@ -199,6 +199,73 @@ export class ForInNode extends AbstractExpressionNode {
         return {
             variable: this.variable.toJSON(),
             object: this.object.toJSON(),
+            statement: this.statement.toJSON(),
+        };
+    }
+
+}
+
+@Deserializer()
+export class ForAwaitOfNode extends AbstractExpressionNode {
+
+    static KEYWORDS = ['for', 'await'];
+
+    static fromJSON(node: ForAwaitOfNode, deserializer: ExpressionDeserializer): ForAwaitOfNode {
+        return new ForAwaitOfNode(
+            deserializer(node.variable as any),
+            deserializer(node.iterable as any),
+            deserializer(node.statement as any)
+        );
+    }
+
+
+    // variable of iterable
+    constructor(private variable: ExpressionNode,
+        private iterable: ExpressionNode,
+        private statement: ExpressionNode) {
+        super();
+    }
+
+    set(stack: ScopedStack, value: any) {
+        throw new Error(`ForAwaitOfNode#set() has no implementation.`);
+    }
+
+    get(stack: ScopedStack) {
+        const iterable: { [Symbol.asyncIterator](): AsyncIterator<any> } = this.iterable.get(stack);
+        (async () => {
+            for await (const iterator of iterable) {
+                const forOfStack = stack.newStack();
+                this.variable.set(forOfStack, iterable);
+                const symbol = this.statement.get(forOfStack);
+                // useless case, as it at the end of for statement
+                // an array/block statement, should return last signal
+                if (TerminateNode.ContinueSymbol === symbol) {
+                    continue;
+                }
+                if (TerminateNode.BreakSymbol === symbol) {
+                    break;
+                }
+            }
+        })();
+        return void 0;
+    }
+
+    entry(): string[] {
+        return [];
+    }
+
+    event(parent?: string): string[] {
+        return [];
+    }
+
+    toString(): string {
+        return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
+    }
+
+    toJson(): object {
+        return {
+            variable: this.variable.toJSON(),
+            iterable: this.iterable.toJSON(),
             statement: this.statement.toJSON(),
         };
     }
