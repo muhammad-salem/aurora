@@ -5,10 +5,11 @@ export interface ScopedContext {
 }
 
 export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
-    localScop: ScopedContext;
+    readonly localScop: ScopedContext;
     add(...contexts: ScopedContext[]): number;
     remove(index: number): ScopedContext;
-    addProvider(obj: any): void;
+    addProvider(obj: any): number;
+    addEmptyProvider(): ScopedContext;
     findContext(propertyKey: PropertyKey): ScopedContext;
     newStack(): ScopedStack;
 }

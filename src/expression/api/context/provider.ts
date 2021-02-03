@@ -13,14 +13,14 @@ export class DefaultScopedContext implements ScopedContext {
     }
 }
 
-export class LocalScopedContext extends DefaultScopedContext {
+export class EmptyScopedContext extends DefaultScopedContext {
     constructor() {
         super(Object.create(null));
     }
 }
 
 export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
-    private localScop: ScopedContext = new LocalScopedContext();
+    readonly localScop: ScopedContext = new EmptyScopedContext();
     constructor(first: ScopedContext) {
         super(first);
     }
@@ -35,8 +35,13 @@ export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
         this.splice(index, 1);
         return context;
     }
-    addProvider(obj: any): void {
-        this.add(new DefaultScopedContext(obj));
+    addProvider(obj: any): number {
+        return this.add(new DefaultScopedContext(obj));
+    }
+    addEmptyProvider(): ScopedContext {
+        const scope = new EmptyScopedContext();
+        this.add(scope);
+        return scope;
     }
     findContext(propertyKey: PropertyKey): ScopedContext {
         return this.find(context => context.has(propertyKey)) || this.localScop;
