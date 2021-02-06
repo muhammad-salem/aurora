@@ -1,16 +1,18 @@
 import type { ExpressionNode } from '../expression.js';
+import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestParameter } from './rest-parameter.js';
 import { PropertyNode, ValueNode } from './values.js';
+import { ReturnValue } from '../computing/return.js';
 
 @Deserializer()
-export class FunctionDefinitionNode extends AbstractExpressionNode {
+export class FunctionDeclarationNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['function', '=>'];
 
-    static fromJSON(node: FunctionDefinitionNode): FunctionDefinitionNode {
-        return new FunctionDefinitionNode(
+    static fromJSON(node: FunctionDeclarationNode): FunctionDeclarationNode {
+        return new FunctionDeclarationNode(
             node.funcBody,
             node.paramNames,
             node.restParamter,
@@ -29,17 +31,26 @@ export class FunctionDefinitionNode extends AbstractExpressionNode {
         super();
     }
 
-    set(context: object, value: Function) {
-        if (this.funcName) {
-            Reflect.set(context, this.funcName.get(), value);
-        }
+    set(stack: ScopedStack, value: Function) {
+        throw new Error('FunctionDeclarationNode#set() has no implementation.');
     }
 
-    get(context: object) {
-        this.paramNames.forEach(param => param.set(context, param.get(context)));
-        return this.funcBody
-            .map(line => line.get(context))
-            .find((value, index, array) => index === array.length - 1);
+    get(stack: ScopedStack) {
+        const func = (...args: any[]) => {
+            const funcStack = stack.newStack();
+            this.paramNames.forEach((param, index) => funcStack.set(param.get(stack), args[index]));
+            let returnValue;
+            for (const node of this.funcBody) {
+                returnValue = node.get(funcStack);
+                if (returnValue instanceof ReturnValue) {
+                    return returnValue.value;
+                }
+            }
+        };
+        if (this.funcName) {
+            stack.set(this.funcName.get(), func);
+        }
+        return func;
     }
 
     entry(): string[] {
