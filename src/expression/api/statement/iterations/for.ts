@@ -3,6 +3,7 @@ import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
+import { ReturnValue } from '../../computing/return.js';
 
 /**
  * The if statement executes a statement if a specified condition is truthy.
@@ -16,10 +17,10 @@ export class ForNode extends AbstractExpressionNode {
 
     static fromJSON(node: ForNode, deserializer: NodeDeserializer): ForNode {
         return new ForNode(
-            deserializer(node.statement as any),
-            node.initialization ? deserializer(node.initialization as any) : void 0,
-            node.condition ? deserializer(node.condition as any) : void 0,
-            node.finalExpression ? deserializer(node.finalExpression as any) : void 0
+            deserializer(node.statement),
+            node.initialization && deserializer(node.initialization),
+            node.condition && deserializer(node.condition),
+            node.finalExpression && deserializer(node.finalExpression)
         );
     }
 
@@ -38,14 +39,17 @@ export class ForNode extends AbstractExpressionNode {
     get(stack: ScopedStack) {
         stack = stack.newStack();
         for (this.initialization?.get(stack); this.condition?.get(stack) || true; this.finalExpression?.get(stack)) {
-            const symbol = this.statement.get(stack);
+            const result = this.statement.get(stack);
             // useless case, as it at the end of for statement
             // an array/block statement, should return last signal
-            if (TerminateNode.ContinueSymbol === symbol) {
+            if (TerminateNode.ContinueSymbol === result) {
                 continue;
             }
-            if (TerminateNode.BreakSymbol === symbol) {
+            if (TerminateNode.BreakSymbol === result) {
                 break;
+            }
+            if (result instanceof ReturnValue) {
+                return result;
             }
         }
         return void 0;
@@ -81,9 +85,9 @@ export class ForOfNode extends AbstractExpressionNode {
 
     static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
         return new ForOfNode(
-            deserializer(node.variable as any),
-            deserializer(node.iterable as any),
-            deserializer(node.statement as any)
+            deserializer(node.variable),
+            deserializer(node.iterable),
+            deserializer(node.statement)
         );
     }
 
@@ -104,14 +108,17 @@ export class ForOfNode extends AbstractExpressionNode {
         for (const iterator of iterable) {
             const forOfStack = stack.newStack();
             this.variable.set(forOfStack, iterable);
-            const symbol = this.statement.get(forOfStack);
+            const result = this.statement.get(forOfStack);
             // useless case, as it at the end of for statement
             // an array/block statement, should return last signal
-            if (TerminateNode.ContinueSymbol === symbol) {
+            if (TerminateNode.ContinueSymbol === result) {
                 continue;
             }
-            if (TerminateNode.BreakSymbol === symbol) {
+            if (TerminateNode.BreakSymbol === result) {
                 break;
+            }
+            if (result instanceof ReturnValue) {
+                return result;
             }
         }
         return void 0;
@@ -147,9 +154,9 @@ export class ForInNode extends AbstractExpressionNode {
 
     static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
         return new ForInNode(
-            deserializer(node.variable as any),
-            deserializer(node.object as any),
-            deserializer(node.statement as any)
+            deserializer(node.variable),
+            deserializer(node.object),
+            deserializer(node.statement)
         );
     }
 
@@ -170,14 +177,17 @@ export class ForInNode extends AbstractExpressionNode {
         for (const iterator in iterable) {
             const forOfStack = stack.newStack();
             this.variable.set(forOfStack, iterable);
-            const symbol = this.statement.get(forOfStack);
+            const result = this.statement.get(forOfStack);
             // useless case, as it at the end of for statement
             // an array/block statement, should return last signal
-            if (TerminateNode.ContinueSymbol === symbol) {
+            if (TerminateNode.ContinueSymbol === result) {
                 continue;
             }
-            if (TerminateNode.BreakSymbol === symbol) {
+            if (TerminateNode.BreakSymbol === result) {
                 break;
+            }
+            if (result instanceof ReturnValue) {
+                return result;
             }
         }
         return void 0;
@@ -212,9 +222,9 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 
     static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
         return new ForAwaitOfNode(
-            deserializer(node.variable as any),
-            deserializer(node.iterable as any),
-            deserializer(node.statement as any)
+            deserializer(node.variable),
+            deserializer(node.iterable),
+            deserializer(node.statement)
         );
     }
 
@@ -236,14 +246,17 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
             for await (const iterator of iterable) {
                 const forOfStack = stack.newStack();
                 this.variable.set(forOfStack, iterable);
-                const symbol = this.statement.get(forOfStack);
+                const result = this.statement.get(forOfStack);
                 // useless case, as it at the end of for statement
                 // an array/block statement, should return last signal
-                if (TerminateNode.ContinueSymbol === symbol) {
+                if (TerminateNode.ContinueSymbol === result) {
                     continue;
                 }
-                if (TerminateNode.BreakSymbol === symbol) {
+                if (TerminateNode.BreakSymbol === result) {
                     break;
+                }
+                if (result instanceof ReturnValue) {
+                    return result;
                 }
             }
         })();

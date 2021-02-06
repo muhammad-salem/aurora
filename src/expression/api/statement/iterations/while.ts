@@ -3,6 +3,7 @@ import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
+import { ReturnValue } from '../../computing/return.js';
 
 /**
  * The while statement creates a loop that executes a specified
@@ -17,15 +18,13 @@ export class WhileNode extends AbstractExpressionNode {
 
     static fromJSON(node: WhileNode, deserializer: NodeDeserializer): WhileNode {
         return new WhileNode(
-            deserializer(node.condition as any),
-            deserializer(node.statement as any),
-            node.elseIf ? deserializer(node.elseIf as any) : void 0
+            deserializer(node.condition),
+            deserializer(node.statement)
         );
     }
 
 
-    constructor(private condition: ExpressionNode, private statement: ExpressionNode,
-        private elseIf?: ExpressionNode) {
+    constructor(private condition: ExpressionNode, private statement: ExpressionNode) {
         super();
     }
 
@@ -37,14 +36,17 @@ export class WhileNode extends AbstractExpressionNode {
         stack = stack.newStack();
         const condition = this.condition.get(stack);
         while (condition) {
-            const symbol = this.statement.get(stack);
+            const result = this.statement.get(stack);
             // useless case, as it at the end of for statement
             // an array/block statement, should return last signal
-            if (TerminateNode.ContinueSymbol === symbol) {
+            if (TerminateNode.ContinueSymbol === result) {
                 continue;
             }
-            if (TerminateNode.BreakSymbol === symbol) {
+            if (TerminateNode.BreakSymbol === result) {
                 break;
+            }
+            if (result instanceof ReturnValue) {
+                return result;
             }
         }
         return void 0;
@@ -60,6 +62,69 @@ export class WhileNode extends AbstractExpressionNode {
 
     toString(): string {
         return `while (${this.condition.toString()}) ${this.statement.toString()}`;
+    }
+
+    toJson(): object {
+        return {
+            condition: this.condition.toJSON(),
+            statement: this.statement.toJSON()
+        };
+    }
+
+}
+
+
+@Deserializer('do-while')
+export class DoWhileNode extends AbstractExpressionNode {
+
+    static KEYWORDS = ['do', 'while'];
+
+    static fromJSON(node: DoWhileNode, deserializer: NodeDeserializer): DoWhileNode {
+        return new DoWhileNode(
+            deserializer(node.condition),
+            deserializer(node.statement)
+        );
+    }
+
+
+    constructor(private condition: ExpressionNode, private statement: ExpressionNode) {
+        super();
+    }
+
+    set(stack: ScopedStack, value: any) {
+        throw new Error(`WhileNode#set() has no implementation.`);
+    }
+
+    get(stack: ScopedStack) {
+        stack = stack.newStack();
+        const condition = this.condition.get(stack);
+        do {
+            const result = this.statement.get(stack);
+            // useless case, as it at the end of for statement
+            // an array/block statement, should return last signal
+            if (TerminateNode.ContinueSymbol === result) {
+                continue;
+            }
+            if (TerminateNode.BreakSymbol === result) {
+                break;
+            }
+            if (result instanceof ReturnValue) {
+                return result;
+            }
+        } while (this.condition.get(stack));
+        return void 0;
+    }
+
+    entry(): string[] {
+        return [];
+    }
+
+    event(parent?: string): string[] {
+        return [];
+    }
+
+    toString(): string {
+        return `do {${this.statement.toString()}} while (${this.condition.toString()})`;
     }
 
     toJson(): object {
