@@ -475,14 +475,21 @@ export class ComponentRender<T> {
 		});
 		const handler = () => {
 			let renderText = viewProperty;
-			templateMap.forEach(prop => {
-				let value = prop.expression.get(prop.context);
-				renderText = renderText.replace(prop.template, value);
-			});
+			let result: any;
+			if (templateMap.length > 1) {
+				templateMap.forEach(prop => {
+					let value = prop.expression.get(prop.context);
+					renderText = renderText.replace(prop.template, value);
+				});
+			} else if (templateMap.length === 1) {
+				const prop = templateMap[0];
+				result = prop.expression.get(prop.context);
+			}
+
 			if (isAttr && element instanceof HTMLElement) {
-				element.setAttribute(elementAttr, renderText);
+				element.setAttribute(elementAttr, result || renderText);
 			} else {
-				Reflect.set(element, elementAttr, renderText);
+				Reflect.set(element, elementAttr, result || renderText);
 			}
 		}
 
