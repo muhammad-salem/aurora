@@ -51,7 +51,7 @@ export class IfElseNode extends AbstractExpressionNode {
     }
 
     toString(): string {
-        return `if (${this.condition.toString()}) ${this.statement.toString()} ${this.elseIf ? 'else ' : ''}${this.elseIf ? this.elseIf.toString() : ''}`;
+        return `if (${this.condition.toString()}) ${this.statement.toString()}${this.elseIf ? ' else ' : ''}${this.elseIf ? this.elseIf.toString() : ''}`;
     }
 
     toJson(): object {
