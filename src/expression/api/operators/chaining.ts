@@ -21,7 +21,7 @@ export class OptionalChainingNode extends AbstractExpressionNode {
         if (object === null || object === undefined) {
             return undefined
         }
-        return this.property.set(object, value);
+        return this.property.set(stack.stackFor(object), value);
     }
 
     get(stack: ScopedStack) {

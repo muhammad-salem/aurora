@@ -1,7 +1,7 @@
+import type { ScopedStack } from '../scope.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { ScopedStack } from '../scope.js';
 
 @Deserializer('access')
 export class PropertyAccessNode extends AbstractExpressionNode {
@@ -26,12 +26,12 @@ export class PropertyAccessNode extends AbstractExpressionNode {
     }
 
     set(stack: ScopedStack, value: any) {
-        return this.right.set(this.left.get(stack), value);
+        return this.right.set(stack.stackFor(this.left.get(stack)), value);
     }
 
     get(stack: ScopedStack) {
         if (this.op === '.') {
-            return this.right.get(this.left.get(stack));
+            return this.right.get(stack.stackFor(this.left.get(stack)));
         } else {
             return this.left.get(stack)[this.right.get(stack)];
         }
