@@ -7,7 +7,7 @@ import { ScopedStack } from '../scope.js';
 export class LiteralObjectNode extends AbstractExpressionNode {
 
     static fromJSON(node: LiteralObjectNode, deserializer: ExpressionDeserializer): LiteralObjectNode {
-        return new LiteralObjectNode(node.keyValue.map(expression => deserializer(expression as any)));
+        return new LiteralObjectNode(node.keyValue.map(exp => { return { key: exp.key, value: deserializer(exp.value as any) } }));
     }
 
     constructor(private keyValue: { key: string, value: ExpressionNode }[]) {
@@ -15,7 +15,7 @@ export class LiteralObjectNode extends AbstractExpressionNode {
     }
 
     set(stack: ScopedStack) {
-        throw new Error("LiteralArrayNode#set() has no implementation.");
+        throw new Error('LiteralObjectNode#set() has no implementation.');
     }
 
     get(stack: ScopedStack) {
@@ -41,7 +41,7 @@ export class LiteralObjectNode extends AbstractExpressionNode {
 
     toJson(): object {
         return {
-            items: this.keyValue.map(item => { return { key: item.key, value: item.value.toJSON() }; })
+            keyValue: this.keyValue.map(item => { return { key: item.key, value: item.value.toJSON() }; })
         };
     }
 
