@@ -20,7 +20,7 @@ export function generateTokens(str: string, tokenParser: RegExp): (NodeExpressio
         const num: string = args[0];
         const str: string = args[1];
         const bool: string = args[2];
-        const undefinedAndNull: string = args[3];
+        const nullish: string = args[3];
         const op: string = args[4];
         const property: string = args[5];
         // const whitespace: number = args[6];
@@ -40,8 +40,8 @@ export function generateTokens(str: string, tokenParser: RegExp): (NodeExpressio
             } else {
                 token = FalseNode;
             }
-        } else if (undefinedAndNull) {
-            if (NULL === undefinedAndNull) {
+        } else if (nullish) {
+            if (NULL === nullish) {
                 token = NullNode;
             } else {
                 token = UndefinedNode;
