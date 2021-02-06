@@ -72,7 +72,7 @@ export class LetNode extends DeclarationsNode {
 
     static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
         return new LetNode(
-            node.variables.map(item => { return new Variable(deserializer(<any>item.variable), deserializer(<any>item.value)) })
+            node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
         );
     }
 
@@ -101,7 +101,7 @@ export class ConstNode extends DeclarationsNode {
 
     static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
         return new ConstNode(
-            node.variables.map(item => { return new Variable(deserializer(<any>item.variable), deserializer(<any>item.value)) })
+            node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
         );
     }
 
