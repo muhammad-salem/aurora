@@ -33,6 +33,11 @@ export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
     newStack(): ScopedStack {
         return new ScopeProvider(this);
     }
+    stackFor(obj: any): ScopedStack {
+        const newStack = this.newStack();
+        newStack.addProvider(obj);
+        return newStack;
+    }
     add(...contexts: ScopedContext[]): number {
         return this.unshift(...contexts);
     }
@@ -52,14 +57,14 @@ export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
     findContext(propertyKey: PropertyKey): ScopedContext {
         return this.find(context => context.has(propertyKey)) || this.localScop;
     }
-    has(propertyKey: PropertyKey): boolean {
-        return this.findContext(propertyKey).has(propertyKey);
-    }
     get(propertyKey: PropertyKey) {
         return this.findContext(propertyKey).get(propertyKey);
     }
     set(propertyKey: PropertyKey, value: any): boolean {
         return this.findContext(propertyKey).set(propertyKey, value);
+    }
+    has(propertyKey: PropertyKey): boolean {
+        return this.find(context => context.has(propertyKey)) ? true : false;
     }
 }
 
