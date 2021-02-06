@@ -1,6 +1,7 @@
 import type { ScopedStack } from './scope.js';
 
-export type NodeJsonType = { type: string, node: { [key: string]: any } };
+export type NodeType = { type: string };
+export type NodeJsonType = { [key: string]: any } & NodeType;
 
 export interface ExpressionNode {
     set(stack: ScopedStack, value: any): any;
@@ -17,14 +18,15 @@ interface TypeOf<T> {
     new(...params: any[]): T;
 }
 
-export type ExpressionDeserializer = (node: NodeJsonType) => ExpressionNode;
+export type NodeDeserializer<T = ExpressionNode> = (node: T) => T;
 
 /**
  * this is how to:
  * describe a class with it's static functions and properties
+ * in the interface add getClass method
  */
 export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
     KEYWORDS?: string[];
-    fromJSON(node: T, deserializer: ExpressionDeserializer): T;
+    fromJSON(node: T, deserializer: NodeDeserializer): T;
 }
 

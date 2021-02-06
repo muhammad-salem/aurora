@@ -2,7 +2,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('rest')
 export class RestParameter extends AbstractExpressionNode {
 
     static KEYWORDS = ['...'];
@@ -20,8 +20,8 @@ export class RestParameter extends AbstractExpressionNode {
      * @param context execution stack/scope context
      * @param value any paramter
      */
-    set(stack: ScopedStack, value: any) {
-        return stack.localScop.set(this.arrayName, value) ? value : void 0;
+    set(stack: ScopedStack, ...values: any[]) {
+        return stack.localScop.set(this.arrayName, values) ? values : void 0;
     }
 
     /**
@@ -30,10 +30,6 @@ export class RestParameter extends AbstractExpressionNode {
      */
     get(stack: ScopedStack) {
         return stack.localScop.get(this.arrayName);
-    }
-
-    applyParams(context: any, ...params: any[]) {
-        this.set(context, params);
     }
 
     entry(): string[] {

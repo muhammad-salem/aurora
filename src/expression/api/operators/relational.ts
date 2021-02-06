@@ -1,16 +1,16 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer()
-export class RelationalNode extends InfixExpressionNode {
+@Deserializer('compare')
+export class CompareNode extends InfixExpressionNode {
 
-    static fromJSON(node: RelationalNode, deserializer: ExpressionDeserializer): RelationalNode {
-        return new RelationalNode(
+    static fromJSON(node: CompareNode, deserializer: NodeDeserializer): CompareNode {
+        return new CompareNode(
             node.op,
-            deserializer(node.left as any),
-            deserializer(node.right as any)
+            deserializer(node.left),
+            deserializer(node.right)
         );
     }
 
@@ -25,16 +25,16 @@ export class RelationalNode extends InfixExpressionNode {
         '<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
     };
 
-    static KEYWORDS = Object.keys(RelationalNode.Evaluations);
+    static KEYWORDS = Object.keys(CompareNode.Evaluations);
 
     constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
-        if (!(RelationalNode.KEYWORDS.includes(op))) {
+        if (!(CompareNode.KEYWORDS.includes(op))) {
             throw new Error(`[${op}]: operation has no implementation yet`);
         }
         super(op, left, right);
     }
 
     evalNode(evalNode: EvaluateNode) {
-        return RelationalNode.Evaluations[this.op](evalNode);
+        return CompareNode.Evaluations[this.op](evalNode);
     }
 }

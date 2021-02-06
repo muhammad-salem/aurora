@@ -3,13 +3,13 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
-export class SpreadSyntax extends AbstractExpressionNode {
+@Deserializer('spread')
+export class SpreadSyntaxNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['...'];
 
-    static fromJSON(nodeExp: SpreadSyntax): SpreadSyntax {
-        return new SpreadSyntax(nodeExp.node);
+    static fromJSON(nodeExp: SpreadSyntaxNode): SpreadSyntaxNode {
+        return new SpreadSyntaxNode(nodeExp.node);
     }
 
     constructor(private node: ExpressionNode) {

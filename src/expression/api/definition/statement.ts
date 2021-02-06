@@ -1,15 +1,15 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('statement')
 export class StatementNode extends AbstractExpressionNode {
 
     static KEYWORDS = [';'];
 
-    static fromJSON(node: StatementNode, deserializer: ExpressionDeserializer): StatementNode {
-        const nodes = node.lines.map(line => deserializer(line as any));
+    static fromJSON(node: StatementNode, deserializer: NodeDeserializer): StatementNode {
+        const nodes = node.lines.map(line => deserializer(line));
         return new StatementNode(node.lines);
     }
 

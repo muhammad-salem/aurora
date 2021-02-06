@@ -1,4 +1,4 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -10,12 +10,12 @@ import { TerminateNode } from '../controlflow/terminate.js';
  * The condition is evaluated before executing the statement.
  * 
  */
-@Deserializer()
+@Deserializer('while')
 export class WhileNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['while'];
 
-    static fromJSON(node: WhileNode, deserializer: ExpressionDeserializer): WhileNode {
+    static fromJSON(node: WhileNode, deserializer: NodeDeserializer): WhileNode {
         return new WhileNode(
             deserializer(node.condition as any),
             deserializer(node.statement as any),

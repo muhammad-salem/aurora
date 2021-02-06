@@ -1,5 +1,5 @@
 
-import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -65,12 +65,12 @@ export class DeclarationsNode extends AbstractExpressionNode {
  * optionally initializing it to a value.
  * 
  */
-@Deserializer()
+@Deserializer('let')
 export class LetNode extends DeclarationsNode {
 
     static KEYWORDS = ['let'];
 
-    static fromJSON(node: LetNode, deserializer: ExpressionDeserializer): LetNode {
+    static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
         return new LetNode(
             node.variables.map(item => { return new Variable(deserializer(<any>item.variable), deserializer(<any>item.value)) })
         );
@@ -90,14 +90,16 @@ export class LetNode extends DeclarationsNode {
  * Constants are block-scoped, much like variables declared using the let keyword.
  * The value of a constant can't be changed through reassignment,
  * and it can't be redeclared.
+ * 
+ * the impl set no constrain on the local variable
  *
  */
-@Deserializer()
+@Deserializer('const')
 export class ConstNode extends DeclarationsNode {
 
     static KEYWORDS = ['const'];
 
-    static fromJSON(node: ConstNode, deserializer: ExpressionDeserializer): ConstNode {
+    static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
         return new ConstNode(
             node.variables.map(item => { return new Variable(deserializer(<any>item.variable), deserializer(<any>item.value)) })
         );

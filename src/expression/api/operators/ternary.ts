@@ -1,14 +1,16 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
+@Deserializer('ternary')
 export class TernaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: TernaryNode, deserializer: ExpressionDeserializer): TernaryNode {
+    static fromJSON(node: TernaryNode, deserializer: NodeDeserializer): TernaryNode {
         return new TernaryNode(
-            deserializer(node.logical as any),
-            deserializer(node.ifTrue as any),
-            deserializer(node.ifFalse as any)
+            deserializer(node.logical),
+            deserializer(node.ifTrue),
+            deserializer(node.ifFalse)
         );
     }
 

@@ -1,14 +1,14 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { SpreadSyntax } from './spread-syntax.js';
+import { SpreadSyntaxNode } from './spread-syntax.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer()
-export class FunctionExecNode extends AbstractExpressionNode {
+@Deserializer('function-expression')
+export class FunctionExpression extends AbstractExpressionNode {
 
-    static fromJSON(node: FunctionExecNode, deserializer: ExpressionDeserializer): FunctionExecNode {
-        return new FunctionExecNode(deserializer(node.func as any), node.params.map(param => deserializer(param as any)));
+    static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
+        return new FunctionExpression(deserializer(node.func), node.params.map(param => deserializer(param)));
     }
 
     constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
@@ -16,14 +16,14 @@ export class FunctionExecNode extends AbstractExpressionNode {
     }
 
     set(stack: ScopedStack, value: any) {
-        throw new Error(`FunctionExecNode#set() has no implementation.`);
+        throw new Error(`FunctionExpression#set() has no implementation.`);
     }
 
     get(stack: ScopedStack,) {
         const funCallBack = this.func.get(stack) as Function;
         const argArray: any[] = [];
         this.params.forEach(param => {
-            if (param instanceof SpreadSyntax) {
+            if (param instanceof SpreadSyntaxNode) {
                 const spreadObj = param.get(stack);
                 if (Array.isArray(spreadObj)) {
                     spreadObj.forEach(arg => argArray.push(arg));

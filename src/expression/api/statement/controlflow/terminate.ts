@@ -10,7 +10,7 @@ import { ScopedStack } from '../../scope.js';
  * and continues execution of the loop with the next iteration.
  *
  */
-@Deserializer()
+@Deserializer('terminate')
 export class TerminateNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['break', 'continue'];

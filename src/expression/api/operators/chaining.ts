@@ -1,14 +1,16 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('chaining')
 export class OptionalChainingNode extends AbstractExpressionNode {
 
-    static fromJSON(node: OptionalChainingNode, deserializer: ExpressionDeserializer): OptionalChainingNode {
-        return new OptionalChainingNode(deserializer(node.optional as any), deserializer(node.property as any));
+    static fromJSON(node: OptionalChainingNode, deserializer: NodeDeserializer): OptionalChainingNode {
+        return new OptionalChainingNode(deserializer(node.optional), deserializer(node.property));
     }
+
+    static KEYWORDS = ['?.'];
 
     constructor(private optional: ExpressionNode, private property: ExpressionNode) {
         super();

@@ -1,4 +1,4 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -9,12 +9,12 @@ import { TerminateNode } from '../controlflow/terminate.js';
  * If the condition is falsy, another statement can be executed.
  * 
  */
-@Deserializer()
+@Deserializer('for')
 export class ForNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['for'];
 
-    static fromJSON(node: ForNode, deserializer: ExpressionDeserializer): ForNode {
+    static fromJSON(node: ForNode, deserializer: NodeDeserializer): ForNode {
         return new ForNode(
             deserializer(node.statement as any),
             node.initialization ? deserializer(node.initialization as any) : void 0,
@@ -74,12 +74,12 @@ export class ForNode extends AbstractExpressionNode {
 
 }
 
-@Deserializer()
+@Deserializer('for-of')
 export class ForOfNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['for', 'of'];
 
-    static fromJSON(node: ForOfNode, deserializer: ExpressionDeserializer): ForOfNode {
+    static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
         return new ForOfNode(
             deserializer(node.variable as any),
             deserializer(node.iterable as any),
@@ -140,12 +140,12 @@ export class ForOfNode extends AbstractExpressionNode {
 }
 
 
-@Deserializer()
+@Deserializer('for-in')
 export class ForInNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['for', 'in'];
 
-    static fromJSON(node: ForInNode, deserializer: ExpressionDeserializer): ForInNode {
+    static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
         return new ForInNode(
             deserializer(node.variable as any),
             deserializer(node.object as any),
@@ -205,12 +205,12 @@ export class ForInNode extends AbstractExpressionNode {
 
 }
 
-@Deserializer()
+@Deserializer('for-await-of')
 export class ForAwaitOfNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['for', 'await'];
+    static KEYWORDS = ['for', 'await', 'of'];
 
-    static fromJSON(node: ForAwaitOfNode, deserializer: ExpressionDeserializer): ForAwaitOfNode {
+    static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
         return new ForAwaitOfNode(
             deserializer(node.variable as any),
             deserializer(node.iterable as any),

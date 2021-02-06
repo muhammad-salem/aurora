@@ -1,12 +1,12 @@
-import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
-@Deserializer()
+@Deserializer('unary')
 export class UnaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: UnaryNode, deserializer: ExpressionDeserializer): UnaryNode {
-        return new UnaryNode(node.op, deserializer(node.node as any));
+    static fromJSON(node: UnaryNode, deserializer: NodeDeserializer): UnaryNode {
+        return new UnaryNode(node.op, deserializer(node.node));
     }
 
     static Evaluations: { [key: string]: (value: any) => any } = {
@@ -56,11 +56,11 @@ export class UnaryNode extends AbstractExpressionNode {
 }
 
 
-@Deserializer()
+@Deserializer('literal-unary')
 export class LiteralUnaryNode extends AbstractExpressionNode {
 
-    static fromJSON(node: LiteralUnaryNode, serializer: ExpressionDeserializer): LiteralUnaryNode {
-        return new LiteralUnaryNode(node.op, serializer(node.node as any));
+    static fromJSON(node: LiteralUnaryNode, serializer: NodeDeserializer): LiteralUnaryNode {
+        return new LiteralUnaryNode(node.op, serializer(node.node));
     }
 
     static KEYWORDS = ['delete', 'typeof', 'void'];

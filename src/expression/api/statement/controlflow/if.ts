@@ -1,4 +1,4 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -8,16 +8,16 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  * If the condition is falsy, another statement can be executed.
  * 
  */
-@Deserializer()
+@Deserializer('if')
 export class IfElseNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['if', 'else'];
 
-    static fromJSON(node: IfElseNode, deserializer: ExpressionDeserializer): IfElseNode {
+    static fromJSON(node: IfElseNode, deserializer: NodeDeserializer): IfElseNode {
         return new IfElseNode(
-            deserializer(node.condition as any),
-            deserializer(node.statement as any),
-            node.elseIf ? deserializer(node.elseIf as any) : void 0
+            deserializer(node.condition),
+            deserializer(node.statement),
+            node.elseIf ? deserializer(node.elseIf) : void 0
         );
     }
 

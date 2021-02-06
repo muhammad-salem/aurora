@@ -3,7 +3,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('regexp')
 export class RegExpNode extends AbstractExpressionNode {
 
     static fromJSON(node: RegExpNode & { source: string, flags: string }): RegExpNode {

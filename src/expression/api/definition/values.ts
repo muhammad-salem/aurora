@@ -3,7 +3,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('property')
 export class PropertyNode extends AbstractExpressionNode {
 
     static fromJSON(node: PropertyNode): PropertyNode {
@@ -39,7 +39,7 @@ export class PropertyNode extends AbstractExpressionNode {
     }
 }
 
-@Deserializer()
+@Deserializer('value')
 export class ValueNode extends AbstractExpressionNode {
 
     static fromJSON(node: ValueNode): ValueNode {
@@ -97,7 +97,7 @@ export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
 
-@Deserializer()
+@Deserializer('native-value')
 export class NativeValueNode extends AbstractExpressionNode {
 
     static fromJSON(node: NativeValueNode): NativeValueNode {

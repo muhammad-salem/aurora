@@ -1,4 +1,4 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -10,10 +10,10 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * before an expression with higher priority.
  * As it sounds, it groups what's inside of the parentheses.
  */
-@Deserializer()
+@Deserializer('grouping')
 export class GroupingNode extends AbstractExpressionNode {
 
-    static fromJSON(node: GroupingNode, deserializer: ExpressionDeserializer): GroupingNode {
+    static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
         return new GroupingNode(deserializer(node.node as any));
     }
 
@@ -22,7 +22,7 @@ export class GroupingNode extends AbstractExpressionNode {
     }
 
     set(stack: ScopedStack, value: any) {
-        throw new Error(`GroupingNode#set() has no implementation.`);
+        this.node.set(stack, value);
     }
 
     get(stack: ScopedStack,) {

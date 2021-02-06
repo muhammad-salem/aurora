@@ -1,33 +1,30 @@
-import type { ExpressionNode } from '../expression.js';
+import type { NodeDeserializer } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { RestParameter } from './rest-parameter.js';
-import { PropertyNode, ValueNode } from './values.js';
-import { ReturnValue } from '../computing/return.js';
+import { ValueNode } from './values.js';
+import { CommaNode } from '../operators/comma.js';
+import { BlockNode } from '../statement/controlflow/block.js';
 
-@Deserializer()
+@Deserializer('function-declaration')
 export class FunctionDeclarationNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['function', '=>'];
 
-    static fromJSON(node: FunctionDeclarationNode): FunctionDeclarationNode {
+    static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
         return new FunctionDeclarationNode(
-            node.funcBody,
-            node.paramNames,
-            node.restParamter,
+            deserializer(node.parameters) as CommaNode,
+            deserializer(node.statements) as BlockNode,
             node.isArrow,
-            node.funcName
+            node.name ? deserializer(node.name) as ValueNode : void 0
         );
     }
 
     constructor(
-        private funcBody: ExpressionNode[],
-        private paramNames: PropertyNode[],
-        private restParamter?: RestParameter,
+        private parameters: CommaNode,
+        private statements: BlockNode,
         private isArrow: boolean = false,
-        private funcName?: ValueNode
-    ) {
+        private name?: ValueNode) {
         super();
     }
 
@@ -38,48 +35,51 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
     get(stack: ScopedStack) {
         const func = (...args: any[]) => {
             const funcStack = stack.newStack();
-            this.paramNames.forEach((param, index) => funcStack.set(param.get(stack), args[index]));
-            let returnValue;
-            for (const node of this.funcBody) {
-                returnValue = node.get(funcStack);
-                if (returnValue instanceof ReturnValue) {
-                    return returnValue.value;
-                }
-            }
+            this.parameters.set(funcStack, args);
+            return this.statements.get(funcStack);
         };
-        if (this.funcName) {
-            stack.set(this.funcName.get(), func);
+        if (this.name) {
+            stack.set(this.name.get(), func);
         }
         return func;
     }
 
     entry(): string[] {
         return [
-            ...this.paramNames.flatMap(param => param.entry()),
+            ...this.parameters.entry(),
             /** remove for now, should return only object not defined in this function scope */
             // ...this.funcBody.flatMap(line => line.entry())
         ];
     }
 
     event(): string[] {
-        return this.funcBody.flatMap(node => node.event());
+        return this.statements.event();
     }
 
     toString(): string {
+
         if (this.isArrow) {
-            return `(${this.paramNames.map(param => param.toString()).join(', ')}${this.restParamter ? ', ' + this.restParamter.toString() : ''})  => {
-                ${this.funcBody.map(line => line.toString())}
+            return `${this.parameters.toString()} => {
+                ${this.statements.toString()}
             }`;
         } else {
-            return `${this.funcName!.toString()}(${this.paramNames.map(param => param.toString()).join(', ')}${this.restParamter ? ', ' + this.restParamter.toString() : ''}) {
-                ${this.funcBody.map(line => line.toString())}
+            return `function ${this.name?.toString() || ''}${this.parameters.toString()} {
+                ${this.statements.toString()}
             }`;
         }
 
     }
 
     toJson(): object {
-        return { value: this.toString() };
+        const func = {
+            parameters: this.parameters.toJSON(),
+            statements: this.statements.toJSON(),
+            isArrow: this.isArrow
+        };
+        if (this.name) {
+            Reflect.set(func, 'name', this.name.toJSON());
+        }
+        return func;
     }
 
 }

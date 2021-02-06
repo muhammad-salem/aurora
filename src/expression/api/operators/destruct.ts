@@ -1,16 +1,16 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('destruct')
 export class DestructuringAssignmentNode extends AbstractExpressionNode {
 
-    static fromJSON(node: DestructuringAssignmentNode, deserializer: ExpressionDeserializer): DestructuringAssignmentNode {
+    static fromJSON(node: DestructuringAssignmentNode, deserializer: NodeDeserializer): DestructuringAssignmentNode {
         return new DestructuringAssignmentNode(
-            node.keys.map(key => deserializer(key as any)),
-            deserializer(node.arrayOrObject as any),
-            node.restKey ? deserializer(node.restKey as any) : void 0
+            node.keys.map(key => deserializer(key)),
+            deserializer(node.arrayOrObject),
+            node.restKey ? deserializer(node.restKey) : void 0
         );
     }
 

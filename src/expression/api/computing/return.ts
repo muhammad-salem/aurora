@@ -1,4 +1,4 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -13,14 +13,12 @@ export class ReturnValue {
  * The expression whose value is to be returned. 
  * If omitted, undefined is returned instead.
  */
-@Deserializer()
+@Deserializer('return')
 export class ReturnNode extends AbstractExpressionNode {
 
-    static fromJSON(node: ReturnNode, deserializer: ExpressionDeserializer): ReturnNode {
-        return new ReturnNode(node.node ? deserializer(node.node as any) : void 0);
+    static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
+        return new ReturnNode(node.node ? deserializer(node.node) : void 0);
     }
-
-    static ReturnSymbol = Symbol.for('return');
 
     constructor(private node?: ExpressionNode) {
         super();

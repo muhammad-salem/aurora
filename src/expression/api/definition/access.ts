@@ -1,10 +1,10 @@
-import type { ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
-export class PropertyAccessors extends AbstractExpressionNode {
+@Deserializer('access')
+export class PropertyAccessNode extends AbstractExpressionNode {
 
     static KEYWORDS = [
         /**
@@ -17,8 +17,8 @@ export class PropertyAccessors extends AbstractExpressionNode {
         '[]'
     ];
 
-    static fromJSON(node: PropertyAccessors): PropertyAccessors {
-        return new PropertyAccessors(node.op, node.left, node.right);
+    static fromJSON(node: PropertyAccessNode, deserializer: NodeDeserializer): PropertyAccessNode {
+        return new PropertyAccessNode(node.op, deserializer(node.left), deserializer(node.right));
     }
 
     constructor(private op: string, private left: ExpressionNode, private right: ExpressionNode) {

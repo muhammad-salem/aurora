@@ -1,13 +1,13 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer()
+@Deserializer('object')
 export class LiteralObjectNode extends AbstractExpressionNode {
 
-    static fromJSON(node: LiteralObjectNode, deserializer: ExpressionDeserializer): LiteralObjectNode {
-        return new LiteralObjectNode(node.keyValue.map(exp => { return { key: exp.key, value: deserializer(exp.value as any) } }));
+    static fromJSON(node: LiteralObjectNode, deserializer: NodeDeserializer): LiteralObjectNode {
+        return new LiteralObjectNode(node.keyValue.map(exp => { return { key: exp.key, value: deserializer(exp.value) } }));
     }
 
     constructor(private keyValue: { key: string, value: ExpressionNode }[]) {

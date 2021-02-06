@@ -9,7 +9,7 @@ import { ScopedStack } from '../../scope.js';
  * but JavaScript only allows a single one, is possible using a block statement,
  * which combines several statements into a single one.
  */
-@Deserializer()
+@Deserializer('empty')
 export class EmptyNode extends AbstractExpressionNode {
 
     static KEYWORDS = [';'];

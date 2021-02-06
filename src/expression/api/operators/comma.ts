@@ -1,12 +1,13 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
+import { RestParameter } from '../definition/rest-parameter.js';
 
-@Deserializer()
+@Deserializer('comma')
 export class CommaNode extends AbstractExpressionNode {
 
-    static fromJSON(node: CommaNode, deserializer: ExpressionDeserializer): CommaNode {
+    static fromJSON(node: CommaNode, deserializer: NodeDeserializer): CommaNode {
         return new CommaNode(node.expressions.map(expression => deserializer(expression as any)));
     }
 
@@ -14,14 +15,19 @@ export class CommaNode extends AbstractExpressionNode {
         super();
     }
 
-    set(stack: ScopedStack) {
-        let value;
-        this.expressions.forEach(expression => value = expression.get(stack))
-        return value;
+    set(stack: ScopedStack, values: any[]) {
+        for (let index = 0; index < this.expressions.length; index++) {
+            const expr = this.expressions[index];
+            if (expr instanceof RestParameter) {
+                expr.set(stack, this.expressions.slice(index).map(node => node.get(stack)));
+                return;
+            }
+            stack.set(expr.get(stack), values[index]);
+        }
     }
 
     get(stack: ScopedStack) {
-        return this.set(stack);
+        return this.expressions.map(expr => expr.get(stack));
     }
 
     entry(): string[] {

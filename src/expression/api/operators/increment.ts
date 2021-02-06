@@ -1,8 +1,8 @@
-import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import type { OperatorPosition } from './types.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
-@Deserializer()
+@Deserializer('increment')
 export class IncrementDecrementNode implements ExpressionNode {
 
     static Evaluations: { [key: string]: (value: number) => number } = {
@@ -12,8 +12,8 @@ export class IncrementDecrementNode implements ExpressionNode {
 
     static KEYWORDS = Object.keys(IncrementDecrementNode.Evaluations);
 
-    static fromJSON(node: IncrementDecrementNode, deserializer: ExpressionDeserializer): IncrementDecrementNode {
-        return new IncrementDecrementNode(node.op, deserializer(node.node as any), node.position);
+    static fromJSON(node: IncrementDecrementNode, deserializer: NodeDeserializer): IncrementDecrementNode {
+        return new IncrementDecrementNode(node.op, deserializer(node.node), node.position);
     }
 
     constructor(private op: '++' | '--', private node: ExpressionNode, private position: OperatorPosition) { }

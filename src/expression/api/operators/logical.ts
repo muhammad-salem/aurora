@@ -1,16 +1,16 @@
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 
-@Deserializer()
+@Deserializer('logical')
 export class BinaryLogicalNode extends InfixExpressionNode {
 
-    static fromJSON(node: BinaryLogicalNode, deserializer: ExpressionDeserializer): BinaryLogicalNode {
+    static fromJSON(node: BinaryLogicalNode, deserializer: NodeDeserializer): BinaryLogicalNode {
         return new BinaryLogicalNode(
             node.op,
-            deserializer(node.left as any),
-            deserializer(node.right as any)
+            deserializer(node.left),
+            deserializer(node.right)
         );
     }
 
@@ -65,10 +65,10 @@ export class BinaryLogicalNode extends InfixExpressionNode {
 }
 
 
-@Deserializer()
+@Deserializer('logical-assign')
 export class LogicalAssignmentNode extends InfixExpressionNode {
 
-    static fromJSON(node: LogicalAssignmentNode, deserializer: ExpressionDeserializer): LogicalAssignmentNode {
+    static fromJSON(node: LogicalAssignmentNode, deserializer: NodeDeserializer): LogicalAssignmentNode {
         return new LogicalAssignmentNode(
             node.op,
             deserializer(node.left as any),

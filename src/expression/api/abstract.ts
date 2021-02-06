@@ -1,26 +1,25 @@
-import type { ExpressionDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
+import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
 import type { EvaluateNode } from './operators/types.js';
 import type { ScopedStack } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
-    static fromJSON(node: ExpressionNode, deserializer: ExpressionDeserializer): ExpressionNode {
+    static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
         return deserializer(node as any);
     }
     getClass(): NodeExpressionClass<ExpressionNode> {
         return this.constructor as NodeExpressionClass<ExpressionNode>;
     }
     toJSON(key?: string): NodeJsonType {
-        return {
-            type: this.constructor.name,
-            node: this.toJson(key)
-        };
+        const json = this.toJson(key) as NodeJsonType;
+        json.type = this.constructor.name;
+        return json;
     }
     abstract set(stack: ScopedStack, value: any): any;
     abstract get(stack: ScopedStack): any;
     abstract entry(): string[];
     abstract event(parent?: string): string[];
     abstract toString(): string;
-    abstract toJson(key?: string): object;
+    abstract toJson(key?: string): { [key: string]: any };
 }
 
 export abstract class InfixExpressionNode extends AbstractExpressionNode {

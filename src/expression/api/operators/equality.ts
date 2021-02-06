@@ -1,16 +1,16 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { ExpressionDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer()
+@Deserializer('equal')
 export class EqualityNode extends InfixExpressionNode {
 
-    static fromJSON(node: EqualityNode, deserializer: ExpressionDeserializer): EqualityNode {
+    static fromJSON(node: EqualityNode, deserializer: NodeDeserializer): EqualityNode {
         return new EqualityNode(
             node.op,
-            deserializer(node.left as any),
-            deserializer(node.right as any)
+            deserializer(node.left),
+            deserializer(node.right)
         );
     }
 

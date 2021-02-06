@@ -1,5 +1,5 @@
 
-import type { ExpressionDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -12,15 +12,15 @@ import { TerminateNode } from './terminate.js';
  * as well as statements in cases that follow the matching case.
  * 
  */
-@Deserializer()
+@Deserializer('switch')
 export class SwitchNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['switch', 'case'];
 
-    static fromJSON(node: SwitchNode, deserializer: ExpressionDeserializer): SwitchNode {
+    static fromJSON(node: SwitchNode, deserializer: NodeDeserializer): SwitchNode {
         return new SwitchNode(
             deserializer(node.condition as any),
-            node.cases.map(item => { return { key: deserializer(<any>item.key), statement: deserializer(<any>item.statement) } })
+            node.cases.map(item => { return { key: deserializer(item.key), statement: deserializer(item.statement) } })
         );
     }
 
