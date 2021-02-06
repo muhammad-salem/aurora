@@ -3,6 +3,12 @@ import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
+
+
+export class ReturnValue {
+    constructor(public value: any) { }
+}
+
 /**
  * The expression whose value is to be returned. 
  * If omitted, undefined is returned instead.
@@ -14,6 +20,8 @@ export class ReturnNode extends AbstractExpressionNode {
         return new ReturnNode(node.node ? deserializer(node.node as any) : void 0);
     }
 
+    static ReturnSymbol = Symbol.for('return');
+
     constructor(private node?: ExpressionNode) {
         super();
     }
@@ -22,8 +30,8 @@ export class ReturnNode extends AbstractExpressionNode {
         throw new Error(`ReturnNode#set() has no implementation.`);
     }
 
-    get(stack: ScopedStack,) {
-        return this.node?.get(stack);
+    get(stack: ScopedStack) {
+        return new ReturnValue(this.node?.get(stack));
         // nothing should be written after this operation in a function body.
     }
 
@@ -32,7 +40,7 @@ export class ReturnNode extends AbstractExpressionNode {
     }
 
     event(parent?: string): string[] {
-        return this.node?.event(parent) | [];
+        return this.node?.event(parent) || [];
     }
 
     toString(): string {
