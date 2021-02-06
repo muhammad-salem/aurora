@@ -1,6 +1,9 @@
 import type { ScopedContext, ScopedStack } from '../scope.js';
 
 export class DefaultScopedContext implements ScopedContext {
+    static for(context: any | Array<any>) {
+        return new DefaultScopedContext(context);
+    }
     constructor(private context: any | Array<any>) { }
     get(propertyKey: PropertyKey): any {
         return Reflect.get(this.context, propertyKey);
@@ -20,6 +23,9 @@ export class EmptyScopedContext extends DefaultScopedContext {
 }
 
 export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
+    static for(context: any | Array<any>) {
+        return new ScopeProvider(DefaultScopedContext.for(context));
+    }
     readonly localScop: ScopedContext = new EmptyScopedContext();
     constructor(first: ScopedContext) {
         super(first);
