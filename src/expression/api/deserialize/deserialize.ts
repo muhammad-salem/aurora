@@ -5,9 +5,10 @@ type FromJSON = (node: ExpressionNode, deserializer: NodeDeserializer) => Expres
 const DeserializerMap: Map<string, FromJSON> = new Map();
 
 
-export function Deserializer(name: string): Function {
+export function Deserializer(type: string): Function {
     return (target: NodeExpressionClass<ExpressionNode>) => {
-        DeserializerMap.set(name, target.fromJSON);
+        DeserializerMap.set(type, target.fromJSON);
+        Reflect.set(target, 'type', type)
         return target;
     };
 }
@@ -22,11 +23,16 @@ export function serializeNode(node: ExpressionNode) {
  * @param node as type `NodeJsonType`
  * @returns ExpressionNode
  */
-export function deserializeNode(node: ExpressionNode) {
+export function deserialize(node: ExpressionNode) {
     const fromJSON = DeserializerMap.get((<any>node).type);
     if (fromJSON) {
-        return fromJSON(node, deserializeNode);
+        return fromJSON(node, deserialize);
     } else {
         throw new Error(`Couldn't find Expression class for name: ${(<any>node).type}.`);
     }
+}
+
+export function deserializeNode(node: string) {
+    const exp = JSON.parse(node);
+    return deserialize(exp);
 }
