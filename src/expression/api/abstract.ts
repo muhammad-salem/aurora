@@ -11,7 +11,7 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
     }
     toJSON(key?: string): NodeJsonType {
         const json = this.toJson(key) as NodeJsonType;
-        json.type = this.constructor.name;
+        json.type = Reflect.get(this.constructor, 'type');
         return json;
     }
     abstract set(stack: ScopedStack, value: any): any;
