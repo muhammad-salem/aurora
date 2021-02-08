@@ -62,4 +62,10 @@ export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
      * @param obj create chained stack for provided object
      */
     stackFor(obj: any): ScopedStack;
+
+    /**
+     * 
+     * @param obj create an empty stack for this provided object, as local scope context
+     */
+    emptyScopeFor(obj: any): ScopedStack;
 }

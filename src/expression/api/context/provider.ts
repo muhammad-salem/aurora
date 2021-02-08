@@ -22,14 +22,14 @@ export class EmptyScopedContext extends DefaultScopedContext {
     }
 }
 
-export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
-    static for(context: any | Array<any>) {
-        return new ScopeProvider(DefaultScopedContext.for(context));
+export abstract class AbstractScopedStack extends Array<ScopedContext> implements ScopedStack {
+
+    abstract readonly localScop: ScopedContext;
+
+    constructor(...args: ScopedContext[]) {
+        super(...args);
     }
-    readonly localScop: ScopedContext = new EmptyScopedContext();
-    constructor(first: ScopedContext) {
-        super(first);
-    }
+
     newStack(): ScopedStack {
         return new ScopeProvider(this);
     }
@@ -37,6 +37,9 @@ export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
         const newStack = this.newStack();
         newStack.addProvider(obj);
         return newStack;
+    }
+    emptyScopeFor(obj: any): ScopedStack {
+        return new EmptyScopeProvider(obj);
     }
     add(...contexts: ScopedContext[]): number {
         return this.unshift(...contexts);
@@ -65,6 +68,25 @@ export class ScopeProvider extends Array<ScopedContext> implements ScopedStack {
     }
     has(propertyKey: PropertyKey): boolean {
         return this.find(context => context.has(propertyKey)) ? true : false;
+    }
+
+}
+
+export class EmptyScopeProvider extends AbstractScopedStack {
+
+    constructor(public readonly localScop: ScopedContext) {
+        super();
+    }
+
+}
+
+export class ScopeProvider extends AbstractScopedStack {
+    static for(context: any | Array<any>) {
+        return new ScopeProvider(DefaultScopedContext.for(context));
+    }
+    readonly localScop: ScopedContext = new EmptyScopedContext();
+    constructor(first: ScopedContext) {
+        super(first);
     }
 }
 
