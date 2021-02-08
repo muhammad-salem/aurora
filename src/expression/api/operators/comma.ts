@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
-import { RestParameter } from '../definition/rest-parameter.js';
+import { RestParameter } from '../definition/rest.js';
 
 @Deserializer('comma')
 export class CommaNode extends AbstractExpressionNode {
