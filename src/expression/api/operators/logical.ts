@@ -20,7 +20,6 @@ export class BinaryLogicalNode extends InfixExpressionNode {
             let value = exp.left.get(context);
             if (value) {
                 value = exp.right.get(context);
-                exp.set(context, value);
             }
             return value;
         },
@@ -29,7 +28,6 @@ export class BinaryLogicalNode extends InfixExpressionNode {
             let value = exp.left.get(context);
             if (!value) {
                 value = exp.right.get(context);
-                exp.set(context, value);
             }
             return value;
         },
@@ -38,7 +36,6 @@ export class BinaryLogicalNode extends InfixExpressionNode {
             let value = exp.left.get(context);
             if (value === undefined || value === null) {
                 value = exp.right.get(context);
-                exp.set(context, value);
             }
             return value;
         }
@@ -71,8 +68,8 @@ export class LogicalAssignmentNode extends InfixExpressionNode {
     static fromJSON(node: LogicalAssignmentNode, deserializer: NodeDeserializer): LogicalAssignmentNode {
         return new LogicalAssignmentNode(
             node.op,
-            deserializer(node.left as any),
-            deserializer(node.right as any)
+            deserializer(node.left),
+            deserializer(node.right)
         );
     }
 
