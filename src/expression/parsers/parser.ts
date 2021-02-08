@@ -65,19 +65,19 @@ export function generateTokenParser(operators: string[][], concatRegex: string[]
 
     //dynamically build js parsing regex:
     const pattern = [
-        //numbers
+        //numbers,                          index 0
         /\d+(?:\.\d*)?|\.\d+/.source,
 
-        //string-literal
+        //string-literal                    index 1
         /["](?:\\[\s\S]|[^"])+["]|['](?:\\[\s\S]|[^'])+[']/.source,
 
-        //booleans
+        //booleans                          index 2
         "true|false",
 
-        //primitive values
+        //primitive values                  index 3
         "null|undefined",
 
-        //operators
+        //operators                         index 4
         operators
             .flatMap(item => item)
             .filter((value: string, index: number, array: string[]) => {
@@ -88,12 +88,12 @@ export function generateTokenParser(operators: string[][], concatRegex: string[]
             .concat(concatRegex || [])
             .join('|'),
 
-        //properties
+        //properties                        index 5
         //has to be after the operators
         /[a-zA-Z$_ɵ][a-zA-Z0-9$_]*/.source,
 
         //remaining (non-whitespace-)chars, just in case
-        //has to be at the end
+        //has to be at the end              index 6
         /\S/.source
     ].map(s => `(${s})`).join('|');
 
