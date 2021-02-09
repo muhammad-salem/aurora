@@ -3,11 +3,11 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('compare')
-export class CompareNode extends InfixExpressionNode {
+@Deserializer('relational')
+export class RelationalNode extends InfixExpressionNode {
 
-    static fromJSON(node: CompareNode, deserializer: NodeDeserializer): CompareNode {
-        return new CompareNode(
+    static fromJSON(node: RelationalNode, deserializer: NodeDeserializer): RelationalNode {
+        return new RelationalNode(
             node.op,
             deserializer(node.left),
             deserializer(node.right)
@@ -25,16 +25,16 @@ export class CompareNode extends InfixExpressionNode {
         '<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
     };
 
-    static KEYWORDS = Object.keys(CompareNode.Evaluations);
+    static KEYWORDS = Object.keys(RelationalNode.Evaluations);
 
     constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
-        if (!(CompareNode.KEYWORDS.includes(op))) {
+        if (!(RelationalNode.KEYWORDS.includes(op))) {
             throw new Error(`[${op}]: operation has no implementation yet`);
         }
         super(op, left, right);
     }
 
     evalNode(evalNode: EvaluateNode) {
-        return CompareNode.Evaluations[this.op](evalNode);
+        return RelationalNode.Evaluations[this.op](evalNode);
     }
 }

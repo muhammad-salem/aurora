@@ -96,17 +96,16 @@ export const FALSE = String(false);
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
+@Deserializer('literal')
+export class LiteralNode extends AbstractExpressionNode {
 
-@Deserializer('native-value')
-export class NativeValueNode extends AbstractExpressionNode {
-
-    static fromJSON(node: NativeValueNode): NativeValueNode {
+    static fromJSON(node: LiteralNode): LiteralNode {
         switch (String(node.value)) {
-            case TRUE: return TrueNode as NativeValueNode;
-            case FALSE: return FalseNode as NativeValueNode;
-            case NULL: return NullNode as NativeValueNode;
+            case TRUE: return TrueNode as LiteralNode;
+            case FALSE: return FalseNode as LiteralNode;
+            case NULL: return NullNode as LiteralNode;
             case UNDEFINED:
-            default: return UndefinedNode as NativeValueNode;
+            default: return UndefinedNode as LiteralNode;
         }
     }
 
@@ -141,8 +140,8 @@ export class NativeValueNode extends AbstractExpressionNode {
 
 }
 
-export const NullNode = Object.freeze(new NativeValueNode(null)) as NativeValueNode;
-export const UndefinedNode = Object.freeze(new NativeValueNode(undefined)) as NativeValueNode;
-export const TrueNode = Object.freeze(new NativeValueNode(true)) as NativeValueNode;
-export const FalseNode = Object.freeze(new NativeValueNode(false)) as NativeValueNode;
+export const NullNode = Object.freeze(new LiteralNode(null)) as LiteralNode;
+export const UndefinedNode = Object.freeze(new LiteralNode(undefined)) as LiteralNode;
+export const TrueNode = Object.freeze(new LiteralNode(true)) as LiteralNode;
+export const FalseNode = Object.freeze(new LiteralNode(false)) as LiteralNode;
 export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;

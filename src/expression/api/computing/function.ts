@@ -4,11 +4,11 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadSyntaxNode } from './spread-syntax.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('function-expression')
-export class FunctionExpressionNode extends AbstractExpressionNode {
+@Deserializer('function-call')
+export class FunctionCallNode extends AbstractExpressionNode {
 
-    static fromJSON(node: FunctionExpressionNode, deserializer: NodeDeserializer): FunctionExpressionNode {
-        return new FunctionExpressionNode(deserializer(node.func), node.params.map(param => deserializer(param)));
+    static fromJSON(node: FunctionCallNode, deserializer: NodeDeserializer): FunctionCallNode {
+        return new FunctionCallNode(deserializer(node.func), node.params.map(param => deserializer(param)));
     }
 
     constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
@@ -16,7 +16,7 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
     }
 
     set(stack: ScopedStack, value: any) {
-        throw new Error(`FunctionExpressionNode#set() has no implementation.`);
+        throw new Error(`FunctionCallNode#set() has no implementation.`);
     }
 
     get(stack: ScopedStack,) {
