@@ -186,14 +186,14 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
             });
 
             // if (!this.hasParentComponent() && this.attributes.length > 0) {
-            // 	let oldAttrValues = [].slice.call(this.attributes);
+            // 	let oldAttrValues = Array.prototype.slice.call(this.attributes);
             //	oldAttrValues.forEach((attr: Attr) => {
             // 		Reflect.set(this, attr.name, attr.value);
             // 	});
             // }
 
             if (!this.hasParentComponent() && this.attributes.length > 0) {
-                let attrs: Attr[] = [].slice.call(this.attributes);
+                let attrs: Attr[] = Array.prototype.slice.call(this.attributes);
                 attrs.forEach(attr => this.initOuterAttribute(attr));
             }
 

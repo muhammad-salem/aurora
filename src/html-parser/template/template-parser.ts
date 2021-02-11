@@ -18,7 +18,7 @@ export class TemplateParser {
                 return node;
             }
         } else /* if (template.content.childNodes.length > 1)*/ {
-            const children = [].slice.call(template.content.childNodes)
+            const children = Array.prototype.slice.call(template.content.childNodes)
                 .map(item => this.createComponent(item))
                 .flatMap(function (toFlat): AuroraChild[] {
                     if (Array.isArray(toFlat)) {
@@ -48,7 +48,7 @@ export class TemplateParser {
                 const attr = element.attributes.item(i) as Attr;
                 Aurora.handelAttribute(node, attr.name, attr.value);
             }
-            const children = [].slice.call(element.childNodes)
+            const children = Array.prototype.slice.call(element.childNodes)
                 .map(item => this.createComponent(item));
             children.forEach(child => {
                 if (Array.isArray(child)) {
