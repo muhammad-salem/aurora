@@ -1,12 +1,12 @@
 {
     "editor.formatOnSave": true,
-    "typescript.tsdk": "node_modules/typescript/lib",
     "editor.suggestSelection": "first",
-    "workbench.editor.highlightModifiedTabs": true,
     "editor.formatOnPaste": true,
     "editor.formatOnType": true,
+    "editor.insertSpaces": false,
     "editor.suggest.insertMode": "replace",
     "editor.suggest.localityBonus": true,
+    "workbench.editor.highlightModifiedTabs": true,
     "javascript.format.semicolons": "insert",
     "javascript.preferences.importModuleSpecifier": "relative",
     "javascript.preferences.importModuleSpecifierEnding": "js",
@@ -20,5 +20,5 @@
     "typescript.preferences.quoteStyle": "single",
     "typescript.referencesCodeLens.showOnAllFunctions": true,
     "typescript.referencesCodeLens.enabled": true,
-    "editor.insertSpaces": false
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
