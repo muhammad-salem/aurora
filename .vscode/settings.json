@@ -1,11 +1,24 @@
 {
     "editor.formatOnSave": true,
     "typescript.tsdk": "node_modules/typescript/lib",
-    "editor.suggest.statusBar.visible": true,
     "editor.suggestSelection": "first",
     "workbench.editor.highlightModifiedTabs": true,
     "editor.formatOnPaste": true,
     "editor.formatOnType": true,
     "editor.suggest.insertMode": "replace",
-    "editor.suggest.localityBonus": true
+    "editor.suggest.localityBonus": true,
+    "javascript.format.semicolons": "insert",
+    "javascript.preferences.importModuleSpecifier": "relative",
+    "javascript.preferences.importModuleSpecifierEnding": "js",
+    "javascript.preferences.quoteStyle": "single",
+    "javascript.referencesCodeLens.showOnAllFunctions": true,
+    "javascript.referencesCodeLens.enabled": true,
+    "javascript.suggest.completeFunctionCalls": true,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.preferences.importModuleSpecifierEnding": "js",
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.referencesCodeLens.showOnAllFunctions": true,
+    "typescript.referencesCodeLens.enabled": true,
+    "editor.insertSpaces": false
 }
