@@ -3,12 +3,12 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
 @Deserializer('rest')
-export class RestParameter extends AbstractExpressionNode {
+export class RestParameterNode extends AbstractExpressionNode {
 
     static KEYWORDS = ['...'];
 
-    static fromJSON(nodeExp: RestParameter): RestParameter {
-        return new RestParameter(nodeExp.arrayName);
+    static fromJSON(nodeExp: RestParameterNode): RestParameterNode {
+        return new RestParameterNode(nodeExp.arrayName);
     }
 
     constructor(private arrayName: string) {
