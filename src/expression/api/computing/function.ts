@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { SpreadSyntaxNode } from './spread-syntax.js';
+import { SpreadSyntaxNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('function-call')
