@@ -1,35 +1,35 @@
 {
-  "name": "@ibyar/http",
-  "version": "0.1.12",
-  "description": "Aurora HTTP, define default http client and interceptor",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/api": "^0.1.12",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "http-client",
-    "http",
-    "interceptor",
-    "typescript"
-  ]
+	"name": "@ibyar/http",
+	"version": "0.1.12",
+	"description": "Aurora HTTP, define default http client and interceptor",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/api": "^0.1.12",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"http-client",
+		"http",
+		"interceptor",
+		"typescript"
+	]
 }

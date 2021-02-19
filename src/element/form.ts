@@ -4,23 +4,23 @@
  * @param tagName 
  */
 export function isFormElement(tagName: string): boolean {
-    switch (tagName) {
-        case 'button':
-        case 'datalist':
-        case 'fieldset':
-        case 'input':
-        case 'label':
-        case 'legend':
-        case 'meter':
-        case 'optgroup':
-        case 'option':
-        case 'output':
-        case 'progress':
-        case 'select':
-        case 'textarea':
-            return true;
-        default: return false;
-    }
+	switch (tagName) {
+		case 'button':
+		case 'datalist':
+		case 'fieldset':
+		case 'input':
+		case 'label':
+		case 'legend':
+		case 'meter':
+		case 'optgroup':
+		case 'option':
+		case 'output':
+		case 'progress':
+		case 'select':
+		case 'textarea':
+			return true;
+		default: return false;
+	}
 }
 
 /**
@@ -29,15 +29,15 @@ export function isFormElement(tagName: string): boolean {
  * @param tagName 
  */
 export function isSubmittableElement(tagName: string): boolean {
-    switch (tagName) {
-        case 'button':
-        case 'input':
-        case 'object':
-        case 'select':
-        case 'textarea':
-            return true;
-        default: return false;
-    }
+	switch (tagName) {
+		case 'button':
+		case 'input':
+		case 'object':
+		case 'select':
+		case 'textarea':
+			return true;
+		default: return false;
+	}
 }
 
 /**
@@ -45,14 +45,14 @@ export function isSubmittableElement(tagName: string): boolean {
  * @param tagName 
  */
 export function isResettableElement(tagName: string): boolean {
-    switch (tagName) {
-        case 'input':
-        case 'output':
-        case 'select':
-        case 'textarea':
-            return true;
-        default: return false;
-    }
+	switch (tagName) {
+		case 'input':
+		case 'output':
+		case 'select':
+		case 'textarea':
+			return true;
+		default: return false;
+	}
 }
 
 
@@ -62,16 +62,16 @@ export function isResettableElement(tagName: string): boolean {
  * @param tagName 
  */
 export function isAutocapitalizeInheritingElement(tagName: string): boolean {
-    switch (tagName) {
-        case 'button':
-        case 'fieldset':
-        case 'input':
-        case 'output':
-        case 'select':
-        case 'textarea':
-            return true;
-        default: return false;
-    }
+	switch (tagName) {
+		case 'button':
+		case 'fieldset':
+		case 'input':
+		case 'output':
+		case 'select':
+		case 'textarea':
+			return true;
+		default: return false;
+	}
 }
 
 /**
@@ -83,15 +83,15 @@ export function isAutocapitalizeInheritingElement(tagName: string): boolean {
  * @param tagName the tested tag name
  */
 export function isFormLabelableElement(tagName: string): boolean {
-    switch (tagName) {
-        case 'button':
-        case 'input':
-        case 'meter':
-        case 'output':
-        case 'progress':
-        case 'select':
-        case 'textarea':
-            return true;
-        default: return false;
-    }
+	switch (tagName) {
+		case 'button':
+		case 'input':
+		case 'meter':
+		case 'output':
+		case 'progress':
+		case 'select':
+		case 'textarea':
+			return true;
+		default: return false;
+	}
 }

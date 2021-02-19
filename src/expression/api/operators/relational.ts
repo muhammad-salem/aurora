@@ -6,35 +6,35 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('relational')
 export class RelationalNode extends InfixExpressionNode {
 
-    static fromJSON(node: RelationalNode, deserializer: NodeDeserializer): RelationalNode {
-        return new RelationalNode(
-            node.op,
-            deserializer(node.left),
-            deserializer(node.right)
-        );
-    }
+	static fromJSON(node: RelationalNode, deserializer: NodeDeserializer): RelationalNode {
+		return new RelationalNode(
+			node.op,
+			deserializer(node.left),
+			deserializer(node.right)
+		);
+	}
 
-    static Evaluations: EvaluateType = {
-        'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
-        'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; },
+	static Evaluations: EvaluateType = {
+		'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
+		'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; },
 
-        '<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
-        '>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
+		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
+		'>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
 
-        '>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
-        '<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
-    };
+		'>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
+		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
+	};
 
-    static KEYWORDS = Object.keys(RelationalNode.Evaluations);
+	static KEYWORDS = Object.keys(RelationalNode.Evaluations);
 
-    constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
-        if (!(RelationalNode.KEYWORDS.includes(op))) {
-            throw new Error(`[${op}]: operation has no implementation yet`);
-        }
-        super(op, left, right);
-    }
+	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
+		if (!(RelationalNode.KEYWORDS.includes(op))) {
+			throw new Error(`[${op}]: operation has no implementation yet`);
+		}
+		super(op, left, right);
+	}
 
-    evalNode(evalNode: EvaluateNode) {
-        return RelationalNode.Evaluations[this.op](evalNode);
-    }
+	evalNode(evalNode: EvaluateNode) {
+		return RelationalNode.Evaluations[this.op](evalNode);
+	}
 }

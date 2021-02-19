@@ -1,29 +1,29 @@
 {
-  "name": "@ibyar/metadata",
-  "version": "0.1.12",
-  "description": "Aurora metadata, basic functionality to save and load type metadata at runtime",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "reflect-metadata",
-    "typescript"
-  ]
+	"name": "@ibyar/metadata",
+	"version": "0.1.12",
+	"description": "Aurora metadata, basic functionality to save and load type metadata at runtime",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"reflect-metadata",
+		"typescript"
+	]
 }

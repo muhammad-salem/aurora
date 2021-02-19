@@ -1,60 +1,60 @@
 {
-  "name": "@ibyar/aurora",
-  "version": "0.1.12",
-  "description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/api": "^0.1.12",
-    "@ibyar/directives": "^0.1.12",
-    "@ibyar/forms": "^0.1.12",
-    "@ibyar/http": "^0.1.12",
-    "@ibyar/pipes": "^0.1.12",
-    "@ibyar/router": "^0.1.12",
-    "@ibyar/types": "^0.1.12",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "custom-elements",
-    "dependency-injection",
-    "reflect-metadata",
-    "services",
-    "component",
-    "directive",
-    "pipes",
-    "forms",
-    "template-syntax",
-    "template-expression",
-    "http-client",
-    "http",
-    "html-parser",
-    "parser",
-    "jsx",
-    "jsx-factory",
-    "routers",
-    "js-parser",
-    "elements-info",
-    "element",
-    "interceptor",
-    "shadow-dom",
-    "typescript"
-  ]
+	"name": "@ibyar/aurora",
+	"version": "0.1.12",
+	"description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/api": "^0.1.12",
+		"@ibyar/directives": "^0.1.12",
+		"@ibyar/forms": "^0.1.12",
+		"@ibyar/http": "^0.1.12",
+		"@ibyar/pipes": "^0.1.12",
+		"@ibyar/router": "^0.1.12",
+		"@ibyar/types": "^0.1.12",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"custom-elements",
+		"dependency-injection",
+		"reflect-metadata",
+		"services",
+		"component",
+		"directive",
+		"pipes",
+		"forms",
+		"template-syntax",
+		"template-expression",
+		"http-client",
+		"http",
+		"html-parser",
+		"parser",
+		"jsx",
+		"jsx-factory",
+		"routers",
+		"js-parser",
+		"elements-info",
+		"element",
+		"interceptor",
+		"shadow-dom",
+		"typescript"
+	]
 }

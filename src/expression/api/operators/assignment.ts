@@ -6,49 +6,49 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('assignment')
 export class AssignmentNode extends InfixExpressionNode {
 
-    static fromJSON(node: AssignmentNode, deserializer: NodeDeserializer): AssignmentNode {
-        return new AssignmentNode(
-            node.op,
-            deserializer(node.left),
-            deserializer(node.right)
-        );
-    }
+	static fromJSON(node: AssignmentNode, deserializer: NodeDeserializer): AssignmentNode {
+		return new AssignmentNode(
+			node.op,
+			deserializer(node.left),
+			deserializer(node.right)
+		);
+	}
 
-    static Evaluations: EvaluateType = {
+	static Evaluations: EvaluateType = {
 
-        '=': (evalNode: EvaluateNode) => { return evalNode.left = evalNode.right; },
-        '*=': (evalNode: EvaluateNode) => { return evalNode.left *= evalNode.right; },
-        '**=': (evalNode: EvaluateNode) => { return evalNode.left **= evalNode.right; },
+		'=': (evalNode: EvaluateNode) => { return evalNode.left = evalNode.right; },
+		'*=': (evalNode: EvaluateNode) => { return evalNode.left *= evalNode.right; },
+		'**=': (evalNode: EvaluateNode) => { return evalNode.left **= evalNode.right; },
 
-        '/=': (evalNode: EvaluateNode) => { return evalNode.left /= evalNode.right; },
-        '%=': (evalNode: EvaluateNode) => { return evalNode.left %= evalNode.right; },
+		'/=': (evalNode: EvaluateNode) => { return evalNode.left /= evalNode.right; },
+		'%=': (evalNode: EvaluateNode) => { return evalNode.left %= evalNode.right; },
 
-        '+=': (evalNode: EvaluateNode) => { return evalNode.left += evalNode.right; },
-        '-=': (evalNode: EvaluateNode) => { return evalNode.left -= evalNode.right; },
-
-
-        '<<=': (evalNode: EvaluateNode) => { return evalNode.left <<= evalNode.right; },
-        '>>=': (evalNode: EvaluateNode) => { return evalNode.left >>= evalNode.right; },
-        '>>>=': (evalNode: EvaluateNode) => { return evalNode.left >>>= evalNode.right; },
+		'+=': (evalNode: EvaluateNode) => { return evalNode.left += evalNode.right; },
+		'-=': (evalNode: EvaluateNode) => { return evalNode.left -= evalNode.right; },
 
 
-        '&=': (evalNode: EvaluateNode) => { return evalNode.left &= evalNode.right; },
-        '^=': (evalNode: EvaluateNode) => { return evalNode.left ^= evalNode.right; },
-        '|=': (evalNode: EvaluateNode) => { return evalNode.left |= evalNode.right; },
+		'<<=': (evalNode: EvaluateNode) => { return evalNode.left <<= evalNode.right; },
+		'>>=': (evalNode: EvaluateNode) => { return evalNode.left >>= evalNode.right; },
+		'>>>=': (evalNode: EvaluateNode) => { return evalNode.left >>>= evalNode.right; },
 
-    };
 
-    static KEYWORDS = Object.keys(AssignmentNode.Evaluations);
+		'&=': (evalNode: EvaluateNode) => { return evalNode.left &= evalNode.right; },
+		'^=': (evalNode: EvaluateNode) => { return evalNode.left ^= evalNode.right; },
+		'|=': (evalNode: EvaluateNode) => { return evalNode.left |= evalNode.right; },
 
-    constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
-        if (!(AssignmentNode.KEYWORDS.includes(op))) {
-            throw new Error(`[${op}]: operation has no implementation yet`);
-        }
-        super(op, left, right);
-    }
+	};
 
-    evalNode(evalNode: EvaluateNode) {
-        return AssignmentNode.Evaluations[this.op](evalNode);
-    }
+	static KEYWORDS = Object.keys(AssignmentNode.Evaluations);
+
+	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
+		if (!(AssignmentNode.KEYWORDS.includes(op))) {
+			throw new Error(`[${op}]: operation has no implementation yet`);
+		}
+		super(op, left, right);
+	}
+
+	evalNode(evalNode: EvaluateNode) {
+		return AssignmentNode.Evaluations[this.op](evalNode);
+	}
 
 }

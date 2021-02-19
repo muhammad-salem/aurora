@@ -14,7 +14,7 @@ import './pipe-app/pipe-test';
 
 const appRoot = document.getElementById('app-root') as HTMLComponent<AppRoot>;
 appRoot._model.setAppSelector([
-    'person-app',
-    { tag: 'div', is: 'bind-2way' },
-    'pipe-app'
+	'person-app',
+	{ tag: 'div', is: 'bind-2way' },
+	'pipe-app'
 ]);

@@ -1,9 +1,9 @@
 export interface EvaluateType {
-    [key: string]: EvaluateCallback;
+	[key: string]: EvaluateCallback;
 }
 
 export interface EvaluateNode {
-    left: any, right: any;
+	left: any, right: any;
 }
 
 export type EvaluateCallback = (evalNode: EvaluateNode) => any;

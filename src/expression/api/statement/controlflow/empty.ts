@@ -12,45 +12,45 @@ import { ScopedStack } from '../../scope.js';
 @Deserializer('empty')
 export class EmptyNode extends AbstractExpressionNode {
 
-    static KEYWORDS = [';'];
+	static KEYWORDS = [';'];
 
-    static INSTANCE = Object.freeze(new EmptyNode()) as EmptyNode;
+	static INSTANCE = Object.freeze(new EmptyNode()) as EmptyNode;
 
-    static fromJSON(node: EmptyNode): EmptyNode {
-        if (EmptyNode.INSTANCE) {
-            return EmptyNode.INSTANCE;
-        }
-        return EmptyNode.INSTANCE = new EmptyNode();
-    }
+	static fromJSON(node: EmptyNode): EmptyNode {
+		if (EmptyNode.INSTANCE) {
+			return EmptyNode.INSTANCE;
+		}
+		return EmptyNode.INSTANCE = new EmptyNode();
+	}
 
-    private semicolon = EmptyNode.KEYWORDS[0];
+	private semicolon = EmptyNode.KEYWORDS[0];
 
-    constructor() {
-        super();
-    }
+	constructor() {
+		super();
+	}
 
-    set(stack: ScopedStack, value: any) {
-        throw new Error(`EmptyNode#set() has no implementation.`);
-    }
+	set(stack: ScopedStack, value: any) {
+		throw new Error(`EmptyNode#set() has no implementation.`);
+	}
 
-    get(stack: ScopedStack) {
-        return void 0;
-    }
+	get(stack: ScopedStack) {
+		return void 0;
+	}
 
-    entry(): string[] {
-        return [];
-    }
+	entry(): string[] {
+		return [];
+	}
 
-    event(parent?: string): string[] {
-        return [];
-    }
+	event(parent?: string): string[] {
+		return [];
+	}
 
-    toString(): string {
-        return this.semicolon;
-    }
+	toString(): string {
+		return this.semicolon;
+	}
 
-    toJson(): object {
-        return {};
-    }
+	toJson(): object {
+		return {};
+	}
 
 }

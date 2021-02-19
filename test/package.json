@@ -1,32 +1,32 @@
 {
-  "name": "@ibyar/test",
-  "version": "0.1.12",
-  "description": "Aurora test, all the test apps, used while building this lib",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "type": "module",
-  "files": [
-    "dist"
-  ],
-  "private": true,
-  "publishConfig": {
-    "access": "restricted"
-  },
-  "dependencies": {
-    "@ibyar/aurora": "^0.1.12",
-    "bootstrap": "^v5.0.0-beta1",
-    "rxjs": "^6.6.3",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "@ibyar/esmpack": "^0.1.9",
-    "typescript": "^4.1.3"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose",
-    "esmpack:watch": "esmpack -w"
-  }
+	"name": "@ibyar/test",
+	"version": "0.1.12",
+	"description": "Aurora test, all the test apps, used while building this lib",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"files": [
+		"dist"
+	],
+	"private": true,
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"dependencies": {
+		"@ibyar/aurora": "^0.1.12",
+		"bootstrap": "^v5.0.0-beta1",
+		"rxjs": "^6.6.3",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"@ibyar/esmpack": "^0.1.9",
+		"typescript": "^4.1.3"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose",
+		"esmpack:watch": "esmpack -w"
+	}
 }

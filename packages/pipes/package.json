@@ -1,35 +1,35 @@
 {
-  "name": "@ibyar/pipes",
-  "version": "0.1.12",
-  "description": "Aurora pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/api": "^0.1.12",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "custom-elements",
-    "pipes",
-    "async",
-    "typescript"
-  ]
+	"name": "@ibyar/pipes",
+	"version": "0.1.12",
+	"description": "Aurora pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/api": "^0.1.12",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"custom-elements",
+		"pipes",
+		"async",
+		"typescript"
+	]
 }

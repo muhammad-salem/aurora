@@ -1,26 +1,26 @@
 {
-  "name": "@ibyar/types",
-  "version": "0.1.12",
-  "description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "types": "./index.d.ts",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "custom-elements",
-    "typescript"
-  ]
+	"name": "@ibyar/types",
+	"version": "0.1.12",
+	"description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"types": "./index.d.ts",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"custom-elements",
+		"typescript"
+	]
 }

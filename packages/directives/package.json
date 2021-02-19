@@ -1,33 +1,33 @@
 {
-  "name": "@ibyar/directives",
-  "version": "0.1.12",
-  "description": "Aurora directives had the built-in directives for aurora project",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/api": "^0.1.12",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "directives",
-    "typescript"
-  ]
+	"name": "@ibyar/directives",
+	"version": "0.1.12",
+	"description": "Aurora directives had the built-in directives for aurora project",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/api": "^0.1.12",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"directives",
+		"typescript"
+	]
 }

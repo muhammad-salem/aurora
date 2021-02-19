@@ -1,36 +1,36 @@
 {
-  "name": "@ibyar/html-parser",
-  "version": "0.1.12",
-  "description": "Aurora HTML parser, parse an html string or file to jsx component",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/element": "^0.1.12",
-    "@ibyar/jsx": "^0.1.12"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "html-parser",
-    "node-html-parser",
-    "html",
-    "parser",
-    "typescript"
-  ]
+	"name": "@ibyar/html-parser",
+	"version": "0.1.12",
+	"description": "Aurora HTML parser, parse an html string or file to jsx component",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/element": "^0.1.12",
+		"@ibyar/jsx": "^0.1.12"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"html-parser",
+		"node-html-parser",
+		"html",
+		"parser",
+		"typescript"
+	]
 }

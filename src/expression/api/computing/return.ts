@@ -6,7 +6,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 
 export class ReturnValue {
-    constructor(public value: any) { }
+	constructor(public value: any) { }
 }
 
 /**
@@ -16,37 +16,37 @@ export class ReturnValue {
 @Deserializer('return')
 export class ReturnNode extends AbstractExpressionNode {
 
-    static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
-        return new ReturnNode(node.node ? deserializer(node.node) : void 0);
-    }
+	static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
+		return new ReturnNode(node.node ? deserializer(node.node) : void 0);
+	}
 
-    constructor(private node?: ExpressionNode) {
-        super();
-    }
+	constructor(private node?: ExpressionNode) {
+		super();
+	}
 
-    set(stack: ScopedStack, value: any) {
-        throw new Error(`ReturnNode#set() has no implementation.`);
-    }
+	set(stack: ScopedStack, value: any) {
+		throw new Error(`ReturnNode#set() has no implementation.`);
+	}
 
-    get(stack: ScopedStack) {
-        return new ReturnValue(this.node?.get(stack));
-        // nothing should be written after this operation in a function body.
-    }
+	get(stack: ScopedStack) {
+		return new ReturnValue(this.node?.get(stack));
+		// nothing should be written after this operation in a function body.
+	}
 
-    entry(): string[] {
-        return this.node?.entry() || [];
-    }
+	entry(): string[] {
+		return this.node?.entry() || [];
+	}
 
-    event(parent?: string): string[] {
-        return this.node?.event(parent) || [];
-    }
+	event(parent?: string): string[] {
+		return this.node?.event(parent) || [];
+	}
 
-    toString(): string {
-        return `return ${this.node?.toString()}`;
-    }
+	toString(): string {
+		return `return ${this.node?.toString()}`;
+	}
 
-    toJson(): object {
-        return { func: this.node?.toJSON() };
-    }
+	toJson(): object {
+		return { func: this.node?.toJSON() };
+	}
 
 }

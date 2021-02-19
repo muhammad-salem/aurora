@@ -5,47 +5,47 @@ import { ScopedStack } from '../scope.js';
 @Deserializer('rest')
 export class RestParameterNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['...'];
+	static KEYWORDS = ['...'];
 
-    static fromJSON(nodeExp: RestParameterNode): RestParameterNode {
-        return new RestParameterNode(nodeExp.arrayName);
-    }
+	static fromJSON(nodeExp: RestParameterNode): RestParameterNode {
+		return new RestParameterNode(nodeExp.arrayName);
+	}
 
-    constructor(private arrayName: string) {
-        super();
-    }
+	constructor(private arrayName: string) {
+		super();
+	}
 
-    /**
-     * 
-     * @param context execution stack/scope context
-     * @param value any paramter
-     */
-    set(stack: ScopedStack, ...values: any[]) {
-        return stack.localScop.set(this.arrayName, values) ? values : void 0;
-    }
+	/**
+	 * 
+	 * @param context execution stack/scope context
+	 * @param value any paramter
+	 */
+	set(stack: ScopedStack, ...values: any[]) {
+		return stack.localScop.set(this.arrayName, values) ? values : void 0;
+	}
 
-    /**
-     * used when define a function
-     * @param context execution stack/scope context
-     */
-    get(stack: ScopedStack) {
-        return stack.localScop.get(this.arrayName);
-    }
+	/**
+	 * used when define a function
+	 * @param context execution stack/scope context
+	 */
+	get(stack: ScopedStack) {
+		return stack.localScop.get(this.arrayName);
+	}
 
-    entry(): string[] {
-        return [];
-    }
+	entry(): string[] {
+		return [];
+	}
 
-    event(parent?: string): string[] {
-        return [];
-    }
+	event(parent?: string): string[] {
+		return [];
+	}
 
-    toString(): string {
-        return `...${this.arrayName}`;
-    }
+	toString(): string {
+		return `...${this.arrayName}`;
+	}
 
-    toJson(): object {
-        return { arrayName: this.arrayName };
-    }
+	toJson(): object {
+		return { arrayName: this.arrayName };
+	}
 
 }

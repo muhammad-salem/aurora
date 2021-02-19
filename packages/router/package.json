@@ -1,34 +1,34 @@
 {
-  "name": "@ibyar/router",
-  "version": "0.1.12",
-  "description": "Aurora router, router configuration and setup",
-  "license": "MIT",
-  "homepage": "https://github.com/ibyar/aurora",
-  "main": "./index.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "type": "module",
-  "files": [
-    "*"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@ibyar/api": "^0.1.12",
-    "tslib": "^2.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.1.5"
-  },
-  "scripts": {
-    "build": "tsc --build --verbose"
-  },
-  "keywords": [
-    "aurora",
-    "ibyar",
-    "custom-elements",
-    "routers",
-    "typescript"
-  ]
+	"name": "@ibyar/router",
+	"version": "0.1.12",
+	"description": "Aurora router, router configuration and setup",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/api": "^0.1.12",
+		"tslib": "^2.1.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.5"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"custom-elements",
+		"routers",
+		"typescript"
+	]
 }

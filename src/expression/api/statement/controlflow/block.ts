@@ -12,50 +12,50 @@ import { ReturnValue } from '../../computing/return.js';
 @Deserializer('block')
 export class BlockNode extends AbstractExpressionNode {
 
-    static KEYWORDS = ['{', '}'];
+	static KEYWORDS = ['{', '}'];
 
-    static fromJSON(node: BlockNode, deserializer: NodeDeserializer): BlockNode {
-        const nodes = node.statements.map(line => deserializer(line));
-        return new BlockNode(node.statements);
-    }
+	static fromJSON(node: BlockNode, deserializer: NodeDeserializer): BlockNode {
+		const nodes = node.statements.map(line => deserializer(line));
+		return new BlockNode(node.statements);
+	}
 
-    constructor(private statements: ExpressionNode[]) {
-        super();
-    }
+	constructor(private statements: ExpressionNode[]) {
+		super();
+	}
 
-    set(stack: ScopedStack, value: any) {
-        throw new Error(`BlockNode#set() has no implementation.`);
-    }
+	set(stack: ScopedStack, value: any) {
+		throw new Error(`BlockNode#set() has no implementation.`);
+	}
 
-    get(stack: ScopedStack) {
-        let value;
-        const stackForBlock = stack.newStack();
-        for (const node of this.statements) {
-            value = node.get(stackForBlock);
-            if (TerminateNode.BreakSymbol === value || TerminateNode.ContinueSymbol === value) {
-                return value
-            }
-            if (value instanceof ReturnValue) {
-                return value.value;
-            }
-        }
-        return value;
-    }
+	get(stack: ScopedStack) {
+		let value;
+		const stackForBlock = stack.newStack();
+		for (const node of this.statements) {
+			value = node.get(stackForBlock);
+			if (TerminateNode.BreakSymbol === value || TerminateNode.ContinueSymbol === value) {
+				return value
+			}
+			if (value instanceof ReturnValue) {
+				return value.value;
+			}
+		}
+		return value;
+	}
 
-    entry(): string[] {
-        return this.statements.flatMap(node => node.entry());
-    }
+	entry(): string[] {
+		return this.statements.flatMap(node => node.entry());
+	}
 
-    event(parent?: string): string[] {
-        return this.statements.flatMap(node => node.event(parent));
-    }
+	event(parent?: string): string[] {
+		return this.statements.flatMap(node => node.event(parent));
+	}
 
-    toString(): string {
-        return this.statements.map(node => node.toString()).join('; ');
-    }
+	toString(): string {
+		return this.statements.map(node => node.toString()).join('; ');
+	}
 
-    toJson(): object {
-        return { statements: this.statements.map(node => node.toJSON()) };
-    }
+	toJson(): object {
+		return { statements: this.statements.map(node => node.toJSON()) };
+	}
 
 }

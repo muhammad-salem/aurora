@@ -6,57 +6,57 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 
 export class Variable {
 
-    constructor(public variable: ExpressionNode, public value?: ExpressionNode) { }
+	constructor(public variable: ExpressionNode, public value?: ExpressionNode) { }
 
-    toString() {
-        return `${this.variable.toString()}${this.value ? ` = ${this.value.toString()}` : ''}`;
-    }
+	toString() {
+		return `${this.variable.toString()}${this.value ? ` = ${this.value.toString()}` : ''}`;
+	}
 
-    toJson() {
-        return {
-            variable: this.variable.toString(),
-            value: this.value?.toString()
-        };
-    }
+	toJson() {
+		return {
+			variable: this.variable.toString(),
+			value: this.value?.toString()
+		};
+	}
 }
 
 export class DeclarationsNode extends AbstractExpressionNode {
 
-    constructor(protected variables: Variable[]) {
-        super();
-    }
+	constructor(protected variables: Variable[]) {
+		super();
+	}
 
-    set(stack: ScopedStack, value: any) {
-        if (this.variables.length > 1) {
-            throw new Error(`LetNode#set() has no implementation.`);
-        }
-        const variable = this.variables[0];
-        variable.variable.set(stack, value);
-    }
+	set(stack: ScopedStack, value: any) {
+		if (this.variables.length > 1) {
+			throw new Error(`LetNode#set() has no implementation.`);
+		}
+		const variable = this.variables[0];
+		variable.variable.set(stack, value);
+	}
 
-    get(stack: ScopedStack) {
-        this.variables.forEach(item => {
-            stack.localScop.set(item.variable.get(stack), item.value?.get(stack));
-        });
-    }
+	get(stack: ScopedStack) {
+		this.variables.forEach(item => {
+			stack.localScop.set(item.variable.get(stack), item.value?.get(stack));
+		});
+	}
 
-    entry(): string[] {
-        return [];
-    }
+	entry(): string[] {
+		return [];
+	}
 
-    event(parent?: string): string[] {
-        return [];
-    }
+	event(parent?: string): string[] {
+		return [];
+	}
 
-    toString(): string {
-        return `let ${this.variables.map(v => v.toString()).join(', ')};`;
-    }
+	toString(): string {
+		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
+	}
 
-    toJson(): object {
-        return {
-            variables: this.variables.map(v => v.toJson())
-        };
-    }
+	toJson(): object {
+		return {
+			variables: this.variables.map(v => v.toJson())
+		};
+	}
 
 }
 
@@ -68,21 +68,21 @@ export class DeclarationsNode extends AbstractExpressionNode {
 @Deserializer('let')
 export class LetNode extends DeclarationsNode {
 
-    static KEYWORDS = ['let'];
+	static KEYWORDS = ['let'];
 
-    static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
-        return new LetNode(
-            node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
-        );
-    }
+	static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
+		return new LetNode(
+			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
+		);
+	}
 
-    constructor(variables: Variable[]) {
-        super(variables);
-    }
+	constructor(variables: Variable[]) {
+		super(variables);
+	}
 
-    toString(): string {
-        return `let ${this.variables.map(v => v.toString()).join(', ')};`;
-    }
+	toString(): string {
+		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
+	}
 
 }
 
@@ -97,20 +97,20 @@ export class LetNode extends DeclarationsNode {
 @Deserializer('const')
 export class ConstNode extends DeclarationsNode {
 
-    static KEYWORDS = ['const'];
+	static KEYWORDS = ['const'];
 
-    static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
-        return new ConstNode(
-            node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
-        );
-    }
+	static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
+		return new ConstNode(
+			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
+		);
+	}
 
-    constructor(variables: Variable[]) {
-        super(variables);
-    }
+	constructor(variables: Variable[]) {
+		super(variables);
+	}
 
-    toString(): string {
-        return `const ${this.variables.map(v => v.toString()).join(', ')};`;
-    }
+	toString(): string {
+		return `const ${this.variables.map(v => v.toString()).join(', ')};`;
+	}
 
 }

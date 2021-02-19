@@ -1,28 +1,28 @@
 {
-  "compilerOptions": {
-    "sourceMap": true,
-    "declaration": true,
-    "importHelpers": true,
-    "inlineSources": true,
-    "declarationMap": false,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strictBindCallApply": true,
-    "downlevelIteration": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "moduleResolution": "Node",
-    "target": "ES2020",
-    "module": "ES2020",
-    "lib": [
-      "ES2020",
-      "dom"
-    ],
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "removeComments": true,
-    "jsx": "react",
-    "jsxFactory": "Aurora.createElement",
-    "jsxFragmentFactory": "Aurora.Fragment"
-  }
+	"compilerOptions": {
+		"sourceMap": true,
+		"declaration": true,
+		"importHelpers": true,
+		"inlineSources": true,
+		"declarationMap": false,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictBindCallApply": true,
+		"downlevelIteration": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"moduleResolution": "Node",
+		"target": "ES2020",
+		"module": "ES2020",
+		"lib": [
+			"ES2020",
+			"dom"
+		],
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"removeComments": true,
+		"jsx": "react",
+		"jsxFactory": "Aurora.createElement",
+		"jsxFragmentFactory": "Aurora.Fragment"
+	}
 }

@@ -13,36 +13,36 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('grouping')
 export class GroupingNode extends AbstractExpressionNode {
 
-    static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
-        return new GroupingNode(deserializer(node.node as any));
-    }
+	static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
+		return new GroupingNode(deserializer(node.node as any));
+	}
 
-    constructor(private node: ExpressionNode) {
-        super();
-    }
+	constructor(private node: ExpressionNode) {
+		super();
+	}
 
-    set(stack: ScopedStack, value: any) {
-        this.node.set(stack, value);
-    }
+	set(stack: ScopedStack, value: any) {
+		this.node.set(stack, value);
+	}
 
-    get(stack: ScopedStack,) {
-        return this.node.get(stack);
-    }
+	get(stack: ScopedStack,) {
+		return this.node.get(stack);
+	}
 
-    entry(): string[] {
-        return this.node.entry();
-    }
+	entry(): string[] {
+		return this.node.entry();
+	}
 
-    event(parent?: string): string[] {
-        return this.node.event(parent);
-    }
+	event(parent?: string): string[] {
+		return this.node.event(parent);
+	}
 
-    toString(): string {
-        return `(${this.node.toString()})`;
-    }
+	toString(): string {
+		return `(${this.node.toString()})`;
+	}
 
-    toJson(): object {
-        return { node: this.node.toJSON() };
-    }
+	toJson(): object {
+		return { node: this.node.toJSON() };
+	}
 
 }

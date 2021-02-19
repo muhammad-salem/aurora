@@ -32,243 +32,243 @@ import { NodeExpression, PropertyNode } from '../expression.js';
 import { MemberNode, NavigationNode } from './infix.js';
 
 export enum UnaryType {
-    PREFIX,
-    INFIX,
-    POSTFIX
+	PREFIX,
+	INFIX,
+	POSTFIX
 }
 
 interface EvaluateType {
-    [key: string]: (node: any) => any;
+	[key: string]: (node: any) => any;
 }
 
 export class IncrementDecrementOperators implements NodeExpression {
 
-    static Evaluations: EvaluateType = {
-        '++': (value: number) => { return ++value; },
-        '--': (value: number) => { return --value; }
-    };
+	static Evaluations: EvaluateType = {
+		'++': (value: number) => { return ++value; },
+		'--': (value: number) => { return --value; }
+	};
 
-    static Operators = Object.keys(IncrementDecrementOperators.Evaluations);
+	static Operators = Object.keys(IncrementDecrementOperators.Evaluations);
 
-    static parse(tokens: (NodeExpression | string)[]) {
-        IncrementDecrementOperators.Operators.forEach(op => {
-            // assume that tokens.length = 2;
-            for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
-                let pre = tokens[i - 1], post = tokens[i + 1];
-                if (typeof post === 'object') {
-                    tokens.splice(i, 2,
-                        new IncrementDecrementOperators(op, post, UnaryType.PREFIX)
-                    );
-                } else if (typeof pre === 'object') {
-                    tokens.splice(i - 1, 2,
-                        new IncrementDecrementOperators(op, pre, UnaryType.POSTFIX)
-                    );
-                }
-            }
-        });
-    }
+	static parse(tokens: (NodeExpression | string)[]) {
+		IncrementDecrementOperators.Operators.forEach(op => {
+			// assume that tokens.length = 2;
+			for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
+				let pre = tokens[i - 1], post = tokens[i + 1];
+				if (typeof post === 'object') {
+					tokens.splice(i, 2,
+						new IncrementDecrementOperators(op, post, UnaryType.PREFIX)
+					);
+				} else if (typeof pre === 'object') {
+					tokens.splice(i - 1, 2,
+						new IncrementDecrementOperators(op, pre, UnaryType.POSTFIX)
+					);
+				}
+			}
+		});
+	}
 
-    constructor(public op: string, public node: NodeExpression, public unaryType: UnaryType) { }
-    set(context: object, value: any) {
-        this.node.set(context, value);
-    }
-    get(context: object) {
-        let value = this.node.get(context);
-        let opValue = IncrementDecrementOperators.Evaluations[this.op](value);
-        this.set(context, opValue);
-        if (this.unaryType === UnaryType.PREFIX) {
-            value = opValue;
-        }
-        return value;
-    }
-    entry(): string[] {
-        return this.node.entry();
-    }
-    event(parent?: string): string[] {
-        return this.node.event(parent);
-    }
-    toString() {
-        let str: string;
-        if (this.unaryType === UnaryType.POSTFIX) {
-            str = `${this.node.toString()}${this.op}`;
-        } else {
-            str = `${this.op}${this.node.toString()}`;
-        }
-        return str;
-    }
+	constructor(public op: string, public node: NodeExpression, public unaryType: UnaryType) { }
+	set(context: object, value: any) {
+		this.node.set(context, value);
+	}
+	get(context: object) {
+		let value = this.node.get(context);
+		let opValue = IncrementDecrementOperators.Evaluations[this.op](value);
+		this.set(context, opValue);
+		if (this.unaryType === UnaryType.PREFIX) {
+			value = opValue;
+		}
+		return value;
+	}
+	entry(): string[] {
+		return this.node.entry();
+	}
+	event(parent?: string): string[] {
+		return this.node.event(parent);
+	}
+	toString() {
+		let str: string;
+		if (this.unaryType === UnaryType.POSTFIX) {
+			str = `${this.node.toString()}${this.op}`;
+		} else {
+			str = `${this.op}${this.node.toString()}`;
+		}
+		return str;
+	}
 }
 
 export class UnaryOperators implements NodeExpression {
 
-    static Evaluations: EvaluateType = {
-        '+': (value: string) => { return +value; },
-        '-': (value: number) => { return -value; },
-        '~': (value: number) => { return ~value; },
-        '!': (value: any) => { return !value; },
-        // // 'delete': (value: any) => { return delete value; },
-        // // 'typeof': (value: any) => { return typeof value; },
-        // // 'void': (value: any) => { return void value; },
-    };
+	static Evaluations: EvaluateType = {
+		'+': (value: string) => { return +value; },
+		'-': (value: number) => { return -value; },
+		'~': (value: number) => { return ~value; },
+		'!': (value: any) => { return !value; },
+		// // 'delete': (value: any) => { return delete value; },
+		// // 'typeof': (value: any) => { return typeof value; },
+		// // 'void': (value: any) => { return void value; },
+	};
 
-    static Operators = Object.keys(UnaryOperators.Evaluations);
+	static Operators = Object.keys(UnaryOperators.Evaluations);
 
-    static parse(tokens: (NodeExpression | string)[], ignore?: string[]) {
-        UnaryOperators.Operators.forEach(op => {
-            if (ignore && ignore.includes(op)) {
-                return;
-            }
-            for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
-                let pre = tokens[i - 1], post = tokens[i + 1];
-                if (typeof pre === 'object' && typeof post === 'object') {
+	static parse(tokens: (NodeExpression | string)[], ignore?: string[]) {
+		UnaryOperators.Operators.forEach(op => {
+			if (ignore && ignore.includes(op)) {
+				return;
+			}
+			for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
+				let pre = tokens[i - 1], post = tokens[i + 1];
+				if (typeof pre === 'object' && typeof post === 'object') {
 
-                } else if (typeof post === 'object') {
-                    tokens.splice(i, 2, new UnaryOperators(op, post));
-                }
-            }
-        });
-    }
+				} else if (typeof post === 'object') {
+					tokens.splice(i, 2, new UnaryOperators(op, post));
+				}
+			}
+		});
+	}
 
-    constructor(public op: string, public node: NodeExpression) { }
-    set(context: object, value: any) {
-        return this.node.set(context, value);
-    }
-    get(context: object) {
-        let value = this.node.get(context);
-        return UnaryOperators.Evaluations[this.op](value);
-    }
-    entry(): string[] {
-        return this.node.entry();
-    }
-    event(parent?: string): string[] {
-        return [];
-    }
-    toString() {
-        return `${this.op}${this.node.toString()}`;
-    }
+	constructor(public op: string, public node: NodeExpression) { }
+	set(context: object, value: any) {
+		return this.node.set(context, value);
+	}
+	get(context: object) {
+		let value = this.node.get(context);
+		return UnaryOperators.Evaluations[this.op](value);
+	}
+	entry(): string[] {
+		return this.node.entry();
+	}
+	event(parent?: string): string[] {
+		return [];
+	}
+	toString() {
+		return `${this.op}${this.node.toString()}`;
+	}
 }
 
 export class ConditionalOperators implements NodeExpression {
 
-    static Operators = ['?'];
+	static Operators = ['?'];
 
-    static parse(tokens: (NodeExpression | string)[]) {
-        for (let i = -1; (i = tokens.indexOf('?', i + 1)) > -1;) {
-            tokens.splice(i - 1, 2, new ConditionalOperators(tokens[i - 1] as NodeExpression));
-        }
-    }
+	static parse(tokens: (NodeExpression | string)[]) {
+		for (let i = -1; (i = tokens.indexOf('?', i + 1)) > -1;) {
+			tokens.splice(i - 1, 2, new ConditionalOperators(tokens[i - 1] as NodeExpression));
+		}
+	}
 
-    constructor(public condition: NodeExpression) { }
-    set(context: object, value: any) {
-        throw new Error('ConditionalOperators#set() has no implementation.');
-    }
-    get(context: object) {
-        return this.condition.get(context) || false;
-    }
-    entry(): string[] {
-        return this.condition.entry();
-    }
-    event(parent?: string): string[] {
-        return [];
-    }
-    toString() {
-        return `(${this.condition.toString()})?`;
-    }
+	constructor(public condition: NodeExpression) { }
+	set(context: object, value: any) {
+		throw new Error('ConditionalOperators#set() has no implementation.');
+	}
+	get(context: object) {
+		return this.condition.get(context) || false;
+	}
+	entry(): string[] {
+		return this.condition.entry();
+	}
+	event(parent?: string): string[] {
+		return [];
+	}
+	toString() {
+		return `(${this.condition.toString()})?`;
+	}
 }
 
 export class LiteralUnaryOperators implements NodeExpression {
 
-    static Operators = ['delete', 'typeof', 'void'];
-    static RegexOperators = [/^delete|typeof|void\b/.source];
+	static Operators = ['delete', 'typeof', 'void'];
+	static RegexOperators = [/^delete|typeof|void\b/.source];
 
-    static parse(tokens: (NodeExpression | string)[], ignore?: string[]) {
-        LiteralUnaryOperators.Operators.forEach(op => {
-            if (ignore && ignore.includes(op)) {
-                return;
-            }
-            for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
-                let pre = tokens[i - 1], post = tokens[i + 1];
-                if (typeof pre === 'object' && typeof post === 'object') {
+	static parse(tokens: (NodeExpression | string)[], ignore?: string[]) {
+		LiteralUnaryOperators.Operators.forEach(op => {
+			if (ignore && ignore.includes(op)) {
+				return;
+			}
+			for (let i = -1; (i = tokens.indexOf(op, i + 1)) > -1;) {
+				let pre = tokens[i - 1], post = tokens[i + 1];
+				if (typeof pre === 'object' && typeof post === 'object') {
 
-                } else if (typeof post === 'object') {
-                    tokens.splice(i, 2, new LiteralUnaryOperators(op, post));
-                }
-            }
-        });
-    }
+				} else if (typeof post === 'object') {
+					tokens.splice(i, 2, new LiteralUnaryOperators(op, post));
+				}
+			}
+		});
+	}
 
-    constructor(public op: string, public node: NodeExpression) { }
-    toString() {
-        return `${this.op} ${this.node.toString()}`;
-    }
-    set(context: object, value: any) {
-        throw new Error('LiteralUnaryOperators#set() has no implementation.');
-    }
-    entry(): string[] {
-        return this.node.entry();
-    }
-    event(parent?: string): string[] {
-        if (this.op === 'delete') {
-            return this.node.event(parent);
-        }
-        return [];
-    }
-    get(context: object) {
-        switch (this.op) {
-            case 'delete': return this.getDelete(context);
-            case 'typeof': return this.getTypeof(context);
-            case 'void': return this.getVoid(context);
-        }
-    }
+	constructor(public op: string, public node: NodeExpression) { }
+	toString() {
+		return `${this.op} ${this.node.toString()}`;
+	}
+	set(context: object, value: any) {
+		throw new Error('LiteralUnaryOperators#set() has no implementation.');
+	}
+	entry(): string[] {
+		return this.node.entry();
+	}
+	event(parent?: string): string[] {
+		if (this.op === 'delete') {
+			return this.node.event(parent);
+		}
+		return [];
+	}
+	get(context: object) {
+		switch (this.op) {
+			case 'delete': return this.getDelete(context);
+			case 'typeof': return this.getTypeof(context);
+			case 'void': return this.getVoid(context);
+		}
+	}
 
-    private getVoid(context: object) {
-        return void this.node.get(context);
-    }
-    private getTypeof(context: object) {
-        return typeof this.node.get(context);
-    }
-    private getDelete(context: object) {
-        throw new Error('LiteralUnaryOperators.delete#get() has no implementation.');
-        // if (this.node instanceof MemberNode || this.node instanceof NavigationNode) {
-        //     if (this.node.right instanceof ValueNode) {
-        //         let parent = this.node.left.get(context);
-        //         return Reflect.deleteProperty(parent, this.node.right.get(context) as string | number);
-        //     } else {
-        //         // loop to get to an end of the chain
-        //     }
-        // } else if (this.node instanceof PropertyNode) {
-        //     return Reflect.deleteProperty(context, this.node.get(context));
-        // }
-        // return Reflect.deleteProperty(context, this.node.get(context));
-    }
+	private getVoid(context: object) {
+		return void this.node.get(context);
+	}
+	private getTypeof(context: object) {
+		return typeof this.node.get(context);
+	}
+	private getDelete(context: object) {
+		throw new Error('LiteralUnaryOperators.delete#get() has no implementation.');
+		// if (this.node instanceof MemberNode || this.node instanceof NavigationNode) {
+		//     if (this.node.right instanceof ValueNode) {
+		//         let parent = this.node.left.get(context);
+		//         return Reflect.deleteProperty(parent, this.node.right.get(context) as string | number);
+		//     } else {
+		//         // loop to get to an end of the chain
+		//     }
+		// } else if (this.node instanceof PropertyNode) {
+		//     return Reflect.deleteProperty(context, this.node.get(context));
+		// }
+		// return Reflect.deleteProperty(context, this.node.get(context));
+	}
 }
 
 export class FunctionExpression implements NodeExpression {
 
-    constructor(public funcName: NodeExpression, public args: NodeExpression[]) { }
+	constructor(public funcName: NodeExpression, public args: NodeExpression[]) { }
 
-    set(context: object, value: any) {
-        throw new Error('FunctionExpression#set() has no implementation.');
-    }
-    get(context: object) {
-        let parameters = this.args.map(param => param.get(context));
-        let funCallBack = this.funcName.get(context) as Function;
-        let funcThis: any;
-        if (this.funcName instanceof MemberNode || this.funcName instanceof NavigationNode) {
-            funcThis = this.funcName.left.get(context);
-        } else if (this.funcName instanceof PropertyNode) {
-            funcThis = context;
-        }
-        let value = funCallBack.call(funcThis, ...parameters);
-        return value;
-    }
-    entry(): string[] {
-        return [...this.funcName.entry(), ...this.args.flatMap(arg => arg.entry())];
-    }
-    event(parent?: string): string[] {
-        return [];
-    }
-    toString(): string {
-        const argsStr = this.args.map(param => param.toString()).join(', ');
-        return `${this.funcName.toString()}(${argsStr})`;
-    }
+	set(context: object, value: any) {
+		throw new Error('FunctionExpression#set() has no implementation.');
+	}
+	get(context: object) {
+		let parameters = this.args.map(param => param.get(context));
+		let funCallBack = this.funcName.get(context) as Function;
+		let funcThis: any;
+		if (this.funcName instanceof MemberNode || this.funcName instanceof NavigationNode) {
+			funcThis = this.funcName.left.get(context);
+		} else if (this.funcName instanceof PropertyNode) {
+			funcThis = context;
+		}
+		let value = funCallBack.call(funcThis, ...parameters);
+		return value;
+	}
+	entry(): string[] {
+		return [...this.funcName.entry(), ...this.args.flatMap(arg => arg.entry())];
+	}
+	event(parent?: string): string[] {
+		return [];
+	}
+	toString(): string {
+		const argsStr = this.args.map(param => param.toString()).join(', ');
+		return `${this.funcName.toString()}(${argsStr})`;
+	}
 }

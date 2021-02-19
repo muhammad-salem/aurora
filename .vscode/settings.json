@@ -1,9 +1,11 @@
 {
+    "editor.tabSize": 4,
     "editor.formatOnSave": true,
     "editor.suggestSelection": "first",
     "editor.formatOnPaste": true,
     "editor.formatOnType": true,
     "editor.insertSpaces": false,
+    "editor.detectIndentation": false,
     "editor.suggest.insertMode": "replace",
     "editor.suggest.localityBonus": true,
     "workbench.editor.highlightModifiedTabs": true,
