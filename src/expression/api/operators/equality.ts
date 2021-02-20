@@ -23,7 +23,7 @@ export class EqualityNode extends InfixExpressionNode {
 		'!==': (evalNode: EvaluateNode) => { return evalNode.left !== evalNode.right; },
 	};
 
-	static KEYWORDS = Object.keys(EqualityNode.Evaluations);
+	static KEYWORDS = ['==', '!=', '===', '!=='];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(EqualityNode.KEYWORDS.includes(op))) {

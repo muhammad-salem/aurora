@@ -15,17 +15,17 @@ export class ArithmeticNode extends InfixExpressionNode {
 	}
 
 	static Evaluations: EvaluateType = {
+		'**': (evalNode: EvaluateNode) => { return evalNode.left ** evalNode.right; },
+
+		'*': (evalNode: EvaluateNode) => { return evalNode.left * evalNode.right; },
+		'/': (evalNode: EvaluateNode) => { return evalNode.left / evalNode.right; },
+		'%': (evalNode: EvaluateNode) => { return evalNode.left % evalNode.right; },
 
 		'+': (evalNode: EvaluateNode) => { return evalNode.left + evalNode.right; },
 		'-': (evalNode: EvaluateNode) => { return evalNode.left - evalNode.right; },
-		'*': (evalNode: EvaluateNode) => { return evalNode.left * evalNode.right; },
-		'/': (evalNode: EvaluateNode) => { return evalNode.left / evalNode.right; },
-
-		'%': (evalNode: EvaluateNode) => { return evalNode.left % evalNode.right; },
-		'**': (evalNode: EvaluateNode) => { return evalNode.left ** evalNode.right; },
 	};
 
-	static KEYWORDS = Object.keys(ArithmeticNode.Evaluations);
+	static KEYWORDS = ['**', '*', '/', '%', '+', '-'];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(ArithmeticNode.KEYWORDS.includes(op))) {

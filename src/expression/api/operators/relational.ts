@@ -15,17 +15,17 @@ export class RelationalNode extends InfixExpressionNode {
 	}
 
 	static Evaluations: EvaluateType = {
+		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
+		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
+
+		'>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
+		'>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
+
 		'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
 		'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; },
-
-		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
-		'>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
-
-		'>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
-		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
 	};
 
-	static KEYWORDS = Object.keys(RelationalNode.Evaluations);
+	static KEYWORDS = ['<', '<=', '>', '>=', 'in', 'instanceof'];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(RelationalNode.KEYWORDS.includes(op))) {

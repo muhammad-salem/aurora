@@ -63,7 +63,7 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 		return new LiteralUnaryNode(node.op, serializer(node.node));
 	}
 
-	static KEYWORDS = ['delete', 'typeof', 'void'];
+	static KEYWORDS = ['typeof', 'void', 'delete', 'await'];
 
 	constructor(private op: string, private node: ExpressionNode) {
 		super();
@@ -86,23 +86,27 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 
 	get(stack: ScopedStack) {
 		switch (this.op) {
-			case 'delete': return this.getDelete(stack);
 			case 'typeof': return this.getTypeof(stack);
 			case 'void': return this.getVoid(stack);
+			case 'delete': return this.getDelete(stack);
+			case 'await': return this.getAwait(stack);
 		}
+	}
+	private getTypeof(stack: ScopedStack) {
+		return typeof this.node.get(stack);
 	}
 
 	private getVoid(stack: ScopedStack) {
 		return void this.node.get(stack);
-	}
-	private getTypeof(stack: ScopedStack) {
-		return typeof this.node.get(stack);
 	}
 	private getDelete(stack: ScopedStack) {
 		const thisNode = this.node.getThis?.(stack);
 		if (thisNode) {
 			delete thisNode[this.node.toString()];
 		}
+	}
+	private async getAwait(stack: ScopedStack) {
+		return await this.node.get(stack);
 	}
 
 	toString() {

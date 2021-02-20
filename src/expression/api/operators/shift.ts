@@ -22,7 +22,7 @@ export class BitwiseShiftNode extends InfixExpressionNode {
 		'>>>': (evalNode: EvaluateNode) => { return evalNode.left >>> evalNode.right; },
 	};
 
-	static KEYWORDS = Object.keys(BitwiseShiftNode.Evaluations);
+	static KEYWORDS = ['<<', '>>', '>>>'];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(BitwiseShiftNode.KEYWORDS.includes(op))) {
@@ -52,11 +52,11 @@ export class BinaryBitwiseNode extends InfixExpressionNode {
 	static Evaluations: EvaluateType = {
 		// Binary bitwise operators
 		'&': (evalNode: EvaluateNode) => { return evalNode.left & evalNode.right; },
-		'|': (evalNode: EvaluateNode) => { return evalNode.left | evalNode.right; },
 		'^': (evalNode: EvaluateNode) => { return evalNode.left ^ evalNode.right; },
+		'|': (evalNode: EvaluateNode) => { return evalNode.left | evalNode.right; },
 	};
 
-	static KEYWORDS = Object.keys(BinaryBitwiseNode.Evaluations);
+	static KEYWORDS = ['&', '^', '|'];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(BinaryBitwiseNode.KEYWORDS.includes(op))) {

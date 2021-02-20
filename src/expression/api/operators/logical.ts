@@ -4,19 +4,19 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 
 @Deserializer('logical')
-export class BinaryLogicalNode extends InfixExpressionNode {
+export class LogicalNode extends InfixExpressionNode {
 
-	static fromJSON(node: BinaryLogicalNode, deserializer: NodeDeserializer): BinaryLogicalNode {
-		return new BinaryLogicalNode(
+	static fromJSON(node: LogicalNode, deserializer: NodeDeserializer): LogicalNode {
+		return new LogicalNode(
 			node.op,
 			deserializer(node.left),
 			deserializer(node.right)
 		);
 	}
 
-	static Evaluations: { [key: string]: (exp: BinaryLogicalNode, context: any) => any } = {
+	static Evaluations: { [key: string]: (exp: LogicalNode, context: any) => any } = {
 
-		'&&': (exp: BinaryLogicalNode, context: any) => {
+		'&&': (exp: LogicalNode, context: any) => {
 			let value = exp.left.get(context);
 			if (value) {
 				value = exp.right.get(context);
@@ -24,7 +24,7 @@ export class BinaryLogicalNode extends InfixExpressionNode {
 			return value;
 		},
 
-		'||': (exp: BinaryLogicalNode, context: any) => {
+		'||': (exp: LogicalNode, context: any) => {
 			let value = exp.left.get(context);
 			if (!value) {
 				value = exp.right.get(context);
@@ -32,7 +32,7 @@ export class BinaryLogicalNode extends InfixExpressionNode {
 			return value;
 		},
 
-		'??': (exp: BinaryLogicalNode, context: any) => {
+		'??': (exp: LogicalNode, context: any) => {
 			let value = exp.left.get(context);
 			if (value === undefined || value === null) {
 				value = exp.right.get(context);
@@ -42,17 +42,17 @@ export class BinaryLogicalNode extends InfixExpressionNode {
 
 	};
 
-	static KEYWORDS = Object.keys(BinaryLogicalNode.Evaluations);
+	static KEYWORDS = ['&&', '||', '??'];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
-		if (!(BinaryLogicalNode.KEYWORDS.includes(op))) {
+		if (!(LogicalNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
 
 	get(context: object) {
-		return BinaryLogicalNode.Evaluations[this.op](this, context);
+		return LogicalNode.Evaluations[this.op](this, context);
 	}
 
 	evalNode() {
@@ -104,7 +104,7 @@ export class LogicalAssignmentNode extends InfixExpressionNode {
 
 	};
 
-	static KEYWORDS = Object.keys(LogicalAssignmentNode.Evaluations);
+	static KEYWORDS = ['&&=', '||=', '??='];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(LogicalAssignmentNode.KEYWORDS.includes(op))) {

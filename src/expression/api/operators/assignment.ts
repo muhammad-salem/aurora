@@ -38,7 +38,12 @@ export class AssignmentNode extends InfixExpressionNode {
 
 	};
 
-	static KEYWORDS = Object.keys(AssignmentNode.Evaluations);
+	static KEYWORDS = [
+		'=', '+=', '-=',
+		'**=', '/=', '%=',
+		'<<=', '>>=', '>>>=',
+		'&=', '^=', '|='
+	];
 
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(AssignmentNode.KEYWORDS.includes(op))) {
