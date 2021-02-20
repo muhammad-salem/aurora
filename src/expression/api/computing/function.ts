@@ -36,8 +36,7 @@ export class FunctionCallNode extends AbstractExpressionNode {
 				argArray.push(param.get(stack));
 			}
 		});
-		const value = funCallBack.call(this.func.getThis?.(stack), ...argArray);
-		return value;
+		return funCallBack.call(this.func.getThis?.(stack), ...argArray);
 	}
 
 	entry(): string[] {
