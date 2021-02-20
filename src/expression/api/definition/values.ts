@@ -91,6 +91,44 @@ export class ValueNode extends AbstractExpressionNode {
 	}
 }
 
+@Deserializer('bigint')
+export class BigIntNode extends AbstractExpressionNode {
+
+	static fromJSON(node: BigIntNode): BigIntNode {
+		return new BigIntNode(node.value);
+	}
+
+	private quote: string;
+
+	constructor(private value: BigInt) {
+		super();
+	}
+
+	set() {
+		throw new Error("BigIntNode#set() has no implementation.");
+	}
+
+	get() {
+		return this.value;
+	}
+
+	entry(): string[] {
+		return [];
+	}
+
+	event(): string[] {
+		return [];
+	}
+
+	toString(): string {
+		return String(this.value);
+	}
+
+	toJson(): object {
+		return { value: this.value };
+	}
+}
+
 export const TRUE = String(true);
 export const FALSE = String(false);
 export const NULL = String(null);
@@ -145,3 +183,4 @@ export const UndefinedNode = Object.freeze(new LiteralNode(undefined)) as Litera
 export const TrueNode = Object.freeze(new LiteralNode(true)) as LiteralNode;
 export const FalseNode = Object.freeze(new LiteralNode(false)) as LiteralNode;
 export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
+export const SymbolNode = Object.freeze(new PropertyNode('Symbol')) as PropertyNode;
