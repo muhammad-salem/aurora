@@ -1,7 +1,6 @@
-import { InfixExpressionNodeConstructor } from '../api/abstract.js';
+import type { ExpressionNode, NodeExpressionClass } from '../api/expression.js';
 import { ScopeProvider } from '../api/context/provider.js';
 import { ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
-import { ExpressionNode } from '../api/expression.js';
 import { ArithmeticNode } from '../api/operators/arithmetic.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { OptionalChainingNode } from '../api/operators/chaining.js';
@@ -109,21 +108,23 @@ export class TokenParser {
 		this.parseDelete();
 		this.parseAwait();
 
-		this.parseArithmetic();
+		this.parseInfixNodeType(ArithmeticNode);
 
-		this.parseBitwiseShift();
-		this.parseRelational();
-		this.parseEquality();
+		this.parseInfixNodeType(BitwiseShiftNode);
+		this.parseInfixNodeType(RelationalNode);
+		this.parseInfixNodeType(EqualityNode);
 
-		this.parseBinaryBitwise();
+		this.parseInfixNodeType(BinaryBitwiseNode);
 
-		this.parseLogical();
+		this.parseInfixNodeType(LogicalNode);
 
 		this.parsePipeline();
 
 		this.parseTernary();
 
-		this.parseAssignment();
+
+		this.parseInfixNodeType(AssignmentNode);
+		this.parseInfixNodeType(LogicalAssignmentNode);
 
 		// this.parseYield();
 		// this.parseYieldAstr();
@@ -326,56 +327,20 @@ export class TokenParser {
 	parseDelete() { }
 	parseAwait() { }
 
-	parseArithmetic(): void {
-		for (const op of ArithmeticNode.KEYWORDS) {
-			this.parseArithmeticNode(op, ArithmeticNode);
-		}
-	}
-
-	parseBitwiseShift() {
-		for (const op of BitwiseShiftNode.KEYWORDS) {
-			this.parseArithmeticNode(op, BitwiseShiftNode);
-		}
-	}
-
-	parseRelational() {
-		for (const op of RelationalNode.KEYWORDS) {
-			this.parseArithmeticNode(op, RelationalNode);
-		}
-	}
-
-	parseEquality() {
-		for (const op of EqualityNode.KEYWORDS) {
-			this.parseArithmeticNode(op, EqualityNode);
-		}
-	}
-
-	parseBinaryBitwise() {
-		for (const op of BinaryBitwiseNode.KEYWORDS) {
-			this.parseArithmeticNode(op, BinaryBitwiseNode);
-		}
-	}
-	parseLogical() {
-		for (const op of LogicalNode.KEYWORDS) {
-			this.parseArithmeticNode(op, LogicalNode);
-		}
-	}
 	parsePipeline() { }
 	parseTernary() { }
-	parseAssignment() {
-		for (const op of AssignmentNode.KEYWORDS) {
-			this.parseArithmeticNode(op, AssignmentNode);
-		}
-		for (const op of LogicalAssignmentNode.KEYWORDS) {
-			this.parseArithmeticNode(op, LogicalAssignmentNode);
-		}
-	}
 
 	// parseYield(){}
 	// parseYieldAstr(){}
 	parseCommaSequence() { }
 
-	private parseArithmeticNode(op: string, nodeType: InfixExpressionNodeConstructor): void {
+	private parseInfixNodeType(nodeType: NodeExpressionClass<ExpressionNode>): void {
+		for (const op of nodeType.KEYWORDS!) {
+			this.parseInfixNode(op, nodeType);
+		}
+	}
+
+	private parseInfixNode(op: string, nodeType: NodeExpressionClass<ExpressionNode>): void {
 		for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
 				if (op === this.tokens[index].value) {
@@ -424,9 +389,9 @@ export class Parser {
 }
 
 const parser = new Parser();
-// const tokensJS = parser.parse(`9 + ( 2 * 3 - (5+6) + (4 / 8))`);
+const tokensJS = parser.parse(`9 + ( 2 * 3 - (5+6) + (4 / 8))`);
 //const tokens = parser.parse(`0 1 2 3 4 5 6 78901 2 34 5 678`);
-const tokensJS = parser.parse(`x.y?.zp[4]`);
+// const tokensJS = parser.parse(`x.y?.zp[4]`);
 
 const stack = ScopeProvider.for({});
 Reflect.set(window, 'parser', parser.parse);

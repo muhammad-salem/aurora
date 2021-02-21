@@ -58,7 +58,3 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 		};
 	}
 }
-
-export type InfixExpressionNodeConstructor = {
-	new(op: string, left: ExpressionNode, right: ExpressionNode): InfixExpressionNode;
-}
