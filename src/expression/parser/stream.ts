@@ -7,14 +7,14 @@ export class TokenStream {
 
 	static OPERATORS = [
 		'!', '!=', '!==', '%', '%=',
-		'&', '&&', '&&=', '&=', '(', ')',
+		'&', '&&', '&&=', '&=',
 		'*', '*=', '+', '++', '+=',
-		',', '-', '--', '-=', '.', '...',
+		'-', '--', '-=', '.', '...',
 		'/', '/=', ':',
 		'<', '<<', '<<=', '<=', '=', '==', '===',
 		'>', '>=', '>>', '>>=', '>>>', '>>>=',
-		'?', '[', ']', '^', '^=',
-		'{', '|', '|=', '||', '||=', '}', '~'
+		'?', '?.', '^', '^=', '~',
+		'|', '|>', '|=', '||', '||='
 	];
 	static CodePointPattern = /^[0-9a-f]{4}$/i;
 
@@ -402,186 +402,264 @@ export class TokenStream {
 		return valid;
 	}
 
-
-	// static OPERATORS2 = [
-	// 	"instanceof", "typeof", "delete", "void", "new", "in", 'await', 'async',
-	// 	">>>=", ">>>", "===", "!==",
-	// 	"**=", "<<=", ">>=", "&&=", "||=", "??=",
-	// 	"?.", "++", "--", "**",
-	// 	"<<", ">>", "<=", ">=", "==", "!=",
-	// 	"&&", "||", "??", "+=",
-	// 	"-=", "*=", "/=", "%=", "&=", "^=", "|=", "|>",
-	// 	".",
-	// 	"!", "~", "+", "-", "*", "/", "%",
-	// 	"<", ">", "&", "^", "|", "?", ":", "="
-	// ];
 	isOperator() {
-		const c = this.expression.charAt(this.pos);
-		if (c === ':' || c === '.' || c === '~') {
-			this.current = this.newToken(TokenType.OPERATOR, c);
-		} else if (c === '*') {
-			if (this.expression.charAt(this.pos + 1) === '*') {
-				if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '**=');
+		const char = this.expression.charAt(this.pos);
+		switch (char) {
+			case '+':
+				if (this.expression.charAt(this.pos + 1) === '+') {
+					this.current = this.newToken(TokenType.OPERATOR, '++');
+					this.pos += 2;
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '+=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '**');
+					this.current = this.newToken(TokenType.OPERATOR, '+');
 					this.pos++;
 				}
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '*=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '*');
-			}
-		} else if (c === '/') {
-			if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '/=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '/');
-			}
-		} else if (c === '%') {
-			if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '%=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '%');
-			}
-		} else if (c === '^') {
-			if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '^=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '^');
-			}
-		} else if (c === '+') {
-			if (this.expression.charAt(this.pos + 1) === '+') {
-				this.current = this.newToken(TokenType.OPERATOR, '++');
-				this.pos++;
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '+=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '+');
-			}
-		} else if (c === '-') {
-			if (this.expression.charAt(this.pos + 1) === '-') {
-				this.current = this.newToken(TokenType.OPERATOR, '--');
-				this.pos++;
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '-=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '-');
-			}
-		} else if (c === '>') {
-			if (this.expression.charAt(this.pos + 1) === '>') {
-				if (this.expression.charAt(this.pos + 2) === '>') {
-					if (this.expression.charAt(this.pos + 3) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '>>>=');
-						this.pos += 4;
-					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '>>>');
-						this.pos += 3;
-					}
-				} else if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '>>=');
+				return true;
+			case '-':
+				if (this.expression.charAt(this.pos + 1) === '-') {
+					this.current = this.newToken(TokenType.OPERATOR, '--');
+					this.pos += 2;
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '-=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '>>');
+					this.current = this.newToken(TokenType.OPERATOR, '-');
 					this.pos++;
 				}
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '>=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '>');
-			}
-		} else if (c === '<') {
-			if (this.expression.charAt(this.pos + 1) === '<') {
-				if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '<<=');
-					this.pos += 2;
-				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '<<');
-					this.pos++;
-				}
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '<=');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '<');
-			}
-		} else if (c === '|') {
-			if (this.expression.charAt(this.pos + 1) === '|') {
-				if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '||=');
-					this.pos += 2;
-				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '||');
-					this.pos++;
-				}
-			} else if (this.expression.charAt(this.pos + 1) === '=') {
-				this.current = this.newToken(TokenType.OPERATOR, '|=');
-				this.pos++;
-			} else if (this.expression.charAt(this.pos + 1) === '>') {
-				this.current = this.newToken(TokenType.OPERATOR, '|>');
-				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '|');
-			}
-		} else if (c === '?') {
-			if (this.expression.charAt(this.pos + 1) === '?') {
+				return true;
+			case '=':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '??=');
-					this.pos += 2;
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '===');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '==');
+						this.pos += 2;
+					}
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '??');
+					this.current = this.newToken(TokenType.OPERATOR, '=');
 					this.pos++;
 				}
-			} else if (this.expression.charAt(this.pos + 1) === '.') {
-				this.current = this.newToken(TokenType.OPERATOR, '?.');
+				return true;
+			case '*':
+				if (this.expression.charAt(this.pos + 1) === '*') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '**=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '**');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '*=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '*');
+					this.pos++;
+				}
+				return true;
+			case '/':
+				if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '/=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '/');
+					this.pos++;
+				}
+				return true;
+			case '%':
+				if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '%=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '%');
+					this.pos++;
+				}
+				return true;
+			case '^':
+				if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '^=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '^');
+					this.pos++;
+				}
+				return true;
+			case '>':
+				if (this.expression.charAt(this.pos + 1) === '>') {
+					if (this.expression.charAt(this.pos + 2) === '>') {
+						if (this.expression.charAt(this.pos + 3) === '=') {
+							this.current = this.newToken(TokenType.OPERATOR, '>>>=');
+							this.pos += 4;
+						} else {
+							this.current = this.newToken(TokenType.OPERATOR, '>>>');
+							this.pos += 3;
+						}
+					} else if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '>>=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '>>');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '>=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '>');
+					this.pos++;
+				}
+				return true;
+			case '<':
+				if (this.expression.charAt(this.pos + 1) === '<') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '<<=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '<<');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '<=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '<');
+					this.pos++;
+				}
+				return true;
+			case '|':
+				if (this.expression.charAt(this.pos + 1) === '|') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '||=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '||');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '|=');
+					this.pos += 2;
+				} else if (this.expression.charAt(this.pos + 1) === '>') {
+					this.current = this.newToken(TokenType.OPERATOR, '|>');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '|');
+					this.pos++;
+				}
+				return true;
+			case '&':
+				if (this.expression.charAt(this.pos + 1) === '&') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '&&=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '&&');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
+					this.current = this.newToken(TokenType.OPERATOR, '&=');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '&');
+					this.pos++;
+				}
+				return true;
+			case '?':
+				if (this.expression.charAt(this.pos + 1) === '?') {
+					if (this.expression.charAt(this.pos + 1) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '??=');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '??');
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '.') {
+					this.current = this.newToken(TokenType.OPERATOR, '?.');
+					this.pos += 2;
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '?');
+					this.pos++;
+				}
+				return true;
+			case '!':
+				if (this.expression.charAt(this.pos + 1) === '=') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(TokenType.OPERATOR, '!==');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '!=');
+						this.pos += 2;
+					}
+				} else {
+					this.current = this.newToken(TokenType.OPERATOR, '!');
+					this.pos++;
+				}
+				return true;
+			case '.':
+				if (this.expression.substring(this.pos, 3) === '...') {
+					this.current = this.newToken(TokenType.OPERATOR, '...');
+					this.pos += 3;
+					return true;
+				}
+			// no break
+			case ':':
+			case '~':
+				this.current = this.newToken(TokenType.OPERATOR, char);
 				this.pos++;
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '?');
-			}
-		} else if (c === '|') {
-			if (this.expression.charAt(this.pos + 1) === '|') {
-				this.current = this.newToken(TokenType.OPERATOR, '||');
-				this.pos++;
-			} else {
+				return true;
+			case 'i':			// in, instanceof
+				if (this.expression.charAt(this.pos + 1) === 'n') {
+					if (this.expression.substring(this.pos, 10) === 'instanceof') {
+						this.current = this.newToken(TokenType.OPERATOR, 'instanceof');
+						this.pos += 10;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, 'in');
+						this.pos += 2;
+					}
+					return true;
+				}
 				return false;
-			}
-		} else if (c === '=') {
-			if (this.expression.charAt(this.pos + 1) === '=') {
-				if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '===');
-					this.pos += 2;
-				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '==');
-					this.pos++;
+			case 't':			// typeof
+				if (this.expression.substring(this.pos, 6) === 'typeof') {
+					this.current = this.newToken(TokenType.OPERATOR, 'typeof');
+					this.pos += 6;
+					return true;
 				}
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '=');
-			}
-		} else if (c === '!') {
-			if (this.expression.charAt(this.pos + 1) === '=') {
-				if (this.expression.charAt(this.pos + 2) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '!==');
-					this.pos += 2;
-				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '!=');
-					this.pos++;
+				return false;
+			case 'v':			// void
+				if (this.expression.substring(this.pos, 4) === 'void') {
+					this.current = this.newToken(TokenType.OPERATOR, 'void');
+					this.pos += 4;
+					return true;
 				}
-			} else {
-				this.current = this.newToken(TokenType.OPERATOR, '!');
-			}
-		} else {
-			return false;
+				return false;
+			case 'd':			// delete
+				if (this.expression.substring(this.pos, 6) === 'delete') {
+					this.current = this.newToken(TokenType.OPERATOR, 'delete');
+					this.pos += 6;
+					return true;
+				}
+				return false;
+			case 'n':			// new
+				if (this.expression.substring(this.pos, 3) === 'new') {
+					this.current = this.newToken(TokenType.OPERATOR, 'new');
+					this.pos += 3;
+					return true;
+				}
+				return false;
+			case 'a':			// await, async
+				const nextStr = this.expression.substring(this.pos, 5);
+				if ('await' === nextStr || 'async' === nextStr) {
+					this.current = this.newToken(TokenType.OPERATOR, nextStr);
+					this.pos += 5;
+					return true;
+				}
+				return false;
+			default:
+				return false;
 		}
-		this.pos++;
-		return true;
 	}
 
 	getCoordinates() {
