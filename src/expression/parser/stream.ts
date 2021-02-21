@@ -1,3 +1,5 @@
+import { BigIntNode, NumberNode, PropertyNode, RegExpNode, StringNode } from '../api/definition/values.js';
+import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenType } from './token.js';
 
 export class TokenStream {
@@ -24,7 +26,7 @@ export class TokenStream {
 
 	constructor(private expression: string) { }
 
-	private newToken(type: TokenType, value: string | RegExp): Token {
+	private newToken(type: TokenType, value: string | ExpressionNode): Token {
 		return new Token(type, value);
 	}
 
@@ -72,8 +74,9 @@ export class TokenStream {
 			while (index >= 0 && this.pos < this.expression.length) {
 				this.pos = index + 1;
 				if (this.expression.charAt(index - 1) !== '\\') {
-					let rawString = this.expression.substring(startPos + 1, index);
-					this.current = this.newToken(TokenType.STRING, this.unescape(rawString));
+					const rawString = this.expression.substring(startPos + 1, index);
+					const stringNode = new StringNode(this.unescape(rawString));
+					this.current = this.newToken(TokenType.EXPRESSION, stringNode);
 					result = true;
 					break;
 				}
@@ -166,7 +169,7 @@ export class TokenStream {
 		}
 		if (hasLetter) {
 			let str = this.expression.substring(startPos, i);
-			this.current = this.newToken(TokenType.PROPERTY, str);
+			this.current = this.newToken(TokenType.EXPRESSION, new PropertyNode(str));
 			this.pos += str.length;
 			return true;
 		}
@@ -230,7 +233,8 @@ export class TokenStream {
 				flags += nextChar;
 				this.pos++;
 			}
-			this.current = this.newToken(TokenType.REGEXP, new RegExp(pattern, flags));
+			const regexNode = new RegExpNode(new RegExp(pattern, flags));
+			this.current = this.newToken(TokenType.EXPRESSION, regexNode);
 			return true;
 		}
 		return false;
@@ -325,7 +329,8 @@ export class TokenStream {
 		}
 
 		if (valid) {
-			this.current = this.newToken(TokenType.NUMBER, parseInt(this.expression.substring(startPos, pos), radix).toString());
+			const numNode = new NumberNode(parseInt(this.expression.substring(startPos, pos), radix));
+			this.current = this.newToken(TokenType.EXPRESSION, numNode);
 			this.pos = pos;
 		}
 		return valid;
@@ -383,10 +388,12 @@ export class TokenStream {
 
 		if (valid) {
 			if (this.expression.charAt(pos) === 'n') {
-				this.current = this.newToken(TokenType.BIGINT, this.expression.substring(startPos, pos));
+				const bigintNode = new BigIntNode(BigInt(this.expression.substring(startPos, pos)));
+				this.current = this.newToken(TokenType.EXPRESSION, bigintNode);
 				pos++;
 			} else {
-				this.current = this.newToken(TokenType.NUMBER, parseFloat(this.expression.substring(startPos, pos)).toString());
+				const numNode = new NumberNode(parseFloat(this.expression.substring(startPos, pos)));
+				this.current = this.newToken(TokenType.EXPRESSION, numNode);
 			}
 			this.pos = pos;
 		} else {

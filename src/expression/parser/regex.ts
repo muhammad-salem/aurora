@@ -1,3 +1,8 @@
+import {
+	BigIntNode, FalseNode, NullNode, NumberNode,
+	PropertyNode,
+	StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
+} from '../api/definition/values.js';
 import { OperatorPrecedence, StatementPrecedence } from './grammar.js';
 import { Token, TokenType } from './token.js';
 
@@ -19,8 +24,6 @@ export class RegexParser {
 	}
 
 	tokenParser = this.generateTokenParser(OperatorPrecedence, StatementPrecedence);
-
-
 
 	private generateTokenParser(operators: string[][], statement: string[][]): RegExp {
 
@@ -51,7 +54,10 @@ export class RegexParser {
 			// comma, semicolon                 index 7
 			',|;',
 
-			// operators                        index 8
+			// division, regex, comment			index 8
+			/\/*|\/\/|\/=|\//.source,
+
+			// operators                        index 9
 			operators
 				.flatMap(item => item)
 				.filter((value: string, index: number, array: string[]) => {
@@ -61,7 +67,7 @@ export class RegexParser {
 				.map(escapeForRegex)
 				.join('|'),
 
-			// statement                        index 9
+			// statement                        index 10
 			statement
 				.flatMap(item => item)
 				.filter((value: string, index: number, array: string[]) => {
@@ -70,12 +76,12 @@ export class RegexParser {
 				.map(escapeForRegex)
 				.join('|'),
 
-			// properties                        index 10
+			// properties                        index 11
 			// has to be after the operators
 			/[a-zA-Z$_ɵ][a-zA-Z0-9$_]*/.source,
 
 			// remaining (non-whitespace-)chars, just in case
-			// has to be at the end              index 11
+			// has to be at the end              index 12
 			/\S/.source
 		].map(s => `(${s})`).join('|');
 
@@ -100,28 +106,29 @@ export class RegexParser {
 				brackets,               /** index 5  */
 				curly,                  /** index 6  */
 				commaAndSemicolon,      /** index 7  */
-				operator,               /** index 8  */
-				statement,              /** index 9  */
-				property,               /** index 10 */
-				,             /** index 11 */
+				slash,					/** index 8  */
+				operator,               /** index 9  */
+				statement,              /** index 10 */
+				property,               /** index 11 */
+				//,             		/** index 12 */
 			] = args;
 
 			// console.log(args);
 			if (number) {
-				token = new Token(TokenType.NUMBER, number);
+				token = new Token(TokenType.EXPRESSION, new NumberNode(number));
 			} else if (string) {
-				token = new Token(TokenType.STRING, string);
+				token = new Token(TokenType.EXPRESSION, new StringNode(string));
 			} else if (boolean) {
 				if (TRUE === boolean) {
-					token = new Token(TokenType.BOOLEAN, TRUE);
+					token = new Token(TokenType.EXPRESSION, TrueNode);
 				} else {
-					token = new Token(TokenType.BOOLEAN, FALSE);
+					token = new Token(TokenType.EXPRESSION, FalseNode);
 				}
 			} else if (nullish) {
 				if (NULL === nullish) {
-					token = new Token(TokenType.NULLISH, NULL);
+					token = new Token(TokenType.EXPRESSION, NullNode);
 				} else {
-					token = new Token(TokenType.NULLISH, UNDEFINED);
+					token = new Token(TokenType.EXPRESSION, UndefinedNode);
 				}
 			} else if (parentheses) {
 				token = new Token(parentheses === '(' ? TokenType.OPEN_PARENTHESES : TokenType.CLOSE_PARENTHESES, parentheses);
@@ -131,19 +138,39 @@ export class RegexParser {
 				token = new Token(curly === '{' ? TokenType.OPEN_CURLY : TokenType.CLOSE_CURLY, curly);
 			} else if (commaAndSemicolon) {
 				token = new Token(commaAndSemicolon === ',' ? TokenType.COMMA : TokenType.SEMICOLON, commaAndSemicolon);
+			} else if (slash) {
+				// test value of slash
+				// case regex
+				// case comment
+				// case operator
+				// disable baed on index and length;
+				// TO:DO
+				token = new Token(TokenType.OPERATOR, slash);
 			} else if (operator) {
 				token = new Token(TokenType.OPERATOR, operator);
 			} else if (statement) {
 				token = new Token(TokenType.STATEMENTS, statement);
 			} else if (property) {
 				// check for bigint
-				if (property === 'n') {
-					if (lastTokenIndex >= 0 && tokens[lastTokenIndex].type === TokenType.NUMBER) {
-						tokens[lastTokenIndex].type = TokenType.BIGINT;
-						return substring;
-					}
+				switch (property) {
+					case 'this':
+						token = new Token(TokenType.EXPRESSION, ThisNode);
+						break;
+					case 'Symbol':
+						token = new Token(TokenType.EXPRESSION, SymbolNode);
+						break;
+					case 'n':
+						if (lastTokenIndex >= 0
+							&& tokens[lastTokenIndex].type === TokenType.EXPRESSION
+							&& tokens[lastTokenIndex].value instanceof NumberNode) {
+							const bigint = BigInt((tokens[lastTokenIndex].value as NumberNode).get())
+							tokens[lastTokenIndex].value = new BigIntNode(bigint);
+							return substring;
+						}
+					default:
+						token = new Token(TokenType.EXPRESSION, new PropertyNode(property));
+						break;
 				}
-				token = new Token(TokenType.PROPERTY, property);
 			} else {
 				token = new Token(TokenType.NS, TokenType.NS.toString());
 				// throw new Error(`unexpected token '${substring}'`);

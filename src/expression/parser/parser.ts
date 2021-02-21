@@ -133,7 +133,7 @@ export class TokenParser {
 		const count = new Counter();
 		for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
 			if (this.tokens[index].type === TokenType.OPEN_PARENTHESES) {
-				if (this.tokens[index - 1]?.type === TokenType.PROPERTY || this.tokens[index - 1]?.value === '?.') { // a function call
+				if (this.tokens[index - 1]?.type === TokenType.EXPRESSION || this.tokens[index - 1]?.value === '?.') { // a function call
 					count.incrementFalseOpen();
 					continue;
 				}
@@ -292,7 +292,7 @@ export class TokenParser {
 						this.tokens.splice(index - 1, 5, temp);
 						this.limit -= 4;
 						break;
-					case TokenType.PROPERTY:
+					case TokenType.EXPRESSION:
 						// property access
 						temp = new Token(
 							TokenType.EXPRESSION,
@@ -414,7 +414,6 @@ export class Parser {
 			if (token.type === TokenType.EOF) {
 				break;
 			}
-			token.toLiteralExpression();
 			tokens.push(token);
 		}
 		const tokenParser = new TokenParser(tokens);
