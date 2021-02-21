@@ -2,7 +2,7 @@ import type { NodeDeserializer } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ValueNode } from './values.js';
+import { PropertyNode } from './values.js';
 import { CommaNode } from '../operators/comma.js';
 import { BlockNode } from '../statement/controlflow/block.js';
 
@@ -16,7 +16,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			deserializer(node.parameters) as CommaNode,
 			deserializer(node.statements) as BlockNode,
 			node.isArrow,
-			node.name ? deserializer(node.name) as ValueNode : void 0
+			node.name ? deserializer(node.name) as PropertyNode : void 0
 		);
 	}
 
@@ -24,7 +24,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		private parameters: CommaNode,
 		private statements: BlockNode,
 		private isArrow: boolean = false,
-		private name?: ValueNode) {
+		private name?: PropertyNode) {
 		super();
 	}
 
@@ -39,7 +39,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			return this.statements.get(funcStack);
 		};
 		if (this.name) {
-			stack.set(this.name.get(), func);
+			this.name.set(stack, func);
 		}
 		return func;
 	}

@@ -5,182 +5,178 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('property')
 export class PropertyNode extends AbstractExpressionNode {
-
 	static fromJSON(node: PropertyNode): PropertyNode {
 		return new PropertyNode(node.property);
 	}
-
 	constructor(private property: string | number) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		return stack.set(this.property, value) ? value : void 0;
 	}
-
 	get(stack: ScopedStack) {
 		return stack.get(this.property);
 	}
-
 	entry(): string[] {
 		return [this.toString()];
 	}
-
 	event(): string[] {
 		return [this.toString()];
 	}
-
 	toString(): string {
 		return String(this.property);
 	}
-
 	toJson(): object {
 		return { property: this.property };
 	}
 }
 
-@Deserializer('value')
-export class ValueNode extends AbstractExpressionNode {
-
-	static fromJSON(node: ValueNode): ValueNode {
-		return new ValueNode(node.value);
-	}
-
-	private quote: string;
-
-	constructor(private value: string | number) {
-		super();
-		if (typeof value === 'string') {
-			this.quote = value.substring(0, 1);
-			value = `"${value.substring(1, value.length - 1)}"`;
-		}
-		this.value = JSON.parse(value as string);
-	}
-
+export abstract class AbstractValueNode<T> extends AbstractExpressionNode {
+	protected value: T;
 	set() {
-		throw new Error("ValueNode#set() has no implementation.");
+		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-
-	get() {
+	get(): T {
 		return this.value;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(): string[] {
 		return [];
 	}
-
-	toString(): string {
-		if (typeof this.value === 'string') {
-			return `${this.quote}${this.value}${this.quote}`;
-		}
-		return String(this.value);
-	}
-
-	toJson(): object {
-		let node: { value: string | number };
-		if (typeof this.value === 'string') {
-			node = { value: `${this.quote}${this.value}${this.quote}` };
-		} else {
-			node = { value: this.value };
-		}
-		return node;
-	}
-}
-
-@Deserializer('bigint')
-export class BigIntNode extends AbstractExpressionNode {
-
-	static fromJSON(node: BigIntNode): BigIntNode {
-		return new BigIntNode(node.value);
-	}
-
-	private quote: string;
-
-	constructor(private value: BigInt) {
-		super();
-	}
-
-	set() {
-		throw new Error("BigIntNode#set() has no implementation.");
-	}
-
-	get() {
-		return this.value;
-	}
-
-	entry(): string[] {
-		return [];
-	}
-
-	event(): string[] {
-		return [];
-	}
-
 	toString(): string {
 		return String(this.value);
 	}
-
 	toJson(): object {
 		return { value: this.value };
 	}
 }
 
+@Deserializer('string')
+export class StringNode extends AbstractValueNode<string> {
+	static fromJSON(node: StringNode): StringNode {
+		return new StringNode(node.value, node.quote);
+	}
+	private quote: string;
+	constructor(value: string, quote?: string) {
+		super();
+		const firstChar = value.charAt(0);
+		if (quote) {
+			this.quote = quote;
+			this.value = value;
+		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
+			this.quote = firstChar;
+			this.value = `"${value.substring(1, value.length - 1)}"`;
+		}
+	}
+	toString(): string {
+		return `${this.quote}${this.value}${this.quote}`;
+	}
+	toJson(): object {
+		return {
+			value: this.value,
+			quote: this.quote
+		};
+	}
+}
+
+@Deserializer('number')
+export class NumberNode extends AbstractValueNode<number> {
+	static fromJSON(node: NumberNode): NumberNode {
+		return new NumberNode(node.value);
+	}
+	constructor(value: number) {
+		super();
+		this.value = value;
+	}
+}
+
+@Deserializer('bigint')
+export class BigIntNode extends AbstractValueNode<bigint> {
+	static fromJSON(node: BigIntNode): BigIntNode {
+		return new BigIntNode(BigInt(String(node.value)));
+	}
+	constructor(value: bigint) {
+		super();
+		this.value = value;
+	}
+	toString(): string {
+		return `${this.value}n`;
+	}
+	toJson(): object {
+		return { value: this.value.toString() };
+	}
+}
+@Deserializer('regexp')
+export class RegExpNode extends AbstractValueNode<RegExp> {
+	static fromJSON(node: RegExpNode & { source: string, flags: string }): RegExpNode {
+		return new RegExpNode(new RegExp(node.source, node.flags));
+	}
+	constructor(value: RegExp) {
+		super();
+		this.value = value;
+	}
+	toString(): string {
+		return `${this.value}n`;
+	}
+	toJson(): object {
+		return {
+			source: this.value.source,
+			flags: this.value.flags
+		};
+	}
+}
+
 export const TRUE = String(true);
 export const FALSE = String(false);
+@Deserializer('boolean')
+export class BooleanNode extends AbstractValueNode<boolean> {
+	static fromJSON(node: BooleanNode): BooleanNode {
+		switch (String(node.value)) {
+			case TRUE: return TrueNode;
+			case FALSE:
+			default:
+				return FalseNode;
+		}
+	}
+	constructor(value: boolean) {
+		super();
+		this.value = value;
+	}
+}
+
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
-@Deserializer('literal')
-export class LiteralNode extends AbstractExpressionNode {
-
-	static fromJSON(node: LiteralNode): LiteralNode {
+@Deserializer('nullish')
+export class NullishNode extends AbstractValueNode<null | undefined> {
+	static fromJSON(node: NullishNode): NullishNode {
 		switch (String(node.value)) {
-			case TRUE: return TrueNode as LiteralNode;
-			case FALSE: return FalseNode as LiteralNode;
-			case NULL: return NullNode as LiteralNode;
+			case NULL: return NullNode;
 			case UNDEFINED:
-			default: return UndefinedNode as LiteralNode;
+			default: return UndefinedNode;
 		}
 	}
-
-	constructor(private value: true | false | null | undefined | bigint) {
+	constructor(value: null | undefined) {
 		super();
-		this.value = this.value;
-	}
-
-	set() {
-		throw new Error("BooleanNode.set() Method has not implementation.");
-	}
-
-	get() {
-		return this.value;
-	}
-
-	entry(): string[] {
-		return [];
-	}
-
-	event(parent?: string): string[] {
-		return []
+		this.value = value;
 	}
 
 	toString(): string {
-		return String(this.value);
+		if (typeof this.value === 'undefined') {
+			return UNDEFINED;
+		}
+		return NULL;
 	}
-
 	toJson(): object {
 		return { value: this.toString() };
 	}
-
 }
 
-export const NullNode = Object.freeze(new LiteralNode(null)) as LiteralNode;
-export const UndefinedNode = Object.freeze(new LiteralNode(undefined)) as LiteralNode;
-export const TrueNode = Object.freeze(new LiteralNode(true)) as LiteralNode;
-export const FalseNode = Object.freeze(new LiteralNode(false)) as LiteralNode;
+export const NullNode = Object.freeze(new NullishNode(null)) as NullishNode;
+export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as NullishNode;
+export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
+export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
 export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
 export const SymbolNode = Object.freeze(new PropertyNode('Symbol')) as PropertyNode;
