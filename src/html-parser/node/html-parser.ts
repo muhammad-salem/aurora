@@ -167,7 +167,7 @@ export class NodeParser {
 			this.propType = 'input';
 			return this.parseInputOutput;
 		}
-		else if (/\(/.test(token)) {
+		else if (/\(|@/.test(token)) {
 			this.propType = 'output';
 			return this.parseInputOutput;
 		}
