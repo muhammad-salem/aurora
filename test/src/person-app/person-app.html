@@ -13,7 +13,8 @@
 
 <div class="row">
 	<div class="col-3">
-		<person-view #pm1 [(person)]="person1" name="dddddddd" age="34" allowed="true"></person-view>
+		<person-view #pm1 [(person)]="person1" name="dddddddd" age="34" allowed="true"
+			@click="onClose('person:clicked')"></person-view>
 	</div>
 	<div class="col-3">
 		<person-view #pm2 [(person)]="person2" name="alex2" age="19"></person-view>
