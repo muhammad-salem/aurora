@@ -113,3 +113,4 @@ dist
 .verdaccio
 **/web_modules/
 yarn.lock
+package-lock.json
