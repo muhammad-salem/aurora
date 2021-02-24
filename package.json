@@ -14,12 +14,12 @@
 	},
 	"scripts": {
 		"clean": "./tasks/clean",
-		"build": "yarn clean && tsc --build -v",
-		"build:test": "yarn clean && tsc -b -v -w test/",
-		"do:publish-no-git": "yarn build && lerna publish --no-git-tag-version --no-push",
-		"do:publish-no-tag": "yarn build && lerna publish --no-git-tag-version",
-		"do:publish-no-push": "yarn build && lerna publish --no-push",
-		"do:publish": "yarn build && lerna publish",
+		"build": "npm run clean && tsc --build -v",
+		"build:test": "npm run clean && tsc -b -v -w test/",
+		"do:publish-no-git": "npm run build && lerna publish --no-git-tag-version --no-push",
+		"do:publish-no-tag": "npm run build && lerna publish --no-git-tag-version",
+		"do:publish-no-push": "npm run build && lerna publish --no-push",
+		"do:publish": "npm run build && lerna publish",
 		"update:config": "./tasks/update-config",
 		"local:npm": "./tasks/run-local-npm",
 		"local:publish": "./tasks/publish-local"
