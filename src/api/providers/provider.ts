@@ -120,4 +120,3 @@ export class ClassRegistry {
 }
 
 export const ClassRegistryProvider = new ClassRegistry();
-export default ClassRegistryProvider;

@@ -9,7 +9,7 @@ import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnInit } from '../component/lifecycle.js';
 import { isModel, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
-import ClassRegistryProvider from '../providers/provider.js';
+import { ClassRegistryProvider } from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { ElementMutation } from './mutation.js';

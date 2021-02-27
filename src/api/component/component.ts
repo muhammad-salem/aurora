@@ -5,7 +5,7 @@ import { findByTagName, Tag } from '@ibyar/element';
 import { htmlParser, templateParser } from '@ibyar/html-parser';
 
 import { HTMLComponent } from './custom-element.js';
-import ClassRegistryProvider from '../providers/provider.js';
+import { ClassRegistryProvider } from '../providers/provider.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
 import {

@@ -1,5 +1,5 @@
 import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
-import ClassRegistryProvider from '../providers/provider.js';
+import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
  * Pipes are used as singleton
