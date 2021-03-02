@@ -115,20 +115,20 @@ export class RegexParser {
 
 			// console.log(args);
 			if (number) {
-				token = new Token(TokenType.EXPRESSION, new NumberNode(number));
+				token = new Token(TokenType.NUMBER, new NumberNode(number));
 			} else if (string) {
-				token = new Token(TokenType.EXPRESSION, new StringNode(string));
+				token = new Token(TokenType.STRING, new StringNode(string));
 			} else if (boolean) {
 				if (TRUE === boolean) {
-					token = new Token(TokenType.EXPRESSION, TrueNode);
+					token = new Token(TokenType.BOOLEAN, TrueNode);
 				} else {
-					token = new Token(TokenType.EXPRESSION, FalseNode);
+					token = new Token(TokenType.BOOLEAN, FalseNode);
 				}
 			} else if (nullish) {
 				if (NULL === nullish) {
-					token = new Token(TokenType.EXPRESSION, NullNode);
+					token = new Token(TokenType.NULLISH, NullNode);
 				} else {
-					token = new Token(TokenType.EXPRESSION, UndefinedNode);
+					token = new Token(TokenType.NULLISH, UndefinedNode);
 				}
 			} else if (parentheses) {
 				token = new Token(parentheses === '(' ? TokenType.OPEN_PARENTHESES : TokenType.CLOSE_PARENTHESES, parentheses);
@@ -154,26 +154,27 @@ export class RegexParser {
 				// check for bigint
 				switch (property) {
 					case 'this':
-						token = new Token(TokenType.EXPRESSION, ThisNode);
+						token = new Token(TokenType.PROPERTY, ThisNode);
 						break;
 					case 'Symbol':
-						token = new Token(TokenType.EXPRESSION, SymbolNode);
+						token = new Token(TokenType.PROPERTY, SymbolNode);
 						break;
 					case 'n':
 						if (lastTokenIndex >= 0
-							&& tokens[lastTokenIndex].type === TokenType.EXPRESSION
+							&& tokens[lastTokenIndex].type === TokenType.NUMBER
 							&& tokens[lastTokenIndex].value instanceof NumberNode) {
 							const bigint = BigInt((tokens[lastTokenIndex].value as NumberNode).get())
 							tokens[lastTokenIndex].value = new BigIntNode(bigint);
+							tokens[lastTokenIndex].type = TokenType.BIGINT;
 							return substring;
 						}
 					default:
-						token = new Token(TokenType.EXPRESSION, new PropertyNode(property));
+						token = new Token(TokenType.PROPERTY, new PropertyNode(property));
 						break;
 				}
 			} else {
-				token = new Token(TokenType.NS, TokenType.NS.toString());
-				// throw new Error(`unexpected token '${substring}'`);
+				// token = new Token(TokenType.NS, TokenType.NS.toString());
+				throw new Error(`unexpected token '${substring}'`);
 			}
 			tokens.push(token);
 			lastTokenIndex++;

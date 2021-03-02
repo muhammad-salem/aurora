@@ -2,13 +2,13 @@
 import type { ExpressionNode } from '../api/expression.js';
 
 export enum TokenType {
-	// STRING = 'STRING',
-	// NUMBER = 'NUMBER',
-	// BOOLEAN = 'BOOLEAN',
-	// NULLISH = 'NULLISH',
-	// REGEXP = 'REGEXP',
-	// BIGINT = 'BIGINT',
-	// PROPERTY = 'PROPERTY',
+	STRING = 'STRING',
+	NUMBER = 'NUMBER',
+	BOOLEAN = 'BOOLEAN',
+	NULLISH = 'NULLISH',
+	REGEXP = 'REGEXP',
+	BIGINT = 'BIGINT',
+	PROPERTY = 'PROPERTY',
 
 	OPEN_PARENTHESES = 'OPEN_PARENTHESES',
 	CLOSE_PARENTHESES = 'CLOSE_PARENTHESES',
@@ -22,6 +22,9 @@ export enum TokenType {
 
 	OPERATOR = 'OPERATOR',
 	STATEMENTS = 'STATEMENTS',
+
+	OBJECT = 'OBJECT',
+	ARRAY = 'ARRAY',
 
 	EOF = 'EOF',
 	NS = 'NOT_SUPPORTED',
