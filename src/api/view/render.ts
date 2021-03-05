@@ -7,7 +7,7 @@ import {
 import { isTagNameNative, isValidCustomElementName } from '@ibyar/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
-import { isOnInit } from '../component/lifecycle.js';
+import { isOnDestroy, isOnInit, OnDestroy } from '../component/lifecycle.js';
 import { isModel, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
@@ -391,6 +391,10 @@ export class ComponentRender<T> {
 			.map(prop => {
 				if (prop.provider === ASYNC_PIPE_CONTEXT_PROVIDER) {
 					prop.provider = prop.provider.getContext(prop.entityName) as AsyncPipeContext<any, any>;
+					if (isOnDestroy(prop.provider)) {
+						const asyncPipeDestroy: OnDestroy = prop.provider;
+						this.view._model.subscribeModel('destroy', () => asyncPipeDestroy.onDestroy());
+					}
 				}
 				return prop;
 			});
