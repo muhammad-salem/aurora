@@ -18,12 +18,13 @@
 	"dependencies": {
 		"@ibyar/aurora": "^0.1.12",
 		"bootstrap": "^5.0.0-beta2",
-		"rxjs": "^6.6.3",
+		"rxjs": "^6.6.6",
 		"tslib": "^2.1.0"
 	},
 	"devDependencies": {
 		"@ibyar/esmpack": "^0.1.9",
-		"typescript": "^4.2.2"
+		"typescript": "^4.2.3",
+		"http2-push-manifest": "1.0.1"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
