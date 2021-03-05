@@ -23,8 +23,7 @@
 	},
 	"devDependencies": {
 		"@ibyar/esmpack": "^0.1.9",
-		"typescript": "^4.2.3",
-		"http2-push-manifest": "1.0.1"
+		"typescript": "^4.2.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
