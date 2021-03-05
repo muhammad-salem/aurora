@@ -12,7 +12,7 @@ export function isModel(object: any): object is Model {
 		&& object.emitChangeModel;
 }
 
-export function defineModel(object: any): Model {
+export function defineModel<T>(object: T): Model & T {
 	if (typeof object !== 'object') {
 		throw new Error(`typeof ${typeof object} can't be a subscription model`);
 	}
@@ -44,7 +44,7 @@ export function defineModel(object: any): Model {
 			});
 		}
 	});
-	return object as Model;
+	return object as Model & T;
 }
 
 export type SourceFollowerCallback = (stack: any[]) => void;
