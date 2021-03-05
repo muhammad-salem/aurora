@@ -64,7 +64,7 @@ export class TokenStream {
 				this.pos = index + 1;
 				if (this.expression.charAt(index - 1) !== '\\') {
 					const rawString = this.expression.substring(startPos + 1, index);
-					const stringNode = new StringNode(this.unescape(rawString));
+					const stringNode = new StringNode(this.unescape(rawString), quote);
 					this.current = this.newToken(TokenType.STRING, stringNode);
 					result = true;
 					break;
