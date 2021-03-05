@@ -31,11 +31,8 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 					delegatesFocus: componentRef.shadowDomDelegatesFocus
 				});
 			}
-			let model = new modelClass(/* resolve dependency injection*/);
-			defineModel(model);
-			if (isModel(model)) {
-				this._model = model;
-			}
+			const model = new modelClass(/* resolve dependency injection*/);
+			this._model = defineModel(model);
 
 			this._setAttributeNative = this.setAttribute;
 			this._getAttributeNative = this.getAttribute;
