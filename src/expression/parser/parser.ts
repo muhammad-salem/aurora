@@ -1,5 +1,4 @@
 import type { ExpressionNode, NodeExpressionClass } from '../api/expression.js';
-import { ScopeProvider } from '../api/context/provider.js';
 import { ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
 import { ArithmeticNode } from '../api/operators/arithmetic.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
@@ -11,6 +10,7 @@ import { RelationalNode } from '../api/operators/relational.js';
 import { BinaryBitwiseNode, BitwiseShiftNode } from '../api/operators/shift.js';
 import { TokenStream } from './stream.js';
 import { Token, TokenType } from './token.js';
+import { ScopeProvider } from '../api/context/provider.js';
 
 export class CountCoordinate {
 	constructor(public start: number, public end: number) { }
@@ -367,9 +367,6 @@ export class TokenParser {
 }
 
 export class Parser {
-
-
-
 	parse(expression: string) {
 		const stream: TokenStream = new TokenStream(expression);
 		const tokens: Token[] = [];
@@ -381,15 +378,17 @@ export class Parser {
 			}
 			tokens.push(token);
 		}
-		const tokenParser = new TokenParser(tokens);
-		tokenParser.scan();
+		// const tokenParser = new TokenParser(tokens);
+		// tokenParser.scan();
 		return tokens;
 	}
 
 }
 
 const parser = new Parser();
-const tokensJS = parser.parse(`9 + ( 2 * 3 - (5+6) + (4 / 8))`);
+const tokensJS = parser.parse(`switch (key) {case 'a': console.log('value'); break; default: break;}`);
+// const tokensJS = parser.parse(`for (let index = 0; index < array.length; index++) {const element = array[index];}`);
+// const tokensJS = parser.parse(`9 + ( 2 * 3 - (5+6) + (4 / 8))`);
 //const tokens = parser.parse(`0 1 2 3 4 5 6 78901 2 34 5 678`);
 // const tokensJS = parser.parse(`x.y?.zp[4]`);
 
