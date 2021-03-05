@@ -149,7 +149,7 @@ export class RegexParser {
 			} else if (operator) {
 				token = new Token(TokenType.OPERATOR, operator);
 			} else if (statement) {
-				token = new Token(TokenType.STATEMENTS, statement);
+				token = new Token(TokenType.STATEMENT, statement);
 			} else if (property) {
 				// check for bigint
 				switch (property) {
