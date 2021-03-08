@@ -14,6 +14,8 @@ export class TernaryNode extends AbstractExpressionNode {
 		);
 	}
 
+	static KEYWORDS = ['?', ':'];
+
 	constructor(private logical: ExpressionNode, private ifTrue: ExpressionNode, private ifFalse: ExpressionNode) {
 		super();
 	}
