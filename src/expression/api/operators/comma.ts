@@ -27,7 +27,7 @@ export class CommaNode extends AbstractExpressionNode {
 	}
 
 	get(stack: ScopedStack) {
-		return this.expressions.map(expr => expr.get(stack));
+		return this.expressions.map(expr => expr.get(stack)).pop();
 	}
 
 	entry(): string[] {
