@@ -45,8 +45,7 @@ export class TokenStream {
 			|| this.isSemicolon()
 			|| this.isOperator()
 			|| this.isStatement()
-			|| this.isProperty()
-		) {
+			|| this.isProperty()) {
 			return this.current;
 		} else {
 			throw this.parseError('Unknown character "' + this.expression.charAt(this.pos) + '"');
@@ -759,7 +758,7 @@ export class TokenStream {
 		}
 	}
 
-	private getCoordinates() {
+	getCoordinates() {
 		let line = 0;
 		let column;
 		let newline = -1;
