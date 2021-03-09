@@ -11,6 +11,7 @@ import { BinaryBitwiseNode, BitwiseShiftNode } from '../api/operators/shift.js';
 import { TokenStream } from './stream.js';
 import { Token, TokenType } from './token.js';
 import { ScopeProvider } from '../api/context/provider.js';
+import { TernaryNode } from '../api/operators/ternary.js';
 
 export class CountCoordinate {
 	constructor(public start: number, public end: number) { }
@@ -84,7 +85,16 @@ export class TokenParser {
 
 	}
 
-	scan(): void {
+	/**
+	 * Operator precedence
+	 * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence#table
+	 */
+	scan() {
+		this.scanOperators();
+		this.scanStatements();
+	}
+
+	private scanOperators(): void {
 		this.parseGrouping();
 		this.parseMemberAccess();
 		this.parseComputedMemberAccess();
@@ -130,6 +140,7 @@ export class TokenParser {
 		// this.parseYieldAstr();
 		this.parseCommaSequence();
 	}
+	scanStatements() { }
 	parseGrouping(): void {
 		const count = new Counter();
 		for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
@@ -328,7 +339,42 @@ export class TokenParser {
 	parseAwait() { }
 
 	parsePipeline() { }
-	parseTernary() { }
+	parseTernary() {
+		for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				if ('?' === this.tokens[index].value) {
+					const logicalParser = new TokenParser(this.tokens, this.pos, index);
+					logicalParser.scan();
+					// search for ':'
+					const newStart = index;
+					index++;
+					let leftParser: TokenParser, rightParser: TokenParser;
+					for (; index < Math.min(this.limit, this.tokens.length); index++) {
+						if (this.tokens[index].type === TokenType.OPERATOR) {
+							if (':' === this.tokens[index].value) {
+								leftParser = new TokenParser(this.tokens, newStart, index);
+								leftParser.scan();
+								rightParser = new TokenParser(this.tokens, index + 1, this.limit);
+								rightParser.scan();
+								break;
+							}
+						}
+					}
+					const temp = new Token(
+						TokenType.EXPRESSION,
+						new TernaryNode(
+							this.tokens[index - 2].value as ExpressionNode,
+							this.tokens[index - 1].value as ExpressionNode,
+							this.tokens[index + 1].value as ExpressionNode
+						)
+					);
+					this.tokens.splice(index - 1, 3, temp);
+					this.limit -= (logicalParser.limit - logicalParser.pos) + (rightParser!.limit - rightParser!.pos);
+					index = index - 1;
+				}
+			}
+		}
+	}
 
 	// parseYield(){}
 	// parseYieldAstr(){}
@@ -385,15 +431,22 @@ export class Parser {
 
 }
 
-const parser = new Parser();
-const tokensJS = parser.parse(`switch (key) {case 'a': console.log('value'); break; default: break;}`);
-// const tokensJS = parser.parse(`for (let index = 0; index < array.length; index++) {const element = array[index];}`);
-// const tokensJS = parser.parse(`9 + ( 2 * 3 - (5+6) + (4 / 8))`);
-//const tokens = parser.parse(`0 1 2 3 4 5 6 78901 2 34 5 678`);
-// const tokensJS = parser.parse(`x.y?.zp[4]`);
+try {
+	const parser = new Parser();
+	let statement: string;
+	// statement = `x.y?.zp[4]`;
+	// statement = `9 + ( 2 * 3 - (5+6) + (4 / 8))`;
+	statement = `for (let index = 0; index < array.length; index++) {const element = array[index];}`;
+	// statement = `const iterator of object; index as id; even as isEven;`;
+	// statement = `switch (key) {case 'a': console.log('value'); break; default: break;}`;
+	// statement = `y = true ? 6 : 7`;
 
-const stack = ScopeProvider.for({});
-Reflect.set(window, 'parser', parser.parse);
-Reflect.set(window, 'tokens', tokensJS);
-Reflect.set(window, 'stack', stack);
-console.log(tokensJS);
+	const tokensJS = parser.parse(statement);
+	const stack = ScopeProvider.for({});
+	Reflect.set(window, 'parser', parser.parse);
+	Reflect.set(window, 'tokens', tokensJS);
+	Reflect.set(window, 'stack', stack);
+	console.log(tokensJS);
+} catch (error) {
+	console.error(error);
+}
