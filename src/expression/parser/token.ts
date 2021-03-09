@@ -41,6 +41,12 @@ export class Token {
 		}
 		return this.value as ExpressionNode;
 	}
+	asString(): string {
+		if (typeof this.value !== 'string') {
+			throw new Error(`can't convert to string`);
+		}
+		return this.value as string;
+	}
 	toString(): string {
 		return this.type + ': ' + String(this.value);
 	}
