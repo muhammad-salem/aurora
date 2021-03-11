@@ -510,8 +510,13 @@ export class TokenStream {
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '<=');
-					this.pos += 2;
+					if (this.expression.charAt(this.pos + 2) === '>') {
+						this.current = this.newToken(TokenType.OPERATOR, '<=>');
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(TokenType.OPERATOR, '<=');
+						this.pos += 2;
+					}
 				} else {
 					this.current = this.newToken(TokenType.OPERATOR, '<');
 					this.pos++;

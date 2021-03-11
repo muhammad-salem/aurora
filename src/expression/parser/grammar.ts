@@ -76,6 +76,10 @@ export const OperatorPrecedence: string[][] = [
 		'>>>'
 	],
 	[
+		/** Three-way comparison, "spaceship operator", operator <=>*/
+		'<=>',
+	],
+	[
 		/** Less Than (<) */
 		'<',
 		/** Less Than Or Equal (<=) */

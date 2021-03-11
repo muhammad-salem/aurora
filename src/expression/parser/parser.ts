@@ -6,7 +6,7 @@ import { OptionalChainingNode } from '../api/operators/chaining.js';
 import { EqualityNode } from '../api/operators/equality.js';
 import { GroupingNode } from '../api/operators/grouping.js';
 import { LogicalAssignmentNode, LogicalNode } from '../api/operators/logical.js';
-import { RelationalNode } from '../api/operators/relational.js';
+import { RelationalNode, ThreeWayComparisonNode } from '../api/operators/relational.js';
 import { BinaryBitwiseNode, BitwiseShiftNode } from '../api/operators/shift.js';
 import { TokenStream } from './stream.js';
 import { Token, TokenType } from './token.js';
@@ -121,6 +121,7 @@ export class TokenParser {
 		this.parseInfixNodeType(ArithmeticNode);
 
 		this.parseInfixNodeType(BitwiseShiftNode);
+		this.parseInfixNodeType(ThreeWayComparisonNode);
 		this.parseInfixNodeType(RelationalNode);
 		this.parseInfixNodeType(EqualityNode);
 

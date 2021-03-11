@@ -4,7 +4,7 @@ import { ArithmeticNode, PostfixNode, PrefixNode } from '../api/operators/arithm
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { EqualityNode } from '../api/operators/equality.js';
 import { LogicalAssignmentNode, LogicalNode } from '../api/operators/logical.js';
-import { RelationalNode } from '../api/operators/relational.js';
+import { RelationalNode, ThreeWayComparisonNode } from '../api/operators/relational.js';
 import { BinaryBitwiseNode, BitwiseShiftNode } from '../api/operators/shift.js';
 import { LiteralUnaryNode, UnaryNode } from '../api/operators/unary.js';
 import { TernaryNode } from '../api/operators/ternary.js';
@@ -49,6 +49,8 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '||=':
 		case '??=':
 			return new LogicalAssignmentNode(op, left, right);
+		case '<=>':
+			return new ThreeWayComparisonNode(op, left, right);
 		case '<':
 		case '<=':
 		case '>':
