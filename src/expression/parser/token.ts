@@ -33,6 +33,44 @@ export enum TokenType {
 	EXPRESSION = 'EXPRESSION'
 }
 
+export namespace TokenType {
+	export function isPair(type: TokenType): boolean {
+		switch (type) {
+			case TokenType.OPEN_PARENTHESES:
+			case TokenType.OPEN_BRACKETS:
+			case TokenType.OPEN_CURLY:
+			case TokenType.CLOSE_CURLY:
+			case TokenType.CLOSE_BRACKETS:
+			case TokenType.CLOSE_PARENTHESES:
+				return true;
+			default:
+				return false;
+		}
+	}
+	export function openOf(type: TokenType): TokenType {
+		switch (type) {
+			case TokenType.CLOSE_CURLY:
+				return TokenType.OPEN_CURLY;
+			case TokenType.CLOSE_BRACKETS:
+				return TokenType.OPEN_BRACKETS;
+			case TokenType.CLOSE_PARENTHESES:
+				return TokenType.OPEN_PARENTHESES;
+		}
+		return type;
+	}
+	export function closeOf(type: TokenType): TokenType {
+		switch (type) {
+			case TokenType.OPEN_CURLY:
+				return TokenType.CLOSE_CURLY;
+			case TokenType.OPEN_BRACKETS:
+				return TokenType.CLOSE_BRACKETS;
+			case TokenType.OPEN_PARENTHESES:
+				return TokenType.CLOSE_PARENTHESES;
+		}
+		return type;
+	}
+}
+
 export class Token {
 	constructor(public type: TokenType, public value: string | ExpressionNode) { }
 	valueAsExpressionNode(): ExpressionNode {
@@ -87,6 +125,16 @@ export class Token {
 	isStatement(): boolean {
 		switch (this.type) {
 			case TokenType.STATEMENT:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isFunctionCall(): boolean {
+		switch (this.type) {
+			case TokenType.CLOSE_BRACKETS:
+			case TokenType.CLOSE_PARENTHESES:
+			case TokenType.PROPERTY:
 				return true;
 			default:
 				return false;
