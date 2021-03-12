@@ -6,21 +6,17 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('function-call')
 export class FunctionCallNode extends AbstractExpressionNode {
-
 	static fromJSON(node: FunctionCallNode, deserializer: NodeDeserializer): FunctionCallNode {
 		return new FunctionCallNode(deserializer(node.func), node.params.map(param => deserializer(param)));
 	}
-
 	constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}
-
-	get(stack: ScopedStack,) {
-		const funCallBack = this.func.get(stack) as Function;
+	get(stack: ScopedStack, thisContext?: any) {
+		const funCallBack = this.func.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
 		const argArray: any[] = [];
 		this.params.forEach(param => {
 			if (param instanceof SpreadSyntaxNode) {
@@ -36,26 +32,21 @@ export class FunctionCallNode extends AbstractExpressionNode {
 				argArray.push(param.get(stack));
 			}
 		});
-		return funCallBack.call(this.func.getThis?.(stack), ...argArray);
+		return funCallBack.call(thisContext, ...argArray);
 	}
-
 	entry(): string[] {
 		return [...this.func.entry(), ...this.params.flatMap(param => param.entry())];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `${this.func.toString()}(${this.params.map(param => param.toString()).join(', ')})`;
 	}
-
 	toJson(): object {
 		return {
 			func: this.func.toJSON(),
 			params: this.params.map(param => param.toJSON())
 		};
 	}
-
 }

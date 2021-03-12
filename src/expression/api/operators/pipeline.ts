@@ -30,9 +30,8 @@ export class PipelineNode extends AbstractExpressionNode {
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: ScopedStack, thisContext?: any) {
 		const funCallBack = this.func.get(stack) as Function;
-		const thisContext = this.func.getThis?.(stack);
 		return funCallBack.call(thisContext, ...this.argumentList.map(arg => arg.get(stack)));
 	}
 	entry(): string[] {
