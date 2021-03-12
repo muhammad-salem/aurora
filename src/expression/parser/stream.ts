@@ -1,35 +1,76 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { BigIntNode, NumberNode, PropertyNode, RegExpNode, StringNode } from '../api/definition/values.js';
 import { Token, TokenType } from './token.js';
+import {
+	BigIntNode, NumberNode, PropertyNode,
+	RegExpNode, StringNode
+} from '../api/definition/values.js';
 
-export class TokenStream {
-	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
-	static CodePointPattern = /^[0-9a-f]{4}$/i;
+export interface TokenStream {
+	save(): void;
+	restore(): void;
+	next(): Token;
+	getStreamer(expect?: TokenType): TokenStream;
+}
 
-	private pos = 0;
-	private savedPosition = 0;
-	private current: Token;
-	private savedCurrent: Token;
+const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF')) as Token;
 
-	constructor(private expression: string) { }
-
-	private newToken(type: TokenType, value: string | ExpressionNode): Token {
-		return new Token(type, value);
-	}
+export abstract class Streamer implements TokenStream {
+	protected pos = 0;
+	protected savedPosition = 0;
+	protected current: Token;
+	protected savedCurrent: Token;
 
 	save() {
 		this.savedPosition = this.pos;
 		this.savedCurrent = this.current;
 	}
-
 	restore(): void {
 		this.pos = this.savedPosition;
 		this.current = this.savedCurrent;
 	}
+	getStreamer(expect?: TokenType): TokenStream {
+		expect ??= TokenType.EOF;
+		const tokens: Token[] = [];
+		let token: Token;
+		while (true) {
+			token = this.next();
+			tokens.push(token);
+			if (token.type === expect) {
+				break;
+			}
+		}
+		return new TokenStreamer(tokens);
+	}
+
+	abstract next(): Token;
+}
+
+export class TokenStreamer extends Streamer {
+	constructor(private tokens: Token[]) {
+		super();
+	}
+	next(): Token {
+		if (this.pos === this.tokens.length) {
+			return EOFToken;
+		}
+		return this.tokens[this.pos++];
+	}
+}
+
+export class TokenStreamImpl extends Streamer {
+	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
+	static CodePointPattern = /^[0-9a-f]{4}$/i;
+
+	constructor(private expression: string) {
+		super();
+	}
+	private newToken(type: TokenType, value: string | ExpressionNode): Token {
+		return new Token(type, value);
+	}
 
 	next(): Token {
 		if (this.pos >= this.expression.length) {
-			return this.newToken(TokenType.EOF, 'EOF');
+			return EOFToken;
 		}
 		if (this.isWhitespace() || this.isComment()) {
 			return this.next();
@@ -217,7 +258,7 @@ export class TokenStream {
 				return false;
 			}
 			let flags = '';
-			while (TokenStream.REGEXP_FLAGS.indexOf((nextChar = this.expression.charAt(this.pos + 1))) > -1) {
+			while (TokenStreamImpl.REGEXP_FLAGS.indexOf((nextChar = this.expression.charAt(this.pos + 1))) > -1) {
 				flags += nextChar;
 				this.pos++;
 			}
@@ -263,7 +304,7 @@ export class TokenStream {
 				case 'u':
 					// interpret the following 4 characters as the hex of the unicode code point
 					let codePoint = v.substring(index + 1, index + 5);
-					if (!TokenStream.CodePointPattern.test(codePoint)) {
+					if (!TokenStreamImpl.CodePointPattern.test(codePoint)) {
 						throw this.parseError('Illegal escape sequence: \\u' + codePoint);
 					}
 					buffer += String.fromCharCode(parseInt(codePoint, 16));
@@ -763,7 +804,7 @@ export class TokenStream {
 		}
 	}
 
-	getCoordinates() {
+	private getCoordinates() {
 		let line = 0;
 		let column;
 		let newline = -1;
@@ -784,4 +825,14 @@ export class TokenStream {
 		return new Error('parse error [' + coords.line + ':' + coords.column + ']: ' + message);
 	}
 
+}
+
+export function getTokenStream(source: string | Token[]): TokenStream {
+	if (Array.isArray(source)) {
+		return new TokenStreamer(source);
+	}
+	else if (typeof source === 'string') {
+		return new TokenStreamImpl(source);
+	}
+	throw new Error(`Can't build token stream for ${source}`);
 }
