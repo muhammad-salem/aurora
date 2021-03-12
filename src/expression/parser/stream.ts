@@ -5,20 +5,14 @@ import {
 	RegExpNode, StringNode
 } from '../api/definition/values.js';
 
-export interface TokenStream {
-	save(): void;
-	restore(): void;
-	next(): Token;
-	getStreamer(expect?: TokenType): TokenStream;
-}
-
 const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF')) as Token;
 
-export abstract class Streamer implements TokenStream {
+export abstract class TokenStream {
 	protected pos = 0;
 	protected savedPosition = 0;
 	protected current: Token;
 	protected savedCurrent: Token;
+	protected last?: Token;
 
 	save() {
 		this.savedPosition = this.pos;
@@ -27,15 +21,63 @@ export abstract class Streamer implements TokenStream {
 	restore(): void {
 		this.pos = this.savedPosition;
 		this.current = this.savedCurrent;
+		this.last = undefined;
+	}
+	lastToken(): Token | undefined {
+		return this.last;
+	}
+
+	seekTo(expect: TokenType): boolean {
+		let token: Token;
+		while (true) {
+			token = this.next();
+			if (token.type === expect) {
+				return true;
+			}
+			else if (token.type === TokenType.EOF) {
+				return false;
+			}
+		}
 	}
 	getStreamer(expect?: TokenType): TokenStream {
 		expect ??= TokenType.EOF;
+		if (TokenType.isPair(expect)) {
+			return this.getPairStreamer(TokenType.openOf(expect), expect);
+		}
+		return this.getStreamerTo(expect);
+	}
+	private getStreamerTo(expect: TokenType): TokenStream {
 		const tokens: Token[] = [];
 		let token: Token;
 		while (true) {
 			token = this.next();
 			tokens.push(token);
-			if (token.type === expect) {
+			if (token.type === expect || token.type === TokenType.EOF) {
+				break;
+			}
+		}
+		return new TokenStreamer(tokens);
+	}
+	private getPairStreamer(open: TokenType, close: TokenType): TokenStream {
+		// check pair
+		let count = 0;
+		const tokens: Token[] = [];
+		let token: Token;
+		while (true) {
+			token = this.next();
+			tokens.push(token);
+			if (token.type === open) {
+				count++;
+			}
+			else if (token.type === close) {
+				if (count === 0) {
+					break;
+				}
+				else if (count > 0) {
+					count--;
+				}
+			}
+			else if (token.type === TokenType.EOF) {
 				break;
 			}
 		}
@@ -45,7 +87,7 @@ export abstract class Streamer implements TokenStream {
 	abstract next(): Token;
 }
 
-export class TokenStreamer extends Streamer {
+export class TokenStreamer extends TokenStream {
 	constructor(private tokens: Token[]) {
 		super();
 	}
@@ -53,11 +95,12 @@ export class TokenStreamer extends Streamer {
 		if (this.pos === this.tokens.length) {
 			return EOFToken;
 		}
+		this.last = this.tokens[this.pos];
 		return this.tokens[this.pos++];
 	}
 }
 
-export class TokenStreamImpl extends Streamer {
+export class TokenStreamImpl extends TokenStream {
 	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
 	static CodePointPattern = /^[0-9a-f]{4}$/i;
 
@@ -72,6 +115,7 @@ export class TokenStreamImpl extends Streamer {
 		if (this.pos >= this.expression.length) {
 			return EOFToken;
 		}
+		this.last = this.current;
 		if (this.isWhitespace() || this.isComment()) {
 			return this.next();
 		} else if (

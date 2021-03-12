@@ -8,7 +8,7 @@ import { GroupingNode } from '../api/operators/grouping.js';
 import { LogicalAssignmentNode, LogicalNode } from '../api/operators/logical.js';
 import { RelationalNode, ThreeWayComparisonNode } from '../api/operators/relational.js';
 import { BinaryBitwiseNode, BitwiseShiftNode } from '../api/operators/shift.js';
-import { TokenStream } from './stream.js';
+import { getTokenStream, TokenStream } from './stream.js';
 import { Token, TokenType } from './token.js';
 import { ScopeProvider } from '../api/context/provider.js';
 import { TernaryNode } from '../api/operators/ternary.js';
@@ -415,7 +415,7 @@ export class TokenParser {
 
 export class Parser {
 	parse(expression: string) {
-		const stream: TokenStream = new TokenStream(expression);
+		const stream: TokenStream = getTokenStream(expression);
 		const tokens: Token[] = [];
 		let token: Token;
 		while (true) {
@@ -436,8 +436,8 @@ try {
 	const parser = new Parser();
 	let statement: string;
 	// statement = `x.y?.zp[4]`;
-	// statement = `9 + ( 2 * 3 - (5+6) + (4 / 8))`;
-	statement = `for (let index = 0; index < array.length; index++) {const element = array[index];}`;
+	statement = `9 + ( 2 * 3 - (5+6) + (4 / 8))`;
+	// statement = `for (let index = 0; index < array.length; index++) {const element = array[index];}`;
 	// statement = `const iterator of object; index as id; even as isEven;`;
 	// statement = `switch (key) {case 'a': console.log('value'); break; default: break;}`;
 	// statement = `y = true ? 6 : 7`;
@@ -447,6 +447,7 @@ try {
 	Reflect.set(window, 'parser', parser.parse);
 	Reflect.set(window, 'tokens', tokensJS);
 	Reflect.set(window, 'stack', stack);
+	Reflect.set(window, 'getTokenStream', getTokenStream);
 	console.log(tokensJS);
 } catch (error) {
 	console.error(error);
