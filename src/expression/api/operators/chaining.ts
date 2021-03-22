@@ -3,7 +3,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
-export type ChainingType = 'access' | 'computed' | 'function';
+export type ChainingType = 'property' | 'expression' | 'function';
 @Deserializer('chaining')
 export class OptionalChainingNode extends AbstractExpressionNode {
 	static fromJSON(node: OptionalChainingNode, deserializer: NodeDeserializer): OptionalChainingNode {
@@ -22,12 +22,15 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 			return undefined
 		}
 		switch (this.type) {
-			case 'access':
+			case 'property':
 				return this.property.get(stack, object);
-			case 'computed':
+			case 'expression':
 				return object[this.property.get(stack, object)];
 			case 'function':
-				return this.property.get(stack, object);
+				const func = object as Function;
+				// expect property to be a LiteralArrayNode
+				const parameters = this.property.get(stack) as [];
+				return func.call(thisContext, ...parameters);
 		}
 	}
 	getThis(stack: ScopedStack): any {
