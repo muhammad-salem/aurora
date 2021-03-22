@@ -8,6 +8,15 @@ import {
 const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF')) as Token;
 
 export abstract class TokenStream {
+	public static getTokenStream(source: string | Token[]): TokenStream {
+		if (Array.isArray(source)) {
+			return new TokenStreamer(source);
+		}
+		else if (typeof source === 'string') {
+			return new TokenStreamImpl(source);
+		}
+		throw new Error(`Can't build token stream for ${source}`);
+	}
 	protected pos = 0;
 	protected savedPosition = 0;
 	protected current: Token;
@@ -22,6 +31,11 @@ export abstract class TokenStream {
 		this.pos = this.savedPosition;
 		this.current = this.savedCurrent;
 		this.last = undefined;
+	}
+	reset(): void {
+		this.pos = 0;
+		this.savedPosition = 0;
+		this.current = this.savedCurrent = undefined as any;
 	}
 	lastToken(): Token | undefined {
 		return this.last;
@@ -39,6 +53,16 @@ export abstract class TokenStream {
 			}
 		}
 	}
+	getPos(): number {
+		return this.pos;
+	}
+	setPos(pos: number): void {
+		this.pos = pos;
+		this.current = undefined as any;
+	}
+	getSavedPos(): number {
+		return this.savedPosition;
+	}
 	getStreamer(expect?: TokenType): TokenStream {
 		expect ??= TokenType.EOF;
 		if (TokenType.isPair(expect)) {
@@ -51,10 +75,10 @@ export abstract class TokenStream {
 		let token: Token;
 		while (true) {
 			token = this.next();
-			tokens.push(token);
 			if (token.type === expect || token.type === TokenType.EOF) {
 				break;
 			}
+			tokens.push(token);
 		}
 		return new TokenStreamer(tokens);
 	}
@@ -65,7 +89,6 @@ export abstract class TokenStream {
 		let token: Token;
 		while (true) {
 			token = this.next();
-			tokens.push(token);
 			if (token.type === open) {
 				count++;
 			}
@@ -80,8 +103,22 @@ export abstract class TokenStream {
 			else if (token.type === TokenType.EOF) {
 				break;
 			}
+			tokens.push(token);
 		}
 		return new TokenStreamer(tokens);
+	}
+
+	public toTokens(): Token[] {
+		const tokens: Token[] = [];
+		let token: Token;
+		while (true) {
+			token = this.next();
+			if (token.type === TokenType.EOF) {
+				break;
+			}
+			tokens.push(token);
+		}
+		return tokens;
 	}
 
 	abstract next(): Token;
@@ -871,12 +908,3 @@ export class TokenStreamImpl extends TokenStream {
 
 }
 
-export function getTokenStream(source: string | Token[]): TokenStream {
-	if (Array.isArray(source)) {
-		return new TokenStreamer(source);
-	}
-	else if (typeof source === 'string') {
-		return new TokenStreamImpl(source);
-	}
-	throw new Error(`Can't build token stream for ${source}`);
-}
