@@ -1,10 +1,8 @@
-import type { NodeDeserializer } from '../expression.js';
+import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { PropertyNode } from './values.js';
-import { CommaNode } from '../operators/comma.js';
-import { BlockNode } from '../statement/controlflow/block.js';
 
 @Deserializer('function-declaration')
 export class FunctionDeclarationNode extends AbstractExpressionNode {
@@ -13,18 +11,18 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 
 	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
 		return new FunctionDeclarationNode(
-			deserializer(node.parameters) as CommaNode,
-			deserializer(node.statements) as BlockNode,
+			deserializer(node.parameters),
+			deserializer(node.statements),
 			node.isArrow,
 			node.name ? deserializer(node.name) as PropertyNode : void 0
 		);
 	}
 
 	constructor(
-		private parameters: CommaNode,
-		private statements: BlockNode,
+		private parameters: ExpressionNode,
+		private statements: ExpressionNode,
 		private isArrow: boolean = false,
-		private name?: PropertyNode) {
+		private name?: ExpressionNode) {
 		super();
 	}
 
@@ -57,7 +55,6 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	}
 
 	toString(): string {
-
 		if (this.isArrow) {
 			return `${this.parameters.toString()} => {
                 ${this.statements.toString()}
@@ -67,18 +64,15 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
                 ${this.statements.toString()}
             }`;
 		}
-
 	}
 
 	toJson(): object {
 		const func = {
 			parameters: this.parameters.toJSON(),
 			statements: this.statements.toJSON(),
-			isArrow: this.isArrow
+			isArrow: this.isArrow,
+			name: this.name?.toJSON()
 		};
-		if (this.name) {
-			Reflect.set(func, 'name', this.name.toJSON());
-		}
 		return func;
 	}
 
