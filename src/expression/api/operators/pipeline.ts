@@ -25,7 +25,8 @@ export class PipelineNode extends AbstractExpressionNode {
 	private argumentList: ExpressionNode[];
 	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: ExpressionNode[] = [], private index = 0) {
 		super();
-		this.argumentList = this.args.slice().splice(this.index, 0, this.param);
+		this.argumentList = args.slice();
+		this.argumentList.splice(index, 0, param);
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
