@@ -13,70 +13,8 @@ import { Token, TokenType } from './token.js';
 import { ScopeProvider } from '../api/context/provider.js';
 import { TernaryNode } from '../api/operators/ternary.js';
 import { PipelineNode } from '../api/operators/pipeline.js';
-
-// export class CountCoordinate {
-// 	constructor(public start: number, public end: number) { }
-
-// 	get length(): number {
-// 		return this.end - this.start + 1;
-// 	}
-// }
-
-// export class Counter {
-// 	private open = 0;
-// 	private openPos: number[] = [];
-// 	private falseOpen = 0;
-// 	private close = 0;
-// 	private closePos: number[] = [];
-// 	incrementOpened(pos: number) {
-// 		this.open++;
-// 		this.openPos.push(pos);
-// 	}
-// 	incrementClosed(pos: number) {
-// 		this.close++;
-// 		this.closePos.push(pos);
-// 	}
-// 	incrementFalseOpen() {
-// 		this.falseOpen++;
-// 	}
-// 	decrementFalseOpen() {
-// 		this.falseOpen--;
-// 	}
-
-// 	hasFalseOpen(): boolean {
-// 		return this.falseOpen > 0;
-// 	}
-
-// 	isEqual() {
-// 		return this.open === this.close;
-// 	}
-
-// 	isMulti() {
-// 		return this.open > 1;
-// 	}
-
-// 	get length(): number {
-// 		return this.closePos.length;
-// 	}
-
-// 	coordinate(): CountCoordinate[] {
-// 		if (!this.isEqual()) {
-// 			throw new Error('Counter is not equal for open and close count');
-// 		}
-// 		return this.openPos
-// 			.map((pos, index) => new CountCoordinate(pos, this.closePos[this.length - index - 1]))
-// 			.reverse();
-// 	}
-// 	lastCoordinate(): CountCoordinate {
-// 		return new CountCoordinate(this.openPos[this.openPos.length - 1], this.closePos[this.closePos.length - 1]);
-// 	}
-
-// 	removeLastCoordinate() {
-// 		this.openPos.pop();
-// 		this.closePos.pop();
-// 	}
-
-// }
+import { CommaNode } from '../api/operators/comma.js';
+import { FunctionCallNode } from '../api/computing/function.js';
 
 /**
  * operator parser
@@ -110,7 +48,7 @@ export class TokenParser {
 		this.parseTypeof();
 		this.parseVoid();
 		this.parseDelete();
-		this.parseAwait();
+		// this.parseAwait();
 
 		// Exponentiation (**)	right-to-left	… ** …
 		this.parseInfixNodeType(ArithmeticNode);
@@ -232,62 +170,10 @@ export class TokenParser {
 		// }
 	}
 	parseNewWithArgumentList() {
-		// const count = new Counter();
-		// for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
-		// 	if (this.tokens[index].type === TokenType.OPEN_PARENTHESES) {
-		// 		if (this.tokens[index - 1]?.type === TokenType.PROPERTY) { // a function call
-		// 			count.incrementFalseOpen();
-		// 			continue;
-		// 		}
-		// 		count.incrementOpened(index);
-		// 	} else if (this.tokens[index].type === TokenType.CLOSE_PARENTHESES) {
-		// 		if (count.hasFalseOpen()) {
-		// 			count.decrementFalseOpen();
-		// 			continue;
-		// 		}
-		// 		count.incrementClosed(index);
-		// 		const lastCoordinate = count.lastCoordinate();
-		// 		const tokenParser = new TokenParser(this.tokens, lastCoordinate.start + 1, lastCoordinate.end);
-		// 		tokenParser.scan();
-		// 		const temp = new Token(
-		// 			TokenType.EXPRESSION,
-		// 			new GroupingNode(this.tokens[lastCoordinate.start + 1].value as ExpressionNode)
-		// 		);
-		// 		this.tokens.splice(lastCoordinate.start, 3, temp);
-		// 		this.limit -= lastCoordinate.end - lastCoordinate.start;
-		// 		index = lastCoordinate.start;
-		// 		count.removeLastCoordinate();
-		// 	}
-		// }
+
 	}
 	parseFunctionCall() {
-		// const count = new Counter();
-		// for (let index = this.pos; index < Math.min(this.limit, this.tokens.length); index++) {
-		// 	if (this.tokens[index].type === TokenType.OPEN_PARENTHESES) {
-		// 		if (this.tokens[index - 1]?.type === TokenType.PROPERTY) { // a function call
-		// 			count.incrementFalseOpen();
-		// 			continue;
-		// 		}
-		// 		count.incrementOpened(index);
-		// 	} else if (this.tokens[index].type === TokenType.CLOSE_PARENTHESES) {
-		// 		if (count.hasFalseOpen()) {
-		// 			count.decrementFalseOpen();
-		// 			continue;
-		// 		}
-		// 		count.incrementClosed(index);
-		// 		const lastCoordinate = count.lastCoordinate();
-		// 		const tokenParser = new TokenParser(this.tokens, lastCoordinate.start + 1, lastCoordinate.end);
-		// 		tokenParser.scan();
-		// 		const temp = new Token(
-		// 			TokenType.EXPRESSION,
-		// 			new GroupingNode(this.tokens[lastCoordinate.start + 1].value as ExpressionNode)
-		// 		);
-		// 		this.tokens.splice(lastCoordinate.start, 3, temp);
-		// 		this.limit -= lastCoordinate.end - lastCoordinate.start;
-		// 		index = lastCoordinate.start;
-		// 		count.removeLastCoordinate();
-		// 	}
-		// }
+
 	}
 
 	parseOptionalChaining() {
@@ -295,12 +181,6 @@ export class TokenParser {
 			if (this.tokens[index].type === TokenType.OPERATOR && this.tokens[index].value === '?.') {
 				let temp: Token;
 				switch (this.tokens[index + 1].type) {
-					case TokenType.OPEN_PARENTHESES:
-						// function call
-						// not supported yet
-						// CommaNode
-
-						break;
 					case TokenType.OPEN_BRACKETS:
 						// computed property access
 						temp = new Token(
@@ -325,6 +205,20 @@ export class TokenParser {
 						)
 						this.tokens.splice(index - 1, 3, temp);
 						break;
+					case TokenType.EXPRESSION:
+						// function access
+						if (this.tokens[index + 1].value instanceof FunctionCallNode) {
+							temp = new Token(
+								TokenType.EXPRESSION,
+								new OptionalChainingNode(
+									this.tokens[index - 1].value as ExpressionNode,
+									this.tokens[index + 1].value as ExpressionNode,
+									'function'
+								)
+							)
+							this.tokens.splice(index - 1, 3, temp);
+						}
+						break;
 				}
 			}
 		}
@@ -344,7 +238,7 @@ export class TokenParser {
 	parseTypeof() { }
 	parseVoid() { }
 	parseDelete() { }
-	parseAwait() { }
+	// parseAwait() { }
 
 	parsePipeline() {
 		for (let index = 0; index < this.tokens.length; index++) {
@@ -352,13 +246,31 @@ export class TokenParser {
 				if ('|>' === this.tokens[index].value) {
 					const param = this.tokens[index - 1].value as ExpressionNode;
 					const func = this.tokens[index + 1].value as ExpressionNode;
-					let args: ExpressionNode[], paramterIndex: number;
-					if (this.tokens[index + 2]?.value === ':') {
-						paramterIndex = 0;
-					} else if (this.tokens[index + 2]?.type === TokenType.COMMA) {
-
-					} else if (this.tokens[index + 2]?.type === TokenType.OPEN_PARENTHESES) {
-
+					if (this.tokens[index + 2]?.value === ':'
+						|| this.tokens[index + 2]?.type === TokenType.OPEN_PARENTHESES) {
+						const args: ExpressionNode[] = [];
+						let paramterIndex = 0;
+						let pointer = index + 3;
+						for (; pointer < this.tokens.length; pointer++) {
+							if (!this.tokens[pointer]
+								|| this.tokens[pointer]?.type === TokenType.EOF
+								|| this.tokens[pointer]?.type === TokenType.SEMICOLON
+								|| this.tokens[pointer]?.type === TokenType.CLOSE_PARENTHESES) {
+								break;
+							}
+							if (this.tokens[pointer].value === '?') {
+								paramterIndex = args.length;
+								continue;
+							} else if (
+								this.tokens[pointer].value === ':'
+								|| this.tokens[pointer]?.type === TokenType.COMMA) {
+								continue;
+							}
+							args.push(this.tokens[pointer].value as ExpressionNode);
+						}
+						const ternary = new Token(TokenType.EXPRESSION, new PipelineNode(param, func, args, paramterIndex));
+						this.tokens.splice(index - 1, pointer - index, ternary);
+						index -= 2;
 					} else {
 						const ternary = new Token(TokenType.EXPRESSION, new PipelineNode(param, func));
 						this.tokens.splice(index - 1, 3, ternary);
@@ -391,7 +303,29 @@ export class TokenParser {
 
 	// parseYield(){}
 	// parseYieldAstr(){}
-	parseCommaSequence() { }
+	parseCommaSequence() {
+		for (let index = 0; index < this.tokens.length; index++) {
+			if (this.tokens[index].type === TokenType.COMMA) {
+				const expressions: ExpressionNode[] = [];
+				const start = index - 1;
+				expressions.push(this.tokens[start].value as ExpressionNode);
+				for (++index; index < this.tokens.length; index++) {
+					if (this.tokens[index].type === TokenType.COMMA) {
+						continue;
+					}
+					if (this.tokens[index].type === TokenType.SEMICOLON ||
+						this.tokens[index].type === TokenType.EOF) {
+						break;
+					}
+					expressions.push(this.tokens[index].value as ExpressionNode);
+				}
+				const ternary = new Token(TokenType.EXPRESSION, new CommaNode(expressions));
+
+				this.tokens.splice(start, (expressions.length * 2) - 1, ternary);
+				index = start;
+			}
+		}
+	}
 
 	private parseInfixNodeType(nodeType: NodeExpressionClass<ExpressionNode>): void {
 		for (const op of nodeType.KEYWORDS!) {
@@ -444,7 +378,11 @@ try {
 
 	// statement = `((x.y.z[4]['abc']))`;
 	// statement = `x?.y.z.r = y + d`;
-	statement = `x.y > 8 ? (a = b + c): (a = b + (9 |> Math.trunc))`;
+	// statement = `x.y > 8 ? (a = b + c): (a = b + (9 |> Math.trunc))`;
+	// statement = `x |> max:6:7:?:55`;
+	// statement = `x |> max(6, 7, ?, 55)`;
+	// statement = `x.y = 6, v.g = 9, df.gh = -44`;
+	statement = `x.y.d?.dd(3,4)`;
 
 	const tokensJS = parser.parse(statement);
 	const stack = ScopeProvider.for({});
