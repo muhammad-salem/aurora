@@ -1,6 +1,6 @@
 import type { ExpressionNode, NodeExpressionClass } from '../api/expression.js';
 import { ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
-import { ArithmeticNode } from '../api/operators/arithmetic.js';
+import { ArithmeticNode, PostfixNode, PrefixNode } from '../api/operators/arithmetic.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { OptionalChainingNode } from '../api/operators/chaining.js';
 import { EqualityNode } from '../api/operators/equality.js';
@@ -15,6 +15,7 @@ import { TernaryNode } from '../api/operators/ternary.js';
 import { PipelineNode } from '../api/operators/pipeline.js';
 import { CommaNode } from '../api/operators/comma.js';
 import { FunctionCallNode } from '../api/computing/function.js';
+import { LiteralUnaryNode, UnaryNode } from '../api/operators/unary.js';
 
 /**
  * operator parser
@@ -36,22 +37,14 @@ export class TokenParser {
 
 		this.parseNewWithoutArgumentList();
 
-		this.parsePostfixIncrement();
-		this.parsePostfixDecrement();
-
-		this.parseLogicalNOT();
-		this.parseBitwiseNOT();
-		this.parseUnaryPlus();
-		this.parseUnaryNegation();
-		this.parsePrefixIncrement();
-		this.parsePrefixDecrement();
-		this.parseTypeof();
-		this.parseVoid();
-		this.parseDelete();
-		// this.parseAwait();
+		this.parsePostfixIncrementDecrement();
+		this.parseUnary();
+		this.parsePrefixIncrementDecrement();
+		this.parseLiteralUnary();
 
 		// Exponentiation (**)	right-to-left	… ** …
 		this.parseInfixNodeType(ArithmeticNode);
+		this.parseArithmeticUnary();
 
 		this.parseInfixNodeType(BitwiseShiftNode);
 		this.parseInfixNodeType(ThreeWayComparisonNode);
@@ -226,19 +219,129 @@ export class TokenParser {
 
 	parseNewWithoutArgumentList() { }
 
-	parsePostfixIncrement() { }
-	parsePostfixDecrement() { }
+	parsePostfixIncrementDecrement() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				switch (this.tokens[index].value) {
+					case '++':
+					case '--':
+						if (this.tokens[index - 1].type === TokenType.EXPRESSION ||
+							this.tokens[index - 1].type === TokenType.PROPERTY) {
+							// check of is postfix
+							if ((this.tokens[index].index! - this.tokens[index - 1].index!) === 2) {
+								const postfix = new Token(TokenType.EXPRESSION,
+									new PostfixNode(
+										this.tokens[index].value as '++' | '--',
+										this.tokens[index - 1].value as ExpressionNode
+									)
+								);
+								this.tokens.splice(index - 1, 2, postfix);
+							}
+						}
+						break;
+					default:
+				}
+			}
 
-	parseLogicalNOT() { }
-	parseBitwiseNOT() { }
-	parseUnaryPlus() { }
-	parseUnaryNegation() { }
-	parsePrefixIncrement() { }
-	parsePrefixDecrement() { }
-	parseTypeof() { }
-	parseVoid() { }
-	parseDelete() { }
-	// parseAwait() { }
+		}
+	}
+
+	parseUnary() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				switch (this.tokens[index].value) {
+					case '!':
+					case '~':
+						const unary = new Token(TokenType.EXPRESSION,
+							new UnaryNode(
+								this.tokens[index].value as string,
+								this.tokens[index + 1].value as ExpressionNode
+							)
+						);
+						this.tokens.splice(index, 2, unary);
+						break;
+					default:
+				}
+			}
+
+		}
+	}
+
+	parseArithmeticUnary() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				switch (this.tokens[index].value) {
+					case '+':
+					case '-':
+						if (this.tokens[index + 1].type === TokenType.EXPRESSION ||
+							this.tokens[index + 1].type === TokenType.PROPERTY) {
+							// check of is prefix
+							if ((this.tokens[index + 1].index! - this.tokens[index].index!) === 1) {
+								const literalUnary = new Token(TokenType.EXPRESSION,
+									new UnaryNode(
+										this.tokens[index].value as string,
+										this.tokens[index + 1].value as ExpressionNode
+									)
+								);
+								this.tokens.splice(index, 2, literalUnary);
+							}
+						}
+						break;
+					default:
+				}
+			}
+
+		}
+	}
+
+	parsePrefixIncrementDecrement() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				switch (this.tokens[index].value) {
+					case '++':
+					case '--':
+						if (this.tokens[index + 1].type === TokenType.EXPRESSION ||
+							this.tokens[index + 1].type === TokenType.PROPERTY) {
+							// check of is prefix
+							if ((this.tokens[index + 1].index! - this.tokens[index].index!) === 2) {
+								const prefix = new Token(TokenType.EXPRESSION,
+									new PrefixNode(
+										this.tokens[index].value as '++' | '--',
+										this.tokens[index + 1].value as ExpressionNode
+									)
+								);
+								this.tokens.splice(index, 2, prefix);
+							}
+						}
+						break;
+					default:
+				}
+			}
+
+		}
+	}
+	parseLiteralUnary() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				switch (this.tokens[index].value) {
+					case 'typeof':
+					case 'void':
+					case 'delete':
+					case 'await':
+						const literalUnary = new Token(TokenType.EXPRESSION,
+							new LiteralUnaryNode(
+								this.tokens[index].value as string,
+								this.tokens[index + 1].value as ExpressionNode
+							)
+						);
+						this.tokens.splice(index, 2, literalUnary);
+						break;
+					default:
+				}
+			}
+
+		}
+	}
 
 	parsePipeline() {
 		for (let index = 0; index < this.tokens.length; index++) {
@@ -382,15 +485,17 @@ try {
 	// statement = `x |> max:6:7:?:55`;
 	// statement = `x |> max(6, 7, ?, 55)`;
 	// statement = `x.y = 6, v.g = 9, df.gh = -44`;
-	statement = `x.y.d?.dd(3,4)`;
+	// statement = `delete x.y.v`;
+	// statement = `x.y.d?.dd(3,4)`;
+	statement = `x+ ++t +y`;
 
+	console.log(statement);
 	const tokensJS = parser.parse(statement);
 	const stack = ScopeProvider.for({});
 	Reflect.set(window, 'parser', parser.parse);
 	Reflect.set(window, 'tokens', tokensJS);
 	Reflect.set(window, 'stack', stack);
 	Reflect.set(window, 'getTokenStream', TokenStream.getTokenStream);
-	console.log(statement);
 	console.log(tokensJS[0].value);
 } catch (error) {
 	console.error(error);
