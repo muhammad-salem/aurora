@@ -126,41 +126,6 @@ export class TokenParser {
 				stream.setPos(start);
 			}
 		}
-		// const count = new Counter();
-		// for (let index = 0; index < this.tokens.length; index++) {
-		// 	// object[property_name] syntax, the property_name is just a string or Symbol.
-		// 	// object?.[property_name]
-		// 	if (this.tokens[index].type === TokenType.OPEN_BRACKETS) {
-		// 		if (this.tokens[index - 1]?.value !== '?.') {
-		// 			count.incrementFalseOpen();		 // array
-		// 			continue;
-		// 		}
-		// 		count.incrementOpened(index);
-		// 	} else if (this.tokens[index].type === TokenType.CLOSE_BRACKETS) {
-		// 		if (count.hasFalseOpen()) {
-		// 			count.decrementFalseOpen();
-		// 			continue;
-		// 		}
-		// 		count.incrementClosed(index);
-		// 		const lastCoordinate = count.lastCoordinate();
-		// 		const tokenParser = new TokenParser(this.tokens, lastCoordinate.start + 1, lastCoordinate.end);
-		// 		tokenParser.scan();
-		// 		if (this.tokens[lastCoordinate.start - 1].value === '?.') { // chaining
-		// 			// will be parsed in chaining op
-		// 			this.limit -= lastCoordinate.end - lastCoordinate.start;
-		// 			index = lastCoordinate.start - 1;
-		// 		} else {
-		// 			const left = this.tokens[lastCoordinate.start - 1].value as ExpressionNode;
-		// 			const right = this.tokens[lastCoordinate.start + 1].value as ExpressionNode;
-
-		// 			const temp = new Token(TokenType.EXPRESSION, new ComputedMemberAccessNode(left, right!));
-		// 			this.tokens.splice(index, 4, temp);
-		// 			this.limit -= 3;
-		// 			index = lastCoordinate.start;
-		// 			count.removeLastCoordinate();
-		// 		}
-		// 	}
-		// }
 	}
 	parseNewWithArgumentList() {
 
@@ -225,8 +190,7 @@ export class TokenParser {
 				switch (this.tokens[index].value) {
 					case '++':
 					case '--':
-						if (this.tokens[index - 1].type === TokenType.EXPRESSION ||
-							this.tokens[index - 1].type === TokenType.PROPERTY) {
+						if (this.tokens[index - 1].isPropOrExp()) {
 							// check of is postfix
 							if ((this.tokens[index].index! - this.tokens[index - 1].index!) === 2) {
 								const postfix = new Token(TokenType.EXPRESSION,
@@ -273,8 +237,7 @@ export class TokenParser {
 				switch (this.tokens[index].value) {
 					case '+':
 					case '-':
-						if (this.tokens[index + 1].type === TokenType.EXPRESSION ||
-							this.tokens[index + 1].type === TokenType.PROPERTY) {
+						if (this.tokens[index + 1].isPropOrExp()) {
 							// check of is prefix
 							if ((this.tokens[index + 1].index! - this.tokens[index].index!) === 1) {
 								const literalUnary = new Token(TokenType.EXPRESSION,
@@ -300,8 +263,7 @@ export class TokenParser {
 				switch (this.tokens[index].value) {
 					case '++':
 					case '--':
-						if (this.tokens[index + 1].type === TokenType.EXPRESSION ||
-							this.tokens[index + 1].type === TokenType.PROPERTY) {
+						if (this.tokens[index + 1].isPropOrExp()) {
 							// check of is prefix
 							if ((this.tokens[index + 1].index! - this.tokens[index].index!) === 2) {
 								const prefix = new Token(TokenType.EXPRESSION,
@@ -355,10 +317,7 @@ export class TokenParser {
 						let paramterIndex = 0;
 						let pointer = index + 3;
 						for (; pointer < this.tokens.length; pointer++) {
-							if (!this.tokens[pointer]
-								|| this.tokens[pointer]?.type === TokenType.EOF
-								|| this.tokens[pointer]?.type === TokenType.SEMICOLON
-								|| this.tokens[pointer]?.type === TokenType.CLOSE_PARENTHESES) {
+							if (!this.tokens[pointer] || this.tokens[pointer].isEofSmCP()) {
 								break;
 							}
 							if (this.tokens[pointer].value === '?') {
@@ -437,9 +396,11 @@ export class TokenParser {
 	}
 
 	private parseInfixNode(op: string, nodeType: NodeExpressionClass<ExpressionNode>): void {
-		for (let index = 0; index < this.tokens.length; index++) {
+		for (let index = 1; index < this.tokens.length - 1; index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
-				if (op === this.tokens[index].value) {
+				if (this.tokens[index].value === op &&
+					this.tokens[index - 1].isPropOrExp() &&
+					this.tokens[index + 1].isPropOrExp()) {
 					const temp = new Token(
 						TokenType.EXPRESSION,
 						new nodeType(
@@ -487,7 +448,8 @@ try {
 	// statement = `x.y = 6, v.g = 9, df.gh = -44`;
 	// statement = `delete x.y.v`;
 	// statement = `x.y.d?.dd(3,4)`;
-	statement = `x+ ++t +y`;
+	// statement = `x+ ++t +y`;
+	statement = `+y`;
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
