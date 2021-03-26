@@ -30,7 +30,6 @@ export function generateTokens(str: string, tokenParser: RegExp): (NodeExpressio
 		// console.log(args);
 
 		if (num) {
-			console.log(num);
 			token = new ValueNode(+num);
 		} else if (str) {
 			token = new ValueNode(str);
