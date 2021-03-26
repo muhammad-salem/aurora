@@ -72,7 +72,7 @@ export namespace TokenType {
 }
 
 export class Token {
-	constructor(public type: TokenType, public value: string | ExpressionNode) { }
+	constructor(public type: TokenType, public value: string | ExpressionNode, public index?: number) { }
 	valueAsExpression(): ExpressionNode {
 		if (this.type !== TokenType.EXPRESSION) {
 			throw new Error(`can't convert to ExpressionNode`);

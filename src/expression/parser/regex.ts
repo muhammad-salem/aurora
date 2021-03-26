@@ -110,34 +110,36 @@ export class RegexParser {
 				operator,               /** index 9  */
 				statement,              /** index 10 */
 				property,               /** index 11 */
-				//,             		/** index 12 */
+				whitespace,             /** index 12 */
+				index,             		/** index 13 */
+				template,				/** index 14 */
 			] = args;
 
 			// console.log(args);
 			if (number) {
-				token = new Token(TokenType.NUMBER, new NumberNode(number));
+				token = new Token(TokenType.NUMBER, new NumberNode(number), index);
 			} else if (string) {
-				token = new Token(TokenType.STRING, new StringNode(string));
+				token = new Token(TokenType.STRING, new StringNode(string), index);
 			} else if (boolean) {
 				if (TRUE === boolean) {
-					token = new Token(TokenType.BOOLEAN, TrueNode);
+					token = new Token(TokenType.BOOLEAN, TrueNode, index);
 				} else {
-					token = new Token(TokenType.BOOLEAN, FalseNode);
+					token = new Token(TokenType.BOOLEAN, FalseNode, index);
 				}
 			} else if (nullish) {
 				if (NULL === nullish) {
-					token = new Token(TokenType.NULLISH, NullNode);
+					token = new Token(TokenType.NULLISH, NullNode, index);
 				} else {
-					token = new Token(TokenType.NULLISH, UndefinedNode);
+					token = new Token(TokenType.NULLISH, UndefinedNode, index);
 				}
 			} else if (parentheses) {
-				token = new Token(parentheses === '(' ? TokenType.OPEN_PARENTHESES : TokenType.CLOSE_PARENTHESES, parentheses);
+				token = new Token(parentheses === '(' ? TokenType.OPEN_PARENTHESES : TokenType.CLOSE_PARENTHESES, parentheses, index);
 			} else if (brackets) {
-				token = new Token(brackets === '[' ? TokenType.OPEN_BRACKETS : TokenType.CLOSE_BRACKETS, brackets);
+				token = new Token(brackets === '[' ? TokenType.OPEN_BRACKETS : TokenType.CLOSE_BRACKETS, brackets, index);
 			} else if (curly) {
-				token = new Token(curly === '{' ? TokenType.OPEN_CURLY : TokenType.CLOSE_CURLY, curly);
+				token = new Token(curly === '{' ? TokenType.OPEN_CURLY : TokenType.CLOSE_CURLY, curly, index);
 			} else if (commaAndSemicolon) {
-				token = new Token(commaAndSemicolon === ',' ? TokenType.COMMA : TokenType.SEMICOLON, commaAndSemicolon);
+				token = new Token(commaAndSemicolon === ',' ? TokenType.COMMA : TokenType.SEMICOLON, commaAndSemicolon, index);
 			} else if (slash) {
 				// test value of slash
 				// case regex
@@ -145,19 +147,19 @@ export class RegexParser {
 				// case operator
 				// disable baed on index and length;
 				// TO:DO
-				token = new Token(TokenType.OPERATOR, slash);
+				token = new Token(TokenType.OPERATOR, slash, index);
 			} else if (operator) {
-				token = new Token(TokenType.OPERATOR, operator);
+				token = new Token(TokenType.OPERATOR, operator, index);
 			} else if (statement) {
-				token = new Token(TokenType.STATEMENT, statement);
+				token = new Token(TokenType.STATEMENT, statement, index);
 			} else if (property) {
 				// check for bigint
 				switch (property) {
 					case 'this':
-						token = new Token(TokenType.PROPERTY, ThisNode);
+						token = new Token(TokenType.PROPERTY, ThisNode, index);
 						break;
 					case 'Symbol':
-						token = new Token(TokenType.PROPERTY, SymbolNode);
+						token = new Token(TokenType.PROPERTY, SymbolNode, index);
 						break;
 					case 'n':
 						if (lastTokenIndex >= 0
@@ -169,7 +171,7 @@ export class RegexParser {
 							return substring;
 						}
 					default:
-						token = new Token(TokenType.PROPERTY, new PropertyNode(property));
+						token = new Token(TokenType.PROPERTY, new PropertyNode(property), index);
 						break;
 				}
 			} else {
@@ -180,7 +182,7 @@ export class RegexParser {
 			lastTokenIndex++;
 			return substring;
 		});
-		tokens.push(new Token(TokenType.EOF, TokenType.EOF.toString()));
+		tokens.push(new Token(TokenType.EOF, TokenType.EOF.toString(), -1));
 		return tokens;
 	}
 
