@@ -140,6 +140,25 @@ export class Token {
 				return false;
 		}
 	}
+	isPropOrExp(): boolean {
+		switch (this.type) {
+			case TokenType.PROPERTY:
+			case TokenType.EXPRESSION:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isEofSmCP(): boolean {
+		switch (this.type) {
+			case TokenType.EOF:
+			case TokenType.SEMICOLON:
+			case TokenType.CLOSE_PARENTHESES:
+				return true;
+			default:
+				return false;
+		}
+	}
 	toString(): string {
 		return this.type + ': ' + String(this.value);
 	}
