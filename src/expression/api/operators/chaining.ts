@@ -9,12 +9,12 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 	static fromJSON(node: OptionalChainingNode, deserializer: NodeDeserializer): OptionalChainingNode {
 		return new OptionalChainingNode(
 			deserializer(node.optional),
-			(Array.isArray(node.property)) ? node.property.map(deserializer) : deserializer(node.property),
+			deserializer(node.property),
 			node.type
 		);
 	}
 	static KEYWORDS = ['?.'];
-	constructor(private optional: ExpressionNode, private property: ExpressionNode | ExpressionNode[], private type: ChainingType) {
+	constructor(private optional: ExpressionNode, private property: ExpressionNode, private type: ChainingType) {
 		super();
 	}
 	set(stack: ScopedStack, value: any) {
@@ -31,17 +31,14 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 			case 'expression':
 				return object[(<ExpressionNode>this.property).get(stack, object)];
 			case 'function':
-				const func = object as Function;
-				// expect property to be a ExpressionNode[]
-				const parameters = (<ExpressionNode[]>this.property).map(prop => prop.get(stack));
-				return func.call(thisContext, ...parameters);
+				return (<ExpressionNode>this.property).get(stack, object);
 		}
 	}
 	getThis(stack: ScopedStack): any {
 		return this.optional.get(stack);
 	}
 	entry(): string[] {
-		return [...this.optional.entry(), ...(Array.isArray(this.property)) ? this.property.flatMap(param => param.entry()) : this.property.entry()];
+		return [...this.optional.entry(), ...this.property.entry()];
 	}
 	event(parent?: string): string[] {
 		return [];
@@ -52,7 +49,7 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 	toJson(): object {
 		return {
 			optional: this.optional.toJSON(),
-			property: (Array.isArray(this.property)) ? this.property.map(param => param.toJSON()) : this.property.toJSON(),
+			property: this.property.toJSON(),
 			type: this.type
 		};
 	}
