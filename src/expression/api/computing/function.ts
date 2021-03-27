@@ -12,6 +12,12 @@ export class FunctionCallNode extends AbstractExpressionNode {
 	constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
 		super();
 	}
+	getFunc() {
+		return this.func;
+	}
+	getParams() {
+		return this.params;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}

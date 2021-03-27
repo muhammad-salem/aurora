@@ -5,7 +5,6 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('shift')
 export class BitwiseShiftNode extends InfixExpressionNode {
-
 	static fromJSON(node: BitwiseShiftNode, deserializer: NodeDeserializer): BitwiseShiftNode {
 		return new BitwiseShiftNode(
 			node.op,
@@ -13,33 +12,26 @@ export class BitwiseShiftNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
-
 	static Evaluations: EvaluateType = {
 		// Bitwise shift operators
 		'<<': (evalNode: EvaluateNode) => { return evalNode.left << evalNode.right; },
 		'>>': (evalNode: EvaluateNode) => { return evalNode.left >> evalNode.right; },
 		'>>>': (evalNode: EvaluateNode) => { return evalNode.left >>> evalNode.right; },
 	};
-
 	static KEYWORDS = ['<<', '>>', '>>>'];
-
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(BitwiseShiftNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
-
 	evalNode(evalNode: EvaluateNode) {
 		return BitwiseShiftNode.Evaluations[this.op](evalNode);
 	}
-
 }
 
 @Deserializer('binary')
 export class BinaryBitwiseNode extends InfixExpressionNode {
-
 	static fromJSON(node: BinaryBitwiseNode, deserializer: NodeDeserializer): BinaryBitwiseNode {
 		return new BinaryBitwiseNode(
 			node.op,
@@ -47,26 +39,20 @@ export class BinaryBitwiseNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
-
 	static Evaluations: EvaluateType = {
 		// Binary bitwise operators
 		'&': (evalNode: EvaluateNode) => { return evalNode.left & evalNode.right; },
 		'^': (evalNode: EvaluateNode) => { return evalNode.left ^ evalNode.right; },
 		'|': (evalNode: EvaluateNode) => { return evalNode.left | evalNode.right; },
 	};
-
 	static KEYWORDS = ['&', '^', '|'];
-
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(BinaryBitwiseNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
-
 	evalNode(evalNode: EvaluateNode) {
 		return BinaryBitwiseNode.Evaluations[this.op](evalNode);
 	}
-
 }

@@ -28,6 +28,18 @@ export class PipelineNode extends AbstractExpressionNode {
 		this.argumentList = args.slice();
 		this.argumentList.splice(index, 0, param);
 	}
+	getParam() {
+		return this.param;
+	}
+	getFunc() {
+		return this.func;
+	}
+	getArgs() {
+		return this.args;
+	}
+	getIndex() {
+		return this.index;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
 	}

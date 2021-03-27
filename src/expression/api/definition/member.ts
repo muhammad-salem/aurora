@@ -7,6 +7,12 @@ export abstract class AccessNode extends AbstractExpressionNode {
 	constructor(protected left: ExpressionNode, protected right: ExpressionNode) {
 		super();
 	}
+	getLeft() {
+		return this.left;
+	}
+	getRight() {
+		return this.right;
+	}
 	abstract get(stack: ScopedStack, thisContext?: any): any;
 	abstract toString(): string;
 	abstract event(parent?: string): string[];
@@ -23,7 +29,6 @@ export abstract class AccessNode extends AbstractExpressionNode {
 		};
 	}
 }
-
 
 @Deserializer('member-access')
 export class MemberAccessNode extends AccessNode {

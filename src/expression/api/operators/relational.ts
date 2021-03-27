@@ -5,7 +5,6 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('relational')
 export class RelationalNode extends InfixExpressionNode {
-
 	static fromJSON(node: RelationalNode, deserializer: NodeDeserializer): RelationalNode {
 		return new RelationalNode(
 			node.op,
@@ -13,7 +12,6 @@ export class RelationalNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
 	static Evaluations: EvaluateType = {
 		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
 		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
@@ -24,16 +22,13 @@ export class RelationalNode extends InfixExpressionNode {
 		'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
 		'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; },
 	};
-
 	static KEYWORDS = ['<', '<=', '>', '>=', 'in', 'instanceof'];
-
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(RelationalNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
-
 	evalNode(evalNode: EvaluateNode) {
 		return RelationalNode.Evaluations[this.op](evalNode);
 	}
@@ -41,7 +36,6 @@ export class RelationalNode extends InfixExpressionNode {
 
 @Deserializer('spaceship')
 export class ThreeWayComparisonNode extends InfixExpressionNode {
-
 	static fromJSON(node: ThreeWayComparisonNode, deserializer: NodeDeserializer): ThreeWayComparisonNode {
 		return new ThreeWayComparisonNode(
 			node.op,
@@ -49,7 +43,6 @@ export class ThreeWayComparisonNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
 	static Evaluations: EvaluateType = {
 		'<=>': (evalNode: EvaluateNode) => {
 			if ((evalNode.left === null || evalNode.right === null) || (typeof evalNode.left != typeof evalNode.right)) {
@@ -67,16 +60,13 @@ export class ThreeWayComparisonNode extends InfixExpressionNode {
 			}
 		}
 	};
-
 	static KEYWORDS = ['<=>'];
-
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(ThreeWayComparisonNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
-
 	evalNode(evalNode: EvaluateNode) {
 		return ThreeWayComparisonNode.Evaluations[this.op](evalNode);
 	}

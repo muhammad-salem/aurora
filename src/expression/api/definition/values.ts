@@ -11,6 +11,9 @@ export class PropertyNode extends AbstractExpressionNode {
 	constructor(private property: string | number) {
 		super();
 	}
+	getProperty() {
+		return this.property;
+	}
 	set(stack: ScopedStack, value: any) {
 		return stack.set(this.property, value) ? value : void 0;
 	}
@@ -33,6 +36,9 @@ export class PropertyNode extends AbstractExpressionNode {
 
 export abstract class AbstractValueNode<T> extends AbstractExpressionNode {
 	protected value: T;
+	getValue() {
+		return this.value;
+	}
 	set() {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
@@ -69,6 +75,9 @@ export class StringNode extends AbstractValueNode<string> {
 			this.quote = firstChar;
 			this.value = `"${value.substring(1, value.length - 1)}"`;
 		}
+	}
+	getQuote() {
+		return this.quote;
 	}
 	toString(): string {
 		return `${this.quote}${this.value}${this.quote}`;

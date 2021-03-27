@@ -17,6 +17,15 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 	constructor(private optional: ExpressionNode, private property: ExpressionNode, private type: ChainingType) {
 		super();
 	}
+	getOptional() {
+		return this.optional;
+	}
+	getProperty() {
+		return this.property;
+	}
+	getType() {
+		return this.type;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`OptionalChainingNode.#set() has no implementation.`)
 	}

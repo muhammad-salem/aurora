@@ -20,6 +20,12 @@ export class UnaryNode extends AbstractExpressionNode {
 	constructor(private op: string, private node: ExpressionNode) {
 		super();
 	}
+	getOperator() {
+		return this.op;
+	}
+	getNode() {
+		return this.node;
+	}
 	set(stack: ScopedStack, value: any) {
 		return this.node.set(stack, value);
 	}
@@ -53,6 +59,9 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 	static KEYWORDS = ['typeof', 'void', 'delete', 'await'];
 	constructor(private op: string, private node: ExpressionNode) {
 		super();
+	}
+	getNode() {
+		return this.node;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error('LiteralUnaryNode#set() has no implementation.');

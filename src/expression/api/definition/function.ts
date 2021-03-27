@@ -6,9 +6,7 @@ import { PropertyNode } from './values.js';
 
 @Deserializer('function-declaration')
 export class FunctionDeclarationNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['function', '=>'];
-
 	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
 		return new FunctionDeclarationNode(
 			deserializer(node.parameters),
@@ -17,7 +15,6 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			node.name ? deserializer(node.name) as PropertyNode : void 0
 		);
 	}
-
 	constructor(
 		private parameters: ExpressionNode,
 		private statements: ExpressionNode,
@@ -25,11 +22,21 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		private name?: ExpressionNode) {
 		super();
 	}
-
+	getParameters() {
+		return this.parameters;
+	}
+	getStatements() {
+		return this.statements;
+	}
+	getIsArrow() {
+		return this.isArrow;
+	}
+	getName() {
+		return this.name;
+	}
 	set(stack: ScopedStack, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
-
 	get(stack: ScopedStack) {
 		const func = (...args: any[]) => {
 			const funcStack = stack.newStack();
@@ -41,7 +48,6 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		}
 		return func;
 	}
-
 	entry(): string[] {
 		return [
 			...this.parameters.entry(),
@@ -49,11 +55,9 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			// ...this.funcBody.flatMap(line => line.entry())
 		];
 	}
-
 	event(): string[] {
 		return this.statements.event();
 	}
-
 	toString(): string {
 		if (this.isArrow) {
 			return `${this.parameters.toString()} => {
@@ -65,7 +69,6 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
             }`;
 		}
 	}
-
 	toJson(): object {
 		const func = {
 			parameters: this.parameters.toJSON(),
@@ -75,5 +78,4 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		};
 		return func;
 	}
-
 }

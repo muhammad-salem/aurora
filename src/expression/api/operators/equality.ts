@@ -5,7 +5,6 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('equal')
 export class EqualityNode extends InfixExpressionNode {
-
 	static fromJSON(node: EqualityNode, deserializer: NodeDeserializer): EqualityNode {
 		return new EqualityNode(
 			node.op,
@@ -13,8 +12,6 @@ export class EqualityNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
-
 	static Evaluations: EvaluateType = {
 		'==': (evalNode: EvaluateNode) => { return evalNode.left == evalNode.right; },
 		'!=': (evalNode: EvaluateNode) => { return evalNode.left != evalNode.right; },
@@ -22,18 +19,14 @@ export class EqualityNode extends InfixExpressionNode {
 		'===': (evalNode: EvaluateNode) => { return evalNode.left === evalNode.right; },
 		'!==': (evalNode: EvaluateNode) => { return evalNode.left !== evalNode.right; },
 	};
-
 	static KEYWORDS = ['==', '!=', '===', '!=='];
-
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(EqualityNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
 		}
 		super(op, left, right);
 	}
-
 	evalNode(evalNode: EvaluateNode) {
 		return EqualityNode.Evaluations[this.op](evalNode);
 	}
-
 }

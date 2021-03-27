@@ -6,7 +6,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('arithmetic')
 export class ArithmeticNode extends InfixExpressionNode {
-
 	static fromJSON(node: ArithmeticNode, deserializer: NodeDeserializer): ArithmeticNode {
 		return new ArithmeticNode(
 			node.op,
@@ -14,7 +13,6 @@ export class ArithmeticNode extends InfixExpressionNode {
 			deserializer(node.right)
 		);
 	}
-
 	static Evaluations: EvaluateType = {
 		'**': (evalNode: EvaluateNode) => { return evalNode.left ** evalNode.right; },
 
@@ -40,12 +38,17 @@ export class ArithmeticNode extends InfixExpressionNode {
 	}
 }
 
-
 export abstract class IncrementDecrementNode implements ExpressionNode {
 	constructor(protected op: '++' | '--', protected node: ExpressionNode) { }
 	abstract getClass(): NodeExpressionClass<IncrementDecrementNode>;
 	abstract evaluate(num: { value: number }): number;
 	abstract toString(): string;
+	getOperator() {
+		return this.op;
+	}
+	getNode() {
+		return this.node;
+	}
 	set(stack: ScopedStack, value: any) {
 		this.node.set(stack, value);
 	}

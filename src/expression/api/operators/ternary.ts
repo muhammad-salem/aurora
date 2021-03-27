@@ -5,7 +5,6 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ternary')
 export class TernaryNode extends AbstractExpressionNode {
-
 	static fromJSON(node: TernaryNode, deserializer: NodeDeserializer): TernaryNode {
 		return new TernaryNode(
 			deserializer(node.logical),
@@ -13,33 +12,34 @@ export class TernaryNode extends AbstractExpressionNode {
 			deserializer(node.ifFalse)
 		);
 	}
-
 	static KEYWORDS = ['?', ':'];
-
 	constructor(private logical: ExpressionNode, private ifTrue: ExpressionNode, private ifFalse: ExpressionNode) {
 		super();
 	}
-
+	getLogical() {
+		return this.logical;
+	}
+	getIfTrue() {
+		return this.ifTrue;
+	}
+	getIfFalse() {
+		return this.ifFalse;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`TernaryNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		return this.logical.get(stack) ? this.ifFalse.get(stack) : this.ifTrue.get(stack);
 	}
-
 	entry(): string[] {
 		return [...this.logical.entry(), ...this.ifTrue.entry(), ...this.ifFalse.entry()];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString() {
 		return `${this.logical.toString()} (${this.ifTrue.toString()}):(${this.ifFalse.toString()})`;
 	}
-
 	toJson(): object {
 		return {
 			logical: this.logical.toJSON(),
@@ -47,5 +47,4 @@ export class TernaryNode extends AbstractExpressionNode {
 			ifFalse: this.ifFalse.toJSON()
 		};
 	}
-
 }

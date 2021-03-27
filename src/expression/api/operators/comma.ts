@@ -6,15 +6,15 @@ import { RestParameterNode } from '../definition/rest.js';
 
 @Deserializer('comma')
 export class CommaNode extends AbstractExpressionNode {
-
 	static fromJSON(node: CommaNode, deserializer: NodeDeserializer): CommaNode {
 		return new CommaNode(node.expressions.map(expression => deserializer(expression as any)));
 	}
-
 	constructor(private expressions: ExpressionNode[]) {
 		super();
 	}
-
+	getExpressions() {
+		return this.expressions;
+	}
 	set(stack: ScopedStack, values: any[]) {
 		for (let index = 0; index < this.expressions.length; index++) {
 			const expr = this.expressions[index];
@@ -25,28 +25,22 @@ export class CommaNode extends AbstractExpressionNode {
 			stack.set(expr.get(stack), values[index]);
 		}
 	}
-
 	get(stack: ScopedStack) {
 		return this.expressions.map(expr => expr.get(stack)).pop();
 	}
-
 	entry(): string[] {
 		return [...this.expressions.flatMap(expression => expression.entry())];
 	}
-
 	event(parent?: string): string[] {
 		return [...this.expressions.flatMap(expression => expression.event())];
 	}
-
 	toString() {
 		const isObject = true;
 		return this.expressions.map(key => key.toString()).join(', ');
 	}
-
 	toJson(): object {
 		return {
 			expressions: this.expressions.map(expression => expression.toJSON())
 		};
 	}
-
 }

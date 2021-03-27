@@ -6,19 +6,21 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('new')
 export class NewNode extends AbstractExpressionNode {
-
 	static fromJSON(node: NewNode, deserializer: NodeDeserializer): NewNode {
 		return new NewNode(deserializer(node.className), node.params?.map(deserializer));
 	}
-
 	constructor(private className: ExpressionNode, private params?: ExpressionNode[]) {
 		super();
 	}
-
+	getClassName() {
+		return this.className;
+	}
+	getParams() {
+		return this.params;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`NewNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack,) {
 		const classRef = this.className.get(stack);
 		const argArray: any[] = [];
@@ -44,25 +46,20 @@ export class NewNode extends AbstractExpressionNode {
 		}
 		return value;
 	}
-
 	entry(): string[] {
 		return [...this.className.entry()].concat(this.params?.flatMap(param => param.entry()) || []);
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		const parameters = this.params ? `(${this.params?.map(param => param.toString()).join(', ')})` : '';
 		return `new ${this.className.toString()}${parameters}`;
 	}
-
 	toJson(): object {
 		return {
 			func: this.className.toJSON(),
 			params: this.params?.map(param => param.toJSON())
 		};
 	}
-
 }

@@ -23,11 +23,18 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 }
 
 export abstract class InfixExpressionNode extends AbstractExpressionNode {
-
 	constructor(protected op: string, protected left: ExpressionNode, protected right: ExpressionNode) {
 		super();
 	}
-
+	getOperator() {
+		return this.op;
+	}
+	getLeft() {
+		return this.left;
+	}
+	getRight() {
+		return this.right;
+	}
 	set(context: object, value: any) {
 		throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
 	}
@@ -38,9 +45,7 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 		};
 		return this.evalNode(evalNode);
 	}
-
 	abstract evalNode(evalNode: EvaluateNode): any;
-
 	entry(): string[] {
 		return [...this.left.entry(), ...this.right.entry()];
 	}

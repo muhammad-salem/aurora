@@ -12,37 +12,31 @@ import { Deserializer } from '../deserialize/deserialize.js';
  */
 @Deserializer('grouping')
 export class GroupingNode extends AbstractExpressionNode {
-
 	static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
 		return new GroupingNode(deserializer(node.node as any));
 	}
-
 	constructor(private node: ExpressionNode) {
 		super();
 	}
-
+	getNode() {
+		return this.node;
+	}
 	set(stack: ScopedStack, value: any) {
 		this.node.set(stack, value);
 	}
-
 	get(stack: ScopedStack,) {
 		return this.node.get(stack);
 	}
-
 	entry(): string[] {
 		return this.node.entry();
 	}
-
 	event(parent?: string): string[] {
 		return this.node.event(parent);
 	}
-
 	toString(): string {
 		return `(${this.node.toString()})`;
 	}
-
 	toJson(): object {
 		return { node: this.node.toJSON() };
 	}
-
 }

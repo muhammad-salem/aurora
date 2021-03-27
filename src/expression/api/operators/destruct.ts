@@ -5,7 +5,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('destruct')
 export class DestructuringAssignmentNode extends AbstractExpressionNode {
-
 	static fromJSON(node: DestructuringAssignmentNode, deserializer: NodeDeserializer): DestructuringAssignmentNode {
 		return new DestructuringAssignmentNode(
 			node.keys.map(key => deserializer(key)),
@@ -13,11 +12,18 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 			node.restKey ? deserializer(node.restKey) : void 0
 		);
 	}
-
 	constructor(private keys: ExpressionNode[], private arrayOrObject: ExpressionNode, private restKey?: ExpressionNode) {
 		super();
 	}
-
+	getKeys() {
+		return this.keys;
+	}
+	getArrayOrObject() {
+		return this.arrayOrObject;
+	}
+	getRestKey() {
+		return this.restKey;
+	}
 	set(stack: ScopedStack) {
 		const value = this.arrayOrObject.get(stack);
 		if (Array.isArray(value)) {
@@ -63,24 +69,19 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 		}
 		return value;
 	}
-
 	get(stack: ScopedStack) {
 		return this.set(stack);
 	}
-
 	entry(): string[] {
 		return [...this.keys.flatMap(key => key.entry()), ...(this.restKey?.entry() || [])];
 	}
-
 	event(parent?: string): string[] {
 		return [...this.keys.flatMap(key => key.event()), ...(this.restKey?.event() || [])];
 	}
-
 	toString() {
 		const isObject = true;
 		return `{${this.keys.map(key => key.toString()).join(', ')}${this.restKey ? ', ...' : ''}${this.restKey?.toString()}} = ${this.arrayOrObject.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			keys: this.keys.map(key => key.toJSON()),
@@ -88,5 +89,4 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 			restKey: this.restKey?.toJSON()
 		};
 	}
-
 }

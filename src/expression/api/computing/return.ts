@@ -3,10 +3,11 @@ import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-
-
 export class ReturnValue {
 	constructor(public value: any) { }
+	getValue() {
+		return this.value;
+	}
 }
 
 /**
@@ -15,38 +16,32 @@ export class ReturnValue {
  */
 @Deserializer('return')
 export class ReturnNode extends AbstractExpressionNode {
-
 	static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
 		return new ReturnNode(node.node ? deserializer(node.node) : void 0);
 	}
-
 	constructor(private node?: ExpressionNode) {
 		super();
 	}
-
+	getNode() {
+		return this.node;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ReturnNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		return new ReturnValue(this.node?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}
-
 	entry(): string[] {
 		return this.node?.entry() || [];
 	}
-
 	event(parent?: string): string[] {
 		return this.node?.event(parent) || [];
 	}
-
 	toString(): string {
 		return `return ${this.node?.toString()}`;
 	}
-
 	toJson(): object {
 		return { func: this.node?.toJSON() };
 	}
-
 }

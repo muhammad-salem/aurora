@@ -7,5 +7,3 @@ export interface EvaluateNode {
 }
 
 export type EvaluateCallback = (evalNode: EvaluateNode) => any;
-
-export type OperatorPosition = 'PREFIX' | 'INFIX' | 'POSTFIX';
