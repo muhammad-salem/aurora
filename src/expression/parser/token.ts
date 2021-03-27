@@ -74,14 +74,14 @@ export namespace TokenType {
 export class Token {
 	constructor(public type: TokenType, public value: string | ExpressionNode, public index?: number) { }
 	valueAsExpression(): ExpressionNode {
-		if (this.type !== TokenType.EXPRESSION) {
-			throw new Error(`can't convert to ExpressionNode`);
+		if (!this.isPropOrExp()) {
+			throw new Error(`token value is not ExpressionNode`);
 		}
 		return this.value as ExpressionNode;
 	}
 	valueAsString(): string {
 		if (typeof this.value !== 'string') {
-			throw new Error(`can't convert to string`);
+			throw new Error(`token value is not string`);
 		}
 		return this.value as string;
 	}
