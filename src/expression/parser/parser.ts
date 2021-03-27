@@ -68,21 +68,22 @@ export class TokenParser {
 		let open: boolean;
 		const stream = TokenStream.getTokenStream(this.tokens);
 		while (open = stream.seekTo(TokenType.OPEN_PARENTHESES)) {
-			if (open && !stream.lastToken()?.isFunctionCall()) {
-				const start = stream.getPos() - 1;
-				const group = stream.getStreamer(TokenType.CLOSE_PARENTHESES);
-				const end = stream.getPos();
 
-				const tokenParser = new TokenParser(group.toTokens());
-				tokenParser.scan();
-				const expression = tokenParser.tokens[0].value as ExpressionNode;
-				const groupExpression = new Token(
-					TokenType.EXPRESSION,
-					new GroupingNode(expression)
-				);
-				this.tokens.splice(start, end - start, groupExpression);
-				stream.setPos(start);
+			const start = stream.getPos() - 1;
+			const group = stream.getStreamer(TokenType.CLOSE_PARENTHESES);
+			const end = stream.getPos();
+
+			const tokenParser = new TokenParser(group.toTokens());
+			tokenParser.scan();
+			let expression: ExpressionNode;
+			if (tokenParser.tokens.length > 0) {
+				expression = tokenParser.tokens[0].value as ExpressionNode;
+			} else {
+				expression = undefined as unknown as ExpressionNode;
 			}
+			const groupExpression = new Token(TokenType.EXPRESSION, new GroupingNode(expression));
+			this.tokens.splice(start, end - start, groupExpression);
+			stream.setPos(start);
 		}
 	}
 	parseMemberAccess(): void {
@@ -135,28 +136,52 @@ export class TokenParser {
 						}
 						classNameTokens.push(this.tokens[end]);
 					}
-					if (classNameTokens.length === 1 && classNameTokens[0].type === TokenType.EXPRESSION) {
+					if (classNameTokens.length === 1 && classNameTokens[0].isPropOrExp()) {
 						className = classNameTokens[0].valueAsExpression();
 					} else {
 						const classNameParser = new TokenParser(classNameTokens);
 						classNameParser.scan();
 						className = classNameParser.tokens[0].valueAsExpression();
 					}
-					if (this.tokens[end].type === TokenType.EXPRESSION && this.tokens[end].value instanceof GroupingNode) {
-						const params = ((this.tokens[end].value as GroupingNode).getNode() as CommaNode).getExpressions();
+					if (this.tokens[end]?.type === TokenType.EXPRESSION && this.tokens[end].value instanceof GroupingNode) {
+						const node = (this.tokens[end].value as GroupingNode).getNode();
+						let params: ExpressionNode[] | undefined;
+						if (node instanceof CommaNode) {
+							params = node.getExpressions();
+						} else if (node) {
+							params = [node];
+						}
 						const newNode = new Token(TokenType.EXPRESSION, new NewNode(className, params));
-						this.tokens.splice(start, end - start, newNode);
+						this.tokens.splice(start, end - start + 1, newNode);
 					} else {
 						// without arguments
 						const newNode = new Token(TokenType.EXPRESSION, new NewNode(className));
-						this.tokens.splice(start, end - start, newNode);
+						this.tokens.splice(start, end - start + 1, newNode);
 					}
 				}
 			}
 		}
 	}
 	parseFunctionCall() {
-
+		for (let index = this.tokens.length - 1; index >= 0; index--) {
+			if (index > 0 && this.tokens[index].value instanceof GroupingNode) {
+				if (this.tokens[index - 1].isPropOrExp()) {
+					const func = this.tokens[index - 1].valueAsExpression();
+					const node = (this.tokens[index].value as GroupingNode).getNode();
+					let params: ExpressionNode[];
+					if (node instanceof CommaNode) {
+						params = node.getExpressions();
+					} else if (node) {
+						params = [node];
+					} else {
+						params = [];
+					}
+					const funcNode = new Token(TokenType.EXPRESSION, new FunctionCallNode(func, params));
+					this.tokens.splice(index - 1, 2, funcNode);
+					index--;
+				}
+			}
+		}
 	}
 	parseOptionalChaining() {
 		for (let index = 0; index < this.tokens.length; index++) {
@@ -458,7 +483,8 @@ try {
 	// statement = `x.y.d?.dd(3,4)`;
 	// statement = `x + ++t +y`;
 	// statement = `+y`;
-	statement = `new x.y(y,u,6,4, '5555')`;
+	// statement = `new x(y,u,6,4, '5555')`;
+	statement = `new className(x, u(x?y:u??g), t||v)`;
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
