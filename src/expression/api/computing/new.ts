@@ -8,7 +8,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export class NewNode extends AbstractExpressionNode {
 
 	static fromJSON(node: NewNode, deserializer: NodeDeserializer): NewNode {
-		return new NewNode(deserializer(node.className), node.params?.map(param => deserializer(param)));
+		return new NewNode(deserializer(node.className), node.params?.map(deserializer));
 	}
 
 	constructor(private className: ExpressionNode, private params?: ExpressionNode[]) {
