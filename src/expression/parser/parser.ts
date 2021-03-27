@@ -21,9 +21,11 @@ import { NewNode } from '../api/computing/new.js';
 /**
  * operator parser
  */
-export class TokenParser {
+export class OperatorParser {
 	constructor(private tokens: Token[]) { }
-
+	getTokenValue(index: number) {
+		return this.tokens[index].valueAsExpression();
+	}
 	/**
 	 * Operator precedence
 	 * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence#table
@@ -73,11 +75,11 @@ export class TokenParser {
 			const group = stream.getStreamer(TokenType.CLOSE_PARENTHESES);
 			const end = stream.getPos();
 
-			const tokenParser = new TokenParser(group.toTokens());
+			const tokenParser = new OperatorParser(group.toTokens());
 			tokenParser.scan();
 			let expression: ExpressionNode;
 			if (tokenParser.tokens.length > 0) {
-				expression = tokenParser.tokens[0].value as ExpressionNode;
+				expression = tokenParser.getTokenValue(0);
 			} else {
 				expression = undefined as unknown as ExpressionNode;
 			}
@@ -110,12 +112,12 @@ export class TokenParser {
 				const propertyName = stream.getStreamer(TokenType.CLOSE_BRACKETS);
 				const end = stream.getPos();
 
-				const tokenParser = new TokenParser(propertyName.toTokens());
+				const tokenParser = new OperatorParser(propertyName.toTokens());
 				tokenParser.scan();
-				const property = tokenParser.tokens[0].value as ExpressionNode;
+				const property = tokenParser.getTokenValue(0);
 				const propertyExpression = new Token(
 					TokenType.EXPRESSION,
-					new ComputedMemberAccessNode(this.tokens[start].value as ExpressionNode, property)
+					new ComputedMemberAccessNode(this.getTokenValue(start), property)
 				);
 				this.tokens.splice(start, end - start, propertyExpression);
 				stream.setPos(start);
@@ -139,7 +141,7 @@ export class TokenParser {
 					if (classNameTokens.length === 1 && classNameTokens[0].isPropOrExp()) {
 						className = classNameTokens[0].valueAsExpression();
 					} else {
-						const classNameParser = new TokenParser(classNameTokens);
+						const classNameParser = new OperatorParser(classNameTokens);
 						classNameParser.scan();
 						className = classNameParser.tokens[0].valueAsExpression();
 					}
@@ -166,8 +168,8 @@ export class TokenParser {
 		for (let index = this.tokens.length - 1; index >= 0; index--) {
 			if (index > 0 && this.tokens[index].value instanceof GroupingNode) {
 				if (this.tokens[index - 1].isPropOrExp()) {
-					const func = this.tokens[index - 1].valueAsExpression();
-					const node = (this.tokens[index].value as GroupingNode).getNode();
+					const func = this.getTokenValue(index - 1);
+					const node = (this.getTokenValue(index) as GroupingNode).getNode();
 					let params: ExpressionNode[];
 					if (node instanceof CommaNode) {
 						params = node.getExpressions();
@@ -193,8 +195,8 @@ export class TokenParser {
 						temp = new Token(
 							TokenType.EXPRESSION,
 							new OptionalChainingNode(
-								this.tokens[index - 1].value as ExpressionNode,
-								this.tokens[index + 2].value as ExpressionNode,
+								this.getTokenValue(index - 1),
+								this.getTokenValue(index + 2),
 								'expression'
 							)
 						)
@@ -205,8 +207,8 @@ export class TokenParser {
 						temp = new Token(
 							TokenType.EXPRESSION,
 							new OptionalChainingNode(
-								this.tokens[index - 1].value as ExpressionNode,
-								this.tokens[index + 1].value as ExpressionNode,
+								this.getTokenValue(index - 1),
+								this.getTokenValue(index + 1),
 								'property'
 							)
 						)
@@ -218,8 +220,8 @@ export class TokenParser {
 							temp = new Token(
 								TokenType.EXPRESSION,
 								new OptionalChainingNode(
-									this.tokens[index - 1].value as ExpressionNode,
-									this.tokens[index + 1].value as ExpressionNode,
+									this.getTokenValue(index - 1),
+									this.getTokenValue(index + 1),
 									'function'
 								)
 							)
@@ -242,7 +244,7 @@ export class TokenParser {
 								const postfix = new Token(TokenType.EXPRESSION,
 									new PostfixNode(
 										this.tokens[index].value as '++' | '--',
-										this.tokens[index - 1].value as ExpressionNode
+										this.getTokenValue(index - 1)
 									)
 								);
 								this.tokens.splice(index - 1, 2, postfix);
@@ -264,7 +266,7 @@ export class TokenParser {
 						const unary = new Token(TokenType.EXPRESSION,
 							new UnaryNode(
 								this.tokens[index].value as string,
-								this.tokens[index + 1].value as ExpressionNode
+								this.getTokenValue(index + 1)
 							)
 						);
 						this.tokens.splice(index, 2, unary);
@@ -287,7 +289,7 @@ export class TokenParser {
 								const literalUnary = new Token(TokenType.EXPRESSION,
 									new UnaryNode(
 										this.tokens[index].value as string,
-										this.tokens[index + 1].value as ExpressionNode
+										this.getTokenValue(index + 1)
 									)
 								);
 								this.tokens.splice(index, 2, literalUnary);
@@ -312,7 +314,7 @@ export class TokenParser {
 								const prefix = new Token(TokenType.EXPRESSION,
 									new PrefixNode(
 										this.tokens[index].value as '++' | '--',
-										this.tokens[index + 1].value as ExpressionNode
+										this.getTokenValue(index + 1)
 									)
 								);
 								this.tokens.splice(index, 2, prefix);
@@ -336,7 +338,7 @@ export class TokenParser {
 						const literalUnary = new Token(TokenType.EXPRESSION,
 							new LiteralUnaryNode(
 								this.tokens[index].value as string,
-								this.tokens[index + 1].value as ExpressionNode
+								this.getTokenValue(index + 1)
 							)
 						);
 						this.tokens.splice(index, 2, literalUnary);
@@ -370,7 +372,7 @@ export class TokenParser {
 								|| this.tokens[pointer]?.type === TokenType.COMMA) {
 								continue;
 							}
-							args.push(this.tokens[pointer].value as ExpressionNode);
+							args.push(this.getTokenValue(pointer));
 						}
 						const ternary = new Token(TokenType.EXPRESSION, new PipelineNode(param, func, args, paramterIndex));
 						this.tokens.splice(index - 1, pointer - index, ternary);
@@ -388,12 +390,12 @@ export class TokenParser {
 		for (let index = 0; index < this.tokens.length; index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
 				if ('?' === this.tokens[index].value) {
-					const logical = this.tokens[index - 1].value as ExpressionNode;
-					const ifTrue = this.tokens[index + 1].value as ExpressionNode;
+					const logical = this.getTokenValue(index - 1);
+					const ifTrue = this.getTokenValue(index + 1);
 					if (this.tokens[index + 2].value !== ':') {
 						throw new Error(`not ternary operator`);
 					}
-					const ifFalse = this.tokens[index + 3].value as ExpressionNode;
+					const ifFalse = this.getTokenValue(index + 3);
 					const ternary = new Token(
 						TokenType.EXPRESSION,
 						new TernaryNode(logical, ifTrue, ifFalse)
@@ -420,10 +422,9 @@ export class TokenParser {
 						this.tokens[index].type === TokenType.EOF) {
 						break;
 					}
-					expressions.push(this.tokens[index].value as ExpressionNode);
+					expressions.push(this.getTokenValue(index));
 				}
 				const ternary = new Token(TokenType.EXPRESSION, new CommaNode(expressions));
-
 				this.tokens.splice(start, (expressions.length * 2) - 1, ternary);
 				index = start;
 			}
@@ -439,8 +440,8 @@ export class TokenParser {
 						TokenType.EXPRESSION,
 						new nodeType(
 							this.tokens[index].value as string,
-							this.tokens[index - 1].value as ExpressionNode,
-							this.tokens[index + 1].value as ExpressionNode
+							this.getTokenValue(index - 1),
+							this.getTokenValue(index + 1)
 						)
 					);
 					this.tokens.splice(index - 1, 3, temp);
@@ -456,7 +457,7 @@ export class Parser {
 		const stream: TokenStream = TokenStream.getTokenStream(expression);
 		const tokens: Token[] = stream.toTokens();
 		tokens.forEach(t => console.log(t));
-		const tokenParser = new TokenParser(tokens);
+		const tokenParser = new OperatorParser(tokens);
 		tokenParser.scan();
 		return tokens;
 	}
@@ -484,7 +485,7 @@ try {
 	// statement = `x + ++t +y`;
 	// statement = `+y`;
 	// statement = `new x(y,u,6,4, '5555')`;
-	statement = `new className(x, u(x?y:u??g), t||v)`;
+	statement = `new className(x, u(x?(y = 89):u??g), t||v)`;
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
