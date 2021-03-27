@@ -16,6 +16,7 @@ import { PipelineNode } from '../api/operators/pipeline.js';
 import { CommaNode } from '../api/operators/comma.js';
 import { FunctionCallNode } from '../api/computing/function.js';
 import { LiteralUnaryNode, UnaryNode } from '../api/operators/unary.js';
+import { NewNode } from '../api/computing/new.js';
 
 /**
  * operator parser
@@ -31,11 +32,9 @@ export class TokenParser {
 		this.parseGrouping();
 		this.parseMemberAccess();
 		this.parseComputedMemberAccess();
-		this.parseNewWithArgumentList();
+		this.parseNewOperator();
 		this.parseFunctionCall();
 		this.parseOptionalChaining();
-
-		this.parseNewWithoutArgumentList();
 
 		this.parsePostfixIncrementDecrement();
 		this.parseUnary();
@@ -52,11 +51,9 @@ export class TokenParser {
 		this.parseInfixNodeType(EqualityNode);
 
 		this.parseInfixNodeType(BinaryBitwiseNode);
-
 		this.parseInfixNodeType(LogicalNode);
 
 		this.parsePipeline();
-
 		this.parseTernary();
 
 
@@ -67,7 +64,6 @@ export class TokenParser {
 		// this.parseYieldAstr();
 		this.parseCommaSequence();
 	}
-	scanStatements() { }
 	parseGrouping(): void {
 		let open: boolean;
 		const stream = TokenStream.getTokenStream(this.tokens);
@@ -88,7 +84,6 @@ export class TokenParser {
 				stream.setPos(start);
 			}
 		}
-		// stream.reset();
 	}
 	parseMemberAccess(): void {
 		for (let index = 1; index < this.tokens.length - 1; index++) {
@@ -105,7 +100,6 @@ export class TokenParser {
 			}
 		}
 	}
-
 	parseComputedMemberAccess(): void {
 		let open: boolean;
 		const stream = TokenStream.getTokenStream(this.tokens);
@@ -127,13 +121,43 @@ export class TokenParser {
 			}
 		}
 	}
-	parseNewWithArgumentList() {
-
+	parseNewOperator() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].type === TokenType.OPERATOR) {
+				if (this.tokens[index].value === 'new') {
+					let className: ExpressionNode;
+					const start = index;
+					let end: number;
+					const classNameTokens: Token[] = [];
+					for (end = start + 1; end < this.tokens.length; end++) {
+						if (this.tokens[end].isEofSmCP() || this.tokens[end].value instanceof GroupingNode) {
+							break;
+						}
+						classNameTokens.push(this.tokens[end]);
+					}
+					if (classNameTokens.length === 1 && classNameTokens[0].type === TokenType.EXPRESSION) {
+						className = classNameTokens[0].valueAsExpression();
+					} else {
+						const classNameParser = new TokenParser(classNameTokens);
+						classNameParser.scan();
+						className = classNameParser.tokens[0].valueAsExpression();
+					}
+					if (this.tokens[end].type === TokenType.EXPRESSION && this.tokens[end].value instanceof GroupingNode) {
+						const params = ((this.tokens[end].value as GroupingNode).getNode() as CommaNode).getExpressions();
+						const newNode = new Token(TokenType.EXPRESSION, new NewNode(className, params));
+						this.tokens.splice(start, end - start, newNode);
+					} else {
+						// without arguments
+						const newNode = new Token(TokenType.EXPRESSION, new NewNode(className));
+						this.tokens.splice(start, end - start, newNode);
+					}
+				}
+			}
+		}
 	}
 	parseFunctionCall() {
 
 	}
-
 	parseOptionalChaining() {
 		for (let index = 0; index < this.tokens.length; index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR && this.tokens[index].value === '?.') {
@@ -181,9 +205,6 @@ export class TokenParser {
 			}
 		}
 	}
-
-	parseNewWithoutArgumentList() { }
-
 	parsePostfixIncrementDecrement() {
 		for (let index = this.tokens.length - 2; index >= 0; index--) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
@@ -209,7 +230,6 @@ export class TokenParser {
 
 		}
 	}
-
 	parseUnary() {
 		for (let index = this.tokens.length - 2; index >= 0; index--) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
@@ -230,7 +250,6 @@ export class TokenParser {
 
 		}
 	}
-
 	parseArithmeticUnary() {
 		for (let index = this.tokens.length - 2; index >= 0; index--) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
@@ -256,7 +275,6 @@ export class TokenParser {
 
 		}
 	}
-
 	parsePrefixIncrementDecrement() {
 		for (let index = this.tokens.length - 2; index >= 0; index--) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
@@ -304,7 +322,6 @@ export class TokenParser {
 
 		}
 	}
-
 	parsePipeline() {
 		for (let index = 0; index < this.tokens.length; index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
@@ -362,7 +379,6 @@ export class TokenParser {
 			}
 		}
 	}
-
 	// parseYield(){}
 	// parseYieldAstr(){}
 	parseCommaSequence() {
@@ -388,23 +404,16 @@ export class TokenParser {
 			}
 		}
 	}
-
 	private parseInfixNodeType(nodeType: NodeExpressionClass<ExpressionNode>): void {
-		for (const op of nodeType.KEYWORDS!) {
-			this.parseInfixNode(op, nodeType);
-		}
-	}
-
-	private parseInfixNode(op: string, nodeType: NodeExpressionClass<ExpressionNode>): void {
 		for (let index = 1; index < this.tokens.length - 1; index++) {
 			if (this.tokens[index].type === TokenType.OPERATOR) {
-				if (this.tokens[index].value === op &&
+				if (nodeType.KEYWORDS!.includes(this.tokens[index].value as string) &&
 					this.tokens[index - 1].isPropOrExp() &&
 					this.tokens[index + 1].isPropOrExp()) {
 					const temp = new Token(
 						TokenType.EXPRESSION,
 						new nodeType(
-							op,
+							this.tokens[index].value as string,
 							this.tokens[index - 1].value as ExpressionNode,
 							this.tokens[index + 1].value as ExpressionNode
 						)
@@ -415,7 +424,6 @@ export class TokenParser {
 			}
 		}
 	}
-
 }
 
 export class Parser {
@@ -448,8 +456,9 @@ try {
 	// statement = `x.y = 6, v.g = 9, df.gh = -44`;
 	// statement = `delete x.y.v`;
 	// statement = `x.y.d?.dd(3,4)`;
-	// statement = `x+ ++t +y`;
-	statement = `+y`;
+	// statement = `x + ++t +y`;
+	// statement = `+y`;
+	statement = `new x.y(y,u,6,4, '5555')`;
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
