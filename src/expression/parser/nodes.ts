@@ -12,9 +12,6 @@ import { PipelineNode } from '../api/operators/pipeline.js';
 import { CommaNode } from '../api/operators/comma.js';
 
 export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): InfixExpressionNode {
-	// const right = tokens.pop()!.getExpressionNode();
-	// const op = tokens.pop()!.asString();
-	// const left = tokens.pop()!.getExpressionNode();
 	switch (op) {
 		case '**':
 		case '*':
