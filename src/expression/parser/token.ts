@@ -142,6 +142,15 @@ export class Token {
 	}
 	isPropOrExp(): boolean {
 		switch (this.type) {
+			case TokenType.STRING:
+			case TokenType.NUMBER:
+			case TokenType.BOOLEAN:
+			case TokenType.NULLISH:
+			case TokenType.REGEXP:
+			case TokenType.BIGINT:
+			case TokenType.PROPERTY:
+			case TokenType.OBJECT:
+			case TokenType.ARRAY:
 			case TokenType.PROPERTY:
 			case TokenType.EXPRESSION:
 				return true;
