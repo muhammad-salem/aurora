@@ -47,6 +47,26 @@ export namespace TokenType {
 				return false;
 		}
 	}
+	export function isOpenPair(type: TokenType): boolean {
+		switch (type) {
+			case TokenType.OPEN_PARENTHESES:
+			case TokenType.OPEN_BRACKETS:
+			case TokenType.OPEN_CURLY:
+				return true;
+			default:
+				return false;
+		}
+	}
+	export function isClosePair(type: TokenType): boolean {
+		switch (type) {
+			case TokenType.CLOSE_CURLY:
+			case TokenType.CLOSE_BRACKETS:
+			case TokenType.CLOSE_PARENTHESES:
+				return true;
+			default:
+				return false;
+		}
+	}
 	export function openOf(type: TokenType): TokenType {
 		switch (type) {
 			case TokenType.CLOSE_CURLY:
@@ -73,6 +93,15 @@ export namespace TokenType {
 
 export class Token {
 	constructor(public type: TokenType, public value: string | ExpressionNode, public index?: number) { }
+	isEqual(type: TokenType, value: string | ExpressionNode) {
+		return this.type === type && this.value === value;
+	}
+	isTypeOf(type: TokenType) {
+		return this.type === type;
+	}
+	isValueOf(value: string | ExpressionNode) {
+		return this.value === value;
+	}
 	valueAsExpression(): ExpressionNode {
 		if (!this.isPropOrExp()) {
 			throw new Error(`token value is not ExpressionNode`);
