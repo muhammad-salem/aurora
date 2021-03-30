@@ -40,7 +40,21 @@ export abstract class TokenStream {
 	lastToken(): Token | undefined {
 		return this.last;
 	}
-
+	currentToken() {
+		return this.current;
+	}
+	seekByValue(expect: TokenType, keywords: string[]) {
+		let token: Token;
+		while (true) {
+			token = this.next();
+			if (token.type === expect && keywords.includes(token.value as string)) {
+				return true;
+			}
+			else if (token.type === TokenType.EOF) {
+				return false;
+			}
+		}
+	}
 	seekTo(expect: TokenType): boolean {
 		let token: Token;
 		while (true) {
@@ -65,7 +79,7 @@ export abstract class TokenStream {
 	}
 	getStreamer(expect?: TokenType): TokenStream {
 		expect ??= TokenType.EOF;
-		if (TokenType.isPair(expect)) {
+		if (TokenType.isClosePair(expect)) {
 			return this.getPairStreamer(TokenType.openOf(expect), expect);
 		}
 		return this.getStreamerTo(expect);
@@ -132,8 +146,8 @@ export class TokenStreamer extends TokenStream {
 		if (this.pos === this.tokens.length) {
 			return EOFToken;
 		}
-		this.last = this.tokens[this.pos];
-		return this.tokens[this.pos++];
+		this.last = this.current;
+		return this.current = this.tokens[this.pos++];
 	}
 }
 
@@ -876,7 +890,7 @@ export class TokenStreamImpl extends TokenStream {
 			case 'w':
 				if (/while[\s\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(TokenType.STATEMENT, 'while', this.pos);
-					this.pos += 6;
+					this.pos += 5;
 					return true;
 				}
 				return false;
