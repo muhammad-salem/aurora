@@ -12,9 +12,7 @@ import { ReturnValue } from '../../computing/return.js';
  */
 @Deserializer('for')
 export class ForNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['for'];
-
 	static fromJSON(node: ForNode, deserializer: NodeDeserializer): ForNode {
 		return new ForNode(
 			deserializer(node.statement),
@@ -23,19 +21,15 @@ export class ForNode extends AbstractExpressionNode {
 			node.finalExpression && deserializer(node.finalExpression)
 		);
 	}
-
-
 	constructor(private statement: ExpressionNode,
 		private initialization?: ExpressionNode,
 		private condition?: ExpressionNode,
 		private finalExpression?: ExpressionNode) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		stack = stack.newStack();
 		for (this.initialization?.get(stack); this.condition?.get(stack) || true; this.finalExpression?.get(stack)) {
@@ -54,19 +48,15 @@ export class ForNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `for (${this.initialization?.toString()};${this.condition?.toString()};${this.initialization?.toString()}) ${this.statement.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			statement: this.statement.toJSON(),
@@ -75,14 +65,11 @@ export class ForNode extends AbstractExpressionNode {
 			finalExpression: this.finalExpression?.toJSON(),
 		};
 	}
-
 }
 
 @Deserializer('for-of')
 export class ForOfNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['for', 'of'];
-
 	static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
 		return new ForOfNode(
 			deserializer(node.variable),
@@ -90,19 +77,15 @@ export class ForOfNode extends AbstractExpressionNode {
 			deserializer(node.statement)
 		);
 	}
-
-
 	// variable of iterable
 	constructor(private variable: ExpressionNode,
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		const iterable = <any[]>this.iterable.get(stack);
 		for (const iterator of iterable) {
@@ -123,19 +106,15 @@ export class ForOfNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			variable: this.variable.toJSON(),
@@ -143,15 +122,11 @@ export class ForOfNode extends AbstractExpressionNode {
 			statement: this.statement.toJSON(),
 		};
 	}
-
 }
-
 
 @Deserializer('for-in')
 export class ForInNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['for', 'in'];
-
 	static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
 		return new ForInNode(
 			deserializer(node.variable),
@@ -159,19 +134,15 @@ export class ForInNode extends AbstractExpressionNode {
 			deserializer(node.statement)
 		);
 	}
-
-
 	// variable of iterable
 	constructor(private variable: ExpressionNode,
 		private object: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		const iterable = <object>this.object.get(stack);
 		for (const iterator in iterable) {
@@ -192,19 +163,15 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `for (${this.variable?.toString()} in ${this.object.toString()}) ${this.statement.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			variable: this.variable.toJSON(),
@@ -212,14 +179,11 @@ export class ForInNode extends AbstractExpressionNode {
 			statement: this.statement.toJSON(),
 		};
 	}
-
 }
 
 @Deserializer('for-await-of')
 export class ForAwaitOfNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['for', 'await', 'of'];
-
 	static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
 		return new ForAwaitOfNode(
 			deserializer(node.variable),
@@ -227,19 +191,15 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			deserializer(node.statement)
 		);
 	}
-
-
 	// variable of iterable
 	constructor(private variable: ExpressionNode,
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
 	}
-
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		const iterable: { [Symbol.asyncIterator](): AsyncIterator<any> } = this.iterable.get(stack);
 		(async () => {
@@ -262,19 +222,15 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		})();
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			variable: this.variable.toJSON(),
@@ -282,5 +238,4 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			statement: this.statement.toJSON(),
 		};
 	}
-
 }

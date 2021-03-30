@@ -7,11 +7,15 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 export class Variable {
 
 	constructor(public variable: ExpressionNode, public value?: ExpressionNode) { }
-
+	getVariable() {
+		return this.variable;
+	}
+	getValue() {
+		return this.value;
+	}
 	toString() {
 		return `${this.variable.toString()}${this.value ? ` = ${this.value.toString()}` : ''}`;
 	}
-
 	toJson() {
 		return {
 			variable: this.variable.toString(),
@@ -25,7 +29,9 @@ export class DeclarationsNode extends AbstractExpressionNode {
 	constructor(protected variables: Variable[]) {
 		super();
 	}
-
+	getVariables() {
+		return this.variables;
+	}
 	set(stack: ScopedStack, value: any) {
 		if (this.variables.length > 1) {
 			throw new Error(`LetNode#set() has no implementation.`);
@@ -39,25 +45,20 @@ export class DeclarationsNode extends AbstractExpressionNode {
 			stack.localScop.set(item.variable.get(stack), item.value?.get(stack));
 		});
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
 	}
-
 	toJson(): object {
 		return {
 			variables: this.variables.map(v => v.toJson())
 		};
 	}
-
 }
 
 /**
@@ -67,23 +68,18 @@ export class DeclarationsNode extends AbstractExpressionNode {
  */
 @Deserializer('let')
 export class LetNode extends DeclarationsNode {
-
 	static KEYWORDS = ['let'];
-
 	static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
 		return new LetNode(
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
 		);
 	}
-
 	constructor(variables: Variable[]) {
 		super(variables);
 	}
-
 	toString(): string {
 		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
 	}
-
 }
 
 /**
@@ -96,21 +92,19 @@ export class LetNode extends DeclarationsNode {
  */
 @Deserializer('const')
 export class ConstNode extends DeclarationsNode {
-
 	static KEYWORDS = ['const'];
-
 	static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
 		return new ConstNode(
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
 		);
 	}
-
 	constructor(variables: Variable[]) {
 		super(variables);
 	}
-
+	set(stack: ScopedStack, value: any) {
+		throw new Error(`ConstNode#set() has no implementation.`);
+	}
 	toString(): string {
 		return `const ${this.variables.map(v => v.toString()).join(', ')};`;
 	}
-
 }
