@@ -1,8 +1,8 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenType } from './token.js';
 import {
-	BigIntNode, NumberNode, PropertyNode,
-	RegExpNode, StringNode
+	BigIntNode, FalseNode, NullNode, NumberNode, PropertyNode,
+	RegExpNode, StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 
 const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF', -1)) as Token;
@@ -293,7 +293,18 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		if (hasLetter) {
 			let str = this.expression.substring(startPos, i);
-			this.current = this.newToken(TokenType.PROPERTY, new PropertyNode(str), startPos);
+			let node: ExpressionNode;
+			switch (str) {
+				case 'this': node = ThisNode; break;
+				case 'null': node = NullNode; break;
+				case 'undefined': node = UndefinedNode; break;
+				case 'true': node = TrueNode; break;
+				case 'false': node = FalseNode; break;
+				case 'Symbol': node = SymbolNode; break;
+				default:
+					node = new PropertyNode(str); break;
+			}
+			this.current = this.newToken(TokenType.PROPERTY, node, startPos);
 			this.pos += str.length;
 			return true;
 		}
