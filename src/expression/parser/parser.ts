@@ -22,6 +22,7 @@ import { ConstNode, LetNode, Variable } from '../api/statement/declarations/decl
 import { ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
+import { IfElseNode } from '../api/statement/controlflow/if.js';
 
 export class ParserUtils {
 	constructor(protected tokens: Token[]) { }
@@ -525,6 +526,7 @@ export class StatementParser extends ParserUtils {
 		this.parseForLoop();
 		this.parseDoWhile();
 		this.parseWhile();
+		this.parseIfElse();
 	}
 	private createVariable(node: ExpressionNode) {
 		if (node instanceof AssignmentNode) {
@@ -714,6 +716,35 @@ export class StatementParser extends ParserUtils {
 			}
 		}
 	}
+	private parseIfElse() {
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].isEqual(TokenType.STATEMENT, 'if')) {
+				const openParentheses = index + 1;
+				if (!this.tokens[openParentheses].isTypeOf(TokenType.OPEN_PARENTHESES)) {
+					throw new Error(`Can't found '(' in if statement at index: ${this.tokens[openParentheses].index}`);
+				}
+				const closeParentheses = this.indexOf(TokenType.CLOSE_PARENTHESES, openParentheses + 1);
+				if (closeParentheses === -1) {
+					throw new Error(`Can't found ')' in if statement after index: ${this.tokens[openParentheses].index}`);
+				}
+				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
+				if (conditionTokens.length !== 1) {
+					OperatorParser.parse(conditionTokens);
+					StatementParser.parse(conditionTokens);
+				}
+				const condition = conditionTokens[0].valueAsExpression();
+				const statement = this.getExpressionValue(closeParentheses + 1);
+				let elseIf: ExpressionNode | undefined;
+				if (this.tokens[closeParentheses + 2]?.isEqual(TokenType.STATEMENT, 'else')) {
+					elseIf = this.getExpressionValue(closeParentheses + 3);
+				}
+
+				const ifNode = new IfElseNode(condition, statement, elseIf);
+				const expression = new Token(TokenType.EXPRESSION, ifNode);
+				this.tokens.splice(index, closeParentheses - index + 4, expression);
+			}
+		}
+	}
 }
 
 export class Parser {
@@ -752,8 +783,10 @@ try {
 	// statement = `let x = 8, u = 0, y,o`;
 	// statement = `let x = 8; const u = 0`;
 	// statement = `for (let i = 0; i< 10; i++) { console.log(i); }`;
-	statement = `do {x = a+b;} while (x > 8);`
+	// statement = `do {x = a+b;} while (x > 8);`
 	// statement = `while(x > 9) { console.log(x++); }`;
+	// statement = `if(x>9) {console.log(Math.max(6,9));}`
+	statement = `if(x){b=a+x;}else{b=a;}`
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
