@@ -805,13 +805,6 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				return false;
-			case 'b':
-				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'break', this.pos);
-					this.pos += 5;
-					return true;
-				}
-				return false;
 			default:
 				return false;
 		}
@@ -823,6 +816,13 @@ export class TokenStreamImpl extends TokenStream {
 				if (/as\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
 					this.current = this.newToken(TokenType.STATEMENT, 'as', this.pos);
 					this.pos += 3;
+					return true;
+				}
+				return false;
+			case 'b':
+				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(TokenType.STATEMENT, 'break', this.pos);
+					this.pos += 5;
 					return true;
 				}
 				return false;
