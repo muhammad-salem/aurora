@@ -359,17 +359,17 @@ export class TokenStreamImpl extends TokenStream {
 			if (currentPos > this.pos) {
 				// case found {2} of /1/2
 				pattern = this.expression.substring(this.pos + 1, currentPos);
-				this.pos = currentPos;
+				this.pos = currentPos + 1;
 			} else {
 				return false;
 			}
 			let flags = '';
-			while (TokenStreamImpl.REGEXP_FLAGS.indexOf((nextChar = this.expression.charAt(this.pos + 1))) > -1) {
+			while (TokenStreamImpl.REGEXP_FLAGS.indexOf((nextChar = this.expression.charAt(this.pos))) > -1) {
 				flags += nextChar;
 				this.pos++;
 			}
 			const regexNode = new RegExpNode(new RegExp(pattern, flags));
-			this.current = this.newToken(TokenType.REGEXP, regexNode, this.pos);
+			this.current = this.newToken(TokenType.REGEXP, regexNode, start);
 			return true;
 		}
 		return false;
