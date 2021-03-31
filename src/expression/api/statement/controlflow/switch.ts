@@ -6,6 +6,34 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from './terminate.js';
 
 
+@Deserializer('default')
+export class DefaultCaseExpression extends AbstractExpressionNode {
+	static DEFAULT_KEYWORD = 'default';
+	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer<DefaultCaseExpression>): DefaultCaseExpression {
+		return DefaultNode;
+	}
+	set(stack: ScopedStack, value: any) {
+		throw new Error('Method DefaultCaseExpression.#set() not implemented.');
+	}
+	get(stack: ScopedStack) {
+		return DefaultCaseExpression.DEFAULT_KEYWORD;
+	}
+	entry(): string[] {
+		return [];
+	}
+	event(parent?: string): string[] {
+		return [];
+	}
+	toString(): string {
+		return DefaultCaseExpression.DEFAULT_KEYWORD;
+	}
+	toJson(key?: string) {
+		return {};
+	}
+}
+
+const DefaultNode = Object.freeze(new DefaultCaseExpression()) as DefaultCaseExpression;
+
 /**
  * The switch statement evaluates an expression, matching the expression's value to a case clause,
  * and executes statements associated with that case,
@@ -17,15 +45,15 @@ export class SwitchNode extends AbstractExpressionNode {
 	static KEYWORDS = ['switch', 'case'];
 	static fromJSON(node: SwitchNode, deserializer: NodeDeserializer): SwitchNode {
 		return new SwitchNode(
-			deserializer(node.condition as any),
+			deserializer(node.expression as any),
 			node.cases.map(item => { return { key: deserializer(item.key), statement: deserializer(item.statement) } })
 		);
 	}
-	constructor(private condition: ExpressionNode, private cases: { key: ExpressionNode, statement: ExpressionNode }[]) {
+	constructor(private expression: ExpressionNode, private cases: { key: ExpressionNode, statement: ExpressionNode }[]) {
 		super();
 	}
-	getCondition() {
-		return this.condition;
+	getExpression() {
+		return this.expression;
 	}
 	getCases() {
 		return this.cases;
@@ -34,19 +62,21 @@ export class SwitchNode extends AbstractExpressionNode {
 		throw new Error(`SwitchNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack) {
+		// need to fix statements execution and support default case
 		stack = stack.newStack();
-		const condition = this.condition.get(stack);
-		for (let i = 0; i < this.cases.length; i++) {
-			const caseValue = this.cases[i].key.get(stack);
-			if (condition === caseValue) {
-				let returnValue = this.cases[i].statement.get(stack);
-				if (returnValue === TerminateNode.BreakSymbol) {
-					break;
-				} else {
-					for (++i; i < this.cases.length; i++) {
-						this.cases[i].statement.get(stack);
-					}
-				}
+		const result = this.expression.get(stack);
+		const resolvedCases = this.cases.map(item => { return { key: item.key.get(stack), statement: item.statement } });
+		let startIndex = resolvedCases.findIndex(item => result === item.key);
+		if (startIndex === -1) {
+			startIndex = resolvedCases.findIndex(item => DefaultCaseExpression.DEFAULT_KEYWORD === item.key);
+			if (startIndex === -1) {
+				return;
+			}
+		}
+		for (let index = startIndex; index < resolvedCases.length; index++) {
+			const returnValue = this.cases[index].statement.get(stack);
+			if (returnValue === TerminateNode.BreakSymbol) {
+				break;
 			}
 		}
 		return void 0;
@@ -58,11 +88,11 @@ export class SwitchNode extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		return `switch (${this.condition.toString()}) {${this.cases.map(item => `case: ${item.key.toString()}: ${item.statement.toString()}`).join(' ')}}`;
+		return `switch (${this.expression.toString()}) {${this.cases.map(item => `case: ${item.key.toString()}: ${item.statement.toString()}`).join(' ')}}`;
 	}
 	toJson(): object {
 		return {
-			condition: this.condition.toJSON(),
+			expression: this.expression.toJSON(),
 			cases: this.cases.map(item => {
 				return {
 					key: item.key.toJSON(),
