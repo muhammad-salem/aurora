@@ -92,7 +92,7 @@ export namespace TokenType {
 }
 
 export class Token {
-	constructor(public type: TokenType, public value: string | ExpressionNode, public index?: number) { }
+	constructor(public type: TokenType, public value: string | ExpressionNode) { }
 	isEqual(type: TokenType, value: string | ExpressionNode) {
 		return this.type === type && this.value === value;
 	}

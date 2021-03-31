@@ -5,7 +5,7 @@ import {
 	RegExpNode, StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 
-const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF', -1)) as Token;
+const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF')) as Token;
 
 export abstract class TokenStream {
 	public static getTokenStream(source: string | Token[]): TokenStream {
@@ -158,8 +158,8 @@ export class TokenStreamImpl extends TokenStream {
 	constructor(private expression: string) {
 		super();
 	}
-	private newToken(type: TokenType, value: string | ExpressionNode, index: number): Token {
-		return new Token(type, value, index);
+	private newToken(type: TokenType, value: string | ExpressionNode): Token {
+		return new Token(type, value);
 	}
 
 	next(): Token {
@@ -200,7 +200,7 @@ export class TokenStreamImpl extends TokenStream {
 				if (this.expression.charAt(index - 1) !== '\\') {
 					const rawString = this.expression.substring(startPos + 1, index);
 					const stringNode = new StringNode(this.unescape(rawString), quote);
-					this.current = this.newToken(TokenType.STRING, stringNode, startPos);
+					this.current = this.newToken(TokenType.STRING, stringNode);
 					result = true;
 					break;
 				}
@@ -213,11 +213,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isParentheses() {
 		const c = this.expression.charAt(this.pos);
 		if (c === '(') {
-			this.current = this.newToken(TokenType.OPEN_PARENTHESES, c, this.pos);
+			this.current = this.newToken(TokenType.OPEN_PARENTHESES, c);
 			this.pos++;
 			return true;
 		} else if (c === ')') {
-			this.current = this.newToken(TokenType.CLOSE_PARENTHESES, c, this.pos);
+			this.current = this.newToken(TokenType.CLOSE_PARENTHESES, c);
 			this.pos++;
 			return true;
 		}
@@ -227,11 +227,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isBracket() {
 		const c = this.expression.charAt(this.pos);
 		if (c === '[') {
-			this.current = this.newToken(TokenType.OPEN_BRACKETS, c, this.pos);
+			this.current = this.newToken(TokenType.OPEN_BRACKETS, c);
 			this.pos++;
 			return true;
 		} else if (c === ']') {
-			this.current = this.newToken(TokenType.CLOSE_BRACKETS, c, this.pos);
+			this.current = this.newToken(TokenType.CLOSE_BRACKETS, c);
 			this.pos++;
 			return true;
 		}
@@ -241,11 +241,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isCurlY() {
 		const c = this.expression.charAt(this.pos);
 		if (c === '{') {
-			this.current = this.newToken(TokenType.OPEN_CURLY, c, this.pos);
+			this.current = this.newToken(TokenType.OPEN_CURLY, c);
 			this.pos++;
 			return true;
 		} else if (c === '}') {
-			this.current = this.newToken(TokenType.CLOSE_CURLY, c, this.pos);
+			this.current = this.newToken(TokenType.CLOSE_CURLY, c);
 			this.pos++;
 			return true;
 		}
@@ -255,7 +255,7 @@ export class TokenStreamImpl extends TokenStream {
 	private isComma() {
 		const c = this.expression.charAt(this.pos);
 		if (c === ',') {
-			this.current = this.newToken(TokenType.COMMA, c, this.pos);
+			this.current = this.newToken(TokenType.COMMA, c);
 			this.pos++;
 			return true;
 		}
@@ -265,7 +265,7 @@ export class TokenStreamImpl extends TokenStream {
 	private isSemicolon() {
 		const c = this.expression.charAt(this.pos);
 		if (c === ';') {
-			this.current = this.newToken(TokenType.SEMICOLON, c, this.pos);
+			this.current = this.newToken(TokenType.SEMICOLON, c);
 			this.pos++;
 			return true;
 		}
@@ -304,7 +304,7 @@ export class TokenStreamImpl extends TokenStream {
 				default:
 					node = new PropertyNode(str); break;
 			}
-			this.current = this.newToken(TokenType.PROPERTY, node, startPos);
+			this.current = this.newToken(TokenType.PROPERTY, node);
 			this.pos += str.length;
 			return true;
 		}
@@ -369,7 +369,7 @@ export class TokenStreamImpl extends TokenStream {
 				this.pos++;
 			}
 			const regexNode = new RegExpNode(new RegExp(pattern, flags));
-			this.current = this.newToken(TokenType.REGEXP, regexNode, start);
+			this.current = this.newToken(TokenType.REGEXP, regexNode);
 			return true;
 		}
 		return false;
@@ -465,7 +465,7 @@ export class TokenStreamImpl extends TokenStream {
 
 		if (valid) {
 			const numNode = new NumberNode(parseInt(this.expression.substring(startPos, pos), radix));
-			this.current = this.newToken(TokenType.NUMBER, numNode, this.pos);
+			this.current = this.newToken(TokenType.NUMBER, numNode);
 			this.pos = pos;
 		}
 		return valid;
@@ -524,11 +524,11 @@ export class TokenStreamImpl extends TokenStream {
 		if (valid) {
 			if (this.expression.charAt(pos) === 'n') {
 				const bigintNode = new BigIntNode(BigInt(this.expression.substring(startPos, pos)));
-				this.current = this.newToken(TokenType.BIGINT, bigintNode, this.pos);
+				this.current = this.newToken(TokenType.BIGINT, bigintNode);
 				pos++;
 			} else {
 				const numNode = new NumberNode(parseFloat(this.expression.substring(startPos, pos)));
-				this.current = this.newToken(TokenType.NUMBER, numNode, this.pos);
+				this.current = this.newToken(TokenType.NUMBER, numNode);
 			}
 			this.pos = pos;
 		} else {
@@ -542,83 +542,83 @@ export class TokenStreamImpl extends TokenStream {
 		switch (char) {
 			case '+':
 				if (this.expression.charAt(this.pos + 1) === '+') {
-					this.current = this.newToken(TokenType.OPERATOR, '++', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '++');
 					this.pos += 2;
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '+=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '+=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '+', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '+');
 					this.pos++;
 				}
 				return true;
 			case '-':
 				if (this.expression.charAt(this.pos + 1) === '-') {
-					this.current = this.newToken(TokenType.OPERATOR, '--', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '--');
 					this.pos += 2;
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '-=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '-=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '-', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '-');
 					this.pos++;
 				}
 				return true;
 			case '=':
 				if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '===', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '===');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '==', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '==');
 						this.pos += 2;
 					}
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '=');
 					this.pos++;
 				}
 				return true;
 			case '*':
 				if (this.expression.charAt(this.pos + 1) === '*') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '**=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '**=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '**', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '**');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '*=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '*=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '*', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '*');
 					this.pos++;
 				}
 				return true;
 			case '/':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '/=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '/=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '/', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '/');
 					this.pos++;
 				}
 				return true;
 			case '%':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '%=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '%=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '%', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '%');
 					this.pos++;
 				}
 				return true;
 			case '^':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '^=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '^=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '^', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '^');
 					this.pos++;
 				}
 				return true;
@@ -626,137 +626,137 @@ export class TokenStreamImpl extends TokenStream {
 				if (this.expression.charAt(this.pos + 1) === '>') {
 					if (this.expression.charAt(this.pos + 2) === '>') {
 						if (this.expression.charAt(this.pos + 3) === '=') {
-							this.current = this.newToken(TokenType.OPERATOR, '>>>=', this.pos);
+							this.current = this.newToken(TokenType.OPERATOR, '>>>=');
 							this.pos += 4;
 						} else {
-							this.current = this.newToken(TokenType.OPERATOR, '>>>', this.pos);
+							this.current = this.newToken(TokenType.OPERATOR, '>>>');
 							this.pos += 3;
 						}
 					} else if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '>>=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '>>=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '>>', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '>>');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '>=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '>=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '>', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '>');
 					this.pos++;
 				}
 				return true;
 			case '<':
 				if (this.expression.charAt(this.pos + 1) === '<') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '<<=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '<<=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '<<', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '<<');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '>') {
-						this.current = this.newToken(TokenType.OPERATOR, '<=>', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '<=>');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '<=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '<=');
 						this.pos += 2;
 					}
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '<', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '<');
 					this.pos++;
 				}
 				return true;
 			case '|':
 				if (this.expression.charAt(this.pos + 1) === '|') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '||=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '||=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '||', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '||');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '|=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '|=');
 					this.pos += 2;
 				} else if (this.expression.charAt(this.pos + 1) === '>') {
-					this.current = this.newToken(TokenType.OPERATOR, '|>', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '|>');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '|', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '|');
 					this.pos++;
 				}
 				return true;
 			case '&':
 				if (this.expression.charAt(this.pos + 1) === '&') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '&&=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '&&=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '&&', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '&&');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(TokenType.OPERATOR, '&=', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '&=');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '&', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '&');
 					this.pos++;
 				}
 				return true;
 			case '?':
 				if (this.expression.charAt(this.pos + 1) === '?') {
 					if (this.expression.charAt(this.pos + 1) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '??=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '??=');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '??', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '??');
 						this.pos += 2;
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '.') {
-					this.current = this.newToken(TokenType.OPERATOR, '?.', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '?.');
 					this.pos += 2;
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '?', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '?');
 					this.pos++;
 				}
 				return true;
 			case '!':
 				if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(TokenType.OPERATOR, '!==', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '!==');
 						this.pos += 3;
 					} else {
-						this.current = this.newToken(TokenType.OPERATOR, '!=', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, '!=');
 						this.pos += 2;
 					}
 				} else {
-					this.current = this.newToken(TokenType.OPERATOR, '!', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '!');
 					this.pos++;
 				}
 				return true;
 			case '.':
 				if (/\.\.\./.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.OPERATOR, '...', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, '...');
 					this.pos += 3;
 					return true;
 				}
 			// no break
 			case ':':
 			case '~':
-				this.current = this.newToken(TokenType.OPERATOR, char, this.pos);
+				this.current = this.newToken(TokenType.OPERATOR, char);
 				this.pos++;
 				return true;
 			case 'i':			// in, instanceof
 				if (this.expression.charAt(this.pos + 1) === 'n') {
 					if (/instanceof\s/.test(this.expression.substring(this.pos, this.pos + 11))) {
-						this.current = this.newToken(TokenType.OPERATOR, 'instanceof', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, 'instanceof');
 						this.pos += 11;
 						return true;
 					} else if (/\s/.test(this.expression.charAt(this.pos + 2))) {
-						this.current = this.newToken(TokenType.OPERATOR, 'in', this.pos);
+						this.current = this.newToken(TokenType.OPERATOR, 'in');
 						this.pos += 3;
 						return true;
 					}
@@ -764,35 +764,35 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'o':			// typeof
 				if (/of\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'of', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, 'of');
 					this.pos += 3;
 					return true;
 				}
 				return false;
 			case 't':			// typeof
 				if (/typeof\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'typeof', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, 'typeof');
 					this.pos += 7;
 					return true;
 				}
 				return false;
 			case 'v':			// void
 				if (/void\s/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'void', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, 'void');
 					this.pos += 5;
 					return true;
 				}
 				return false;
 			case 'd':			// delete
 				if (/delete\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'delete', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, 'delete');
 					this.pos += 7;
 					return true;
 				}
 				return false;
 			case 'n':			// new
 				if (/new\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(TokenType.OPERATOR, 'new', this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, 'new');
 					this.pos += 4;
 					return true;
 				}
@@ -800,7 +800,7 @@ export class TokenStreamImpl extends TokenStream {
 			case 'a':			// await, async
 				const nextStr = this.expression.substring(this.pos, this.pos + 5);
 				if (/(await|async)\s/.test(nextStr)) {
-					this.current = this.newToken(TokenType.OPERATOR, nextStr, this.pos);
+					this.current = this.newToken(TokenType.OPERATOR, nextStr);
 					this.pos += 5;
 					return true;
 				}
@@ -814,93 +814,93 @@ export class TokenStreamImpl extends TokenStream {
 		switch (char) {
 			case 'a':
 				if (/as\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'as', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'as');
 					this.pos += 3;
 					return true;
 				}
 				return false;
 			case 'b':
 				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'break', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'break');
 					this.pos += 5;
 					return true;
 				}
 				return false;
 			case 'c':
 				if (/case\s/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'case', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'case');
 					this.pos += 5;
 					return true;
 				} else if (/const\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'const', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'const');
 					this.pos += 6;
 					return true;
 				} else if (/continue[\s;]/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'continue', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'continue');
 					this.pos += 8;
 					return true;
 				}
 				return false;
 			case 'd':
 				if (/^(do\s?\{)/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'do', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'do');
 					this.pos += 2;
 					return true;
 				} else if (/^(default\s?:)/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'default', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'default');
 					this.pos += 7;
 					return true;
 				}
 				return false;
 			case 'e':
 				if (/else[\s\{]?/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'else', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'else');
 					this.pos += 4;
 					return true;
 				}
 				return false;
 			case 'f':
 				if (/for\s?\(/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'for', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'for');
 					this.pos += 3;
 					return true;
 				}
 				return false;
 			case 'i':
 				if (/if[\s\(]?/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'if', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'if');
 					this.pos += 2;
 					return true;
 				} else if (/in\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'in', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'in');
 					this.pos += 3;
 					return true;
 				}
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'let', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'let');
 					this.pos += 4;
 					return true;
 				}
 				return false;
 			case 'of':
 				if (/of\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'of', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'of');
 					this.pos += 3;
 					return true;
 				}
 				return false;
 			case 's':
 				if (/switch[\s\(]?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'switch', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'switch');
 					this.pos += 6;
 					return true;
 				}
 				return false;
 			case 'w':
 				if (/while[\s\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(TokenType.STATEMENT, 'while', this.pos);
+					this.current = this.newToken(TokenType.STATEMENT, 'while');
 					this.pos += 5;
 					return true;
 				}
