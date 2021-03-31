@@ -12,45 +12,36 @@ import { ScopedStack } from '../../scope.js';
  */
 @Deserializer('terminate')
 export class TerminateNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['break', 'continue'];
-
 	static readonly BreakSymbol = Symbol.for('break');
 	static readonly ContinueSymbol = Symbol.for('continue');
-
 	static readonly BREAK_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.BreakSymbol)) as TerminateNode;
 	static readonly CONTINUE_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.ContinueSymbol)) as TerminateNode;
-
 	static fromJSON(node: TerminateNode): TerminateNode {
 		return String(node.symbol) === 'break' ? TerminateNode.BREAK_INSTANCE : TerminateNode.CONTINUE_INSTANCE;
 	}
-
 	constructor(private symbol: Symbol) {
 		super();
 	}
-
+	getSymbol() {
+		return this.symbol;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`TerminateNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		return this.symbol;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return this.symbol.description!;
 	}
-
 	toJson(): object {
 		return { symbol: this.symbol.description };
 	}
-
 }

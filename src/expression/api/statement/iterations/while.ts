@@ -13,25 +13,25 @@ import { ReturnValue } from '../../computing/return.js';
  */
 @Deserializer('while')
 export class WhileNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['while'];
-
 	static fromJSON(node: WhileNode, deserializer: NodeDeserializer): WhileNode {
 		return new WhileNode(
 			deserializer(node.condition),
 			deserializer(node.statement)
 		);
 	}
-
-
 	constructor(private condition: ExpressionNode, private statement: ExpressionNode) {
 		super();
 	}
-
+	getCondition() {
+		return this.condition;
+	}
+	getStatement() {
+		return this.statement;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		stack = stack.newStack();
 		const condition = this.condition.get(stack);
@@ -51,50 +51,44 @@ export class WhileNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `while (${this.condition.toString()}) ${this.statement.toString()}`;
 	}
-
 	toJson(): object {
 		return {
 			condition: this.condition.toJSON(),
 			statement: this.statement.toJSON()
 		};
 	}
-
 }
-
 
 @Deserializer('do-while')
 export class DoWhileNode extends AbstractExpressionNode {
-
 	static KEYWORDS = ['do', 'while'];
-
 	static fromJSON(node: DoWhileNode, deserializer: NodeDeserializer): DoWhileNode {
 		return new DoWhileNode(
 			deserializer(node.condition),
 			deserializer(node.statement)
 		);
 	}
-
-
 	constructor(private condition: ExpressionNode, private statement: ExpressionNode) {
 		super();
 	}
-
+	getCondition() {
+		return this.condition;
+	}
+	getStatement() {
+		return this.statement;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
-
 	get(stack: ScopedStack) {
 		stack = stack.newStack();
 		const condition = this.condition.get(stack);
@@ -114,24 +108,19 @@ export class DoWhileNode extends AbstractExpressionNode {
 		} while (this.condition.get(stack));
 		return void 0;
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return `do {${this.statement.toString()}} while (${this.condition.toString()})`;
 	}
-
 	toJson(): object {
 		return {
 			condition: this.condition.toJSON(),
 			statement: this.statement.toJSON()
 		};
 	}
-
 }

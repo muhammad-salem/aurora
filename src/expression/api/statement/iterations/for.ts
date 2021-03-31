@@ -27,6 +27,18 @@ export class ForNode extends AbstractExpressionNode {
 		private finalExpression?: ExpressionNode) {
 		super();
 	}
+	getStatement() {
+		return this.statement;
+	}
+	getInitialization() {
+		return this.initialization;
+	}
+	getCondition() {
+		return this.condition;
+	}
+	getFinalExpression() {
+		return this.finalExpression;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForNode#set() has no implementation.`);
 	}
@@ -82,6 +94,12 @@ export class ForOfNode extends AbstractExpressionNode {
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
+	}
+	getIterable() {
+		return this.iterable;
+	}
+	getStatement() {
+		return this.statement;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
@@ -140,6 +158,12 @@ export class ForInNode extends AbstractExpressionNode {
 		private statement: ExpressionNode) {
 		super();
 	}
+	getObject() {
+		return this.object;
+	}
+	getStatement() {
+		return this.statement;
+	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
@@ -196,6 +220,12 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
+	}
+	getIterable() {
+		return this.iterable;
+	}
+	getStatement() {
+		return this.statement;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);
