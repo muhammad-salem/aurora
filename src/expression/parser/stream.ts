@@ -1,7 +1,7 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenType } from './token.js';
 import {
-	BigIntNode, FalseNode, NullNode, NumberNode, PropertyNode,
+	BigIntNode, FalseNode, GlobalThisNode, NullNode, NumberNode, PropertyNode,
 	RegExpNode, StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 
@@ -296,6 +296,7 @@ export class TokenStreamImpl extends TokenStream {
 			let node: ExpressionNode;
 			switch (str) {
 				case 'this': node = ThisNode; break;
+				case 'globalThis': node = GlobalThisNode; break;
 				case 'null': node = NullNode; break;
 				case 'undefined': node = UndefinedNode; break;
 				case 'true': node = TrueNode; break;

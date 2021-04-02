@@ -188,4 +188,5 @@ export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as Nullis
 export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
 export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
 export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
+export const GlobalThisNode = Object.freeze(new PropertyNode('globalThis')) as PropertyNode;
 export const SymbolNode = Object.freeze(new PropertyNode('Symbol')) as PropertyNode;
