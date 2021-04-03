@@ -54,7 +54,7 @@ export class CaseExpression extends AbstractExpressionNode {
 }
 
 const DEFAULT_KEYWORD = 'default';
-const DefaultNode = Object.freeze(new PropertyNode(DEFAULT_KEYWORD)) as PropertyNode;
+export const DefaultNode = Object.freeze(new PropertyNode(DEFAULT_KEYWORD)) as PropertyNode;
 
 /**
  * The switch statement evaluates an expression, matching the expression's value to a case clause,
