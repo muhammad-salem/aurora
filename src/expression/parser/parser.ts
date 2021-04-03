@@ -23,7 +23,7 @@ import { ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '../api/statement/
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
-import { CaseExpression, DefaultNode, SwitchNode } from '../api/statement/controlflow/switch.js';
+import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
 
 export class ParserUtils {
 	constructor(protected tokens: Token[]) { }
@@ -572,25 +572,28 @@ export class StatementParser extends ParserUtils {
 				value = this.tokens[index + 1].valueAsExpression();
 				blokStart = index + 2;
 			} else if (this.tokens[index].isEqual(TokenType.STATEMENT, 'default')) {
-				value = DefaultNode;
+				value = DefaultExpression.DefaultNode;
 				blokStart = index + 1;
 			} else if (this.tokens[index].isEqual(TokenType.STATEMENT, 'switch')) {
 				this.tokens.forEach((v: Token, i: number) => console.log(i, v));
 				if (!this.tokens[index + 1].isTypeOf(TokenType.OPEN_PARENTHESES)) {
 					throw new Error(`error parsing switch case, no '(' found`);
 				}
-				const expression = this.tokens[index + 2].valueAsExpression();
-				if (!this.tokens[index + 3].isTypeOf(TokenType.CLOSE_PARENTHESES)) {
+				const close = this.indexOf(TokenType.CLOSE_PARENTHESES, index + 2);
+				if (close === -1) {
 					throw new Error(`error parsing switch case, no ')' found`);
 				}
-				if (!this.tokens[index + 4].isTypeOf(TokenType.OPEN_CURLY)) {
+				const expTkn = this.tokens.slice(index + 2, close);
+				StatementParser.parse(expTkn);
+				const expression = expTkn[0].valueAsExpression();
+				if (!this.tokens[close + 1].isTypeOf(TokenType.OPEN_CURLY)) {
 					throw new Error(`error parsing switch case, no '{' found`);
 				}
-				const end = this.indexOf(TokenType.CLOSE_CURLY, index + 5);
+				const end = this.indexOf(TokenType.CLOSE_CURLY, close + 2);
 				if (end === -1) {
 					throw new Error(`error parsing switch case, no '}' found`);
 				}
-				const casesTokens = this.tokens.slice(index + 5, end);
+				const casesTokens = this.tokens.slice(close + 2, end);
 				const cases = casesTokens.filter(token => token.isTypeOf(TokenType.EXPRESSION))
 					.map(token => token.valueAsExpression()) as CaseExpression[];
 				const switchNode = new SwitchNode(expression, cases);
@@ -615,10 +618,14 @@ export class StatementParser extends ParserUtils {
 						throw new Error(`error parsing switch case: '${value.toString()}' statement`);
 					}
 					const tokens = this.tokens.slice(start, end);
-					OperatorParser.parse(tokens);
 					StatementParser.parse(tokens);
 					const block = tokens[0].valueAsExpression();
-					const node = new CaseExpression(value, block);
+					let node: CaseExpression;
+					if (DefaultExpression.DefaultNode === value) {
+						node = new DefaultExpression(block);
+					} else {
+						node = new CaseExpression(value, block);
+					}
 					const expression = new Token(TokenType.EXPRESSION, node);
 					this.tokens.splice(index + 1, end - index - 1, expression);
 				}
@@ -639,7 +646,6 @@ export class StatementParser extends ParserUtils {
 				} else {
 					// list of statements
 					const tokens = this.tokens.slice(index + 1, i);
-					OperatorParser.parse(tokens);
 					StatementParser.parse(tokens);
 					const statements = tokens
 						.filter(tkn => !tkn.isEqual(TokenType.SEMICOLON, ';'))
@@ -744,7 +750,6 @@ export class StatementParser extends ParserUtils {
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
-					OperatorParser.parse(conditionTokens);
 					StatementParser.parse(conditionTokens);
 				}
 				const condition = conditionTokens[0].valueAsExpression();
@@ -767,7 +772,6 @@ export class StatementParser extends ParserUtils {
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
-					OperatorParser.parse(conditionTokens);
 					StatementParser.parse(conditionTokens);
 				}
 				const condition = conditionTokens[0].valueAsExpression();
@@ -791,7 +795,6 @@ export class StatementParser extends ParserUtils {
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
-					OperatorParser.parse(conditionTokens);
 					StatementParser.parse(conditionTokens);
 				}
 				const condition = conditionTokens[0].valueAsExpression();

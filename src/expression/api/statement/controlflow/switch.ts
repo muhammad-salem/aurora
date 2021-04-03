@@ -16,7 +16,7 @@ export class CaseExpression extends AbstractExpressionNode {
 			deserializer(node.block)
 		);
 	}
-	constructor(private value: ExpressionNode, private block: ExpressionNode) {
+	constructor(protected value: ExpressionNode, protected block: ExpressionNode) {
 		super();
 	}
 	getValue() {
@@ -38,12 +38,7 @@ export class CaseExpression extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		const caseString = this.value.toString();
-		if (caseString === 'default') {
-			return `default: ${this.block.toString()};`;
-		} else {
-			return `case ${caseString}: ${this.block.toString()};`;
-		}
+		return `case ${this.value.toString()}: ${this.block.toString()};`;
 	}
 	toJson(): object {
 		return {
@@ -53,8 +48,27 @@ export class CaseExpression extends AbstractExpressionNode {
 	}
 }
 
-const DEFAULT_KEYWORD = 'default';
-export const DefaultNode = Object.freeze(new PropertyNode(DEFAULT_KEYWORD)) as PropertyNode;
+
+@Deserializer('default')
+export class DefaultExpression extends CaseExpression {
+	static DEFAULT_KEYWORD = 'default';
+	static DefaultNode = Object.freeze(new PropertyNode(DefaultExpression.DEFAULT_KEYWORD)) as PropertyNode;
+	static KEYWORDS = [DefaultExpression.DEFAULT_KEYWORD];
+	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
+		return new DefaultExpression(deserializer(node.block));
+	}
+	constructor(block: ExpressionNode) {
+		super(DefaultExpression.DefaultNode, block);
+	}
+	toString(): string {
+		return `default: ${this.block.toString()};`;
+	}
+	toJson(): object {
+		return {
+			block: this.block.toJSON()
+		};
+	}
+}
 
 /**
  * The switch statement evaluates an expression, matching the expression's value to a case clause,
@@ -90,7 +104,8 @@ export class SwitchNode extends AbstractExpressionNode {
 		const values = this.cases.map(item => item.getValue().get(stack));
 		let startIndex = values.findIndex(item => result === item);
 		if (startIndex === -1) {
-			startIndex = values.findIndex(value => DEFAULT_KEYWORD === value);
+			// search for default statement
+			startIndex = this.cases.findIndex(item => item instanceof DefaultExpression);
 			if (startIndex === -1) {
 				return;
 			}
