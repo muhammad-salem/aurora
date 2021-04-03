@@ -22,11 +22,11 @@
 		"tslib": "^2.1.0"
 	},
 	"devDependencies": {
-		"@ibyar/esmpack": "^0.1.9",
+		"@ibyar/esmpack": "^0.1.93",
 		"typescript": "^4.2.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose",
-		"esmpack:watch": "esmpack -w"
+		"build": "npx tsc --build --verbose",
+		"esmpack:watch": "npx esmpack -w"
 	}
 }
