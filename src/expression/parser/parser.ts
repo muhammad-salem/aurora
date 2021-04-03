@@ -23,6 +23,7 @@ import { ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '../api/statement/
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
+import { CaseExpression, DefaultNode, SwitchNode } from '../api/statement/controlflow/switch.js';
 
 export class ParserUtils {
 	constructor(protected tokens: Token[]) { }
@@ -32,10 +33,16 @@ export class ParserUtils {
 	protected getStringValue(index: number) {
 		return this.tokens[index].valueAsString();
 	}
-	protected includes(tokens: Token[], expect: TokenType, start = 0): number {
+	protected includes(tokens: Token[], expect: TokenType, start = 0, value?: string): number {
 		for (let index = start; index < tokens.length; index++) {
 			const token = tokens[index];
 			if (token.type === expect) {
+				if (value) {
+					if (token.value === value) {
+						return index;
+					}
+					continue;
+				}
 				return index;
 			}
 			else if (token.type === TokenType.EOF) {
@@ -44,17 +51,14 @@ export class ParserUtils {
 		}
 		return -1;
 	}
-	protected indexOf(expect: TokenType, start = 0): number {
+	protected indexOf(expect: TokenType, start = 0, value?: string): number {
 		if (start >= this.tokens.length) {
 			return -1;
 		}
 		if (TokenType.isClosePair(expect)) {
 			return this.getPairTokenIndex(TokenType.openOf(expect), expect, start);
 		}
-		return this.getTokenIndex(expect, start);
-	}
-	private getTokenIndex(expect: TokenType, start: number): number {
-		return this.includes(this.tokens, expect, start);
+		return this.includes(this.tokens, expect, start, value);
 	}
 
 	private getPairTokenIndex(open: TokenType, expectClose: TokenType, start: number): number {
@@ -366,16 +370,13 @@ export class OperatorParser extends ParserUtils {
 					case '+':
 					case '-':
 						if (this.tokens[index + 1].isPropOrExp()) {
-							// check of is prefix
-							if ((this.tokens[index + 1].index! - this.tokens[index].index!) === 1) {
-								const literalUnary = new Token(TokenType.EXPRESSION,
-									new UnaryNode(
-										this.tokens[index].value as string,
-										this.getExpressionValue(index + 1)
-									)
-								);
-								this.tokens.splice(index, 2, literalUnary);
-							}
+							const literalUnary = new Token(TokenType.EXPRESSION,
+								new UnaryNode(
+									this.tokens[index].value as string,
+									this.getExpressionValue(index + 1)
+								)
+							);
+							this.tokens.splice(index, 2, literalUnary);
 						}
 						break;
 					default:
@@ -520,8 +521,8 @@ export class StatementParser extends ParserUtils {
 		super(tokens);
 	}
 	scan() {
-		// this.parseConstAndLet();
 		this.parseDeclarations();
+		this.parseSwitchCase();
 		this.parseObjectAndBlock();
 		this.parseForLoop();
 		this.parseDoWhile();
@@ -559,6 +560,67 @@ export class StatementParser extends ParserUtils {
 					const declarationsNode = this.createDeclareNode(keyword, variables);
 					const declareExpression = new Token(TokenType.EXPRESSION, declarationsNode);
 					this.tokens.splice(index, 2, declareExpression);
+				}
+			}
+		}
+	}
+	private parseSwitchCase() {
+		let value: ExpressionNode | undefined;
+		let blokStart: number;
+		for (let index = this.tokens.length - 2; index >= 0; index--) {
+			if (this.tokens[index].isEqual(TokenType.STATEMENT, 'case')) {
+				value = this.tokens[index + 1].valueAsExpression();
+				blokStart = index + 2;
+			} else if (this.tokens[index].isEqual(TokenType.STATEMENT, 'default')) {
+				value = DefaultNode;
+				blokStart = index + 1;
+			} else if (this.tokens[index].isEqual(TokenType.STATEMENT, 'switch')) {
+				this.tokens.forEach((v: Token, i: number) => console.log(i, v));
+				if (!this.tokens[index + 1].isTypeOf(TokenType.OPEN_PARENTHESES)) {
+					throw new Error(`error parsing switch case, no '(' found`);
+				}
+				const expression = this.tokens[index + 2].valueAsExpression();
+				if (!this.tokens[index + 3].isTypeOf(TokenType.CLOSE_PARENTHESES)) {
+					throw new Error(`error parsing switch case, no ')' found`);
+				}
+				if (!this.tokens[index + 4].isTypeOf(TokenType.OPEN_CURLY)) {
+					throw new Error(`error parsing switch case, no '{' found`);
+				}
+				const end = this.indexOf(TokenType.CLOSE_CURLY, index + 5);
+				if (end === -1) {
+					throw new Error(`error parsing switch case, no '}' found`);
+				}
+				const casesTokens = this.tokens.slice(index + 5, end);
+				const cases = casesTokens.filter(token => token.isTypeOf(TokenType.EXPRESSION))
+					.map(token => token.valueAsExpression()) as CaseExpression[];
+				const switchNode = new SwitchNode(expression, cases);
+				const switchExpression = new Token(TokenType.EXPRESSION, switchNode);
+				this.tokens.splice(index, end - index + 1, switchExpression);
+				continue;
+			} else {
+				value = undefined;
+				blokStart = -1;
+			}
+			if (value) {
+				if (this.tokens[blokStart].isEqual(TokenType.OPERATOR, ':')) {
+					const start = blokStart + 1;
+					let end = this.indexOf(TokenType.STATEMENT, start, 'case');
+					if (end === -1) {
+						end = this.indexOf(TokenType.STATEMENT, start, 'default');
+					}
+					if (end === -1) {
+						end = this.indexOf(TokenType.CLOSE_CURLY, start);
+					}
+					if (end === -1) {
+						throw new Error(`error parsing switch case: '${value.toString()}' statement`);
+					}
+					const tokens = this.tokens.slice(start, end);
+					OperatorParser.parse(tokens);
+					StatementParser.parse(tokens);
+					const block = tokens[0].valueAsExpression();
+					const node = new CaseExpression(value, block);
+					const expression = new Token(TokenType.EXPRESSION, node);
+					this.tokens.splice(index + 1, end - index - 1, expression);
 				}
 			}
 		}
@@ -670,15 +732,15 @@ export class StatementParser extends ParserUtils {
 			if (this.tokens[index].isEqual(TokenType.STATEMENT, 'do')) {
 				const statement = this.getExpressionValue(index + 1);
 				if (!this.tokens[index + 2].isEqual(TokenType.STATEMENT, 'while')) {
-					throw new Error(`Can't found 'while' in while statement at index: ${this.tokens[index + 2].index}`);
+					throw new Error(`error parsing 'while' in while statement`);
 				}
 				const openParentheses = index + 3;
 				if (!this.tokens[openParentheses].isTypeOf(TokenType.OPEN_PARENTHESES)) {
-					throw new Error(`Can't found '(' in while statement at index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing '(' in while statement`);
 				}
 				const closeParentheses = this.indexOf(TokenType.CLOSE_PARENTHESES, openParentheses + 1);
 				if (closeParentheses === -1) {
-					throw new Error(`Can't found ')' in while statement after index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing ')' in while statement`);
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
@@ -697,11 +759,11 @@ export class StatementParser extends ParserUtils {
 			if (this.tokens[index].isEqual(TokenType.STATEMENT, 'while')) {
 				const openParentheses = index + 1;
 				if (!this.tokens[openParentheses].isTypeOf(TokenType.OPEN_PARENTHESES)) {
-					throw new Error(`Can't found '(' in while statement at index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing '(' in while statement`);
 				}
 				const closeParentheses = this.indexOf(TokenType.CLOSE_PARENTHESES, openParentheses + 1);
 				if (closeParentheses === -1) {
-					throw new Error(`Can't found ')' in while statement after index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing ')' in while statement`);
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
@@ -721,11 +783,11 @@ export class StatementParser extends ParserUtils {
 			if (this.tokens[index].isEqual(TokenType.STATEMENT, 'if')) {
 				const openParentheses = index + 1;
 				if (!this.tokens[openParentheses].isTypeOf(TokenType.OPEN_PARENTHESES)) {
-					throw new Error(`Can't found '(' in if statement at index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing '(' in if statement`);
 				}
 				const closeParentheses = this.indexOf(TokenType.CLOSE_PARENTHESES, openParentheses + 1);
 				if (closeParentheses === -1) {
-					throw new Error(`Can't found ')' in if statement after index: ${this.tokens[openParentheses].index}`);
+					throw new Error(`error parsing ')' in if statement`);
 				}
 				const conditionTokens = this.tokens.slice(openParentheses + 1, closeParentheses);
 				if (conditionTokens.length !== 1) {
@@ -786,7 +848,9 @@ try {
 	// statement = `do {x = a+b;} while (x > 8);`
 	// statement = `while(x > 9) { console.log(x++); }`;
 	// statement = `if(x>9) {console.log(Math.max(6,9));}`
-	statement = `if(x){b=a+x;}else{b=a;}`
+	// statement = `if(x){b=a+x;}else{b=true;}`
+	// statement = `if(x === null) { /data/gm.test('data');}`;
+	statement = `switch('data'){ case 'a': x = 4+j; break; case 'b': x = null; default: y = x; }`;
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);
