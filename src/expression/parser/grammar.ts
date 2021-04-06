@@ -13,7 +13,7 @@ export const OperatorPrecedence: string[][] = [
 		/** Function Call */
 		// '(', ')',
 		/** pipeline operator */
-		'||>',
+		'|>',
 		/** Optional chaining */
 		'?.'
 	],
