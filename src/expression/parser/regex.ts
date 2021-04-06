@@ -1,5 +1,6 @@
 import {
-	BigIntNode, FalseNode, GlobalThisNode, NullNode, NumberNode, PropertyNode,
+	AsNode, BigIntNode, FalseNode, GlobalThisNode,
+	NullNode, NumberNode, OfNode, PropertyNode,
 	StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 import { OperatorPrecedence, StatementPrecedence } from './grammar.js';
@@ -162,6 +163,12 @@ export class RegexParser {
 						break;
 					case 'Symbol':
 						token = new Token(TokenType.PROPERTY, SymbolNode);
+						break;
+					case 'of':
+						token = new Token(TokenType.PROPERTY, OfNode);
+						break;
+					case 'as':
+						token = new Token(TokenType.PROPERTY, AsNode);
 						break;
 					case 'n':
 						if (lastTokenIndex >= 0

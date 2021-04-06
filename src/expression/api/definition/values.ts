@@ -190,3 +190,5 @@ export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
 export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
 export const GlobalThisNode = Object.freeze(new PropertyNode('globalThis')) as PropertyNode;
 export const SymbolNode = Object.freeze(new PropertyNode('Symbol')) as PropertyNode;
+export const OfNode = Object.freeze(new PropertyNode('of')) as PropertyNode;
+export const AsNode = Object.freeze(new PropertyNode('as')) as PropertyNode;

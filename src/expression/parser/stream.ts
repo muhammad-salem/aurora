@@ -1,8 +1,10 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenType } from './token.js';
 import {
-	BigIntNode, FalseNode, GlobalThisNode, NullNode, NumberNode, PropertyNode,
-	RegExpNode, StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
+	AsNode, BigIntNode, FalseNode, GlobalThisNode,
+	NullNode, NumberNode, OfNode, PropertyNode,
+	RegExpNode, StringNode, SymbolNode, ThisNode,
+	TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 
 const EOFToken = Object.freeze(new Token(TokenType.EOF, 'EOF')) as Token;
@@ -134,7 +136,19 @@ export abstract class TokenStream {
 		}
 		return tokens;
 	}
-
+	[Symbol.iterator](): IterableIterator<Token> {
+		const self = this;
+		return {
+			[Symbol.iterator]: function () {
+				return this;
+			},
+			next: () => {
+				const value = self.next();
+				const done = value ? false : true;
+				return { value, done };
+			}
+		}
+	}
 	abstract next(): Token;
 }
 
@@ -302,6 +316,8 @@ export class TokenStreamImpl extends TokenStream {
 				case 'true': node = TrueNode; break;
 				case 'false': node = FalseNode; break;
 				case 'Symbol': node = SymbolNode; break;
+				case 'of': node = OfNode; break;
+				case 'as': node = AsNode; break;
 				default:
 					node = new PropertyNode(str); break;
 			}
