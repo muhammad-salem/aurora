@@ -5,7 +5,6 @@ import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
 export class Variable {
-
 	constructor(public variable: ExpressionNode, public value?: ExpressionNode) { }
 	getVariable() {
 		return this.variable;
@@ -25,7 +24,6 @@ export class Variable {
 }
 
 export class DeclarationsNode extends AbstractExpressionNode {
-
 	constructor(protected variables: Variable[]) {
 		super();
 	}

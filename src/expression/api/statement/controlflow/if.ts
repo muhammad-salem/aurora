@@ -14,21 +14,21 @@ export class IfElseNode extends AbstractExpressionNode {
 	static fromJSON(node: IfElseNode, deserializer: NodeDeserializer): IfElseNode {
 		return new IfElseNode(
 			deserializer(node.condition),
-			deserializer(node.statement),
-			node.elseIf ? deserializer(node.elseIf) : void 0
+			deserializer(node.thenStatement),
+			node.elseStatement ? deserializer(node.elseStatement) : void 0
 		);
 	}
-	constructor(private condition: ExpressionNode, private statement: ExpressionNode, private elseIf?: ExpressionNode) {
+	constructor(private condition: ExpressionNode, private thenStatement: ExpressionNode, private elseStatement?: ExpressionNode) {
 		super();
 	}
 	getCondition() {
 		return this.condition;
 	}
-	getStatement() {
-		return this.statement;
+	getTHenStatement() {
+		return this.thenStatement;
 	}
-	getElseIf() {
-		return this.elseIf;
+	getElseStatement() {
+		return this.elseStatement;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`IfElseNode#set() has no implementation.`);
@@ -37,9 +37,9 @@ export class IfElseNode extends AbstractExpressionNode {
 		stack = stack.newStack();
 		const condition = this.condition.get(stack);
 		if (condition) {
-			return this.statement.get(stack);
-		} else if (this.elseIf) {
-			return this.elseIf.get(stack);
+			return this.thenStatement.get(stack);
+		} else if (this.elseStatement) {
+			return this.elseStatement.get(stack);
 		}
 		return void 0;
 	}
@@ -50,13 +50,13 @@ export class IfElseNode extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		return `if (${this.condition.toString()}) ${this.statement.toString()}${this.elseIf ? ' else ' : ''}${this.elseIf ? this.elseIf.toString() : ''}`;
+		return `if (${this.condition.toString()}) ${this.thenStatement.toString()}${this.elseStatement ? ' else ' : ''}${this.elseStatement ? this.elseStatement.toString() : ''}`;
 	}
 	toJson(): object {
 		return {
 			condition: this.condition.toJSON(),
-			statement: this.statement.toJSON(),
-			elseIf: this.elseIf?.toJSON()
+			thenStatement: this.thenStatement.toJSON(),
+			elseStatement: this.elseStatement?.toJSON()
 		};
 	}
 }

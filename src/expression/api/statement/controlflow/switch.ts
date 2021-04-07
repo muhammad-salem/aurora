@@ -48,7 +48,6 @@ export class CaseExpression extends AbstractExpressionNode {
 	}
 }
 
-
 @Deserializer('default')
 export class DefaultExpression extends CaseExpression {
 	static DEFAULT_KEYWORD = 'default';
