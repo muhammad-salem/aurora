@@ -7,7 +7,8 @@ import { PropertyNode } from './values.js';
 export enum FunctionType {
 	NORMAL = 'NORMAL',
 	GENERATOR = 'GENERATOR',
-	ASYNC = 'ASYNC'
+	ASYNC = 'ASYNC',
+	ASYNC_GENERATOR = 'ASYNC_GENERATOR'
 }
 export enum ArrowFunctionType {
 	NORMAL = 'NORMAL',
@@ -64,7 +65,14 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 					self.parameters.set(funcStack, args);
 					return self.statements.get(funcStack);
 				};
-				break; break;
+				break;
+			case FunctionType.ASYNC_GENERATOR:
+				func = async function* (...args: any[]) {
+					const funcStack = stack.newStack();
+					self.parameters.set(funcStack, args);
+					return self.statements.get(funcStack);
+				};
+				break;
 			default:
 			case FunctionType.NORMAL:
 				func = function (...args: any[]) {
@@ -96,6 +104,8 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				declare = 'async function'; break;
 			case FunctionType.GENERATOR:
 				declare = 'function*'; break;
+			case FunctionType.ASYNC_GENERATOR:
+				declare = 'async function*'; break;
 			default:
 			case FunctionType.NORMAL:
 				declare = 'function'; break;
