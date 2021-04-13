@@ -2,7 +2,7 @@ import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenType } from './token.js';
 import {
 	AsNode, BigIntNode, FalseNode, GlobalThisNode,
-	NullNode, NumberNode, OfNode, PropertyNode,
+	NullNode, NumberNode, OfNode, IdentifierNode,
 	RegExpNode, StringNode, SymbolNode, ThisNode,
 	TrueNode, UndefinedNode
 } from '../api/definition/values.js';
@@ -319,7 +319,7 @@ export class TokenStreamImpl extends TokenStream {
 				case 'of': node = OfNode; break;
 				case 'as': node = AsNode; break;
 				default:
-					node = new PropertyNode(str); break;
+					node = new IdentifierNode(str); break;
 			}
 			this.current = this.newToken(TokenType.PROPERTY, node);
 			this.pos += str.length;
@@ -925,6 +925,13 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				return false;
+			case 'v':
+				if (/var\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
+					// convert 'var' to be 'let' 
+					this.current = this.newToken(TokenType.STATEMENT, 'let');
+					this.pos += 4;
+					return true;
+				}
 			default:
 				return false;
 		}

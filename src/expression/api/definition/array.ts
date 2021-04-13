@@ -4,9 +4,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
 @Deserializer('array')
-export class LiteralArrayNode extends AbstractExpressionNode {
-	static fromJSON(node: LiteralArrayNode, deserializer: NodeDeserializer): LiteralArrayNode {
-		return new LiteralArrayNode(node.items.map(expression => deserializer(expression)));
+export class ArrayLiteralNode extends AbstractExpressionNode {
+	static fromJSON(node: ArrayLiteralNode, deserializer: NodeDeserializer): ArrayLiteralNode {
+		return new ArrayLiteralNode(node.items.map(expression => deserializer(expression)));
 	}
 	constructor(private items: ExpressionNode[]) {
 		super();

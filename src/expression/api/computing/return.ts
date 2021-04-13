@@ -39,9 +39,9 @@ export class ReturnNode extends AbstractExpressionNode {
 		return this.node?.event(parent) || [];
 	}
 	toString(): string {
-		return `return ${this.node?.toString()}`;
+		return `return ${this.node?.toString() || ''}`;
 	}
 	toJson(): object {
-		return { func: this.node?.toJSON() };
+		return { node: this.node?.toJSON() };
 	}
 }

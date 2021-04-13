@@ -4,7 +4,7 @@ import type { ScopedStack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from './terminate.js';
-import { PropertyNode } from '../../definition/values.js';
+import { IdentifierNode } from '../../definition/values.js';
 
 
 @Deserializer('case')
@@ -51,7 +51,7 @@ export class CaseExpression extends AbstractExpressionNode {
 @Deserializer('default')
 export class DefaultExpression extends CaseExpression {
 	static DEFAULT_KEYWORD = 'default';
-	static DefaultNode = Object.freeze(new PropertyNode(DefaultExpression.DEFAULT_KEYWORD)) as PropertyNode;
+	static DefaultNode = Object.freeze(new IdentifierNode(DefaultExpression.DEFAULT_KEYWORD)) as IdentifierNode;
 	static KEYWORDS = [DefaultExpression.DEFAULT_KEYWORD];
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
 		return new DefaultExpression(deserializer(node.block));

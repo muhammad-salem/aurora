@@ -44,7 +44,7 @@ export class ForNode extends AbstractExpressionNode {
 	}
 	get(stack: ScopedStack) {
 		stack = stack.newStack();
-		for (this.initialization?.get(stack); this.condition?.get(stack) || true; this.finalExpression?.get(stack)) {
+		for (this.initialization?.get(stack); this.condition?.get(stack) ?? true; this.finalExpression?.get(stack)) {
 			const result = this.statement.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
@@ -194,7 +194,7 @@ export class ForInNode extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		return `for (${this.variable?.toString()} in ${this.object.toString()}) ${this.statement.toString()}`;
+		return `for (${this.variable.toString()} in ${this.object.toString()}) ${this.statement.toString()}`;
 	}
 	toJson(): object {
 		return {

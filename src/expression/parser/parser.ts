@@ -17,7 +17,7 @@ import { CommaNode } from '../api/operators/comma.js';
 import { FunctionCallNode } from '../api/computing/function.js';
 import { LiteralUnaryNode, UnaryNode } from '../api/operators/unary.js';
 import { NewNode } from '../api/computing/new.js';
-import { PropertyNode } from '../api/definition/values.js';
+import { IdentifierNode } from '../api/definition/values.js';
 import { ConstNode, LetNode, Variable } from '../api/statement/declarations/declares.js';
 import { ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
@@ -532,7 +532,7 @@ export class StatementParser extends ParserUtils {
 	private createVariable(node: ExpressionNode) {
 		if (node instanceof AssignmentNode) {
 			return new Variable(node.getLeft(), node.getRight());
-		} else if (node instanceof PropertyNode) {
+		} else if (node instanceof IdentifierNode) {
 			return new Variable(node);
 		} else {
 			throw new Error(`unknown type of definition`);
@@ -849,11 +849,12 @@ try {
 	// statement = `let x = 8; const u = 0`;
 	// statement = `for (let i = 0; i< 10; i++) { console.log(i); }`;
 	// statement = `do {x = a+b;} while (x > 8);`
-	// statement = `while(x > 9) { console.log(x++); }`;
+	statement = `while(x > 9) { console.log(x++); }`;
 	// statement = `if(x>9) {console.log(Math.max(6,9));}`
 	// statement = `if(x){b=a+x;}else{b=true;}`
 	// statement = `if(x === null) { /data/gm.test('data');}`;
-	statement = `switch('data'){ case 'a': x = 4+j; break; case 'b': x = null; default: y = x; }`;
+	// statement = `switch('data'){ case 'a': x = 4+j; break; case 'b': x = null; default: y = x; }`;
+	// statement = `let x = {x: 8, y: 9};`
 
 	console.log(statement);
 	const tokensJS = parser.parse(statement);

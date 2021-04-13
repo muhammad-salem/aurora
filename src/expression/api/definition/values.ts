@@ -3,10 +3,10 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 
-@Deserializer('property')
-export class PropertyNode extends AbstractExpressionNode {
-	static fromJSON(node: PropertyNode): PropertyNode {
-		return new PropertyNode(node.property);
+@Deserializer('identifier')
+export class IdentifierNode extends AbstractExpressionNode {
+	static fromJSON(node: IdentifierNode): IdentifierNode {
+		return new IdentifierNode(node.property);
 	}
 	constructor(private property: string | number) {
 		super();
@@ -187,8 +187,8 @@ export const NullNode = Object.freeze(new NullishNode(null)) as NullishNode;
 export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as NullishNode;
 export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
 export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
-export const ThisNode = Object.freeze(new PropertyNode('this')) as PropertyNode;
-export const GlobalThisNode = Object.freeze(new PropertyNode('globalThis')) as PropertyNode;
-export const SymbolNode = Object.freeze(new PropertyNode('Symbol')) as PropertyNode;
-export const OfNode = Object.freeze(new PropertyNode('of')) as PropertyNode;
-export const AsNode = Object.freeze(new PropertyNode('as')) as PropertyNode;
+export const ThisNode = Object.freeze(new IdentifierNode('this')) as IdentifierNode;
+export const GlobalThisNode = Object.freeze(new IdentifierNode('globalThis')) as IdentifierNode;
+export const SymbolNode = Object.freeze(new IdentifierNode('Symbol')) as IdentifierNode;
+export const OfNode = Object.freeze(new IdentifierNode('of')) as IdentifierNode;
+export const AsNode = Object.freeze(new IdentifierNode('as')) as IdentifierNode;

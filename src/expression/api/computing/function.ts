@@ -4,7 +4,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadSyntaxNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('function-call')
+@Deserializer('call')
 export class FunctionCallNode extends AbstractExpressionNode {
 	static fromJSON(node: FunctionCallNode, deserializer: NodeDeserializer): FunctionCallNode {
 		return new FunctionCallNode(deserializer(node.func), node.params.map(param => deserializer(param)));

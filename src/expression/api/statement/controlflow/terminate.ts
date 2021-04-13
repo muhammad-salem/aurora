@@ -20,7 +20,7 @@ export class TerminateNode extends AbstractExpressionNode {
 	static fromJSON(node: TerminateNode): TerminateNode {
 		return String(node.symbol) === 'break' ? TerminateNode.BREAK_INSTANCE : TerminateNode.CONTINUE_INSTANCE;
 	}
-	constructor(private symbol: Symbol) {
+	private constructor(private symbol: Symbol) {
 		super();
 	}
 	getSymbol() {

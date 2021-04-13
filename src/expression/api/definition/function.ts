@@ -2,7 +2,7 @@ import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { PropertyNode } from './values.js';
+import { IdentifierNode } from './values.js';
 
 export enum FunctionType {
 	NORMAL = 'NORMAL',
@@ -23,7 +23,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			deserializer(node.parameters),
 			deserializer(node.statements),
 			FunctionType[node.type],
-			node.name ? deserializer(node.name) as PropertyNode : void 0
+			node.name ? deserializer(node.name) as IdentifierNode : void 0
 		);
 	}
 	constructor(
@@ -148,8 +148,8 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	get(stack: ScopedStack) {
 		let func: Function;
 		switch (this.type) {
-			case ArrowFunctionType.NORMAL:
-				func = (...args: any[]) => {
+			case ArrowFunctionType.ASYNC:
+				func = async (...args: any[]) => {
 					const funcStack = stack.newStack();
 					this.parameters.set(funcStack, args);
 					return this.statements.get(funcStack);
@@ -157,7 +157,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 				break;
 			default:
 			case ArrowFunctionType.NORMAL:
-				func = async (...args: any[]) => {
+				func = (...args: any[]) => {
 					const funcStack = stack.newStack();
 					this.parameters.set(funcStack, args);
 					return this.statements.get(funcStack);

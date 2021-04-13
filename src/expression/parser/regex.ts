@@ -1,6 +1,6 @@
 import {
 	AsNode, BigIntNode, FalseNode, GlobalThisNode,
-	NullNode, NumberNode, OfNode, PropertyNode,
+	NullNode, NumberNode, OfNode, IdentifierNode,
 	StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode
 } from '../api/definition/values.js';
 import { OperatorPrecedence, StatementPrecedence } from './grammar.js';
@@ -180,7 +180,7 @@ export class RegexParser {
 							return substring;
 						}
 					default:
-						token = new Token(TokenType.PROPERTY, new PropertyNode(property));
+						token = new Token(TokenType.PROPERTY, new IdentifierNode(property));
 						break;
 				}
 			} else {
