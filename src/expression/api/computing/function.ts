@@ -7,52 +7,45 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('call')
 export class FunctionCallNode extends AbstractExpressionNode {
 	static fromJSON(node: FunctionCallNode, deserializer: NodeDeserializer): FunctionCallNode {
-		return new FunctionCallNode(deserializer(node.func), node.params.map(param => deserializer(param)));
+		return new FunctionCallNode(deserializer(node.func), node.parameters.map(param => deserializer(param)));
 	}
-	constructor(private func: ExpressionNode, private params: ExpressionNode[]) {
+	constructor(private func: ExpressionNode, private parameters: ExpressionNode[]) {
 		super();
 	}
 	getFunc() {
 		return this.func;
 	}
-	getParams() {
-		return this.params;
+	getParameters() {
+		return this.parameters;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack, thisContext?: any) {
 		const funCallBack = this.func.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
-		const argArray: any[] = [];
-		this.params.forEach(param => {
-			if (param instanceof SpreadSyntaxNode) {
-				const spreadObj = param.get(stack);
-				if (Array.isArray(spreadObj)) {
-					spreadObj.forEach(arg => argArray.push(arg));
-				} else {
-					/** wrong use her, it shouldn't do that */
-					// args.push(spreadObj);
-					throw new Error('a function support only spread array syntax');
-				}
-			} else {
-				argArray.push(param.get(stack));
-			}
-		});
-		return funCallBack.call(thisContext, ...argArray);
+		const parameters = this.parameters
+			.filter(param => !(param instanceof SpreadSyntaxNode))
+			.map(param => param.get(stack));
+		const spreadParam = this.parameters[this.parameters.length - 1];
+		if (spreadParam instanceof SpreadSyntaxNode) {
+			const spreadArray = spreadParam.getNode().get(stack);
+			return funCallBack.call(thisContext, ...parameters, ...spreadArray);
+		}
+		return funCallBack.call(thisContext, ...parameters);
 	}
 	entry(): string[] {
-		return [...this.func.entry(), ...this.params.flatMap(param => param.entry())];
+		return [...this.func.entry(), ...this.parameters.flatMap(param => param.entry())];
 	}
 	event(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {
-		return `${this.func.toString()}(${this.params.map(param => param.toString()).join(', ')})`;
+		return `${this.func.toString()}(${this.parameters.map(param => param.toString()).join(', ')})`;
 	}
 	toJson(): object {
 		return {
 			func: this.func.toJSON(),
-			params: this.params.map(param => param.toJSON())
+			parameters: this.parameters.map(param => param.toJSON())
 		};
 	}
 }
