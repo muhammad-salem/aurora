@@ -5,11 +5,14 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 /**
  * pipeline ('|>') operator support syntax:
- * param |> func:arg1:arg2:arg3
- * param |> func:arg1:?:arg3
+ *  param |> func
+ *  param |> func:arg1:arg2:arg3
+ *  param |> func:arg1:?:arg3
+ *  param |> func:arg1:?:arg3:?:arg5
  * 
- * param |> func(arg1, arg2, arg3)
- * param |> func(arg1, ?, arg3)
+ *  param |> func(arg1, arg2, arg3)
+ *  param |> func(arg1, ?, arg3)
+ *  param |> func(arg1, ?, arg3, arg4, ?, arg6)
  */
 @Deserializer('pipeline')
 export class PipelineNode extends AbstractExpressionNode {
@@ -17,16 +20,12 @@ export class PipelineNode extends AbstractExpressionNode {
 		return new PipelineNode(
 			deserializer(node.param),
 			deserializer(node.func),
-			node.args?.map(deserializer),
-			node.index
+			node.args.map(arg => arg === '?' ? arg : deserializer(arg))
 		);
 	}
 	static KEYWORDS = ['|>', ':', '?', ','];
-	private argumentList: ExpressionNode[];
-	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: ExpressionNode[] = [], private index = 0) {
+	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: (ExpressionNode | '?')[] = []) {
 		super();
-		this.argumentList = args.slice();
-		this.argumentList.splice(index, 0, param);
 	}
 	getParam() {
 		return this.param;
@@ -37,18 +36,21 @@ export class PipelineNode extends AbstractExpressionNode {
 	getArgs() {
 		return this.args;
 	}
-	getIndex() {
-		return this.index;
-	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack, thisContext?: any) {
+		const paramValue = this.param.get(stack, thisContext);
 		const funCallBack = this.func.get(stack) as Function;
-		return funCallBack.call(thisContext, ...this.argumentList.map(arg => arg.get(stack)));
+		const argumentList = this.args.map(arg => arg === '?' ? paramValue : arg.get(stack));
+		return funCallBack.call(thisContext, ...argumentList);
 	}
 	entry(): string[] {
-		return [...this.func.entry(), ...this.param.entry(), ...this.args.flatMap(arg => arg.entry())];
+		return [
+			...this.func.entry(),
+			...this.param.entry(),
+			...(this.args.filter(arg => arg !== '?') as ExpressionNode[]).flatMap(arg => arg.entry!())
+		];
 	}
 	event(parent?: string): string[] {
 		return [];
@@ -60,8 +62,7 @@ export class PipelineNode extends AbstractExpressionNode {
 		return {
 			param: this.param.toJSON(),
 			func: this.func.toJSON(),
-			args: this.args?.map(arg => arg.toJSON()),
-			index: this.index
+			args: this.args?.map(arg => arg === '?' ? arg : arg.toJSON())
 		};
 	}
 }
