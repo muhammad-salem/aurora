@@ -415,15 +415,14 @@ export class OperatorParser extends ParserUtils {
 					const func = this.tokens[index + 1].value as ExpressionNode;
 					if (this.tokens[index + 2]?.value === ':'
 						|| this.tokens[index + 2]?.type === TokenType.OPEN_PARENTHESES) {
-						const args: ExpressionNode[] = [];
-						let paramterIndex = 0;
+						const args: (ExpressionNode | '?')[] = [];
 						let pointer = index + 3;
 						for (; pointer < this.tokens.length; pointer++) {
 							if (!this.tokens[pointer] || this.tokens[pointer].isEofSmCP()) {
 								break;
 							}
 							if (this.tokens[pointer].value === '?') {
-								paramterIndex = args.length;
+								args.push('?');
 								continue;
 							} else if (
 								this.tokens[pointer].value === ':'
@@ -432,7 +431,7 @@ export class OperatorParser extends ParserUtils {
 							}
 							args.push(this.getExpressionValue(pointer));
 						}
-						const ternary = new Token(TokenType.EXPRESSION, new PipelineNode(param, func, args, paramterIndex));
+						const ternary = new Token(TokenType.EXPRESSION, new PipelineNode(param, func, args));
 						this.tokens.splice(index - 1, pointer - index, ternary);
 						index -= 2;
 					} else {
