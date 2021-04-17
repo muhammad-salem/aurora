@@ -30,14 +30,16 @@ export class BlockNode extends AbstractExpressionNode {
 		const stackForBlock = stack.newStack();
 		for (const node of this.statements) {
 			value = node.get(stackForBlock);
-			if (TerminateNode.BreakSymbol === value || TerminateNode.ContinueSymbol === value) {
-				return value
+			if (TerminateNode.BreakSymbol === value) {
+				break;
+			}
+			if (TerminateNode.ContinueSymbol === value) {
+				continue;
 			}
 			if (value instanceof ReturnValue) {
 				return value.value;
 			}
 		}
-		return value;
 	}
 	entry(): string[] {
 		return this.statements.flatMap(node => node.entry());
