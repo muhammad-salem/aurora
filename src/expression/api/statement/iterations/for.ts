@@ -108,17 +108,17 @@ export class ForOfNode extends AbstractExpressionNode {
 		const iterable = <any[]>this.iterable.get(stack);
 		for (const iterator of iterable) {
 			const forOfStack = stack.newStack();
-			this.variable.set(forOfStack, iterable);
+			this.variable.set(forOfStack, iterator);
 			const result = this.statement.get(forOfStack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
 				continue;
 			}
-			if (TerminateNode.BreakSymbol === result) {
+			else if (TerminateNode.BreakSymbol === result) {
 				break;
 			}
-			if (result instanceof ReturnValue) {
+			else if (result instanceof ReturnValue) {
 				return result;
 			}
 		}
@@ -171,17 +171,17 @@ export class ForInNode extends AbstractExpressionNode {
 		const iterable = <object>this.object.get(stack);
 		for (const iterator in iterable) {
 			const forOfStack = stack.newStack();
-			this.variable.set(forOfStack, iterable);
+			this.variable.set(forOfStack, iterator);
 			const result = this.statement.get(forOfStack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
 				continue;
 			}
-			if (TerminateNode.BreakSymbol === result) {
+			else if (TerminateNode.BreakSymbol === result) {
 				break;
 			}
-			if (result instanceof ReturnValue) {
+			else if (result instanceof ReturnValue) {
 				return result;
 			}
 		}
@@ -235,17 +235,17 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		(async () => {
 			for await (const iterator of iterable) {
 				const forOfStack = stack.newStack();
-				this.variable.set(forOfStack, iterable);
+				this.variable.set(forOfStack, iterator);
 				const result = this.statement.get(forOfStack);
 				// useless case, as it at the end of for statement
 				// an array/block statement, should return last signal
 				if (TerminateNode.ContinueSymbol === result) {
 					continue;
 				}
-				if (TerminateNode.BreakSymbol === result) {
+				else if (TerminateNode.BreakSymbol === result) {
 					break;
 				}
-				if (result instanceof ReturnValue) {
+				else if (result instanceof ReturnValue) {
 					return result;
 				}
 			}

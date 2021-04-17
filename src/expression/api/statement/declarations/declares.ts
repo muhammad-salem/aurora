@@ -37,7 +37,6 @@ export class DeclarationsNode extends AbstractExpressionNode {
 		const variable = this.variables[0];
 		variable.variable.set(stack, value);
 	}
-
 	get(stack: ScopedStack) {
 		this.variables.forEach(item => {
 			stack.localScop.set(item.variable.get(stack), item.value?.get(stack));
@@ -72,9 +71,6 @@ export class LetNode extends DeclarationsNode {
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
 		);
 	}
-	constructor(variables: Variable[]) {
-		super(variables);
-	}
 	toString(): string {
 		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
 	}
@@ -95,9 +91,6 @@ export class ConstNode extends DeclarationsNode {
 		return new ConstNode(
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
 		);
-	}
-	constructor(variables: Variable[]) {
-		super(variables);
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`ConstNode#set() has no implementation.`);
