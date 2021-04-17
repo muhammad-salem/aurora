@@ -78,10 +78,10 @@ export function createTernaryExpression(op: string, logical: ExpressionNode, ifT
 	}
 }
 
-export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ExpressionNode[], index?: number): ExpressionNode {
+export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ('?' | ExpressionNode)[]): ExpressionNode {
 	switch (op) {
 		case '|>':
-			return new PipelineNode(param, func, args, index);
+			return new PipelineNode(param, func, args);
 		default:
 			throw new Error(`${op} is not pipeline operator`);
 
