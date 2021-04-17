@@ -18,36 +18,28 @@ export class SpreadSyntaxNode extends AbstractExpressionNode {
 	set(stack: ScopedStack, value: any) {
 		throw new Error('SpreadSyntax.set() Method has no implementation.');
 	}
-	get(stack: ScopedStack): any[] | { [k: string]: any } {
-		const object = this.node.get(stack);
-		if (Array.isArray(object)) {
-			return this.getArray(object);
-		} else if (Reflect.has(object, Symbol.iterator)) {
-			return this.getIterator(object);
+	get(stack: ScopedStack): void {
+		const value = this.node.get(stack);
+		if (Array.isArray(value)) {
+			this.spreadFromArray(stack, value);
+		} else if (Reflect.has(value, Symbol.iterator)) {
+			this.spreadFromIterator(stack, value);
 		} else {
-			return this.getObject(object);
+			Object.keys(value).forEach(key => stack.localScop.set(key, value[key]));
 		}
 	}
-	getArray(contextArray: any[]): any[] {
-		const result: any[] = [];
-		contextArray.forEach(item => result.push(item));
-		return result;
+	private spreadFromArray(stack: ScopedStack, array: Array<any>): void {
+		let length: number = stack.get('length');
+		array.forEach(value => stack.localScop.set(length++, value));
 	}
-	getIterator(iterator: Iterator<any>): any[] {
-		const result: any[] = [];
+	private spreadFromIterator(stack: ScopedStack, iterator: Iterator<any>): void {
 		while (true) {
 			const iteratorResult = iterator.next();
 			if (iteratorResult.done) {
 				break;
 			}
-			result.push(iteratorResult.value);
+			stack.localScop.pushValue(iteratorResult.value);
 		}
-		return result;
-	}
-	getObject(contextObject: any): { [k in keyof typeof contextObject]: any } {
-		const result: { [k in keyof typeof contextObject]: any } = {};
-		Object.keys(contextObject).forEach(key => result[key] = contextObject[key]);
-		return result;
 	}
 	entry(): string[] {
 		return [];
