@@ -5,14 +5,55 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { IdentifierNode } from './values.js';
 
 export enum FunctionType {
-	NORMAL = 'NORMAL',
-	GENERATOR = 'GENERATOR',
-	ASYNC = 'ASYNC',
-	ASYNC_GENERATOR = 'ASYNC_GENERATOR'
+	NORMAL = 'NORMAL',						// 0
+	ASYNC = 'ASYNC',						// 1
+	GENERATOR = 'GENERATOR',				// 2
+	ASYNC_GENERATOR = 'ASYNC_GENERATOR'		// 3
 }
 export enum ArrowFunctionType {
 	NORMAL = 'NORMAL',
 	ASYNC = 'ASYNC'
+}
+
+@Deserializer('param')
+export class ParamterNode extends AbstractExpressionNode {
+	static fromJSON(node: ParamterNode, deserializer: NodeDeserializer): ParamterNode {
+		return new ParamterNode(
+			deserializer(node.identifier),
+			node.defaultValue ? deserializer(node.defaultValue) as IdentifierNode : void 0
+		);
+	}
+	constructor(private identifier: ExpressionNode, private defaultValue?: ExpressionNode) {
+		super();
+	}
+	getIdentifier() {
+		return this.identifier;
+	}
+	getDefaultValue() {
+		return this.defaultValue;
+	}
+	set(stack: ScopedStack, value: Function) {
+		stack.localScop.set(this.identifier.get(stack), value || this.defaultValue?.get(stack));
+	}
+	get(stack: ScopedStack) {
+		throw new Error('ParamterNode#get() has no implementation.');
+	}
+	entry(): string[] {
+		return [];
+	}
+	event(): string[] {
+		return [];
+	}
+	toString(): string {
+		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
+		return this.identifier.toString() + init;
+	}
+	toJson(): object {
+		return {
+			identifier: this.identifier.toJSON(),
+			defaultValue: this.defaultValue?.toJSON()
+		};
+	}
 }
 
 @Deserializer('function')
@@ -20,14 +61,14 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	static KEYWORDS = ['function'];
 	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
 		return new FunctionDeclarationNode(
-			deserializer(node.parameters),
+			node.parameters.map(deserializer),
 			deserializer(node.statements),
 			FunctionType[node.type],
 			node.name ? deserializer(node.name) as IdentifierNode : void 0
 		);
 	}
 	constructor(
-		private parameters: ExpressionNode,
+		private parameters: ExpressionNode[],
 		private statements: ExpressionNode,
 		private type: FunctionType,
 		private name?: ExpressionNode) {
@@ -48,6 +89,11 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	set(stack: ScopedStack, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
+	private setParamter(stack: ScopedStack, args: any[]) {
+		for (let i = 0; i < this.parameters.length; i++) {
+			this.parameters[i].set(stack, args[i])
+		}
+	}
 	get(stack: ScopedStack) {
 		const self = this;
 		let func: Function;
@@ -55,21 +101,21 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			case FunctionType.ASYNC:
 				func = async function (...args: any[]) {
 					const funcStack = stack.newStack();
-					self.parameters.set(funcStack, args);
+					self.setParamter(funcStack, args);
 					return self.statements.get(funcStack);
 				};
 				break;
 			case FunctionType.GENERATOR:
 				func = function* (...args: any[]) {
 					const funcStack = stack.newStack();
-					self.parameters.set(funcStack, args);
+					self.setParamter(funcStack, args);
 					return self.statements.get(funcStack);
 				};
 				break;
 			case FunctionType.ASYNC_GENERATOR:
 				func = async function* (...args: any[]) {
 					const funcStack = stack.newStack();
-					self.parameters.set(funcStack, args);
+					self.setParamter(funcStack, args);
 					return self.statements.get(funcStack);
 				};
 				break;
@@ -77,7 +123,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			case FunctionType.NORMAL:
 				func = function (...args: any[]) {
 					const funcStack = stack.newStack();
-					self.parameters.set(funcStack, args);
+					self.setParamter(funcStack, args);
 					return self.statements.get(funcStack);
 				};
 				break;
@@ -89,7 +135,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	}
 	entry(): string[] {
 		return [
-			...this.parameters.entry(),
+			...this.parameters.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.funcBody.flatMap(line => line.entry())
 		];
@@ -110,11 +156,11 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			case FunctionType.NORMAL:
 				declare = 'function'; break;
 		}
-		return `${declare} ${this.name?.toString() || ''}(${this.parameters.toString()}) ${this.statements.toString()}`;
+		return `${declare} ${this.name?.toString() || ''}(${this.parameters.map(param => param.toString()).join(', ')}) ${this.statements.toString()}`;
 	}
 	toJson(): object {
 		return {
-			parameters: this.parameters.toJSON(),
+			parameters: this.parameters.map(param => param.toJSON()),
 			statements: this.statements.toJSON(),
 			type: this.type,
 			name: this.name?.toJSON()
@@ -128,12 +174,12 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	static KEYWORDS = ['=>'];
 	static fromJSON(node: ArrowFunctionNode, deserializer: NodeDeserializer): ArrowFunctionNode {
 		return new ArrowFunctionNode(
-			deserializer(node.parameters),
+			node.parameters.map(deserializer),
 			deserializer(node.statements),
 			ArrowFunctionType[node.type]
 		);
 	}
-	constructor(private parameters: ExpressionNode, private statements: ExpressionNode, private type: ArrowFunctionType) {
+	constructor(private parameters: ExpressionNode[], private statements: ExpressionNode, private type: ArrowFunctionType) {
 		super();
 	}
 	getParameters() {
@@ -145,13 +191,18 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	set(stack: ScopedStack, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
+	private setParamter(stack: ScopedStack, args: any[]) {
+		for (let i = 0; i < this.parameters.length; i++) {
+			this.parameters[i].set(stack, args[i])
+		}
+	}
 	get(stack: ScopedStack) {
 		let func: Function;
 		switch (this.type) {
 			case ArrowFunctionType.ASYNC:
 				func = async (...args: any[]) => {
 					const funcStack = stack.newStack();
-					this.parameters.set(funcStack, args);
+					this.setParamter(funcStack, args);
 					return this.statements.get(funcStack);
 				};
 				break;
@@ -159,7 +210,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			case ArrowFunctionType.NORMAL:
 				func = (...args: any[]) => {
 					const funcStack = stack.newStack();
-					this.parameters.set(funcStack, args);
+					this.setParamter(funcStack, args);
 					return this.statements.get(funcStack);
 				};
 				break;
@@ -168,7 +219,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	}
 	entry(): string[] {
 		return [
-			...this.parameters.entry(),
+			...this.parameters.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.funcBody.flatMap(line => line.entry())
 		];
@@ -177,11 +228,23 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		return this.statements.event();
 	}
 	toString(): string {
-		return `${this.type === ArrowFunctionType.ASYNC ? 'async ' : ''}${this.parameters.toString()} => ${this.statements.toString()}`;
+		let str = this.type === ArrowFunctionType.ASYNC ? 'async ' : '';
+		if (this.parameters.length === 0) {
+			str += '()';
+		} else if (this.parameters.length === 1) {
+			str += this.parameters[0].toString();
+		} else {
+			str += '(';
+			str += this.parameters.map(param => param.toString()).join(', ');
+			str += ')';
+		}
+		str += ' => ';
+		str += this.statements.toString();
+		return str;
 	}
 	toJson(): object {
 		return {
-			parameters: this.parameters.toJSON(),
+			parameters: this.parameters.map(param => param.toJSON()),
 			statements: this.statements.toJSON(),
 			type: this.type,
 		};
