@@ -33,12 +33,13 @@ export class SpreadSyntaxNode extends AbstractExpressionNode {
 		array.forEach(value => stack.localScop.set(length++, value));
 	}
 	private spreadFromIterator(stack: ScopedStack, iterator: Iterator<any>): void {
+		let length: number = stack.get('length');
 		while (true) {
 			const iteratorResult = iterator.next();
 			if (iteratorResult.done) {
 				break;
 			}
-			stack.localScop.pushValue(iteratorResult.value);
+			stack.localScop.set(length++, iteratorResult.value);
 		}
 	}
 	entry(): string[] {
