@@ -36,11 +36,10 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 		}
 		switch (this.type) {
 			case 'property':
+			case 'function':
 				return (<ExpressionNode>this.property).get(stack, object);
 			case 'expression':
 				return object[(<ExpressionNode>this.property).get(stack, object)];
-			case 'function':
-				return (<ExpressionNode>this.property).get(stack, object);
 		}
 	}
 	getThis(stack: ScopedStack): any {

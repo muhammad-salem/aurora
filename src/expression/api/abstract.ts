@@ -38,7 +38,7 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 	set(context: object, value: any) {
 		throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
 	}
-	get(stack: ScopedStack): boolean {
+	get(stack: ScopedStack): any {
 		const evalNode: EvaluateNode = {
 			left: this.left.get(stack),
 			right: this.right.get(stack)
