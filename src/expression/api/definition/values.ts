@@ -34,7 +34,7 @@ export class IdentifierNode extends AbstractExpressionNode {
 	}
 }
 
-export abstract class AbstractValueNode<T> extends AbstractExpressionNode {
+export abstract class AbstractLiteralNode<T> extends AbstractExpressionNode {
 	protected value: T;
 	getValue() {
 		return this.value;
@@ -60,7 +60,7 @@ export abstract class AbstractValueNode<T> extends AbstractExpressionNode {
 }
 
 @Deserializer('string')
-export class StringNode extends AbstractValueNode<string> {
+export class StringNode extends AbstractLiteralNode<string> {
 	static fromJSON(node: StringNode): StringNode {
 		return new StringNode(node.value, node.quote);
 	}
@@ -91,7 +91,7 @@ export class StringNode extends AbstractValueNode<string> {
 }
 
 @Deserializer('number')
-export class NumberNode extends AbstractValueNode<number> {
+export class NumberNode extends AbstractLiteralNode<number> {
 	static fromJSON(node: NumberNode): NumberNode {
 		return new NumberNode(node.value);
 	}
@@ -102,7 +102,7 @@ export class NumberNode extends AbstractValueNode<number> {
 }
 
 @Deserializer('bigint')
-export class BigIntNode extends AbstractValueNode<bigint> {
+export class BigIntNode extends AbstractLiteralNode<bigint> {
 	static fromJSON(node: BigIntNode): BigIntNode {
 		return new BigIntNode(BigInt(String(node.value)));
 	}
@@ -118,7 +118,7 @@ export class BigIntNode extends AbstractValueNode<bigint> {
 	}
 }
 @Deserializer('regexp')
-export class RegExpNode extends AbstractValueNode<RegExp> {
+export class RegExpNode extends AbstractLiteralNode<RegExp> {
 	static fromJSON(node: RegExpNode & { source: string, flags: string }): RegExpNode {
 		return new RegExpNode(new RegExp(node.source, node.flags));
 	}
@@ -140,7 +140,7 @@ export class RegExpNode extends AbstractValueNode<RegExp> {
 export const TRUE = String(true);
 export const FALSE = String(false);
 @Deserializer('boolean')
-export class BooleanNode extends AbstractValueNode<boolean> {
+export class BooleanNode extends AbstractLiteralNode<boolean> {
 	static fromJSON(node: BooleanNode): BooleanNode {
 		switch (String(node.value)) {
 			case TRUE: return TrueNode;
@@ -159,7 +159,7 @@ export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
 @Deserializer('nullish')
-export class NullishNode extends AbstractValueNode<null | undefined> {
+export class NullishNode extends AbstractLiteralNode<null | undefined> {
 	static fromJSON(node: NullishNode): NullishNode {
 		switch (String(node.value)) {
 			case NULL: return NullNode;
