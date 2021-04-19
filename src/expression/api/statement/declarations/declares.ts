@@ -15,10 +15,10 @@ export class Variable {
 	toString() {
 		return `${this.variable.toString()}${this.value ? ` = ${this.value.toString()}` : ''}`;
 	}
-	toJson() {
+	toJSON() {
 		return {
-			variable: this.variable.toString(),
-			value: this.value?.toString()
+			variable: this.variable.toJSON(),
+			value: this.value?.toJSON()
 		};
 	}
 }
@@ -47,7 +47,7 @@ export abstract class DeclarationsNode extends AbstractExpressionNode {
 	abstract toString(): string;
 	toJson(): object {
 		return {
-			variables: this.variables.map(v => v.toJson())
+			variables: this.variables.map(v => v.toJSON())
 		};
 	}
 }
