@@ -10,7 +10,7 @@
 		"outDir": "dist",
 		"rootDir": "src",
 		"composite": true,
-		"tsBuildInfoFile": "./build.info"
+		"tsBuildInfoFile": "./tsBuild.info"
 	},
 	"include": [
 		"src/**/*.ts",

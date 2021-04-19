@@ -109,6 +109,7 @@ dist
 **/*.d.ts
 **/*.map
 **/*/build.info
+**/*/tsBuild.info
 .idea
 .verdaccio
 **/web_modules/

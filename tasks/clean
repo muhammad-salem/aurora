@@ -10,5 +10,5 @@ for packageDir in packages/* ; do
     done
 done
 
-rm -rf ./src/*/build.info
-rm -rf test/{dist,build.info,public/web_modules}
+rm -rf ./src/*/tsBuild.info
+rm -rf test/{dist,tsBuild.info,public/web_modules}

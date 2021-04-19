@@ -5,7 +5,7 @@
 		"outDir": "../../packages/directives",
 		"rootDir": ".",
 		"composite": true,
-		"tsBuildInfoFile": "./build.info"
+		"tsBuildInfoFile": "./tsBuild.info"
 	},
 	"include": [
 		"**/*.ts",
