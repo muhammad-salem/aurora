@@ -31,7 +31,7 @@ export class StatementNode extends AbstractExpressionNode {
 		return this.lines.flatMap(node => node.event(parent));
 	}
 	toString(): string {
-		return this.lines.map(node => node.toString()).join('; ');
+		return this.lines.map(node => node.toString()).join('; ').concat(';');
 	}
 	toJson(): object {
 		return { lines: this.lines.map(line => line.toJSON()) };

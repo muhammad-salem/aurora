@@ -23,7 +23,7 @@ export class Variable {
 	}
 }
 
-export class DeclarationsNode extends AbstractExpressionNode {
+export abstract class DeclarationsNode extends AbstractExpressionNode {
 	constructor(protected variables: Variable[]) {
 		super();
 	}
@@ -31,11 +31,7 @@ export class DeclarationsNode extends AbstractExpressionNode {
 		return this.variables;
 	}
 	set(stack: ScopedStack, value: any) {
-		if (this.variables.length > 1) {
-			throw new Error(`LetNode#set() has no implementation.`);
-		}
-		const variable = this.variables[0];
-		variable.variable.set(stack, value);
+		throw new Error(`LetNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack) {
 		this.variables.forEach(item => {
@@ -48,9 +44,7 @@ export class DeclarationsNode extends AbstractExpressionNode {
 	event(parent?: string): string[] {
 		return [];
 	}
-	toString(): string {
-		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
-	}
+	abstract toString(): string;
 	toJson(): object {
 		return {
 			variables: this.variables.map(v => v.toJson())
@@ -72,7 +66,7 @@ export class LetNode extends DeclarationsNode {
 		);
 	}
 	toString(): string {
-		return `let ${this.variables.map(v => v.toString()).join(', ')};`;
+		return `let ${this.variables.map(v => v.toString()).join(', ')}`;
 	}
 }
 
@@ -92,10 +86,7 @@ export class ConstNode extends DeclarationsNode {
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
 		);
 	}
-	set(stack: ScopedStack, value: any) {
-		throw new Error(`ConstNode#set() has no implementation.`);
-	}
 	toString(): string {
-		return `const ${this.variables.map(v => v.toString()).join(', ')};`;
+		return `const ${this.variables.map(v => v.toString()).join(', ')}`;
 	}
 }
