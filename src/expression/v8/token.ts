@@ -456,12 +456,7 @@ export class Token {
 		return false;
 	}
 	public static isArrowOrAssignmentOp(token: Token) {
-		switch (token) {
-			case Token.EQ:
-			case Token.ARROW:
-				return true;
-		}
-		return false;
+		return token === Token.ARROW || this.isAssignment(token);
 	}
 	public static isAssignment(token: Token): boolean {
 		switch (token) {
@@ -548,7 +543,9 @@ export class Token {
 			case Token.TEMPLATE_SPAN:
 			case Token.TEMPLATE_TAIL:
 			case Token.PERIOD:
-			case Token.R_BRACKETS:
+			case Token.L_BRACKETS:
+			case Token.QUESTION_PERIOD:
+			case Token.L_PARENTHESES:
 				return true;
 		}
 		return false;
