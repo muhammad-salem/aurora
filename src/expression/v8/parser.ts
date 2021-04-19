@@ -28,6 +28,7 @@ import { CommaNode } from '../api/operators/comma.js';
 import { RestParameterNode } from '../api/definition/rest.js';
 import { buildPostfixExpression, buildUnaryExpression, shortcutNumericLiteralBinaryExpression } from './nodes.js';
 import { OptionalChainingNode } from '../api/operators/chaining.js';
+import { StatementNode } from '../api/definition/statement.js';
 
 
 enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
@@ -180,13 +181,17 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = [];
+		let expression: ExpressionNode;
 		while (this.peek().isNotType(Token.EOS)) {
-			list.push(this.parseStatement());
+			expression = this.parseStatement();
+			if (EmptyNode.INSTANCE !== expression) {
+				list.push(expression);
+			}
 		}
 		if (list.length === 1) {
 			return list[0];
 		}
-		return new BlockNode(list);
+		return new StatementNode(list);
 	}
 
 	/**
@@ -518,10 +523,6 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		const variables: Variable[] = [];
 		do {
-			// Parse binding pattern.
-			// FuncNameInferrerState fni_state(& fni_);
-
-			// int decl_pos = peek_position();
 
 			let name: ExpressionNode;
 			let value: ExpressionNode | undefined;
@@ -538,16 +539,9 @@ export class JavaScriptParser extends AbstractParser {
 					// // for of/in will need it later, so create the expression now.
 				}
 			} else {
-				// name = impl() -> NullIdentifier();
-				// pattern = ParseBindingPattern();
-				// DCHECK(!impl() -> IsIdentifier(pattern));
 				name = this.parseBindingPattern();
 			}
 
-			// Scanner:: Location variable_loc = scanner() -> location();
-
-			// ExpressionT value = impl() -> NullExpression();
-			// int value_beg_pos = kNoSourcePosition;
 			if (this.check(Token.ASSIGN)) {
 				value = this.parseAssignmentExpression();
 			} else if (!this.peekInOrOf()) {
@@ -1048,6 +1042,7 @@ export class JavaScriptParser extends AbstractParser {
 				// }
 
 				// return expr;
+				break;
 			}
 			case Token.CLASS: {
 				throw new Error(`not supported`);
