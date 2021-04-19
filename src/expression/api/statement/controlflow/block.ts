@@ -48,7 +48,7 @@ export class BlockNode extends AbstractExpressionNode {
 		return this.statements.flatMap(node => node.event(parent));
 	}
 	toString(): string {
-		return this.statements.map(node => node.toString()).join('; ').concat(';');
+		return `{ ${this.statements.map(node => node.toString()).join('; ')}; }`;
 	}
 	toJson(): object {
 		return { statements: this.statements.map(node => node.toJSON()) };
