@@ -288,6 +288,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 	}
 	protected parseBlock(): ExpressionNode {
+		this.expect(Token.L_CURLY);
 		const statements: ExpressionNode[] = [];
 		const block = new BlockNode(statements)
 		while (this.peek().isNotType(Token.R_CURLY)) {
@@ -373,8 +374,9 @@ export class JavaScriptParser extends AbstractParser {
 		return this.parseFunctionLiteral(type, funcName);
 	}
 	protected parseIfStatement(): ExpressionNode {
+		this.consume(Token.IF);
 		this.consume(Token.L_PARENTHESES);
-		const condition = this.parseExpressionOrLabelledStatement();
+		const condition = this.parseExpression();
 		this.consume(Token.R_PARENTHESES);
 		if (this.peek().isNotType(Token.L_CURLY)) {
 			throw new Error(`expected '{'`);
@@ -712,7 +714,7 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.SEMICOLON);
 		// if (expr -> IsFailureExpression()) return impl() -> NullStatement();
 		// return factory() -> NewExpressionStatement(expr, pos);
-		return new NewNode(expr);
+		return expr;
 	}
 	protected parseExpression(): ExpressionNode {
 		return this.parseExpressionCoverGrammar();
@@ -988,6 +990,7 @@ export class JavaScriptParser extends AbstractParser {
 			}
 
 			case Token.REGEXP_LITERAL:
+				this.consume(Token.REGEXP_LITERAL);
 				return token.value!;
 
 			case Token.FUNCTION:
@@ -1093,7 +1096,6 @@ export class JavaScriptParser extends AbstractParser {
 		// Arguments ::
 		//   '(' (AssignmentExpression)*[','] ')'
 
-		let hasSpread = false;
 		this.consume(Token.L_PARENTHESES);
 		const args: ExpressionNode[] = [];
 		while (this.peek().isNotType(Token.R_PARENTHESES)) {
@@ -1110,7 +1112,6 @@ export class JavaScriptParser extends AbstractParser {
 				}
 			}
 			if (isSpread) {
-				hasSpread = true;
 				argument = new SpreadSyntaxNode(argument);
 			}
 			args.push(argument);
