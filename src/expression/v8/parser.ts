@@ -58,7 +58,7 @@ export abstract class AbstractParser {
 	}
 	protected consume(token: Token) {
 		if (this.scanner.next().token !== token) {
-			throw new Error(`Error parsing ${token}`);
+			throw new Error(`Error parsing ${JSON.stringify(token)}`);
 		}
 	}
 	protected check(token: Token): boolean {
@@ -80,7 +80,7 @@ export abstract class AbstractParser {
 	protected expect(token: Token) {
 		const next = this.scanner.next();
 		if (next.token !== token) {
-			throw new Error(`Unexpected Token: ${token}`);
+			throw new Error(`Unexpected Token: ${JSON.stringify(token)}`);
 		}
 	}
 
@@ -771,9 +771,7 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.L_PARENTHESES);
 		const formals: ExpressionNode[] = this.parseFormalParameterList();
 		this.expect(Token.R_PARENTHESES);
-		this.expect(Token.L_CURLY);
 		const body: ExpressionNode = this.parseFunctionBody();
-		this.expect(Token.R_CURLY);
 		return new FunctionDeclarationNode(formals, body, flag, name);
 	}
 	protected parseFunctionBody(): ExpressionNode {
@@ -970,7 +968,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   AsyncFunctionLiteral
 
 		// int beg_pos = peek_position();
-		let token = this.scanner.peek();
+		let token = this.peek();
 
 		if (Token.isAnyIdentifier(token.token)) {
 			return this.next().getValue();
@@ -1017,35 +1015,29 @@ export class JavaScriptParser extends AbstractParser {
 				if (this.check(Token.R_PARENTHESES)) {
 					// ()=>x.  The continuation that consumes the => is in
 					// ParseAssignmentExpressionCoverGrammar.
-					// if (!this.peekAhead().isType(Token.ARROW)) {
-					// 	throw new Error(`Unexpected Token: ${Token.R_PARENTHESES}`);
-					// }
-					// next_arrow_function_info_.scope =
-					// 	NewFunctionScope(FunctionKind.kArrowFunction);
-					// return factory() -> NewEmptyParentheses(beg_pos);
+
+					if (!this.peekAhead().isType(Token.ARROW)) {
+						throw new Error(`Unexpected Token: ${Token.R_PARENTHESES}`);
+					}
+					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
 				}
-				// Scope.Snapshot scope_snapshot(scope());
-				// ArrowHeadParsingScope maybe_arrow(impl(), FunctionKind.kArrowFunction);
-				// // Heuristically try to detect immediately called functions before
-				// // seeing the call parentheses.
-				// if (this.peekAhead().isType(Token.FUNCTION) ||
-				// 	(this.peekAhead().isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION))) {
-				// 	function_state_ -> set_next_function_is_likely_called();
-				// }
-				// AcceptINScope scope(this, true);
-				// ExpressionT expr = ParseExpressionCoverGrammar();
-				// expr -> mark_parenthesized();
-				// this.expect(Token.RPAREN);
+				// Heuristically try to detect immediately called functions before
+				// seeing the call parentheses.
 
-				// if (this.peekAhead().isType(Token.ARROW)) {
-				// 	next_arrow_function_info_.scope = maybe_arrow.ValidateAndCreateScope();
-				// 	scope_snapshot.Reparent(next_arrow_function_info_.scope);
-				// } else {
-				// 	maybe_arrow.ValidateExpression();
-				// }
-
-				// return expr;
-				break;
+				let peekToken = this.peek();
+				let expression: ExpressionNode;
+				if (peekToken.isType(Token.FUNCTION)) {
+					this.consume(Token.FUNCTION);
+					expression = this.parseFunctionLiteral(FunctionType.NORMAL);
+				} else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
+					this.consume(Token.ASYNC);
+					this.consume(Token.FUNCTION);
+					expression = this.parseFunctionLiteral(FunctionType.ASYNC);
+				} else {
+					expression = this.parseExpressionCoverGrammar();
+				}
+				this.expect(Token.R_PARENTHESES);
+				return expression;
 			}
 			case Token.CLASS: {
 				throw new Error(`not supported`);
