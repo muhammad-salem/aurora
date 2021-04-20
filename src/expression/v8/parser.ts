@@ -26,9 +26,12 @@ import { PipelineNode } from '../api/operators/pipeline.js';
 import { LogicalNode } from '../api/operators/logical.js';
 import { CommaNode } from '../api/operators/comma.js';
 import { RestParameterNode } from '../api/definition/rest.js';
-import { buildPostfixExpression, buildUnaryExpression, shortcutNumericLiteralBinaryExpression } from './nodes.js';
 import { OptionalChainingNode } from '../api/operators/chaining.js';
 import { StatementNode } from '../api/definition/statement.js';
+import {
+	buildPostfixExpression, buildUnaryExpression,
+	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
+} from './nodes.js';
 
 
 enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
@@ -58,7 +61,7 @@ export abstract class AbstractParser {
 	}
 	protected consume(token: Token) {
 		if (this.scanner.next().token !== token) {
-			throw new Error(`Error parsing ${JSON.stringify(token)}`);
+			throw new Error(`Parsing ${JSON.stringify(token)}`);
 		}
 	}
 	protected check(token: Token): boolean {
@@ -378,9 +381,6 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.L_PARENTHESES);
 		const condition = this.parseExpression();
 		this.consume(Token.R_PARENTHESES);
-		if (this.peek().isNotType(Token.L_CURLY)) {
-			throw new Error(`expected '{'`);
-		}
 		const thenStatement = this.parseStatement();
 		let elseStatement;
 		if (this.peek().isType(Token.ELSE)) {
@@ -445,7 +445,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else {
 				this.expect(Token.DEFAULT);
 				if (defaultSeen) {
-					throw new Error(`Error: Multiple Defaults In Switch`);
+					throw new Error(`Multiple Defaults In Switch`);
 				}
 				defaultSeen = true;
 			}
@@ -495,7 +495,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (forMode === 'IN') {
 				return new ForInNode(initializer, object, statement);
 			} else {
-				throw new Error(`Error: parsing for loop: ${this.position()}`);
+				throw new Error(`parsing for loop: ${this.position()}`);
 			}
 		}
 		this.expect(Token.SEMICOLON);
@@ -533,7 +533,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (Token.isAnyIdentifier(this.peek().token)) {
 				name = this.parseAndClassifyIdentifier(this.next());
 				if (this.isEvalOrArguments(name)) {
-					throw new Error(`Error: Strict Eval Arguments`);
+					throw new Error(`Strict Eval Arguments`);
 				}
 				if (this.peekInOrOf()) {
 					break;
@@ -549,7 +549,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (!this.peekInOrOf()) {
 				// ES6 'const' and binding patterns require initializers.
 				if (mode === 'const' && (name === undefined || value === undefined)) {
-					throw new Error(`Error: Declaration Missing Initializer : ${this.position()}`);
+					throw new Error(`Declaration Missing Initializer : ${this.position()}`);
 				}
 				// value = undefined;
 			}
@@ -793,11 +793,11 @@ export class JavaScriptParser extends AbstractParser {
 		const list: ExpressionNode[] = [];
 		while (this.peek().isNotType(endToken)) {
 			const stat = this.parseStatementListItem();
-			if (!stat || this.isEmptyStatement(stat)) {
+			if (!stat) {
 				break;
 			}
 			if (this.isEmptyStatement(stat)) {
-				break;
+				continue;
 			}
 			list.push(stat);
 		}
@@ -975,22 +975,18 @@ export class JavaScriptParser extends AbstractParser {
 		}
 
 		if (Token.isLiteral(token.token)) {
-			return this.next().getValue();
+			return expressionFromLiteral(this.next());
 		}
 
 		switch (token.token) {
-			case Token.NEW: {
+			case Token.NEW:
 				return this.parseMemberWithPresentNewPrefixesExpression();
-			}
-			case Token.THIS: {
+			case Token.THIS:
 				this.consume(Token.THIS);
 				return ThisNode;
-			}
-
 			case Token.REGEXP_LITERAL:
 				this.consume(Token.REGEXP_LITERAL);
 				return token.value!;
-
 			case Token.FUNCTION:
 				this.consume(Token.FUNCTION);
 				if (this.peek().isType(Token.MUL)) {
@@ -1024,7 +1020,7 @@ export class JavaScriptParser extends AbstractParser {
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
 
-				let peekToken = this.peek();
+				const peekToken = this.peek();
 				let expression: ExpressionNode;
 				if (peekToken.isType(Token.FUNCTION)) {
 					this.consume(Token.FUNCTION);
@@ -1058,9 +1054,9 @@ export class JavaScriptParser extends AbstractParser {
 
 
 		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.L_PARENTHESES)) {
-			throw new Error(`Error: parsing new import ( at position ${newPos}`);
+			throw new Error(`parsing new import ( at position ${newPos}`);
 		} else if (this.peek().isType(Token.SUPER)) {
-			throw new Error(`Error: parsing new super() is never allowed at position ${newPos}`);
+			throw new Error(`parsing new super() is never allowed at position ${newPos}`);
 		} else if (this.peek().isType(Token.PERIOD)) {
 			classRef = this.parseNewTargetExpression();
 			return this.parseMemberExpressionContinuation(classRef);
@@ -1078,7 +1074,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
-			throw new Error(`Error: parsing new xxx?.yyy at position ${newPos}`);
+			throw new Error(`parsing new xxx?.yyy at position ${newPos}`);
 		}
 
 		// NewExpression without arguments.
@@ -1099,7 +1095,7 @@ export class JavaScriptParser extends AbstractParser {
 						throw new Error(` Rest parameter may not have a default initializer'`);
 					}
 					if (this.peek().isType(Token.COMMA)) {
-						throw new Error(`Error: parsing '...spread,arg =>'`);
+						throw new Error(`parsing '...spread,arg =>'`);
 					}
 				}
 			}
@@ -1110,7 +1106,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (!this.check(Token.COMMA)) break;
 		}
 		if (!this.check(Token.R_PARENTHESES)) {
-			throw new Error(`Error: parsing arguments call, expecting ')'`);
+			throw new Error(`parsing arguments call, expecting ')'`);
 		}
 		return args;
 	}
@@ -1130,17 +1126,17 @@ export class JavaScriptParser extends AbstractParser {
 		// Arrow functions.
 		if (op == Token.ARROW) {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
-				throw new Error(`Error: Malformed Arrow Fun Param List`);
+				throw new Error(`Malformed Arrow Fun Param List`);
 			}
 			expression = this.parseArrowFunctionLiteral([new ParamterNode(expression)], ArrowFunctionType.NORMAL);
 			return expression;
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression.getLeft())) {
-				throw new Error(`Error: Invalid Destructuring Target`);
+				throw new Error(`Invalid Destructuring Target`);
 			}
 		} else if (this.isProperty(expression)) {
-			throw new Error(`Error: Invalid Property Binding Pattern`);
+			// throw new Error(`Invalid Property Binding Pattern`);
 		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
 			if (this.isParenthesized(expression)) {
@@ -1159,10 +1155,10 @@ export class JavaScriptParser extends AbstractParser {
 			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
 		} else {
 			if (!this.isValidReferenceExpression(expression)) {
-				throw new Error(`Error: Invalid Reference Expression`);
+				throw new Error(`Invalid Reference Expression`);
 			}
 			if (Token.isLogicalAssignmentOp(op)) {
-				throw new Error(`Error: Invalid Lhs In Assignment`);
+				throw new Error(`Invalid Lhs In Assignment`);
 			}
 		}
 
@@ -1188,7 +1184,7 @@ export class JavaScriptParser extends AbstractParser {
 		// }
 
 		if (!Token.isAssignment(op)) {
-			throw new Error(`Error: Invalid Destructuring Target`);
+			throw new Error(`Invalid Destructuring Target`);
 		}
 		// if (Token.isAssignment(op)) {
 		// 	// We try to estimate the set of properties set by constructors. We define a
@@ -1200,7 +1196,7 @@ export class JavaScriptParser extends AbstractParser {
 		// 	}
 		// } else {
 		// 	// Only initializers (i.e. no compound assignments) are allowed in patterns.
-		// 	throw new Error(`Error: Invalid Destructuring Target`);
+		// 	throw new Error(`Invalid Destructuring Target`);
 		// }
 		return new AssignmentNode(op.jsToken(), expression, right);
 	}
@@ -1412,7 +1408,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected doParseMemberExpressionContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!Token.isMember(this.peek().token)) {
-			throw new Error(`Error: Parsing member expression`);
+			throw new Error(`Parsing member expression`);
 		}
 		// Parses this part of MemberExpression:
 		// ('[' Expression ']' | '.' Identifier | TemplateLiteral)*
@@ -1438,7 +1434,7 @@ export class JavaScriptParser extends AbstractParser {
 					/* ES6 Template Literals */
 					// parser need to handel
 					// if (!Token.isTemplate(this.peek().token)) {
-					// 	throw new Error(`Error: Parsing Template Literals ${this.position()}`);
+					// 	throw new Error(`Parsing Template Literals ${this.position()}`);
 					// }
 					// if (expression -> IsFunctionLiteral()) {
 					// 	// If the tag function looks like an IIFE, set_parenthesized() to
@@ -1457,7 +1453,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (next.getValue() instanceof IdentifierNode) {
 			return next.getValue();
 		}
-		throw new Error(`Error Parsing property expression: Unexpected Token`);
+		throw new Error(`Parsing property expression: Unexpected Token`);
 	}
 	protected parsePipelineExpression(expression: ExpressionNode): ExpressionNode {
 		// ConditionalExpression ::
@@ -1835,7 +1831,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		// }
 
-		throw new Error(`Error: Yield expression is not supported now.`);
+		throw new Error(`Yield expression is not supported now.`);
 
 		// if (delegating) {
 		// 	return new YieldStarNode(expression!);
