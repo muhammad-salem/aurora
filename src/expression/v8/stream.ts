@@ -809,6 +809,18 @@ export class TokenStreamImpl extends TokenStream {
 				this.current = this.newToken(Token.BIT_NOT);
 				this.pos++;
 				return true;
+			case 'a':
+				if (/async\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.ASYNC);
+					this.pos += 5;
+					return true;
+				}
+				if (/await\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.AWAIT);
+					this.pos += 5;
+					return true;
+				}
+				return false;
 			case 'i':			// in, instanceof
 				if (this.expression.charAt(this.pos + 1) === 'n') {
 					if (/instanceof\s/.test(this.expression.substring(this.pos, this.pos + 11))) {
@@ -850,17 +862,20 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				return false;
-			case 'a':			// await, async
-				const nextStr = this.expression.substring(this.pos, this.pos + 5);
-				if (/(await)\s/.test(nextStr)) {
-					this.current = this.newToken(Token.AWAIT);
-				} else if (/(async)\s/.test(nextStr)) {
-					this.current = this.newToken(Token.ASYNC);
-				} else {
-					return false;
+			case 'n':			// new
+				if (/new\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
+					this.current = this.newToken(Token.NEW);
+					this.pos += 4;
+					return true;
 				}
-				this.pos += 5;
-				return true;
+				return false;
+			case 'y':			// void
+				if (/yield\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.YIELD);
+					this.pos += 6;
+					return true;
+				}
+				return false;
 			default:
 				return false;
 		}
@@ -874,7 +889,7 @@ export class TokenStreamImpl extends TokenStream {
 			// 		this.pos += 3;
 			// 		return true;
 			// 	}
-			// 	return false;
+			// return false;
 			case 'b':
 				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
 					this.current = this.newToken(Token.BREAK, TerminateNode.BREAK_INSTANCE);
@@ -889,6 +904,14 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				} else if (/const\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(Token.CONST);
+					this.pos += 6;
+					return true;
+				} else if (/catch\(/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.CATCH);
+					this.pos += 5;
+					return true;
+				} else if (/class\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.CLASS);
 					this.pos += 6;
 					return true;
 				} else if (/continue[\s;]/.test(this.expression.substring(this.pos, this.pos + 9))) {
@@ -914,11 +937,26 @@ export class TokenStreamImpl extends TokenStream {
 					this.pos += 4;
 					return true;
 				}
+				if (/export\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.EXPORT);
+					this.pos += 7;
+					return true;
+				}
+				if (/extends\s/.test(this.expression.substring(this.pos, this.pos + 8))) {
+					this.current = this.newToken(Token.EXTENDS);
+					this.pos += 8;
+					return true;
+				}
 				return false;
 			case 'f':
 				if (/for\s?\(/.test(this.expression.substring(this.pos, this.pos + 5))) {
 					this.current = this.newToken(Token.FOR);
 					this.pos += 3;
+					return true;
+				}
+				if (/finally[\s\{]/.test(this.expression.substring(this.pos, this.pos + 8))) {
+					this.current = this.newToken(Token.FINALLY);
+					this.pos += 7;
 					return true;
 				}
 				if (/function[\s\*\(]/.test(this.expression.substring(this.pos, this.pos + 9))) {
@@ -937,11 +975,35 @@ export class TokenStreamImpl extends TokenStream {
 					this.pos += 3;
 					return true;
 				}
+				else if (/import\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.IMPORT);
+					this.pos += 7;
+					return true;
+				}
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
 					this.current = this.newToken(Token.LET);
 					this.pos += 4;
+					return true;
+				}
+				return false;
+			case 't':
+				if (/try[\s\{]/.test(this.expression.substring(this.pos, this.pos + 4))) {
+					this.current = this.newToken(Token.TRY);
+					this.pos += 3;
+					return true;
+				}
+				if (/throw\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.THROW);
+					this.pos += 6;
+					return true;
+				}
+				return false;
+			case 'r':
+				if (/return\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.RETURN);
+					this.pos += 6;
 					return true;
 				}
 				return false;
@@ -956,6 +1018,16 @@ export class TokenStreamImpl extends TokenStream {
 				if (/switch[\s\(]?/.test(this.expression.substring(this.pos, this.pos + 7))) {
 					this.current = this.newToken(Token.SWITCH);
 					this.pos += 6;
+					return true;
+				}
+				if (/static\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.STATIC);
+					this.pos += 7;
+					return true;
+				}
+				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.SUPER);
+					this.pos += 5;
 					return true;
 				}
 				return false;
