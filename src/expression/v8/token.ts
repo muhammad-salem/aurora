@@ -450,6 +450,7 @@ export class Token {
 			case Token.NUMBER:
 			case Token.BIGINT:
 			case Token.STRING:
+			case Token.REGEXP_LITERAL:
 				// case Token.SMI:
 				return true;
 		}
@@ -501,7 +502,7 @@ export class Token {
 	public static isMember(token: Token): boolean {
 		switch (token) {
 			case Token.PERIOD:
-			case Token.R_BRACKETS:
+			case Token.L_BRACKETS:
 				return true;
 		}
 		return false;
