@@ -381,14 +381,14 @@ export class TokenStreamImpl extends TokenStream {
 		const char = this.expression.charAt(this.pos);
 		const nextChar = this.expression.charAt(this.pos + 1);
 		if (char === '/' && nextChar === '*') {
-			this.pos = this.expression.indexOf('*/' + 2) + 2;
+			this.pos = this.expression.indexOf('*/', this.pos) + 2;
 			if (this.pos === 1) {
 				this.pos = this.expression.length;
 			}
 			return true;
 		}
 		if (char === '/' && nextChar === '/') {
-			this.pos = this.expression.indexOf('\n' + 2) + 1;
+			this.pos = this.expression.indexOf('\n', this.pos) + 1;
 			if (this.pos === -1) {
 				this.pos = this.expression.length;
 			}
@@ -919,6 +919,11 @@ export class TokenStreamImpl extends TokenStream {
 				if (/for\s?\(/.test(this.expression.substring(this.pos, this.pos + 5))) {
 					this.current = this.newToken(Token.FOR);
 					this.pos += 3;
+					return true;
+				}
+				if (/function[\s\*\(]/.test(this.expression.substring(this.pos, this.pos + 9))) {
+					this.current = this.newToken(Token.FUNCTION);
+					this.pos += 8;
 					return true;
 				}
 				return false;
