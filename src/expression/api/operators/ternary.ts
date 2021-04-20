@@ -7,44 +7,44 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export class TernaryNode extends AbstractExpressionNode {
 	static fromJSON(node: TernaryNode, deserializer: NodeDeserializer): TernaryNode {
 		return new TernaryNode(
-			deserializer(node.logical),
-			deserializer(node.ifTrue),
-			deserializer(node.ifFalse)
+			deserializer(node.condition),
+			deserializer(node.exprIfTrue),
+			deserializer(node.exprIfFalse)
 		);
 	}
 	static KEYWORDS = ['?', ':'];
-	constructor(private logical: ExpressionNode, private ifTrue: ExpressionNode, private ifFalse: ExpressionNode) {
+	constructor(private condition: ExpressionNode, private exprIfTrue: ExpressionNode, private exprIfFalse: ExpressionNode) {
 		super();
 	}
 	getLogical() {
-		return this.logical;
+		return this.condition;
 	}
-	getIfTrue() {
-		return this.ifTrue;
+	getExprIfTrue() {
+		return this.exprIfTrue;
 	}
-	getIfFalse() {
-		return this.ifFalse;
+	getExprIfFalse() {
+		return this.exprIfFalse;
 	}
 	set(stack: ScopedStack, value: any) {
 		throw new Error(`TernaryNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack) {
-		return this.logical.get(stack) ? this.ifFalse.get(stack) : this.ifTrue.get(stack);
+		return this.condition.get(stack) ? this.exprIfFalse.get(stack) : this.exprIfTrue.get(stack);
 	}
 	entry(): string[] {
-		return [...this.logical.entry(), ...this.ifTrue.entry(), ...this.ifFalse.entry()];
+		return [...this.condition.entry(), ...this.exprIfTrue.entry(), ...this.exprIfFalse.entry()];
 	}
 	event(parent?: string): string[] {
 		return [];
 	}
 	toString() {
-		return `${this.logical.toString()} (${this.ifTrue.toString()}):(${this.ifFalse.toString()})`;
+		return `${this.condition.toString()} ? (${this.exprIfTrue.toString()}):(${this.exprIfFalse.toString()})`;
 	}
 	toJson(): object {
 		return {
-			logical: this.logical.toJSON(),
-			ifTrue: this.ifTrue.toJSON(),
-			ifFalse: this.ifFalse.toJSON()
+			condition: this.condition.toJSON(),
+			exprIfTrue: this.exprIfTrue.toJSON(),
+			exprIfFalse: this.exprIfFalse.toJSON()
 		};
 	}
 }
