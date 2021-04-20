@@ -183,17 +183,17 @@ export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
 
 export function expressionFromLiteral(te: TokenExpression) {
 	switch (te.token) {
-		case Token.UNDEFINED_LITERAL:
-		case Token.NULL_LITERAL:
-		case Token.TRUE_LITERAL:
-		case Token.FALSE_LITERAL:
 		case Token.NUMBER:
 		case Token.BIGINT:
 		case Token.STRING:
 		case Token.REGEXP_LITERAL:
 		case Token.IDENTIFIER:
 			return te.getValue();
+
+		case Token.NULL_LITERAL: return NullNode;
+		case Token.TRUE_LITERAL: return TrueNode;
+		case Token.FALSE_LITERAL: return FalseNode;
 		default:
-			return false;
+		case Token.UNDEFINED_LITERAL: return UndefinedNode;
 	}
 }
