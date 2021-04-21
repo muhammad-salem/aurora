@@ -15,7 +15,7 @@ import { GetPropertyNode, ObjectLiteralNode, ObjectLiteralPropertyNode, SetPrope
 import { ArrayLiteralNode } from '../api/definition/array.js';
 import { FunctionCallNode } from '../api/computing/function.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { ThrowExpressionNode } from '../api/computing/throw.js';
+import { ThrowNode, TryCatchNode } from '../api/computing/throw.js';
 import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
 import { TerminateNode } from '../api/statement/controlflow/terminate.js';
 import { ReturnNode } from '../api/computing/return.js';
@@ -33,14 +33,11 @@ import {
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
 
-
 enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
-
 
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
 	abstract scan(): ExpressionNode;
-
 	protected position() {
 		return this.scanner.getPos();
 	}
@@ -60,13 +57,13 @@ export abstract class AbstractParser {
 		return this.scanner.peekAheadPosition();
 	}
 	protected consume(token: Token) {
-		if (this.scanner.next().token !== token) {
+		if (this.scanner.next().isNotType(token)) {
 			throw this.scanner.createError(`Parsing ${JSON.stringify(token)}`);
 		}
 	}
 	protected check(token: Token): boolean {
 		const next = this.scanner.peek();
-		if (next.token == token) {
+		if (next.isType(token)) {
 			this.scanner.next();
 			return true;
 		}
@@ -81,9 +78,9 @@ export abstract class AbstractParser {
 		return false;
 	}
 	protected expect(token: Token) {
-		const next = this.scanner.next();
-		if (next.token !== token) {
-			throw this.scanner.createError(`Unexpected Token: ${JSON.stringify(token)}, next is ${JSON.stringify(next)}`);
+		const current = this.scanner.next();
+		if (current.isNotType(token)) {
+			throw this.scanner.createError(`Unexpected Token: ${JSON.stringify(token)}, current is ${JSON.stringify(current)}`);
 		}
 	}
 
@@ -181,6 +178,21 @@ export abstract class AbstractParser {
 	protected isValidReferenceExpression(expression: ExpressionNode): boolean {
 		return this.isAssignableIdentifier(expression) || this.isProperty(expression);
 	}
+	protected expectSemicolon() {
+		const tok = this.peek();
+		if (tok.isType(Token.SEMICOLON)) {
+			this.next();
+			return;
+		}
+		if (Token.isAutoSemicolon(tok.token)) {
+			return;
+		}
+
+		if (this.scanner.currentToken().isType(Token.AWAIT)) {
+			throw this.scanner.createError(`Await Not In Async Context/Function`);
+		}
+		throw this.scanner.createError(`Await Not In Async Context/Function`);
+	}
 }
 
 export class JavaScriptParser extends AbstractParser {
@@ -248,23 +260,8 @@ export class JavaScriptParser extends AbstractParser {
 				return this.parseReturnStatement();
 			case Token.THROW:
 				return this.parseThrowStatement();
-			// case Token.TRY: {
-			// 	// It is somewhat complicated to have label on try-statements.
-			// 	// When breaking out of a try-finally statement, one must take
-			// 	// great care not to treat it as a fall-through. It is much easier
-			// 	// just to wrap the entire try-statement in a statement block and
-			// 	// put the label there.
-			// 	if (label == nullptr) return this.parseTryStatement();
-			// 	StatementListT statements(pointer_buffer());
-			// 	BlockT result = factory() -> NewBlock(false, true);
-			// 	Target target(this, result, label, nullptr,
-			// 		Target.TARGET_FOR_NAMED_ONLY);
-			// 	StatementT statement = ParseTryStatement();
-			// 	statements.Add(statement);
-			// 	result -> InitializeStatements(statements, zone());
-			// 	return result;
-			// }
-
+			case Token.TRY:
+				return this.parseTryStatement();
 			case Token.SWITCH:
 				return this.parseSwitchStatement();
 			// case Token.FUNCTION:
@@ -278,9 +275,7 @@ export class JavaScriptParser extends AbstractParser {
 			// 			? MessageTemplate.kStrictFunction
 			// 			: MessageTemplate.kSloppyFunction);
 			// 	return impl() -> NullStatement();
-			// case Token.DEBUGGER:
-			// 	return this.parseDebuggerStatement();
-			// case Token.VAR:
+			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
 				return this.parseVariableDeclarations();
@@ -296,6 +291,40 @@ export class JavaScriptParser extends AbstractParser {
 			default:
 				return this.parseExpressionOrLabelledStatement();
 		}
+	}
+	protected parseTryStatement(): ExpressionNode {
+		// TryStatement ::
+		//   'try' Block Catch
+		//   'try' Block Finally
+		//   'try' Block Catch Finally
+		//
+		// Catch ::
+		//   'catch' '(' Identifier ')' Block
+		//
+		// Finally ::
+		//   'finally' Block
+
+		this.consume(Token.TRY);
+		const tryBlock = this.parseBlock();
+		let peek = this.peek();
+		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
+			throw this.scanner.createError(`Uncaught SyntaxError: Missing catch or finally after try`);
+		}
+		let catchVar: ExpressionNode | undefined, catchBlock: ExpressionNode | undefined;
+		if (this.check(Token.CATCH)) {
+			// bool has_binding;
+			const hasBinding = this.check(Token.L_PARENTHESES);
+			if (hasBinding) {
+				catchVar = this.parseIdentifier();
+				this.expect(Token.R_PARENTHESES);
+			}
+			catchBlock = this.parseBlock();
+		}
+		let finallyBlock: ExpressionNode | undefined;
+		if (this.check(Token.FINALLY)) {
+			finallyBlock = this.parseBlock();
+		}
+		return new TryCatchNode(tryBlock, catchVar, catchBlock, finallyBlock);
 	}
 	protected parseBlock(): ExpressionNode {
 		this.expect(Token.L_CURLY);
@@ -423,8 +452,8 @@ export class JavaScriptParser extends AbstractParser {
 		//   'throw' Expression ';'
 		this.consume(Token.THROW);
 		const exception = this.parseExpression();
-		this.expect(Token.SEMICOLON);
-		return new ThrowExpressionNode(exception);
+		this.expectSemicolon();
+		return new ThrowNode(exception);
 	}
 	protected parseSwitchStatement(): ExpressionNode {
 		// SwitchStatement ::
@@ -494,7 +523,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (forMode) {
 			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
 			this.expect(Token.R_PARENTHESES)
-			const statement = (this.peek().isType(Token.L_CURLY)) ? this.parseBlock() : this.parseStatement();
+			const statement = this.parseStatement();
 			if (isAwait && forMode === 'OF') {
 				return new ForAwaitOfNode(initializer, object, statement);
 			} else if (forMode === 'OF') {
@@ -510,8 +539,8 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.SEMICOLON);
 		const finalExpression = this.parseExpression();
 		this.expect(Token.R_PARENTHESES);
-		const statement = this.parseBlock();
-		return new ForNode(statement, initializer, condition, finalExpression);
+		const body = this.parseStatement();
+		return new ForNode(body, initializer, condition, finalExpression);
 	}
 	protected parseVariableDeclarations(): ExpressionNode {
 		// VariableDeclarations ::
@@ -620,7 +649,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		const pos = this.peekPosition();
 		this.consume(Token.CONTINUE);
-		this.expect(Token.SEMICOLON);
+		this.expectSemicolon();
 		return TerminateNode.CONTINUE_INSTANCE;
 	}
 	protected parseBreakStatement(): ExpressionNode {
@@ -630,7 +659,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		const pos = this.peekPosition();
 		this.consume(Token.BREAK);
-		this.expect(Token.SEMICOLON);
+		this.expectSemicolon();
 		return TerminateNode.BREAK_INSTANCE;
 	}
 	protected parseReturnStatement(): ExpressionNode {
@@ -652,7 +681,7 @@ export class JavaScriptParser extends AbstractParser {
 		} else {
 			returnValue = this.parseExpression();
 		}
-		this.expect(Token.SEMICOLON);
+		this.expectSemicolon()
 		return new ReturnNode(returnValue);
 	}
 	protected parseExpressionOrLabelledStatement(): ExpressionNode {
@@ -662,8 +691,6 @@ export class JavaScriptParser extends AbstractParser {
 		//
 		// ExpressionStatement[Yield] :
 		//   [lookahead notin {{, function, class, let [}] Expression[In, ?Yield] ;
-
-		// int pos = peek_position();
 
 		switch (this.peek().token) {
 			case Token.FUNCTION:
@@ -685,31 +712,15 @@ export class JavaScriptParser extends AbstractParser {
 			default:
 				break;
 		}
-
-		// bool starts_with_identifier = peek_any_identifier();
 		const startsWithIdentifier = Token.isAnyIdentifier(this.peek().token);
-
-		// ExpressionT expr;
-		// {
-		// Effectively inlines ParseExpression, so potential labels can be extracted
-		// from expression_scope.
-		// ExpressionParsingScope expression_scope(impl());
-		// AcceptINScope scope(this, true);
-		const expr: ExpressionNode = this.parseExpressionCoverGrammar();
-		// expression_scope.ValidateExpression();
-
-		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.isIdentifier(expr)) {
+		const expression: ExpressionNode = this.parseExpressionCoverGrammar();
+		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.isIdentifier(expression)) {
 			// The whole expression was a single identifier, and not, e.g.,
 			// something starting with an identifier or a parenthesized identifier.
-
-			// DCHECK_EQ(expression_scope.variable_list() -> length(), 1);
-			// VariableProxy * label = expression_scope.variable_list() -> at(0).first;
-			// impl() -> DeclareLabel(& labels, & own_labels, label -> raw_name());
 
 			// Remove the "ghost" variable that turned out to be a label from the top
 			// scope. This way, we don't try to resolve it during the scope
 			// processing.
-			// this -> scope() -> DeleteUnresolved(label);
 
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
@@ -719,10 +730,8 @@ export class JavaScriptParser extends AbstractParser {
 			return this.parseStatement();
 		}
 		// Parsed expression statement, followed by semicolon.
-		this.consume(Token.SEMICOLON);
-		// if (expr -> IsFailureExpression()) return impl() -> NullStatement();
-		// return factory() -> NewExpressionStatement(expr, pos);
-		return expr;
+		this.expectSemicolon();
+		return expression;
 	}
 	protected parseExpression(): ExpressionNode {
 		return this.parseExpressionCoverGrammar();
@@ -734,7 +743,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.parseHoistableDeclaration(FunctionType.NORMAL);
 	}
-	protected ParseHoistableDeclarationAndGenerator() {
+	protected parseFunctionDeclarationAndGenerator() {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			return this.parseHoistableDeclaration(FunctionType.GENERATOR);
@@ -879,14 +888,8 @@ export class JavaScriptParser extends AbstractParser {
 			if (this.peek().isType(Token.ELLIPSIS)) {
 				return this.parseArrowParametersWithRest(list, variableIndex);
 			}
-
-
-			// int expr_pos = peek_position();
 			expression = this.parseAssignmentExpressionCoverGrammar();
-			// ClassifyArrowParameter(& accumulation_scope, expr_pos, expression);
 			list.push(expression);
-
-			// variableIndex = expression_scope() -> SetInitializers(variable_index, peek_position());
 
 			if (!this.check(Token.COMMA)) break;
 
@@ -894,47 +897,26 @@ export class JavaScriptParser extends AbstractParser {
 				// a trailing comma is allowed at the end of an arrow parameter list
 				break;
 			}
-
-			// Pass on the 'set_next_function_is_likely_called' flag if we have
-			// several function literals separated by comma.
-			// if (this.peek().isType(Token.FUNCTION) &&
-			// 	function_state_ -> previous_function_was_likely_called()) {
-			// 	function_state_ -> set_next_function_is_likely_called();
-			// }
 		}
 		if (list.length == 1) return expression;
 		return this.expressionListToExpression(list);
 	}
 	protected parseArrowParametersWithRest(list: ExpressionNode[], variableIndex: number): ExpressionNode {
 		this.consume(Token.ELLIPSIS);
-
-		// Scanner:: Location ellipsis = scanner() -> location();
-		// int pattern_pos = peek_position();
 		const pattern: ExpressionNode = this.parseBindingPattern();
-		// ClassifyArrowParameter(accumulation_scope, pattern_pos, pattern);
-
-		// expression_scope() -> RecordNonSimpleParameter();
-
 		if (this.peek().isType(Token.ASSIGN)) {
 			throw this.scanner.createError(`Error A rest parameter cannot have an initializer`);
 		}
-
 		const spread = new SpreadSyntaxNode(pattern);
-
-		// ExpressionT spread = factory() -> NewSpread(pattern, ellipsis.beg_pos, pattern_pos);
 		if (this.peek().isType(Token.COMMA)) {
 			throw this.scanner.createError(`Error A rest parameter or binding pattern may not have a trailing comma`);
 		}
-
-		// expression_scope() -> SetInitializers(seen_variables, peek_position());
-
 		// 'x, y, ...z' in CoverParenthesizedExpressionAndArrowParameterList only
 		// as the formal parameters of'(x, y, ...z) => foo', and is not itself a
 		// valid expression.
 		if (this.peek().isNotType(Token.R_PARENTHESES) || this.peekAhead().isNotType(Token.ARROW)) {
 			throw this.scanner.createError(`Error Unexpected Token At ${this.position()}`);
 		}
-
 		list.push(spread);
 		return this.expressionListToExpression(list);
 	}
@@ -975,11 +957,26 @@ export class JavaScriptParser extends AbstractParser {
 		//   do Block
 		//   AsyncFunctionLiteral
 
-		// int beg_pos = peek_position();
 		let token = this.peek();
-
 		if (Token.isAnyIdentifier(token.token)) {
-			return this.next().getValue();
+			this.consume(token.token);
+			let kind: ArrowFunctionType = ArrowFunctionType.NORMAL;
+			if (token.isType(Token.ASYNC)) {
+				// async function ...
+				if (this.peek().isType(Token.FUNCTION)) {
+					return this.parseFunctionDeclarationAndGenerator();
+				};
+				// async Identifier => ...
+				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
+					token = this.next();
+					kind = ArrowFunctionType.ASYNC;
+				}
+			}
+			if (this.peek().isType(Token.ARROW)) {
+				const name = this.parseAndClassifyIdentifier(token);
+				return this.parseArrowFunctionLiteral([name], kind);
+			}
+			return this.parseAndClassifyIdentifier(token);
 		}
 
 		if (Token.isLiteral(token.token)) {
@@ -1075,12 +1072,9 @@ export class JavaScriptParser extends AbstractParser {
 			// The expression can still continue with . or [ after the arguments.
 			return this.parseMemberExpressionContinuation(classRef);
 		}
-
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
 			throw this.scanner.createError(`parsing new xxx?.yyy at position`);
 		}
-
-		// NewExpression without arguments.
 		return new NewNode(classRef);
 	}
 	protected parseArguments(maybeArrow?: ParsingArrowHeadFlag): ExpressionNode[] {
@@ -1272,7 +1266,7 @@ export class JavaScriptParser extends AbstractParser {
 		// int begin = peek_position();
 		const result = this.parseAssignmentExpressionCoverGrammar();
 
-		// if (IsValidReferenceExpression(result)) {
+		// if (this.isValidReferenceExpression(result)) {
 		// 	// Parenthesized identifiers and property references are allowed as part of
 		// 	// a larger assignment pattern, even though parenthesized patterns
 		// 	// themselves are not allowed, e.g., "[(x)] = []". Only accumulate
@@ -1310,7 +1304,6 @@ export class JavaScriptParser extends AbstractParser {
 		while (!this.check(Token.R_CURLY)) {
 			const property: ExpressionNode = this.parseObjectPropertyDefinition();
 			properties.push(property);
-
 			if (this.peek().isNotType(Token.R_CURLY)) {
 				this.expect(Token.COMMA);
 			}
@@ -1340,7 +1333,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (this.peek().isType(Token.COLON)) {
 				// computed
 				this.consume(Token.COLON);
-				const value = this.parsePrimaryExpression();
+				const value = this.parsePossibleDestructuringSubPattern();
 				return new ObjectLiteralPropertyNode(property, value);
 			}
 		} else if (property instanceof FunctionDeclarationNode) {
@@ -1373,14 +1366,15 @@ export class JavaScriptParser extends AbstractParser {
 					return this.parseFunctionExpression(FunctionType.ASYNC_GENERATOR);
 				}
 				return this.parseFunctionExpression(FunctionType.ASYNC);
-
 			case Token.L_BRACKETS:
-				return this.parseFunctionExpression(FunctionType.NORMAL);
-
+				this.consume(Token.L_BRACKETS);
+				const name = this.parseAssignmentExpression();
+				this.expect(Token.R_BRACKETS);
+				return this.parseFunctionLiteral(FunctionType.NORMAL, name);
 			case Token.IDENTIFIER:
 				this.consume(Token.IDENTIFIER);
 				if (this.check(Token.COLON)) {
-					const value = this.parsePrimaryExpression();
+					const value = this.parseAssignmentExpression();
 					return new ObjectLiteralPropertyNode(nextToken.getValue(), value);
 				}
 				return nextToken.getValue();
@@ -1389,7 +1383,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.BIGINT:
 				this.consume(nextToken.token);
 				this.expect(Token.COLON);
-				const value = this.parsePrimaryExpression();
+				const value = this.parseAssignmentExpression();
 				return new ObjectLiteralPropertyNode(nextToken.getValue(), value);
 			case Token.ELLIPSIS:
 				this.consume(Token.ELLIPSIS);
