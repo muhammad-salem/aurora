@@ -402,10 +402,14 @@ export class TokenStreamImpl extends TokenStream {
 	}
 
 	private isRegExp() {
-		const start = this.pos;
 		const char = this.expression.charAt(this.pos);
 		let nextChar = this.expression.charAt(this.pos + 1);
-		if (char === '/' && nextChar !== '*' && nextChar !== '=') {
+		if (char === '/' && nextChar !== '*') {
+			if (nextChar === '=') {
+				if (/\s/.test(this.expression.charAt(this.pos + 2))) {
+					return false;
+				}
+			}
 			let currentPos = this.pos;
 			let pattern: string;
 			currentPos = this.expression.indexOf('/', currentPos + 1);
@@ -910,7 +914,7 @@ export class TokenStreamImpl extends TokenStream {
 					this.current = this.newToken(Token.CONST);
 					this.pos += 6;
 					return true;
-				} else if (/catch\(/.test(this.expression.substring(this.pos, this.pos + 6))) {
+				} else if (/catch[\s\{]/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(Token.CATCH);
 					this.pos += 5;
 					return true;
@@ -1069,8 +1073,8 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	public createError(message: String): Error {
 		let coords = this.getCoordinates();
-		return new Error(message + ` @[line: ${coords.line}, column: ${coords.column}]
-		current token: ${JSON.stringify(this.current)}`);
+		return new Error(`@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}
+		--> ${message}`);
 	}
 }
 
