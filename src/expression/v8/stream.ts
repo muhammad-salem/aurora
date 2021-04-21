@@ -180,6 +180,7 @@ export abstract class TokenStream {
 		this.restore();
 		return pos;
 	}
+	public abstract createError(message: String): Error;
 }
 
 export class TokenStreamer extends TokenStream {
@@ -192,6 +193,9 @@ export class TokenStreamer extends TokenStream {
 		}
 		this.last = this.current;
 		return this.current = this.tokens[this.pos++];
+	}
+	createError(message: String): Error {
+		return new Error('parse error [' + this.pos + ']: ' + message);
 	}
 }
 
@@ -228,7 +232,7 @@ export class TokenStreamImpl extends TokenStream {
 			|| this.isProperty()) {
 			return this.current;
 		} else {
-			throw this.parseError('Unknown character "' + this.expression.charAt(this.pos) + '"');
+			throw this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"');
 		}
 	}
 
@@ -463,13 +467,13 @@ export class TokenStreamImpl extends TokenStream {
 					// interpret the following 4 characters as the hex of the unicode code point
 					let codePoint = v.substring(index + 1, index + 5);
 					if (!TokenStreamImpl.CodePointPattern.test(codePoint)) {
-						throw this.parseError('Illegal escape sequence: \\u' + codePoint);
+						throw this.createError('Illegal escape sequence: \\u' + codePoint);
 					}
 					buffer += String.fromCharCode(parseInt(codePoint, 16));
 					index += 4;
 					break;
 				default:
-					throw this.parseError('Illegal escape sequence: "\\' + c + '"');
+					throw this.createError('Illegal escape sequence: "\\' + c + '"');
 			}
 			++index;
 			let backslash = v.indexOf('\\', index);
@@ -1050,11 +1054,8 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 		}
 	}
-
-	private getCoordinates() {
-		let line = 0;
-		let column;
-		let newline = -1;
+	protected getCoordinates() {
+		let line = 0, column, newline = -1;
 		do {
 			line++;
 			column = this.pos - newline;
@@ -1066,11 +1067,10 @@ export class TokenStreamImpl extends TokenStream {
 			column: column
 		}
 	}
-
-	private parseError(message: String): Error {
+	public createError(message: String): Error {
 		let coords = this.getCoordinates();
-		return new Error('parse error [' + coords.line + ':' + coords.column + ']: ' + message);
+		return new Error(message + ` @[line: ${coords.line}, column: ${coords.column}]
+		current token: ${JSON.stringify(this.current)}`);
 	}
-
 }
 

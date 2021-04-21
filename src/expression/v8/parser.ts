@@ -61,7 +61,7 @@ export abstract class AbstractParser {
 	}
 	protected consume(token: Token) {
 		if (this.scanner.next().token !== token) {
-			throw new Error(`Parsing ${JSON.stringify(token)}`);
+			throw this.scanner.createError(`Parsing ${JSON.stringify(token)}`);
 		}
 	}
 	protected check(token: Token): boolean {
@@ -83,7 +83,7 @@ export abstract class AbstractParser {
 	protected expect(token: Token) {
 		const next = this.scanner.next();
 		if (next.token !== token) {
-			throw new Error(`Unexpected Token: ${JSON.stringify(token)}`);
+			throw this.scanner.createError(`Unexpected Token: ${JSON.stringify(token)}, next is ${JSON.stringify(next)}`);
 		}
 	}
 
@@ -145,8 +145,15 @@ export abstract class AbstractParser {
 	protected isParenthesized(expression: ExpressionNode): expression is GroupingNode {
 		return expression instanceof GroupingNode;
 	}
-	protected isAssignableIdentifier(expression: ExpressionNode): expression is AssignmentNode {
-		return expression instanceof AssignmentNode;
+	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
+		// return expression instanceof AssignmentNode;
+		if (!(expression instanceof IdentifierNode)) {
+			return false;
+		}
+		if (this.isEvalOrArguments(expression)) {
+			return false;
+		}
+		return true;
 	}
 	protected isPattern(expression: ExpressionNode): expression is (ObjectLiteralNode | ArrayLiteralNode) {
 		return expression instanceof ObjectLiteralNode || expression instanceof ArrayLiteralNode;
@@ -336,7 +343,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.CLASS:
 				this.consume(Token.CLASS);
 				// return this.parseClassDeclaration();
-				throw new Error(`Parsing Error: 'class': not supported now`);
+				throw this.scanner.createError(`Parsing Error: 'class': not supported now`);
 			// case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
@@ -445,7 +452,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else {
 				this.expect(Token.DEFAULT);
 				if (defaultSeen) {
-					throw new Error(`Multiple Defaults In Switch`);
+					throw this.scanner.createError(`Multiple Defaults In Switch`);
 				}
 				defaultSeen = true;
 			}
@@ -485,9 +492,9 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		const forMode = this.checkInOrOf();
 		if (forMode) {
-			const object = this.parseExpression();
+			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
 			this.expect(Token.R_PARENTHESES)
-			const statement = this.parseBlock();
+			const statement = (this.peek().isType(Token.L_CURLY)) ? this.parseBlock() : this.parseStatement();
 			if (isAwait && forMode === 'OF') {
 				return new ForAwaitOfNode(initializer, object, statement);
 			} else if (forMode === 'OF') {
@@ -495,7 +502,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (forMode === 'IN') {
 				return new ForInNode(initializer, object, statement);
 			} else {
-				throw new Error(`parsing for loop: ${this.position()}`);
+				throw this.scanner.createError(`parsing for loop: ${this.position()}`);
 			}
 		}
 		this.expect(Token.SEMICOLON);
@@ -533,7 +540,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (Token.isAnyIdentifier(this.peek().token)) {
 				name = this.parseAndClassifyIdentifier(this.next());
 				if (this.isEvalOrArguments(name)) {
-					throw new Error(`Strict Eval Arguments`);
+					throw this.scanner.createError(`Strict Eval Arguments`);
 				}
 				if (this.peekInOrOf()) {
 					break;
@@ -549,7 +556,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (!this.peekInOrOf()) {
 				// ES6 'const' and binding patterns require initializers.
 				if (mode === 'const' && (name === undefined || value === undefined)) {
-					throw new Error(`Declaration Missing Initializer : ${this.position()}`);
+					throw this.scanner.createError(`Declaration Missing Initializer : ${this.position()}`);
 				}
 				// value = undefined;
 			}
@@ -572,7 +579,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (Token.isAnyIdentifier(token)) {
 			const name = this.parseAndClassifyIdentifier(this.next());
 			if (this.isEvalOrArguments(name)) {
-				throw new Error(`Syntax Error: Strict Eval Arguments`);
+				throw this.scanner.createError(`Strict Eval Arguments`);
 			}
 			return name;
 		}
@@ -581,7 +588,8 @@ export class JavaScriptParser extends AbstractParser {
 		} else if (token == Token.L_CURLY) {
 			return this.parseObjectLiteral();
 		} else {
-			throw new Error(`Syntax Error: Unexpected Token ${this.next().getValue().toString()}`);
+			this.next();
+			throw this.scanner.createError(`Unexpected Token`);
 		}
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
@@ -597,13 +605,13 @@ export class JavaScriptParser extends AbstractParser {
 			return new GetPropertyNode(next.getValue(), value);
 		}
 		else if (next.isType(Token.AWAIT)) {
-			throw new Error(`Parsing Error: un supported expression (await)`);
+			throw this.scanner.createError(`Parsing Error: un supported expression (await)`);
 
 		}
 		return next.getValue();
 	}
 	getIdentifier() {
-		throw new Error('Method not implemented.');
+		throw this.scanner.createError('Method not implemented.');
 	}
 	protected parseContinueStatement(): ExpressionNode {
 		// ContinueStatement ::
@@ -660,9 +668,9 @@ export class JavaScriptParser extends AbstractParser {
 		switch (this.peek().token) {
 			case Token.FUNCTION:
 			case Token.L_CURLY:
-				throw new Error(`Parsing Error: Unreachable state`);
+				throw this.scanner.createError(`Parsing Error: Unreachable state`);
 			case Token.CLASS:
-				throw new Error(`Parsing Error: Unexpected Token ${this.next().getValue().toString()}`);
+				throw this.scanner.createError(`Parsing Error: Unexpected Token ${this.next().getValue().toString()}`);
 			case Token.LET: {
 				const nextNext = this.peekAhead();
 				// "let" followed by either "[", "{" or an identifier means a lexical
@@ -672,7 +680,7 @@ export class JavaScriptParser extends AbstractParser {
 					((nextNext.isNotType(Token.L_CURLY) && nextNext.isNotType(Token.IDENTIFIER)))) {
 					break;
 				}
-				throw new Error(`Parsing Error: Unexpected Lexical Declaration ${this.position()}`);
+				throw this.scanner.createError(`Parsing Error: Unexpected Lexical Declaration ${this.position()}`);
 			}
 			default:
 				break;
@@ -722,7 +730,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseFunctionDeclaration(): ExpressionNode {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
-			throw new Error(`Error Generator In Single Statement Context`);
+			throw this.scanner.createError(`Error Generator In Single Statement Context`);
 		}
 		return this.parseHoistableDeclaration(FunctionType.NORMAL);
 	}
@@ -823,7 +831,7 @@ export class JavaScriptParser extends AbstractParser {
 				parameters.push(param);
 				if (param instanceof RestParameterNode) {
 					if (this.peek().isType(Token.COMMA)) {
-						throw new Error(`Parsing Error: Param After Rest @${this.position()}`);
+						throw this.scanner.createError(`Param After Rest`);
 					}
 					break;
 				}
@@ -844,7 +852,7 @@ export class JavaScriptParser extends AbstractParser {
 		let initializer: ParamterNode;
 		if (this.check(Token.ASSIGN)) {
 			if (hasRest) {
-				throw new Error(`Parsing Error: Rest Default Initializer`);
+				throw this.scanner.createError(`Parsing Error: Rest Default Initializer`);
 			}
 			const value = this.parseAssignmentExpression();
 			initializer = new ParamterNode(pattern, value);
@@ -908,14 +916,14 @@ export class JavaScriptParser extends AbstractParser {
 		// expression_scope() -> RecordNonSimpleParameter();
 
 		if (this.peek().isType(Token.ASSIGN)) {
-			throw new Error(`Error A rest parameter cannot have an initializer`);
+			throw this.scanner.createError(`Error A rest parameter cannot have an initializer`);
 		}
 
 		const spread = new SpreadSyntaxNode(pattern);
 
 		// ExpressionT spread = factory() -> NewSpread(pattern, ellipsis.beg_pos, pattern_pos);
 		if (this.peek().isType(Token.COMMA)) {
-			throw new Error(`Error A rest parameter or binding pattern may not have a trailing comma`);
+			throw this.scanner.createError(`Error A rest parameter or binding pattern may not have a trailing comma`);
 		}
 
 		// expression_scope() -> SetInitializers(seen_variables, peek_position());
@@ -924,7 +932,7 @@ export class JavaScriptParser extends AbstractParser {
 		// as the formal parameters of'(x, y, ...z) => foo', and is not itself a
 		// valid expression.
 		if (this.peek().isNotType(Token.R_PARENTHESES) || this.peekAhead().isNotType(Token.ARROW)) {
-			throw new Error(`Error Unexpected Token At ${this.position()}`);
+			throw this.scanner.createError(`Error Unexpected Token At ${this.position()}`);
 		}
 
 		list.push(spread);
@@ -1013,7 +1021,7 @@ export class JavaScriptParser extends AbstractParser {
 					// ParseAssignmentExpressionCoverGrammar.
 
 					if (!this.peekAhead().isType(Token.ARROW)) {
-						throw new Error(`Unexpected Token: ${Token.R_PARENTHESES}`);
+						throw this.scanner.createError(`Unexpected Token: ${Token.R_PARENTHESES}`);
 					}
 					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
 				}
@@ -1036,27 +1044,24 @@ export class JavaScriptParser extends AbstractParser {
 				return expression;
 			}
 			case Token.CLASS: {
-				throw new Error(`not supported`);
+				throw this.scanner.createError(`not supported`);
 			}
 
 			// case Token.TEMPLATE_SPAN:
 			// case Token.TEMPLATE_TAIL:
-			// 	throw new Error(`not supported`);
+			// 	throw this.scanner.createError(`not supported`);
 			default:
 				break;
 		}
-		throw new Error(`Unexpected Token: ${JSON.stringify(this.next())}`);
+		throw this.scanner.createError(`Unexpected Token: ${JSON.stringify(this.next())}`);
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
 		this.consume(Token.NEW);
-		const newPos = this.scanner.getPos();
 		let classRef: ExpressionNode;
-
-
 		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.L_PARENTHESES)) {
-			throw new Error(`parsing new import ( at position ${newPos}`);
+			throw this.scanner.createError(`parsing new import (`);
 		} else if (this.peek().isType(Token.SUPER)) {
-			throw new Error(`parsing new super() is never allowed at position ${newPos}`);
+			throw this.scanner.createError(`parsing new super() is never allowed`);
 		} else if (this.peek().isType(Token.PERIOD)) {
 			classRef = this.parseNewTargetExpression();
 			return this.parseMemberExpressionContinuation(classRef);
@@ -1065,16 +1070,14 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		if (this.peek().isType(Token.L_PARENTHESES)) {
 			// NewExpression with arguments.
-
-			const args: ExpressionNode[] = this.parseFormalParameterList();
+			const args: ExpressionNode[] = this.parseArguments();
 			classRef = new NewNode(classRef, args);
-
 			// The expression can still continue with . or [ after the arguments.
 			return this.parseMemberExpressionContinuation(classRef);
 		}
 
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
-			throw new Error(`parsing new xxx?.yyy at position ${newPos}`);
+			throw this.scanner.createError(`parsing new xxx?.yyy at position`);
 		}
 
 		// NewExpression without arguments.
@@ -1092,10 +1095,10 @@ export class JavaScriptParser extends AbstractParser {
 			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
 				if (isSpread) {
 					if (argument instanceof AssignmentNode) {
-						throw new Error(` Rest parameter may not have a default initializer'`);
+						throw this.scanner.createError(` Rest parameter may not have a default initializer'`);
 					}
 					if (this.peek().isType(Token.COMMA)) {
-						throw new Error(`parsing '...spread,arg =>'`);
+						throw this.scanner.createError(`parsing '...spread,arg =>'`);
 					}
 				}
 			}
@@ -1106,7 +1109,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (!this.check(Token.COMMA)) break;
 		}
 		if (!this.check(Token.R_PARENTHESES)) {
-			throw new Error(`parsing arguments call, expecting ')'`);
+			throw this.scanner.createError(`parsing arguments call, expecting ')'`);
 		}
 		return args;
 	}
@@ -1126,17 +1129,17 @@ export class JavaScriptParser extends AbstractParser {
 		// Arrow functions.
 		if (op == Token.ARROW) {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
-				throw new Error(`Malformed Arrow Fun Param List`);
+				throw this.scanner.createError(`Malformed Arrow Fun Param List`);
 			}
 			expression = this.parseArrowFunctionLiteral([new ParamterNode(expression)], ArrowFunctionType.NORMAL);
 			return expression;
 		}
 		if (this.isAssignableIdentifier(expression)) {
-			if (this.isParenthesized(expression.getLeft())) {
-				throw new Error(`Invalid Destructuring Target`);
+			if (this.isParenthesized(expression)) {
+				throw this.scanner.createError(`Invalid Destructuring Target`);
 			}
 		} else if (this.isProperty(expression)) {
-			// throw new Error(`Invalid Property Binding Pattern`);
+			// throw this.scanner.createError(`Invalid Property Binding Pattern`);
 		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
 			if (this.isParenthesized(expression)) {
@@ -1155,10 +1158,10 @@ export class JavaScriptParser extends AbstractParser {
 			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
 		} else {
 			if (!this.isValidReferenceExpression(expression)) {
-				throw new Error(`Invalid Reference Expression`);
+				throw this.scanner.createError(`Invalid Reference Expression`);
 			}
 			if (Token.isLogicalAssignmentOp(op)) {
-				throw new Error(`Invalid Lhs In Assignment`);
+				throw this.scanner.createError(`Invalid Lhs In Assignment`);
 			}
 		}
 
@@ -1184,7 +1187,7 @@ export class JavaScriptParser extends AbstractParser {
 		// }
 
 		if (!Token.isAssignment(op)) {
-			throw new Error(`Invalid Destructuring Target`);
+			throw this.scanner.createError(`Invalid Destructuring Target`);
 		}
 		// if (Token.isAssignment(op)) {
 		// 	// We try to estimate the set of properties set by constructors. We define a
@@ -1196,7 +1199,7 @@ export class JavaScriptParser extends AbstractParser {
 		// 	}
 		// } else {
 		// 	// Only initializers (i.e. no compound assignments) are allowed in patterns.
-		// 	throw new Error(`Invalid Destructuring Target`);
+		// 	throw this.scanner.createError(`Invalid Destructuring Target`);
 		// }
 		return new AssignmentNode(op.jsToken(), expression, right);
 	}
@@ -1209,7 +1212,7 @@ export class JavaScriptParser extends AbstractParser {
 		return new ArrowFunctionNode(parameters, body, flag);
 	}
 	protected parseNewTargetExpression(): ExpressionNode {
-		throw new Error('Expression (new.target) not supported.');
+		throw this.scanner.createError('Expression (new.target) not supported.');
 	}
 	protected parseRegExpLiteral(): ExpressionNode | undefined {
 		const value = this.peek().getValue();
@@ -1218,10 +1221,10 @@ export class JavaScriptParser extends AbstractParser {
 		}
 	}
 	protected parseSuperExpression(): ExpressionNode {
-		throw new Error('Expression (supper) not supported.');
+		throw this.scanner.createError('Expression (supper) not supported.');
 	}
 	protected parseImportExpressions(): ExpressionNode {
-		throw new Error('Expression (import) not supported.');
+		throw this.scanner.createError('Expression (import) not supported.');
 	}
 	protected parseArrayLiteral(): ExpressionNode {
 		// ArrayLiteral ::
@@ -1254,7 +1257,7 @@ export class JavaScriptParser extends AbstractParser {
 				// }
 
 				if (this.peek().isType(Token.COMMA)) {
-					throw new Error(`Parsing Error: Element After Rest @${this.position()}`);
+					throw this.scanner.createError(`Parsing Error: Element After Rest @${this.position()}`);
 				}
 			} else {
 				elem = this.parsePossibleDestructuringSubPattern();
@@ -1354,7 +1357,7 @@ export class JavaScriptParser extends AbstractParser {
 		} else if (property instanceof ObjectLiteralPropertyNode) {
 			return property;
 		}
-		throw new Error(`Parsing Error: Unexpected Token @${this.position()}`);
+		throw this.scanner.createError(`Parsing Error: Unexpected Token @${this.position()}`);
 	}
 	protected parseProperty(): ExpressionNode {
 		const nextToken = this.peek();
@@ -1392,10 +1395,10 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.ELLIPSIS);
 				const expression = this.parsePossibleDestructuringSubPattern();
 				if (!this.isValidReferenceExpression(expression)) {
-					throw new Error(`Parsing Error: Invalid Rest Binding/Assignment Pattern`);
+					throw this.scanner.createError(`Parsing Error: Invalid Rest Binding/Assignment Pattern`);
 				}
 				if (this.peek().isNotType(Token.R_CURLY)) {
-					throw new Error(`Parsing Error: Element After Rest`);
+					throw this.scanner.createError(`Parsing Error: Element After Rest`);
 				}
 				return expression;
 			default:
@@ -1408,7 +1411,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected doParseMemberExpressionContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!Token.isMember(this.peek().token)) {
-			throw new Error(`Parsing member expression`);
+			throw this.scanner.createError(`Parsing member expression`);
 		}
 		// Parses this part of MemberExpression:
 		// ('[' Expression ']' | '.' Identifier | TemplateLiteral)*
@@ -1434,7 +1437,7 @@ export class JavaScriptParser extends AbstractParser {
 					/* ES6 Template Literals */
 					// parser need to handel
 					// if (!Token.isTemplate(this.peek().token)) {
-					// 	throw new Error(`Parsing Template Literals ${this.position()}`);
+					// 	throw this.scanner.createError(`Parsing Template Literals ${this.position()}`);
 					// }
 					// if (expression -> IsFunctionLiteral()) {
 					// 	// If the tag function looks like an IIFE, set_parenthesized() to
@@ -1453,7 +1456,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (next.getValue() instanceof IdentifierNode) {
 			return next.getValue();
 		}
-		throw new Error(`Parsing property expression: Unexpected Token`);
+		throw this.scanner.createError(`Parsing property expression: Unexpected Token`);
 	}
 	protected parsePipelineExpression(expression: ExpressionNode): ExpressionNode {
 		// ConditionalExpression ::
@@ -1508,7 +1511,7 @@ export class JavaScriptParser extends AbstractParser {
 		return this.peek().isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
 	}
 	protected parseLogicalExpression(): ExpressionNode {
-		// throw new Error('Method not implemented.');
+		// throw this.scanner.createError('Method not implemented.');
 		// LogicalExpression ::
 		//   LogicalORExpression
 		//   CoalesceExpression
@@ -1582,7 +1585,7 @@ export class JavaScriptParser extends AbstractParser {
 		return x;
 	}
 	protected parseBinaryExpression(precedence: number): ExpressionNode {
-		// throw new Error('Method not implemented.');
+		// throw this.scanner.createError('Method not implemented.');
 		const x: ExpressionNode = this.parseUnaryExpression();
 
 		const precedence1 = this.peek().token.jsPrecedence();
@@ -1621,15 +1624,15 @@ export class JavaScriptParser extends AbstractParser {
 			if (op.isType(Token.DELETE)) {
 				if (this.isIdentifier(expression)) {
 					// "delete identifier" is a syntax error in strict mode.
-					throw new Error(`"delete identifier" is a syntax error in strict mode`);
+					throw this.scanner.createError(`"delete identifier" is a syntax error in strict mode`);
 				}
 				if (expression instanceof AccessNode && expression.getRight().toString().startsWith('#')) {
-					throw new Error(`"Delete Private Field" is a syntax error`);
+					throw this.scanner.createError(`"Delete Private Field" is a syntax error`);
 				}
 			}
 
 			if (this.peek().isType(Token.EXP)) {
-				throw new Error(`Unexpected Token Unary Exponentiation`);
+				throw this.scanner.createError(`Unexpected Token Unary Exponentiation`);
 			}
 		}
 
@@ -1640,7 +1643,7 @@ export class JavaScriptParser extends AbstractParser {
 				return unary;
 			}
 		}
-		throw new Error(`Parsing Error: while rewrite unary operation`);
+		throw this.scanner.createError(`Parsing Error: while rewrite unary operation`);
 	}
 	protected parsePostfixExpression(): ExpressionNode {
 		// PostfixExpression ::
@@ -1655,14 +1658,14 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parsePostfixContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!this.isValidReferenceExpression(expression)) {
-			throw new Error(`Parsing Error: Invalid Lhs In Postfix Op.`);
+			throw this.scanner.createError(`Parsing Error: Invalid Lhs In Postfix Op.`);
 		}
 		const op = this.next();
 		const postfix = buildPostfixExpression(expression, op.token);
 		if (postfix) {
 			return postfix;
 		}
-		throw new Error(`Parsing Error: while rewrite postfix operation`);
+		throw this.scanner.createError(`Parsing Error: while rewrite postfix operation`);
 	}
 	protected parseLeftHandSideExpression(): ExpressionNode {
 		// LeftHandSideExpression ::
@@ -1697,7 +1700,7 @@ export class JavaScriptParser extends AbstractParser {
 			switch (this.peek().token) {
 				case Token.QUESTION_PERIOD: {
 					if (isOptional) {
-						throw new Error(`Parsing Error: Failure Expression`);
+						throw this.scanner.createError(`Parsing Error: Failure Expression`);
 					}
 					// Include the ?. in the source range position.
 					// optionalLinkBegin = scanner() -> peek_location().beg_pos;
@@ -1728,7 +1731,7 @@ export class JavaScriptParser extends AbstractParser {
 				/* Property */
 				case Token.PERIOD: {
 					if (isOptional) {
-						throw new Error(`Parsing Error: Unexpected Token:${this.position()}`);
+						throw this.scanner.createError(`Parsing Error: Unexpected Token:${this.position()}`);
 					}
 					this.consume(Token.PERIOD);
 					// int pos = position();
@@ -1742,7 +1745,7 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_PARENTHESES: {
 					const args = this.parseArguments();
 					if (result.toString() === 'eval') {
-						throw new Error(`'eval(...)' is not supported.`);
+						throw this.scanner.createError(`'eval(...)' is not supported.`);
 					}
 					result = new FunctionCallNode(result, args);
 					break;
@@ -1751,7 +1754,7 @@ export class JavaScriptParser extends AbstractParser {
 				default:
 					// Template literals in/after an Optional Chain not supported:
 					if (optionalChaining) {
-						throw new Error(`Parsing Error: Optional Chaining No Template support`);
+						throw this.scanner.createError(`Parsing Error: Optional Chaining No Template support`);
 					}
 					/* Tagged Template */
 					// result = result;
@@ -1766,7 +1769,7 @@ export class JavaScriptParser extends AbstractParser {
 		return result;
 	}
 	protected parseAwaitExpression(): ExpressionNode {
-		throw new Error(`'await' is not supported`);
+		throw this.scanner.createError(`'await' is not supported`);
 	}
 	protected parseNullishExpression(expression: ExpressionNode): ExpressionNode {
 		// CoalesceExpression ::
@@ -1824,14 +1827,14 @@ export class JavaScriptParser extends AbstractParser {
 				if (!delegating) break;
 				// Delegating yields require an RHS; fall through.
 				// V8_FALLTHROUGH;
-				throw new Error(`Delegating yields require an RHS`);
+				throw this.scanner.createError(`Delegating yields require an RHS`);
 			default:
 				expression = this.parseAssignmentExpressionCoverGrammar();
 				break;
 		}
 		// }
 
-		throw new Error(`Yield expression is not supported now.`);
+		throw this.scanner.createError(`Yield expression is not supported now.`);
 
 		// if (delegating) {
 		// 	return new YieldStarNode(expression!);
