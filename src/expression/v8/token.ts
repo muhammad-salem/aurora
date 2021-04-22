@@ -444,6 +444,7 @@ export class Token {
 	}
 	public static isLiteral(token: Token): boolean {
 		switch (token) {
+			case Token.UNDEFINED_LITERAL:
 			case Token.NULL_LITERAL:
 			case Token.TRUE_LITERAL:
 			case Token.FALSE_LITERAL:
