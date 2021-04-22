@@ -150,6 +150,9 @@ export abstract class TokenStream {
 		}
 	}
 	abstract next(): TokenExpression;
+	scanRegExpPattern(): boolean {
+		return false;
+	};
 
 	peek() {
 		this.save();
@@ -220,7 +223,7 @@ export class TokenStreamImpl extends TokenStream {
 		} else if (
 			this.isRadixInteger()
 			|| this.isNumber()
-			|| this.isRegExp()
+			// || this.isRegExp()
 			|| this.isString()
 			|| this.isCurlY()
 			|| this.isParentheses()
@@ -401,36 +404,46 @@ export class TokenStreamImpl extends TokenStream {
 		return false;
 	}
 
-	private isRegExp() {
-		const char = this.expression.charAt(this.pos);
-		let nextChar = this.expression.charAt(this.pos + 1);
-		if (char === '/' && nextChar !== '*') {
-			if (nextChar === '=') {
-				if (/\s/.test(this.expression.charAt(this.pos + 2))) {
-					return false;
-				}
-			}
+	public scanRegExpPattern() {
+		const peek = this.peek()
+		if (peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN)) {
+			this.next();
+			let pattern = peek.isType(Token.DIV_ASSIGN) ? '=' : '';
+
+			let start = this.pos;
 			let currentPos = this.pos;
-			let pattern: string;
 			currentPos = this.expression.indexOf('/', currentPos + 1);
-			while (currentPos > this.pos && this.expression.charAt(currentPos - 1) === '//') {
-				currentPos = this.expression.indexOf('/', currentPos);
+			while (currentPos !== -1 && this.expression.charAt(currentPos - 1) === '\\') {
+				pattern += this.expression.substring(start, currentPos - 1);
+				start = currentPos;
+				currentPos = this.expression.indexOf('/', currentPos + 1);
 			}
-			if (currentPos > this.pos) {
-				// case found {2} of /1/2
-				pattern = this.expression.substring(this.pos + 1, currentPos);
-				this.pos = currentPos + 1;
-			} else {
+			if (currentPos === -1) {
 				return false;
 			}
+			pattern += this.expression.substring(start, currentPos);
+			currentPos++;
 			let flags = '';
-			while (TokenStreamImpl.REGEXP_FLAGS.indexOf((nextChar = this.expression.charAt(this.pos))) > -1) {
-				flags += nextChar;
-				this.pos++;
+			const remainFlags = TokenStreamImpl.REGEXP_FLAGS.slice();
+			while (true) {
+				const nextChar = this.expression.charAt(currentPos);
+				if (/[\.\s]/.test(nextChar)) {
+					break;
+				}
+				const nextCharIndex = remainFlags.indexOf(nextChar);
+				if (nextCharIndex === -1) {
+					return false;
+				} else {
+					flags += nextChar;
+					remainFlags.splice(nextCharIndex, 1);
+					currentPos++;
+				}
 			}
 			const regexNode = new RegExpNode(new RegExp(pattern, flags));
 			this.current = this.newToken(Token.REGEXP_LITERAL, regexNode);
+			this.pos = currentPos;
 			return true;
+
 		}
 		return false;
 	}
@@ -956,6 +969,13 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				return false;
+			case 'g':
+				if (/get\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
+					this.current = this.newToken(Token.GET);
+					this.pos += 4;
+					return true;
+				}
+				return false;
 			case 'f':
 				if (/for\s?\(/.test(this.expression.substring(this.pos, this.pos + 5))) {
 					this.current = this.newToken(Token.FOR);
@@ -1031,6 +1051,11 @@ export class TokenStreamImpl extends TokenStream {
 				if (/static\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
 					this.current = this.newToken(Token.STATIC);
 					this.pos += 7;
+					return true;
+				}
+				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
+					this.current = this.newToken(Token.SET);
+					this.pos += 4;
 					return true;
 				}
 				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
