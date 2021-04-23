@@ -1526,6 +1526,8 @@ export class JavaScriptParser extends AbstractParser {
 			expression = this.parseBinaryContinuation(expression, 4, precedence);
 		} else if (peek.isType(Token.NULLISH)) {
 			expression = this.parseNullishExpression(expression);
+		} else if (peek.isType(Token.PIPELINE)) {
+			expression = this.parsePipelineExpression(expression);
 		}
 		return expression;
 	}
