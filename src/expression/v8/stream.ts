@@ -279,7 +279,7 @@ export class TokenStreamImpl extends TokenStream {
 			}
 			strings.push(this.expression.substring(start, i));
 			this.current = this.newToken(Token.TEMPLATE_LITERALS, new PreTemplateLiteral(strings, exprs));
-			this.pos = i;
+			this.pos = i + 1;
 			return true;
 		}
 		return false;
