@@ -192,3 +192,6 @@ export const GlobalThisNode = Object.freeze(new IdentifierNode('globalThis')) as
 export const SymbolNode = Object.freeze(new IdentifierNode('Symbol')) as IdentifierNode;
 export const OfNode = Object.freeze(new IdentifierNode('of')) as IdentifierNode;
 export const AsNode = Object.freeze(new IdentifierNode('as')) as IdentifierNode;
+export const GetIdentifier = Object.freeze(new IdentifierNode('get')) as IdentifierNode;
+export const SetIdentifier = Object.freeze(new IdentifierNode('set')) as IdentifierNode;
+export const AsyncIdentifier = Object.freeze(new IdentifierNode('async')) as IdentifierNode;
