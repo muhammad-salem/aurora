@@ -256,26 +256,27 @@ export class TokenStreamImpl extends TokenStream {
 				if (this.expression[i] === '$' && this.expression[i + 1] === '{') {
 					strings.push(this.expression.substring(start, i));
 					i += 2;
-					let j = i;
+					start = i;
 					let openCount = 0;
-					for (; j < this.expression.length; j++) {
-						if (this.expression[j] === '$' && this.expression[j + 1] === '{') {
+					for (; i < this.expression.length; i++) {
+						if (this.expression[i] === '$' && this.expression[i + 1] === '{') {
+							// if (openCount === 0) {
+							// 	start = i;
+							// }
 							openCount++;
-							j++;
-						} else if (openCount === 0 && this.expression[j] === '}') {
-							exprs.push(this.expression.substring(i, j));
+							i++;
+						} else if (openCount === 0 && this.expression[i] === '}') {
+							exprs.push(this.expression.substring(start, i));
 							break;
-						} else if (this.expression[j] === '}') {
+						} else if (this.expression[i] === '}') {
 							openCount--;
 						}
 					}
-					i = j;
-					start = j + 1;
+					start = i + 1;
 				}
-			}
-			i = this.expression.indexOf('`', start);
-			if (i === -1) {
-				return false;
+				else if (this.expression[i] === '`') {
+					break;
+				}
 			}
 			strings.push(this.expression.substring(start, i));
 			this.current = this.newToken(Token.TEMPLATE_LITERALS, new PreTemplateLiteral(strings, exprs));

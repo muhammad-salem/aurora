@@ -219,11 +219,9 @@ export abstract class AbstractParser {
 		if (Token.isAutoSemicolon(tok.token)) {
 			return;
 		}
-
 		if (this.scanner.currentToken().isType(Token.AWAIT)) {
 			throw this.scanner.createError(`Await Not In Async Context/Function`);
 		}
-		throw this.scanner.createError(`Await Not In Async Context/Function`);
 	}
 }
 
@@ -1735,7 +1733,7 @@ export class JavaScriptParser extends AbstractParser {
 						throw this.scanner.createError(`Optional Chaining No Template support`);
 					}
 					/* Tagged Template */
-					// result = result;
+					result = this.parseTemplateLiteral(result);
 					break;
 			}
 			if (isOptional) {
