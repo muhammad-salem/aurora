@@ -1,7 +1,7 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import { TokenStream } from './stream.js';
-import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode } from '../api/definition/values.js';
+import { PreTemplateLiteral, TokenStream } from './stream.js';
+import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode, StringNode, TemplateLiteralsNode } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode, FunctionType, ParamterNode } from '../api/definition/function.js';
@@ -404,7 +404,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.CLASS:
 				this.consume(Token.CLASS);
 				// return this.parseClassDeclaration();
-				throw this.scanner.createError(`Parsing Error: 'class': not supported now`);
+				throw this.scanner.createError(`'class': not supported now`);
 			// case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
@@ -661,7 +661,7 @@ export class JavaScriptParser extends AbstractParser {
 			return new GetPropertyNode(next.getValue(), value);
 		}
 		else if (next.isType(Token.AWAIT)) {
-			throw this.scanner.createError(`Parsing Error: un supported expression (await)`);
+			throw this.scanner.createError(`un supported expression (await)`);
 
 		}
 		return next.getValue();
@@ -719,9 +719,9 @@ export class JavaScriptParser extends AbstractParser {
 		switch (this.peek().token) {
 			case Token.FUNCTION:
 			case Token.L_CURLY:
-				throw this.scanner.createError(`Parsing Error: Unreachable state`);
+				throw this.scanner.createError(`Unreachable state`);
 			case Token.CLASS:
-				throw this.scanner.createError(`Parsing Error: Unexpected Token ${this.next().getValue().toString()}`);
+				throw this.scanner.createError(`Unexpected Token ${this.next().getValue().toString()}`);
 			case Token.LET: {
 				const nextNext = this.peekAhead();
 				// "let" followed by either "[", "{" or an identifier means a lexical
@@ -731,7 +731,7 @@ export class JavaScriptParser extends AbstractParser {
 					((nextNext.isNotType(Token.L_CURLY) && nextNext.isNotType(Token.IDENTIFIER)))) {
 					break;
 				}
-				throw this.scanner.createError(`Parsing Error: Unexpected Lexical Declaration ${this.position()}`);
+				throw this.scanner.createError(`Unexpected Lexical Declaration ${this.position()}`);
 			}
 			default:
 				break;
@@ -885,7 +885,7 @@ export class JavaScriptParser extends AbstractParser {
 		let initializer: ParamterNode;
 		if (this.check(Token.ASSIGN)) {
 			if (hasRest) {
-				throw this.scanner.createError(`Parsing Error: Rest Default Initializer`);
+				throw this.scanner.createError(`Rest Default Initializer`);
 			}
 			const value = this.parseAssignmentExpression();
 			initializer = new ParamterNode(pattern, value);
@@ -1071,13 +1071,22 @@ export class JavaScriptParser extends AbstractParser {
 				throw this.scanner.createError(`not supported`);
 			}
 
-			// case Token.TEMPLATE_SPAN:
-			// case Token.TEMPLATE_TAIL:
-			// 	throw this.scanner.createError(`not supported`);
+			case Token.TEMPLATE_LITERALS:
+				return this.parseTemplateLiteral();
 			default:
 				break;
 		}
 		throw this.scanner.createError(`Unexpected Token: ${JSON.stringify(this.next())}`);
+	}
+	protected parseTemplateLiteral(tag?: ExpressionNode): ExpressionNode {
+		const template = this.next().getValue() as PreTemplateLiteral;
+		const exprs = template.expressions.map(expr => JavaScriptParser.parse(expr));
+
+		if (tag) {
+			return new TemplateLiteralsNode(tag, template.strings, exprs);
+		} else {
+			return new TemplateLiteralsNode(JavaScriptParser.parse('String.raw'), template.strings, exprs);
+		}
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
 		this.consume(Token.NEW);
@@ -1240,7 +1249,7 @@ export class JavaScriptParser extends AbstractParser {
 					firstSpreadIndex = values.length;
 				}
 				if (this.peek().isType(Token.COMMA)) {
-					throw this.scanner.createError(`Parsing Error: Element After Rest @${this.position()}`);
+					throw this.scanner.createError(`Element After Rest @${this.position()}`);
 				}
 			} else {
 				elem = this.parsePossibleDestructuringSubPattern();
@@ -1433,9 +1442,12 @@ export class JavaScriptParser extends AbstractParser {
 					expression = new MemberAccessNode(expression, key);
 					break;
 				}
-				default: {
+				case Token.TEMPLATE_LITERALS: {
+					expression = this.parseTemplateLiteral(expression);
 					break;
 				}
+				default:
+					break;
 			}
 		} while (Token.isMember(this.peek().token));
 		return expression;
@@ -1625,7 +1637,7 @@ export class JavaScriptParser extends AbstractParser {
 				return unary;
 			}
 		}
-		throw this.scanner.createError(`Parsing Error: while rewrite unary operation`);
+		throw this.scanner.createError(`while rewrite unary operation`);
 	}
 	protected parsePostfixExpression(): ExpressionNode {
 		// PostfixExpression ::
@@ -1639,14 +1651,14 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parsePostfixContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!this.isValidReferenceExpression(expression)) {
-			throw this.scanner.createError(`Parsing Error: Invalid Lhs In Postfix Op.`);
+			throw this.scanner.createError(`Invalid Lhs In Postfix Op.`);
 		}
 		const op = this.next();
 		const postfix = buildPostfixExpression(expression, op.token);
 		if (postfix) {
 			return postfix;
 		}
-		throw this.scanner.createError(`Parsing Error: while rewrite postfix operation`);
+		throw this.scanner.createError(`while rewrite postfix operation`);
 	}
 	protected parseLeftHandSideExpression(): ExpressionNode {
 		// LeftHandSideExpression ::
@@ -1672,12 +1684,11 @@ export class JavaScriptParser extends AbstractParser {
 
 		let optionalChaining = false;
 		let isOptional = false;
-		// let optionalLinkBegin;
 		do {
 			switch (this.peek().token) {
 				case Token.QUESTION_PERIOD: {
 					if (isOptional) {
-						throw this.scanner.createError(`Parsing Error: Failure Expression`);
+						throw this.scanner.createError(`Failure Expression`);
 					}
 					this.consume(Token.QUESTION_PERIOD);
 					isOptional = true;
@@ -1700,7 +1711,7 @@ export class JavaScriptParser extends AbstractParser {
 				/* Property */
 				case Token.PERIOD: {
 					if (isOptional) {
-						throw this.scanner.createError(`Parsing Error: Unexpected Token:${this.position()}`);
+						throw this.scanner.createError(`Unexpected Token:${this.position()}`);
 					}
 					this.consume(Token.PERIOD);
 					const key = this.parsePropertyName();
@@ -1721,7 +1732,7 @@ export class JavaScriptParser extends AbstractParser {
 				default:
 					// Template literals in/after an Optional Chain not supported:
 					if (optionalChaining) {
-						throw this.scanner.createError(`Parsing Error: Optional Chaining No Template support`);
+						throw this.scanner.createError(`Optional Chaining No Template support`);
 					}
 					/* Tagged Template */
 					// result = result;

@@ -1,4 +1,4 @@
-
+import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
@@ -89,6 +89,70 @@ export class StringNode extends AbstractLiteralNode<string> {
 		};
 	}
 }
+
+class TemplateArray extends Array<string> implements TemplateStringsArray {
+	raw: readonly string[];
+	constructor(strings: string[]) {
+		super(...strings);
+		this.raw = strings;
+	}
+}
+
+@Deserializer('template')
+export class TemplateLiteralsNode extends AbstractExpressionNode {
+	static fromJSON(node: TemplateLiteralsNode, deserializer: NodeDeserializer): TemplateLiteralsNode {
+		return new TemplateLiteralsNode(
+			deserializer(node.tag),
+			node.strings,
+			node.expressions.map(deserializer)
+		);
+	}
+	constructor(private tag: ExpressionNode, private strings: string[], private expressions: ExpressionNode[]) {
+		super();
+	}
+
+	set(stack: ScopedStack, value: any) {
+		throw new Error(`TemplateLiteralsNode#set() has no implementation.`);
+	}
+	get(stack: ScopedStack) {
+		const tagged: Function = this.tag.get(stack);
+		const templateStringsArray = new TemplateArray(this.strings);
+		templateStringsArray.raw = templateStringsArray;
+		const values = this.expressions.map(expr => expr.get(stack));
+		return tagged(templateStringsArray, ...values);
+	}
+	entry(): string[] {
+		return this.expressions.flatMap(expr => expr.entry());
+	}
+	event(): string[] {
+		return this.expressions.flatMap(expr => expr.event());
+	}
+	toString(): string {
+		let str = this.tag.toString();
+		if (str === 'String.raw') {
+			str = ``;
+		}
+		str += '`';
+		let i = 0;
+		for (; i < this.strings.length - 1; i++) {
+			str += this.strings[i];
+			str += '${';
+			str += this.expressions[i].toString();
+			str += '}';
+		}
+		str += this.strings[i];
+		str += '`';
+		return str;
+	}
+	toJson(): object {
+		return {
+			tag: this.tag.toJSON(),
+			strings: this.strings,
+			expressions: this.expressions.map(expr => expr.toJSON())
+		};
+	}
+}
+
 
 @Deserializer('number')
 export class NumberNode extends AbstractLiteralNode<number> {
