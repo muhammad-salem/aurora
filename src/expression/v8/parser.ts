@@ -171,8 +171,8 @@ export abstract class AbstractParser {
 	protected isIdentifier(expression: ExpressionNode): expression is IdentifierNode {
 		return expression instanceof IdentifierNode;
 	}
-	protected isParenthesized(expression: ExpressionNode): expression is GroupingNode {
-		return expression instanceof GroupingNode;
+	protected isParenthesized(expression: ExpressionNode): expression is (GroupingNode | CommaNode) {
+		return expression instanceof GroupingNode || expression instanceof CommaNode;
 	}
 	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
 		// return expression instanceof AssignmentNode;
@@ -1159,8 +1159,14 @@ export class JavaScriptParser extends AbstractParser {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
 				throw this.scanner.createError(`Malformed Arrow Fun Param List`);
 			}
-			expression = this.parseArrowFunctionLiteral([new ParamterNode(expression)], ArrowFunctionType.NORMAL);
-			return expression;
+			if (expression instanceof CommaNode) {
+				const params = expression.getExpressions().map(expr => new ParamterNode(expr));
+				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
+			}
+			if (expression instanceof GroupingNode) {
+				return this.parseArrowFunctionLiteral([new ParamterNode(expression.getNode())], ArrowFunctionType.NORMAL);
+			}
+			return this.parseArrowFunctionLiteral([new ParamterNode(expression)], ArrowFunctionType.NORMAL);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {
