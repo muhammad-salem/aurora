@@ -1,7 +1,7 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { TokenStream } from './stream.js';
-import { OfNode, IdentifierNode, ThisNode, RegExpNode } from '../api/definition/values.js';
+import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode, FunctionType, ParamterNode } from '../api/definition/function.js';
@@ -34,6 +34,38 @@ import {
 } from './nodes.js';
 
 enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
+enum PropertyKind {
+	Value, Shorthand, ShorthandOrClassField,
+	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
+	Spread, NotSet
+}
+type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionType/*, name?: ExpressionNode */ };
+function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
+	switch (token) {
+		case Token.COLON:
+			info.kind = PropertyKind.Value;
+			return true;
+		case Token.COMMA:
+			info.kind = PropertyKind.Shorthand;
+			return true;
+		case Token.R_CURLY:
+			info.kind = PropertyKind.ShorthandOrClassField;
+			return true;
+		case Token.ASSIGN:
+			info.kind = PropertyKind.Assign;
+			return true;
+		case Token.L_PARENTHESES:
+			info.kind = PropertyKind.Method;
+			return true;
+		case Token.MUL:
+		case Token.SEMICOLON:
+			info.kind = PropertyKind.ClassField;
+			return true;
+		default:
+			break;
+	}
+	return false;
+}
 
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
@@ -377,11 +409,6 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.LET:
 			case Token.CONST:
 				return this.parseVariableDeclarations();
-			// case Token.LET:
-			// 	if (this.peekAhead().isNextLetKeyword()) {
-			// 		return this.parseVariableDeclarations();
-			// 	}
-			// 	break;
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION)) {
 					this.consume(Token.ASYNC);
@@ -545,7 +572,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseVariableDeclarations(): ExpressionNode {
 		// VariableDeclarations ::
 		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
-		// var converted into ==> let by parser
+		// var converted into ==> 'let' by parser
 
 		let mode: 'const' | 'let';
 		switch (this.peek().token) {
@@ -638,9 +665,6 @@ export class JavaScriptParser extends AbstractParser {
 
 		}
 		return next.getValue();
-	}
-	getIdentifier() {
-		throw this.scanner.createError('Method not implemented.');
 	}
 	protected parseContinueStatement(): ExpressionNode {
 		// ContinueStatement ::
@@ -989,9 +1013,12 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.THIS:
 				this.consume(Token.THIS);
 				return ThisNode;
-			case Token.REGEXP_LITERAL:
-				this.consume(Token.REGEXP_LITERAL);
-				return token.value!;
+			case Token.DIV:
+			case Token.DIV_ASSIGN:
+				// case Token.REGEXP_LITERAL:
+				// this.consume(Token.REGEXP_LITERAL);
+				// return token.value!;
+				return this.parseRegExpLiteral();
 			case Token.FUNCTION:
 				this.consume(Token.FUNCTION);
 				if (this.peek().isType(Token.MUL)) {
@@ -1163,38 +1190,10 @@ export class JavaScriptParser extends AbstractParser {
 		// const opPosition = this.position();
 		const right: ExpressionNode = this.parseAssignmentExpression();
 		// Anonymous function name inference applies to =, ||=, &&=, and ??=.
-		// if (Token.isAssignment(op) || Token.isLogicalAssignmentOp(op)) {
-		// 	// impl() -> CheckAssigningFunctionLiteralToProperty(expression, right);
-
-		// 	// Check if the right hand side is a call to avoid inferring a
-		// 	// name if we're dealing with "a = function(){...}();"-like
-		// 	// expression.
-		// 	// if (this.isCall(right) || this.isCallNew(right)) {
-		// 	// 	fni_.RemoveLastFunction();
-		// 	// } else {
-		// 	// 	fni_.Infer();
-		// 	// }
-
-		// 	// impl() -> SetFunctionNameFromIdentifierRef(right, expression);
-		// } else {
-		// 	// fni_.RemoveLastFunction();
-		// }
 
 		if (!Token.isAssignment(op)) {
 			throw this.scanner.createError(`Invalid Destructuring Target`);
 		}
-		// if (Token.isAssignment(op)) {
-		// 	// We try to estimate the set of properties set by constructors. We define a
-		// 	// new property whenever there is an assignment to a property of 'this'. We
-		// 	// should probably only add properties if we haven't seen them before.
-		// 	// Otherwise we'll probably overestimate the number of properties.
-		// 	if (this.isThisProperty(expression)) {
-		// 		function_state_ -> AddProperty();
-		// 	}
-		// } else {
-		// 	// Only initializers (i.e. no compound assignments) are allowed in patterns.
-		// 	throw this.scanner.createError(`Invalid Destructuring Target`);
-		// }
 		return new AssignmentNode(op.jsToken(), expression, right);
 	}
 	protected parseAssignmentExpression(): ExpressionNode {
@@ -1208,11 +1207,11 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw this.scanner.createError('Expression (new.target) not supported.');
 	}
-	protected parseRegExpLiteral(): ExpressionNode | undefined {
-		const value = this.peek().getValue();
-		if (value instanceof RegExpNode) {
-			return this.next().getValue();
+	protected parseRegExpLiteral(): ExpressionNode {
+		if (!this.scanner.scanRegExpPattern()) {
+			throw new Error('Unterminated RegExp');
 		}
+		return this.scanner.currentToken().getValue();
 	}
 	protected parseSuperExpression(): ExpressionNode {
 		throw this.scanner.createError('Expression (supper) not supported.');
@@ -1231,25 +1230,15 @@ export class JavaScriptParser extends AbstractParser {
 		while (!this.check(Token.R_BRACKETS)) {
 			let elem: ExpressionNode;
 			if (this.peek().isType(Token.COMMA)) {
+				this.consume(Token.COMMA);
 				continue;
 			} else if (this.check(Token.ELLIPSIS)) {
-				// int start_pos = position();
-				// int expr_pos = peek_position();
-				// AcceptINScope scope(this, true);
 				const argument: ExpressionNode = this.parsePossibleDestructuringSubPattern();
-				// elem = factory() -> NewSpread(argument, start_pos, expr_pos);
 				elem = new SpreadSyntaxNode(argument);
 
 				if (firstSpreadIndex < 0) {
 					firstSpreadIndex = values.length;
 				}
-
-				// if (argument -> IsAssignment()) {
-				// 	expression_scope() -> RecordPatternError(
-				// 		Scanner:: Location(start_pos, end_position()),
-				// 		MessageTemplate:: kInvalidDestructuringTarget);
-				// }
-
 				if (this.peek().isType(Token.COMMA)) {
 					throw this.scanner.createError(`Parsing Error: Element After Rest @${this.position()}`);
 				}
@@ -1262,38 +1251,7 @@ export class JavaScriptParser extends AbstractParser {
 		return new ArrayLiteralNode(values);
 	}
 	protected parsePossibleDestructuringSubPattern(): ExpressionNode {
-		// if (scope) scope -> Accumulate();
-		// int begin = peek_position();
-		const result = this.parseAssignmentExpressionCoverGrammar();
-
-		// if (this.isValidReferenceExpression(result)) {
-		// 	// Parenthesized identifiers and property references are allowed as part of
-		// 	// a larger assignment pattern, even though parenthesized patterns
-		// 	// themselves are not allowed, e.g., "[(x)] = []". Only accumulate
-		// 	// assignment pattern errors if the parsed expression is more complex.
-		// 	if (impl() -> IsIdentifier(result)) {
-		// 		if (result -> is_parenthesized()) {
-		// 			expression_scope() -> RecordDeclarationError(
-		// 				Scanner:: Location(begin, end_position()),
-		// 				MessageTemplate:: kInvalidDestructuringTarget);
-		// 		}
-		// 		IdentifierT identifier = impl() -> AsIdentifier(result);
-		// 		ClassifyParameter(identifier, begin, end_position());
-		// 	} else {
-		// 		DCHECK(result -> IsProperty());
-		// 		expression_scope() -> RecordDeclarationError(
-		// 			Scanner:: Location(begin, end_position()),
-		// 			MessageTemplate:: kInvalidPropertyBindingPattern);
-		// 		if (scope != nullptr) scope -> ValidateExpression();
-		// 	}
-		// } else if (result -> is_parenthesized() ||
-		// 	(!result -> IsPattern() && !result -> IsAssignment())) {
-		// 	expression_scope() -> RecordPatternError(
-		// 		Scanner:: Location(begin, end_position()),
-		// 		MessageTemplate:: kInvalidDestructuringTarget);
-		// }
-
-		return result;
+		return this.parseAssignmentExpressionCoverGrammar();
 	}
 	protected parseObjectLiteral(): ExpressionNode {
 		// ObjectLiteral ::
@@ -1311,93 +1269,144 @@ export class JavaScriptParser extends AbstractParser {
 		return new ObjectLiteralNode(properties);
 	}
 	protected parseObjectPropertyDefinition(): ExpressionNode {
-		const nextValue = this.peek().getValue().toString();
-		const property: ExpressionNode = this.parseProperty();
+		const propInfo = { kind: PropertyKind.NotSet } as Required<PropertyKindInfo>;
+		const nameToken = this.peek();
+		const nameExpression = this.parseProperty(propInfo);
 
-		// DCHECK_IMPLIES(name_token == Token.PRIVATE_NAME, has_error());
+		switch (propInfo.kind) {
+			case PropertyKind.Spread:
+				const spared: SpreadSyntaxNode = nameExpression as SpreadSyntaxNode;
+				return new ObjectLiteralPropertyNode(spared.getNode(), spared);
 
-		// IdentifierT name = propInfo.name;
-		// ParseFunctionFlags function_flags = propInfo.function_flags;
-		// ParsePropertyKind kind = propInfo.kind;
-
-		if (nextValue === '...' && property instanceof SpreadSyntaxNode) {
-			// spread
-			return new ObjectLiteralPropertyNode(property.getNode(), property);
-		} else if (nextValue === '...' && property instanceof IdentifierNode) {
-			// spread
-			return new ObjectLiteralPropertyNode(property, new SpreadSyntaxNode(property));
-		} else if (property instanceof IdentifierNode) {
-			if (this.peek().isType(Token.COMMA) || this.peek().isType(Token.R_CURLY)) {
-				// shorthand
-				return new ObjectLiteralPropertyNode(property, property);
-			} else if (this.peek().isType(Token.COLON)) {
-				// computed
+			case PropertyKind.Value: {
 				this.consume(Token.COLON);
 				const value = this.parsePossibleDestructuringSubPattern();
-				return new ObjectLiteralPropertyNode(property, value);
+				return new ObjectLiteralPropertyNode(nameExpression, value);
 			}
-		} else if (property instanceof FunctionDeclarationNode) {
-			if (nextValue === 'set') {
-				// set
-				return new SetPropertyNode(property.getName()!, property);
-			} else if (nextValue === 'get') {
-				// get
-				return new GetPropertyNode(property.getName()!, property);
-			} else {
-				// method
-				return new ObjectLiteralPropertyNode(property.getName()!, property);
+
+			case PropertyKind.Assign:
+			case PropertyKind.ShorthandOrClassField:
+			case PropertyKind.Shorthand: {
+				// PropertyDefinition
+				//    IdentifierReference
+				//    CoverInitializedName
+				//
+				// CoverInitializedName
+				//    IdentifierReference Initializer?
+
+				const lhs = new IdentifierNode(nameExpression.toString());
+				if (!this.isAssignableIdentifier(lhs)) {
+					throw this.scanner.createError('Strict Eval Arguments');
+				}
+				let value: ExpressionNode;
+				if (this.peek().isType(Token.ASSIGN)) {
+					this.consume(Token.ASSIGN);
+					const rhs = this.parseAssignmentExpression();
+					value = new AssignmentNode(Token.ASSIGN.jsToken(), lhs, rhs);
+				} else {
+					value = lhs;
+				}
+				return new ObjectLiteralPropertyNode(nameExpression, value);
 			}
-		} else if (property instanceof ObjectLiteralPropertyNode) {
-			return property;
+
+			case PropertyKind.Method: {
+				// MethodDefinition
+				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
+				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
+
+				const value = this.parseFunctionLiteral(propInfo.funcFlag, nameExpression);
+				return new ObjectLiteralPropertyNode(nameExpression, value);
+			}
+
+			case PropertyKind.AccessorGetter:
+			case PropertyKind.AccessorSetter: {
+				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
+				const value = this.parseFunctionLiteral(propInfo.funcFlag, nameExpression);
+				return new (isGet ? GetPropertyNode : SetPropertyNode)(nameExpression, value);
+			}
+
+			case PropertyKind.ClassField:
+			case PropertyKind.NotSet:
+				return NullNode;
 		}
-		throw this.scanner.createError(`Parsing Error: Unexpected Token @${this.position()}`);
 	}
-	protected parseProperty(): ExpressionNode {
-		const nextToken = this.peek();
-		const nextValue = nextToken.value?.toString();
-		if (nextValue === 'set' || nextValue === 'get') {
-			return this.parseFunctionExpression(FunctionType.NORMAL);
+	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
+		let nextToken = this.peek();
+		if (this.check(Token.ASYNC)) {
+			// async
+			nextToken = this.peek();
+			if (nextToken.isNotType(Token.MUL) && parsePropertyKindFromToken(nextToken.token, propInfo)) {
+				return AsyncIdentifier;
+			}
+			propInfo.kind = PropertyKind.Method;
+			propInfo.funcFlag = FunctionType.ASYNC;
 		}
+
+		if (this.check(Token.MUL)) {
+			// async*
+			propInfo.kind = PropertyKind.Method;
+			propInfo.funcFlag = FunctionType.ASYNC_GENERATOR;
+		}
+
+		nextToken = this.peek();
+		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
+			const token = this.next();
+			if (parsePropertyKindFromToken(this.peek().token, propInfo)) {
+				return nextToken.isType(Token.GET) ? GetIdentifier : SetIdentifier;
+			}
+			if (token.isType(Token.GET)) {
+				propInfo.kind = PropertyKind.AccessorGetter;
+			} else if (token.isType(Token.SET)) {
+				propInfo.kind = PropertyKind.AccessorSetter;
+			}
+		}
+		let propertyName: ExpressionNode;
 		switch (nextToken.token) {
-			case Token.ASYNC:
-				this.consume(Token.ASYNC);
-				const peek = this.peek();
-				if (peek.isType(Token.MUL)) {
-					return this.parseFunctionExpression(FunctionType.ASYNC_GENERATOR);
-				}
-				return this.parseFunctionExpression(FunctionType.ASYNC);
-			case Token.L_BRACKETS:
-				this.consume(Token.L_BRACKETS);
-				const name = this.parseAssignmentExpression();
-				this.expect(Token.R_BRACKETS);
-				return this.parseFunctionLiteral(FunctionType.NORMAL, name);
 			case Token.IDENTIFIER:
-				this.consume(Token.IDENTIFIER);
-				if (this.check(Token.COLON)) {
-					const value = this.parseAssignmentExpression();
-					return new ObjectLiteralPropertyNode(nextToken.getValue(), value);
-				}
-				return nextToken.getValue();
+				//   identifier -> "identifier"
+				this.consume(nextToken.token);
+				propertyName = nextToken.getValue();
+				break;
 			case Token.STRING:
 			case Token.NUMBER:
 			case Token.BIGINT:
+				//   "12" -> 12
+				//   12.3 -> "12.3"
+				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
-				this.expect(Token.COLON);
-				const value = this.parseAssignmentExpression();
-				return new ObjectLiteralPropertyNode(nextToken.getValue(), value);
+				propertyName = new IdentifierNode((nextToken.getValue() as AbstractLiteralNode<string>).getValue());
+				break;
+			case Token.L_BRACKETS:
+				// [Symbol.iterator]
+				this.consume(Token.L_BRACKETS);
+				propertyName = this.parseAssignmentExpression();
+				this.expect(Token.R_BRACKETS);
+				if (propInfo.kind === PropertyKind.NotSet) {
+					parsePropertyKindFromToken(this.peek().token, propInfo);
+				}
+				return propertyName;
 			case Token.ELLIPSIS:
-				this.consume(Token.ELLIPSIS);
-				const expression = this.parsePossibleDestructuringSubPattern();
-				if (!this.isValidReferenceExpression(expression)) {
-					throw this.scanner.createError(`Parsing Error: Invalid Rest Binding/Assignment Pattern`);
+				if (propInfo.kind == PropertyKind.NotSet) {
+					this.consume(Token.ELLIPSIS);
+					propertyName = this.parsePossibleDestructuringSubPattern();
+					propInfo.kind = PropertyKind.Spread;
+
+					if (!this.isValidReferenceExpression(propertyName)) {
+						throw this.scanner.createError('Invalid Rest Binding/Assignment Pattern');
+					}
+					if (this.peek().isNotType(Token.R_CURLY)) {
+						throw this.scanner.createError('Element After Rest');
+					}
+					return propertyName;
 				}
-				if (this.peek().isNotType(Token.R_CURLY)) {
-					throw this.scanner.createError(`Parsing Error: Element After Rest`);
-				}
-				return expression;
 			default:
-				return this.parsePropertyOrPrivatePropertyName();
+				propertyName = this.parsePropertyName();
+				break;
 		}
+		if (propInfo.kind === PropertyKind.NotSet) {
+			parsePropertyKindFromToken(this.peek().token, propInfo);
+		}
+		return propertyName;
 	}
 	protected parseMemberExpressionContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!Token.isMember(this.peek().token)) return expression;
@@ -1420,32 +1429,18 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				case Token.PERIOD: {
 					this.consume(Token.PERIOD);
-					// int pos = peek_position();
-					// ExpressionT key = ParsePropertyOrPrivatePropertyName();
-					// expression = factory() -> NewProperty(expression, key, pos);
-					const key: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
+					const key: ExpressionNode = this.parsePropertyName();
 					expression = new MemberAccessNode(expression, key);
 					break;
 				}
 				default: {
-					/* ES6 Template Literals */
-					// parser need to handel
-					// if (!Token.isTemplate(this.peek().token)) {
-					// 	throw this.scanner.createError(`Parsing Template Literals ${this.position()}`);
-					// }
-					// if (expression -> IsFunctionLiteral()) {
-					// 	// If the tag function looks like an IIFE, set_parenthesized() to
-					// 	// force eager compilation.
-					// 	expression -> AsFunctionLiteral() -> SetShouldEagerCompile();
-					// }
-					// expression = this.parseTemplateLiteral(expression, true);
 					break;
 				}
 			}
 		} while (Token.isMember(this.peek().token));
 		return expression;
 	}
-	protected parsePropertyOrPrivatePropertyName(): ExpressionNode {
+	protected parsePropertyName(): ExpressionNode {
 		const next = this.next();
 		if (next.getValue() instanceof IdentifierNode) {
 			return next.getValue();
@@ -1528,13 +1523,8 @@ export class JavaScriptParser extends AbstractParser {
 		do {
 			// prec1 >= 4
 			while (this.peek().token.jsPrecedence() === prec1) {
-				// SourceRange right_range;
-				// int pos = peek_position();
 				let y: ExpressionNode;
-				let op;
-
-				// SourceRangeScope right_range_scope(scanner(), & right_range);
-				op = this.next();
+				let op = this.next();
 
 				const is_right_associative = op.isType(Token.EXP);
 				const next_prec = is_right_associative ? prec1 : prec1 + 1;
@@ -1579,9 +1569,7 @@ export class JavaScriptParser extends AbstractParser {
 		return x;
 	}
 	protected parseBinaryExpression(precedence: number): ExpressionNode {
-		// throw this.scanner.createError('Method not implemented.');
 		const x: ExpressionNode = this.parseUnaryExpression();
-
 		const precedence1 = this.peek().token.jsPrecedence();
 		if (precedence1 >= precedence) {
 			return this.parseBinaryContinuation(x, precedence, precedence1);
@@ -1643,7 +1631,6 @@ export class JavaScriptParser extends AbstractParser {
 		// PostfixExpression ::
 		//   LeftHandSideExpression ('++' | '--')?
 
-		// int lhs_beg_pos = peek_position();
 		const expression: ExpressionNode = this.parseLeftHandSideExpression();
 		if (!Token.isCount(this.peek().token)) {
 			return expression;
@@ -1674,15 +1661,11 @@ export class JavaScriptParser extends AbstractParser {
 			this.scanner.currentToken().isType(Token.ASYNC)) {
 			const args = this.parseArguments(ParsingArrowHeadFlag.AsyncArrowFunction);
 			if (this.peek().isType(Token.ARROW)) {
-				// fni_.RemoveAsyncKeywordFromEnd();
-				// next_arrow_function_info_.scope = maybe_arrow.ValidateAndCreateScope();
-				// scope_snapshot.Reparent(next_arrow_function_info_.scope);
 				// async () => ...
 				if (!args.length) return new EmptyNode;
 				// async ( Arguments ) => ...
 				return this.expressionListToExpression(args);
 			}
-
 			result = new FunctionCallNode(result, args);
 			if (!Token.isPropertyOrCall(this.peek().token)) return result;
 		}
@@ -1696,16 +1679,11 @@ export class JavaScriptParser extends AbstractParser {
 					if (isOptional) {
 						throw this.scanner.createError(`Parsing Error: Failure Expression`);
 					}
-					// Include the ?. in the source range position.
-					// optionalLinkBegin = scanner() -> peek_location().beg_pos;
-
 					this.consume(Token.QUESTION_PERIOD);
 					isOptional = true;
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
-					// int pos = position();
-					const key = this.parsePropertyOrPrivatePropertyName();
-					// result = factory() -> NewProperty(result, key, pos, isOptional);
+					const key = this.parsePropertyName();
 					result = new OptionalChainingNode(result, key, 'property');
 					break;
 				}
@@ -1713,10 +1691,7 @@ export class JavaScriptParser extends AbstractParser {
 				/* Property */
 				case Token.L_BRACKETS: {
 					this.consume(Token.L_BRACKETS);
-					// int pos = position();
-					// AcceptINScope scope(this, true);
 					const index = this.parseExpressionCoverGrammar();
-					// result = factory() -> NewProperty(result, index, pos, isOptional);
 					result = new ComputedMemberAccessNode(result, index);
 					this.expect(Token.R_BRACKETS);
 					break;
@@ -1728,9 +1703,7 @@ export class JavaScriptParser extends AbstractParser {
 						throw this.scanner.createError(`Parsing Error: Unexpected Token:${this.position()}`);
 					}
 					this.consume(Token.PERIOD);
-					// int pos = position();
-					const key = this.parsePropertyOrPrivatePropertyName();
-					// result = factory() -> NewProperty(result, key, pos, isOptional);
+					const key = this.parsePropertyName();
 					result = new MemberAccessNode(result, key);
 					break;
 				}
@@ -1755,8 +1728,6 @@ export class JavaScriptParser extends AbstractParser {
 					break;
 			}
 			if (isOptional) {
-				// SourceRange chain_link_range(optionalLinkBegin, end_position());
-				// impl() -> RecordExpressionSourceRange(result, chain_link_range);
 				isOptional = false;
 			}
 		} while (Token.isPropertyOrCall(this.peek().token));
@@ -1829,11 +1800,6 @@ export class JavaScriptParser extends AbstractParser {
 		// }
 
 		throw this.scanner.createError(`Yield expression is not supported now.`);
-
-		// if (delegating) {
-		// 	return new YieldStarNode(expression!);
-		// }
-
 		// // Hackily disambiguate o from o.next and o [Symbol.iterator]().
 		// // TODO(verwaest): Come up with a better solution.
 		// return new YieldNode(expression!);
