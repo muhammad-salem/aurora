@@ -1,12 +1,17 @@
-import type { ExpressionNode } from '../api/expression.js';
+import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	BigIntNode, FalseNode, GlobalThisNode, NullNode, NumberNode, OfNode, IdentifierNode,
-	RegExpNode, StringNode, SymbolNode, ThisNode, TrueNode, UndefinedNode, AsNode
+	BigIntNode, GlobalThisNode, NumberNode, OfNode, IdentifierNode,
+	RegExpNode, StringNode, SymbolNode, AsNode
 } from '../api/definition/values.js';
 import { TerminateNode } from '../api/statement/controlflow/terminate.js';
 
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
+
+export interface PreTemplateLiteral extends ExpressionNode { };
+export class PreTemplateLiteral {
+	constructor(public strings: string[], public expressions: string[]) { }
+}
 
 export abstract class TokenStream {
 	public static getTokenStream(source: string | TokenExpression[]): TokenStream {
@@ -23,7 +28,6 @@ export abstract class TokenStream {
 	protected current: TokenExpression;
 	protected savedCurrent: TokenExpression;
 	protected last?: TokenExpression;
-
 	save() {
 		this.savedPosition = this.pos;
 		this.savedCurrent = this.current;
@@ -44,18 +48,6 @@ export abstract class TokenStream {
 	currentToken() {
 		return this.current;
 	}
-	// seekByValue(expect: Token, keywords: string[]) {
-	// 	let token: TokenExpression;
-	// 	while (true) {
-	// 		token = this.next();
-	// 		if (token.type === expect && keywords.includes(token.value as string)) {
-	// 			return true;
-	// 		}
-	// 		else if (token.type === Token.EOS) {
-	// 			return false;
-	// 		}
-	// 	}
-	// }
 	seekTo(expect: Token): boolean {
 		let token: TokenExpression;
 		while (true) {
@@ -122,7 +114,6 @@ export abstract class TokenStream {
 		}
 		return new TokenStreamer(tokens);
 	}
-
 	public toTokens(): TokenExpression[] {
 		const tokens: TokenExpression[] = [];
 		let token: TokenExpression;
@@ -153,7 +144,6 @@ export abstract class TokenStream {
 	scanRegExpPattern(): boolean {
 		return false;
 	};
-
 	peek() {
 		this.save();
 		const exp = this.next();
@@ -212,7 +202,6 @@ export class TokenStreamImpl extends TokenStream {
 	private newToken(type: Token, value?: ExpressionNode): TokenExpression {
 		return new TokenExpression(type, value);
 	}
-
 	next(): TokenExpression {
 		if (this.pos >= this.expression.length) {
 			return EOFToken;
@@ -225,6 +214,7 @@ export class TokenStreamImpl extends TokenStream {
 			|| this.isNumber()
 			// || this.isRegExp()
 			|| this.isString()
+			|| this.isTemplateLiteral()
 			|| this.isCurlY()
 			|| this.isParentheses()
 			|| this.isBracket()
@@ -238,13 +228,10 @@ export class TokenStreamImpl extends TokenStream {
 			throw this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"');
 		}
 	}
-
 	private isString() {
-		let result = false;
-		let startPos = this.pos;
-		let quote = this.expression.charAt(startPos);
-
-		if (quote === '\'' || quote === '"' || quote === '`') {
+		const quote = this.expression.charAt(this.pos);
+		if (quote === '\'' || quote === '"') {
+			const startPos = this.pos;
 			let index = this.expression.indexOf(quote, startPos + 1);
 			while (index >= 0 && this.pos < this.expression.length) {
 				this.pos = index + 1;
@@ -252,15 +239,51 @@ export class TokenStreamImpl extends TokenStream {
 					const rawString = this.expression.substring(startPos + 1, index);
 					const stringNode = new StringNode(this.unescape(rawString), quote);
 					this.current = this.newToken(Token.STRING, stringNode);
-					result = true;
-					break;
+					return true;
 				}
 				index = this.expression.indexOf(quote, index + 1);
 			}
 		}
-		return result;
+		return false;
 	}
-
+	private isTemplateLiteral(): boolean {
+		const quote = this.expression.charAt(this.pos);
+		if (quote === '`') {
+			const strings: string[] = [], exprs: string[] = [];
+			let start = this.pos + 1;
+			let i = start;
+			for (; i < this.expression.length; i++) {
+				if (this.expression[i] === '$' && this.expression[i + 1] === '{') {
+					strings.push(this.expression.substring(start, i));
+					i += 2;
+					let j = i;
+					let openCount = 0;
+					for (; j < this.expression.length; j++) {
+						if (this.expression[j] === '$' && this.expression[j + 1] === '{') {
+							openCount++;
+							j++;
+						} else if (openCount === 0 && this.expression[j] === '}') {
+							exprs.push(this.expression.substring(i, j));
+							break;
+						} else if (this.expression[j] === '}') {
+							openCount--;
+						}
+					}
+					i = j;
+					start = j + 1;
+				}
+			}
+			i = this.expression.indexOf('`', start);
+			if (i === -1) {
+				return false;
+			}
+			strings.push(this.expression.substring(start, i));
+			this.current = this.newToken(Token.TEMPLATE_LITERALS, new PreTemplateLiteral(strings, exprs));
+			this.pos = i;
+			return true;
+		}
+		return false;
+	}
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '(') {
@@ -274,7 +297,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private isBracket() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '[') {
@@ -288,7 +310,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private isCurlY() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '{') {
@@ -302,7 +323,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private isComma() {
 		const char = this.expression.charAt(this.pos);
 		if (char === ',') {
@@ -322,7 +342,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private isProperty() {
 		let startPos = this.pos;
 		let i = startPos;
@@ -369,7 +388,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private isWhitespace() {
 		let result = false;
 		let char = this.expression.charAt(this.pos);
@@ -383,7 +401,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return result;
 	}
-
 	private isComment() {
 		const char = this.expression.charAt(this.pos);
 		const nextChar = this.expression.charAt(this.pos + 1);
@@ -403,7 +420,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	public scanRegExpPattern() {
 		const peek = this.peek()
 		if (peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN)) {
@@ -447,7 +463,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return false;
 	}
-
 	private unescape(v: string) {
 		let index = v.indexOf('\\');
 		if (index < 0) {
@@ -499,7 +514,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return buffer;
 	}
-
 	private isRadixInteger() {
 		let pos = this.pos;
 		if (pos >= this.expression.length - 2 || this.expression.charAt(pos) !== '0') {
@@ -541,7 +555,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return valid;
 	}
-
 	private isNumber() {
 		let valid = false;
 		let pos = this.pos;
@@ -607,7 +620,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return valid;
 	}
-
 	private isOperator() {
 		const char = this.expression.charAt(this.pos);
 		switch (char) {
