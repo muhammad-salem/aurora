@@ -737,6 +737,14 @@ export class TokenStreamImpl extends TokenStream {
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
 					this.current = this.newToken(Token.GTE);
 					this.pos += 2;
+				} else if (this.expression.charAt(this.pos + 1) === '?') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(Token.LARGER_ASSIGN);
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(Token.LARGER);
+						this.pos += 2;
+					}
 				} else {
 					this.current = this.newToken(Token.GT);
 					this.pos++;
@@ -757,6 +765,14 @@ export class TokenStreamImpl extends TokenStream {
 						this.pos += 3;
 					} else {
 						this.current = this.newToken(Token.LTE);
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '?') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(Token.SMALLER_ASSIGN);
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(Token.SMALLER);
 						this.pos += 2;
 					}
 				} else {

@@ -79,6 +79,16 @@ export class Token {
 	public static readonly MODULO = new Token('%%', 13);
 
 	/**
+	 * ___ > ___
+	 */
+	public static readonly LARGER = new Token('>?', 13);
+
+	/**
+	 * ___ > ___
+	 */
+	public static readonly SMALLER = new Token('<?', 13);
+
+	/**
 	 * ___ ** ___
 	 */
 	public static readonly EXP = new Token('**', 14);
@@ -191,7 +201,17 @@ export class Token {
 	/**
 	 * ___ %% ___
 	 */
-	public static readonly MODULO_ASSIGN = new Token('%%', 2);
+	public static readonly MODULO_ASSIGN = new Token('%%=', 2);
+
+	/**
+	 * ___ > ___
+	 */
+	public static readonly LARGER_ASSIGN = new Token('>?=', 2);
+
+	/**
+	 * ___ > ___
+	 */
+	public static readonly SMALLER_ASSIGN = new Token('<?=', 2);
 
 	/**
 	 * ___ **= ___
