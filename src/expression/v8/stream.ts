@@ -173,7 +173,7 @@ export abstract class TokenStream {
 		this.restore();
 		return pos;
 	}
-	public abstract createError(message: String): Error;
+	public abstract createError(message: String): string;
 }
 
 export class TokenStreamer extends TokenStream {
@@ -187,8 +187,8 @@ export class TokenStreamer extends TokenStream {
 		this.last = this.current;
 		return this.current = this.tokens[this.pos++];
 	}
-	createError(message: String): Error {
-		return new Error('parse error [' + this.pos + ']: ' + message);
+	createError(message: String): string {
+		return 'parse error [' + this.pos + ']: ' + message;
 	}
 }
 
@@ -1103,16 +1103,11 @@ export class TokenStreamImpl extends TokenStream {
 			column = this.pos - newline;
 			newline = this.expression.indexOf('\n', newline + 1);
 		} while (newline >= 0 && newline < this.pos);
-
-		return {
-			line: line,
-			column: column
-		}
+		return { line, column };
 	}
-	public createError(message: String): Error {
+	public createError(message: String): string {
 		let coords = this.getCoordinates();
-		return new Error(`@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}
-		--> ${message}`);
+		return `@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}\n\t==> ${message}`;
 	}
 }
 
