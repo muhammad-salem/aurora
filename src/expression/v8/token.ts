@@ -149,6 +149,11 @@ export class Token {
 	public static readonly GTE = new Token('>=', 10);
 
 	/**
+	 * ___ <=> ___
+	 */
+	public static readonly SPACESHIP = new Token('<=>', 10);
+
+	/**
 	 * ___ = ___
 	 */
 	public static readonly ASSIGN = new Token('=', 2);
@@ -227,11 +232,6 @@ export class Token {
 	 * ___ >>>= ___
 	 */
 	public static readonly SHR_ASSIGN = new Token('>>>=', 2);
-
-	/**
-	 * ___ <=> ___
-	 */
-	public static readonly SPACESHIP = new Token('<=>', 2);
 
 	/**
 	 * ___ . ___
@@ -328,12 +328,12 @@ export class Token {
 	public static readonly IMPORT = new Token('import', 0);
 	public static readonly IN = new Token('in', 10);
 	public static readonly INSTANCEOF = new Token('instanceof', 10);
-	public static readonly INTERFACE = new Token('interface', 10);
 	public static readonly LET = new Token('let', 0);
 	public static readonly NEW = new Token('new', 0);
 	public static readonly NULL_LITERAL = new Token('null', 0);
 	public static readonly UNDEFINED_LITERAL = new Token('undefined', 0);
 	public static readonly PACKAGE = new Token('package', 0);
+	public static readonly INTERFACE = new Token('interface', 0);
 	public static readonly PRIVATE = new Token('private', 0);
 	public static readonly PROTECTED = new Token('protected', 0);
 	public static readonly PUBLIC = new Token('public', 0);
@@ -570,6 +570,7 @@ export class Token {
 			case Token.GT:
 			case Token.LTE:
 			case Token.GTE:
+			case Token.SPACESHIP:
 			case Token.INSTANCEOF:
 			case Token.IN:
 				return true;
@@ -583,6 +584,7 @@ export class Token {
 			case Token.GT:
 			case Token.LTE:
 			case Token.GTE:
+			case Token.SPACESHIP:
 				return true;
 		}
 		return false;
