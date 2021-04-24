@@ -692,7 +692,15 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return true;
 			case '%':
-				if (this.expression.charAt(this.pos + 1) === '=') {
+				if (this.expression.charAt(this.pos + 1) === '%') {
+					if (this.expression.charAt(this.pos + 1) === '=') {
+						this.current = this.newToken(Token.MODULO_ASSIGN);
+						this.pos += 3;
+					} else {
+						this.current = this.newToken(Token.MODULO);
+						this.pos += 2;
+					}
+				} else if (this.expression.charAt(this.pos + 1) === '=') {
 					this.current = this.newToken(Token.MOD_ASSIGN);
 					this.pos += 2;
 				} else {

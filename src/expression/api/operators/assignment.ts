@@ -20,6 +20,7 @@ export class AssignmentNode extends InfixExpressionNode {
 
 		'/=': (evalNode: EvaluateNode) => { return evalNode.left /= evalNode.right; },
 		'%=': (evalNode: EvaluateNode) => { return evalNode.left %= evalNode.right; },
+		'%%=': (evalNode: EvaluateNode) => { return evalNode.left %= ((evalNode.left % evalNode.right) + evalNode.right) % evalNode.right; },
 
 		'+=': (evalNode: EvaluateNode) => { return evalNode.left += evalNode.right; },
 		'-=': (evalNode: EvaluateNode) => { return evalNode.left -= evalNode.right; },

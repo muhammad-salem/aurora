@@ -16,7 +16,7 @@ export class Token {
 	 * ___ |> ___ : ___ : ?
 	 * ___ |> ___ ( ___, ___ ,? )
 	 */
-	public static readonly PIPELINE = new Token('|>', 4);
+	public static readonly PIPELINE = new Token('|>', 3);
 
 	/**
 	 * ___ || ___
@@ -72,6 +72,11 @@ export class Token {
 	 * ___ % ___
 	 */
 	public static readonly MOD = new Token('%', 13);
+
+	/**
+	 * ___ %% ___
+	 */
+	public static readonly MODULO = new Token('%%', 13);
 
 	/**
 	 * ___ ** ___
@@ -182,6 +187,11 @@ export class Token {
 	 * ___ %= ___
 	 */
 	public static readonly MOD_ASSIGN = new Token('%=', 2);
+
+	/**
+	 * ___ %% ___
+	 */
+	public static readonly MODULO_ASSIGN = new Token('%%', 2);
 
 	/**
 	 * ___ **= ___
@@ -467,6 +477,7 @@ export class Token {
 			case Token.MUL_ASSIGN:
 			case Token.DIV_ASSIGN:
 			case Token.MOD_ASSIGN:
+			case Token.MODULO_ASSIGN:
 			case Token.EXP_ASSIGN:
 			case Token.BIT_XOR_ASSIGN:
 			case Token.BIT_AND_ASSIGN:

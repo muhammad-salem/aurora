@@ -1476,7 +1476,7 @@ export class JavaScriptParser extends AbstractParser {
 		//
 
 		this.expect(Token.PIPELINE);
-		const func = this.parseExpression();
+		const func = this.parseBinaryExpression(4);
 		let args: (ExpressionNode | '?')[] = [];
 		switch (this.peek().token) {
 			case Token.COLON:
@@ -1487,7 +1487,7 @@ export class JavaScriptParser extends AbstractParser {
 						this.consume(Token.CONDITIONAL);
 						args.push('?');
 					} else {
-						args.push(this.parseExpression());
+						args.push(this.parseLogicalExpression());
 					}
 				} while (this.peek().isType(Token.COLON));
 				break;
@@ -1499,7 +1499,7 @@ export class JavaScriptParser extends AbstractParser {
 						this.consume(Token.CONDITIONAL);
 						args.push('?');
 					} else {
-						args.push(this.parseExpression());
+						args.push(this.parseLogicalExpression());
 					}
 				}
 				break;
@@ -1567,7 +1567,6 @@ export class JavaScriptParser extends AbstractParser {
 					if (r) {
 						x = r;
 					}
-
 					if (op.isNotType(cmp)) {
 						// The comparison was negated - add a NOT.
 						r = buildUnaryExpression(x, Token.NOT);
@@ -1579,7 +1578,6 @@ export class JavaScriptParser extends AbstractParser {
 					const r = shortcutNumericLiteralBinaryExpression(x, y, op.token);
 					if (r) {
 						x = r;
-
 					}
 				}
 			}
