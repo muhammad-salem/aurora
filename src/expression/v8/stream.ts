@@ -140,7 +140,6 @@ export abstract class TokenStream {
 			}
 		}
 	}
-	abstract next(): TokenExpression;
 	scanRegExpPattern(): boolean {
 		return false;
 	};
@@ -173,7 +172,9 @@ export abstract class TokenStream {
 		this.restore();
 		return pos;
 	}
-	public abstract createError(message: String): string;
+	abstract next(): TokenExpression;
+	abstract hasLineTerminatorBeforeNext(): boolean;
+	abstract createError(message: String): string;
 }
 
 export class TokenStreamer extends TokenStream {
@@ -189,6 +190,9 @@ export class TokenStreamer extends TokenStream {
 	}
 	createError(message: String): string {
 		return 'parse error [' + this.pos + ']: ' + message;
+	}
+	hasLineTerminatorBeforeNext(): boolean {
+		return false;
 	}
 }
 
@@ -227,6 +231,9 @@ export class TokenStreamImpl extends TokenStream {
 		} else {
 			throw this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"');
 		}
+	}
+	hasLineTerminatorBeforeNext(): boolean {
+		return /\s/.test(this.expression[this.pos - 1]);
 	}
 	private isString() {
 		const quote = this.expression.charAt(this.pos);

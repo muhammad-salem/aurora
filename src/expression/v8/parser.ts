@@ -1,7 +1,7 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
-import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode, StringNode, TemplateLiteralsNode } from '../api/definition/values.js';
+import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode, TemplateLiteralsNode } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode, FunctionType, ParamterNode } from '../api/definition/function.js';
@@ -215,7 +215,7 @@ export abstract class AbstractParser {
 			this.next();
 			return;
 		}
-		if (Token.isAutoSemicolon(tok.token)) {
+		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tok.token)) {
 			return;
 		}
 		if (this.scanner.currentToken().isType(Token.AWAIT)) {
@@ -478,6 +478,9 @@ export class JavaScriptParser extends AbstractParser {
 		// ThrowStatement ::
 		//   'throw' Expression ';'
 		this.consume(Token.THROW);
+		if (this.scanner.hasLineTerminatorBeforeNext()) {
+			throw new Error(this.scanner.createError(`New line After Throw`));
+		}
 		const exception = this.parseExpression();
 		this.expectSemicolon();
 		return new ThrowNode(exception);
@@ -697,7 +700,7 @@ export class JavaScriptParser extends AbstractParser {
 		const tokenExp = this.peek();
 		let returnValue: ExpressionNode | undefined;
 		// ExpressionT return_value = impl() -> NullExpression();
-		if (Token.isAutoSemicolon(tokenExp.token)) {
+		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tokenExp.token)) {
 			// check if this scope is belong to 'constructor' method to return this at the end;
 			// if (this.isDerivedConstructor(function_state_ -> kind())) {
 			// 	returnValue = ThisNode;
@@ -965,6 +968,15 @@ export class JavaScriptParser extends AbstractParser {
 		const result = this.parsePrimaryExpression();
 		return this.parseMemberExpressionContinuation(result);
 	}
+	protected toParamterNode(expression: ExpressionNode): ParamterNode {
+		if (expression instanceof AssignmentNode) {
+			return new ParamterNode(expression.getLeft(), expression.getRight());
+		}
+		if (expression instanceof GroupingNode) {
+			return new ParamterNode(expression.getNode());
+		}
+		return new ParamterNode(expression);
+	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
 		//   'this'
@@ -985,7 +997,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (Token.isAnyIdentifier(token.token)) {
 			this.consume(token.token);
 			let kind: ArrowFunctionType = ArrowFunctionType.NORMAL;
-			if (token.isType(Token.ASYNC)) {
+			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
 					return this.parseFunctionDeclarationAndGenerator();
@@ -998,7 +1010,13 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			if (this.peek().isType(Token.ARROW)) {
 				const name = this.parseAndClassifyIdentifier(token);
-				return this.parseArrowFunctionLiteral([name], kind);
+				const params: ParamterNode[] = [];
+				if (name instanceof CommaNode) {
+					params.push(...name.getExpressions().map(this.toParamterNode));
+				} else {
+					params.push(this.toParamterNode(name));
+				}
+				return this.parseArrowFunctionLiteral(params, kind);
 			}
 			return this.parseAndClassifyIdentifier(token);
 		}
@@ -1065,12 +1083,14 @@ export class JavaScriptParser extends AbstractParser {
 					expression = this.parseExpressionCoverGrammar();
 				}
 				this.expect(Token.R_PARENTHESES);
+				if (this.peek().isType(Token.ARROW)) {
+					expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL);
+				}
 				return expression;
 			}
 			case Token.CLASS: {
 				throw new Error(this.errorMessage(`not supported`));
 			}
-
 			case Token.TEMPLATE_LITERALS:
 				return this.parseTemplateLiteral();
 			default:
@@ -1285,7 +1305,6 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseObjectPropertyDefinition(): ExpressionNode {
 		const propInfo = { kind: PropertyKind.NotSet } as Required<PropertyKindInfo>;
-		const nameToken = this.peek();
 		const nameExpression = this.parseProperty(propInfo);
 
 		switch (propInfo.kind) {
@@ -1350,7 +1369,9 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.check(Token.ASYNC)) {
 			// async
 			nextToken = this.peek();
-			if (nextToken.isNotType(Token.MUL) && parsePropertyKindFromToken(nextToken.token, propInfo)) {
+			if (nextToken.isNotType(Token.MUL)
+				&& parsePropertyKindFromToken(nextToken.token, propInfo)
+				|| this.scanner.hasLineTerminatorBeforeNext()) {
 				return AsyncIdentifier;
 			}
 			propInfo.kind = PropertyKind.Method;
@@ -1474,39 +1495,45 @@ export class JavaScriptParser extends AbstractParser {
 		//   expression '|>' function ':' expression [':' expression | '?']*]
 		//   expression '|>' function '(' expression [',' expression | '?']* ')'
 		//
+		// [~Await]PipelineExpression[?In, ?Yield, ?Await] |> LogicalORExpression[?In, ?Yield, ?Await]
+		// [+Await]PipelineExpression[? In, ? Yield, ? Await] |> [lookahead ∉ { await }]LogicalORExpression[? In, ? Yield, ? Await]
 
-		this.expect(Token.PIPELINE);
-		const func = this.parseBinaryExpression(4);
-		let args: (ExpressionNode | '?')[] = [];
-		switch (this.peek().token) {
-			case Token.COLON:
-				// support angular pipeline syntax
-				do {
-					this.consume(Token.COLON);
-					if (this.peek().isType(Token.CONDITIONAL)) {
-						this.consume(Token.CONDITIONAL);
-						args.push('?');
-					} else {
-						args.push(this.parseLogicalExpression());
+
+		while (this.peek().isType(Token.PIPELINE)) {
+			this.expect(Token.PIPELINE);
+			const func = this.parseLogicalExpression();
+			let args: (ExpressionNode | '?')[] = [];
+			switch (this.peek().token) {
+				case Token.COLON:
+					// support angular pipeline syntax
+					do {
+						this.consume(Token.COLON);
+						if (this.peek().isType(Token.CONDITIONAL)) {
+							this.consume(Token.CONDITIONAL);
+							args.push('?');
+						} else {
+							args.push(this.parseLogicalExpression());
+						}
+					} while (this.peek().isType(Token.COLON));
+					break;
+				case Token.L_PARENTHESES:
+					// es2020 syntax
+					this.consume(Token.L_PARENTHESES);
+					while (this.peek().isNotType(Token.R_PARENTHESES)) {
+						if (this.peek().isType(Token.CONDITIONAL)) {
+							this.consume(Token.CONDITIONAL);
+							args.push('?');
+						} else {
+							args.push(this.parseLogicalExpression());
+						}
 					}
-				} while (this.peek().isType(Token.COLON));
-				break;
-			case Token.L_PARENTHESES:
-				// es2020 syntax
-				this.consume(Token.L_PARENTHESES);
-				while (this.peek().isNotType(Token.R_PARENTHESES)) {
-					if (this.peek().isType(Token.CONDITIONAL)) {
-						this.consume(Token.CONDITIONAL);
-						args.push('?');
-					} else {
-						args.push(this.parseLogicalExpression());
-					}
-				}
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
+			}
+			expression = new PipelineNode(expression, func, args);
 		}
-		return new PipelineNode(expression, func, args);
+		return expression;
 	}
 	protected parseConditionalExpression(): ExpressionNode {
 		// ConditionalExpression ::
@@ -1515,7 +1542,13 @@ export class JavaScriptParser extends AbstractParser {
 		//
 
 		const expression: ExpressionNode = this.parseLogicalExpression();
-		return this.peek().isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
+		const peek = this.peek();
+		if (peek.isType(Token.PIPELINE)) {
+			// 	// if (expression instanceof LogicalAssignmentNode && expression.getOperator() === '||') {
+			return this.parsePipelineExpression(expression);
+			// 	// }
+		}
+		return peek.isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
 	}
 	protected parseLogicalExpression(): ExpressionNode {
 		// throw new Error(this.errorMessage('Method not implemented.'));
@@ -1534,8 +1567,6 @@ export class JavaScriptParser extends AbstractParser {
 			expression = this.parseBinaryContinuation(expression, 4, precedence);
 		} else if (peek.isType(Token.NULLISH)) {
 			expression = this.parseNullishExpression(expression);
-		} else if (peek.isType(Token.PIPELINE)) {
-			expression = this.parsePipelineExpression(expression);
 		}
 		return expression;
 	}
@@ -1650,7 +1681,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   LeftHandSideExpression ('++' | '--')?
 
 		const expression: ExpressionNode = this.parseLeftHandSideExpression();
-		if (!Token.isCount(this.peek().token)) {
+		if (!Token.isCount(this.peek().token) || this.scanner.hasLineTerminatorBeforeNext()) {
 			return expression;
 		}
 		return this.parsePostfixContinuation(expression);
@@ -1669,14 +1700,15 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseLeftHandSideExpression(): ExpressionNode {
 		// LeftHandSideExpression ::
 		//   (NewExpression | MemberExpression) ...
-
 		const result = this.parseMemberExpression();
 		if (!Token.isPropertyOrCall(this.peek().token)) return result;
 		return this.parseLeftHandSideContinuation(result);
 	}
 	protected parseLeftHandSideContinuation(result: ExpressionNode): ExpressionNode {
-		if (this.peek().isType(Token.L_PARENTHESES) && this.isIdentifier(result) &&
-			this.scanner.currentToken().isType(Token.ASYNC)) {
+		if (this.peek().isType(Token.L_PARENTHESES)
+			&& this.isIdentifier(result)
+			&& this.scanner.currentToken().isType(Token.ASYNC)
+			&& !this.scanner.hasLineTerminatorBeforeNext()) {
 			const args = this.parseArguments(ParsingArrowHeadFlag.AsyncArrowFunction);
 			if (this.peek().isType(Token.ARROW)) {
 				// async () => ...
