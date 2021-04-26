@@ -234,14 +234,7 @@ export class JavaScriptParser extends AbstractParser {
 		return parser.scan();
 	}
 	scan(): ExpressionNode {
-		const list: ExpressionNode[] = [];
-		let expression: ExpressionNode;
-		while (this.peek().isNotType(Token.EOS)) {
-			expression = this.parseStatement();
-			if (EmptyNode.INSTANCE !== expression) {
-				list.push(expression);
-			}
-		}
+		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
 		if (list.length === 1) {
 			return list[0];
 		}
@@ -1501,7 +1494,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		while (this.peek().isType(Token.PIPELINE)) {
 			this.expect(Token.PIPELINE);
-			const func = this.parseLogicalExpression();
+			const func = this.parseMemberExpression(); //this.parseLogicalExpression();
 			let args: (ExpressionNode | '?')[] = [];
 			switch (this.peek().token) {
 				case Token.COLON:
@@ -1527,6 +1520,7 @@ export class JavaScriptParser extends AbstractParser {
 							args.push(this.parseLogicalExpression());
 						}
 					}
+					this.expect(Token.R_PARENTHESES);
 					break;
 				default:
 					break;
@@ -1544,9 +1538,7 @@ export class JavaScriptParser extends AbstractParser {
 		const expression: ExpressionNode = this.parseLogicalExpression();
 		const peek = this.peek();
 		if (peek.isType(Token.PIPELINE)) {
-			// 	// if (expression instanceof LogicalAssignmentNode && expression.getOperator() === '||') {
 			return this.parsePipelineExpression(expression);
-			// 	// }
 		}
 		return peek.isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
 	}
