@@ -41,7 +41,8 @@ export class AssignmentNode extends InfixExpressionNode {
 		'=', '+=', '-=',
 		'**=', '/=', '%=',
 		'<<=', '>>=', '>>>=',
-		'&=', '^=', '|='
+		'&=', '^=', '|=',
+		'>?=', '<?='
 	];
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(AssignmentNode.KEYWORDS.includes(op))) {

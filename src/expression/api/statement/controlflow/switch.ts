@@ -9,7 +9,6 @@ import { IdentifierNode } from '../../definition/values.js';
 
 @Deserializer('case')
 export class CaseExpression extends AbstractExpressionNode {
-	static KEYWORDS = ['case'];
 	static fromJSON(node: CaseExpression, deserializer: NodeDeserializer): CaseExpression {
 		return new CaseExpression(
 			deserializer(node.value),
@@ -52,7 +51,6 @@ export class CaseExpression extends AbstractExpressionNode {
 export class DefaultExpression extends CaseExpression {
 	static DEFAULT_KEYWORD = 'default';
 	static DefaultNode = Object.freeze(new IdentifierNode(DefaultExpression.DEFAULT_KEYWORD)) as IdentifierNode;
-	static KEYWORDS = [DefaultExpression.DEFAULT_KEYWORD];
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
 		return new DefaultExpression(deserializer(node.block));
 	}
@@ -77,7 +75,6 @@ export class DefaultExpression extends CaseExpression {
  */
 @Deserializer('switch')
 export class SwitchNode extends AbstractExpressionNode {
-	static KEYWORDS = ['switch'];
 	static fromJSON(node: SwitchNode, deserializer: NodeDeserializer): SwitchNode {
 		return new SwitchNode(
 			deserializer(node.expression),

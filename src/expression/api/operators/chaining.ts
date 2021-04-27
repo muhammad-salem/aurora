@@ -13,7 +13,6 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 			node.type
 		);
 	}
-	static KEYWORDS = ['?.'];
 	constructor(private optional: ExpressionNode, private property: ExpressionNode, private type: ChainingType) {
 		super();
 	}

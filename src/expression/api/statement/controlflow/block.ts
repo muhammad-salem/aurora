@@ -11,7 +11,6 @@ import { ReturnValue } from '../../computing/return.js';
  */
 @Deserializer('block')
 export class BlockNode extends AbstractExpressionNode {
-	static KEYWORDS = ['{', '}'];
 	static fromJSON(node: BlockNode, deserializer: NodeDeserializer): BlockNode {
 		const nodes = node.statements.map(line => deserializer(line));
 		return new BlockNode(node.statements);

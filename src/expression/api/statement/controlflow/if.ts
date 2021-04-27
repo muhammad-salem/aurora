@@ -10,7 +10,6 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  */
 @Deserializer('if')
 export class IfElseNode extends AbstractExpressionNode {
-	static KEYWORDS = ['if', 'else'];
 	static fromJSON(node: IfElseNode, deserializer: NodeDeserializer): IfElseNode {
 		return new IfElseNode(
 			deserializer(node.condition),

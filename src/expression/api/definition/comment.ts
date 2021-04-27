@@ -4,7 +4,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('comment')
 export class CommentNode extends AbstractExpressionNode {
-	static KEYWORDS = ['//', '/**/'];
 	static fromJSON(nodeExp: CommentNode): CommentNode {
 		return new CommentNode(nodeExp.comment);
 	}
@@ -31,21 +30,16 @@ export class CommentNode extends AbstractExpressionNode {
 	get(stack: ScopedStack) {
 
 	}
-
 	entry(): string[] {
 		return [];
 	}
-
 	event(parent?: string): string[] {
 		return [];
 	}
-
 	toString(): string {
 		return this.comment;
 	}
-
 	toJson(): object {
 		return { comment: this.comment };
 	}
-
 }

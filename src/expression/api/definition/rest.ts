@@ -4,7 +4,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('rest')
 export class RestParameterNode extends AbstractExpressionNode {
-	static KEYWORDS = ['...'];
 	static fromJSON(nodeExp: RestParameterNode): RestParameterNode {
 		return new RestParameterNode(nodeExp.arrayName);
 	}

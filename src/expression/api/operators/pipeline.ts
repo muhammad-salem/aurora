@@ -23,7 +23,6 @@ export class PipelineNode extends AbstractExpressionNode {
 			node.args.map(arg => arg === '?' ? arg : deserializer(arg))
 		);
 	}
-	static KEYWORDS = ['|>', ':', '?', ','];
 	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: (ExpressionNode | '?')[] = []) {
 		super();
 	}

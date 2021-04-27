@@ -11,12 +11,11 @@ import { ScopedStack } from '../../scope.js';
  */
 @Deserializer('empty')
 export class EmptyNode extends AbstractExpressionNode {
-	static KEYWORDS = [';'];
 	static INSTANCE = Object.freeze(new EmptyNode()) as EmptyNode;
 	static fromJSON(node: EmptyNode): EmptyNode {
 		return EmptyNode.INSTANCE;
 	}
-	private semicolon = EmptyNode.KEYWORDS[0];
+	private semicolon = ';';
 	constructor() {
 		super();
 	}

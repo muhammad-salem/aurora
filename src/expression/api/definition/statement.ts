@@ -5,7 +5,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('statement')
 export class StatementNode extends AbstractExpressionNode {
-	static KEYWORDS = [';'];
 	static fromJSON(node: StatementNode, deserializer: NodeDeserializer): StatementNode {
 		const nodes = node.lines.map(line => deserializer(line));
 		return new StatementNode(node.lines);

@@ -25,6 +25,5 @@ export type NodeDeserializer<T = ExpressionNode> = (node: T) => T;
  * in the interface add getClass method
  */
 export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
-	KEYWORDS?: string[];
 	fromJSON(node: T, deserializer: NodeDeserializer): T;
 }

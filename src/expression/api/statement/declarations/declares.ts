@@ -59,7 +59,6 @@ export abstract class DeclarationsNode extends AbstractExpressionNode {
  */
 @Deserializer('let')
 export class LetNode extends DeclarationsNode {
-	static KEYWORDS = ['let'];
 	static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
 		return new LetNode(
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })
@@ -73,14 +72,13 @@ export class LetNode extends DeclarationsNode {
 /**
  * Constants are block-scoped, much like variables declared using the let keyword.
  * The value of a constant can't be changed through reassignment,
- * and it can't be redeclared.
+ * and it can't be redeclare.
  * 
  * the impl set no constrain on the local variable
  *
  */
 @Deserializer('const')
 export class ConstNode extends DeclarationsNode {
-	static KEYWORDS = ['const'];
 	static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
 		return new ConstNode(
 			node.variables.map(item => { return new Variable(deserializer(item.variable), item.value && deserializer(item.value)) })

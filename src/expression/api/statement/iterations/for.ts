@@ -12,7 +12,6 @@ import { ReturnValue } from '../../computing/return.js';
  */
 @Deserializer('for')
 export class ForNode extends AbstractExpressionNode {
-	static KEYWORDS = ['for'];
 	static fromJSON(node: ForNode, deserializer: NodeDeserializer): ForNode {
 		return new ForNode(
 			deserializer(node.statement),
@@ -81,7 +80,6 @@ export class ForNode extends AbstractExpressionNode {
 
 @Deserializer('for-of')
 export class ForOfNode extends AbstractExpressionNode {
-	static KEYWORDS = ['for', 'of'];
 	static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
 		return new ForOfNode(
 			deserializer(node.variable),
@@ -144,7 +142,6 @@ export class ForOfNode extends AbstractExpressionNode {
 
 @Deserializer('for-in')
 export class ForInNode extends AbstractExpressionNode {
-	static KEYWORDS = ['for', 'in'];
 	static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
 		return new ForInNode(
 			deserializer(node.variable),
@@ -207,7 +204,6 @@ export class ForInNode extends AbstractExpressionNode {
 
 @Deserializer('for-await-of')
 export class ForAwaitOfNode extends AbstractExpressionNode {
-	static KEYWORDS = ['for', 'await', 'of'];
 	static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
 		return new ForAwaitOfNode(
 			deserializer(node.variable),

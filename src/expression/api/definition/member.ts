@@ -30,14 +30,8 @@ export abstract class AccessNode extends AbstractExpressionNode {
 	}
 }
 
-@Deserializer('member-access')
+@Deserializer('member')
 export class MemberAccessNode extends AccessNode {
-	static KEYWORDS = [
-		/**
-		 * dot notation
-		 */
-		'.',
-	];
 	static fromJSON(node: MemberAccessNode, deserializer: NodeDeserializer): MemberAccessNode {
 		return new MemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}
@@ -58,14 +52,8 @@ export class MemberAccessNode extends AccessNode {
 	}
 }
 
-@Deserializer('computed-member-access')
+@Deserializer('computed-member')
 export class ComputedMemberAccessNode extends AccessNode {
-	static KEYWORDS = [
-		/**
-		 * bracket notation
-		 */
-		'[', ']'
-	];
 	static fromJSON(node: ComputedMemberAccessNode, deserializer: NodeDeserializer): ComputedMemberAccessNode {
 		return new ComputedMemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}

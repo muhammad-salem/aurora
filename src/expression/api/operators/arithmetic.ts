@@ -27,9 +27,7 @@ export class ArithmeticNode extends InfixExpressionNode {
 		'>?': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right ? evalNode.left : evalNode.right; },
 		'<?': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right ? evalNode.right : evalNode.left; },
 	};
-
-	static KEYWORDS = ['**', '*', '/', '%', '+', '-'];
-
+	static KEYWORDS = ['**', '*', '/', '%', '+', '-', '>?', '<?'];
 	constructor(op: string, left: ExpressionNode, right: ExpressionNode) {
 		if (!(ArithmeticNode.KEYWORDS.includes(op))) {
 			throw new Error(`[${op}]: operation has no implementation yet`);
@@ -86,7 +84,6 @@ export class PostfixNode extends IncrementDecrementNode {
 		'++': num => { return num.value++; },
 		'--': num => { return num.value--; }
 	};
-	static KEYWORDS = Object.keys(PostfixNode.Evaluations);
 	static fromJSON(node: PostfixNode, deserializer: NodeDeserializer): PostfixNode {
 		return new PostfixNode(node.op, deserializer(node.node));
 	}
@@ -107,7 +104,6 @@ export class PrefixNode extends IncrementDecrementNode {
 		'++': num => { return ++num.value; },
 		'--': num => { return --num.value; }
 	};
-	static KEYWORDS = Object.keys(PrefixNode.Evaluations);
 	static fromJSON(node: PrefixNode, deserializer: NodeDeserializer): PrefixNode {
 		return new PrefixNode(node.op, deserializer(node.node));
 	}

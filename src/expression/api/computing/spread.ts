@@ -5,7 +5,6 @@ import { ScopedStack } from '../scope.js';
 
 @Deserializer('spread')
 export class SpreadSyntaxNode extends AbstractExpressionNode {
-	static KEYWORDS = ['...'];
 	static fromJSON(nodeExp: SpreadSyntaxNode): SpreadSyntaxNode {
 		return new SpreadSyntaxNode(nodeExp.node);
 	}

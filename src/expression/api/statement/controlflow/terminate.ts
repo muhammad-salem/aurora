@@ -12,7 +12,6 @@ import { ScopedStack } from '../../scope.js';
  */
 @Deserializer('terminate')
 export class TerminateNode extends AbstractExpressionNode {
-	static KEYWORDS = ['break', 'continue'];
 	static readonly BreakSymbol = Symbol.for('break');
 	static readonly ContinueSymbol = Symbol.for('continue');
 	static readonly BREAK_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.BreakSymbol)) as TerminateNode;

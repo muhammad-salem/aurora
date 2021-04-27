@@ -15,10 +15,10 @@ export enum ArrowFunctionType {
 	ASYNC = 'ASYNC'
 }
 
-@Deserializer('param')
-export class ParamterNode extends AbstractExpressionNode {
-	static fromJSON(node: ParamterNode, deserializer: NodeDeserializer): ParamterNode {
-		return new ParamterNode(
+@Deserializer('paramter')
+export class FormalParamterNode extends AbstractExpressionNode {
+	static fromJSON(node: FormalParamterNode, deserializer: NodeDeserializer): FormalParamterNode {
+		return new FormalParamterNode(
 			deserializer(node.identifier),
 			node.defaultValue ? deserializer(node.defaultValue) as IdentifierNode : void 0
 		);
@@ -58,7 +58,6 @@ export class ParamterNode extends AbstractExpressionNode {
 
 @Deserializer('function')
 export class FunctionDeclarationNode extends AbstractExpressionNode {
-	static KEYWORDS = ['function'];
 	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
 		return new FunctionDeclarationNode(
 			node.parameters.map(deserializer),
@@ -171,7 +170,6 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 
 @Deserializer('=>')
 export class ArrowFunctionNode extends AbstractExpressionNode {
-	static KEYWORDS = ['=>'];
 	static fromJSON(node: ArrowFunctionNode, deserializer: NodeDeserializer): ArrowFunctionNode {
 		return new ArrowFunctionNode(
 			node.parameters.map(deserializer),

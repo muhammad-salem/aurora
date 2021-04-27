@@ -12,7 +12,6 @@ export class TernaryNode extends AbstractExpressionNode {
 			deserializer(node.exprIfFalse)
 		);
 	}
-	static KEYWORDS = ['?', ':'];
 	constructor(private condition: ExpressionNode, private exprIfTrue: ExpressionNode, private exprIfFalse: ExpressionNode) {
 		super();
 	}

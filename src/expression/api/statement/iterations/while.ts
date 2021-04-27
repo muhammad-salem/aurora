@@ -13,7 +13,6 @@ import { ReturnValue } from '../../computing/return.js';
  */
 @Deserializer('while')
 export class WhileNode extends AbstractExpressionNode {
-	static KEYWORDS = ['while'];
 	static fromJSON(node: WhileNode, deserializer: NodeDeserializer): WhileNode {
 		return new WhileNode(
 			deserializer(node.condition),
@@ -70,7 +69,6 @@ export class WhileNode extends AbstractExpressionNode {
 
 @Deserializer('do-while')
 export class DoWhileNode extends AbstractExpressionNode {
-	static KEYWORDS = ['do', 'while'];
 	static fromJSON(node: DoWhileNode, deserializer: NodeDeserializer): DoWhileNode {
 		return new DoWhileNode(
 			deserializer(node.condition),

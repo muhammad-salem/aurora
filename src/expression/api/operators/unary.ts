@@ -12,11 +12,7 @@ export class UnaryNode extends AbstractExpressionNode {
 		'-': (value: number) => { return -value; },
 		'~': (value: number) => { return ~value; },
 		'!': (value: any) => { return !value; },
-		// // 'void': (value: any) => { return void value; },
-		// // 'typeof': (value: any) => { return typeof value; },
-		// // 'delete': (value: any) => { return delete value; },
 	};
-	static KEYWORDS = Object.keys(UnaryNode.Evaluations);
 	constructor(private op: string, private node: ExpressionNode) {
 		super();
 	}
@@ -56,7 +52,6 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 	static fromJSON(node: LiteralUnaryNode, serializer: NodeDeserializer): LiteralUnaryNode {
 		return new LiteralUnaryNode(node.op, serializer(node.node));
 	}
-	static KEYWORDS = ['typeof', 'void', 'delete', 'await'];
 	constructor(private op: string, private node: ExpressionNode) {
 		super();
 	}

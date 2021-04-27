@@ -40,7 +40,6 @@ export class ThrowNode extends AbstractExpressionNode {
 
 @Deserializer('try')
 export class TryCatchNode extends AbstractExpressionNode {
-	static KEYWORDS = ['try', 'catch', 'finally'];
 	static fromJSON(node: TryCatchNode, deserializer: NodeDeserializer): TryCatchNode {
 		return new TryCatchNode(
 			deserializer(node.tryBlock),
