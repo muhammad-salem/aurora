@@ -38,7 +38,7 @@ export abstract class AbstractScopedStack extends Array<ScopedContext> implement
 		newStack.addProvider(obj);
 		return newStack;
 	}
-	emptyScopeFor(obj: any): ScopedStack {
+	emptyScopeFor(obj: any | any[]): ScopedStack {
 		return new EmptyScopeProvider(obj);
 	}
 	add(...contexts: ScopedContext[]): number {
@@ -49,7 +49,7 @@ export abstract class AbstractScopedStack extends Array<ScopedContext> implement
 		this.splice(index, 1);
 		return context;
 	}
-	addProvider(obj: any): number {
+	addProvider(obj: any | any[]): number {
 		return this.add(new DefaultScopedContext(obj));
 	}
 	addEmptyProvider(): ScopedContext {
