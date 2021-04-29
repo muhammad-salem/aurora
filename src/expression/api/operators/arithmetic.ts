@@ -1,6 +1,6 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
-import { InfixExpressionNode } from '../abstract.js';
+import { AbstractExpressionNode, InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
@@ -40,9 +40,10 @@ export class ArithmeticNode extends InfixExpressionNode {
 	}
 }
 
-export abstract class IncrementDecrementNode implements ExpressionNode {
-	constructor(protected op: '++' | '--', protected node: ExpressionNode) { }
-	abstract getClass(): NodeExpressionClass<IncrementDecrementNode>;
+export abstract class IncrementDecrementNode extends AbstractExpressionNode {
+	constructor(protected op: '++' | '--', protected node: ExpressionNode) {
+		super();
+	}
 	abstract evaluate(num: { value: number }): number;
 	abstract toString(): string;
 	getOperator() {
@@ -66,14 +67,11 @@ export abstract class IncrementDecrementNode implements ExpressionNode {
 	event(parent?: string): string[] {
 		return this.node.event(parent);
 	}
-	toJSON(): NodeJsonType {
+	toJson(): object {
 		return {
-			type: Reflect.get(this.constructor, 'type'),
-			node: {
-				op: this.op,
-				node: this.node.toJSON()
-			}
-		}
+			op: this.op,
+			node: this.node.toJSON()
+		};
 	}
 
 }
@@ -86,9 +84,6 @@ export class PostfixNode extends IncrementDecrementNode {
 	};
 	static fromJSON(node: PostfixNode, deserializer: NodeDeserializer): PostfixNode {
 		return new PostfixNode(node.op, deserializer(node.node));
-	}
-	getClass(): NodeExpressionClass<PostfixNode> {
-		return PostfixNode;
 	}
 	evaluate(num: { value: number }): number {
 		return PostfixNode.Evaluations[this.op](num);
@@ -106,9 +101,6 @@ export class PrefixNode extends IncrementDecrementNode {
 	};
 	static fromJSON(node: PrefixNode, deserializer: NodeDeserializer): PrefixNode {
 		return new PrefixNode(node.op, deserializer(node.node));
-	}
-	getClass(): NodeExpressionClass<PrefixNode> {
-		return PrefixNode;
 	}
 	evaluate(num: { value: number }): number {
 		return PrefixNode.Evaluations[this.op](num);

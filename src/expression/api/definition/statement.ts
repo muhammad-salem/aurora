@@ -6,8 +6,7 @@ import { ScopedStack } from '../scope.js';
 @Deserializer('statement')
 export class StatementNode extends AbstractExpressionNode {
 	static fromJSON(node: StatementNode, deserializer: NodeDeserializer): StatementNode {
-		const nodes = node.lines.map(line => deserializer(line));
-		return new StatementNode(node.lines);
+		return new StatementNode(node.lines.map(line => deserializer(line)));
 	}
 	constructor(private lines: ExpressionNode[]) {
 		super();
