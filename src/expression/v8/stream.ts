@@ -458,7 +458,10 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				const nextCharIndex = remainFlags.indexOf(nextChar);
 				if (nextCharIndex === -1) {
-					return false;
+					if (flags.includes(nextChar)) {
+						throw new Error(this.createError('Invalid regular expression flags'));
+					}
+					break;
 				} else {
 					flags += nextChar;
 					remainFlags.splice(nextCharIndex, 1);
