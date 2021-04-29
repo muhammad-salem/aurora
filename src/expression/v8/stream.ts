@@ -198,7 +198,8 @@ export class TokenStreamer extends TokenStream {
 
 export class TokenStreamImpl extends TokenStream {
 	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
-	static CodePointPattern = /^[0-9a-f]{4}$/i;
+	static UnicodePattern = /^[0-9a-f]{4}$/i;
+	static DecimalPattern = /^[0-9a-f]{2}$/i;
 
 	constructor(private expression: string) {
 		super();
@@ -229,7 +230,7 @@ export class TokenStreamImpl extends TokenStream {
 			|| this.isProperty()) {
 			return this.current;
 		} else {
-			throw this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"');
+			throw new Error(this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"'));
 		}
 	}
 	hasLineTerminatorBeforeNext(): boolean {
@@ -508,17 +509,28 @@ export class TokenStreamImpl extends TokenStream {
 				case 't':
 					buffer += '\t';
 					break;
-				case 'u':
+				case 'u': {
 					// interpret the following 4 characters as the hex of the unicode code point
 					let codePoint = v.substring(index + 1, index + 5);
-					if (!TokenStreamImpl.CodePointPattern.test(codePoint)) {
-						throw this.createError('Illegal escape sequence: \\u' + codePoint);
+					if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
+						throw new Error(this.createError('Illegal escape sequence: \\u' + codePoint));
 					}
 					buffer += String.fromCharCode(parseInt(codePoint, 16));
 					index += 4;
 					break;
+				}
+				case 'x': {
+					// interpret the following 2 characters as the hex of the decimal code point
+					let codePoint = v.substring(index + 1, index + 3);
+					if (!TokenStreamImpl.DecimalPattern.test(codePoint)) {
+						throw new Error(this.createError('Illegal escape sequence: \\x' + codePoint));
+					}
+					buffer += String.fromCharCode(parseInt(codePoint, 16));
+					index += 2;
+					break;
+				}
 				default:
-					throw this.createError('Illegal escape sequence: "\\' + c + '"');
+					throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
 			}
 			++index;
 			let backslash = v.indexOf('\\', index);
@@ -968,15 +980,15 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'c':
-				if (/case\s/.test(this.expression.substring(this.pos, this.pos + 5))) {
+				if (/case[\s~!+-\/\('"`]/.test(this.expression.substring(this.pos, this.pos + 5))) {
 					this.current = this.newToken(Token.CASE);
-					this.pos += 5;
+					this.pos += 4;
 					return true;
 				} else if (/const\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(Token.CONST);
 					this.pos += 6;
 					return true;
-				} else if (/catch[\s\{]/.test(this.expression.substring(this.pos, this.pos + 6))) {
+				} else if (/catch[\s\{\(]/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(Token.CATCH);
 					this.pos += 5;
 					return true;
@@ -1078,7 +1090,7 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'r':
-				if (/return\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+				if (/return[\s~!+-\/\('"`]/.test(this.expression.substring(this.pos, this.pos + 7))) {
 					this.current = this.newToken(Token.RETURN);
 					this.pos += 6;
 					return true;
