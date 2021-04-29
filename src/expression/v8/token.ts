@@ -569,7 +569,6 @@ export class Token {
 				return false;
 		}
 	}
-
 	public static isPropertyOrCall(token: Token) {
 		switch (token) {
 			case Token.TEMPLATE_LITERALS:
@@ -580,6 +579,9 @@ export class Token {
 				return true;
 		}
 		return false;
+	}
+	public static isPropertyName(token: Token) {
+		return /\w/.test(token.jsToken());
 	}
 	private static isInRange(op: number, start: Token, end: Token) {
 		return op >= start.precedence && op <= end.precedence;
@@ -654,6 +656,8 @@ export class Token {
 
 	static isUnary(token: Token) {
 		switch (token) {
+			case Token.ADD:
+			case Token.SUB:
 			case Token.NOT:
 			case Token.BIT_NOT:
 			case Token.DELETE:

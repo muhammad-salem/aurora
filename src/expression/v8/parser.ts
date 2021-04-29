@@ -1477,6 +1477,10 @@ export class JavaScriptParser extends AbstractParser {
 		if (next.getValue() instanceof IdentifierNode) {
 			return next.getValue();
 		}
+		// check keyword as identifier
+		if (Token.isPropertyName(next.token)) {
+			return new IdentifierNode(next.token.jsToken());
+		}
 		throw new Error(this.errorMessage(`Parsing property expression: Unexpected Token`));
 	}
 	protected parsePipelineExpression(expression: ExpressionNode): ExpressionNode {
