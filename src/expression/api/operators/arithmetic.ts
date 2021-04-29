@@ -68,7 +68,7 @@ export abstract class IncrementDecrementNode implements ExpressionNode {
 	}
 	toJSON(): NodeJsonType {
 		return {
-			type: this.constructor.name,
+			type: Reflect.get(this.constructor, 'type'),
 			node: {
 				op: this.op,
 				node: this.node.toJSON()
