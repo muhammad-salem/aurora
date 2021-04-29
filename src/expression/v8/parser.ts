@@ -1,13 +1,16 @@
 import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
-import { OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier, AsyncIdentifier, NullNode, AbstractLiteralNode, TemplateLiteralsNode } from '../api/definition/values.js';
+import {
+	OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier,
+	AsyncIdentifier, NullNode, AbstractLiteralNode, TemplateLiteralsNode
+} from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import { ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode, FunctionType, FormalParamterNode } from '../api/definition/function.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
 import { NewNode } from '../api/computing/new.js';
-import { SpreadSyntaxNode } from '../api/computing/spread.js';
+import { SpreadNode } from '../api/computing/spread.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { GroupingNode } from '../api/operators/grouping.js';
 import { AccessNode, ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
@@ -25,7 +28,6 @@ import { TernaryNode } from '../api/operators/ternary.js';
 import { PipelineNode } from '../api/operators/pipeline.js';
 import { LogicalNode } from '../api/operators/logical.js';
 import { CommaNode } from '../api/operators/comma.js';
-import { RestParameterNode } from '../api/definition/rest.js';
 import { OptionalChainingNode } from '../api/operators/chaining.js';
 import { StatementNode } from '../api/definition/statement.js';
 import {
@@ -40,6 +42,7 @@ enum PropertyKind {
 	Spread, NotSet
 }
 type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionType/*, name?: ExpressionNode */ };
+type FunctionInfo = { rest?: boolean };
 function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
 	switch (token) {
 		case Token.COLON:
@@ -79,14 +82,14 @@ export abstract class AbstractParser {
 	protected peek(): TokenExpression {
 		return this.scanner.peek();
 	}
-	protected peekPosition() {
-		return this.scanner.peekPosition();
-	}
 	protected peekAhead(): TokenExpression {
 		return this.scanner.peekAhead();
 	}
 	protected peekAheadPosition() {
 		return this.scanner.peekAheadPosition();
+	}
+	protected peekPosition() {
+		return this.scanner.peekPosition();
 	}
 	protected consume(token: Token) {
 		if (this.scanner.next().isNotType(token)) {
@@ -484,7 +487,6 @@ export class JavaScriptParser extends AbstractParser {
 		// CaseClause ::
 		//   'case' Expression ':' StatementList
 		//   'default' ':' StatementList
-		const switch_pos = this.peekPosition();
 
 		this.consume(Token.SWITCH);
 		this.expect(Token.L_PARENTHESES);
@@ -667,7 +669,6 @@ export class JavaScriptParser extends AbstractParser {
 		//   'continue' ';'
 		// Identifier? is not supported
 
-		const pos = this.peekPosition();
 		this.consume(Token.CONTINUE);
 		this.expectSemicolon();
 		return TerminateNode.CONTINUE_INSTANCE;
@@ -677,7 +678,6 @@ export class JavaScriptParser extends AbstractParser {
 		//   'break' ';'
 		// Identifier? is not supported
 
-		const pos = this.peekPosition();
 		this.consume(Token.BREAK);
 		this.expectSemicolon();
 		return TerminateNode.BREAK_INSTANCE;
@@ -805,11 +805,12 @@ export class JavaScriptParser extends AbstractParser {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
+		const functionInfo: FunctionInfo = {};
 		this.expect(Token.L_PARENTHESES);
-		const formals: ExpressionNode[] = this.parseFormalParameterList();
+		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
 		const body: ExpressionNode = this.parseFunctionBody();
-		return new FunctionDeclarationNode(formals, body, flag, name);
+		return new FunctionDeclarationNode(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseFunctionBody(): ExpressionNode {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
@@ -840,7 +841,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return list;
 	}
-	protected parseFormalParameterList(): ExpressionNode[] {
+	protected parseFormalParameterList(functionInfo: FunctionInfo): ExpressionNode[] {
 		// FormalParameters[Yield] :
 		//   [empty]
 		//   FunctionRestParameter[?Yield]
@@ -855,10 +856,9 @@ export class JavaScriptParser extends AbstractParser {
 		const parameters: ExpressionNode[] = [];
 		if (this.peek().isNotType(Token.R_PARENTHESES)) {
 			while (true) {
-				// const hasRest = this.check(Token.ELLIPSIS);
-				const param: ExpressionNode = this.parseFormalParameter();
+				const param: ExpressionNode = this.parseFormalParameter(functionInfo);
 				parameters.push(param);
-				if (param instanceof RestParameterNode) {
+				if (functionInfo.rest) {
 					if (this.peek().isType(Token.COMMA)) {
 						throw new Error(this.errorMessage(`Param After Rest`));
 					}
@@ -873,27 +873,24 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return parameters;
 	}
-	protected parseFormalParameter(): ExpressionNode {
+	protected parseFormalParameter(functionInfo: FunctionInfo): ExpressionNode {
 		// FormalParameter[Yield,GeneratorParameter] :
 		//   BindingElement[?Yield, ?GeneratorParameter]
-		const hasRest = this.check(Token.ELLIPSIS);
+		functionInfo.rest = this.check(Token.ELLIPSIS);
 		let pattern = this.parseBindingPattern();
 		let initializer: FormalParamterNode;
 		if (this.check(Token.ASSIGN)) {
-			if (hasRest) {
+			if (functionInfo.rest) {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			const value = this.parseAssignmentExpression();
 			initializer = new FormalParamterNode(pattern, value);
 		} else {
-			if (hasRest && pattern instanceof IdentifierNode) {
-				pattern = new RestParameterNode((pattern).getProperty() as string);
-			}
 			initializer = new FormalParamterNode(pattern);
 		}
 		return initializer;
 	}
-	protected parseExpressionCoverGrammar(): ExpressionNode {
+	protected parseExpressionCoverGrammar(info?: FunctionInfo): ExpressionNode {
 		// Expression ::
 		//   AssignmentExpression
 		//   Expression ',' AssignmentExpression
@@ -906,6 +903,9 @@ export class JavaScriptParser extends AbstractParser {
 		let expression: ExpressionNode;
 		while (true) {
 			if (this.peek().isType(Token.ELLIPSIS)) {
+				if (info) {
+					info.rest = true;
+				}
 				return this.parseArrowParametersWithRest(list, variableIndex);
 			}
 			expression = this.parseAssignmentExpressionCoverGrammar();
@@ -927,7 +927,6 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.peek().isType(Token.ASSIGN)) {
 			throw new Error(this.errorMessage(`Error A rest parameter cannot have an initializer`));
 		}
-		const spread = new SpreadSyntaxNode(pattern);
 		if (this.peek().isType(Token.COMMA)) {
 			throw new Error(this.errorMessage(`Error A rest parameter or binding pattern may not have a trailing comma`));
 		}
@@ -937,7 +936,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.peek().isNotType(Token.R_PARENTHESES) || this.peekAhead().isNotType(Token.ARROW)) {
 			throw new Error(this.errorMessage(`Error Unexpected Token At ${this.position()}`));
 		}
-		list.push(spread);
+		list.push(pattern);
 		return this.expressionListToExpression(list);
 	}
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
@@ -1065,6 +1064,7 @@ export class JavaScriptParser extends AbstractParser {
 
 				const peekToken = this.peek();
 				let expression: ExpressionNode;
+				const info: FunctionInfo = {};
 				if (peekToken.isType(Token.FUNCTION)) {
 					this.consume(Token.FUNCTION);
 					expression = this.parseFunctionLiteral(FunctionType.NORMAL);
@@ -1073,11 +1073,11 @@ export class JavaScriptParser extends AbstractParser {
 					this.consume(Token.FUNCTION);
 					expression = this.parseFunctionLiteral(FunctionType.ASYNC);
 				} else {
-					expression = this.parseExpressionCoverGrammar();
+					expression = this.parseExpressionCoverGrammar(info);
 				}
 				this.expect(Token.R_PARENTHESES);
 				if (this.peek().isType(Token.ARROW)) {
-					expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL);
+					expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
 				}
 				return expression;
 			}
@@ -1146,7 +1146,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 			}
 			if (isSpread) {
-				argument = new SpreadSyntaxNode(argument);
+				argument = new SpreadNode(argument);
 			}
 			args.push(argument);
 			if (!this.check(Token.COMMA)) break;
@@ -1227,10 +1227,10 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
-	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType): ExpressionNode {
+	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
 		this.consume(Token.ARROW);
 		const body = this.parseFunctionBody();
-		return new ArrowFunctionNode(parameters, body, flag);
+		return new ArrowFunctionNode(parameters, body, flag, rest);
 	}
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
@@ -1262,7 +1262,7 @@ export class JavaScriptParser extends AbstractParser {
 				continue;
 			} else if (this.check(Token.ELLIPSIS)) {
 				const argument: ExpressionNode = this.parsePossibleDestructuringSubPattern();
-				elem = new SpreadSyntaxNode(argument);
+				elem = new SpreadNode(argument);
 
 				if (firstSpreadIndex < 0) {
 					firstSpreadIndex = values.length;
@@ -1302,7 +1302,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		switch (propInfo.kind) {
 			case PropertyKind.Spread:
-				const spared: SpreadSyntaxNode = nameExpression as SpreadSyntaxNode;
+				const spared: SpreadNode = nameExpression as SpreadNode;
 				return new ObjectLiteralPropertyNode(spared.getNode(), spared);
 
 			case PropertyKind.Value: {
@@ -1495,17 +1495,27 @@ export class JavaScriptParser extends AbstractParser {
 		while (this.peek().isType(Token.PIPELINE)) {
 			this.consume(Token.PIPELINE);
 			const func = this.parseMemberExpression(); //this.parseLogicalExpression();
-			let args: (ExpressionNode | '?')[] = [];
+			let args: (ExpressionNode | '?' | '...?')[] = [];
 			switch (this.peek().token) {
 				case Token.COLON:
 					// support angular pipeline syntax
 					do {
 						this.consume(Token.COLON);
+						const isSpread = this.check(Token.ELLIPSIS);
 						if (this.peek().isType(Token.CONDITIONAL)) {
 							this.consume(Token.CONDITIONAL);
-							args.push('?');
+							if (isSpread) {
+								args.push('...?');
+							} else {
+								args.push('?');
+							}
 						} else {
-							args.push(this.parseLogicalExpression());
+							const arg = this.parseLogicalExpression();
+							if (isSpread) {
+								args.push(new SpreadNode(arg));
+							} else {
+								args.push(arg);
+							}
 						}
 					} while (this.peek().isType(Token.COLON));
 					break;
