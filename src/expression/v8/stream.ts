@@ -156,22 +156,22 @@ export abstract class TokenStream {
 		this.restore();
 		return exp;
 	}
-
-	peekAheadPosition() {
-		this.save();
-		this.next();
-		const pos = this.pos;
-		this.restore();
-		return pos;
-	}
 	peekPosition() {
 		this.save();
 		this.next();
+		const pos = this.pos;
+		this.restore();
+		return pos;
+	}
+	peekAheadPosition() {
+		this.save();
+		this.next();
 		this.next();
 		const pos = this.pos;
 		this.restore();
 		return pos;
 	}
+
 	abstract next(): TokenExpression;
 	abstract hasLineTerminatorBeforeNext(): boolean;
 	abstract createError(message: String): string;
@@ -233,7 +233,9 @@ export class TokenStreamImpl extends TokenStream {
 		}
 	}
 	hasLineTerminatorBeforeNext(): boolean {
-		return /\s/.test(this.expression[this.pos - 1]);
+		const limit = this.peekPosition();
+		const str = this.expression.substring(this.pos, limit);
+		return /(?:\r?\n)/g.test(str);
 	}
 	private isString() {
 		const quote = this.expression.charAt(this.pos);
