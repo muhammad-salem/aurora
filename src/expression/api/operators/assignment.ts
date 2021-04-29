@@ -38,8 +38,9 @@ export class AssignmentNode extends InfixExpressionNode {
 
 	};
 	static KEYWORDS = [
-		'=', '+=', '-=',
-		'**=', '/=', '%=',
+		'=', '*=', '**=',
+		'/=', '%=', '%%=',
+		'+=', '-=',
 		'<<=', '>>=', '>>>=',
 		'&=', '^=', '|=',
 		'>?=', '<?='
