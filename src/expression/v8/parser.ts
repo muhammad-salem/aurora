@@ -1188,7 +1188,7 @@ export class JavaScriptParser extends AbstractParser {
 		const op = this.peek().token;
 		if (!Token.isArrowOrAssignmentOp(op)) return expression;
 		// Arrow functions.
-		if (op == Token.ARROW) {
+		if (op === Token.ARROW) {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
