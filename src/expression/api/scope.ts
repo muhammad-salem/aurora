@@ -39,7 +39,7 @@ export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
 	 * @param obj 
 	 * @returns the index of new object in this stack
 	 */
-	addProvider(obj: any): number;
+	addProvider(obj: any | any[]): number;
 
 	/**
 	 * add an empty provider to this scop
@@ -67,5 +67,5 @@ export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
 	 * 
 	 * @param obj create an empty stack for this provided object, as local scope context
 	 */
-	emptyScopeFor(obj: any): ScopedStack;
+	emptyScopeFor(obj: any | any[]): ScopedStack;
 }

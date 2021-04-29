@@ -33,7 +33,7 @@ export class FormalParamterNode extends AbstractExpressionNode {
 		return this.defaultValue;
 	}
 	set(stack: ScopedStack, value: Function) {
-		stack.localScop.set(this.identifier.get(stack), value || this.defaultValue?.get(stack));
+		stack.set(this.identifier.get(stack), value || this.defaultValue?.get(stack));
 	}
 	get(stack: ScopedStack) {
 		throw new Error('ParamterNode#get() has no implementation.');
@@ -63,14 +63,13 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			node.parameters.map(deserializer),
 			deserializer(node.statements),
 			FunctionType[node.type],
-			node.name ? deserializer(node.name) as IdentifierNode : void 0
+			node.name ? deserializer(node.name) as IdentifierNode : void 0,
+			node.rest
 		);
 	}
 	constructor(
-		private parameters: ExpressionNode[],
-		private statements: ExpressionNode,
-		private type: FunctionType,
-		private name?: ExpressionNode) {
+		private parameters: ExpressionNode[], private statements: ExpressionNode,
+		private type: FunctionType, private name?: ExpressionNode, private rest?: boolean) {
 		super();
 	}
 	getParameters() {
@@ -89,8 +88,12 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
 	private setParamter(stack: ScopedStack, args: any[]) {
-		for (let i = 0; i < this.parameters.length; i++) {
-			this.parameters[i].set(stack, args[i])
+		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
+		for (let i = 0; i < limit; i++) {
+			this.parameters[i].set(stack, args[i]);
+		}
+		if (this.rest) {
+			this.parameters[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: ScopedStack) {
@@ -155,14 +158,21 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			case FunctionType.NORMAL:
 				declare = 'function'; break;
 		}
-		return `${declare} ${this.name?.toString() || ''}(${this.parameters.map(param => param.toString()).join(', ')}) ${this.statements.toString()}`;
+		return `${declare} ${this.name?.toString() || ''}(${this.parameters.map((param, index, array) => {
+			if (index === array.length - 1 && this.rest) {
+				return '...' + param.toString();
+			} else {
+				return param.toString();
+			}
+		}).join(', ')}) ${this.statements.toString()}`;
 	}
 	toJson(): object {
 		return {
 			parameters: this.parameters.map(param => param.toJSON()),
 			statements: this.statements.toJSON(),
 			type: this.type,
-			name: this.name?.toJSON()
+			name: this.name?.toJSON(),
+			rest: this.rest
 		};
 	}
 }
@@ -174,10 +184,12 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		return new ArrowFunctionNode(
 			node.parameters.map(deserializer),
 			deserializer(node.statements),
-			ArrowFunctionType[node.type]
+			ArrowFunctionType[node.type],
+			node.rest
 		);
 	}
-	constructor(private parameters: ExpressionNode[], private statements: ExpressionNode, private type: ArrowFunctionType) {
+	constructor(private parameters: ExpressionNode[], private statements: ExpressionNode,
+		private type: ArrowFunctionType, private rest?: boolean) {
 		super();
 	}
 	getParameters() {
@@ -190,8 +202,12 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
 	private setParamter(stack: ScopedStack, args: any[]) {
-		for (let i = 0; i < this.parameters.length; i++) {
-			this.parameters[i].set(stack, args[i])
+		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
+		for (let i = 0; i < limit; i++) {
+			this.parameters[i].set(stack, args[i]);
+		}
+		if (this.rest) {
+			this.parameters[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: ScopedStack) {
@@ -233,7 +249,13 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			str += this.parameters[0].toString();
 		} else {
 			str += '(';
-			str += this.parameters.map(param => param.toString()).join(', ');
+			str += this.parameters.map((param, index, array) => {
+				if (index === array.length - 1 && this.rest) {
+					return '...' + param.toString();
+				} else {
+					return param.toString();
+				}
+			}).join(', ');
 			str += ')';
 		}
 		str += ' => ';
@@ -245,6 +267,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			parameters: this.parameters.map(param => param.toJSON()),
 			statements: this.statements.toJSON(),
 			type: this.type,
+			rest: this.rest
 		};
 	}
 }
