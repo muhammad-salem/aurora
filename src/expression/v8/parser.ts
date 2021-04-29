@@ -1615,22 +1615,13 @@ export class JavaScriptParser extends AbstractParser {
 						case Token.NE_STRICT: cmp = Token.EQ_STRICT; break;
 						default: break;
 					}
-					let r = shortcutNumericLiteralBinaryExpression(x, y, cmp);
-					if (r) {
-						x = r;
-					}
+					x = shortcutNumericLiteralBinaryExpression(x, y, cmp);
 					if (op.isNotType(cmp)) {
 						// The comparison was negated - add a NOT.
-						r = buildUnaryExpression(x, Token.NOT);
-						if (r) {
-							x = r;
-						}
+						x = buildUnaryExpression(x, Token.NOT);
 					}
 				} else {
-					const r = shortcutNumericLiteralBinaryExpression(x, y, op.token);
-					if (r) {
-						x = r;
-					}
+					x = shortcutNumericLiteralBinaryExpression(x, y, op.token);
 				}
 			}
 			--prec1;
@@ -1690,10 +1681,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		if (Token.isCount(op.token) || Token.isUnary(op.token)) {
 			// Allow the parser to rewrite the expression.
-			const unary = buildUnaryExpression(expression, op.token);
-			if (unary) {
-				return unary;
-			}
+			return buildUnaryExpression(expression, op.token);
 		}
 		throw new Error(this.errorMessage(`while rewrite unary operation`));
 	}
@@ -1712,11 +1700,7 @@ export class JavaScriptParser extends AbstractParser {
 			throw new Error(this.errorMessage(`Invalid Lhs In Postfix Op.`));
 		}
 		const op = this.next();
-		const postfix = buildPostfixExpression(expression, op.token);
-		if (postfix) {
-			return postfix;
-		}
-		throw new Error(this.errorMessage(`while rewrite postfix operation`));
+		return buildPostfixExpression(expression, op.token);
 	}
 	protected parseLeftHandSideExpression(): ExpressionNode {
 		// LeftHandSideExpression ::

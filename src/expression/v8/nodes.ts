@@ -12,9 +12,13 @@ import { TernaryNode } from '../api/operators/ternary.js';
 import { PipelineNode } from '../api/operators/pipeline.js';
 import { CommaNode } from '../api/operators/comma.js';
 import { Token, TokenExpression } from './token.js';
-import { AbstractLiteralNode, BigIntNode, BooleanNode, FalseNode, NullNode, NumberNode, StringNode, TrueNode, UndefinedNode } from '../api/definition/values.js';
+import {
+	AbstractLiteralNode, BigIntNode, NumberNode,
+	BooleanNode, TrueNode, FalseNode,
+	NullNode, StringNode, UndefinedNode
+} from '../api/definition/values.js';
 
-export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): InfixExpressionNode | false {
+export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): InfixExpressionNode {
 	switch (op) {
 		case '**':
 		case '*':
@@ -67,7 +71,7 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '|':
 			return new BinaryBitwiseNode(op, left, right);
 		default:
-			return false;
+			throw new Error(`Not Supported Operator: ${op}`);
 	}
 }
 
@@ -121,18 +125,13 @@ export function cretePostfixExpression(op: string, node: ExpressionNode): Expres
 	}
 }
 
-export function creteCommaExpression(op: string, nodes: ExpressionNode[]): ExpressionNode | false {
-	switch (op) {
-		case ',':
-			return new CommaNode(nodes);
-		default:
-			return false;
-	}
+export function creteCommaExpression(nodes: ExpressionNode[]): ExpressionNode {
+	return new CommaNode(nodes);
 }
 
 const USELESS_SCOPE: ScopedStack = null as unknown as ScopedStack;//Object.create(null);
 
-export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode | false {
+export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode {
 	const expression = creteInfixExpression(op.getName(), x, y);
 	if (expression
 		&& (
@@ -142,9 +141,11 @@ export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: Exp
 			|| (x instanceof BooleanNode && y instanceof BooleanNode)
 		)) {
 		const result = expression.get(USELESS_SCOPE);
-		return coverValue(result);
+		if (result !== false) {
+			return result;
+		}
 	}
-	return expression;
+	return expression!;
 }
 export function coverValue(value: any) {
 	switch (typeof value) {
@@ -166,19 +167,27 @@ export function coverValue(value: any) {
 }
 
 export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
+	let result = cretePrefixExpression(op.getName(), expression);
 	if (expression instanceof AbstractLiteralNode) {
-		const value = expression.get();
-		return coverValue(value);
+		const value = result.get(USELESS_SCOPE);
+		const temp = coverValue(value);
+		if (temp !== false) {
+			result = temp;
+		}
 	}
-	return cretePrefixExpression(op.getName(), expression);
+	return result;
 }
 
 export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
+	let result = cretePostfixExpression(op.getName(), expression);
 	if (expression instanceof AbstractLiteralNode) {
-		const value = expression.get();
-		return coverValue(value);
+		const value = result.get(USELESS_SCOPE);
+		const temp = coverValue(value);
+		if (temp !== false) {
+			result = temp;
+		}
 	}
-	return cretePostfixExpression(op.getName(), expression);
+	return result;
 }
 
 export function expressionFromLiteral(te: TokenExpression) {
