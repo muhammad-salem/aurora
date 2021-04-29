@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"@ibyar/aurora": "^0.1.12",
+		"@ibyar/types": "^0.1.12",
 		"bootstrap": "^5.0.0-beta3",
 		"rxjs": "^6.6.7",
 		"tslib": "^2.2.0"

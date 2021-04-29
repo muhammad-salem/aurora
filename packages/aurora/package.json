@@ -17,11 +17,7 @@
 	"dependencies": {
 		"@ibyar/api": "^0.1.12",
 		"@ibyar/directives": "^0.1.12",
-		"@ibyar/forms": "^0.1.12",
-		"@ibyar/http": "^0.1.12",
 		"@ibyar/pipes": "^0.1.12",
-		"@ibyar/router": "^0.1.12",
-		"@ibyar/types": "^0.1.12",
 		"tslib": "^2.2.0"
 	},
 	"devDependencies": {

@@ -7,11 +7,8 @@
 		{ "path": "src/jsx" },
 		{ "path": "src/html-parser" },
 		{ "path": "src/api" },
-		{ "path": "src/http" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
-		{ "path": "src/forms" },
-		{ "path": "src/router" },
 		{ "path": "src/aurora" }
 	],
 	"compilerOptions": {

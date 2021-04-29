@@ -23,19 +23,7 @@
 			"path": "../directives/tsconfig.json"
 		},
 		{
-			"path": "../forms/tsconfig.json"
-		},
-		{
-			"path": "../http/tsconfig.json"
-		},
-		{
 			"path": "../pipes/tsconfig.json"
-		},
-		{
-			"path": "../router/tsconfig.json"
-		},
-		{
-			"path": "../types/tsconfig.json"
 		}
 	]
 }
