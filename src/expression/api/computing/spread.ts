@@ -4,9 +4,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopedStack } from '../scope.js';
 
 @Deserializer('spread')
-export class SpreadSyntaxNode extends AbstractExpressionNode {
-	static fromJSON(nodeExp: SpreadSyntaxNode): SpreadSyntaxNode {
-		return new SpreadSyntaxNode(nodeExp.node);
+export class SpreadNode extends AbstractExpressionNode {
+	static fromJSON(nodeExp: SpreadNode): SpreadNode {
+		return new SpreadNode(nodeExp.node);
 	}
 	constructor(private node: ExpressionNode) {
 		super();

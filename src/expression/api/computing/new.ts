@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { SpreadSyntaxNode } from './spread.js';
+import { SpreadNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('new')
@@ -25,16 +25,20 @@ export class NewNode extends AbstractExpressionNode {
 		const classRef = this.className.get(stack);
 		let value = new classRef();
 		if (this.parameters) {
-			const parameters = this.parameters.filter(param => !(param instanceof SpreadSyntaxNode))
-				.map(param => param.get(stack));
-			const spreadParam = this.parameters[this.parameters.length - 1];
-			if (spreadParam instanceof SpreadSyntaxNode) {
-				const spreadArray = spreadParam.getNode().get(stack);
-				value = new classRef(...parameters, ...spreadArray);
-			} else {
+			if (this.parameters.length > 0) {
+				const parameters: any[] = [];
+				const parametersStack = stack.emptyScopeFor(parameters);
+				for (const param of this.parameters) {
+					if (param instanceof SpreadNode) {
+						param.get(parametersStack);
+					} else {
+						parameters.push(param.get(stack));
+					}
+				}
 				value = new classRef(...parameters);
+			} else {
+				value = new classRef();
 			}
-			value = new classRef(...parameters);
 		} else {
 			value = new classRef;
 		}

@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { SpreadSyntaxNode } from './spread.js';
+import { SpreadNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('call')
@@ -23,13 +23,14 @@ export class FunctionCallNode extends AbstractExpressionNode {
 	}
 	get(stack: ScopedStack, thisContext?: any) {
 		const funCallBack = this.func.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
-		const parameters = this.parameters
-			.filter(param => !(param instanceof SpreadSyntaxNode))
-			.map(param => param.get(stack));
-		const spreadParam = this.parameters[this.parameters.length - 1];
-		if (spreadParam instanceof SpreadSyntaxNode) {
-			const spreadArray = spreadParam.getNode().get(stack);
-			return funCallBack.call(thisContext, ...parameters, ...spreadArray);
+		const parameters: any[] = [];
+		const parametersStack = stack.emptyScopeFor(parameters);
+		for (const arg of this.parameters) {
+			if (arg instanceof SpreadNode) {
+				arg.get(parametersStack);
+			} else {
+				parameters.push(arg.get(stack));
+			}
 		}
 		return funCallBack.call(thisContext, ...parameters);
 	}

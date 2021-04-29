@@ -2,6 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { SpreadNode } from '../computing/spread.js';
 
 /**
  * pipeline ('|>') operator support syntax:
@@ -20,10 +21,10 @@ export class PipelineNode extends AbstractExpressionNode {
 		return new PipelineNode(
 			deserializer(node.param),
 			deserializer(node.func),
-			node.args.map(arg => arg === '?' ? arg : deserializer(arg))
+			node.args.map(arg => typeof arg === 'string' ? arg : deserializer(arg))
 		);
 	}
-	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: (ExpressionNode | '?')[] = []) {
+	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: (ExpressionNode | '?' | '...?')[] = []) {
 		super();
 	}
 	getParam() {
@@ -41,12 +42,28 @@ export class PipelineNode extends AbstractExpressionNode {
 	get(stack: ScopedStack, thisContext?: any) {
 		const paramValue = this.param.get(stack, thisContext);
 		const funCallBack = this.func.get(stack) as Function;
-		const argumentList = this.args.map(arg => arg === '?' ? paramValue : arg.get(stack));
-		const indexed = this.args.includes('?');
-		if (indexed) {
-			return funCallBack.call(thisContext, ...argumentList);
+		const parameters: any[] = [];
+		const parametersStack = stack.emptyScopeFor(parameters);
+		let indexed = false;
+		for (const arg of this.args) {
+			if (arg === '?') {
+				parameters.push(paramValue);
+				indexed = true;
+			} else if (arg === '...?') {
+				parameters.push(...paramValue);
+				indexed = true;
+			} else {
+				if (arg instanceof SpreadNode) {
+					arg.get(parametersStack);
+				} else {
+					parameters.push(arg.get(stack));
+				}
+			}
 		}
-		return funCallBack.call(thisContext, paramValue, ...argumentList);
+		if (indexed) {
+			return funCallBack.call(thisContext, ...parameters);
+		}
+		return funCallBack.call(thisContext, paramValue, ...parameters);
 	}
 	entry(): string[] {
 		return [
@@ -65,7 +82,7 @@ export class PipelineNode extends AbstractExpressionNode {
 		return {
 			param: this.param.toJSON(),
 			func: this.func.toJSON(),
-			args: this.args?.map(arg => arg === '?' ? arg : arg.toJSON())
+			args: this.args?.map(arg => typeof arg === 'string' ? arg : arg.toJSON())
 		};
 	}
 }
