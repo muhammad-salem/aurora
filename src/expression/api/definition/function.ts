@@ -178,7 +178,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 }
 
 
-@Deserializer('=>')
+@Deserializer('arrow')
 export class ArrowFunctionNode extends AbstractExpressionNode {
 	static fromJSON(node: ArrowFunctionNode, deserializer: NodeDeserializer): ArrowFunctionNode {
 		return new ArrowFunctionNode(
