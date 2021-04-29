@@ -28,7 +28,7 @@ export function deserialize(node: ExpressionNode) {
 	if (fromJSON) {
 		return fromJSON(node, deserialize);
 	} else {
-		throw new Error(`Couldn't find Expression class for name: ${(<any>node).type}.`);
+		throw new Error(`Couldn't find Expression class for name: ${JSON.stringify(node)}.`);
 	}
 }
 
