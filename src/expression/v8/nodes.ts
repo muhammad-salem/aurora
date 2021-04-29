@@ -133,7 +133,7 @@ export function creteCommaExpression(op: string, nodes: ExpressionNode[]): Expre
 const USELESS_SCOPE: ScopedStack = null as unknown as ScopedStack;//Object.create(null);
 
 export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode | false {
-	const expression = creteInfixExpression(op.jsToken(), x, y);
+	const expression = creteInfixExpression(op.getName(), x, y);
 	if (expression
 		&& (
 			(x instanceof NumberNode && y instanceof NumberNode)
@@ -170,7 +170,7 @@ export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
 		const value = expression.get();
 		return coverValue(value);
 	}
-	return cretePrefixExpression(op.jsToken(), expression);
+	return cretePrefixExpression(op.getName(), expression);
 }
 
 export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
@@ -178,7 +178,7 @@ export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
 		const value = expression.get();
 		return coverValue(value);
 	}
-	return cretePostfixExpression(op.jsToken(), expression);
+	return cretePostfixExpression(op.getName(), expression);
 }
 
 export function expressionFromLiteral(te: TokenExpression) {

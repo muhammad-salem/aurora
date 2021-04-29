@@ -581,7 +581,7 @@ export class Token {
 		return false;
 	}
 	public static isPropertyName(token: Token) {
-		return /\w/.test(token.jsToken());
+		return /\w/.test(token.getName());
 	}
 	private static isInRange(op: number, start: Token, end: Token) {
 		return op >= start.precedence && op <= end.precedence;
@@ -702,11 +702,11 @@ export class Token {
 		return false;
 	}
 
-	constructor(private token: string, private precedence: number) { }
-	jsToken() {
-		return this.token;
+	constructor(private name: string, private precedence: number) { }
+	getName() {
+		return this.name;
 	}
-	jsPrecedence() {
+	getPrecedence() {
 		return this.precedence;
 	}
 }

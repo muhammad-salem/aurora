@@ -1222,7 +1222,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (!Token.isAssignment(op)) {
 			throw new Error(this.errorMessage(`Invalid Destructuring Target`));
 		}
-		return new AssignmentNode(op.jsToken(), expression, right);
+		return new AssignmentNode(op.getName(), expression, right);
 	}
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
@@ -1329,7 +1329,7 @@ export class JavaScriptParser extends AbstractParser {
 				if (this.peek().isType(Token.ASSIGN)) {
 					this.consume(Token.ASSIGN);
 					const rhs = this.parseAssignmentExpression();
-					value = new AssignmentNode(Token.ASSIGN.jsToken(), lhs, rhs);
+					value = new AssignmentNode(Token.ASSIGN.getName(), lhs, rhs);
 				} else {
 					value = lhs;
 				}
@@ -1479,7 +1479,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		// check keyword as identifier
 		if (Token.isPropertyName(next.token)) {
-			return new IdentifierNode(next.token.jsToken());
+			return new IdentifierNode(next.token.getName());
 		}
 		throw new Error(this.errorMessage(`Parsing property expression: Unexpected Token`));
 	}
@@ -1566,7 +1566,7 @@ export class JavaScriptParser extends AbstractParser {
 		const peek = this.peek();
 		if (peek.isType(Token.AND) || peek.isType(Token.OR)) {
 			// LogicalORExpression, pickup parsing where we left off.
-			const precedence = peek.token.jsPrecedence();
+			const precedence = peek.token.getPrecedence();
 			expression = this.parseBinaryContinuation(expression, 4, precedence);
 		} else if (peek.isType(Token.NULLISH)) {
 			expression = this.parseNullishExpression(expression);
@@ -1576,7 +1576,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseBinaryContinuation(x: ExpressionNode, prec: number, prec1: number): ExpressionNode {
 		do {
 			// prec1 >= 4
-			while (this.peek().token.jsPrecedence() === prec1) {
+			while (this.peek().token.getPrecedence() === prec1) {
 				let y: ExpressionNode;
 				let op = this.next();
 
@@ -1622,7 +1622,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseBinaryExpression(precedence: number): ExpressionNode {
 		const x: ExpressionNode = this.parseUnaryExpression();
-		const precedence1 = this.peek().token.jsPrecedence();
+		const precedence1 = this.peek().token.getPrecedence();
 		if (precedence1 >= precedence) {
 			return this.parseBinaryContinuation(x, precedence, precedence1);
 		}
@@ -1809,7 +1809,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		expression = list.pop()!;
 		expression = list.reverse()
-			.reduce((previous, current) => new LogicalNode(Token.NULLISH.jsToken(), current, previous), expression);
+			.reduce((previous, current) => new LogicalNode(Token.NULLISH.getName(), current, previous), expression);
 		return expression;
 	}
 	protected parseConditionalContinuation(expression: ExpressionNode): ExpressionNode {
