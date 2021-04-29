@@ -34,6 +34,7 @@ import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
+import { RelationalNode } from '../api/operators/relational.js';
 
 enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
 enum PropertyKind {
@@ -537,12 +538,23 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.FOR);
 		const isAwait = this.check(Token.AWAIT);
 		this.expect(Token.L_PARENTHESES);
-		const startsWithLet = this.peek().isType(Token.LET);
+		const peek = this.peek();
+		const startsWithLet = peek.isType(Token.LET);
 		let initializer: ExpressionNode;
-		if (this.peek().isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
+		if (peek.isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
 			initializer = this.parseVariableDeclarations();
+		} else if (peek.isType(Token.SEMICOLON)) {
+			initializer = EmptyNode.INSTANCE;
 		} else {
-			initializer = this.parseExpression();
+			initializer = this.parseExpressionCoverGrammar();
+		}
+		if (initializer instanceof RelationalNode) {
+			// x in y 
+			const objectNode = initializer.getRight();
+			initializer = initializer.getLeft();
+			this.expect(Token.R_PARENTHESES)
+			const statement = this.parseStatement();
+			return new ForInNode(initializer, objectNode, statement);
 		}
 		const forMode = this.checkInOrOf();
 		if (forMode) {
@@ -560,10 +572,16 @@ export class JavaScriptParser extends AbstractParser {
 			}
 		}
 		this.expect(Token.SEMICOLON);
-		const condition = this.parseExpression();
-		this.expect(Token.SEMICOLON);
-		const finalExpression = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
+		let condition: ExpressionNode | undefined;
+		if (!this.check(Token.SEMICOLON)) {
+			condition = this.parseExpression();
+			this.expect(Token.SEMICOLON);
+		}
+		let finalExpression: ExpressionNode | undefined;
+		if (!this.check(Token.R_PARENTHESES)) {
+			finalExpression = this.parseExpression();
+			this.expect(Token.R_PARENTHESES);
+		}
 		const body = this.parseStatement();
 		return new ForNode(body, initializer, condition, finalExpression);
 	}
