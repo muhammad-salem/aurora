@@ -32,38 +32,30 @@ npm i --save @ibyar/aurora
 yarn add @ibyar/aurora
 ```
 
-in your `tsconfig.json` add 
-
-```json
-{
-    "extends": "@ibyar/aurora/tsconfig.compilerOption.json",
-}
-```
-
+for import resources files as module you can get hep by adding reference of `@ibyar/types`
 in your `index.ts` file add type reference for `@ibyar/types`
 
 ```ts
 /// <reference types="@ibyar/types" />
 ```
 
-see test for more help [test](https://github.com/ibyar/aurora/tree/master/test)
+see test for more help [`example`](example/)
 
 ## 'HTML Template' and 'JSX' Features
 
-| Support | HTML Template| JSX |
-| -------------------- | - | - |
-| Parsing Attributes | ✓ | ✓ |
-| One Way Data Binding | ✓ | ✓ |
-| Two Way Data Binding | ✓ | ✓ |
-| Event Binding | ✓ | ✓ |
-| Template Parser | ✓ | ✓ |
-| Template Syntax | ✓ | ✓ |
-| Template Reference Variables | ✓ | ✓ |
-| Template HTML File | fetch | no need |
-| JSX Factory | no need | ✓ |
-| Fragment | ✓ | ✓ |
-| camelCase Property Naming | ✓ | ✓ |
-| lowercase for root element Property Naming | ✓ | ✓ |
+| Support | HTML Template|
+| -------------------- | - |
+| Parsing Attributes | ✓ |
+| One Way Data Binding | ✓ |
+| Two Way Data Binding | ✓ |
+| Event Binding | ✓ |
+| Template Parser | ✓ |
+| Template Syntax | ✓ |
+| Template Reference Variables | ✓ |
+| Template HTML File | fetch or embedded |
+| Fragment | ✓ |
+| camelCase Property Naming | ✓ |
+| lowercase for root element Property Naming | ✓ |
 
 ## Library Features
 
@@ -100,13 +92,13 @@ see test for more help [test](https://github.com/ibyar/aurora/tree/master/test)
 ## Built-in Pipes ( Pipeline operator '|>' )
 
 - [x] async
-- [ ] date
-- [x] lowercase
-- [x] titlecase
-- [x] uppercase
 - [x] json
+- [x] lowercase
+- [x] uppercase
+- [x] titlecase
 - [x] keyvalue
 - [x] slice
+- [ ] date
 - [ ] currency
 - [ ] number
 - [ ] percent
@@ -163,9 +155,9 @@ see test for more help [test](https://github.com/ibyar/aurora/tree/master/test)
 [two-component]:https://github.com/salemebo/aurora-ts/blob/master/test/multi-component/m-person.tsx
 
 
-### `[JSX and HTML] -- template parser example`
+### `HTML -- template parser example`
 
-```tsx
+```ts
 
 export interface DataModel {
     name: string;
@@ -178,26 +170,15 @@ export interface DataModel {
 
 @Component({
     selector: 'app-view',
-    template: ({viewData}: AppView) => {
-        return (
-            <Fragment>
-                {/* just pass data as text, jsx feature*/}
-                <h1>{viewData.name}</h1>
-                {/* just pass data as text, from prop viewData.name to innerHTML */}
-                <h1 innerHTML="$viewData.name"></h1>
-                {/* one way binding for 'innerHTML' to property 'viewData.name' */}
-                <h1 $innerHTML="viewData.name"></h1>
-                {/* two way binding for 'innerHTML' to property 'viewData.name' */}
-                <input type="text" $value="$viewData.name"></h1>
+    template:  `<h1>{{viewData.name}}</h1>
+                <h1 [innerHTML]="viewData.name"></h1>
+                <input type="text" [(value)]="viewData.name"></h1>
 
-                <h2 $innerHTML="viewData.version"></h2>
+                <h2 [innerHTML]="viewData.version"></h2>
                 <div class="card">
-                    <div class="card-header" $innerHTML="viewData.description.title"></div>
-                    <div class="card-body" $innerHTML="viewData.description.desc" ></div>
-                </div>
-            </Fragment>
-        );
-    }
+                    <div class="card-header" [innerHTML]="viewData.description.title"></div>
+                    <div class="card-body" [innerHTML]="viewData.description.desc" ></div>
+                </div>`
 })
 export class AppView {
     @Input()
@@ -309,4 +290,4 @@ yarn install
 yarn build
 ```
 
-see test app for full example https://github.com/ibyar/aurora/tree/master/test
+see test app for full [`example`](example/)
