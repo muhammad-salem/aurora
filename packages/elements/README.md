@@ -13,7 +13,7 @@ yarn add @ibyar/elements
 ```
 
 
-## Exmaple
+## Example
 
 ```ts
 import { hasNativeAttr } from '@ibyar/elements';
