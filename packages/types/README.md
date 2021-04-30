@@ -11,11 +11,11 @@ the esmpack will fetch the data, not inject it to the js module. so, while fetch
 ## `Install`
 
 ``` bash
-npm i --save @ibyar/types
+npm i --save-dev @ibyar/types
 ```
 
 ``` bash
-yarn add @ibyar/types
+yarn add @ibyar/types --dev
 ```
 
 ## *Wildcard Structural
