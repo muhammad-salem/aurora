@@ -28,3 +28,21 @@ declare module '*.html' {
     export const promise: Promise<string>;
 }
 ```
+# available modules
+
+- Text: '*.html', '*.css', '*.txt', '*.json'
+- Stream: '*.formData', '*.blob', '*.buf', '*.buff', '*.b64', '*.pdf'
+- Image: '*.apng', '*.bmp', '*.gif', '*.ico','*.cur','*.jpg', '*.jpeg', '*.jfif', '*.pjpeg', '*.pjp', '*.png', '*.svg', '*.tif', '*.tiff'
+- Audio: '*.webp', '*.3gp', '*.flac', '*.mpg', '*.mpeg', '*.mp3'
+- Video: '*.mp4', '*.m4a', '*.oga', '*.ogg', '*.wav', '*.webm'
+
+# How to use: 
+
+in your main index.ts file insert: 
+
+```ts
+/// <reference types="@ibyar/types" />
+
+import bootstrap from 'bootstrap/dist/css/bootstrap.min.css';
+
+```
