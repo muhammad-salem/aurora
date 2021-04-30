@@ -19,7 +19,7 @@
 		"@ibyar/aurora": "^0.1.12",
 		"@ibyar/types": "^0.1.12",
 		"bootstrap": "^5.0.0-beta3",
-		"rxjs": "^6.6.7",
+		"rxjs": "^7.0.0",
 		"tslib": "^2.2.0"
 	},
 	"devDependencies": {
