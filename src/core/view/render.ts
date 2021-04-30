@@ -3,8 +3,8 @@ import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
 	LiveText, ParentNode, TextNode
-} from '@ibyar/html-parser';
-import { isTagNameNative, isValidCustomElementName } from '@ibyar/element';
+} from '@ibyar/elements';
+import { isTagNameNative, isValidCustomElementName } from '@ibyar/elements';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit, OnDestroy } from '../component/lifecycle.js';

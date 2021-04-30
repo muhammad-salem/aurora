@@ -1,4 +1,4 @@
-import { DirectiveNode } from '@ibyar/html-parser';
+import { DirectiveNode } from '@ibyar/elements';
 import { ContextDescriptorRef, ContextStack } from '../context/context-provider.js';
 import { ComponentRender } from '../view/render.js';
 

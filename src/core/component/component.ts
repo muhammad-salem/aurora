@@ -1,8 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { AuroraNode, AuroraRenderNode } from '@ibyar/html-parser';
 import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
-import { findByTagName, Tag } from '@ibyar/element';
-import { htmlParser, templateParser } from '@ibyar/html-parser';
+import { AuroraNode, AuroraRenderNode } from '@ibyar/elements';
+import { findByTagName, Tag } from '@ibyar/elements';
+import { htmlParser, templateParser } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';

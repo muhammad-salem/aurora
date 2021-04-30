@@ -1,4 +1,4 @@
-import { isEmptyElement } from '@ibyar/element';
+import { isEmptyElement } from '../attributes/tags.js';
 import {
 	ElementNode, CommentNode, parseTextChild,
 	TextNode, LiveText, FragmentNode,

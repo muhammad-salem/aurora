@@ -2,9 +2,8 @@
 	"references": [
 		{ "path": "src/types" },
 		{ "path": "src/metadata" },
-		{ "path": "src/element" },
+		{ "path": "src/elements" },
 		{ "path": "src/expression" },
-		{ "path": "src/html-parser" },
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },

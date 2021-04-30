@@ -15,9 +15,8 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/element": "^0.1.12",
+		"@ibyar/elements": "^0.1.12",
 		"@ibyar/expression": "^0.1.12",
-		"@ibyar/html-parser": "^0.1.12",
 		"@ibyar/metadata": "^0.1.12",
 		"tslib": "^2.2.0"
 	},
@@ -44,8 +43,6 @@
 		"http",
 		"html-parser",
 		"parser",
-		"jsx",
-		"jsx-factory",
 		"routers",
 		"js-parser",
 		"elements-info",

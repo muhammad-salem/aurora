@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { isFormElement } from '@ibyar/element';
+import { isFormElement } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';

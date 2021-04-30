@@ -1,4 +1,4 @@
-import { ElementNode } from '@ibyar/html-parser';
+import { ElementNode } from '@ibyar/elements';
 import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
