@@ -4,7 +4,7 @@ import {
 	generateTokenParser, generateTokens, GroupingOperator, MemberNode,
 	NavigationNode, NodeExpression, ObjectOperator, OfItemsOperator,
 	parseTokens, PipelineOperator, StatementNode, TernaryNode
-} from '@ibyar/expression';
+} from '@ibyar/expressions';
 
 
 const tokenParser = generateTokenParser([

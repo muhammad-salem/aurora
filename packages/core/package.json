@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@ibyar/elements": "^0.1.12",
-		"@ibyar/expression": "^0.1.12",
+		"@ibyar/expressions": "^0.1.12",
 		"@ibyar/metadata": "^0.1.12",
 		"tslib": "^2.2.0"
 	},

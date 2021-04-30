@@ -5,13 +5,10 @@
 			"path": "../elements/tsconfig.json"
 		},
 		{
-			"path": "../expression/tsconfig.json"
+			"path": "../expressions/tsconfig.json"
 		},
 		{
 			"path": "../metadata/tsconfig.json"
-		},
-		{
-			"path": "../jsx/tsconfig.json"
 		},
 		{
 			"path": "../core/tsconfig.json"

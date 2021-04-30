@@ -1,4 +1,4 @@
-import { NodeExpression } from '@ibyar/expression';
+import { NodeExpression } from '@ibyar/expressions';
 
 export type ContextDescriptorRef = { [key: string]: any };
 

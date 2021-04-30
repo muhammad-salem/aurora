@@ -3,7 +3,7 @@
 		{ "path": "src/types" },
 		{ "path": "src/metadata" },
 		{ "path": "src/elements" },
-		{ "path": "src/expression" },
+		{ "path": "src/expressions" },
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },

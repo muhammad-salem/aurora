@@ -1,5 +1,5 @@
 {
-	"name": "@ibyar/expression",
+	"name": "@ibyar/expressions",
 	"version": "0.1.12",
 	"description": "Aurora expression, an template expression evaluation",
 	"license": "MIT",

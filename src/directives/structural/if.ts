@@ -3,7 +3,7 @@ import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
 } from '@ibyar/core';
-import { parseJSExpression } from '@ibyar/expression';
+import { parseJSExpression } from '@ibyar/expressions';
 
 
 @Directive({
