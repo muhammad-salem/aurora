@@ -1,6 +1,6 @@
-# Aurora Teat Package
+# Aurora Example Package
 
-Test App used to test Aurora while development
+Test App used as example to test Aurora while development
 
 #### how to build test app
 
@@ -8,7 +8,7 @@ Test App used to test Aurora while development
 git clone https://github.com/ibyar/aurora.git
 cd aurora
 yarn install
-yarn clean && tsc -b -v test/
+yarn clean && tsc -b -v example/
 cd test
 esmpack
 cd public

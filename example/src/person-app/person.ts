@@ -1,5 +1,5 @@
 import {
-	Aurora, Component, EventEmitter, HostBinding, HostListener,
+	Component, EventEmitter, HostBinding, HostListener,
 	Input, OnInit, Optional, Output, SelfSkip, Service,
 	View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
@@ -104,15 +104,11 @@ export class PersonModel implements OnInit {
 
 @Component({
 	selector: 'person-edit',
-	template: ({ person, printPerson }: PersonEdit) => {
-		return (
-			<form #form >
-				<input if="show" type="text" $value="$person.name" />
-				<input type="number" $value="$person.age" />
-				<input type="button" onClick={printPerson} value="Save" />
-			</form >
-		);
-	}
+	template: `<form #form>
+					<input if="show" type="text" [(value)]="person.name" />
+					<input type="number" [(value)]="person.age" />
+					<input type="button" (click)="printPerson()" value="Save" />
+				</form>`
 })
 export class PersonEdit {
 	@Input()

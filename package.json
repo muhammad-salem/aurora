@@ -4,7 +4,7 @@
 	"license": "MIT",
 	"workspaces": [
 		"packages/*",
-		"test"
+		"example"
 	],
 	"dependencies": {
 		"tslib": "^2.2.0"
@@ -15,7 +15,9 @@
 	"scripts": {
 		"clean": "./tasks/clean",
 		"build": "npm run clean && tsc --build -v",
-		"build:test": "npm run clean && tsc -b -v -w test/",
+		"build:w": "npm run clean && tsc --build -v -w",
+		"build:example": "npm run clean && tsc -b -v example/",
+		"build:example:w": "npm run clean && tsc -b -v -w example/",
 		"do:publish-no-git": "npm run build && lerna publish --no-git-tag-version --no-push",
 		"do:publish-no-tag": "npm run build && lerna publish --no-git-tag-version",
 		"do:publish-no-push": "npm run build && lerna publish --no-push",

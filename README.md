@@ -309,4 +309,4 @@ yarn install
 yarn build
 ```
 
-see test app for full example https://github.com/ibyar/aurora/tree/master/test
+see test app for full [`example`](example/README.md)
