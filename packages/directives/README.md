@@ -11,3 +11,17 @@ npm i --save @ibyar/directives
 ``` bash
 yarn add @ibyar/directives
 ```
+
+# How to use:
+
+```html
+<div *if="x > 50" > x: is {{x}} </div>
+```
+
+## Supported Directive
+
+- [x] *if
+- [ ] *for
+- [ ] *switch
+- [ ] *class
+- [ ] *style
