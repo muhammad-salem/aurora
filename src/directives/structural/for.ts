@@ -1,4 +1,4 @@
-import { Directive, OnInit, StructuralDirective } from '@ibyar/api';
+import { Directive, OnInit, StructuralDirective } from '@ibyar/core';
 import {
 	AliasedOperator, ArrayOperator, AssignmentNode, DeclareVariableOperator,
 	generateTokenParser, generateTokens, GroupingOperator, MemberNode,

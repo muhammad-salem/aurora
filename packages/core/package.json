@@ -1,5 +1,5 @@
 {
-	"name": "@ibyar/api",
+	"name": "@ibyar/core",
 	"version": "0.1.12",
 	"description": "Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",

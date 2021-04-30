@@ -2,7 +2,7 @@
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "../../packages/api",
+		"outDir": "../../packages/core",
 		"rootDir": ".",
 		"composite": true,
 		"tsBuildInfoFile": "./tsBuild.info"

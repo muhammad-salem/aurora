@@ -8,7 +8,7 @@
  */
 
 
-import { Model, OnDestroy, Pipe, PipeTransform } from '@ibyar/api';
+import { Model, OnDestroy, Pipe, PipeTransform } from '@ibyar/core';
 
 interface Observer<T> {
 	complete: () => void;

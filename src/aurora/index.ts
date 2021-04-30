@@ -3,6 +3,6 @@ export * from '@ibyar/expression';
 export * from '@ibyar/metadata';
 export * from '@ibyar/jsx';
 export * from '@ibyar/html-parser';
-export * from '@ibyar/api';
+export * from '@ibyar/core';
 export * from '@ibyar/directives';
 export * from '@ibyar/pipes';

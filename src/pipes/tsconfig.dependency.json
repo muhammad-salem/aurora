@@ -17,7 +17,7 @@
 			"path": "../html-parser/tsconfig.json"
 		},
 		{
-			"path": "../api/tsconfig.json"
+			"path": "../core/tsconfig.json"
 		}
 	]
 }

@@ -1,4 +1,4 @@
-# Aurora API
+# Aurora Core
 
 Aurora API is the base of this project
 Implements Aurora's core functionality, low-level services, and utilities.
@@ -10,10 +10,10 @@ Implements Aurora's core functionality, low-level services, and utilities.
 ## `Install`
 
 ``` bash
-npm i --save @ibyar/api
+npm i --save @ibyar/core
 ```
 
 ``` bash
-yarn add @ibyar/api
+yarn add @ibyar/core
 ```
 

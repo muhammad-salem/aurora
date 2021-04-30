@@ -6,7 +6,7 @@
 		{ "path": "src/expression" },
 		{ "path": "src/jsx" },
 		{ "path": "src/html-parser" },
-		{ "path": "src/api" },
+		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
 		{ "path": "src/aurora" }

@@ -2,7 +2,7 @@ import { ElementNode } from '@ibyar/jsx';
 import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
-} from '@ibyar/api';
+} from '@ibyar/core';
 import { parseJSExpression } from '@ibyar/expression';
 
 

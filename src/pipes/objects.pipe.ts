@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@ibyar/api';
+import { Pipe, PipeTransform } from '@ibyar/core';
 
 @Pipe({
 	name: 'json'

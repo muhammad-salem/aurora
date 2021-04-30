@@ -15,7 +15,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/api": "^0.1.12",
+		"@ibyar/core": "^0.1.12",
 		"@ibyar/directives": "^0.1.12",
 		"@ibyar/pipes": "^0.1.12",
 		"tslib": "^2.2.0"
