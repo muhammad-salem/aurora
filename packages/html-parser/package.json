@@ -15,8 +15,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/element": "^0.1.12",
-		"@ibyar/jsx": "^0.1.12"
+		"@ibyar/element": "^0.1.12"
 	},
 	"devDependencies": {
 		"typescript": "^4.2.4"

@@ -4,7 +4,6 @@
 		{ "path": "src/metadata" },
 		{ "path": "src/element" },
 		{ "path": "src/expression" },
-		{ "path": "src/jsx" },
 		{ "path": "src/html-parser" },
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },

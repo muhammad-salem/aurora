@@ -2,7 +2,7 @@
 	"extends": "@ibyar/aurora/tsconfig.compilerOption.json",
 	"references": [
 		{
-			"path": "../jsx/tsconfig.json"
+			"path": "../element/tsconfig.json"
 		}
 	]
 }

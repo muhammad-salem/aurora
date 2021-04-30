@@ -3,7 +3,7 @@ import {
 	Aurora, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
 	LiveText, ParentNode, TextNode
-} from '@ibyar/jsx';
+} from '@ibyar/html-parser';
 import { isTagNameNative, isValidCustomElementName } from '@ibyar/element';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';

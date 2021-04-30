@@ -1,8 +1,10 @@
 import {
-	Aurora, AuroraChild, AuroraNode, CommentNode,
+	AuroraChild, AuroraNode, CommentNode,
 	ElementNode, FragmentNode, parseTextChild,
 	TextNode
-} from '@ibyar/jsx';
+} from '../dom/nodes.js';
+
+import { Aurora } from '../dom/factory.js';
 
 
 export class TemplateParser {
@@ -75,3 +77,4 @@ export class TemplateParser {
 }
 
 export const templateParser = new TemplateParser();
+

@@ -11,9 +11,6 @@
 			"path": "../metadata/tsconfig.json"
 		},
 		{
-			"path": "../jsx/tsconfig.json"
-		},
-		{
 			"path": "../html-parser/tsconfig.json"
 		}
 	]

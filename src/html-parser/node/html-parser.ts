@@ -3,7 +3,7 @@ import {
 	ElementNode, CommentNode, parseTextChild,
 	TextNode, LiveText, FragmentNode,
 	DirectiveNode, AuroraNode, AuroraChild, TextAttribute
-} from '@ibyar/jsx';
+} from '../dom/nodes.js';
 
 type Token = (token: string) => Token;
 
@@ -406,3 +406,4 @@ export class HTMLParser {
 }
 
 export const htmlParser = new HTMLParser();
+

@@ -1,7 +1,7 @@
 import {
 	ElementNode, DirectiveNode, AuroraChild,
 	BaseNode, FragmentNode, parseTextChild, AuroraNode
-} from '../node/nodes.js';
+} from './nodes.js';
 
 export interface NodeAttr {
 	[attr: string]: string;

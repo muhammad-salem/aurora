@@ -18,7 +18,6 @@
 		"@ibyar/element": "^0.1.12",
 		"@ibyar/expression": "^0.1.12",
 		"@ibyar/html-parser": "^0.1.12",
-		"@ibyar/jsx": "^0.1.12",
 		"@ibyar/metadata": "^0.1.12",
 		"tslib": "^2.2.0"
 	},
