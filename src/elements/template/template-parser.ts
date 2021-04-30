@@ -4,7 +4,7 @@ import {
 	TextNode
 } from '../dom/nodes.js';
 
-import { Aurora } from '../dom/factory.js';
+import { NodeFactory } from '../dom/factory.js';
 
 
 export class TemplateParser {
@@ -48,7 +48,7 @@ export class TemplateParser {
 			let directiveAttr: Attr;
 			for (let i = 0; i < element.attributes.length; i++) {
 				const attr = element.attributes.item(i) as Attr;
-				Aurora.handelAttribute(node, attr.name, attr.value);
+				NodeFactory.handelAttribute(node, attr.name, attr.value);
 			}
 			const children = Array.prototype.slice.call(element.childNodes)
 				.map(item => this.createComponent(item));

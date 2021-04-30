@@ -1,6 +1,6 @@
 import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@ibyar/expressions';
 import {
-	Aurora, AuroraChild, AuroraNode, CommentNode,
+	NodeFactory, AuroraChild, AuroraNode, CommentNode,
 	DirectiveNode, ElementNode, FragmentNode,
 	LiveText, ParentNode, TextNode,
 	isTagNameNative, isValidCustomElementName
@@ -141,7 +141,7 @@ export class ComponentRender<T> {
 			return;
 		}
 		if (component instanceof ElementNode) {
-			if (Aurora.DirectiveTag === component.tagName.toLowerCase()) {
+			if (NodeFactory.DirectiveTag === component.tagName.toLowerCase()) {
 				return;
 			}
 			if (component.templateRefName) {
@@ -152,7 +152,7 @@ export class ComponentRender<T> {
 		}
 		if (component instanceof ParentNode && component.children) {
 			component.children.forEach(child => {
-				if ((child instanceof ElementNode && Aurora.DirectiveTag !== child.tagName.toLowerCase())
+				if ((child instanceof ElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
 					|| child instanceof FragmentNode) {
 					this.defineElementNameKey(child, contextStack);
 				}
