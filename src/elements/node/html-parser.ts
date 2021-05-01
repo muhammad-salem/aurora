@@ -7,7 +7,7 @@ import {
 
 type Token = (token: string) => Token;
 
-type ChildNode = ElementNode | CommentNode | string;
+type ChildNode = ElementNode<any> | CommentNode | string;
 
 export class NodeParser {
 
@@ -16,11 +16,11 @@ export class NodeParser {
 
 	private tagNameRegExp = /[\-\.0-9_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF]/;
 
-	private childStack: AuroraChild[];
+	private childStack: AuroraChild<any>[];
 	private stackTrace: ChildNode[];
 
-	private get currentNode(): ElementNode {
-		return this.stackTrace[this.stackTrace.length - 1] as ElementNode;
+	private get currentNode(): ElementNode<any> {
+		return this.stackTrace[this.stackTrace.length - 1] as ElementNode<any>;
 	}
 
 	private commentOpenCount = 0;
@@ -305,7 +305,7 @@ export class NodeParser {
 		}
 	}
 
-	checkNode(node: ElementNode): ElementNode | DirectiveNode {
+	checkNode(node: ElementNode<any>): ElementNode<any> | DirectiveNode<any> {
 		if (node.attributes) {
 			let temp: TextAttribute | TextAttribute[] | undefined = node.attributes.find(attr => attr.attrName === 'is');
 			if (temp) {
@@ -338,11 +338,11 @@ export class HTMLParser {
 
 	nodeParser = new NodeParser();
 
-	parse(html: string): AuroraChild[] {
+	parse(html: string): AuroraChild<any>[] {
 		return this.nodeParser.parse(html);
 	}
 
-	toAuroraRootNode(html: string): AuroraNode {
+	toAuroraRootNode(html: string): AuroraNode<any> {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
 			return new FragmentNode([new TextNode('')]);
@@ -353,7 +353,7 @@ export class HTMLParser {
 		}
 	}
 
-	stringify(stack: AuroraNode[]) {
+	stringify(stack: AuroraNode<any>[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextNode) {

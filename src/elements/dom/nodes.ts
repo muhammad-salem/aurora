@@ -8,15 +8,19 @@ export class TextAttribute {
 /**
  * an attribute with its source value for binding
  */
-export class LiveAttribute {
+export class LiveAttribute<E> {
 	constructor(public attrName: string, public sourceValue: string) { }
+	sourceNode: E;
+	attrNode: E;
 }
 
 /**
  * an event name and its handler function
  */
-export class LiveEvent {
+export class LiveEvent<E> {
 	constructor(public eventName: string, public sourceHandler: string | Function) { }
+	eventNode: E;
+	sourceNode: E;
 }
 
 /**
@@ -29,8 +33,9 @@ export class TextNode {
 /**
  * a text that its content is binding to variable from the component model.
  */
-export class LiveText {
+export class LiveText<E>  {
 	constructor(public textValue: string) { }
+	textNode: E;
 }
 
 /**
@@ -40,13 +45,13 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class ParentNode {
+export class ParentNode<E> {
 	/**
 	 * element children list
 	 */
-	children: AuroraChild[];
+	children: AuroraChild<E>[];
 
-	addChild(child: AuroraChild) {
+	addChild(child: AuroraChild<E>) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -66,9 +71,9 @@ export class ParentNode {
 /**
  * parent for a list of elements 
  */
-export class FragmentNode extends ParentNode {
+export class FragmentNode<E> extends ParentNode<E> {
 
-	constructor(children?: AuroraChild[]) {
+	constructor(children?: AuroraChild<E>[]) {
 		super();
 		if (children) {
 			this.children = children;
@@ -77,12 +82,12 @@ export class FragmentNode extends ParentNode {
 
 }
 
-export class BaseNode extends ParentNode {
+export class BaseNode<E> extends ParentNode<E> {
 
 	/**
 	 * a given name for element
 	 */
-	templateRefName: LiveAttribute;
+	templateRefName: LiveAttribute<E>;
 
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
@@ -92,22 +97,22 @@ export class BaseNode extends ParentNode {
 	/**
 	 * hold the attrs/inputs name marked as one way binding
 	 */
-	inputs: LiveAttribute[];
+	inputs: LiveAttribute<E>[];
 
 	/**
 	 * hold the name of events that should be connected to a listener
 	 */
-	outputs: LiveEvent[];
+	outputs: LiveEvent<E>[];
 
 	/**
 	 * hold the name of attributes marked for 2 way data binding
 	 */
-	twoWayBinding: LiveAttribute[];
+	twoWayBinding: LiveAttribute<E>[];
 
 	/**
 	 * directive attribute
 	 */
-	templateAttrs: LiveAttribute[];
+	templateAttrs: LiveAttribute<E>[];
 
 	setTemplateRefName(name: string, value?: string) {
 		this.templateRefName = new LiveAttribute(name, value || '');
@@ -123,33 +128,33 @@ export class BaseNode extends ParentNode {
 
 	addInput(attrName: string, valueSource: string) {
 		if (this.inputs) {
-			this.inputs.push(new LiveAttribute(attrName, valueSource));
+			this.inputs.push(new LiveAttribute<E>(attrName, valueSource));
 		} else {
-			this.inputs = [new LiveAttribute(attrName, valueSource)];
+			this.inputs = [new LiveAttribute<E>(attrName, valueSource)];
 		}
 	}
 
 	addOutput(eventName: string, handlerSource: string) {
 		if (this.outputs) {
-			this.outputs.push(new LiveEvent(eventName, handlerSource));
+			this.outputs.push(new LiveEvent<E>(eventName, handlerSource));
 		} else {
-			this.outputs = [new LiveEvent(eventName, handlerSource)];
+			this.outputs = [new LiveEvent<E>(eventName, handlerSource)];
 		}
 	}
 
 	addTwoWayBinding(eventName: string, handlerSource: string) {
 		if (this.twoWayBinding) {
-			this.twoWayBinding.push(new LiveAttribute(eventName, handlerSource));
+			this.twoWayBinding.push(new LiveAttribute<E>(eventName, handlerSource));
 		} else {
-			this.twoWayBinding = [new LiveAttribute(eventName, handlerSource)];
+			this.twoWayBinding = [new LiveAttribute<E>(eventName, handlerSource)];
 		}
 	}
 
 	addTemplateAttr(attrName: string, valueSource: string) {
 		if (this.templateAttrs) {
-			this.templateAttrs.push(new LiveAttribute(attrName, valueSource));
+			this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
 		} else {
-			this.templateAttrs = [new LiveAttribute(attrName, valueSource)];
+			this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
 		}
 	}
 
@@ -158,7 +163,7 @@ export class BaseNode extends ParentNode {
 /**
  * structural directive 
  */
-export class DirectiveNode extends BaseNode {
+export class DirectiveNode<E> extends BaseNode<E> {
 
 	/**
 	 * name of the directive 
@@ -177,7 +182,7 @@ export class DirectiveNode extends BaseNode {
 	}
 }
 
-export class ElementNode extends BaseNode {
+export class ElementNode<E> extends BaseNode<E> {
 
 	/**
 	 * the tag name of the element 
@@ -203,15 +208,15 @@ export class ElementNode extends BaseNode {
 
 }
 
-export type AuroraChild = ElementNode | DirectiveNode | CommentNode | TextNode | LiveText;
+export type AuroraChild<E> = ElementNode<E> | DirectiveNode<E> | CommentNode | TextNode | LiveText<E>;
 
-export type AuroraNode = FragmentNode | ElementNode | DirectiveNode | CommentNode | TextNode | LiveText;
+export type AuroraNode<E> = FragmentNode<E> | ElementNode<E> | DirectiveNode<E> | CommentNode | TextNode | LiveText<E>;
 
-export type AuroraRenderNode<T> = (model: T) => AuroraNode;
+export type AuroraRenderNode<T, E> = (model: T) => AuroraNode<E>;
 
-export function parseTextChild(text: string) {
-	// split from end with '}}', then search for the first '}}'
-	let all: (TextNode | LiveText)[] = [];
+export function parseTextChild<E>(text: string) {
+	// split from end with '}}', then search for the first '{{'
+	let all: (TextNode | LiveText<E>)[] = [];
 	let temp = text;
 	let last = temp.lastIndexOf('}}');
 	let first: number;

@@ -9,7 +9,7 @@ import { NodeFactory } from '../dom/factory.js';
 
 export class TemplateParser {
 
-	parse(template: HTMLTemplateElement): AuroraNode {
+	parse(template: HTMLTemplateElement): AuroraNode<any> {
 		if (template.content.childNodes.length == 0) {
 			return new FragmentNode([new TextNode('')]);
 		} else if (template.content.childNodes.length === 1) {
@@ -22,7 +22,7 @@ export class TemplateParser {
 		} else /* if (template.content.childNodes.length > 1)*/ {
 			const children = Array.prototype.slice.call(template.content.childNodes)
 				.map(item => this.createComponent(item))
-				.flatMap(function (toFlat): AuroraChild[] {
+				.flatMap(function (toFlat): AuroraChild<any>[] {
 					if (Array.isArray(toFlat)) {
 						return toFlat;
 					} else {
@@ -64,7 +64,7 @@ export class TemplateParser {
 		}
 	}
 
-	toAuroraRenderRootNode<T>(template: AuroraNode | HTMLTemplateElement | string) {
+	toAuroraRenderRootNode<T>(template: AuroraNode<any> | HTMLTemplateElement | string) {
 		if (typeof template === 'string') {
 			let temp = document.createElement('template');
 			temp.innerHTML = template;

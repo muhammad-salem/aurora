@@ -21,7 +21,7 @@ export class NodeFactory {
 		'while'
 	];
 
-	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild)[]): AuroraNode {
+	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]): AuroraNode<any> {
 
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
 			return NodeFactory.createFragmentNode(...children);
@@ -79,7 +79,7 @@ export class NodeFactory {
 		}
 	}
 
-	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild)[]) {
+	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]) {
 		let node = new ElementNode(tagName, attrs?.is);
 		NodeFactory.initElementAttrs(node, attrs);
 		children?.forEach(child => {
@@ -92,7 +92,7 @@ export class NodeFactory {
 		return node;
 	}
 
-	static createFragmentNode(...children: (string | AuroraChild)[]) {
+	static createFragmentNode(...children: (string | AuroraChild<any>)[]) {
 		let childStack = children.flatMap(child => {
 			if (typeof child === 'string') {
 				return parseTextChild(child);
@@ -103,14 +103,14 @@ export class NodeFactory {
 		return new FragmentNode(childStack);
 	}
 
-	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | AuroraChild)[]) {
+	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]) {
 		const directive = new DirectiveNode(directiveName, directiveValue);
 		NodeFactory.initElementAttrs(directive, attrs);
 		children?.forEach(child => (typeof child === 'string') ? directive.addTextChild(child) : directive.addChild(child));
 		return directive;
 	}
 
-	static initElementAttrs(element: BaseNode, attrs?: NodeAttr) {
+	static initElementAttrs(element: BaseNode<any>, attrs?: NodeAttr) {
 		if (attrs) {
 			Object.keys(attrs).forEach(key => {
 				NodeFactory.handelAttribute(element, key, attrs[key]);
@@ -118,7 +118,7 @@ export class NodeFactory {
 		}
 	}
 
-	static handelAttribute(element: BaseNode, attrName: string, value: string | Function | object): void {
+	static handelAttribute(element: BaseNode<any>, attrName: string, value: string | Function | object): void {
 
 		if (attrName.startsWith('#')) {
 			// <app-tag #element-name="directiveName?" ></app-tag>
