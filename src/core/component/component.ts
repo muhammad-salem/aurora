@@ -1,6 +1,6 @@
 import type { TypeOf } from '../utils/typeof.js';
 import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
-import { AuroraNode, AuroraRenderNode } from '@ibyar/elements';
+import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { findByTagName, Tag } from '@ibyar/elements';
 import { htmlParser, templateParser } from '@ibyar/elements';
 
@@ -12,6 +12,7 @@ import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
+import { ExpressionNode } from '@ibyar/expressions/api';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, private _viewName?: string) { }
@@ -63,12 +64,12 @@ export interface DirectiveRef<T> {
 
 export interface ComponentRef<T> {
 	selector: string;
-	template: AuroraNode | AuroraRenderNode<T>;
+	template: DomNode<ExpressionNode> | DomRenderNode<T, ExpressionNode>;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
 
-	viewClass: TypeOf<HTMLComponent<T>>; //CustomElementConstructor;
+	viewClass: TypeOf<HTMLComponent<T>> & CustomElementConstructor;
 	modelClass: TypeOf<T>;
 
 	inputs: PropertyRef[];

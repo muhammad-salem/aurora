@@ -1,9 +1,10 @@
-import { ElementNode } from '@ibyar/elements';
+import { DomElementNode } from '@ibyar/elements';
 import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
 } from '@ibyar/core';
 import { parseJSExpression } from '@ibyar/expressions';
+import { ExpressionNode } from '@ibyar/expressions/api';
 
 
 @Directive({
@@ -38,7 +39,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	private _updateView() {
 		if (this.condition) {
 			if (!this.element) {
-				this.element = this.render.createElement(this.directive.children[0] as ElementNode, this.parentContextStack);
+				this.element = this.render.createElement(this.directive.children[0] as DomElementNode<ExpressionNode>, this.parentContextStack);
 				this.comment.after(this.element);
 			}
 		}

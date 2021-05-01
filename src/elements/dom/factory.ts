@@ -1,6 +1,6 @@
 import {
-	ElementNode, DirectiveNode, AuroraChild,
-	BaseNode, FragmentNode, parseTextChild, AuroraNode
+	DomElementNode, DomDirectiveNode, DomChild,
+	BaseNode, DomFragmentNode, parseTextChild, DomNode
 } from './nodes.js';
 
 export interface NodeAttr {
@@ -21,7 +21,7 @@ export class NodeFactory {
 		'while'
 	];
 
-	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]): AuroraNode<any> {
+	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DomChild<any>)[]): DomNode<any> {
 
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
 			return NodeFactory.createFragmentNode(...children);
@@ -49,7 +49,7 @@ export class NodeFactory {
 					delete attrs.directiveName;
 					return NodeFactory.createDirectiveNode(directiveName, directiveValue, attrs, ...children);
 				}
-				let node = new ElementNode(tagName, attrs?.is);
+				let node = new DomElementNode(tagName, attrs?.is);
 				NodeFactory.initElementAttrs(node, attrs);
 				children?.forEach(child => {
 					if (typeof child === 'string') {
@@ -79,8 +79,8 @@ export class NodeFactory {
 		}
 	}
 
-	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]) {
-		let node = new ElementNode(tagName, attrs?.is);
+	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | DomChild<any>)[]) {
+		let node = new DomElementNode(tagName, attrs?.is);
 		NodeFactory.initElementAttrs(node, attrs);
 		children?.forEach(child => {
 			if (typeof child === 'string') {
@@ -92,7 +92,7 @@ export class NodeFactory {
 		return node;
 	}
 
-	static createFragmentNode(...children: (string | AuroraChild<any>)[]) {
+	static createFragmentNode(...children: (string | DomChild<any>)[]) {
 		let childStack = children.flatMap(child => {
 			if (typeof child === 'string') {
 				return parseTextChild(child);
@@ -100,11 +100,11 @@ export class NodeFactory {
 				return [child];
 			}
 		});
-		return new FragmentNode(childStack);
+		return new DomFragmentNode(childStack);
 	}
 
-	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | AuroraChild<any>)[]) {
-		const directive = new DirectiveNode(directiveName, directiveValue);
+	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DomChild<any>)[]) {
+		const directive = new DomDirectiveNode(directiveName, directiveValue);
 		NodeFactory.initElementAttrs(directive, attrs);
 		children?.forEach(child => (typeof child === 'string') ? directive.addTextChild(child) : directive.addChild(child));
 		return directive;

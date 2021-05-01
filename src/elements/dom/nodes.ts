@@ -33,7 +33,7 @@ export class TextNode {
 /**
  * a text that its content is binding to variable from the component model.
  */
-export class LiveText<E>  {
+export class LiveTextNode<E>  {
 	constructor(public textValue: string) { }
 	textNode: E;
 }
@@ -45,13 +45,13 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class ParentNode<E> {
+export class DomParentNode<E> {
 	/**
 	 * element children list
 	 */
-	children: AuroraChild<E>[];
+	children: DomChild<E>[];
 
-	addChild(child: AuroraChild<E>) {
+	addChild(child: DomChild<E>) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -71,9 +71,9 @@ export class ParentNode<E> {
 /**
  * parent for a list of elements 
  */
-export class FragmentNode<E> extends ParentNode<E> {
+export class DomFragmentNode<E> extends DomParentNode<E> {
 
-	constructor(children?: AuroraChild<E>[]) {
+	constructor(children?: DomChild<E>[]) {
 		super();
 		if (children) {
 			this.children = children;
@@ -82,7 +82,7 @@ export class FragmentNode<E> extends ParentNode<E> {
 
 }
 
-export class BaseNode<E> extends ParentNode<E> {
+export class BaseNode<E> extends DomParentNode<E> {
 
 	/**
 	 * a given name for element
@@ -163,7 +163,7 @@ export class BaseNode<E> extends ParentNode<E> {
 /**
  * structural directive 
  */
-export class DirectiveNode<E> extends BaseNode<E> {
+export class DomDirectiveNode<E> extends BaseNode<E> {
 
 	/**
 	 * name of the directive 
@@ -182,7 +182,7 @@ export class DirectiveNode<E> extends BaseNode<E> {
 	}
 }
 
-export class ElementNode<E> extends BaseNode<E> {
+export class DomElementNode<E> extends BaseNode<E> {
 
 	/**
 	 * the tag name of the element 
@@ -208,15 +208,15 @@ export class ElementNode<E> extends BaseNode<E> {
 
 }
 
-export type AuroraChild<E> = ElementNode<E> | DirectiveNode<E> | CommentNode | TextNode | LiveText<E>;
+export type DomChild<E> = DomElementNode<E> | DomDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
 
-export type AuroraNode<E> = FragmentNode<E> | ElementNode<E> | DirectiveNode<E> | CommentNode | TextNode | LiveText<E>;
+export type DomNode<E> = DomFragmentNode<E> | DomElementNode<E> | DomDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
 
-export type AuroraRenderNode<T, E> = (model: T) => AuroraNode<E>;
+export type DomRenderNode<T, E> = (model: T) => DomNode<E>;
 
 export function parseTextChild<E>(text: string) {
 	// split from end with '}}', then search for the first '{{'
-	let all: (TextNode | LiveText<E>)[] = [];
+	let all: (TextNode | LiveTextNode<E>)[] = [];
 	let temp = text;
 	let last = temp.lastIndexOf('}}');
 	let first: number;
@@ -227,7 +227,7 @@ export function parseTextChild<E>(text: string) {
 			if (lastPart) {
 				all.push(new TextNode(lastPart));
 			}
-			let liveText = new LiveText(temp.substring(first + 2, last));
+			let liveText = new LiveTextNode(temp.substring(first + 2, last));
 			all.push(liveText);
 			temp = temp.substring(0, first);
 			last = temp.lastIndexOf('}}');

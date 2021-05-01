@@ -1,7 +1,8 @@
-import { DirectiveNode } from '@ibyar/elements';
+import { DomDirectiveNode } from '@ibyar/elements';
 import { ContextDescriptorRef, ContextStack } from '../context/context-provider.js';
 import { ComponentRender } from '../view/render.js';
 
+import type { ExpressionNode } from '@ibyar/expressions/api';
 /**
  * A structural directive selector as '*if'
  */
@@ -9,7 +10,7 @@ export class StructuralDirective<T> {
 	constructor(
 		protected render: ComponentRender<T>,
 		protected comment: Comment,
-		protected directive: DirectiveNode,
+		protected directive: DomDirectiveNode<ExpressionNode>,
 		protected parentContextStack: ContextStack<ContextDescriptorRef>
 	) { }
 }

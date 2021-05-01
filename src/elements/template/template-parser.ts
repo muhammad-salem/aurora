@@ -1,6 +1,6 @@
 import {
-	AuroraChild, AuroraNode, CommentNode,
-	ElementNode, FragmentNode, parseTextChild,
+	DomChild, DomNode, CommentNode,
+	DomElementNode, DomFragmentNode, parseTextChild,
 	TextNode
 } from '../dom/nodes.js';
 
@@ -9,27 +9,27 @@ import { NodeFactory } from '../dom/factory.js';
 
 export class TemplateParser {
 
-	parse(template: HTMLTemplateElement): AuroraNode<any> {
+	parse(template: HTMLTemplateElement): DomNode<any> {
 		if (template.content.childNodes.length == 0) {
-			return new FragmentNode([new TextNode('')]);
+			return new DomFragmentNode([new TextNode('')]);
 		} else if (template.content.childNodes.length === 1) {
 			let node = this.createComponent(template.content.firstChild as ChildNode);
 			if (Array.isArray(node)) {
-				return new FragmentNode(node);
+				return new DomFragmentNode(node);
 			} else {
 				return node;
 			}
 		} else /* if (template.content.childNodes.length > 1)*/ {
 			const children = Array.prototype.slice.call(template.content.childNodes)
 				.map(item => this.createComponent(item))
-				.flatMap(function (toFlat): AuroraChild<any>[] {
+				.flatMap(function (toFlat): DomChild<any>[] {
 					if (Array.isArray(toFlat)) {
 						return toFlat;
 					} else {
 						return [toFlat];
 					}
 				});
-			return new FragmentNode(children);
+			return new DomFragmentNode(children);
 		}
 	}
 
@@ -44,7 +44,7 @@ export class TemplateParser {
 			 * also all attributes names will be 'lower case'
 			 */
 			const element: HTMLElement = child as HTMLElement;
-			let node = new ElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
+			let node = new DomElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
 			let directiveAttr: Attr;
 			for (let i = 0; i < element.attributes.length; i++) {
 				const attr = element.attributes.item(i) as Attr;
@@ -64,7 +64,7 @@ export class TemplateParser {
 		}
 	}
 
-	toAuroraRenderRootNode<T>(template: AuroraNode<any> | HTMLTemplateElement | string) {
+	toAuroraRenderRootNode<T>(template: DomNode<any> | HTMLTemplateElement | string) {
 		if (typeof template === 'string') {
 			let temp = document.createElement('template');
 			temp.innerHTML = template;

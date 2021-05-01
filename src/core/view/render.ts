@@ -1,10 +1,10 @@
 import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@ibyar/expressions';
 import {
-	NodeFactory, AuroraChild, AuroraNode, CommentNode,
-	DirectiveNode, ElementNode, FragmentNode,
-	LiveText, ParentNode, TextNode,
-	isTagNameNative, isValidCustomElementName
+	CommentNode, DomChild, DomDirectiveNode, DomElementNode,
+	DomFragmentNode, DomNode, DomParentNode, isTagNameNative,
+	isValidCustomElementName, LiveTextNode, NodeFactory, TextNode
 } from '@ibyar/elements';
+import { ExpressionNode } from '@ibyar/expressions/api';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit, OnDestroy } from '../component/lifecycle.js';
@@ -32,7 +32,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 export class ComponentRender<T> {
 
 	componentRef: ComponentRef<T>
-	template: AuroraNode;
+	template: DomNode<ExpressionNode>;
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
 
@@ -136,11 +136,11 @@ export class ComponentRender<T> {
 		});
 	}
 
-	defineElementNameKey(component: AuroraNode, contextStack: ContextStack<ContextDescriptorRef>) {
-		if (component instanceof DirectiveNode || component instanceof CommentNode) {
+	defineElementNameKey(component: DomNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
+		if (component instanceof DomDirectiveNode || component instanceof CommentNode) {
 			return;
 		}
-		if (component instanceof ElementNode) {
+		if (component instanceof DomElementNode) {
 			if (NodeFactory.DirectiveTag === component.tagName.toLowerCase()) {
 				return;
 			}
@@ -150,10 +150,10 @@ export class ComponentRender<T> {
 				this.viewChildMap[component.templateRefName.attrName] = element;
 			}
 		}
-		if (component instanceof ParentNode && component.children) {
+		if (component instanceof DomParentNode && component.children) {
 			component.children.forEach(child => {
-				if ((child instanceof ElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
-					|| child instanceof FragmentNode) {
+				if ((child instanceof DomElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
+					|| child instanceof DomFragmentNode) {
 					this.defineElementNameKey(child, contextStack);
 				}
 			});
@@ -164,7 +164,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 
-	createDirective(directive: DirectiveNode, comment: Comment, contextStack: ContextStack<ContextDescriptorRef>): void {
+	createDirective(directive: DomDirectiveNode<ExpressionNode>, comment: Comment, contextStack: ContextStack<ContextDescriptorRef>): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -190,37 +190,37 @@ export class ComponentRender<T> {
 		return new Text(text.textValue);
 	}
 
-	createLiveText(text: LiveText, contextStack: ContextStack<ContextDescriptorRef>): Text {
+	createLiveText(text: LiveTextNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): Text {
 		const liveText = new Text('');
 		this.bind1Way(liveText, 'textContent', text.textValue, contextStack);
 		return liveText;
 	}
 
-	createDocumentFragment(node: FragmentNode, contextStack: ContextStack<ContextDescriptorRef>): DocumentFragment {
+	createDocumentFragment(node: DomFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): DocumentFragment {
 		let fragment = document.createDocumentFragment();
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
 
-	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: AuroraChild | FragmentNode, contextStack: ContextStack<ContextDescriptorRef>) {
-		if (child instanceof ElementNode) {
+	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: DomChild<ExpressionNode> | DomFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
+		if (child instanceof DomElementNode) {
 			parent.append(this.createElement(child, contextStack));
-		} else if (child instanceof DirectiveNode) {
+		} else if (child instanceof DomDirectiveNode) {
 			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
 			parent.append(comment);
 			this.createDirective(child, comment, contextStack);
 		} else if (child instanceof TextNode) {
 			parent.append(this.createText(child));
-		} else if (child instanceof LiveText) {
+		} else if (child instanceof LiveTextNode) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
-		} else if (child instanceof FragmentNode) {
+		} else if (child instanceof DomFragmentNode) {
 			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
 
-	createElementByTagName(node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
+	createElementByTagName(node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			element = document.createElement(node.tagName);
@@ -247,7 +247,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	createElement(node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
+	createElement(node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
 			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
@@ -265,7 +265,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	initAttribute(element: HTMLElement, node: ElementNode, contextStack: ContextStack<ContextDescriptorRef>): void {
+	initAttribute(element: HTMLElement, node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
