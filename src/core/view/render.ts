@@ -4,7 +4,7 @@ import {
 	DomFragmentNode, DomNode, DomParentNode, isTagNameNative,
 	isValidCustomElementName, LiveTextNode, NodeFactory, TextNode
 } from '@ibyar/elements';
-import { ExpressionNode } from '@ibyar/expressions/api';
+import type { ExpressionNode } from '@ibyar/expressions/api';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit, OnDestroy } from '../component/lifecycle.js';

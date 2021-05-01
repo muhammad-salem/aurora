@@ -4,7 +4,7 @@ import {
 	StructuralDirective, subscribe1way
 } from '@ibyar/core';
 import { parseJSExpression } from '@ibyar/expressions';
-import { ExpressionNode } from '@ibyar/expressions/api';
+import type { ExpressionNode } from '@ibyar/expressions/api';
 
 
 @Directive({

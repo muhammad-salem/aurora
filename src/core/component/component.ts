@@ -12,7 +12,8 @@ import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
-import { ExpressionNode } from '@ibyar/expressions/api';
+import type { ExpressionNode } from '@ibyar/expressions/api';
+import { buildExpressionNodes } from '../html/dom.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, private _viewName?: string) { }
@@ -92,16 +93,16 @@ export class Components {
 	static addOptional(modelProperty: Object) {
 	}
 
-	static addInput(modelProperty: Object, modelName: string, viewNanme: string) {
+	static addInput(modelProperty: Object, modelName: string, viewName: string) {
 		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.inputs = bootstrap.inputs || [];
-		bootstrap.inputs.push(new PropertyRef(modelName, viewNanme));
+		bootstrap.inputs.push(new PropertyRef(modelName, viewName));
 	}
 
-	static addOutput(modelProperty: Object, modelName: string, viewNanme: string) {
+	static addOutput(modelProperty: Object, modelName: string, viewName: string) {
 		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
 		bootstrap.outputs = bootstrap.outputs || [];
-		bootstrap.outputs.push(new PropertyRef(modelName, viewNanme));
+		bootstrap.outputs.push(new PropertyRef(modelName, viewName));
 	}
 
 	static setComponentView(modelProperty: Object, modelName: string) {
@@ -174,12 +175,14 @@ export class Components {
 
 		if (typeof componentRef.template === 'string' && componentRef.template) {
 			componentRef.template = htmlParser.toAuroraRootNode(componentRef.template);
+			buildExpressionNodes(componentRef.template);
 		}
 
 		if (!componentRef.template && /template/g.test(componentRef.encapsulation)) {
 			const template = document.querySelector('#' + componentRef.selector);
 			if (template && template instanceof HTMLTemplateElement) {
 				componentRef.template = templateParser.parse(template);
+				buildExpressionNodes(componentRef.template);
 			} else {
 				// didn't find this template in 'index.html' document
 			}
