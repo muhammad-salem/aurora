@@ -10,7 +10,7 @@ import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
-import { buildExpressionNodes } from '../html/dom.js';
+import { buildExpressionNodes } from '../html/expression.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
