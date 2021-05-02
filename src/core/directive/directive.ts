@@ -1,4 +1,4 @@
-import { DomDirectiveNode } from '@ibyar/elements';
+import { DOMDirectiveNode } from '@ibyar/elements';
 import { ContextDescriptorRef, ContextStack } from '../context/context-provider.js';
 import { ComponentRender } from '../view/render.js';
 
@@ -10,7 +10,7 @@ export class StructuralDirective<T> {
 	constructor(
 		protected render: ComponentRender<T>,
 		protected comment: Comment,
-		protected directive: DomDirectiveNode<ExpressionNode>,
+		protected directive: DOMDirectiveNode<ExpressionNode>,
 		protected parentContextStack: ContextStack<ContextDescriptorRef>
 	) { }
 }

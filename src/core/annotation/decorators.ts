@@ -1,6 +1,6 @@
 import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions/api';
-import { DomNode, DomRenderNode } from '@ibyar/elements';
+import { DOMNode, DOMRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
@@ -55,7 +55,7 @@ export interface ComponentOptions<T = Function> {
 	 * or us aurora jsx factory 
 	 * 				
 	 */
-	template?: string | DomNode<ExpressionNode> | DomRenderNode<T, ExpressionNode>;
+	template?: string | DOMNode<ExpressionNode> | DOMRenderNode<T, ExpressionNode>;
 	/**
 	 * style for this element
 	 */

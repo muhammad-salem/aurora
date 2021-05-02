@@ -1,4 +1,4 @@
-import { DomElementNode } from '@ibyar/elements';
+import { DOMElementNode } from '@ibyar/elements';
 import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
@@ -39,7 +39,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	private _updateView() {
 		if (this.condition) {
 			if (!this.element) {
-				this.element = this.render.createElement(this.directive.children[0] as DomElementNode<ExpressionNode>, this.parentContextStack);
+				this.element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, this.parentContextStack);
 				this.comment.after(this.element);
 			}
 		}

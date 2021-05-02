@@ -1,6 +1,7 @@
 import {
-	BaseNode, DomChild, DomFragmentNode, DomNode,
-	DomParentNode, LiveAttribute, LiveEvent, LiveTextNode
+	BaseNode, DOMChild, DOMFragmentNode,
+	DOMNode, DOMParentNode, LiveAttribute,
+	LiveEvent, LiveTextNode
 } from '@ibyar/elements';
 import type { ExpressionNode } from '@ibyar/expressions/api';
 import { JavaScriptParser } from '@ibyar/expressions';
@@ -30,7 +31,7 @@ function parseBaseNode(base: BaseNode<ExpressionNode>) {
 	parseDomParentNode(base);
 }
 
-function parseChild(child: DomChild<ExpressionNode>) {
+function parseChild(child: DOMChild<ExpressionNode>) {
 	if (child instanceof BaseNode) {
 		// DomElementNode & DomDirectiveNode
 		parseBaseNode(child);
@@ -38,12 +39,12 @@ function parseChild(child: DomChild<ExpressionNode>) {
 		parseLiveText(child);
 	}
 }
-function parseDomParentNode(parent: DomParentNode<ExpressionNode>) {
+function parseDomParentNode(parent: DOMParentNode<ExpressionNode>) {
 	parent.children?.forEach(parseChild);
 }
 
-export function buildExpressionNodes(node: DomNode<ExpressionNode>) {
-	if (node instanceof DomFragmentNode) {
+export function buildExpressionNodes(node: DOMNode<ExpressionNode>) {
+	if (node instanceof DOMFragmentNode) {
 		parseDomParentNode(node);
 	} else {
 		parseChild(node);

@@ -1,7 +1,6 @@
 import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@ibyar/expressions';
 import {
-	CommentNode, DomChild, DomDirectiveNode, DomElementNode,
-	DomFragmentNode, DomNode, DomParentNode, isTagNameNative,
+	CommentNode, DOMChild, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode, DOMParentNode, isTagNameNative,
 	isValidCustomElementName, LiveTextNode, NodeFactory, TextNode
 } from '@ibyar/elements';
 import type { ExpressionNode } from '@ibyar/expressions/api';
@@ -32,7 +31,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): string {
 export class ComponentRender<T> {
 
 	componentRef: ComponentRef<T>
-	template: DomNode<ExpressionNode>;
+	template: DOMNode<ExpressionNode>;
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
 
@@ -136,11 +135,11 @@ export class ComponentRender<T> {
 		});
 	}
 
-	defineElementNameKey(component: DomNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
-		if (component instanceof DomDirectiveNode || component instanceof CommentNode) {
+	defineElementNameKey(component: DOMNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
+		if (component instanceof DOMDirectiveNode || component instanceof CommentNode) {
 			return;
 		}
-		if (component instanceof DomElementNode) {
+		if (component instanceof DOMElementNode) {
 			if (NodeFactory.DirectiveTag === component.tagName.toLowerCase()) {
 				return;
 			}
@@ -150,10 +149,10 @@ export class ComponentRender<T> {
 				this.viewChildMap[component.templateRefName.attrName] = element;
 			}
 		}
-		if (component instanceof DomParentNode && component.children) {
+		if (component instanceof DOMParentNode && component.children) {
 			component.children.forEach(child => {
-				if ((child instanceof DomElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
-					|| child instanceof DomFragmentNode) {
+				if ((child instanceof DOMElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
+					|| child instanceof DOMFragmentNode) {
 					this.defineElementNameKey(child, contextStack);
 				}
 			});
@@ -164,7 +163,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 
-	createDirective(directive: DomDirectiveNode<ExpressionNode>, comment: Comment, contextStack: ContextStack<ContextDescriptorRef>): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, contextStack: ContextStack<ContextDescriptorRef>): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -196,16 +195,16 @@ export class ComponentRender<T> {
 		return liveText;
 	}
 
-	createDocumentFragment(node: DomFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): DocumentFragment {
+	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): DocumentFragment {
 		let fragment = document.createDocumentFragment();
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
 
-	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: DomChild<ExpressionNode> | DomFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
-		if (child instanceof DomElementNode) {
+	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMChild<ExpressionNode> | DOMFragmentNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>) {
+		if (child instanceof DOMElementNode) {
 			parent.append(this.createElement(child, contextStack));
-		} else if (child instanceof DomDirectiveNode) {
+		} else if (child instanceof DOMDirectiveNode) {
 			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
 			parent.append(comment);
 			this.createDirective(child, comment, contextStack);
@@ -215,12 +214,12 @@ export class ComponentRender<T> {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
-		} else if (child instanceof DomFragmentNode) {
+		} else if (child instanceof DOMFragmentNode) {
 			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
 
-	createElementByTagName(node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
+	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			element = document.createElement(node.tagName);
@@ -247,7 +246,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	createElement(node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
+	createElement(node: DOMElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
 		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
 			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
@@ -265,7 +264,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 
-	initAttribute(element: HTMLElement, node: DomElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): void {
+	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**

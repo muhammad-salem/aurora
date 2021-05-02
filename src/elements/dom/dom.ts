@@ -45,13 +45,13 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class DomParentNode<E> {
+export class DOMParentNode<E> {
 	/**
 	 * element children list
 	 */
-	children: DomChild<E>[];
+	children: DOMChild<E>[];
 
-	addChild(child: DomChild<E>) {
+	addChild(child: DOMChild<E>) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -71,9 +71,9 @@ export class DomParentNode<E> {
 /**
  * parent for a list of elements 
  */
-export class DomFragmentNode<E> extends DomParentNode<E> {
+export class DOMFragmentNode<E> extends DOMParentNode<E> {
 
-	constructor(children?: DomChild<E>[]) {
+	constructor(children?: DOMChild<E>[]) {
 		super();
 		if (children) {
 			this.children = children;
@@ -82,7 +82,7 @@ export class DomFragmentNode<E> extends DomParentNode<E> {
 
 }
 
-export class BaseNode<E> extends DomParentNode<E> {
+export class BaseNode<E> extends DOMParentNode<E> {
 
 	/**
 	 * a given name for element
@@ -163,7 +163,7 @@ export class BaseNode<E> extends DomParentNode<E> {
 /**
  * structural directive 
  */
-export class DomDirectiveNode<E> extends BaseNode<E> {
+export class DOMDirectiveNode<E> extends BaseNode<E> {
 
 	/**
 	 * name of the directive 
@@ -182,7 +182,7 @@ export class DomDirectiveNode<E> extends BaseNode<E> {
 	}
 }
 
-export class DomElementNode<E> extends BaseNode<E> {
+export class DOMElementNode<E> extends BaseNode<E> {
 
 	/**
 	 * the tag name of the element 
@@ -208,11 +208,11 @@ export class DomElementNode<E> extends BaseNode<E> {
 
 }
 
-export type DomChild<E> = DomElementNode<E> | DomDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
+export type DOMChild<E> = DOMElementNode<E> | DOMDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
 
-export type DomNode<E> = DomFragmentNode<E> | DomElementNode<E> | DomDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
+export type DOMNode<E> = DOMFragmentNode<E> | DOMElementNode<E> | DOMDirectiveNode<E> | CommentNode | TextNode | LiveTextNode<E>;
 
-export type DomRenderNode<T, E> = (model: T) => DomNode<E>;
+export type DOMRenderNode<T, E> = (model: T) => DOMNode<E>;
 
 export function parseTextChild<E>(text: string) {
 	// split from end with '}}', then search for the first '{{'

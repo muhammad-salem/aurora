@@ -1,35 +1,35 @@
 import {
-	DomChild, DomNode, CommentNode,
-	DomElementNode, DomFragmentNode, parseTextChild,
+	DOMChild, DOMNode, CommentNode,
+	DOMElementNode, DOMFragmentNode, parseTextChild,
 	TextNode
-} from '../dom/nodes.js';
+} from '../dom/dom.js';
 
 import { NodeFactory } from '../dom/factory.js';
 
 
 export class TemplateParser {
 
-	parse(template: HTMLTemplateElement): DomNode<any> {
+	parse(template: HTMLTemplateElement): DOMNode<any> {
 		if (template.content.childNodes.length == 0) {
-			return new DomFragmentNode([new TextNode('')]);
+			return new DOMFragmentNode([new TextNode('')]);
 		} else if (template.content.childNodes.length === 1) {
 			let node = this.createComponent(template.content.firstChild as ChildNode);
 			if (Array.isArray(node)) {
-				return new DomFragmentNode(node);
+				return new DOMFragmentNode(node);
 			} else {
 				return node;
 			}
 		} else /* if (template.content.childNodes.length > 1)*/ {
 			const children = Array.prototype.slice.call(template.content.childNodes)
 				.map(item => this.createComponent(item))
-				.flatMap(function (toFlat): DomChild<any>[] {
+				.flatMap(function (toFlat): DOMChild<any>[] {
 					if (Array.isArray(toFlat)) {
 						return toFlat;
 					} else {
 						return [toFlat];
 					}
 				});
-			return new DomFragmentNode(children);
+			return new DOMFragmentNode(children);
 		}
 	}
 
@@ -44,7 +44,7 @@ export class TemplateParser {
 			 * also all attributes names will be 'lower case'
 			 */
 			const element: HTMLElement = child as HTMLElement;
-			let node = new DomElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
+			let node = new DOMElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
 			let directiveAttr: Attr;
 			for (let i = 0; i < element.attributes.length; i++) {
 				const attr = element.attributes.item(i) as Attr;
@@ -64,7 +64,7 @@ export class TemplateParser {
 		}
 	}
 
-	toDomRenderRootNode<T>(template: DomNode<any> | HTMLTemplateElement | string) {
+	toDomRenderRootNode<T>(template: DOMNode<any> | HTMLTemplateElement | string) {
 		if (typeof template === 'string') {
 			let temp = document.createElement('template');
 			temp.innerHTML = template;

@@ -1,13 +1,13 @@
 import { isEmptyElement } from '../attributes/tags.js';
 import {
-	DomElementNode, CommentNode, parseTextChild,
-	TextNode, LiveTextNode, DomFragmentNode,
-	DomDirectiveNode, DomNode, DomChild, TextAttribute
-} from '../dom/nodes.js';
+	DOMElementNode, CommentNode, parseTextChild,
+	TextNode, LiveTextNode, DOMFragmentNode,
+	DOMDirectiveNode, DOMNode, DOMChild, TextAttribute
+} from '../dom/dom.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DomElementNode<any> | CommentNode | string;
+type ChildNode = DOMElementNode<any> | CommentNode | string;
 
 export class NodeParser {
 
@@ -16,11 +16,11 @@ export class NodeParser {
 
 	private tagNameRegExp = /[\-\.0-9_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF]/;
 
-	private childStack: DomChild<any>[];
+	private childStack: DOMChild<any>[];
 	private stackTrace: ChildNode[];
 
-	private get currentNode(): DomElementNode<any> {
-		return this.stackTrace[this.stackTrace.length - 1] as DomElementNode<any>;
+	private get currentNode(): DOMElementNode<any> {
+		return this.stackTrace[this.stackTrace.length - 1] as DOMElementNode<any>;
 	}
 
 	private commentOpenCount = 0;
@@ -128,7 +128,7 @@ export class NodeParser {
 
 	private parseOpenTag(token: string) {
 		if (token === '>') {
-			this.stackTrace.push(new DomElementNode(this.tempText));
+			this.stackTrace.push(new DOMElementNode(this.tempText));
 			if (isEmptyElement(this.tempText)) {
 				this.popElement();
 			}
@@ -140,7 +140,7 @@ export class NodeParser {
 			return this.parseOpenTag;
 		}
 		else if (/\s/.test(token)) {
-			this.stackTrace.push(new DomElementNode(this.tempText));
+			this.stackTrace.push(new DOMElementNode(this.tempText));
 			this.tempText = '';
 			this.propType = 'attr';
 			return this.parsePropertyName;
@@ -283,10 +283,10 @@ export class NodeParser {
 		const element = this.stackTrace.pop();
 		if (element) {
 			const parent = this.stackTrace.pop();
-			if (parent && parent instanceof DomElementNode) {
+			if (parent && parent instanceof DOMElementNode) {
 				if (typeof element === 'string') {
 					parent.addTextChild(element);
-				} else if (element instanceof DomElementNode) {
+				} else if (element instanceof DOMElementNode) {
 					parent.addChild(this.checkNode(element));
 				} else {
 					parent.addChild(element);
@@ -296,7 +296,7 @@ export class NodeParser {
 			else {
 				if (typeof element === 'string') {
 					parseTextChild(element).forEach(text => this.childStack.push(text));
-				} else if (element instanceof DomElementNode) {
+				} else if (element instanceof DOMElementNode) {
 					this.childStack.push(this.checkNode(element));
 				} else {
 					this.childStack.push(element);
@@ -305,7 +305,7 @@ export class NodeParser {
 		}
 	}
 
-	checkNode(node: DomElementNode<any>): DomElementNode<any> | DomDirectiveNode<any> {
+	checkNode(node: DOMElementNode<any>): DOMElementNode<any> | DOMDirectiveNode<any> {
 		if (node.attributes) {
 			let temp: TextAttribute | TextAttribute[] | undefined = node.attributes.find(attr => attr.attrName === 'is');
 			if (temp) {
@@ -324,7 +324,7 @@ export class NodeParser {
 			temp = node.attributes.find(attr => attr.attrName?.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				let directive = new DomDirectiveNode(temp.attrName, temp.attrValue as string);
+				let directive = new DOMDirectiveNode(temp.attrName, temp.attrValue as string);
 				directive.addChild(node);
 				return directive;
 			}
@@ -338,22 +338,22 @@ export class HTMLParser {
 
 	nodeParser = new NodeParser();
 
-	parse(html: string): DomChild<any>[] {
+	parse(html: string): DOMChild<any>[] {
 		return this.nodeParser.parse(html);
 	}
 
-	toDomRootNode(html: string): DomNode<any> {
+	toDomRootNode(html: string): DOMNode<any> {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
-			return new DomFragmentNode([new TextNode('')]);
+			return new DOMFragmentNode([new TextNode('')]);
 		} else if (stack?.length === 1) {
 			return stack[0];
 		} else {
-			return new DomFragmentNode(stack);
+			return new DOMFragmentNode(stack);
 		}
 	}
 
-	stringify(stack: DomNode<any>[]) {
+	stringify(stack: DOMNode<any>[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextNode) {
@@ -362,7 +362,7 @@ export class HTMLParser {
 				html += `{{${node.textValue}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
-			} else if (node instanceof DomElementNode) {
+			} else if (node instanceof DOMElementNode) {
 				let attrs = '';
 				if (node.attributes) {
 					attrs += node.attributes.map(attr => `${attr.attrName}="${attr.attrValue}"`).join(' ') + ' ';

@@ -1,8 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions/api';
 import {
-	DomNode, DomRenderNode, findByTagName,
-	Tag, htmlParser, templateParser
+	findByTagName,
+	Tag, htmlParser, templateParser, DOMNode, DOMRenderNode
 } from '@ibyar/elements';
 import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
 
@@ -66,7 +66,7 @@ export interface DirectiveRef<T> {
 
 export interface ComponentRef<T> {
 	selector: string;
-	template: DomNode<ExpressionNode> | DomRenderNode<T, ExpressionNode>;
+	template: DOMNode<ExpressionNode> | DOMRenderNode<T, ExpressionNode>;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
