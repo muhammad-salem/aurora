@@ -39,12 +39,17 @@ export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
 	 * @param obj 
 	 * @returns the index of new object in this stack
 	 */
-	addProvider(obj: any | any[]): number;
+	addProvider<T extends object>(obj: T): number;
 
 	/**
 	 * add an empty provider to this scop
 	 */
 	addEmptyProvider(): ScopedContext;
+
+	/**
+	 * add an readonly provider to this scop, you cant set any value in this provider
+	 */
+	addReadOnlyProvider<T extends object>(provider: T): ScopedContext;
 	/**
 	 * search for the first context that have property key
 	 * if not found will return the stack local scop as a default value
