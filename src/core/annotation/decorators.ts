@@ -47,7 +47,7 @@ export interface ComponentOptions<T = Function> {
 	templateUrl?: TemplateUrl | string;
 	/**
 	 * template: typeof 'string' ==> html string,
-	 * 			 TypeOf 'AuroraRootRenderNode<T>' ==> JSX, create factory
+	 * 			 TypeOf 'DomRootRenderNode<T>' ==> JSX, create factory
 	 * 	if template === null || undefined ==> it had nothing to render, 
 	 * and may be inherit from an html element
 	 * 

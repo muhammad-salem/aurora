@@ -1,19 +1,20 @@
 import type { TypeOf } from '../utils/typeof.js';
+import type { ExpressionNode } from '@ibyar/expressions/api';
+import {
+	DomNode, DomRenderNode, findByTagName,
+	Tag, htmlParser, templateParser
+} from '@ibyar/elements';
 import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
-import { DomNode, DomRenderNode } from '@ibyar/elements';
-import { findByTagName, Tag } from '@ibyar/elements';
-import { htmlParser, templateParser } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
+import { buildExpressionNodes } from '../html/dom.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
-import type { ExpressionNode } from '@ibyar/expressions/api';
-import { buildExpressionNodes } from '../html/dom.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, private _viewName?: string) { }
@@ -174,7 +175,7 @@ export class Components {
 		componentRef.extend = findByTagName(opts.extend);
 
 		if (typeof componentRef.template === 'string' && componentRef.template) {
-			componentRef.template = htmlParser.toAuroraRootNode(componentRef.template);
+			componentRef.template = htmlParser.toDomRootNode(componentRef.template);
 			buildExpressionNodes(componentRef.template);
 		}
 

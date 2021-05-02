@@ -64,7 +64,7 @@ export class TemplateParser {
 		}
 	}
 
-	toAuroraRenderRootNode<T>(template: DomNode<any> | HTMLTemplateElement | string) {
+	toDomRenderRootNode<T>(template: DomNode<any> | HTMLTemplateElement | string) {
 		if (typeof template === 'string') {
 			let temp = document.createElement('template');
 			temp.innerHTML = template;

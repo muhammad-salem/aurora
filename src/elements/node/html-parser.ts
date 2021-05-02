@@ -32,7 +32,7 @@ export class NodeParser {
 	private propertyValue: string;
 	private propType: 'attr' | 'ref-name' | 'input' | 'output' | 'two-way';
 
-	parse(html: string)/*: AuroraNode*/ {
+	parse(html: string)/*: DomNode*/ {
 		this.reset();
 		for (; this.index < html.length; this.index++) {
 			this.stateFn = this.stateFn(html[this.index]);
@@ -342,7 +342,7 @@ export class HTMLParser {
 		return this.nodeParser.parse(html);
 	}
 
-	toAuroraRootNode(html: string): DomNode<any> {
+	toDomRootNode(html: string): DomNode<any> {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
 			return new DomFragmentNode([new TextNode('')]);
