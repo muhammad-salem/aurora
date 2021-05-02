@@ -1,6 +1,7 @@
 import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@ibyar/expressions';
 import {
-	CommentNode, DOMChild, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode, DOMParentNode, isTagNameNative,
+	CommentNode, DOMChild, DOMDirectiveNode, DOMElementNode,
+	DOMFragmentNode, DOMNode, DOMParentNode, isTagNameNative,
 	isValidCustomElementName, LiveTextNode, NodeFactory, TextNode
 } from '@ibyar/elements';
 import type { ExpressionNode } from '@ibyar/expressions/api';
@@ -55,7 +56,6 @@ export class ComponentRender<T> {
 
 			this.viewChildMap = {};
 			if (!(this.template instanceof CommentNode)) {
-
 				this.defineElementNameKey(this.template, this.contextStack);
 			}
 
@@ -181,17 +181,17 @@ export class ComponentRender<T> {
 		}
 	}
 
-	createComment(comment: CommentNode): Comment {
-		return document.createComment(`${comment.comment}`);
+	createComment(node: CommentNode): Comment {
+		return document.createComment(`${node.comment}`);
 	}
 
-	createText(text: TextNode): Text {
-		return new Text(text.textValue);
+	createText(node: TextNode): Text {
+		return new Text(node.textValue);
 	}
 
-	createLiveText(text: LiveTextNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): Text {
+	createLiveText(node: LiveTextNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): Text {
 		const liveText = new Text('');
-		this.bind1Way(liveText, 'textContent', text.textValue, contextStack);
+		this.bind1Way(liveText, 'textContent', node.textValue, contextStack);
 		return liveText;
 	}
 
