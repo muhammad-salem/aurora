@@ -1,7 +1,7 @@
 import {
 	DOMChild, DOMNode, CommentNode,
-	DOMElementNode, DOMFragmentNode, parseTextChild,
-	TextNode
+	DOMElementNode, DOMFragmentNode,
+	parseTextChild, TextContent
 } from '../dom/dom.js';
 
 import { NodeFactory } from '../dom/factory.js';
@@ -11,7 +11,7 @@ export class TemplateParser {
 
 	parse(template: HTMLTemplateElement): DOMNode<any> {
 		if (template.content.childNodes.length == 0) {
-			return new DOMFragmentNode([new TextNode('')]);
+			return new DOMFragmentNode([new TextContent('')]);
 		} else if (template.content.childNodes.length === 1) {
 			let node = this.createComponent(template.content.firstChild as ChildNode);
 			if (Array.isArray(node)) {

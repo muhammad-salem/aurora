@@ -1,8 +1,8 @@
 import { isEmptyElement } from '../attributes/tags.js';
 import {
 	DOMElementNode, CommentNode, parseTextChild,
-	TextNode, LiveTextNode, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild, TextAttribute
+	TextContent, LiveTextContent, DOMFragmentNode,
+	DOMDirectiveNode, DOMNode, DOMChild, Attribute
 } from '../dom/dom.js';
 
 type Token = (token: string) => Token;
@@ -307,24 +307,31 @@ export class NodeParser {
 
 	checkNode(node: DOMElementNode<any>): DOMElementNode<any> | DOMDirectiveNode<any> {
 		if (node.attributes) {
-			let temp: TextAttribute | TextAttribute[] | undefined = node.attributes.find(attr => attr.attrName === 'is');
+			let temp: Attribute<string, any> | Attribute<string, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				node.is = temp.attrValue as string;
+				node.is = temp.value as string;
 			}
 			temp = node.attributes.filter(attr => {
-				return typeof attr.attrValue === 'string' && (/\{\{|\}\}/g).test(attr.attrValue);
+				return typeof attr.value === 'string' && (/\{\{|\}\}/g).test(attr.value);
 			});
 			if (temp) {
 				temp.forEach(templateAttrs => {
 					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
-					node.addTemplateAttr(templateAttrs.attrName, templateAttrs.attrValue as string);
+					node.addTemplateAttr(templateAttrs.name, templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.find(attr => attr.attrName?.startsWith('*'));
+			temp = node.attributes.filter(attr => attr.name.startsWith('on'));
+			if (temp) {
+				temp.forEach(templateAttrs => {
+					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
+				});
+			}
+			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				let directive = new DOMDirectiveNode(temp.attrName, temp.attrValue as string);
+				let directive = new DOMDirectiveNode(temp.name, temp.value as string);
 				directive.addChild(node);
 				return directive;
 			}
@@ -345,7 +352,7 @@ export class HTMLParser {
 	toDomRootNode(html: string): DOMNode<any> {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
-			return new DOMFragmentNode([new TextNode('')]);
+			return new DOMFragmentNode([new TextContent('')]);
 		} else if (stack?.length === 1) {
 			return stack[0];
 		} else {
@@ -356,28 +363,28 @@ export class HTMLParser {
 	stringify(stack: DOMNode<any>[]) {
 		let html = '';
 		stack?.forEach(node => {
-			if (node instanceof TextNode) {
-				html += node.textValue;
-			} else if (node instanceof LiveTextNode) {
-				html += `{{${node.textValue}}}`;
+			if (node instanceof TextContent) {
+				html += node.value;
+			} else if (node instanceof LiveTextContent) {
+				html += `{{${node.value}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
 			} else if (node instanceof DOMElementNode) {
 				let attrs = '';
 				if (node.attributes) {
-					attrs += node.attributes.map(attr => `${attr.attrName}="${attr.attrValue}"`).join(' ') + ' ';
+					attrs += node.attributes.map(attr => `${attr.name}="${attr.value}"`).join(' ') + ' ';
 				}
 				if (node.twoWayBinding) {
-					attrs += node.twoWayBinding.map(attr => `[(${attr.attrName})]="${attr.sourceValue}"`).join(' ').concat(' ');
+					attrs += node.twoWayBinding.map(attr => `[(${attr.name})]="${attr.value}"`).join(' ').concat(' ');
 				}
 				if (node.inputs) {
-					attrs += node.inputs.map(attr => `[${attr.attrName}]="${attr.sourceValue}"`).join(' ').concat(' ');
+					attrs += node.inputs.map(attr => `[${attr.name}]="${attr.value}"`).join(' ').concat(' ');
 				}
 				if (node.outputs) {
-					attrs += node.outputs.map(attr => `(${attr.eventName})="${attr.sourceHandler}"`).join(' ').concat(' ');
+					attrs += node.outputs.map(attr => `(${attr.name})="${attr.value}"`).join(' ').concat(' ');
 				}
 				if (node.templateAttrs) {
-					attrs += node.templateAttrs.map(attr => `${attr.attrName}="${attr.sourceValue}"`).join(' ').concat(' ');
+					attrs += node.templateAttrs.map(attr => `${attr.name}="${attr.value}"`).join(' ').concat(' ');
 				}
 				if (isEmptyElement(node.tagName)) {
 					if (attrs) {

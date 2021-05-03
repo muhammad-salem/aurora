@@ -2,7 +2,7 @@ import { AssignmentNode, MemberNode, NodeExpression, parseJSExpression } from '@
 import {
 	CommentNode, DOMChild, DOMDirectiveNode, DOMElementNode,
 	DOMFragmentNode, DOMNode, DOMParentNode, isTagNameNative,
-	isValidCustomElementName, LiveTextNode, NodeFactory, TextNode
+	isValidCustomElementName, LiveTextContent, NodeFactory, TextContent
 } from '@ibyar/elements';
 import type { ExpressionNode } from '@ibyar/expressions/api';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
@@ -145,8 +145,8 @@ export class ComponentRender<T> {
 			}
 			if (component.templateRefName) {
 				const element = this.createElementByTagName(component, contextStack);
-				Reflect.set(this.view, component.templateRefName.attrName, element);
-				this.viewChildMap[component.templateRefName.attrName] = element;
+				Reflect.set(this.view, component.templateRefName.name, element);
+				this.viewChildMap[component.templateRefName.name] = element;
 			}
 		}
 		if (component instanceof DOMParentNode && component.children) {
@@ -169,8 +169,8 @@ export class ComponentRender<T> {
 			// structural directive selector
 			const structural = new directiveRef.modelClass(this, comment, directive, contextStack);
 			if (directive.templateRefName) {
-				Reflect.set(this.view, directive.templateRefName.attrName, structural);
-				this.viewChildMap[directive.templateRefName.attrName] = structural;
+				Reflect.set(this.view, directive.templateRefName.name, structural);
+				this.viewChildMap[directive.templateRefName.name] = structural;
 			}
 			if (isOnInit(structural)) {
 				structural.onInit();
@@ -185,13 +185,13 @@ export class ComponentRender<T> {
 		return document.createComment(`${node.comment}`);
 	}
 
-	createText(node: TextNode): Text {
-		return new Text(node.textValue);
+	createText(text: TextContent): Text {
+		return new Text(text.value);
 	}
 
-	createLiveText(node: LiveTextNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): Text {
+	createLiveText(text: LiveTextContent<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): Text {
 		const liveText = new Text('');
-		this.bind1Way(liveText, 'textContent', node.textValue, contextStack);
+		this.bind1Way(liveText, 'textContent', text.value, contextStack);
 		return liveText;
 	}
 
@@ -208,9 +208,9 @@ export class ComponentRender<T> {
 			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
 			parent.append(comment);
 			this.createDirective(child, comment, contextStack);
-		} else if (child instanceof TextNode) {
+		} else if (child instanceof TextContent) {
 			parent.append(this.createText(child));
-		} else if (child instanceof LiveTextNode) {
+		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
@@ -248,8 +248,8 @@ export class ComponentRender<T> {
 
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: ContextStack<ContextDescriptorRef>): HTMLElement {
 		let element: HTMLElement;
-		if (this.viewChildMap[node.templateRefName?.attrName || '#']) {
-			element = this.viewChildMap[node.templateRefName?.attrName] as HTMLElement;
+		if (this.viewChildMap[node.templateRefName?.name || '#']) {
+			element = this.viewChildMap[node.templateRefName?.name] as HTMLElement;
 		} else {
 			element = this.createElementByTagName(node, contextStack);
 		}
@@ -273,34 +273,32 @@ export class ComponentRender<T> {
 				 * <a onClick="onLinkClick()"></a>
 				 */
 				// console.log('name', attr.attrName);
-				const isAttr = hasAttr(element, attr.attrName);
+				const isAttr = hasAttr(element, attr.name);
 				if (isAttr) {
-					if (attr.attrValue === false) {
-						element.removeAttribute(attr.attrName);
-					} else if (attr.attrValue === true) {
-						element.setAttribute(attr.attrName, '');
+					if (attr.value === false) {
+						element.removeAttribute(attr.name);
+					} else if (attr.value === true) {
+						element.setAttribute(attr.name, '');
 					} else {
-						element.setAttribute(attr.attrName, attr.attrValue as string);
+						element.setAttribute(attr.name, attr.value as string);
 					}
 				} else {
-					if (attr.attrName.startsWith('on') && typeof attr.attrValue === 'string') {
-						let func = parseJSExpression(attr.attrValue);
-						element.addEventListener(attr.attrName.substring(2), event => {
-							let contextProxy = new Proxy(this.view._model, {
-								get: (target: any, p: PropertyKey, receiver: any) => {
-									// console.log(p);
-									if (p === '$event') {
-										return event;
-									}
-									return Reflect.get(target, p, receiver);
-								}
-							});
-							func.get(contextProxy);
-						});
-					} else {
-						Reflect.set(element, attr.attrName, attr.attrValue);
-					}
-
+					Reflect.set(element, attr.name, attr.value);
+					// if (attr.name.startsWith('on') && typeof attr.value === 'string') {
+					// 	let func = parseJSExpression(attr.value);
+					// 	element.addEventListener(attr.name.substring(2), event => {
+					// 		let contextProxy = new Proxy(this.view._model, {
+					// 			get: (target: any, p: PropertyKey, receiver: any) => {
+					// 				// console.log(p);
+					// 				if (p === '$event') {
+					// 					return event;
+					// 				}
+					// 				return Reflect.get(target, p, receiver);
+					// 			}
+					// 		});
+					// 		func.get(contextProxy);
+					// 	});
+					// }
 				}
 			});
 		}
@@ -308,12 +306,12 @@ export class ComponentRender<T> {
 		if (node.twoWayBinding) {
 			node.twoWayBinding.forEach(attr => {
 				//TODO check for attribute directive, find sources from expression
-				this.bind2Way(element, attr.attrName, attr.sourceValue, contextStack);
+				this.bind2Way(element, attr.name, attr.value, contextStack);
 			});
 		}
 		if (node.inputs) {
 			node.inputs.forEach(attr => {
-				this.bind1Way(element, attr.attrName, attr.sourceValue, contextStack);
+				this.bind1Way(element, attr.name, attr.value, contextStack);
 			});
 		}
 		if (node.outputs) {
@@ -327,22 +325,22 @@ export class ComponentRender<T> {
 				 * 
 				 * TODO diff of event listener and back-way data binding
 				 */
-				if (typeof event.sourceHandler === 'string') {
-					let expression = parseJSExpression(event.sourceHandler);
+				if (typeof event.value === 'string') {
+					let expression = parseJSExpression(event.value);
 					listener = (event: Event) => {
 						expression.get(this.view._model);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
-					listener = event.sourceHandler;
+					listener = event.value;
 				}
-				this.view.addEventListener(event.eventName as any, listener as any);
+				this.view.addEventListener(event.name as any, listener as any);
 			});
 		}
 		if (node.templateAttrs) {
 			node.templateAttrs.forEach(tempAttr => {
-				const isAttr = hasAttr(element, tempAttr.attrName);
-				this.attrTemplateHandler(element, tempAttr.attrName, tempAttr.sourceValue, isAttr, contextStack);
+				const isAttr = hasAttr(element, tempAttr.name);
+				this.attrTemplateHandler(element, tempAttr.name, tempAttr.value, isAttr, contextStack);
 			});
 		}
 	}
