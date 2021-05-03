@@ -1,34 +1,5 @@
-import { ScopeProvider, ScopedContext, ReadOnlyScopedContext } from '@ibyar/expressions/api';
-import { PipeTransform } from '../pipe/pipe.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
-
-// const CachedPipes: Map<string, Function> = new Map();
-class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
-	constructor() {
-		super(new Map());
-	}
-	has(pipeName: string): boolean {
-		if (this.context.has(pipeName)) {
-			return true;
-		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
-		return pipeRef ? true : false;
-	}
-	get(pipeName: string): any {
-		let transformFunc: Function | undefined;
-		if (transformFunc = this.context.get(pipeName)) {
-			return transformFunc;
-		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
-		if (pipeRef) {
-			const pipe = new pipeRef.modelClass();
-			transformFunc = pipe.transform.bind(pipe);
-			this.context.set(pipeRef.name, transformFunc);
-			return transformFunc;
-		}
-		return void 0;
-	}
-}
+import { ScopeProvider, ScopedContext, ReadOnlyScopedContext } from '@ibyar/expressions';
+import { PipeScopeProvider } from '../pipe/pipe.js';
 
 export class DOMStack extends ScopeProvider {
 	static pipeProvider: ScopedContext = new PipeScopeProvider();
@@ -40,11 +11,54 @@ export class DOMStack extends ScopeProvider {
 	}
 }
 
-export const documentStack = new DOMStack();
-
-const Constant = {
+const Constant: { [k: string]: any } = {
 	// math
-	Math,
+	Math: {
+		E: Math.E,
+		LN10: Math.LN10,
+		LN2: Math.LN2,
+		LOG10E: Math.LOG10E,
+		LOG2E: Math.LOG2E,
+		PI: Math.PI,
+		SQRT1_2: Math.SQRT1_2,
+		SQRT2: Math.SQRT2,
+
+		abs: Math.abs,
+		acos: Math.acos,
+		asin: Math.asin,
+		atan: Math.atan,
+		atan2: Math.atan2,
+		ceil: Math.ceil,
+		cos: Math.cos,
+		exp: Math.exp,
+		floor: Math.floor,
+		log: Math.log,
+		max: Math.max,
+		min: Math.min,
+		pow: Math.pow,
+		random: Math.random,
+		round: Math.round,
+		sin: Math.sin,
+		sqrt: Math.sqrt,
+		tan: Math.tan,
+		clz32: Math.clz32,
+		imul: Math.imul,
+		sign: Math.sign,
+		log10: Math.log10,
+		log2: Math.log2,
+		log1p: Math.log1p,
+		expm1: Math.expm1,
+		cosh: Math.cosh,
+		sinh: Math.sinh,
+		tanh: Math.tanh,
+		acosh: Math.acosh,
+		asinh: Math.asinh,
+		atanh: Math.atanh,
+		hypot: Math.hypot,
+		trunc: Math.trunc,
+		fround: Math.fround,
+		cbrt: Math.cbrt,
+	},
 	// object
 	Object,
 	// number
@@ -55,10 +69,18 @@ const Constant = {
 	isNaN,
 	isFinite,
 	// array
-	isArray: Array.isArray,
+	Array: {
+		isArray: Array.isArray,
+	},
 	// symbol
-	Symbol
+	Symbol,
+	// string
+	String: {
+		raw: String.raw
+	},
 
 };
 
-documentStack.addReadOnlyProvider(Constant);
+const readOnlyProvider = new ReadOnlyScopedContext(Constant);
+export const documentStack = new DOMStack([readOnlyProvider, new PipeScopeProvider()]);
+// documentStack.addProvider(new PipeScopeProvider());

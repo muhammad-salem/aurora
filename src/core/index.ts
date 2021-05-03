@@ -7,6 +7,8 @@ export * from './component/custom-element.js';
 export * from './component/events.js';
 export * from './component/lifecycle.js';
 
+export * from './context/stack.js';
+
 export * from './directive/directive.js';
 
 export * from './model/change-detection.js';
