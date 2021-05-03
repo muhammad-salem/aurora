@@ -15,7 +15,7 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		return json;
 	}
 	abstract set(stack: ScopedStack, value: any): any;
-	abstract get(stack: ScopedStack): any;
+	abstract get(stack: ScopedStack, thisContext?: any): any;
 	abstract entry(): string[];
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
@@ -50,7 +50,7 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 		return [...this.left.entry(), ...this.right.entry()];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [...this.left.event(), ...this.right.event()];
 	}
 	toString() {
 		return `${this.left.toString()} ${this.op} ${this.right.toString()}`;

@@ -29,17 +29,27 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 		throw new Error(`OptionalChainingNode.#set() has no implementation.`)
 	}
 	get(stack: ScopedStack, thisContext?: any) {
-		const object = this.optional.get(thisContext ? stack.stackFor(thisContext) : stack);
-		if (object === null || object === undefined) {
-			return undefined
+		let value: any | Function;
+		if (thisContext) {
+			value = this.property.get(stack, thisContext);
+		} else {
+			const object = this.optional.get(stack);
+			if (object === null || object === undefined) {
+				return undefined
+			}
+			switch (this.type) {
+				case 'property':
+				case 'function':
+					value = (<ExpressionNode>this.property).get(stack, object);
+				case 'expression':
+					value = object[(<ExpressionNode>this.property).get(stack, object)];
+			}
+			thisContext = object;
 		}
-		switch (this.type) {
-			case 'property':
-			case 'function':
-				return (<ExpressionNode>this.property).get(stack, object);
-			case 'expression':
-				return object[(<ExpressionNode>this.property).get(stack, object)];
+		if (typeof value === 'function') {
+			return (<Function>value).bind(thisContext);
 		}
+		return value;
 	}
 	getThis(stack: ScopedStack): any {
 		return this.optional.get(stack);

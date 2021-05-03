@@ -7,7 +7,7 @@ export * from './context/provider.js';
 
 export * from './definition/values.js';
 export * from './definition/array.js';
-export * from './definition/comment.js';
+// export * from './definition/comment.js';
 export * from './definition/function.js';
 export * from './definition/member.js';
 export * from './definition/object.js';
