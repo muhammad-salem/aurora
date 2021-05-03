@@ -3,8 +3,7 @@ import {
 	Directive, OnInit, SourceFollowerCallback,
 	StructuralDirective, subscribe1way
 } from '@ibyar/core';
-import { parseJSExpression } from '@ibyar/expressions';
-import type { ExpressionNode } from '@ibyar/expressions/api';
+import { ExpressionNode, JavaScriptParser, ScopedStack } from '@ibyar/expressions';
 
 
 @Directive({
@@ -15,21 +14,22 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	condition: boolean;
 	element: HTMLElement;
 
-	onInit(): void {
-		const conditionNode = parseJSExpression(this.directive.directiveValue);
-		const propertyMaps = this.render.getPropertyMaps(conditionNode, this.parentContextStack);
-		const proxyContext = this.render.createProxyObject(propertyMaps, this.parentContextStack);
+	ifStack: ScopedStack;
 
+	onInit(): void {
+		const conditionNode = JavaScriptParser.parse(this.directive.directiveValue);
+
+		this.ifStack = this.contextStack.newStack();
 		const callback1: SourceFollowerCallback = (stack: any[]) => {
-			this.condition = conditionNode.get(proxyContext);
+			this.condition = conditionNode.get(this.ifStack);
 			this._updateView();
 			stack.push(this);
 		};
 
-		propertyMaps.forEach(propertyMap => {
-			const context = propertyMap.provider.getContext(propertyMap.entityName);
+		conditionNode.event().forEach(propertyName => {
+			const context = this.ifStack.getProviderBy(propertyName);
 			if (context) {
-				subscribe1way(context, propertyMap.entityName as string, this, 'condition', callback1);
+				subscribe1way(context, propertyName, this, 'condition', callback1);
 			}
 		});
 
@@ -39,7 +39,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 	private _updateView() {
 		if (this.condition) {
 			if (!this.element) {
-				this.element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, this.parentContextStack);
+				this.element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, this.ifStack);
 				this.comment.after(this.element);
 			}
 		}
