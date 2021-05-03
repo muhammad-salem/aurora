@@ -31,10 +31,10 @@ class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
 }
 
 export class DOMStack extends ScopeProvider {
-	pipeProvider: ScopedContext = new PipeScopeProvider();
+	static pipeProvider: ScopedContext = new PipeScopeProvider();
 	findContext(propertyKey: PropertyKey): ScopedContext {
-		if (this.pipeProvider.has(propertyKey)) {
-			return this.pipeProvider;
+		if (DOMStack.pipeProvider.has(propertyKey)) {
+			return DOMStack.pipeProvider;
 		}
 		return super.findContext(propertyKey);
 	}
