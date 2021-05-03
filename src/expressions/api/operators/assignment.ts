@@ -2,6 +2,7 @@ import type { EvaluateNode, EvaluateType } from './types.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { ScopedStack } from '../scope.js';
 
 @Deserializer('assignment')
 export class AssignmentNode extends InfixExpressionNode {
@@ -53,5 +54,13 @@ export class AssignmentNode extends InfixExpressionNode {
 	}
 	evalNode(evalNode: EvaluateNode) {
 		return AssignmentNode.Evaluations[this.op](evalNode);
+	}
+	set(stack: ScopedStack, value: any) {
+		return this.left.set(stack, value);
+	}
+	get(stack: ScopedStack): any {
+		const value = super.get(stack);
+		this.set(stack, value);
+		return value;
 	}
 }
