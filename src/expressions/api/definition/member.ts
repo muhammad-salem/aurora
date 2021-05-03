@@ -13,9 +13,14 @@ export abstract class AccessNode extends AbstractExpressionNode {
 	getRight() {
 		return this.right;
 	}
-	abstract get(stack: ScopedStack, thisContext?: any): any;
-	abstract toString(): string;
-	abstract event(parent?: string): string[];
+	get(stack: ScopedStack, thisContext?: any) {
+		const thisRef = thisContext ?? this.left.get(stack);
+		const value = this.right.get(stack, thisRef);
+		if (typeof value === 'function') {
+			return (<Function>value).bind(thisRef);
+		}
+		return value;
+	}
 	set(stack: ScopedStack, value: any) {
 		return this.right.set(stack.stackFor(this.left.get(stack)), value);
 	}
@@ -28,19 +33,14 @@ export abstract class AccessNode extends AbstractExpressionNode {
 			right: this.right.toJSON()
 		};
 	}
+	abstract event(parent?: string): string[];
+	abstract toString(): string;
 }
 
 @Deserializer('member')
 export class MemberAccessNode extends AccessNode {
 	static fromJSON(node: MemberAccessNode, deserializer: NodeDeserializer): MemberAccessNode {
 		return new MemberAccessNode(deserializer(node.left), deserializer(node.right));
-	}
-	constructor(left: ExpressionNode, right: ExpressionNode) {
-		super(left, right);
-	}
-	get(stack: ScopedStack, thisContext?: any) {
-		const thisRef = this.left.get(thisContext ? stack.stackFor(thisContext) : stack);
-		return this.right.get(stack.stackFor(thisRef), thisRef);
 	}
 	event(parent?: string): string[] {
 		parent ||= '';
@@ -56,13 +56,6 @@ export class MemberAccessNode extends AccessNode {
 export class ComputedMemberAccessNode extends AccessNode {
 	static fromJSON(node: ComputedMemberAccessNode, deserializer: NodeDeserializer): ComputedMemberAccessNode {
 		return new ComputedMemberAccessNode(deserializer(node.left), deserializer(node.right));
-	}
-	constructor(left: ExpressionNode, right: ExpressionNode) {
-		super(left, right);
-	}
-	get(stack: ScopedStack, thisContext?: any) {
-		const thisRef = this.left.get(thisContext ? stack.stackFor(thisContext) : stack);
-		return thisRef[this.right.get(stack, thisRef)];
 	}
 	event(parent?: string): string[] {
 		return [`${parent}${this.left.event(parent)}[${this.right.event()}]`];

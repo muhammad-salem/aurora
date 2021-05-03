@@ -17,7 +17,10 @@ export class IdentifierNode extends AbstractExpressionNode {
 	set(stack: ScopedStack, value: any) {
 		return stack.set(this.property, value) ? value : void 0;
 	}
-	get(stack: ScopedStack) {
+	get(stack: ScopedStack, thisContext?: any) {
+		if (thisContext) {
+			return thisContext[this.property];
+		}
 		return stack.get(this.property);
 	}
 	entry(): string[] {
