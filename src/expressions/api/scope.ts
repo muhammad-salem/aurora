@@ -28,7 +28,7 @@ export interface ScopedContext {
 	getProviderBy(propertyKey: PropertyKey): object | undefined;
 }
 
-export interface ScopedStack extends Array<ScopedContext>, ScopedContext {
+export interface ScopedStack extends ScopedContext {
 	readonly localScop: ScopedContext;
 	/**
 	 * add one or many context scopes on the top of the current stack

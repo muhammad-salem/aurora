@@ -4,9 +4,13 @@ export class DefaultScopedContext<T extends object> implements ScopedContext {
 	static for<T extends object>(context: T) {
 		return new DefaultScopedContext(context);
 	}
-	constructor(protected context: T) { }
+	constructor(protected context: T & { [key: string]: any } & { [key: number]: any }) { }
 	get(propertyKey: PropertyKey): any {
-		return Reflect.get(this.context, propertyKey);
+		const value = this.context[propertyKey as string];
+		if (typeof value === 'function') {
+			return (<Function>value).bind(this.context);
+		}
+		return value;
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		return Reflect.set(this.context, propertyKey, value);
@@ -32,28 +36,27 @@ export class EmptyScopedContext extends DefaultScopedContext<any> {
 	}
 }
 
-export abstract class AbstractScopedStack extends Array<ScopedContext> implements ScopedStack {
+export abstract class AbstractScopedStack implements ScopedStack {
 	abstract readonly localScop: ScopedContext;
-	constructor(...args: ScopedContext[]) {
-		super(...args);
-	}
+	abstract readonly stack: Array<ScopedContext>;
+
 	newStack(): ScopedStack {
-		return new ScopeProvider(this);
+		return new (this.constructor as (new ([]) => ScopedStack))(this.stack.slice());
 	}
 	stackFor(obj: any): ScopedStack {
-		const newStack = this.newStack();
-		newStack.addProvider(obj);
-		return newStack;
+		const stack = this.newStack();
+		stack.addProvider(obj);
+		return stack;
 	}
 	emptyScopeFor(obj: any | any[]): ScopedStack {
 		return new EmptyScopeProvider(obj);
 	}
 	add(...contexts: ScopedContext[]): number {
-		return this.unshift(...contexts);
+		return this.stack.unshift(...contexts);
 	}
 	remove(index: number = 0): ScopedContext {
-		const context = this[index];
-		this.splice(index, 1);
+		const context = this.stack[index];
+		this.stack.splice(index, 1);
 		return context;
 	}
 	addProvider<T extends object>(obj: T): number {
@@ -73,7 +76,7 @@ export abstract class AbstractScopedStack extends Array<ScopedContext> implement
 		if (this.localScop.has(propertyKey)) {
 			return this.localScop;
 		}
-		return this.find(context => context.has(propertyKey)) || this.localScop;
+		return this.stack.find(context => context.has(propertyKey)) || this.localScop;
 	}
 	get(propertyKey: PropertyKey) {
 		return this.findContext(propertyKey).get(propertyKey);
@@ -82,14 +85,15 @@ export abstract class AbstractScopedStack extends Array<ScopedContext> implement
 		return this.findContext(propertyKey).set(propertyKey, value);
 	}
 	has(propertyKey: PropertyKey): boolean {
-		return this.find(context => context.has(propertyKey)) ? true : false;
+		return this.stack.find(context => context.has(propertyKey)) ? true : false;
 	}
 	getProviderBy(propertyKey: PropertyKey): object | undefined {
-		return this.find(context => context.has(propertyKey))?.getProviderBy(propertyKey);
+		return this.stack.find(context => context.has(propertyKey))?.getProviderBy(propertyKey);
 	}
 }
 
 export class EmptyScopeProvider extends AbstractScopedStack {
+	readonly stack: Array<ScopedContext> = [];
 	constructor(public readonly localScop: ScopedContext) {
 		super();
 	}
@@ -97,11 +101,13 @@ export class EmptyScopeProvider extends AbstractScopedStack {
 
 export class ScopeProvider extends AbstractScopedStack {
 	static for(context: any | Array<any>) {
-		return new ScopeProvider(DefaultScopedContext.for(context));
+		return new ScopeProvider([DefaultScopedContext.for(context)]);
 	}
 	readonly localScop: ScopedContext = new EmptyScopedContext();
-	constructor(first?: ScopedContext) {
-		super(first as unknown as ScopedContext);
+	readonly stack: Array<ScopedContext>;
+	constructor(stack: Array<ScopedContext>) {
+		super();
+		this.stack = stack;
 	}
 }
 
