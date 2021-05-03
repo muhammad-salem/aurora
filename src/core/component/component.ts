@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import type { ExpressionNode } from '@ibyar/expressions/api';
+import type { ExpressionNode } from '@ibyar/expressions';
 import {
 	findByTagName,
 	Tag, htmlParser, templateParser, DOMNode, DOMRenderNode

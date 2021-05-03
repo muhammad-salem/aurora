@@ -2,7 +2,7 @@ import {
 	BaseNode, DOMChild, DOMFragmentNode,
 	DOMNode, DOMParentNode, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { ExpressionNode, IdentifierNode } from '@ibyar/expressions/api';
+import { ExpressionNode, IdentifierNode } from '@ibyar/expressions';
 import { JavaScriptParser } from '@ibyar/expressions';
 
 const TextContent = new IdentifierNode('textContent');
