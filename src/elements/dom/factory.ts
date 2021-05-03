@@ -167,7 +167,7 @@ export class NodeFactory {
 			value = value.substring(2, value.length - 2);
 			element.addInput(attrName, value);
 		}
-		else if (typeof value === 'string' && (/\{\{|\}\}/g).test(value)) {
+		else if (typeof value === 'string' && (/\{\{(.+)\}\}/g).test(value)) {
 			// attr="any string{{viewProperty}}any text" // just pass data
 			element.addTemplateAttr(attrName, value);
 		}

@@ -313,7 +313,7 @@ export class NodeParser {
 				node.is = temp.value as string;
 			}
 			temp = node.attributes.filter(attr => {
-				return typeof attr.value === 'string' && (/\{\{|\}\}/g).test(attr.value);
+				return typeof attr.value === 'string' && (/\{\{(.+)\}\}/g).test(attr.value);
 			});
 			if (temp) {
 				temp.forEach(templateAttrs => {
