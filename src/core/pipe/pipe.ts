@@ -1,4 +1,4 @@
-import { ContextDescriptorRef, ContextProvider } from '../context/context-provider.js';
+import { ReadOnlyScopedContext } from '@ibyar/expressions';
 import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
@@ -16,73 +16,29 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 	return Reflect.has(Object.getPrototypeOf(pipe), 'transform');
 }
 
-export class PipeContextProvider<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<PipeTransform<T, U>> {
-	pipeCacheMap: Map<string, PipeTransform<T, U>> = new Map();
-	getContext(entityName: string): undefined {
-		return void 0;
+export class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
+	constructor() {
+		super(new Map());
 	}
-	getContextValue(entityName: string): any {
-		let cachedPipe: PipeTransform<T, U> | undefined;
-		if (cachedPipe = this.pipeCacheMap.get(entityName)) {
-			return cachedPipe.transform.bind(cachedPipe);
-		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<T, U>>(entityName);
-		if (pipeRef && !pipeRef.asynchronous) {
-			cachedPipe = new pipeRef.modelClass();
-			this.pipeCacheMap.set(pipeRef.name, cachedPipe);
-			return cachedPipe.transform.bind(cachedPipe);
-		}
-		throw new Error(`no pipe found for ${entityName}.`);
-	}
-	setContextValue(entityName: PropertyKey, value: any): boolean {
-		throw new Error("Pipes provider has no set implementation.");
-	}
-	hasContext(entityName: string): boolean {
-		if (this.pipeCacheMap.has(entityName)) {
+	has(pipeName: string): boolean {
+		if (this.context.has(pipeName)) {
 			return true;
 		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<T, U>>(entityName);
-		return pipeRef !== undefined && !pipeRef.asynchronous;
+		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		return pipeRef ? true : false;
 	}
-}
-
-export class AsyncPipeContext<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<PipeTransform<T, U>> {
-	constructor(private context: PipeTransform<T, U>) { }
-	getContext(entityName: string): PipeTransform<T, U> | undefined {
-		return this.context;
-	}
-	getContextValue(entityName: string) {
-		return this.context.transform.bind(this.context);
-	}
-	setContextValue(entityName: PropertyKey, value: any): boolean {
-		throw new Error("Async Pipes provider has no set implementation.");
-	}
-	hasContext(entityName: string): boolean {
-		throw new Error("it should never been called.");
-	}
-}
-
-export class AsyncPipeContextProvider<T extends ContextDescriptorRef, U extends ContextDescriptorRef> implements ContextProvider<AsyncPipeContext<T, U>> {
-	getContext(entityName: string): AsyncPipeContext<T, U> | undefined {
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<T, U>>(entityName);
-		if (pipeRef && pipeRef.asynchronous) {
-			let cachedPipe: PipeTransform<T, U> | undefined;
-			cachedPipe = new pipeRef.modelClass();
-			return new AsyncPipeContext(cachedPipe);
+	get(pipeName: string): any {
+		let transformFunc: Function | undefined;
+		if (transformFunc = this.context.get(pipeName)) {
+			return transformFunc;
+		}
+		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		if (pipeRef) {
+			const pipe = new pipeRef.modelClass();
+			transformFunc = pipe.transform.bind(pipe);
+			this.context.set(pipeRef.name, transformFunc);
+			return transformFunc;
 		}
 		return void 0;
 	}
-	getContextValue(entityName: string) {
-		return (...args: any) => { };
-	}
-	setContextValue(entityName: PropertyKey, value: any): boolean {
-		throw new Error("Async Pipes provider has no set implementation.");
-	}
-	hasContext(entityName: string): boolean {
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<T, U>>(entityName);
-		return pipeRef !== undefined && pipeRef.asynchronous === true;
-	}
 }
-
-export const PIPE_CONTEXT_PROVIDER = new PipeContextProvider();
-export const ASYNC_PIPE_CONTEXT_PROVIDER = new AsyncPipeContextProvider();
