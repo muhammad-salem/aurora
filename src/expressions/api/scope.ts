@@ -19,6 +19,13 @@ export interface ScopedContext {
 	 * @param propertyKey 
 	 */
 	has(propertyKey: PropertyKey): boolean;
+
+	/**
+	 * get context object of this provider
+	 * search for the first context object that has `propertyKey`
+	 * @param propertyKey 
+	 */
+	getProviderBy(propertyKey: PropertyKey): object | undefined;
 }
 
 export interface ScopedStack extends Array<ScopedContext>, ScopedContext {

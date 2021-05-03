@@ -14,6 +14,9 @@ export class DefaultScopedContext<T extends object> implements ScopedContext {
 	has(propertyKey: PropertyKey): boolean {
 		return propertyKey in this.context;
 	}
+	getProviderBy(): T | undefined {
+		return this.context;
+	}
 }
 
 export class ReadOnlyScopedContext<T extends object> extends DefaultScopedContext<T> {
@@ -80,6 +83,9 @@ export abstract class AbstractScopedStack extends Array<ScopedContext> implement
 	}
 	has(propertyKey: PropertyKey): boolean {
 		return this.find(context => context.has(propertyKey)) ? true : false;
+	}
+	getProviderBy(propertyKey: PropertyKey): object | undefined {
+		return this.find(context => context.has(propertyKey))?.getProviderBy(propertyKey);
 	}
 }
 
