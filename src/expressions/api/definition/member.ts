@@ -13,14 +13,6 @@ export abstract class AccessNode extends AbstractExpressionNode {
 	getRight() {
 		return this.right;
 	}
-	get(stack: ScopedStack, thisContext?: any) {
-		const thisRef = thisContext ?? this.left.get(stack);
-		const value = this.right.get(stack, thisRef);
-		if (typeof value === 'function') {
-			return (<Function>value).bind(thisRef);
-		}
-		return value;
-	}
 	entry(): string[] {
 		return this.left.entry();
 	}
@@ -30,6 +22,7 @@ export abstract class AccessNode extends AbstractExpressionNode {
 			right: this.right.toJSON()
 		};
 	}
+	abstract get(stack: ScopedStack, thisContext?: any): any;
 	abstract set(stack: ScopedStack, value: any): any;
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
@@ -42,6 +35,14 @@ export class MemberAccessNode extends AccessNode {
 	}
 	set(stack: ScopedStack, value: any) {
 		return this.right.set(stack.stackFor(this.left.get(stack)), value);
+	}
+	get(stack: ScopedStack, thisContext?: any) {
+		const thisRef = thisContext ?? this.left.get(stack);
+		const value = this.right.get(stack, thisRef);
+		if (typeof value === 'function') {
+			return (<Function>value).bind(thisRef);
+		}
+		return value;
 	}
 	event(parent?: string): string[] {
 		parent ||= '';
@@ -60,6 +61,14 @@ export class ComputedMemberAccessNode extends AccessNode {
 	}
 	set(stack: ScopedStack, value: any) {
 		return this.left.get(stack)[this.right.get(stack)] = value;
+	}
+	get(stack: ScopedStack, thisContext?: any) {
+		const thisRef = thisContext ?? this.left.get(stack);
+		const value = thisRef[this.right.get(stack)];
+		if (typeof value === 'function') {
+			return (<Function>value).bind(thisRef);
+		}
+		return value;
 	}
 	event(parent?: string): string[] {
 		parent ??= '';
