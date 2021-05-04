@@ -26,7 +26,10 @@ export class IdentifierNode extends AbstractExpressionNode {
 	entry(): string[] {
 		return [this.toString()];
 	}
-	event(): string[] {
+	event(parent?: string): string[] {
+		if (parent) {
+			return [parent + this.toString()];
+		}
 		return [this.toString()];
 	}
 	toString(): string {
