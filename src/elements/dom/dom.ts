@@ -144,12 +144,20 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	}
 
 	addTemplateAttr(attrName: string, valueSource: string) {
-		valueSource = parseStringTemplate(valueSource);
-		if (this.templateAttrs) {
-			this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
+		if (/^\{\{(.+)\}\}$/g) {
+			// as one way binding
+			valueSource = valueSource.substring(2, valueSource.length - 2);
+			this.addInput(attrName, valueSource);
 		} else {
-			this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
+			// as string 
+			valueSource = parseStringTemplate(valueSource);
+			if (this.templateAttrs) {
+				this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
+			} else {
+				this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
+			}
 		}
+
 	}
 
 }
@@ -237,6 +245,6 @@ export function parseTextChild<E>(text: string): Array<TextContent | LiveTextCon
 
 export function parseStringTemplate(text: string): string {
 	const node = parseTextChild(text);
-	const map = node.map(str => (str instanceof TextContent ? str.value : '${' + str.valueNode + '}')).join('');
+	const map = node.map(str => (str instanceof TextContent ? str.value : '${' + str.value + '}')).join('');
 	return '`' + map + '`';
 }
