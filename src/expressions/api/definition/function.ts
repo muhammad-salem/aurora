@@ -33,7 +33,7 @@ export class FormalParamterNode extends AbstractExpressionNode {
 		return this.defaultValue;
 	}
 	set(stack: ScopedStack, value: Function) {
-		stack.set(this.identifier.get(stack), value || this.defaultValue?.get(stack));
+		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
 	get(stack: ScopedStack) {
 		throw new Error('ParamterNode#get() has no implementation.');

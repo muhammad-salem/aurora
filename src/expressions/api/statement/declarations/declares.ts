@@ -35,7 +35,7 @@ export abstract class DeclarationsNode extends AbstractExpressionNode {
 	}
 	get(stack: ScopedStack) {
 		this.variables.forEach(item => {
-			stack.localScop.set(item.variable.get(stack), item.value?.get(stack));
+			item.variable.set(stack, item.value?.get(stack));
 		});
 	}
 	entry(): string[] {
