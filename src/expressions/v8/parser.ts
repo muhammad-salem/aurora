@@ -409,6 +409,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION)) {
 					this.consume(Token.ASYNC);
+					this.consume(Token.FUNCTION);
 					if (this.peek().isType(Token.MUL)) {
 						this.consume(Token.MUL);
 						return this.parseFunctionExpression(FunctionType.ASYNC_GENERATOR);
@@ -431,7 +432,7 @@ export class JavaScriptParser extends AbstractParser {
 				funcName = this.parseMemberExpression();
 				this.expect(Token.R_BRACKETS);
 			} else {
-				funcName = this.parsePrimaryExpression();
+				funcName = this.parseIdentifier();
 			}
 		}
 		return this.parseFunctionLiteral(type, funcName);
@@ -1072,8 +1073,8 @@ export class JavaScriptParser extends AbstractParser {
 					// ()=>x.  The continuation that consumes the => is in
 					// ParseAssignmentExpressionCoverGrammar.
 
-					if (!this.peekAhead().isType(Token.ARROW)) {
-						throw new Error(this.errorMessage(`Unexpected Token: ${Token.R_PARENTHESES}`));
+					if (!this.peek().isType(Token.ARROW)) {
+						throw new Error(this.errorMessage(`Unexpected Token: ${Token.R_PARENTHESES.getName()}`));
 					}
 					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
 				}
