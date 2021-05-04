@@ -41,7 +41,9 @@ export abstract class AbstractScopedStack implements ScopedStack {
 	abstract readonly stack: Array<ScopedContext>;
 
 	newStack(): ScopedStack {
-		return new (this.constructor as (new ([]) => ScopedStack))(this.stack.slice());
+		const stack = new (this.constructor as (new ([]) => ScopedStack))(this.stack.slice());
+		stack.add(this.localScop);
+		return stack;
 	}
 	stackFor(obj: any): ScopedStack {
 		const stack = this.newStack();
