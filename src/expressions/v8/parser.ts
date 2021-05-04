@@ -1788,7 +1788,12 @@ export class JavaScriptParser extends AbstractParser {
 		return result;
 	}
 	protected parseAwaitExpression(): ExpressionNode {
-		throw new Error(this.errorMessage(`'await' is not supported`));
+		this.consume(Token.AWAIT);
+		const value = this.parseUnaryExpression();
+		if (this.peek().isType(Token.EXP)) {
+			throw new Error(this.scanner.createError(`Unexpected Token Unary Exponentiation`));
+		}
+		return buildUnaryExpression(value, Token.AWAIT);
 	}
 	protected parseNullishExpression(expression: ExpressionNode): ExpressionNode {
 		// CoalesceExpression ::
