@@ -43,5 +43,4 @@ export function buildExpressionNodes(node: DOMNode<ExpressionNode>) {
 	} else {
 		parseChild(node);
 	}
-	console.log(node);
 }
