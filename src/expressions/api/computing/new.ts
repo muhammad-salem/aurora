@@ -23,7 +23,7 @@ export class NewNode extends AbstractExpressionNode {
 	}
 	get(stack: ScopedStack,) {
 		const classRef = this.className.get(stack);
-		let value = new classRef();
+		let value: any;
 		if (this.parameters) {
 			if (this.parameters.length > 0) {
 				const parameters: any[] = [];
