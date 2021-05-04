@@ -21,9 +21,6 @@ export abstract class AccessNode extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	set(stack: ScopedStack, value: any) {
-		return this.right.set(stack.stackFor(this.left.get(stack)), value);
-	}
 	entry(): string[] {
 		return this.left.entry();
 	}
@@ -33,6 +30,7 @@ export abstract class AccessNode extends AbstractExpressionNode {
 			right: this.right.toJSON()
 		};
 	}
+	abstract set(stack: ScopedStack, value: any): any;
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
 }
@@ -42,10 +40,13 @@ export class MemberAccessNode extends AccessNode {
 	static fromJSON(node: MemberAccessNode, deserializer: NodeDeserializer): MemberAccessNode {
 		return new MemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}
+	set(stack: ScopedStack, value: any) {
+		return this.right.set(stack.stackFor(this.left.get(stack)), value);
+	}
 	event(parent?: string): string[] {
 		parent ||= '';
 		parent += this.left.toString() + '.';
-		return this.right.event(parent);
+		return [...this.left.event(), ...this.right.event(parent)];
 	}
 	toString() {
 		return `${this.left.toString()}.${this.right.toString()}`;
@@ -57,8 +58,13 @@ export class ComputedMemberAccessNode extends AccessNode {
 	static fromJSON(node: ComputedMemberAccessNode, deserializer: NodeDeserializer): ComputedMemberAccessNode {
 		return new ComputedMemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}
+	set(stack: ScopedStack, value: any) {
+		return this.left.get(stack)[this.right.get(stack)] = value;
+	}
 	event(parent?: string): string[] {
-		return [`${parent}${this.left.event(parent)}[${this.right.event()}]`];
+		parent ??= '';
+		parent = `${parent}${this.left.event(parent)}`;
+		return [parent, `${parent}[${this.right.toString()}]`];
 	}
 	toString() {
 		return `${this.left.toString()}[${this.right.toString()}]`;
