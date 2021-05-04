@@ -64,10 +64,9 @@ export class PersonModel implements OnInit {
 		this.open.emit('init data');
 	}
 
-	yearOfBirth() {
-		return 2020 - this.person.age;
+	get yearOfBirth() {
+		return 2021 - this.person.age;
 	}
-
 
 	@HostListener('window:load', ['$event'])
 	onLoad(e: Event) {
