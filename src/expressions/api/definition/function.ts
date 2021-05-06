@@ -102,8 +102,9 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		let func: Function;
 		switch (this.type) {
 			case FunctionType.ASYNC:
-				func = async function (...args: any[]) {
+				func = async function (this: any, ...args: any[]) {
 					const funcStack = stack.newStack();
+					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
 					for (const state of self.statements) {
@@ -142,8 +143,9 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionType.GENERATOR:
-				func = function* (...args: any[]) {
+				func = function* (this: any, ...args: any[]) {
 					const funcStack = stack.newStack();
+					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
 					for (const state of self.statements) {
@@ -155,8 +157,9 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionType.ASYNC_GENERATOR:
-				func = async function* (...args: any[]) {
+				func = async function* (this: any, ...args: any[]) {
 					const funcStack = stack.newStack();
+					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
 					for (const state of self.statements) {
@@ -195,8 +198,9 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				break;
 			default:
 			case FunctionType.NORMAL:
-				func = function (...args: any[]) {
+				func = function (this: any, ...args: any[]) {
 					const funcStack = stack.newStack();
+					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
 					for (const state of self.statements) {
