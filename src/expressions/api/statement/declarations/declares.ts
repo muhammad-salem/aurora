@@ -31,7 +31,10 @@ export abstract class DeclarationsNode extends AbstractExpressionNode {
 		return this.variables;
 	}
 	set(stack: ScopedStack, value: any) {
-		throw new Error(`LetNode#set() has no implementation.`);
+		if (Array.isArray(value)) {
+			throw new Error(`LetNode#set() has no implementation.`);
+		}
+		this.variables[0].variable.set(stack, value);
 	}
 	get(stack: ScopedStack) {
 		for (const item of this.variables) {
