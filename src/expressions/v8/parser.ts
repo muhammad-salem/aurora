@@ -22,7 +22,7 @@ import {
 	ObjectLiteralPropertyNode, SetPropertyNode
 } from '../api/definition/object.js';
 import { ArrayLiteralNode } from '../api/definition/array.js';
-import { FunctionCallNode } from '../api/computing/function.js';
+import { FunctionCallNode } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { ThrowNode, TryCatchNode } from '../api/computing/throw.js';
 import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
