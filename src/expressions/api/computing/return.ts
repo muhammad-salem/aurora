@@ -1,14 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { ScopedStack } from '../scope.js';
-import { AbstractExpressionNode } from '../abstract.js';
+import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-
-export class ReturnValue {
-	constructor(public value: any) { }
-	getValue() {
-		return this.value;
-	}
-}
 
 /**
  * The expression whose value is to be returned. 

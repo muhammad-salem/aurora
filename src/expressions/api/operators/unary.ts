@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { AbstractExpressionNode } from '../abstract.js';
+import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
 @Deserializer('unary')
 export class UnaryNode extends AbstractExpressionNode {
@@ -86,12 +86,12 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 	}
 	private getDelete(stack: ScopedStack, thisContext?: any) {
 		if (thisContext) {
-			Proxy
 			delete thisContext[this.node.toString()];
 		}
 	}
-	private async getAwait(stack: ScopedStack, thisContext?: any) {
-		return await this.node.get(stack);
+	private getAwait(stack: ScopedStack, thisContext?: any) {
+		const promise = this.node.get(stack);
+		return new AwaitPromise(promise);
 	}
 	toString() {
 		return `${this.op} ${this.node.toString()}`;

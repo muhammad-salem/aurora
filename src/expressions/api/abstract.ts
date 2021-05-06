@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
 import type { EvaluateNode } from './operators/types.js';
-import type { ScopedStack } from './scope.js';
+import type { AwaitPromiseInfo, ScopedStack } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
@@ -62,4 +62,16 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 			right: this.right.toJSON()
 		};
 	}
+}
+
+export class ReturnValue {
+	constructor(public value: any) { }
+	getValue() {
+		return this.value;
+	}
+}
+
+export class AwaitPromise implements AwaitPromiseInfo {
+	node: { set(stack: ScopedStack, value: any): any; };
+	constructor(public promise: Promise<any>) { }
 }
