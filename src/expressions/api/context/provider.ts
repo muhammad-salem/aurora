@@ -55,7 +55,7 @@ export abstract class AbstractScopedStack implements ScopedStack {
 		return stack;
 	}
 	emptyScopeFor(obj: any | any[]): ScopedStack {
-		return new EmptyScopeProvider(obj);
+		return new EmptyScopeProvider(DefaultScopedContext.for(obj));
 	}
 	add(...contexts: ScopedContext[]): number {
 		return this.stack.unshift(...contexts);
