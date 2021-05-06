@@ -7,9 +7,6 @@ export class DefaultScopedContext<T extends object> implements ScopedContext {
 	constructor(protected context: T & { [key: string]: any } & { [key: number]: any }) { }
 	get(propertyKey: PropertyKey): any {
 		const value = this.context[propertyKey as string];
-		if (typeof value === 'function') {
-			return (<Function>value).bind(this.context);
-		}
 		return value;
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
