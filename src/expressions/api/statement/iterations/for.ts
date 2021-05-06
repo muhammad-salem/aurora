@@ -1,9 +1,9 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
-import { AbstractExpressionNode } from '../../abstract.js';
+import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
-import { ReturnValue } from '../../computing/return.js';
+
 
 /**
  * The if statement executes a statement if a specified condition is truthy.
@@ -227,26 +227,14 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack) {
-		const iterable: { [Symbol.asyncIterator](): AsyncIterator<any> } = this.iterable.get(stack);
-		(async () => {
-			for await (const iterator of iterable) {
-				const forOfStack = stack.newStack();
-				this.variable.set(forOfStack, iterator);
-				const result = this.statement.get(forOfStack);
-				// useless case, as it at the end of for statement
-				// an array/block statement, should return last signal
-				if (TerminateNode.ContinueSymbol === result) {
-					continue;
-				}
-				else if (TerminateNode.BreakSymbol === result) {
-					break;
-				}
-				else if (result instanceof ReturnValue) {
-					return result;
-				}
-			}
-		})();
-		return void 0;
+		const iterable: AsyncIterable<any> = this.iterable.get(stack);
+		const forAwaitBody = (iterator: any): any => {
+			const forOfStack = stack.newStack();
+			this.variable.set(forOfStack, iterator);
+			const result = this.statement.get(forOfStack);
+			return result;
+		};
+		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
 	}
 	entry(): string[] {
 		return [];
