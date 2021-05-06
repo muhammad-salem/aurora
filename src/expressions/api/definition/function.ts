@@ -102,7 +102,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		let func: Function;
 		switch (this.type) {
 			case FunctionType.ASYNC:
-				func = async function (this: any, ...args: any[]) {
+				func = async function (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
@@ -143,7 +143,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionType.GENERATOR:
-				func = function* (this: any, ...args: any[]) {
+				func = function* (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
@@ -157,7 +157,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionType.ASYNC_GENERATOR:
-				func = async function* (this: any, ...args: any[]) {
+				func = async function* (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
@@ -198,7 +198,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				break;
 			default:
 			case FunctionType.NORMAL:
-				func = function (this: any, ...args: any[]) {
+				func = function (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
