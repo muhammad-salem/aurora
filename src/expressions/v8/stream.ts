@@ -1038,7 +1038,7 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'f':
-				if (/for\s?\(/.test(this.expression.substring(this.pos, this.pos + 5))) {
+				if (/for[\s\(]/.test(this.expression.substring(this.pos, this.pos + 4))) {
 					this.current = this.newToken(Token.FOR);
 					this.pos += 3;
 					return true;
