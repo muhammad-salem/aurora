@@ -69,11 +69,15 @@ export class PipelineNode extends AbstractExpressionNode {
 		return [
 			...this.func.entry(),
 			...this.param.entry(),
-			...(this.args.filter(arg => arg !== '?') as ExpressionNode[]).flatMap(arg => arg.entry!())
+			...(this.args.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(arg => arg.entry!())
 		];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [
+			...this.func.event(),
+			...this.param.event(),
+			...(this.args.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(arg => arg.event!())
+		];
 	}
 	toString() {
 		return `${this.param.toString()} |> ${this.func.toString()}${this.args.flatMap(arg => `:${arg.toString()}`).join('')}`;
