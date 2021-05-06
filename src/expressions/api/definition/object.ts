@@ -18,10 +18,13 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
 		return this.value;
 	}
 	set(stack: ScopedStack, value: any) {
-		return stack.set(this.name.get(stack), value);
+		throw new Error('ObjectLiteralPropertyNode#set() has no implementation');
 	}
-	get(stack: ScopedStack, thisContext?: object): any {
-		return this.value.get(stack, thisContext);
+	get(stack: ScopedStack, thisContext: ThisType<any>): any {
+		const name = this.name.get(stack);
+		const value = this.value.get(stack);
+		Object.defineProperty(thisContext, name, { value });
+		return value;
 	}
 	entry(): string[] {
 		return [];
@@ -49,9 +52,11 @@ export class SetPropertyNode extends ObjectLiteralPropertyNode {
 	set(stack: ScopedStack, value: any) {
 		return true;
 	}
-	get(stack: ScopedStack, thisContext: ThisType<any>): void {
-		const set: (v: any) => void = this.value.get(stack, thisContext);
-		Object.defineProperty(thisContext, this.name.get(stack), { set });
+	get(stack: ScopedStack, thisContext: ThisType<any>): (v: any) => void {
+		const name = this.name.get(stack);
+		const set: (v: any) => void = this.value.get(stack);
+		Object.defineProperty(thisContext, name, { set });
+		return set;
 	}
 }
 
@@ -63,9 +68,11 @@ export class GetPropertyNode extends ObjectLiteralPropertyNode {
 	set(stack: ScopedStack, value: any) {
 		return true;
 	}
-	get(stack: ScopedStack, thisContext: ThisType<any>): void {
-		const get: () => any = this.value.get(stack, thisContext);
-		Object.defineProperty(thisContext, this.name.get(stack), { get });
+	get(stack: ScopedStack, thisContext: ThisType<any>): () => any {
+		const name = this.name.get(stack);
+		const get: () => any = this.value.get(stack);
+		Object.defineProperty(thisContext, name, { get });
+		return get;
 	}
 }
 
@@ -85,8 +92,9 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 	}
 	get(stack: ScopedStack) {
 		const newObject = Object.create(null);
-		const objectScope = stack.emptyScopeFor(newObject);
-		this.properties.forEach(prop => prop.set(objectScope, prop.get(stack, newObject)));
+		for (const property of this.properties) {
+			property.get(stack, newObject);
+		}
 		return newObject;
 	}
 	entry(): string[] {
