@@ -23,7 +23,7 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
 	get(stack: ScopedStack, thisContext: ThisType<any>): any {
 		const name = this.name.get(stack);
 		const value = this.value.get(stack);
-		Object.defineProperty(thisContext, name, { value });
+		Object.defineProperty(thisContext, name, { value, configurable: true, enumerable: true, writable: true });
 		return value;
 	}
 	entry(): string[] {
@@ -55,7 +55,7 @@ export class SetPropertyNode extends ObjectLiteralPropertyNode {
 	get(stack: ScopedStack, thisContext: ThisType<any>): (v: any) => void {
 		const name = this.name.get(stack);
 		const set: (v: any) => void = this.value.get(stack);
-		Object.defineProperty(thisContext, name, { set });
+		Object.defineProperty(thisContext, name, { set, configurable: true, enumerable: true });
 		return set;
 	}
 }
@@ -71,7 +71,7 @@ export class GetPropertyNode extends ObjectLiteralPropertyNode {
 	get(stack: ScopedStack, thisContext: ThisType<any>): () => any {
 		const name = this.name.get(stack);
 		const get: () => any = this.value.get(stack);
-		Object.defineProperty(thisContext, name, { get });
+		Object.defineProperty(thisContext, name, { get, configurable: true, enumerable: true });
 		return get;
 	}
 }
