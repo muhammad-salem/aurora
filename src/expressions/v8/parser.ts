@@ -828,21 +828,20 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.L_PARENTHESES);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
-		const body: ExpressionNode = this.parseFunctionBody();
+		const body = this.parseFunctionBody();
 		return new FunctionDeclarationNode(formals, body, flag, name, functionInfo.rest);
 	}
-	protected parseFunctionBody(): ExpressionNode {
+	protected parseFunctionBody(): ExpressionNode[] {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
-		let expression: ExpressionNode;
 		if (isExpression) {
-			expression = this.parseAssignmentExpression();
+			const expression = this.parseAssignmentExpression();
+			return [expression];
 		} else {
 			this.expect(Token.L_CURLY);
 			const list = this.parseStatementList(Token.R_CURLY);
 			this.expect(Token.R_CURLY);
-			expression = new BlockNode(list);
+			return list;
 		}
-		return expression;
 	}
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
 		// StatementList ::
