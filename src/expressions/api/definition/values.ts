@@ -80,6 +80,9 @@ export class StringNode extends AbstractLiteralNode<string> {
 		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
 			this.quote = firstChar;
 			this.value = `"${value.substring(1, value.length - 1)}"`;
+		} else {
+			this.quote = '';
+			this.value = value;
 		}
 	}
 	getQuote() {
