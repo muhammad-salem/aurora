@@ -136,12 +136,10 @@ export abstract class AbstractParser {
 		}
 		return false;
 	}
-	protected isEvalOrArguments(value: ExpressionNode): boolean {
-		const next = this.scanner.peek();
-		if (next.value?.toString() === 'eval') {
-			this.scanner.next();
+	protected isEvalOrArguments(name: ExpressionNode): boolean {
+		if (name.toString() === 'eval') {
 			return true;
-		} else if (next.value instanceof IdentifierNode) {
+		} else if (name.toString() === 'arguments') {
 			return true;
 		}
 		return false;
@@ -615,11 +613,10 @@ export class JavaScriptParser extends AbstractParser {
 				if (this.isEvalOrArguments(name)) {
 					throw new Error(this.errorMessage(`Strict Eval Arguments`));
 				}
-				if (this.peekInOrOf()) {
-					break;
-					// // Assignments need the variable expression for the assignment LHS, and
-					// // for of/in will need it later, so create the expression now.
-				}
+				// if (this.peekInOrOf()) {
+				// 	// // Assignments need the variable expression for the assignment LHS, and
+				// 	// // for of/in will need it later, so create the expression now.
+				// }
 			} else {
 				name = this.parseBindingPattern();
 			}
