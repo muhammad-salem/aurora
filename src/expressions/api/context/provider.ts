@@ -1,4 +1,4 @@
-import type { ScopedContext, ScopedStack } from '../scope.js';
+import type { AsyncIterableInfo, AwaitPromiseInfo, ScopedContext, ScopedStack } from '../scope.js';
 
 export class DefaultScopedContext<T extends object> implements ScopedContext {
 	static for<T extends object>(context: T) {
@@ -39,6 +39,10 @@ export class EmptyScopedContext extends DefaultScopedContext<any> {
 export abstract class AbstractScopedStack implements ScopedStack {
 	abstract readonly localScop: ScopedContext;
 	abstract readonly stack: Array<ScopedContext>;
+
+	awaitPromise: Array<AwaitPromiseInfo> = [];
+
+	forAwaitAsyncIterable?: AsyncIterableInfo;
 
 	newStack(): ScopedStack {
 		const stack = new (this.constructor as (new ([]) => ScopedStack))(this.stack.slice());
@@ -91,6 +95,10 @@ export abstract class AbstractScopedStack implements ScopedStack {
 	}
 	getProviderBy(propertyKey: PropertyKey): object | undefined {
 		return this.stack.find(context => context.has(propertyKey))?.getProviderBy(propertyKey);
+	}
+
+	resolveAwait(value: AwaitPromiseInfo): void {
+		this.awaitPromise.push(value);
 	}
 }
 

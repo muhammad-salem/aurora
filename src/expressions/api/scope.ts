@@ -28,8 +28,20 @@ export interface ScopedContext {
 	getProviderBy(propertyKey: PropertyKey): object | undefined;
 }
 
+export interface AwaitPromiseInfo {
+	promise: Promise<any>;
+	node: { set(stack: ScopedStack, value: any): any; };
+}
+
+export interface AsyncIterableInfo {
+	iterable: AsyncIterable<any>
+	forAwaitBody: (iterator: any) => any;
+}
+
 export interface ScopedStack extends ScopedContext {
 	readonly localScop: ScopedContext;
+	awaitPromise: Array<AwaitPromiseInfo>;
+	forAwaitAsyncIterable?: AsyncIterableInfo;
 	/**
 	 * add one or many context scopes on the top of the current stack
 	 * @param contexts 
@@ -80,4 +92,6 @@ export interface ScopedStack extends ScopedContext {
 	 * @param obj create an empty stack for this provided object, as local scope context
 	 */
 	emptyScopeFor(obj: any | any[]): ScopedStack;
+
+	resolveAwait(value: AwaitPromiseInfo): void;
 }
