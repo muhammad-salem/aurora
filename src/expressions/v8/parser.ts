@@ -3,18 +3,24 @@ import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
 	OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier,
-	AsyncIdentifier, NullNode, AbstractLiteralNode, TemplateLiteralsNode
+	AsyncIdentifier, NullNode, TemplateLiteralsNode, StringNode
 } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
-import { ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode, FunctionType, FormalParamterNode } from '../api/definition/function.js';
+import {
+	ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode,
+	FunctionType, FormalParamterNode
+} from '../api/definition/function.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
 import { NewNode } from '../api/computing/new.js';
 import { SpreadNode } from '../api/computing/spread.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { GroupingNode } from '../api/operators/grouping.js';
 import { AccessNode, ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
-import { GetPropertyNode, ObjectLiteralNode, ObjectLiteralPropertyNode, SetPropertyNode } from '../api/definition/object.js';
+import {
+	GetPropertyNode, ObjectLiteralNode,
+	ObjectLiteralPropertyNode, SetPropertyNode
+} from '../api/definition/object.js';
 import { ArrayLiteralNode } from '../api/definition/array.js';
 import { FunctionCallNode } from '../api/computing/function.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
@@ -1356,14 +1362,14 @@ export class JavaScriptParser extends AbstractParser {
 				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 
-				const value = this.parseFunctionLiteral(propInfo.funcFlag, nameExpression);
+				const value = this.parseFunctionLiteral(propInfo.funcFlag);
 				return new ObjectLiteralPropertyNode(nameExpression, value);
 			}
 
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
-				const value = this.parseFunctionLiteral(propInfo.funcFlag, nameExpression);
+				const value = this.parseFunctionLiteral(propInfo.funcFlag);
 				return new (isGet ? GetPropertyNode : SetPropertyNode)(nameExpression, value);
 			}
 
@@ -1407,10 +1413,10 @@ export class JavaScriptParser extends AbstractParser {
 		let propertyName: ExpressionNode;
 		switch (nextToken.token) {
 			case Token.IDENTIFIER:
-				//   identifier -> "identifier"
-				this.consume(nextToken.token);
-				propertyName = nextToken.getValue();
-				break;
+			//   identifier -> "identifier"
+			// this.consume(nextToken.token);
+			// propertyName = nextToken.getValue();
+			// break;
 			case Token.STRING:
 			case Token.NUMBER:
 			case Token.BIGINT:
@@ -1418,7 +1424,7 @@ export class JavaScriptParser extends AbstractParser {
 				//   12.3 -> "12.3"
 				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
-				propertyName = new IdentifierNode((nextToken.getValue() as AbstractLiteralNode<string>).getValue());
+				propertyName = new StringNode((nextToken.getValue().toString()));
 				break;
 			case Token.L_BRACKETS:
 				// [Symbol.iterator]
@@ -1444,7 +1450,7 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				propertyName = this.parsePropertyName();
+				propertyName = new StringNode(this.parsePropertyName().toString());
 				break;
 		}
 		if (propInfo.kind === PropertyKind.NotSet) {
