@@ -339,6 +339,9 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
+		if (tryBlock instanceof BlockNode) {
+			tryBlock.isStatement = true;
+		}
 		let peek = this.peek();
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
@@ -352,17 +355,23 @@ export class JavaScriptParser extends AbstractParser {
 				this.expect(Token.R_PARENTHESES);
 			}
 			catchBlock = this.parseBlock();
+			if (catchBlock instanceof BlockNode) {
+				catchBlock.isStatement = true;
+			}
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
+			if (finallyBlock instanceof BlockNode) {
+				finallyBlock.isStatement = true;
+			}
 		}
 		return new TryCatchNode(tryBlock, catchVar, catchBlock, finallyBlock);
 	}
 	protected parseBlock(): ExpressionNode {
 		this.expect(Token.L_CURLY);
 		const statements: ExpressionNode[] = [];
-		const block = new BlockNode(statements)
+		const block = new BlockNode(statements, false);
 		while (this.peek().isNotType(Token.R_CURLY)) {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
@@ -447,6 +456,9 @@ export class JavaScriptParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.consume(Token.R_PARENTHESES);
 		const thenStatement = this.parseStatement();
+		if (thenStatement instanceof BlockNode) {
+			thenStatement.isStatement = true;
+		}
 		let elseStatement;
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
@@ -459,6 +471,9 @@ export class JavaScriptParser extends AbstractParser {
 		//   'do' Statement 'while' '(' Expression ')' ';'
 		this.consume(Token.DO);
 		const body = this.parseStatement();
+		if (body instanceof BlockNode) {
+			body.isStatement = true;
+		}
 		this.expect(Token.WHILE);
 		this.expect(Token.L_PARENTHESES);
 		const condition = this.parseExpression();
@@ -474,6 +489,9 @@ export class JavaScriptParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseStatement();
+		if (body instanceof BlockNode) {
+			body.isStatement = true;
+		}
 		return new WhileNode(condition, body);
 	}
 	protected parseThrowStatement(): ExpressionNode {
@@ -526,7 +544,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				statements.push(statement);
 			}
-			const block = new BlockNode(statements);
+			const block = new BlockNode(statements, true);
 			const clause = defaultSeen ? new DefaultExpression(block) : new CaseExpression(label!, block);
 			cases.push(clause);
 		}
@@ -566,6 +584,9 @@ export class JavaScriptParser extends AbstractParser {
 			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
 			this.expect(Token.R_PARENTHESES)
 			const statement = this.parseStatement();
+			if (statement instanceof BlockNode) {
+				statement.isStatement = true;
+			}
 			if (isAwait && forMode === 'OF') {
 				return new ForAwaitOfNode(initializer, object, statement);
 			} else if (forMode === 'OF') {
@@ -588,6 +609,9 @@ export class JavaScriptParser extends AbstractParser {
 			this.expect(Token.R_PARENTHESES);
 		}
 		const body = this.parseStatement();
+		if (body instanceof BlockNode) {
+			body.isStatement = true;
+		}
 		return new ForNode(body, initializer, condition, finalExpression);
 	}
 	protected parseVariableDeclarations(): ExpressionNode {

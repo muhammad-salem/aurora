@@ -11,9 +11,9 @@ import { TerminateNode } from './terminate.js';
 @Deserializer('block')
 export class BlockNode extends AbstractExpressionNode {
 	static fromJSON(node: BlockNode, deserializer: NodeDeserializer): BlockNode {
-		return new BlockNode(node.statements.map(line => deserializer(line)));
+		return new BlockNode(node.statements.map(line => deserializer(line)), node.isStatement);
 	}
-	constructor(private statements: ExpressionNode[]) {
+	constructor(private statements: ExpressionNode[], public isStatement: boolean) {
 		super();
 	}
 	getStatements() {
@@ -23,18 +23,20 @@ export class BlockNode extends AbstractExpressionNode {
 		throw new Error(`BlockNode#set() has no implementation.`);
 	}
 	get(stack: ScopedStack) {
-		let value;
 		const stackForBlock = stack.newStack();
 		for (const node of this.statements) {
-			value = node.get(stackForBlock);
-			if (TerminateNode.BreakSymbol === value) {
-				break;
-			}
-			if (TerminateNode.ContinueSymbol === value) {
-				continue;
-			}
-			if (value instanceof ReturnValue) {
-				return value.value;
+			const value = node.get(stackForBlock);
+			if (this.isStatement) {
+				switch (true) {
+					case TerminateNode.BreakSymbol === value:
+					case TerminateNode.ContinueSymbol === value:
+					case value instanceof ReturnValue:
+						return value;
+				}
+			} else {
+				if (value instanceof ReturnValue) {
+					return value.value;
+				}
 			}
 		}
 	}
@@ -48,6 +50,6 @@ export class BlockNode extends AbstractExpressionNode {
 		return `{ ${this.statements.map(node => node.toString()).join('; ')}; }`;
 	}
 	toJson(): object {
-		return { statements: this.statements.map(node => node.toJSON()) };
+		return { statements: this.statements.map(node => node.toJSON()), isStatement: this.isStatement };
 	}
 }
