@@ -669,11 +669,11 @@ export class JavaScriptParser extends AbstractParser {
 		if (next.isType(Token.IDENTIFIER)) {
 			return next.getValue();
 		}
-		else if ('set' === next.getValue().toString()) {
+		else if (next.isType(Token.SET)) {
 			const value = this.parseFunctionDeclaration();
 			return new SetPropertyNode(next.getValue(), value);
 		}
-		else if ('get' === next.getValue().toString()) {
+		else if (next.isType(Token.GET)) {
 			const value = this.parseFunctionDeclaration();
 			return new GetPropertyNode(next.getValue(), value);
 		}
