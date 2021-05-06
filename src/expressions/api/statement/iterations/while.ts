@@ -1,9 +1,8 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
-import { AbstractExpressionNode } from '../../abstract.js';
+import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
-import { ReturnValue } from '../../computing/return.js';
 
 /**
  * The while statement creates a loop that executes a specified
