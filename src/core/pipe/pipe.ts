@@ -18,8 +18,9 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 }
 
 export class PipeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
+	static PipeContext = new Map<string, Function>();
 	constructor() {
-		super(new Map());
+		super(PipeProvider.PipeContext);
 	}
 	has(pipeName: string): boolean {
 		if (this.context.has(pipeName)) {
