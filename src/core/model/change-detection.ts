@@ -48,18 +48,18 @@ export function defineModel<T>(object: T): Model & T {
 	return object as Model & T;
 }
 
-export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback: SourceFollowerCallback) {
+export function subscribe1way(obj1: {}, obj1PropName: string, callback: SourceFollowerCallback, obj2: {}, obj2PropName?: string) {
 	let subject1 = defineModel<object>(isHTMLComponent(obj1) ? obj1._model : obj1);
 	let subject2 = defineModel<object>(isHTMLComponent(obj2) ? obj2._model : obj2);
 	subject1.subscribeModel(obj1PropName, (stack: any[]) => {
 		callback(stack);
-		if (!stack.includes(subject2)) {
+		if (obj2PropName && !stack.includes(subject2)) {
 			subject2.emitChangeModel(obj2PropName, stack);
 		}
 	});
 }
 
-export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1: SourceFollowerCallback, callback2: SourceFollowerCallback) {
+export function subscribe2way(obj1: {}, obj1PropName: string, callback1: SourceFollowerCallback, obj2: {}, obj2PropName: string, callback2: SourceFollowerCallback) {
 	let subject1 = defineModel(isHTMLComponent(obj1) ? obj1._model : obj1);
 	let subject2 = defineModel(isHTMLComponent(obj2) ? obj2._model : obj2);
 	subject1.subscribeModel(obj1PropName, (source: any[]) => {

@@ -324,7 +324,7 @@ export class ComponentRender<T> {
 		let rightNode = attr.valueNode;
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 		contextStack = contextStack.stackFor({ this: element });
-		const callback1 = () => {
+		const callback = () => {
 			forwardData.get(contextStack);
 		};
 		rightNode.event().forEach(eventName => {
@@ -332,7 +332,7 @@ export class ComponentRender<T> {
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-					subscribe1way(pipe, eventName, element, attr.name, callback1);
+					subscribe1way(pipe, eventName, callback, element, attr.name);
 					if (isOnDestroy(pipe)) {
 						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
 					}
@@ -340,11 +340,11 @@ export class ComponentRender<T> {
 					pipeContext[eventName] = pipe.transform.bind(pipe);
 					contextStack.addProvider(pipeContext);
 				} else {
-					subscribe1way(context, eventName, element, attr.name, callback1);
+					subscribe1way(context, eventName, callback, element, attr.name);
 				}
 			}
 		});
-		callback1();
+		callback();
 	}
 	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: ScopedStack) {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
@@ -365,7 +365,7 @@ export class ComponentRender<T> {
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-					subscribe2way(pipe, eventName, element, attr.name, callback1, callback2);
+					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
 					if (isOnDestroy(pipe)) {
 						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
 					}
@@ -373,7 +373,7 @@ export class ComponentRender<T> {
 					pipeContext[eventName] = pipe.transform.bind(pipe);
 					contextStack.addProvider(pipeContext);
 				} else {
-					subscribe2way(context, eventName, element, attr.name, callback1, callback2);
+					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
 				}
 			}
 		});

@@ -20,7 +20,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 		const conditionNode = JavaScriptParser.parse(this.directive.directiveValue);
 
 		this.ifStack = this.contextStack.newStack();
-		const callback1: SourceFollowerCallback = (stack: any[]) => {
+		const callback: SourceFollowerCallback = (stack: any[]) => {
 			this.condition = conditionNode.get(this.ifStack);
 			this._updateView();
 			stack.push(this);
@@ -29,11 +29,11 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 		conditionNode.event().forEach(propertyName => {
 			const context = this.ifStack.getProviderBy(propertyName);
 			if (context) {
-				subscribe1way(context, propertyName, this, 'condition', callback1);
+				subscribe1way(context, propertyName, callback, this, 'condition');
 			}
 		});
 
-		callback1([]);
+		callback([]);
 	}
 
 	private _updateView() {
