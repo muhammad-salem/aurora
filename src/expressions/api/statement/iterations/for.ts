@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { ScopedStack } from '../../scope.js';
-import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../../abstract.js';
+import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
 
@@ -63,7 +63,7 @@ export class ForNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [...this.initialization?.event() || [], ...this.condition?.event() || []];
 	}
 	toString(): string {
 		return `for (${this.initialization?.toString()};${this.condition?.toString()};${this.initialization?.toString()}) ${this.statement.toString()}`;
@@ -126,7 +126,7 @@ export class ForOfNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.iterable.event();
 	}
 	toString(): string {
 		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
@@ -188,7 +188,7 @@ export class ForInNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.object.event();
 	}
 	toString(): string {
 		return `for (${this.variable.toString()} in ${this.object.toString()}) ${this.statement.toString()}`;
@@ -240,7 +240,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.iterable.event();
 	}
 	toString(): string {
 		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
