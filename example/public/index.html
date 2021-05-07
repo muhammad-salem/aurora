@@ -44,6 +44,12 @@
 	</template> -->
 
 	<script type="module" src="/web_modules/@ibyar/example/dist/index.js"></script>
+	<script type="text/javascript">
+		window.onload = function () {
+			const time = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart;;
+			console.log("Time until everything loaded: ", time);
+		};
+	</script>
 </body>
 
 </html>
