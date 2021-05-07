@@ -1,15 +1,5 @@
-import { ScopeProvider, ScopedContext, ReadOnlyScopedContext } from '@ibyar/expressions';
-import { PipeScopeProvider } from '../pipe/pipe.js';
-
-export class DOMStack extends ScopeProvider {
-	static pipeProvider: ScopedContext = new PipeScopeProvider();
-	findContext(propertyKey: PropertyKey): ScopedContext {
-		if (DOMStack.pipeProvider.has(propertyKey)) {
-			return DOMStack.pipeProvider;
-		}
-		return super.findContext(propertyKey);
-	}
-}
+import { ScopeProvider, ReadOnlyScopedContext } from '@ibyar/expressions';
+import { PipeProvider, AsyncPipeProvider } from '../pipe/pipe.js';
 
 const Constant: { [k: string]: any } = {
 	// math
@@ -82,5 +72,4 @@ const Constant: { [k: string]: any } = {
 };
 
 const readOnlyProvider = new ReadOnlyScopedContext(Constant);
-export const documentStack = new DOMStack([readOnlyProvider, new PipeScopeProvider()]);
-// documentStack.addProvider(new PipeScopeProvider());
+export const documentStack = new ScopeProvider([readOnlyProvider, new PipeProvider(), new AsyncPipeProvider()]);
