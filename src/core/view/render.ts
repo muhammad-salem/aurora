@@ -8,7 +8,7 @@ import {
 	DOMParentNode, isTagNameNative, isValidCustomElementName,
 	LiveAttribute, LiveTextContent, NodeFactory, TextContent
 } from '@ibyar/elements';
-import { ComponentRef, ListenerRef, PropertyRef } from '../component/component.js';
+import { ComponentRef, ListenerRef } from '../component/component.js';
 import { ElementMutation } from './mutation.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
@@ -16,7 +16,7 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { isModel, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import { isModel, Model, subscribe1way, subscribe2way } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeTransform } from '../pipe/pipe.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
@@ -85,20 +85,22 @@ export class ComponentRender<T> {
 		);
 	}
 	handelHostListener(listener: ListenerRef) {
-		let eventName: string = listener.eventName,
-			source: HTMLElement | Window,
-			eventCallback: Function = this.view._model[listener.modelCallbackName];
+		let eventName: string = listener.eventName, source: HTMLElement | Window;
 		if (listener.eventName.includes(':')) {
 			const eventSource = eventName.substring(0, eventName.indexOf(':'));
 			eventName = eventName.substring(eventName.indexOf(':') + 1);
 			if ('window' === eventSource.toLowerCase()) {
 				source = window;
-				this.addNativeEventListener(source, eventName, eventCallback);
+				this.addNativeEventListener(source, eventName, (event: any) => {
+					this.view._model[listener.modelCallbackName](event);
+				});
 				return;
 			} else if (eventSource in this.view) {
 				source = Reflect.get(this.view, eventSource);
 				if (!Reflect.has(source, '_model')) {
-					this.addNativeEventListener(source, eventName, eventCallback);
+					this.addNativeEventListener(source, eventName, (event: any) => {
+						this.view._model[listener.modelCallbackName](event);
+					});
 					return;
 				}
 			} else {
@@ -107,21 +109,25 @@ export class ComponentRender<T> {
 		} else {
 			source = this.view;
 		}
-		const sourceModel = Reflect.get(source, '_model');
+		const sourceModel = Reflect.get(source, '_model') as Model & { [key: string]: EventEmitter<any> };
 		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
 		if (output) {
-			(sourceModel[(output as PropertyRef).modelProperty] as EventEmitter<any>).subscribe((value: any) => {
-				eventCallback.call(sourceModel, value);
+			sourceModel[output.modelProperty].subscribe((value: any) => {
+				this.view._model[listener.modelCallbackName](value);
 			});
 		}
 		else if (Reflect.has(source, 'on' + eventName)) {
-			this.addNativeEventListener(source, eventName, eventCallback);
+			this.addNativeEventListener(source, eventName, (event: any) => {
+				this.view._model[listener.modelCallbackName](event);
+			});
 		}
 		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
 		// 	this.addNativeEventListener(this.view, eventName, eventCallback);
 		// }
 		else if (eventName in this.view._model) {
-			this.addNativeEventListener(this.view, eventName, eventCallback);
+			this.addNativeEventListener(this.view, eventName, (event: any) => {
+				this.view._model[listener.modelCallbackName](event);
+			});
 		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
@@ -316,7 +322,7 @@ export class ComponentRender<T> {
 		let rightNode = attr.valueNode;
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 		contextStack = contextStack.stackFor({ this: element });
-		const callback1: SourceFollowerCallback = () => {
+		const callback1 = () => {
 			forwardData.get(contextStack);
 		};
 		rightNode.event().forEach(eventName => {
@@ -336,7 +342,7 @@ export class ComponentRender<T> {
 				}
 			}
 		});
-		callback1([]);
+		callback1();
 	}
 	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: ScopedStack) {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
@@ -345,10 +351,10 @@ export class ComponentRender<T> {
 		let backwardData = new AssignmentNode('=', rightNode, leftNode);
 
 		contextStack = contextStack.stackFor({ this: element });
-		const callback1: SourceFollowerCallback = () => {
+		const callback1 = () => {
 			forwardData.get(contextStack);
 		};
-		const callback2: SourceFollowerCallback = () => {
+		const callback2 = () => {
 			backwardData.get(contextStack);
 		};
 
@@ -368,12 +374,9 @@ export class ComponentRender<T> {
 					subscribe2way(context, eventName, element, attr.name, callback1, callback2);
 				}
 			}
-			if (context) {
-
-			}
 		});
 
-		callback1([]);
+		callback1();
 		const changeEventName = getChangeEventName(element, attr.name);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {

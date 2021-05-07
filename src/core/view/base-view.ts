@@ -6,7 +6,7 @@ import {
 import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
-import { defineModel, isModel, Model } from '../model/change-detection.js';
+import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 
 export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
@@ -341,8 +341,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 				});
 			}
 			else {
-				// this._changeObservable.subscribe(eventName, (listener as EventListener));
-				this._model.subscribeModel(eventName, listener as EventListener);
+				this._model.subscribeModel(eventName, listener as () => void);
 			}
 		}
 

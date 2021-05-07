@@ -1,8 +1,9 @@
 import { isHTMLComponent } from '../component/custom-element.js';
 
+export type SourceFollowerCallback = (stack: any[]) => void;
 export interface Model {
 	__observable: { [key: string]: Function[] };
-	subscribeModel(eventName: string, callback: Function): void;
+	subscribeModel(eventName: string, callback: SourceFollowerCallback): void;
 	emitChangeModel(eventName: string, source?: any[]): void;
 }
 
@@ -47,40 +48,29 @@ export function defineModel<T>(object: T): Model & T {
 	return object as Model & T;
 }
 
-export type SourceFollowerCallback = (stack: any[]) => void;
-
-export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback?: SourceFollowerCallback) {
-	let subject1 = defineModel(isHTMLComponent(obj1) ? obj1._model : obj1);
-	let subject2 = defineModel(isHTMLComponent(obj2) ? obj2._model : obj2);
+export function subscribe1way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback: SourceFollowerCallback) {
+	let subject1 = defineModel<object>(isHTMLComponent(obj1) ? obj1._model : obj1);
+	let subject2 = defineModel<object>(isHTMLComponent(obj2) ? obj2._model : obj2);
 	subject1.subscribeModel(obj1PropName, (stack: any[]) => {
-		if (callback) {
-			callback(stack);
-		}
-		// updateValue(obj1, obj1ChildName, obj2, obj2ChildName);
-		if (!stack.includes(subject2) && isModel(subject2)) {
+		callback(stack);
+		if (!stack.includes(subject2)) {
 			subject2.emitChangeModel(obj2PropName, stack);
 		}
 	});
 }
 
-export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1?: SourceFollowerCallback, callback2?: SourceFollowerCallback) {
+export function subscribe2way(obj1: {}, obj1PropName: string, obj2: {}, obj2PropName: string, callback1: SourceFollowerCallback, callback2: SourceFollowerCallback) {
 	let subject1 = defineModel(isHTMLComponent(obj1) ? obj1._model : obj1);
 	let subject2 = defineModel(isHTMLComponent(obj2) ? obj2._model : obj2);
 	subject1.subscribeModel(obj1PropName, (source: any[]) => {
-		if (callback1) {
-			callback1(source);
-		}
-		// updateValue(obj1, obj1ChildName, obj2, obj2ChildName);
-		if (!source.includes(subject2) && isModel(subject2)) {
+		callback1(source);
+		if (!source.includes(subject2)) {
 			subject2.emitChangeModel(obj2PropName, source);
 		}
 	});
 	subject2.subscribeModel(obj2PropName, (stack: any[]) => {
-		if (callback2) {
-			callback2(stack);
-		}
-		// updateValue(obj2, obj2ChildName, obj1, obj1ChildName);
-		if (!stack.includes(subject1) && isModel(subject1)) {
+		callback2(stack);
+		if (!stack.includes(subject1)) {
 			subject1.emitChangeModel(obj1PropName, stack);
 		}
 	});
