@@ -9,6 +9,35 @@ type Token = (token: string) => Token;
 
 type ChildNode = DOMElementNode<any> | CommentNode | string;
 
+export class EscapeHTMLCharacter {
+	static ESCAPE_MAP: { [key: string]: string } = {
+		'&amp;': '&',
+		'&lt;': '<',
+		'&gt;': '>',
+		'&quot;': '"',
+		'&#x27;': "'",
+		'&#x60;': '`'
+	};
+	test: RegExp;
+	replace: RegExp;
+	constructor() {
+		const escapeRegexSource = '(?:' + Object.keys(EscapeHTMLCharacter.ESCAPE_MAP).join('|') + ')';
+		this.test = new RegExp(escapeRegexSource);
+		this.replace = new RegExp(escapeRegexSource, 'g');
+	}
+
+	escaper(match: string): string {
+		return EscapeHTMLCharacter.ESCAPE_MAP[match];
+	}
+
+	unescape(text: string): string {
+		if (!text) {
+			return text;
+		}
+		return this.test.test(text) ? text.replace(this.replace, this.escaper) : text;
+	}
+}
+
 export class NodeParser {
 
 	private index: number;
@@ -31,6 +60,8 @@ export class NodeParser {
 	private propertyName: string;
 	private propertyValue: string;
 	private propType: 'attr' | 'ref-name' | 'input' | 'output' | 'two-way';
+
+	private escaper = new EscapeHTMLCharacter();
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -63,6 +94,7 @@ export class NodeParser {
 	private parseText(token: string) {
 		if (token === '<') {
 			if (this.tempText) {
+				this.tempText = this.escaper.unescape(this.tempText);
 				this.stackTrace.push(this.tempText);
 				this.popElement();
 				this.tempText = '';
@@ -96,6 +128,7 @@ export class NodeParser {
 			return this.parseComment;
 		}
 		else if (token === '>' && this.commentCloseCount === 2) {
+			this.tempText = this.escaper.unescape(this.tempText);
 			this.stackTrace.push(new CommentNode(this.tempText.trim()));
 			this.popElement();
 			this.tempText = '';
@@ -241,6 +274,7 @@ export class NodeParser {
 
 	private parsePropertyValue(token: string) {
 		if (/"/.test(token)) {
+			this.tempText = this.escaper.unescape(this.tempText);
 			this.propertyValue = this.tempText;
 			switch (this.propType) {
 				case 'input':
