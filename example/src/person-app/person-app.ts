@@ -28,6 +28,21 @@ export class PersonApp {
 
 	people = [this.person1, this.person2, this.person3, this.person4];
 
+	asyncIterable = {
+		[Symbol.asyncIterator]() {
+			return {
+				i: 0,
+				next() {
+					if (this.i < 3) {
+						return Promise.resolve({ value: this.i++, done: false });
+					}
+
+					return Promise.resolve({ done: true });
+				}
+			};
+		}
+	};
+
 	@HostListener('person1:select')
 	onClose(data: any) {
 		console.log('AppRoot => person1:select', data);

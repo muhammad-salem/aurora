@@ -35,19 +35,30 @@
 	</div>
 </div>
 
-<!-- <h1> For Of Directive Test</h1>
+<h1> For Of Directive Test</h1>
+<h5>let user of people</h5>
 <div class="row">
-	<div class="col-3" *for="let person of people">
-		<p>Name: <span>{{person.name}}</span></p>
-		<p>Age: <span>{{person.age}}</span></p>
+	<div class="col-3" *for="let user of people">
+		<p>Name: <span>{{user.name}}</span></p>
+		<p>Age: <span>{{user.age}}</span></p>
 	</div>
-</div> -->
+</div>
 
 
-<!-- <h1> For in Directive Test</h1>
+<h1> For in Directive Test</h1>
+<h5>let key in person1</h5>
 <div class="row">
-    <div class="col-3" *for="let key in person1">
-        <p>Key: <span>{{key}}</span></p>
-    </div>
-</div> -->
+	<div class="col-3" *for="let key in person1">
+		<p>Key: <span>{{key}}</span></p>
+		<p>Value: <span>{{person1[key]}}</span></p>
+	</div>
+</div>
+
+<h1> For await OF Directive Test</h1>
+<h5>await (let num of asyncIterable)</h5>
+<div class="row">
+	<div class="col-3" *for="await (let num of asyncIterable)">
+		<p>Num: <span>{{num}}</span></p>
+	</div>
+</div>
 <hr>
