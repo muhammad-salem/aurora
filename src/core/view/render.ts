@@ -17,6 +17,7 @@ import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { isModel, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import { AsyncPipeProvider, PipeTransform } from '../pipe/pipe.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -321,7 +322,18 @@ export class ComponentRender<T> {
 		rightNode.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
-				subscribe1way(context, eventName, element, attr.name, callback1);
+				if (AsyncPipeProvider.AsyncPipeContext === context) {
+					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
+					subscribe1way(pipe, eventName, element, attr.name, callback1);
+					if (isOnDestroy(pipe)) {
+						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+					}
+					const pipeContext: { [key: string]: Function } = {};
+					pipeContext[eventName] = pipe.transform.bind(pipe);
+					contextStack.addProvider(pipeContext);
+				} else {
+					subscribe1way(context, eventName, element, attr.name, callback1);
+				}
 			}
 		});
 		callback1([]);
@@ -343,7 +355,21 @@ export class ComponentRender<T> {
 		rightNode.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
-				subscribe2way(context, eventName, element, attr.name, callback1, callback2);
+				if (AsyncPipeProvider.AsyncPipeContext === context) {
+					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
+					subscribe2way(pipe, eventName, element, attr.name, callback1, callback2);
+					if (isOnDestroy(pipe)) {
+						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+					}
+					const pipeContext: { [key: string]: Function } = {};
+					pipeContext[eventName] = pipe.transform.bind(pipe);
+					contextStack.addProvider(pipeContext);
+				} else {
+					subscribe2way(context, eventName, element, attr.name, callback1, callback2);
+				}
+			}
+			if (context) {
+
 			}
 		});
 
