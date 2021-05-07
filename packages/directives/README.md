@@ -21,7 +21,7 @@ yarn add @ibyar/directives
 ## Supported Directive
 
 - [x] *if
-- [ ] *for
+- [x] *for
 - [ ] *switch
 - [ ] *class
 - [ ] *style
