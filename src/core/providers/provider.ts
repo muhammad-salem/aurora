@@ -62,13 +62,26 @@ export class ClassRegistry {
 		return this.getComponentRef(selector)?.viewClass;
 	}
 
-	hasOutput<T>(model: Object, eventName: string): PropertyRef | boolean {
+	hasOutput<T>(model: Object, eventName: string): PropertyRef | false {
 		if (Reflect.has(model, 'bootstrap')) {
 			const componentRef: ComponentRef<T> = Reflect.get(model, 'bootstrap');
 			if (componentRef.outputs) {
 				for (const out of componentRef.outputs) {
 					if (out.viewAttribute === eventName) {
 						return out;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	hasInput<T>(model: Object, eventName: string): PropertyRef | false {
+		if (Reflect.has(model, 'bootstrap')) {
+			const componentRef: ComponentRef<T> = Reflect.get(model, 'bootstrap');
+			if (componentRef.inputs) {
+				for (const input of componentRef.inputs) {
+					if (input.viewAttribute === eventName) {
+						return input;
 					}
 				}
 			}
@@ -108,11 +121,11 @@ export class ClassRegistry {
 		return undefined;
 	}
 
-	getService<T>(servicName: string): ServiceRef<T> | undefined {
-		for (const servicClass of this.serviceSet) {
-			const servicRef: ServiceRef<T> = getBootstrapMetadata(servicClass.prototype);
-			if (servicRef.name === servicName) {
-				return servicRef;
+	getService<T>(serviceName: string): ServiceRef<T> | undefined {
+		for (const serviceClass of this.serviceSet) {
+			const serviceRef: ServiceRef<T> = getBootstrapMetadata(serviceClass.prototype);
+			if (serviceRef.name === serviceName) {
+				return serviceRef;
 			}
 		}
 		return undefined;
