@@ -7,18 +7,18 @@ import { interval } from 'rxjs';
 	template: `
     <div class="row">
         <input class="col-sm-12" type="text" [(value)]="data1" />
-        <pre class="col-sm-12">{{data1 + (timer |> async)}}</pre>
+        <pre class="col-sm-12">{{data2}} {{timer |> async}}</pre>
     </div>
     <div class="row">
         <input class="col-sm-12" type="text" [(value)]="data2" />
-        <pre class="col-sm-12">{{(data2 |> lowercase) + (timer |> async)}}</pre>
+        <pre class="col-sm-12">{{data2 |> lowercase}} {{timer |> async}}</pre>
     </div>
     <hr />
     `
 })
 export class Binding2Way {
 
-	data1 = 'two way data binding ';
+	data1 = 'two way data binding';
 	data2 = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet';
 
 	timer = interval(1000);
