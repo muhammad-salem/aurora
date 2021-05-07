@@ -1,8 +1,5 @@
 import { DOMElementNode } from '@ibyar/elements';
-import {
-	Directive, OnInit, SourceFollowerCallback,
-	StructuralDirective, subscribe1way
-} from '@ibyar/core';
+import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
 import { ExpressionNode, JavaScriptParser, ScopedStack } from '@ibyar/expressions';
 
 
@@ -26,13 +23,7 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 			stack.push(this);
 		};
 
-		conditionNode.event().forEach(propertyName => {
-			const context = this.ifStack.getProviderBy(propertyName);
-			if (context) {
-				subscribe1way(context, propertyName, callback, this, 'condition');
-			}
-		});
-
+		this.render.subscribeExpressionNode(conditionNode, this.ifStack, callback, this);
 		callback([]);
 	}
 

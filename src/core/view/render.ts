@@ -16,8 +16,8 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { isModel, Model, subscribe1way, subscribe2way } from '../model/change-detection.js';
-import { AsyncPipeProvider, PipeTransform } from '../pipe/pipe.js';
+import { isModel, Model, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -327,24 +327,27 @@ export class ComponentRender<T> {
 		const callback = () => {
 			forwardData.get(contextStack);
 		};
-		rightNode.event().forEach(eventName => {
+		this.subscribeExpressionNode(rightNode, contextStack, callback, element, attr.name);
+		callback();
+	}
+	subscribeExpressionNode(node: ExpressionNode, contextStack: ScopedStack, callback: SourceFollowerCallback, object: object, attrName?: string) {
+		node.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-					subscribe1way(pipe, eventName, callback, element, attr.name);
+					subscribe1way(pipe, eventName, callback, object, attrName);
 					if (isOnDestroy(pipe)) {
 						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
 					}
-					const pipeContext: { [key: string]: Function } = {};
+					const pipeContext: { [key: string]: Function; } = {};
 					pipeContext[eventName] = pipe.transform.bind(pipe);
 					contextStack.addProvider(pipeContext);
-				} else {
-					subscribe1way(context, eventName, callback, element, attr.name);
+				} else if (PipeProvider.PipeContext !== context) {
+					subscribe1way(context, eventName, callback, object, attrName);
 				}
 			}
 		});
-		callback();
 	}
 	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: ScopedStack) {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
@@ -372,7 +375,7 @@ export class ComponentRender<T> {
 					const pipeContext: { [key: string]: Function } = {};
 					pipeContext[eventName] = pipe.transform.bind(pipe);
 					contextStack.addProvider(pipeContext);
-				} else {
+				} else if (PipeProvider.PipeContext !== context) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
 				}
 			}
