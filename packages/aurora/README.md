@@ -84,7 +84,7 @@ see test for more help [`example`](example/)
 ## Built-in Directive
 
 - [x] *if
-- [ ] *for
+- [x] *for
 - [ ] *switch
 - [ ] *class
 - [ ] *style
