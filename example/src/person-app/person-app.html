@@ -26,14 +26,23 @@
 		<person-view #pm4 person="{{person4}}" name="alex" age="29"></person-view>
 	</div>
 </div>
+<h1> For Loop Directive Test</h1>
+<h5>const i = 0; i &lt; people.length; i++</h5>
+<div class="row">
+	<div class="col-3" *for="const i = 0; i < people.length; i++">
+		<p>Name: <span>{{people[i].name}}</span></p>
+		<p>Age: <span>{{people[i].age}}</span></p>
+	</div>
+</div>
 
-<h1> For Of Directive Test</h1>
+<!-- <h1> For Of Directive Test</h1>
 <div class="row">
 	<div class="col-3" *for="let person of people">
 		<p>Name: <span>{{person.name}}</span></p>
 		<p>Age: <span>{{person.age}}</span></p>
 	</div>
-</div>
+</div> -->
+
 
 <!-- <h1> For in Directive Test</h1>
 <div class="row">
