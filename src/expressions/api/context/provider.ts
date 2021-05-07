@@ -4,10 +4,9 @@ export class DefaultScopedContext<T extends object> implements ScopedContext {
 	static for<T extends object>(context: T) {
 		return new DefaultScopedContext(context);
 	}
-	constructor(protected context: T & { [key: string]: any } & { [key: number]: any }) { }
+	constructor(protected context: T) { }
 	get(propertyKey: PropertyKey): any {
-		const value = this.context[propertyKey as string];
-		return value;
+		return Reflect.get(this.context, propertyKey);
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		return Reflect.set(this.context, propertyKey, value);
