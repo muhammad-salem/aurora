@@ -20,7 +20,8 @@ export class ForNode extends AbstractExpressionNode {
 			node.finalExpression && deserializer(node.finalExpression)
 		);
 	}
-	constructor(private statement: ExpressionNode,
+	constructor(
+		private statement: ExpressionNode,
 		private initialization?: ExpressionNode,
 		private condition?: ExpressionNode,
 		private finalExpression?: ExpressionNode) {
@@ -87,11 +88,14 @@ export class ForOfNode extends AbstractExpressionNode {
 			deserializer(node.statement)
 		);
 	}
-	// variable of iterable
-	constructor(private variable: ExpressionNode,
+	constructor(
+		private variable: ExpressionNode,
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
+	}
+	getVariable() {
+		return this.variable;
 	}
 	getIterable() {
 		return this.iterable;
@@ -150,10 +154,14 @@ export class ForInNode extends AbstractExpressionNode {
 		);
 	}
 	// variable of iterable
-	constructor(private variable: ExpressionNode,
+	constructor(
+		private variable: ExpressionNode,
 		private object: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
+	}
+	getVariable() {
+		return this.variable;
 	}
 	getObject() {
 		return this.object;
@@ -167,9 +175,9 @@ export class ForInNode extends AbstractExpressionNode {
 	get(stack: ScopedStack) {
 		const iterable = <object>this.object.get(stack);
 		for (const iterator in iterable) {
-			const forOfStack = stack.newStack();
-			this.variable.set(forOfStack, iterator);
-			const result = this.statement.get(forOfStack);
+			const forInStack = stack.newStack();
+			this.variable.set(forInStack, iterator);
+			const result = this.statement.get(forInStack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -212,10 +220,14 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		);
 	}
 	// variable of iterable
-	constructor(private variable: ExpressionNode,
+	constructor(
+		private variable: ExpressionNode,
 		private iterable: ExpressionNode,
 		private statement: ExpressionNode) {
 		super();
+	}
+	getVariable() {
+		return this.variable;
 	}
 	getIterable() {
 		return this.iterable;
