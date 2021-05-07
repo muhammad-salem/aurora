@@ -1,4 +1,5 @@
 import { ReadOnlyScopedContext } from '@ibyar/expressions';
+import { defineModel, Model } from '../model/change-detection.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
@@ -16,7 +17,7 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 	return Reflect.has(Object.getPrototypeOf(pipe), 'transform');
 }
 
-export class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
+export class PipeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
 	constructor() {
 		super(new Map());
 	}
@@ -25,7 +26,7 @@ export class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Functio
 			return true;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
-		return pipeRef ? true : false;
+		return pipeRef !== undefined && !pipeRef.asynchronous;
 	}
 	get(pipeName: string): any {
 		let transformFunc: Function | undefined;
@@ -33,11 +34,30 @@ export class PipeScopeProvider extends ReadOnlyScopedContext<Map<string, Functio
 			return transformFunc;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
-		if (pipeRef) {
+		if (pipeRef !== undefined && !pipeRef.asynchronous) {
 			const pipe = new pipeRef.modelClass();
 			transformFunc = pipe.transform.bind(pipe);
 			this.context.set(pipeRef.name, transformFunc);
 			return transformFunc;
+		}
+		return void 0;
+	}
+}
+
+export class AsyncPipeProvider extends ReadOnlyScopedContext<object> {
+
+	static AsyncPipeContext = Object.create(null);
+	constructor() {
+		super(AsyncPipeProvider.AsyncPipeContext);
+	}
+	has(pipeName: string): boolean {
+		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		return pipeRef?.asynchronous ? true : false;
+	}
+	get(pipeName: string): PipeTransform<any, any> | undefined {
+		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		if (pipeRef?.asynchronous) {
+			return new pipeRef.modelClass();
 		}
 		return void 0;
 	}
