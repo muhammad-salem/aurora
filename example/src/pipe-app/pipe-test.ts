@@ -4,12 +4,13 @@ import { interval } from 'rxjs';
 @Component({
 	selector: 'pipe-app',
 	template: `
+	<style>.blue{color: var(--bs-blue);} </style>
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">pipe</th>
-                <th scope="col">expression</th>
-                <th scope="col">view</th>
+                <th class="blue" scope="col">pipe</th>
+                <th class="blue" scope="col">expression</th>
+                <th class="blue" scope="col">view</th>
             </tr>
         </thead>
         <tbody>
