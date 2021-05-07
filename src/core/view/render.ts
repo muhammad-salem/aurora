@@ -173,7 +173,9 @@ export class ComponentRender<T> {
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
-			// 
+			if (isOnDestroy(structural)) {
+				this.view._model.subscribeModel('destroy', () => structural.onDestroy());
+			}
 		} else {
 			// didn't fond directive or it didn't defined yet.
 		}
