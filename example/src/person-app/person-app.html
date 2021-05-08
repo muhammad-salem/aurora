@@ -29,8 +29,8 @@
 
 <hr>
 
-<h1> *For Loop Directive</h1>
-<h5>const i = 0; i &lt; people.length; i++</h5>
+<h1>For Loop Directive</h1>
+<h5>*for="const i = 0; i &lt; people.length; i++"</h5>
 <div class="row">
 	<div class="col-3" *for="const i = 0; i < people.length; i++">
 		<p>Name: <span>{{people[i].name}}</span></p>
@@ -38,8 +38,8 @@
 	</div>
 </div>
 
-<h1> *For Of Directive</h1>
-<h5>let user of people</h5>
+<h1>For Of Directive</h1>
+<h5>*for="let user of people"</h5>
 <div class="row">
 	<div class="col-3" *for="let user of people">
 		<p>Name: <span>{{user.name}}</span></p>
@@ -47,9 +47,8 @@
 	</div>
 </div>
 
-
-<h1> *For In Directive</h1>
-<h5>let key in person1</h5>
+<h1>For In Directive</h1>
+<h5>*for="let key in person1"</h5>
 <div class="row">
 	<div class="col-3" *for="let key in person1">
 		<p>Key: <span>{{key}}</span></p>
@@ -57,30 +56,42 @@
 	</div>
 </div>
 
-<h1> *For Await OF Directive</h1>
-<h5>await (let num of asyncIterable)</h5>
+<h1>For Await OF Directive</h1>
+<h5>*for="await (let num of asyncIterable)"</h5>
 <div class="row">
 	<div class="col-3" *for="await (let num of asyncIterable)">
-		<p>Num: <span>{{num}}</span></p>
+		<p>num = <span>{{num}}</span></p>
 	</div>
 </div>
 
 <hr>
-<h1> *While Directive</h1>
-<h5>i &lt; people.length</h5>
+<h1>While Directive</h1>
+<h5>*while="i &lt; people.length"</h5>
 <div class="row">
 	<div class="col-3" *while="i < people.length">
 		<p>Name: <span>{{people[i].name}}</span></p>
 		<p>Age: <span>{{people[i++].age}}</span></p>
 	</div>
 </div>
-<hr>
-<h1> *While Directive</h1>
-<h5>let index = 0; index &lt; people.length</h5>
+<h1>While Directive</h1>
+<h5>*while="let index = 0; index &lt; people.length"</h5>
 <div class="row">
 	<div class="col-3" *while="let index = 0; index < people.length">
 		<p>Name: <span>{{people[index].name}}</span></p>
 		<p>Age: <span>{{people[index++].age}}</span></p>
+	</div>
+</div>
+
+<hr>
+
+<h1>Switch Case Directive</h1>
+<h5>*switch="1"</h5>
+<div class="row">
+	<div class="col-3" *switch="1">
+		<div *case="1">One</div>
+		<div *case="2">Two</div>
+		<div *case="3">Three</div>
+		<div *default>default: Zero</div>
 	</div>
 </div>
 <hr>

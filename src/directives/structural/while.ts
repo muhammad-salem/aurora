@@ -54,7 +54,7 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 				this.elements.splice(0);
 			}
 			callback();
-			const lastComment = new Comment(`end *for: ${this.directive.directiveValue}`);
+			const lastComment = new Comment(`end *while: ${this.directive.directiveValue}`);
 			this.lastElement.after(lastComment);
 			this.elements.push(lastComment);
 			stack.push(this);
@@ -70,8 +70,8 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 			return `while (${statement}) { }`;
 		}
 	}
-	private _updateView(forStack: ScopedStack) {
-		const element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, forStack);
+	private _updateView(stack: ScopedStack) {
+		const element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, stack);
 		this.lastElement.after(element);
 		this.elements.push(element);
 		this.lastElement = element;

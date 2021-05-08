@@ -53,7 +53,7 @@ export class WhileNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.condition.event();
 	}
 	toString(): string {
 		return `while (${this.condition.toString()}) ${this.statement.toString()}`;

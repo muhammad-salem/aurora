@@ -85,8 +85,11 @@ see test for more help [`example`](example/)
 
 - [x] *if
 - [x] *for
+- [x] *for in
+- [x] *for of
+- [x] *for await
 - [x] *while
-- [ ] *switch
+- [x] *switch
 - [ ] *class
 - [ ] *style
 

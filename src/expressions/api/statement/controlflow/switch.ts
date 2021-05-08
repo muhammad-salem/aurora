@@ -118,7 +118,12 @@ export class SwitchNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [
+			...this.expression.event(),
+			...this.cases
+				.filter(c => c.getValue() !== DefaultExpression.DefaultNode)
+				.flatMap(c => c.getValue().event())
+		];
 	}
 	toString(): string {
 		return `switch (${this.expression.toString()}) {${this.cases.map(item => item.toString())}`;
