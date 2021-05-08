@@ -307,7 +307,7 @@ export class ComponentRender<T> {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
 					listener = event.value;
 				}
-				this.view.addEventListener(event.name as any, listener as any);
+				element.addEventListener(event.name as any, listener as any);
 			});
 		}
 		if (node.templateAttrs) {
