@@ -274,7 +274,6 @@ export class NodeParser {
 
 	private parsePropertyValue(token: string) {
 		if (/"/.test(token)) {
-			this.tempText = this.escaper.unescape(this.tempText);
 			this.propertyValue = this.tempText;
 			switch (this.propType) {
 				case 'input':
