@@ -87,7 +87,7 @@ import { interval } from 'rxjs';
 })
 export class PipeTestApp {
 
-	text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet.';
+	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {
 		a: [1, 2, 3],
 		b: 'property b',

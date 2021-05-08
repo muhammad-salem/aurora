@@ -130,7 +130,7 @@ export class PersonEdit {
 	selector: 'progress-bar',
 	template: '<progress [min]="min" [max]="max" [value]="value" ></progress>'
 })
-class ProgressBar {
+export class ProgressBar {
 
 	@Input()
 	min: number;

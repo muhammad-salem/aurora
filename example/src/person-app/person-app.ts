@@ -27,6 +27,7 @@ export class PersonApp {
 	person4: Person = { name: 'alice', age: 14 };
 
 	people = [this.person1, this.person2, this.person3, this.person4];
+	i = 0;
 
 	asyncIterable = {
 		[Symbol.asyncIterator]() {

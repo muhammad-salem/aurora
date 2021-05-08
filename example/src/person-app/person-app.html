@@ -26,7 +26,10 @@
 		<person-view #pm4 person="{{person4}}" name="alex" age="29"></person-view>
 	</div>
 </div>
-<h1> For Loop Directive Test</h1>
+
+<hr>
+
+<h1> *For Loop Directive</h1>
 <h5>const i = 0; i &lt; people.length; i++</h5>
 <div class="row">
 	<div class="col-3" *for="const i = 0; i < people.length; i++">
@@ -35,7 +38,7 @@
 	</div>
 </div>
 
-<h1> For Of Directive Test</h1>
+<h1> *For Of Directive</h1>
 <h5>let user of people</h5>
 <div class="row">
 	<div class="col-3" *for="let user of people">
@@ -45,7 +48,7 @@
 </div>
 
 
-<h1> For in Directive Test</h1>
+<h1> *For In Directive</h1>
 <h5>let key in person1</h5>
 <div class="row">
 	<div class="col-3" *for="let key in person1">
@@ -54,11 +57,30 @@
 	</div>
 </div>
 
-<h1> For await OF Directive Test</h1>
+<h1> *For Await OF Directive</h1>
 <h5>await (let num of asyncIterable)</h5>
 <div class="row">
 	<div class="col-3" *for="await (let num of asyncIterable)">
 		<p>Num: <span>{{num}}</span></p>
+	</div>
+</div>
+
+<hr>
+<h1> *While Directive</h1>
+<h5>i &lt; people.length</h5>
+<div class="row">
+	<div class="col-3" *while="i < people.length">
+		<p>Name: <span>{{people[i].name}}</span></p>
+		<p>Age: <span>{{people[i++].age}}</span></p>
+	</div>
+</div>
+<hr>
+<h1> *While Directive</h1>
+<h5>let index = 0; index &lt; people.length</h5>
+<div class="row">
+	<div class="col-3" *while="let index = 0; index < people.length">
+		<p>Name: <span>{{people[index].name}}</span></p>
+		<p>Age: <span>{{people[index++].age}}</span></p>
 	</div>
 </div>
 <hr>

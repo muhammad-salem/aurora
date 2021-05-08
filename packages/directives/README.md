@@ -22,6 +22,7 @@ yarn add @ibyar/directives
 
 - [x] *if
 - [x] *for
+- [x] *while
 - [ ] *switch
 - [ ] *class
 - [ ] *style
