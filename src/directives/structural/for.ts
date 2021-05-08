@@ -13,6 +13,8 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 	lastElement: HTMLElement | Comment;
 	lastComment: Comment;
 
+	elements: ChildNode[] = [];
+
 	onInit(): void {
 		const statement = this.getStatement();
 		const forNode = JavaScriptParser.parse(statement);
@@ -33,20 +35,17 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
 			this.lastElement = this.comment;
 			// should remove old elements
-			if (this.lastComment) {
-				const elements: ChildNode[] = [];
-				let el = this.comment.nextSibling;
-				while (el && el !== this.lastComment) {
-					elements.push(el);
-					el = el.nextSibling;
+			if (this.elements.length > 0) {
+				const parent: Node = this.comment.parentNode!;
+				for (const elm of this.elements) {
+					parent.removeChild(elm);
 				}
-				for (const elm of elements) {
-					this.comment.parentNode?.removeChild(elm);
-				}
+				this.elements.splice(0);
 			}
 			callback();
-			this.lastComment = new Comment(`end *for: ${this.directive.directiveValue}`);
-			this.lastElement.after(this.lastComment);
+			const lastComment = new Comment(`end *for: ${this.directive.directiveValue}`);
+			this.lastElement.after(lastComment);
+			this.elements.push(lastComment);
 			stack.push(this);
 		};
 		this.render.subscribeExpressionNode(forNode, this.contextStack, uiCallback, this);
@@ -109,6 +108,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 	private _updateView(forStack: ScopedStack) {
 		const element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, forStack);
 		this.lastElement.after(element);
+		this.elements.push(element);
 		this.lastElement = element;
 	}
 }
