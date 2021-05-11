@@ -415,7 +415,7 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.CLASS);
 				// return this.parseClassDeclaration();
 				throw new Error(this.errorMessage(`'class': not supported now`));
-			// case Token.VAR:
+			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
 				return this.parseVariableDeclarations();
@@ -562,7 +562,7 @@ export class JavaScriptParser extends AbstractParser {
 		const isAwait = this.check(Token.AWAIT);
 		this.expect(Token.L_PARENTHESES);
 		const peek = this.peek();
-		const startsWithLet = peek.isType(Token.LET);
+		const startsWithLet = peek.isType(Token.LET) || peek.isType(Token.VAR);
 		let initializer: ExpressionNode;
 		if (peek.isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
 			initializer = this.parseVariableDeclarations();
@@ -620,14 +620,16 @@ export class JavaScriptParser extends AbstractParser {
 		// var converted into ==> 'let' by parser
 
 		let mode: 'const' | 'let';
-		switch (this.peek().token) {
+		const token = this.peek().token;
+		switch (token) {
 			case Token.CONST:
-				this.consume(Token.CONST);
+				this.consume(token);
 				mode = 'const';
 				break;
-			default:
+			case Token.VAR:
 			case Token.LET:
-				this.consume(Token.LET);
+			default:
+				this.consume(token);
 				mode = 'let';
 				break;
 		}
