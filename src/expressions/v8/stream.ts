@@ -1134,8 +1134,7 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'v':
 				if (/var\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					// convert 'var' to be 'let' 
-					this.current = this.newToken(Token.LET);
+					this.current = this.newToken(Token.VAR);
 					this.pos += 4;
 					return true;
 				}
