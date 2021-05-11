@@ -2,9 +2,9 @@ import {
 	DOMChild, DOMNode, CommentNode,
 	DOMElementNode, DOMFragmentNode,
 	parseTextChild, TextContent
-} from '../dom/dom.js';
+} from '../ast/dom.js';
 
-import { NodeFactory } from '../dom/factory.js';
+import { NodeFactory } from '../ast/factory.js';
 
 
 export class TemplateParser {

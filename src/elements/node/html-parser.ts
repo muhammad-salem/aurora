@@ -3,7 +3,7 @@ import {
 	DOMElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DOMFragmentNode,
 	DOMDirectiveNode, DOMNode, DOMChild, Attribute
-} from '../dom/dom.js';
+} from '../ast/dom.js';
 
 type Token = (token: string) => Token;
 
