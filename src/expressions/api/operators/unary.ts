@@ -2,6 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
 import { ScopedStack } from '../scope.js';
+import { AccessNode } from '../definition/member.js';
 @Deserializer('unary')
 export class UnaryNode extends AbstractExpressionNode {
 	static fromJSON(node: UnaryNode, deserializer: NodeDeserializer): UnaryNode {
@@ -85,8 +86,16 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 		return void this.node.get(stack);
 	}
 	private getDelete(stack: ScopedStack, thisContext?: any) {
-		if (thisContext) {
-			delete thisContext[this.node.toString()];
+		if (this.node instanceof AccessNode) {
+			thisContext = thisContext || this.node.getLeft().get(stack);
+			const right = this.node.getRight();
+			if (right instanceof AccessNode) {
+				// [Symbol.asyncIterator]
+				return delete thisContext[this.node.getRight().get(stack)];
+			} else {
+				// [10], ['string']
+				return delete thisContext[this.node.getRight().toString()];
+			}
 		}
 	}
 	private getAwait(stack: ScopedStack, thisContext?: any) {
