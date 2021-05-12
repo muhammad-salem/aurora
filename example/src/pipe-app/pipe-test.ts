@@ -1,16 +1,16 @@
-import { Component } from '@ibyar/aurora';
+import { Component, isModel, Model, OnInit, SourceFollowerCallback } from '@ibyar/aurora';
 import { interval } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
 	template: `
-	<style>.blue{color: var(--bs-blue);} </style>
+	<style>.bs-color{color: var({{currentColor}});} </style>
     <table class="table">
         <thead>
             <tr>
-                <th class="blue" scope="col">pipe</th>
-                <th class="blue" scope="col">expression</th>
-                <th class="blue" scope="col">view</th>
+                <th class="bs-color" scope="col">pipe</th>
+                <th class="bs-color" scope="col">expression</th>
+                <th class="bs-color" scope="col">view</th>
             </tr>
         </thead>
         <tbody>
@@ -85,7 +85,7 @@ import { interval } from 'rxjs';
     </table>
     `
 })
-export class PipeTestApp {
+export class PipeTestApp implements OnInit {
 
 	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {
@@ -108,5 +108,37 @@ export class PipeTestApp {
 	observable = interval(1000);
 
 	array = ['a', 'b', 'c', 'd'];
+
+	colors = [
+		'--bs-blue',
+		'--bs-indigo',
+		'--bs-purple',
+		'--bs-pink',
+		'--bs-red',
+		'--bs-orange',
+		'--bs-yellow',
+		'--bs-green',
+		'--bs-teal',
+		'--bs-cyan',
+		'--bs-white',
+		'--bs-gray',
+		'--bs-gray-dark'
+	];
+
+	currentColor = this.colors[0];
+
+	onInit() {
+		let index = 0;
+		this.observable.subscribe(() => {
+			if (index === this.colors.length) {
+				index = 0;
+			}
+			this.currentColor = this.colors[index++];
+			if (isModel(this)) {
+				this.emitChangeModel('currentColor');
+			}
+			console.log(this.currentColor);
+		});
+	}
 
 }
