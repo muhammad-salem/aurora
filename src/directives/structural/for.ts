@@ -11,7 +11,6 @@ import {
 export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 
 	lastElement: HTMLElement | Comment;
-	lastComment: Comment;
 
 	elements: ChildNode[] = [];
 
@@ -30,8 +29,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
-		// const isNotAsync = Reflect.get(callback, Symbol.toStringTag) !== 'AsyncFunction';
-		// console.log('callback[Symbol.toStringTag]', Reflect.get(callback, Symbol.toStringTag));
+
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
 			this.lastElement = this.comment;
 			// should remove old elements
@@ -43,12 +41,9 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 				this.elements.splice(0);
 			}
 			callback();
-			const lastComment = new Comment(`end *for: ${this.directive.directiveValue}`);
-			this.lastElement.after(lastComment);
-			this.elements.push(lastComment);
 			stack.push(this);
 		};
-		this.render.subscribeExpressionNode(forNode, this.contextStack, uiCallback, this);
+		this.render.subscribeExpressionNode(forNode, this.directiveStack, uiCallback, this);
 		if (!(forNode instanceof ForAwaitOfNode)) uiCallback([]);
 	}
 	private getStatement() {
@@ -64,44 +59,43 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 
 	handelForNode(forNode: ForNode) {
 		return () => {
-			const forStack = this.contextStack.newStack();
 			for (
-				forNode.getInitialization()?.get(forStack);
-				forNode.getCondition()?.get(forStack) ?? true;
-				forNode.getFinalExpression()?.get(forStack)
+				forNode.getInitialization()?.get(this.directiveStack);
+				forNode.getCondition()?.get(this.directiveStack) ?? true;
+				forNode.getFinalExpression()?.get(this.directiveStack)
 			) {
 				// insert/remove
-				this._updateView(forStack);
+				this._updateView(this.directiveStack);
 			}
 		};
 	}
 	handelForOfNode(forOfNode: ForOfNode): () => void {
 		return () => {
-			const iterable = <any[]>forOfNode.getIterable().get(this.contextStack);
-			const forOfStack = this.contextStack.newStack();
+			const iterable = <any[]>forOfNode.getIterable().get(this.directiveStack);
 			for (const iterator of iterable) {
-				forOfNode.getVariable().set(forOfStack, iterator);
-				this._updateView(forOfStack);
+				const stack = this.directiveStack.newStack();
+				forOfNode.getVariable().set(stack, iterator);
+				this._updateView(stack);
 			}
 		};
 	}
 	handelForInNode(forInNode: ForInNode): () => void {
 		return () => {
-			const iterable = <object>forInNode.getObject().get(this.contextStack);
-			const forInStack = this.contextStack.newStack();
+			const iterable = <object>forInNode.getObject().get(this.directiveStack);
 			for (const iterator in iterable) {
-				forInNode.getVariable().set(forInStack, iterator);
-				this._updateView(forInStack);
+				const stack = this.directiveStack.newStack();
+				forInNode.getVariable().set(stack, iterator);
+				this._updateView(stack);
 			}
 		};
 	}
 	handelForAwaitOfNode(forAwaitOfNode: ForAwaitOfNode): () => void {
 		return async () => {
-			const iterable: AsyncIterable<any> = forAwaitOfNode.getIterable().get(this.contextStack);
-			const forOfStack = this.contextStack.newStack();
+			const iterable: AsyncIterable<any> = forAwaitOfNode.getIterable().get(this.directiveStack);
 			for await (const iterator of iterable) {
-				forAwaitOfNode.getVariable().set(forOfStack, iterator);
-				this._updateView(forOfStack);
+				const stack = this.directiveStack.newStack();
+				forAwaitOfNode.getVariable().set(stack, iterator);
+				this._updateView(stack);
 			}
 		};
 	}
