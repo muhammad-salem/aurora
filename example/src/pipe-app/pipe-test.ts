@@ -1,10 +1,13 @@
-import { Component, isModel, Model, OnInit, SourceFollowerCallback } from '@ibyar/aurora';
+import { Component, HostListener, isModel, OnInit } from '@ibyar/aurora';
 import { interval } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});} </style>
+	<div *for="let color of colors">
+		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+	</div>
     <table class="table">
         <thead>
             <tr>
@@ -139,6 +142,11 @@ export class PipeTestApp implements OnInit {
 			}
 			console.log(this.currentColor);
 		});
+	}
+
+	@HostListener('currentColor')
+	onCurrentColorChange() {
+		console.log(this.currentColor);
 	}
 
 }

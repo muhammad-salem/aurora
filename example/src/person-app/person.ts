@@ -90,6 +90,11 @@ export class PersonModel implements OnInit {
 		console.log('select', data);
 	}
 
+	@HostListener('person.age')
+	personChange() {
+		console.log('age change', this.person.age);
+	}
+
 	@Input()
 	set resize(msg: string) {
 		console.log(this, msg);
