@@ -174,8 +174,13 @@ export class Components {
 		}
 		componentRef.extend = findByTagName(opts.extend);
 
-		if (typeof componentRef.template === 'string' && componentRef.template) {
-			componentRef.template = htmlParser.toDomRootNode(componentRef.template);
+		if (typeof componentRef.template === 'string') {
+			if (componentRef.styles) {
+				const template = `<style>${componentRef.styles}</style>${componentRef.template}`;
+				componentRef.template = htmlParser.toDomRootNode(template);
+			} else {
+				componentRef.template = htmlParser.toDomRootNode(componentRef.template);
+			}
 			buildExpressionNodes(componentRef.template);
 		}
 

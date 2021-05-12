@@ -122,7 +122,7 @@ see test for more help [`example`](example/)
 - [x] [Reflecting Properties to Attributes][attr-props]
 - [x] [Observing Changes to Attributes][observ-attr]
 - [x] [Element Upgrades][elem-upgrd]
-- [ ] [Styling a Custom Element][style]
+- [x] [Styling a Custom Element][style]
 - [x] [Extending native HTML elements][extend-native]
 - [ ] [Extending a Custom Element][extend-custom]
 - [x] [Two Component On Same Model Class][two-component]
