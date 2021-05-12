@@ -4,7 +4,7 @@ import { interval } from 'rxjs';
 @Component({
 	selector: 'pipe-app',
 	template: `
-	<style>.bs-color{color: var({{currentColor}});} </style>
+	<style>.bs-color{color: var({{currentColor}});}</style>
 	<div *for="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
 	</div>
