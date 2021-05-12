@@ -16,7 +16,10 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { isModel, Model, SourceFollowerCallback, subscribe1way, subscribe2way } from '../model/change-detection.js';
+import {
+	addChangeListener, isModel, Model,
+	SourceFollowerCallback, subscribe1way, subscribe2way
+} from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
@@ -124,10 +127,10 @@ export class ComponentRender<T> {
 		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
 		// 	this.addNativeEventListener(this.view, eventName, eventCallback);
 		// }
-		else if (eventName in this.view._model) {
-			this.addNativeEventListener(this.view, eventName, (event: any) => {
-				this.view._model[listener.modelCallbackName](event);
-			});
+		else {
+			// listen to internal changes
+			// TODO: need to resolve paramter
+			addChangeListener(sourceModel, eventName, () => this.view._model[listener.modelCallbackName]());
 		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
@@ -161,11 +164,11 @@ export class ComponentRender<T> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, contextStack: ScopedStack): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: ScopedStack): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
-			const structural = new directiveRef.modelClass(this, comment, directive, contextStack);
+			const structural = new directiveRef.modelClass(this, comment, directive, directiveStack);
 			if (directive.templateRefName) {
 				Reflect.set(this.view, directive.templateRefName.name, structural);
 				this.viewChildMap[directive.templateRefName.name] = structural;
@@ -177,7 +180,8 @@ export class ComponentRender<T> {
 				this.view._model.subscribeModel('destroy', () => structural.onDestroy());
 			}
 		} else {
-			// didn't fond directive or it didn't defined yet.
+			// didn't find directive or it is not define yet.
+			// class registry should have 'when defined' callback
 		}
 	}
 	createComment(node: CommentNode): Comment {
@@ -192,7 +196,7 @@ export class ComponentRender<T> {
 		return liveText;
 	}
 	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: ScopedStack): DocumentFragment {
-		let fragment = document.createDocumentFragment();
+		const fragment = document.createDocumentFragment();
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
@@ -200,9 +204,11 @@ export class ComponentRender<T> {
 		if (child instanceof DOMElementNode) {
 			parent.append(this.createElement(child, contextStack));
 		} else if (child instanceof DOMDirectiveNode) {
-			let comment = document.createComment(`${child.directiveName}=${child.directiveValue}`);
+			const comment = document.createComment(`start ${child.directiveName}: ${child.directiveValue}`);
 			parent.append(comment);
-			this.createDirective(child, comment, contextStack);
+			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
+			comment.after(lastComment);
+			this.createDirective(child, comment, contextStack.newStack());
 		} else if (child instanceof TextContent) {
 			parent.append(this.createText(child));
 		} else if (child instanceof LiveTextContent) {
