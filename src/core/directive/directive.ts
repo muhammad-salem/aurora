@@ -10,7 +10,7 @@ export class StructuralDirective<T> {
 		protected render: ComponentRender<T>,
 		protected comment: Comment,
 		protected directive: DOMDirectiveNode<ExpressionNode>,
-		protected contextStack: ScopedStack
+		protected directiveStack: ScopedStack
 	) { }
 }
 
