@@ -14,7 +14,6 @@ import {
 export class WhileDirective<T> extends StructuralDirective<T> implements OnInit {
 
 	lastElement: HTMLElement | Comment;
-	lastComment: Comment;
 	elements: ChildNode[] = [];
 
 	onInit(): void {
@@ -35,12 +34,11 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 		}
 
 		const callback = () => {
-			const whileStack = this.contextStack.newStack();
 			if (initializer) {
-				initializer.get(whileStack);
+				initializer.get(this.directiveStack);
 			}
-			while (condition.get(whileStack)) {
-				this._updateView(whileStack);
+			while (condition.get(this.directiveStack)) {
+				this._updateView(this.directiveStack);
 			}
 		};
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
@@ -54,12 +52,9 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 				this.elements.splice(0);
 			}
 			callback();
-			const lastComment = new Comment(`end *while: ${this.directive.directiveValue}`);
-			this.lastElement.after(lastComment);
-			this.elements.push(lastComment);
 			stack.push(this);
 		};
-		this.render.subscribeExpressionNode(whileNode, this.contextStack, uiCallback, this);
+		this.render.subscribeExpressionNode(whileNode, this.directiveStack, uiCallback, this);
 		uiCallback([]);
 	}
 	private getStatement() {

@@ -32,11 +32,10 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 		let callback: () => void;
 		if (switchNode instanceof SwitchNode) {
 			callback = () => {
-				const switchStack = this.contextStack.newStack();
-				const expressionValue = switchNode.getExpression().get(switchStack);
+				const expressionValue = switchNode.getExpression().get(this.directiveStack);
 				let child: DOMDirectiveNode<ExpressionNode> | undefined;
 				for (let i = 0; i < this.caseExpressions.length; i++) {
-					const value = this.caseExpressions[i].get(switchStack);
+					const value = this.caseExpressions[i].get(this.directiveStack);
 					if (value === expressionValue) {
 						child = this.caseElements[i];
 						break;
@@ -49,7 +48,7 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 						return;
 					}
 				}
-				this._updateView(child.children[0] as DOMElementNode<ExpressionNode>, switchStack);
+				this._updateView(child.children[0] as DOMElementNode<ExpressionNode>, this.directiveStack);
 			};
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
@@ -59,11 +58,9 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 				this.comment.parentNode?.removeChild(this.element);
 			}
 			callback();
-			const lastComment = new Comment(`end *switch: ${this.directive.directiveValue}`);
-			this.element.after(lastComment);
 			stack.push(this);
 		};
-		this.render.subscribeExpressionNode(switchNode, this.contextStack, uiCallback, this);
+		this.render.subscribeExpressionNode(switchNode, this.directiveStack, uiCallback, this);
 		uiCallback([]);
 	}
 	private getStatement() {
