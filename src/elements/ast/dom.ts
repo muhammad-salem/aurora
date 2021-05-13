@@ -78,11 +78,6 @@ export class DOMFragmentNode<E> extends DOMParentNode<E> {
 export class BaseNode<E> extends DOMParentNode<E> {
 
 	/**
-	 * a given name for element
-	 */
-	templateRefName: LiveAttribute<E>;
-
-	/**
 	 * hold static attr and event that will resolve normally from the global window.
 	 */
 	attributes: Attribute<string, string | number | boolean | object>[];
@@ -106,10 +101,6 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	 * directive attribute
 	 */
 	templateAttrs: LiveAttribute<E>[];
-
-	setTemplateRefName(name: string, value?: string) {
-		this.templateRefName = new LiveAttribute(name, value || '');
-	}
 
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
@@ -196,6 +187,11 @@ export class DOMElementNode<E> extends BaseNode<E> {
 	 */
 	is?: string;
 
+	/**
+	 * a given name for element
+	 */
+	templateRefName: Attribute<string, string | undefined>;
+
 	constructor(tagName: string, is?: string) {
 		super();
 		this.tagName = tagName;
@@ -206,6 +202,10 @@ export class DOMElementNode<E> extends BaseNode<E> {
 
 	setTagName(tagName: string) {
 		this.tagName = tagName;
+	}
+
+	setTemplateRefName(name: string, value?: string) {
+		this.templateRefName = new Attribute(name, value);
 	}
 
 }

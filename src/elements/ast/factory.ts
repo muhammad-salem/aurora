@@ -18,7 +18,8 @@ export class NodeFactory {
 	static StructuralDirectives = [
 		'if',
 		'for',
-		'while'
+		'while',
+		'switch'
 	];
 
 	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]): DOMNode<any> {
@@ -120,12 +121,13 @@ export class NodeFactory {
 
 	static handelAttribute(element: BaseNode<any>, attrName: string, value: string | Function | object): void {
 
-		if (attrName.startsWith('#')) {
+		if (attrName.startsWith('#') && element instanceof DOMElementNode) {
 			// <app-tag #element-name="directiveName?" ></app-tag>
 			attrName = attrName.substring(1);
 			element.setTemplateRefName(attrName, value as string);
 		}
-		else if (attrName === 'is') {
+		else if (attrName === 'is' && element instanceof DOMElementNode) {
+			element.is = value as string;
 			return;
 		}
 		else if (attrName.startsWith('[(')) {

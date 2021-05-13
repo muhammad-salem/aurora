@@ -2,8 +2,7 @@ import {
 	BaseNode, DOMChild, DOMFragmentNode,
 	DOMNode, DOMParentNode, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { ExpressionNode, IdentifierNode } from '@ibyar/expressions';
-import { JavaScriptParser } from '@ibyar/expressions';
+import { ExpressionNode, IdentifierNode, JavaScriptParser } from '@ibyar/expressions';
 
 const TextContent = new IdentifierNode('textContent');
 function parseLiveText(text: LiveTextContent<ExpressionNode>) {
@@ -17,7 +16,6 @@ function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
 }
 
 function parseBaseNode(base: BaseNode<ExpressionNode>) {
-	base.templateRefName && parseLiveAttribute(base.templateRefName);
 	base.inputs?.forEach(parseLiveAttribute);
 	base.outputs?.forEach(parseLiveAttribute);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
