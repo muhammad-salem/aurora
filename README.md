@@ -32,8 +32,8 @@ npm i --save @ibyar/aurora
 yarn add @ibyar/aurora
 ```
 
-for import resources files as module you can get hep by adding reference of `@ibyar/types`
-in your `index.ts` file add type reference for `@ibyar/types`
+- for import resources files as module you can get help by adding reference of `@ibyar/types`
+in your main `index.ts` file:
 
 ```ts
 /// <reference types="@ibyar/types" />
@@ -163,124 +163,172 @@ see test for more help [`example`](example/)
 
 ```ts
 
-export interface DataModel {
-    name: string;
-    version: number;
-    description: {
-        title: string;
-        desc: string;
-    };
-}
+import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-view',
-    template:  `<h1>{{viewData.name}}</h1>
-                <h1 [innerHTML]="viewData.name"></h1>
-                <input type="text" [(value)]="viewData.name"></h1>
-
-                <h2 [innerHTML]="viewData.version"></h2>
-                <div class="card">
-                    <div class="card-header" [innerHTML]="viewData.description.title"></div>
-                    <div class="card-body" [innerHTML]="viewData.description.desc" ></div>
-                </div>`
+	selector: 'pipe-app',
+	template: `
+	<style>.bs-color{color: var({{currentColor}});}</style>
+	<div *for="let color of colors">
+		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+	</div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="bs-color" scope="col">pipe</th>
+                <th class="bs-color" scope="col">expression</th>
+                <th class="bs-color" scope="col">view</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>async</td>
+                <td>observable |> async</td>
+                <td>{{observable |> async}}</td>
+            </tr>
+            <tr>
+                <td>*</td>
+                <td>text</td>
+                <td>{{text}}</td>
+            </tr>
+            <tr>
+                <td>lowercase</td>
+                <td>text |> lowercase</td>
+                <td>{{text |> lowercase}}</td>
+            </tr>
+            <tr>
+                <td>titlecase</td>
+                <td>text |> titlecase</td>
+                <td>{{text |> titlecase}}</td>
+            </tr>
+            <tr>
+                <td>uppercase</td>
+                <td>text |> uppercase</td>
+                <td>{{text |> uppercase}}</td>
+            </tr>
+            <tr>
+                <td>json</td>
+                <td>obj |> json</td>
+                <td>{{obj |> json}}</td>
+            </tr>
+            <tr>
+                <td>json <small>pre element</small></td>
+                <td>obj |> json:undefined:2</td>
+                <td>
+                    <pre>{{obj |> json:undefined:2}}</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>keyvalue</td>
+                <td>keyValueObject |> keyvalue</td>
+                <td>{{keyValueObject |> keyvalue |> json}}</td>
+            </tr>
+            <tr>
+                <td>keyvalue</td>
+                <td>keyValueObject |> keyvalue</td>
+                <td>{{keyValueObject |> keyvalue |> json}}</td>
+            </tr>
+            <tr>
+                <td>keyvalue</td>
+                <td>keyValueMap |> keyvalue</td>
+                <td>{{keyValueMap |> keyvalue |> json}}</td>
+            </tr>
+            <tr>
+                <td>slice</td>
+                <td>array |> slice:1:3</td>
+                <td>{{array |> slice:1:3}}</td>
+            </tr>
+            <tr>
+                <td>slice</td>
+                <td>slice(array, 1, 3)</td>
+                <td>{{slice(array, 1, 3)}}</td>
+            </tr>
+            <tr>
+                <td>call windows method directly</td>
+                <td>3345.54645 |> Math.trunc</td>
+                <td>{{3345.54645 |> Math.trunc}}</td>
+            </tr>
+        </tbody>
+    </table>
+    `
 })
-export class AppView {
-    @Input()
-    viewData: DataModel;
+export class PipeAppComponent implements OnInit, OnDestroy {
+
+	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
+	obj = {
+		a: [1, 2, 3],
+		b: 'property b',
+		c: {
+			d: [],
+			e: 4,
+			f: [{ 5: 'g' }]
+		}
+	};
+
+	keyValueObject = {
+		1: 100,
+		a: 'A00'
+	};
+	keyValueArray = [200, 300];
+	keyValueMap = new Map<number, number | string>([[1, 400], [2, 500], [3, 'B200']]);
+
+	observable = interval(1000);
+
+	array = ['a', 'b', 'c', 'd'];
+
+	colors = [
+		'--bs-blue',
+		'--bs-indigo',
+		'--bs-purple',
+		'--bs-pink',
+		'--bs-red',
+		'--bs-orange',
+		'--bs-yellow',
+		'--bs-green',
+		'--bs-teal',
+		'--bs-cyan',
+		'--bs-white',
+		'--bs-gray',
+		'--bs-gray-dark'
+	];
+
+	currentColor = this.colors[0];
+
+	subscription: Subscription;
+
+	onInit() {
+		let index = 0;
+		this.subscription = this.observable.subscribe(() => {
+			if (index === this.colors.length) {
+				index = 0;
+			}
+			this.currentColor = this.colors[index++];
+			if (isModel(this)) {
+				this.emitChangeModel('currentColor');
+			}
+			console.log(this.currentColor);
+		});
+	}
+
+	@HostListener('currentColor')
+	onCurrentColorChange() {
+		console.log(this.currentColor);
+	}
+
+	onDestroy() {
+		this.subscription.unsubscribe();
+	}
+
 }
 
-@Component({
-    selector: 'app-edit',
-    template:
-        `
-        <form #form >
-            <div class="mb-3" >
-                <label for="appName" class="form-label">Name</label>
-                <input id="appName" type="text" [(value)]="editData.name"/>
-            </div>
-            <div class="mb-3" >
-                <label for="app-version" class="form-label" > Version </label>
-                <input id="app-version" type="number" [(value)]="editData.version"/>
-            </div>
-
-            <div class="mb-3" >
-                <label for="title" class="form-label" >Title</label>
-                <input id="title" type="text" [(value)]="editData.description.title"/>
-            </div>
-
-            <div class="mb-3" >
-                <label for="desc" class="form-label">Description</label>
-                <input id="desc" type="text" [(value)]="editData.description.desc"/>
-            </div>
-            <div class="btn-group" role="group" aria-label="Basic example" >
-                <button type="button" class="btn btn-primary" (click)="printModel()">Print</button>
-                <button type="button" class="btn btn-secondary" (click)="saveModel()">Save</button>
-            </div>
-        </form>
-        `
-})
-export class AppEdit {
-    @Input()
-    editData: DataModel;
-
-    @Output()
-    save = new EventEmitter<DataModel>();
-
-    @View()
-    view: HTMLComponent<HTMLEdit> | HTMLElement;
-
-    printModel() {
-        console.log(this.editData);
-    }
-
-    saveModel() {
-        this.save.emit(this.editData);
-    }
-}
-
-@Component({
-    selector: 'root-app',
-    encapsulation: 'custom',
-    template:
-        `
-        <div class="row" >
-            <div class="col-6" >
-                <app-edit [(editData)]="model" (save)="saveAction($event)" />
-            </div>
-            <div class="col-6" >
-                <app-view [viewData]="model" />
-            </div>
-        </div>
-        `
-})
-export class RootApp implements OnInit {
-
-    model: DataModel;
-
-    onInit(): void {
-        this.model = {
-            name: 'Aurora',
-            version: 2,
-            description: {
-                title: 'Aurora custom element creator',
-                desc: `Aurora is a web framework, that can create and define a usable 'custom elements',
-                that compatible with other frameworks, using Typescript`
-            }
-        };
-    }
-
-    saveAction(data: any) {
-        console.log('tag: rootApp', data);
-    }
-
-}
 ```
 
 in index.html add:
 
 ```html
     <body>
-        <root-app></root-app>
+		<pipe-app></pipe-app>
         <script type="module" src="path-to-main-file/index.js"></script>
     </body>
 ```
@@ -292,6 +340,15 @@ git clone https://github.com/ibyar/aurora.git
 cd aurora
 yarn install
 yarn build
+```
+
+## For NPM 7(workshop support):
+
+```bash
+git clone https://github.com/ibyar/aurora.git
+cd aurora
+npm install
+npm run build
 ```
 
 see test app for full [`example`](example/)

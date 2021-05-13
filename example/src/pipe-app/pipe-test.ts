@@ -1,5 +1,5 @@
-import { Component, HostListener, isModel, OnInit } from '@ibyar/aurora';
-import { interval } from 'rxjs';
+import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
@@ -88,7 +88,7 @@ import { interval } from 'rxjs';
     </table>
     `
 })
-export class PipeTestApp implements OnInit {
+export class PipeAppComponent implements OnInit, OnDestroy {
 
 	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {
@@ -130,9 +130,11 @@ export class PipeTestApp implements OnInit {
 
 	currentColor = this.colors[0];
 
+	subscription: Subscription;
+
 	onInit() {
 		let index = 0;
-		this.observable.subscribe(() => {
+		this.subscription = this.observable.subscribe(() => {
 			if (index === this.colors.length) {
 				index = 0;
 			}
@@ -147,6 +149,10 @@ export class PipeTestApp implements OnInit {
 	@HostListener('currentColor')
 	onCurrentColorChange() {
 		console.log(this.currentColor);
+	}
+
+	onDestroy() {
+		this.subscription.unsubscribe();
 	}
 
 }
