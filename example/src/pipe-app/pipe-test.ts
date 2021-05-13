@@ -1,13 +1,15 @@
-import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
+import { Component, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
+	<div [style]="currentColor">{{style|json}}</div>
 	<div *for="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
 	</div>
+	<style>.bs-color{color: var({{currentColor}});}</style>
     <table class="table">
         <thead>
             <tr>
@@ -142,13 +144,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			if (isModel(this)) {
 				this.emitChangeModel('currentColor');
 			}
-			console.log(this.currentColor);
 		});
-	}
-
-	@HostListener('currentColor')
-	onCurrentColorChange() {
-		console.log(this.currentColor);
 	}
 
 	onDestroy() {
