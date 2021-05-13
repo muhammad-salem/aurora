@@ -66,7 +66,9 @@ export class ComponentRender<T> {
 			} else {
 				rootRef = this.view;
 			}
-			this.appendChildToParent(rootRef, this.template, this.contextStack);
+			const rootFragment = document.createDocumentFragment();
+			this.appendChildToParent(rootFragment, this.template, this.contextStack);
+			rootRef.append(rootFragment);
 			// this.componentRef.viewChild
 			// 	.filter(child => child.selector instanceof HTMLElement)
 			// 	.forEach(child => {
@@ -75,7 +77,6 @@ export class ComponentRender<T> {
 			// 		// if (Reflect.has(this.viewChildMap, selectorName)) {
 			// 		// 	Reflect.set(this.view._model, view.modelName, this.viewChildMap[selectorName]);
 			// 		// }
-
 			// 	});
 		}
 	}
@@ -171,7 +172,7 @@ export class ComponentRender<T> {
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
-	private appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMChild<ExpressionNode> | DOMFragmentNode<ExpressionNode>, contextStack: ScopedStack) {
+	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: ScopedStack) {
 		if (child instanceof DOMElementNode) {
 			parent.append(this.createElement(child, contextStack));
 		} else if (child instanceof DOMDirectiveNode) {
@@ -310,7 +311,7 @@ export class ComponentRender<T> {
 		this.subscribeExpressionNode(rightNode, contextStack, callback, element, attr.name);
 		callback();
 	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: ScopedStack, callback: SourceFollowerCallback, object: object, attrName?: string) {
+	subscribeExpressionNode(node: ExpressionNode, contextStack: ScopedStack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
 		node.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
