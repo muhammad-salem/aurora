@@ -135,20 +135,21 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	}
 
 	addTemplateAttr(attrName: string, valueSource: string) {
-		if (/^\{\{(.+)\}\}$/g) {
+		if (/^\{\{(.+)\}\}$/g.test(valueSource)) {
 			// as one way binding
 			valueSource = valueSource.substring(2, valueSource.length - 2);
-			this.addInput(attrName, valueSource);
-		} else {
-			// as string 
-			valueSource = parseStringTemplate(valueSource);
-			if (this.templateAttrs) {
-				this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
-			} else {
-				this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
+			if (!(/\{\{(.+)\}\}/g).test(valueSource)) {
+				this.addInput(attrName, valueSource);
+				return;
 			}
 		}
-
+		// as string 
+		valueSource = parseStringTemplate(valueSource);
+		if (this.templateAttrs) {
+			this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
+		} else {
+			this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
+		}
 	}
 
 }
