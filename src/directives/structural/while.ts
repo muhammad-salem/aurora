@@ -42,6 +42,7 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 			}
 		};
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
+			stack.push(this);
 			this.lastElement = this.comment;
 			// should remove old elements
 			if (this.elements.length > 0) {
@@ -52,13 +53,12 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 				this.elements.splice(0);
 			}
 			callback();
-			stack.push(this);
 		};
 		this.render.subscribeExpressionNode(whileNode, this.directiveStack, uiCallback, this);
 		uiCallback([]);
 	}
 	private getStatement() {
-		const statement = this.directive.directiveValue.trim();
+		const statement = this.directive.directiveValue.toString().trim();
 		if (statement.startsWith('let')) {
 			return statement;
 		} else {

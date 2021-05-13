@@ -1,6 +1,5 @@
-import { DOMElementNode } from '@ibyar/elements';
 import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
-import { ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
+import { JavaScriptParser } from '@ibyar/expressions';
 
 
 @Directive({
@@ -8,30 +7,41 @@ import { ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
 })
 export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 
-	element: HTMLElement;
+	children: Array<ChildNode>;
 
 	onInit(): void {
-		this.element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, this.directiveStack);
-		const conditionNode = JavaScriptParser.parse(this.directive.directiveValue);
+		const fragment = document.createDocumentFragment();
+		for (const child of this.directive.children) {
+			this.render.appendChildToParent(fragment, child, this.directiveStack);
+		}
+		this.children = [];
+		fragment.childNodes.forEach(child => this.children!.push(child));
+
+		const conditionNode = JavaScriptParser.parse(this.directive.directiveValue.toString());
 		let lastConditionValue = false;
 		const callback: SourceFollowerCallback = (stack: any[]) => {
+			stack.push(this);
 			const condition = conditionNode.get(this.directiveStack);
 			if (lastConditionValue !== condition) {
+				lastConditionValue = condition;
 				this._updateView(condition);
 			}
-			lastConditionValue = condition;
-			stack.push(this);
 		};
+
 		this.render.subscribeExpressionNode(conditionNode, this.directiveStack, callback, this);
 		callback([]);
 	}
 
 	private _updateView(condition: boolean) {
 		if (condition) {
-			this.comment.after(this.element);
+			let last: ChildNode = this.comment;
+			this.children.forEach(child => {
+				last.after(child);
+				last = child;
+			});
 		}
-		else if (this.element) {
-			this.element.remove();
+		else if (this.children) {
+			this.children.forEach(child => child.remove());
 		}
 	}
 

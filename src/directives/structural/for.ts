@@ -31,6 +31,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 		}
 
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
+			stack.push(this);
 			this.lastElement = this.comment;
 			// should remove old elements
 			if (this.elements.length > 0) {
@@ -41,7 +42,6 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 				this.elements.splice(0);
 			}
 			callback();
-			stack.push(this);
 		};
 		this.render.subscribeExpressionNode(forNode, this.directiveStack, uiCallback, this);
 		if (!(forNode instanceof ForAwaitOfNode)) uiCallback([]);

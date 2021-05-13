@@ -54,11 +54,11 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
+			stack.push(this);
 			if (this.element) {
 				this.comment.parentNode?.removeChild(this.element);
 			}
 			callback();
-			stack.push(this);
 		};
 		this.render.subscribeExpressionNode(switchNode, this.directiveStack, uiCallback, this);
 		uiCallback([]);
