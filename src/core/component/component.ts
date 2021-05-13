@@ -8,7 +8,7 @@ import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/met
 
 import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
-import { StructuralDirective } from '../directive/directive.js';
+import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
 import { buildExpressionNodes } from '../html/expression.js';
 import {
@@ -53,7 +53,7 @@ export interface PipeRef<T> {
 export interface DirectiveRef<T> {
 	selector: string;
 
-	modelClass: TypeOf<StructuralDirective<T>>; // | TypeOf<AttributeDirective<T>>;
+	modelClass: TypeOf<StructuralDirective<T>> | TypeOf<AttributeDirective>;
 
 	inputs: PropertyRef[];
 	outputs: PropertyRef[];
