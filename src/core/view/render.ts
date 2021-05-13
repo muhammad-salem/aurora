@@ -5,8 +5,8 @@ import {
 import {
 	CommentNode, DOMChild, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
-	DOMParentNode, isTagNameNative, isValidCustomElementName,
-	LiveAttribute, LiveTextContent, NodeFactory, TextContent
+	isTagNameNative, isValidCustomElementName,
+	LiveAttribute, LiveTextContent, TextContent
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
 import { ElementMutation } from './mutation.js';
@@ -38,7 +38,7 @@ export class ComponentRender<T> {
 	template: DOMNode<ExpressionNode>;
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
-	viewChildMap: { [name: string]: any };
+	// viewChildMap: { [name: string]: any };
 	contextStack: ScopedStack;
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
@@ -55,19 +55,6 @@ export class ComponentRender<T> {
 				this.template = this.componentRef.template;
 			}
 
-			this.viewChildMap = {};
-			if (!(this.template instanceof CommentNode)) {
-				this.defineElementNameKey(this.template, this.contextStack);
-			}
-
-			this.componentRef.viewChild.forEach(view => {
-				// support for string selector 
-				let selectorName: string = view.selector as string;
-				if (Reflect.has(this.viewChildMap, selectorName)) {
-					Reflect.set(this.view._model, view.modelName, this.viewChildMap[selectorName]);
-				}
-			});
-
 			let rootRef: HTMLElement | ShadowRoot;
 			if (this.componentRef.isShadowDom) {
 				if (this.view.shadowRoot /* OPEN MODE */) {
@@ -80,6 +67,16 @@ export class ComponentRender<T> {
 				rootRef = this.view;
 			}
 			this.appendChildToParent(rootRef, this.template, this.contextStack);
+			// this.componentRef.viewChild
+			// 	.filter(child => child.selector instanceof HTMLElement)
+			// 	.forEach(child => {
+			// 		// view child support by child class reference, matching with the first 'HTMLElement' element
+			// 		// let selectorName: string = view.selector as string;
+			// 		// if (Reflect.has(this.viewChildMap, selectorName)) {
+			// 		// 	Reflect.set(this.view._model, view.modelName, this.viewChildMap[selectorName]);
+			// 		// }
+
+			// 	});
 		}
 	}
 	initHostListener(): void {
@@ -138,29 +135,6 @@ export class ComponentRender<T> {
 			funcCallback.call(this.view._model, event);
 		});
 	}
-	defineElementNameKey(component: DOMNode<ExpressionNode>, contextStack: ScopedStack) {
-		if (component instanceof DOMDirectiveNode || component instanceof CommentNode) {
-			return;
-		}
-		if (component instanceof DOMElementNode) {
-			if (NodeFactory.DirectiveTag === component.tagName.toLowerCase()) {
-				return;
-			}
-			if (component.templateRefName) {
-				const element = this.createElementByTagName(component, contextStack);
-				Reflect.set(this.view, component.templateRefName.name, element);
-				this.viewChildMap[component.templateRefName.name] = element;
-			}
-		}
-		if (component instanceof DOMParentNode && component.children) {
-			component.children.forEach(child => {
-				if ((child instanceof DOMElementNode && NodeFactory.DirectiveTag !== child.tagName.toLowerCase())
-					|| child instanceof DOMFragmentNode) {
-					this.defineElementNameKey(child, contextStack);
-				}
-			});
-		}
-	}
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
@@ -169,10 +143,6 @@ export class ComponentRender<T> {
 		if (directiveRef) {
 			// structural directive selector
 			const structural = new directiveRef.modelClass(this, comment, directive, directiveStack);
-			if (directive.templateRefName) {
-				Reflect.set(this.view, directive.templateRefName.name, structural);
-				this.viewChildMap[directive.templateRefName.name] = structural;
-			}
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
@@ -192,6 +162,7 @@ export class ComponentRender<T> {
 	}
 	createLiveText(node: LiveTextContent<ExpressionNode>, contextStack: ScopedStack): Text {
 		const liveText = new Text('');
+		contextStack = contextStack.stackFor({ this: liveText });
 		this.bind1Way(liveText, node, contextStack);
 		return liveText;
 	}
@@ -246,15 +217,22 @@ export class ComponentRender<T> {
 		return element;
 	}
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: ScopedStack): HTMLElement {
-		let element: HTMLElement;
-		if (this.viewChildMap[node.templateRefName?.name || '#']) {
-			element = this.viewChildMap[node.templateRefName?.name] as HTMLElement;
-		} else {
-			element = this.createElementByTagName(node, contextStack);
-		}
+		const element = this.createElementByTagName(node, contextStack);
 
+		// TODO: create stack with context for 'this' as element, and a list of attributes directive.
+		contextStack = contextStack.stackFor({ this: element });
 		this.initAttribute(element, node, contextStack);
+		if (node.templateRefName) {
+			let view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.name);
+			if (view) {
+				Reflect.set(this.view._model, view.modelName, element);
+			} else {
+				// <form #form="formDirective"></form>
+				// try to search in this element 'attribute directive' list
+				view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.value);
 
+			}
+		}
 		if (node.children) {
 			for (const child of node.children) {
 				this.appendChildToParent(element, child, contextStack);
@@ -284,7 +262,6 @@ export class ComponentRender<T> {
 		}
 		if (node.twoWayBinding) {
 			node.twoWayBinding.forEach(attr => {
-				//TODO check for attribute directive, find sources from expression
 				this.bind2Way(element, attr, contextStack);
 			});
 		}
@@ -303,7 +280,7 @@ export class ComponentRender<T> {
 				 * <input (value)="person.name" />
 				 * <!-- <input (value)="person.name = $event" /> -->
 				 * 
-				 * TODO diff of event listener and back-way data binding
+				 * TODO: diff of event listener and back-way data binding
 				 */
 				if (typeof event.value === 'string') {
 					listener = ($event: Event) => {
@@ -318,9 +295,7 @@ export class ComponentRender<T> {
 		}
 		if (node.templateAttrs) {
 			node.templateAttrs.forEach(attr => {
-				const isAttr = hasAttr(element, attr.name);
 				this.bind1Way(element, attr, contextStack);
-				// this.attrTemplateHandler(element, attr, isAttr, contextStack);
 			});
 		}
 	}
@@ -329,7 +304,6 @@ export class ComponentRender<T> {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
 		let rightNode = attr.valueNode;
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
-		contextStack = contextStack.stackFor({ this: element });
 		const callback = () => {
 			forwardData.get(contextStack);
 		};
@@ -361,7 +335,6 @@ export class ComponentRender<T> {
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
 		let backwardData = new AssignmentNode('=', rightNode, leftNode);
 
-		contextStack = contextStack.stackFor({ this: element });
 		const callback1 = () => {
 			forwardData.get(contextStack);
 		};
