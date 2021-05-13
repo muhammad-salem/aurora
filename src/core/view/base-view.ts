@@ -216,17 +216,20 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			// 	});
 			// }
 
-			// setup ui view
-			this._render.initView();
+			// do once
+			if (this.childNodes.length === 0) {
+				// setup ui view
+				this._render.initView();
 
-			// if model had view decorator
-			if (this._componentRef.view) {
-				// this._model[componentRef.view] = this;
-				Reflect.set(this._model, this._componentRef.view, this);
+				// if model had view decorator
+				if (this._componentRef.view) {
+					// this._model[componentRef.view] = this;
+					Reflect.set(this._model, this._componentRef.view, this);
+				}
+
+				// init Host Listener events
+				this._render.initHostListener();
 			}
-
-			// init Host Listener events
-			this._render.initHostListener();
 
 			if (isAfterViewInit(this._model)) {
 				this._model.afterViewInit();
@@ -316,13 +319,14 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this.innerHTML = '';
 			this.connectedCallback();
 		}
-
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			// this._changeObservable.emit('destroy');
 			if (isOnDestroy(this._model)) {
 				this._model.onDestroy();
 			}
+			console.log('disconnectedCallback');
+			this.emitChanges('destroy');
 		}
 
 		// events api
