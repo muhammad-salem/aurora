@@ -5,7 +5,10 @@ import { interval, Subscription } from 'rxjs';
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div [style]="currentColor">{{style|json}}</div>
+	<div style="color: var({{currentColor}});"> set style color by style="color: var({{currentColor}});"</div>
+	<div [style]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
+	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
+	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
 	<div *for="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
 	</div>
