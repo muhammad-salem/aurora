@@ -4,6 +4,7 @@ import {
 	TextContent, LiveTextContent, DOMFragmentNode,
 	DOMDirectiveNode, DOMNode, DOMChild, Attribute
 } from '../ast/dom.js';
+import { NodeFactory } from '../ast/factory.js';
 
 type Token = (token: string) => Token;
 
@@ -364,9 +365,19 @@ export class NodeParser {
 			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				let directive = new DOMDirectiveNode(temp.name, temp.value as string);
+				const directive = new DOMDirectiveNode(temp.name, temp.value as string);
 				directive.addChild(node);
 				return directive;
+			}
+			if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
+				// try to find expression attribute
+				// <if expression="a === b">child text <div>...</div></if>
+				temp = node.attributes.find(attr => attr.name === 'expression');
+				if (temp) {
+					const directive = new DOMDirectiveNode('*' + node.tagName, temp.value as string);
+					directive.children = node.children;
+					return directive;
+				}
 			}
 		}
 		return node;

@@ -58,7 +58,7 @@ export class DOMParentNode<E> {
 		if (!this.children) {
 			this.children = [];
 		}
-		parseTextChild<E>(text).forEach(text => this.children.push(text));
+		parseTextChild<E>(text).forEach(childText => this.children.push(childText));
 	}
 
 }
@@ -135,11 +135,12 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	}
 
 	addTemplateAttr(attrName: string, valueSource: string) {
+		valueSource = valueSource.trim();
 		if (/^\{\{(.+)\}\}$/g.test(valueSource)) {
 			// as one way binding
-			valueSource = valueSource.substring(2, valueSource.length - 2);
-			if (!(/\{\{(.+)\}\}/g).test(valueSource)) {
-				this.addInput(attrName, valueSource);
+			const substring = valueSource.substring(2, valueSource.length - 2);
+			if (!(/\{\{(.+)\}\}/g).test(substring)) {
+				this.addInput(attrName, substring);
 				return;
 			}
 		}
@@ -157,7 +158,7 @@ export class BaseNode<E> extends DOMParentNode<E> {
 /**
  * structural directive 
  */
-export class DOMDirectiveNode<E> extends BaseNode<E> {
+export class DOMDirectiveNode<E> extends DOMParentNode<E>{
 
 	/**
 	 * name of the directive 

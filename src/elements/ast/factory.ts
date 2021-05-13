@@ -106,7 +106,6 @@ export class NodeFactory {
 
 	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]) {
 		const directive = new DOMDirectiveNode(directiveName, directiveValue);
-		NodeFactory.initElementAttrs(directive, attrs);
 		children?.forEach(child => (typeof child === 'string') ? directive.addTextChild(child) : directive.addChild(child));
 		return directive;
 	}

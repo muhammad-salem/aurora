@@ -1,6 +1,6 @@
 import {
-	BaseNode, DOMChild, DOMFragmentNode,
-	DOMNode, DOMParentNode, LiveAttribute, LiveTextContent
+	BaseNode, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode,
+	DOMParentNode, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
 import { ExpressionNode, IdentifierNode, JavaScriptParser } from '@ibyar/expressions';
 
@@ -23,10 +23,13 @@ function parseBaseNode(base: BaseNode<ExpressionNode>) {
 	parseDomParentNode(base);
 }
 
-function parseChild(child: DOMChild<ExpressionNode>) {
-	if (child instanceof BaseNode) {
-		// DomElementNode & DomDirectiveNode
+function parseChild(child: DOMNode<ExpressionNode>) {
+	if (child instanceof DOMElementNode) {
+		// DomElementNode
 		parseBaseNode(child);
+	} else if (child instanceof DOMDirectiveNode) {
+		// DomDirectiveNode
+		parseDomParentNode(child);
 	} else if (child instanceof LiveTextContent) {
 		parseLiveText(child);
 	}

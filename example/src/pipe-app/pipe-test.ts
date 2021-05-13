@@ -12,6 +12,9 @@ import { interval, Subscription } from 'rxjs';
 	<div *for="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
 	</div>
+	<for expression="let d of colors">
+		{{d}} :: <if expression="d !== currentColor">X:{{currentColor}}</if>
+	</for>
 	<style>.bs-color{color: var({{currentColor}});}</style>
     <table class="table">
         <thead>
@@ -145,7 +148,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			}
 			this.currentColor = this.colors[index++];
 			if (isModel(this)) {
-				this.emitChangeModel('currentColor');
+				// this.emitChangeModel('currentColor');
 			}
 		});
 	}

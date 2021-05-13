@@ -44,8 +44,7 @@ export class TemplateParser {
 			 * also all attributes names will be 'lower case'
 			 */
 			const element: HTMLElement = child as HTMLElement;
-			let node = new DOMElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
-			let directiveAttr: Attr;
+			const node = new DOMElementNode(element.tagName.toLowerCase(), element.attributes.getNamedItem('is')?.value);
 			for (let i = 0; i < element.attributes.length; i++) {
 				const attr = element.attributes.item(i) as Attr;
 				NodeFactory.handelAttribute(node, attr.name, attr.value);
