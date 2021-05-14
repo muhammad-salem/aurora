@@ -1,19 +1,23 @@
-import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
-import {
-	ForAwaitOfNode, ForInNode, ForNode,
-	ForOfNode, JavaScriptParser, StackProvider
-} from '@ibyar/expressions';
+import { Directive } from '@ibyar/core';
+import { ExpressionNode, ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '@ibyar/expressions';
+import { AbstractStructuralDirective } from './structural.js';
 
 @Directive({
 	selector: '*for',
 })
-export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
+export class ForDirective<T> extends AbstractStructuralDirective<T> {
 
-	elements: ChildNode[] = [];
-
-	onInit(): void {
-		const statement = this.getStatement();
-		const forNode = JavaScriptParser.parse(statement);
+	getStatement() {
+		if (/^await ?\(.*\)$/g.test(this.directive.directiveValue)) {
+			return `for ${this.directive.directiveValue} { }`;
+		} else if (/^await *[cl]$/g.test(this.directive.directiveValue)) {
+			const statement = this.directive.directiveValue.substring(5);
+			return `for await(${statement}) { }`;
+		} else {
+			return `for(${this.directive.directiveValue}) { }`;
+		}
+	}
+	getCallback(forNode: ExpressionNode): () => void {
 		let callback: () => void;
 		if (forNode instanceof ForNode) {
 			callback = this.handelForNode(forNode);
@@ -26,30 +30,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
-
-		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
-			stack.push(this);
-			if (this.elements.length > 0) {
-				const parent: Node = this.comment.parentNode!;
-				for (const elm of this.elements) {
-					parent.removeChild(elm);
-				}
-				this.elements.splice(0);
-			}
-			callback();
-		};
-		this.render.subscribeExpressionNode(forNode, this.directiveStack, uiCallback, this);
-		if (!(forNode instanceof ForAwaitOfNode)) uiCallback([]);
-	}
-	private getStatement() {
-		if (/^await ?\(.*\)$/g.test(this.directive.directiveValue)) {
-			return `for ${this.directive.directiveValue} { }`;
-		} else if (/^await *[cl]$/g.test(this.directive.directiveValue)) {
-			const statement = this.directive.directiveValue.substring(5);
-			return `for await(${statement}) { }`;
-		} else {
-			return `for(${this.directive.directiveValue}) { }`;
-		}
+		return callback;
 	}
 
 	handelForNode(forNode: ForNode) {
@@ -60,7 +41,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 				forNode.getFinalExpression()?.get(this.directiveStack)
 			) {
 				// insert/remove
-				this._updateView(this.directiveStack);
+				this.updateView(this.directiveStack);
 			}
 		};
 	}
@@ -70,7 +51,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 			for (const iterator of iterable) {
 				const stack = this.directiveStack.newStack();
 				forOfNode.getVariable().set(stack, iterator);
-				this._updateView(stack);
+				this.updateView(stack);
 			}
 		};
 	}
@@ -80,7 +61,7 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 			for (const iterator in iterable) {
 				const stack = this.directiveStack.newStack();
 				forInNode.getVariable().set(stack, iterator);
-				this._updateView(stack);
+				this.updateView(stack);
 			}
 		};
 	}
@@ -90,16 +71,8 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 			for await (const iterator of iterable) {
 				const stack = this.directiveStack.newStack();
 				forAwaitOfNode.getVariable().set(stack, iterator);
-				this._updateView(stack);
+				this.updateView(stack);
 			}
 		};
-	}
-	private _updateView(forStack: StackProvider) {
-		const fragment = document.createDocumentFragment();
-		for (const child of this.directive.children) {
-			this.render.appendChildToParent(fragment, child, forStack);
-		}
-		fragment.childNodes.forEach(child => this.elements.push(child));
-		this.comment.after(fragment);
 	}
 }

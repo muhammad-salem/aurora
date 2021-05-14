@@ -1,6 +1,7 @@
 import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
 import { DOMChild, DOMDirectiveNode } from '@ibyar/elements';
 import { ExpressionNode, JavaScriptParser, StackProvider, SwitchNode } from '@ibyar/expressions';
+import { AbstractStructuralDirective } from './structural.js';
 
 
 @Directive({
@@ -16,14 +17,15 @@ export class DefaultSwitchCaseDirective {
 @Directive({
 	selector: '*switch',
 })
-export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit {
-
-	elements: ChildNode[] = [];
+export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 	caseElements: DOMDirectiveNode<ExpressionNode>[] = [];
 	caseExpressions: ExpressionNode[] = [];
 	defaultElement: DOMDirectiveNode<ExpressionNode>;
 
-	onInit(): void {
+	getStatement() {
+		return `switch(${this.directive.directiveValue}) { }`;
+	}
+	getCallback(switchNode: ExpressionNode): () => void {
 		const directiveChildren = (this.directive.children as DOMDirectiveNode<ExpressionNode>[])[0].children as DOMDirectiveNode<ExpressionNode>[];
 		for (const child of directiveChildren) {
 			if (child.directiveName === '*case') {
@@ -35,8 +37,6 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 				this.defaultElement = child;
 			}
 		}
-		const statement = this.getStatement();
-		const switchNode = JavaScriptParser.parse(statement);
 		for (const directive of this.caseElements) {
 			this.caseExpressions.push(JavaScriptParser.parse(String(directive.directiveValue)));
 		}
@@ -59,29 +59,17 @@ export class SwitchDirective<T> extends StructuralDirective<T> implements OnInit
 						return;
 					}
 				}
-				this._updateView(child.children, this.directiveStack);
+				this._updateSwitchCaseView(child.children, this.directiveStack);
 			};
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
-		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
-			stack.push(this);
-			this.elements.forEach(child => this.comment.parentNode?.removeChild(child));
-			this.elements.splice(0);
-			callback();
-		};
-		this.render.subscribeExpressionNode(switchNode, this.directiveStack, uiCallback);
-		uiCallback([]);
+		return callback;
 	}
-	private getStatement() {
-		return `switch(${this.directive.directiveValue}) { }`;
-	}
-	private _updateView(children: DOMChild<ExpressionNode>[], stack: StackProvider) {
+	private _updateSwitchCaseView(children: DOMChild<ExpressionNode>[], stack: StackProvider) {
 		const fragment = document.createDocumentFragment();
 		for (const child of children) {
 			this.render.appendChildToParent(fragment, child, stack);
 		}
-		fragment.childNodes.forEach(child => this.elements.push(child));
-		this.comment.after(fragment);
 	}
 }
