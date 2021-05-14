@@ -1,16 +1,13 @@
 import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
-import { DOMElementNode } from '@ibyar/elements';
 import {
-	ExpressionNode, ForAwaitOfNode, ForInNode,
-	ForNode, ForOfNode, JavaScriptParser, ScopedStack
+	ForAwaitOfNode, ForInNode, ForNode,
+	ForOfNode, JavaScriptParser, StackProvider
 } from '@ibyar/expressions';
 
 @Directive({
 	selector: '*for',
 })
 export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
-
-	lastElement: HTMLElement | Comment;
 
 	elements: ChildNode[] = [];
 
@@ -32,8 +29,6 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
 			stack.push(this);
-			this.lastElement = this.comment;
-			// should remove old elements
 			if (this.elements.length > 0) {
 				const parent: Node = this.comment.parentNode!;
 				for (const elm of this.elements) {
@@ -99,10 +94,12 @@ export class ForDirective<T> extends StructuralDirective<T> implements OnInit {
 			}
 		};
 	}
-	private _updateView(forStack: ScopedStack) {
-		const element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, forStack);
-		this.lastElement.after(element);
-		this.elements.push(element);
-		this.lastElement = element;
+	private _updateView(forStack: StackProvider) {
+		const fragment = document.createDocumentFragment();
+		for (const child of this.directive.children) {
+			this.render.appendChildToParent(fragment, child, forStack);
+		}
+		fragment.childNodes.forEach(child => this.elements.push(child));
+		this.comment.after(fragment);
 	}
 }

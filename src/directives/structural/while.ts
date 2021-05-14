@@ -1,21 +1,11 @@
-import {
-	Directive, OnInit,
-	SourceFollowerCallback, StructuralDirective
-} from '@ibyar/core';
-import { DOMElementNode } from '@ibyar/elements';
-import {
-	ExpressionNode, JavaScriptParser,
-	ScopedStack, StatementNode, WhileNode
-} from '@ibyar/expressions';
+import { Directive, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
+import { ExpressionNode, JavaScriptParser, StackProvider, StatementNode, WhileNode } from '@ibyar/expressions';
 
 @Directive({
 	selector: '*while',
 })
 export class WhileDirective<T> extends StructuralDirective<T> implements OnInit {
-
-	lastElement: HTMLElement | Comment;
 	elements: ChildNode[] = [];
-
 	onInit(): void {
 		const statement = this.getStatement();
 		const whileNode = JavaScriptParser.parse(statement);
@@ -43,8 +33,6 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 		};
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
 			stack.push(this);
-			this.lastElement = this.comment;
-			// should remove old elements
 			if (this.elements.length > 0) {
 				const parent: Node = this.comment.parentNode!;
 				for (const elm of this.elements) {
@@ -65,10 +53,12 @@ export class WhileDirective<T> extends StructuralDirective<T> implements OnInit 
 			return `while (${statement}) { }`;
 		}
 	}
-	private _updateView(stack: ScopedStack) {
-		const element = this.render.createElement(this.directive.children[0] as DOMElementNode<ExpressionNode>, stack);
-		this.lastElement.after(element);
-		this.elements.push(element);
-		this.lastElement = element;
+	private _updateView(stack: StackProvider) {
+		const fragment = document.createDocumentFragment();
+		for (const child of this.directive.children) {
+			this.render.appendChildToParent(fragment, child, stack);
+		}
+		fragment.childNodes.forEach(child => this.elements.push(child));
+		this.comment.after(fragment);
 	}
 }
