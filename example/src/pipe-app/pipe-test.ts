@@ -10,11 +10,16 @@ import { interval, Subscription } from 'rxjs';
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
 	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
 	<div *for="let color of colors">
-		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+		color: {{color}} <span *if="color === currentColor"> => Current Color ='{{currentColor}}'</span>
 	</div>
 	<for expression="let d of colors">
-		{{d}} :: <if expression="d !== currentColor">X:{{currentColor}}</if>
+		{{d}} => <if expression="d !== currentColor"><div>{{currentColor}}</div></if>
 	</for>
+	<if expression="true">
+		<for expression="let d of colors">
+			{{d}}
+		</for>
+	</if>
 	<style>.bs-color{color: var({{currentColor}});}</style>
     <table class="table">
         <thead>
@@ -94,6 +99,27 @@ import { interval, Subscription } from 'rxjs';
             </tr>
         </tbody>
     </table>
+
+	<table class="table">
+		<thead>
+			<tr [height]="heightPX + 'px'">
+				<th scope="col">#</th>
+				<th scope="col">First</th>
+				<th scope="col">Last</th>
+				<th scope="col">Age</th>
+			</tr>
+		</thead>
+		<tbody>
+			<for expression="let index = 0, row=table[index]; index < table.length; index++, row=table[index]">
+				<tr *if="row.age > 20">
+					<th scope="row">{{index}}</th>
+					<td>{{row.firstName}}</td>
+					<td>{{row.lastName}}</td>
+					<td>{{row.age}}</td>
+				</tr>
+			</for>
+		</tbody>
+	</table>
     `
 })
 export class PipeAppComponent implements OnInit, OnDestroy {
@@ -120,6 +146,13 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	array = ['a', 'b', 'c', 'd'];
 
+	table = [
+		{ firstName: 'Tinu', lastName: 'Elejogun', age: 14 },
+		{ firstName: 'Mark', lastName: 'Kostrzewski', age: 25 },
+		{ firstName: 'Lily', lastName: 'McGarrett', age: 18 },
+		{ firstName: 'Adela', lastName: 'Athanasios', age: 22 },
+	];
+
 	colors = [
 		'--bs-blue',
 		'--bs-indigo',
@@ -140,6 +173,8 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	subscription: Subscription;
 
+	heightPX = 10;
+
 	onInit() {
 		let index = 0;
 		this.subscription = this.observable.subscribe(() => {
@@ -147,8 +182,10 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 				index = 0;
 			}
 			this.currentColor = this.colors[index++];
+			this.heightPX += 10;
 			if (isModel(this)) {
-				// this.emitChangeModel('currentColor');
+				this.emitChangeModel('currentColor');
+				this.emitChangeModel('heightPX');
 			}
 		});
 	}

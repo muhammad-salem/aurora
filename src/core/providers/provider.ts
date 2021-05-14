@@ -100,6 +100,17 @@ export class ClassRegistry {
 		return false;
 	}
 
+	directiveHasInput<T>(input: string): boolean {
+		for (const directiveClass of this.directiveSet) {
+			const directiveRef: DirectiveRef<T> =
+				getBootstrapMetadata(directiveClass.prototype);
+			if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef: DirectiveRef<T> =
@@ -110,6 +121,7 @@ export class ClassRegistry {
 		}
 		return undefined;
 	}
+
 
 	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
 		for (const pipeClass of this.pipeSet) {

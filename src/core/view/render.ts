@@ -18,6 +18,7 @@ import {
 	SourceFollowerCallback, subscribe1way, subscribe2way
 } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
+import { ElementContextProvider } from '../directive/providers.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -218,7 +219,9 @@ export class ComponentRender<T> {
 		const element = this.createElementByTagName(node, contextStack);
 
 		// TODO: create stack with context for 'this' as element, and a list of attributes directive.
-		contextStack = contextStack.stackFor({ this: element });
+		const elContext = new ElementContextProvider(element);
+		contextStack = contextStack.newStack();
+		contextStack.add(elContext);
 		this.initAttribute(element, node, contextStack);
 		if (node.templateRefName) {
 			let view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.name);
