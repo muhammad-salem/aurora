@@ -17,8 +17,8 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 			return `for(${this.directive.directiveValue}) { }`;
 		}
 	}
-	getCallback(forNode: ExpressionNode): () => void {
-		let callback: () => void;
+	getCallback(forNode: ExpressionNode): () => void | Promise<void> {
+		let callback: () => void | Promise<void>;
 		if (forNode instanceof ForNode) {
 			callback = this.handelForNode(forNode);
 		} else if (forNode instanceof ForOfNode) {
@@ -65,7 +65,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 			}
 		};
 	}
-	handelForAwaitOfNode(forAwaitOfNode: ForAwaitOfNode): () => void {
+	handelForAwaitOfNode(forAwaitOfNode: ForAwaitOfNode): () => Promise<any> {
 		return async () => {
 			const iterable: AsyncIterable<any> = forAwaitOfNode.getIterable().get(this.directiveStack);
 			for await (const iterator of iterable) {
@@ -74,5 +74,12 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 				this.updateView(stack);
 			}
 		};
+	}
+	onRender(node: ExpressionNode, callback: () => void | Promise<void>) {
+		if (!(node instanceof ForAwaitOfNode)) {
+			this.renderDOMChild(node, callback);
+		} else {
+			this.renderAwaitDOMChild(node, callback as () => Promise<void>);
+		}
 	}
 }

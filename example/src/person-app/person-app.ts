@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener } from '@ibyar/aurora';
+import { Component, Input, View, HostListener, isModel } from '@ibyar/aurora';
 import { Person, PersonModel } from './person';
 import { url as templateUrl } from './person-app.html';
 
@@ -47,6 +47,11 @@ export class PersonApp {
 	@HostListener('person1:select')
 	onClose(data: any) {
 		console.log('AppRoot => person1:select', data);
+		setTimeout(() => {
+			if (isModel(this)) {
+				this.emitChangeModel('asyncIterable');
+			}
+		}, 3000);
 	}
 
 	@HostListener('personEdit:input')
