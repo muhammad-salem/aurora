@@ -253,7 +253,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		}
 
 		emitRootChanges(): void {
-			this.emitChanges(...Object.keys(this._model.__observable));
+			this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
 		}
 
 		emitChanges(...events: string[]): void {
