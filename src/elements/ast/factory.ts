@@ -17,9 +17,12 @@ export class NodeFactory {
 
 	static StructuralDirectives = [
 		'if',
+		'else',
 		'for',
 		'while',
-		'switch'
+		'switch',
+		'case',
+		'default'
 	];
 
 	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]): DOMNode<any> {
