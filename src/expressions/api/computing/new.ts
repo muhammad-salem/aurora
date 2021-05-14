@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { ScopedStack } from '../scope.js';
+import type { StackProvider } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -18,10 +18,10 @@ export class NewNode extends AbstractExpressionNode {
 	getParameters() {
 		return this.parameters;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`NewNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack,) {
+	get(stack: StackProvider,) {
 		const classRef = this.className.get(stack);
 		let value: any;
 		if (this.parameters) {

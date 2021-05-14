@@ -1,6 +1,6 @@
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { ScopedStack } from '../../scope.js';
+import { StackProvider } from '../../scope.js';
 
 /**
  * The break statement terminates the current loop, switch, or label statement
@@ -25,10 +25,10 @@ export class TerminateNode extends AbstractExpressionNode {
 	getSymbol() {
 		return this.symbol;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`TerminateNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		return this.symbol;
 	}
 	entry(): string[] {

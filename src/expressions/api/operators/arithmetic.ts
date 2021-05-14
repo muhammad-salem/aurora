@@ -2,7 +2,7 @@ import type { EvaluateNode, EvaluateType } from './types.js';
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
 import { AbstractExpressionNode, InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('arithmetic')
 export class ArithmeticNode extends InfixExpressionNode {
@@ -52,10 +52,10 @@ export abstract class IncrementDecrementNode extends AbstractExpressionNode {
 	getNode() {
 		return this.node;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		this.node.set(stack, value);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		const num = { value: this.node.get(stack) as number };
 		const returnValue = this.evaluate(num);
 		this.set(stack, num.value);

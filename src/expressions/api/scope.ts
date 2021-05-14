@@ -1,4 +1,4 @@
-export interface ScopedContext {
+export interface ContextProvider {
 
 	/**
 	 * get the first context provider that have `propertyKey`
@@ -30,7 +30,7 @@ export interface ScopedContext {
 
 export interface AwaitPromiseInfo {
 	promise: Promise<any>;
-	node: { set(stack: ScopedStack, value: any): any; };
+	node: { set(stack: StackProvider, value: any): any; };
 }
 
 export interface AsyncIterableInfo {
@@ -38,21 +38,21 @@ export interface AsyncIterableInfo {
 	forAwaitBody: (iterator: any) => any;
 }
 
-export interface ScopedStack extends ScopedContext {
-	readonly localScop: ScopedContext;
+export interface StackProvider extends ContextProvider {
+	readonly localScop: ContextProvider;
 	awaitPromise: Array<AwaitPromiseInfo>;
 	forAwaitAsyncIterable?: AsyncIterableInfo;
 	/**
 	 * add one or many context scopes on the top of the current stack
 	 * @param contexts 
 	 */
-	add(...contexts: ScopedContext[]): number;
+	add(...contexts: ContextProvider[]): number;
 	/**
 	 * remove the scope context with the `index` from this stack 
 	 * @param index the index to remove from this stack `array`
 	 * @returns the context scope that removed
 	 */
-	remove(index: number): ScopedContext;
+	remove(index: number): ContextProvider;
 	/**
 	 * add an `object` as a context provider on the top of this stack.
 	 * @param obj 
@@ -63,35 +63,35 @@ export interface ScopedStack extends ScopedContext {
 	/**
 	 * add an empty provider to this scop
 	 */
-	addEmptyProvider(): ScopedContext;
+	addEmptyProvider(): ContextProvider;
 
 	/**
 	 * add an readonly provider to this scop, you cant set any value in this provider
 	 */
-	addReadOnlyProvider<T extends object>(provider: T): ScopedContext;
+	addReadOnlyProvider<T extends object>(provider: T): ContextProvider;
 	/**
 	 * search for the first context that have property key
 	 * if not found will return the stack local scop as a default value
 	 * @param propertyKey the property key
 	 */
-	findContext(propertyKey: PropertyKey): ScopedContext;
+	findContext(propertyKey: PropertyKey): ContextProvider;
 
 	/**
 	 * crete chained stack based on this stack.
 	 */
-	newStack(): ScopedStack;
+	newStack(): StackProvider;
 
 	/**
 	 * 
 	 * @param obj create chained stack for provided object
 	 */
-	stackFor(obj: any): ScopedStack;
+	stackFor(obj: any): StackProvider;
 
 	/**
 	 * 
 	 * @param obj create an empty stack for this provided object, as local scope context
 	 */
-	emptyScopeFor(obj: any | any[]): ScopedStack;
+	emptyScopeFor(obj: any | any[]): StackProvider;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
 }

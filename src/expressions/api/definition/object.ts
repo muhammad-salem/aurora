@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('property')
 export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
@@ -17,10 +17,10 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
 	getValue() {
 		return this.value;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error('ObjectLiteralPropertyNode#set() has no implementation');
 	}
-	get(stack: ScopedStack, thisContext: ThisType<any>): any {
+	get(stack: StackProvider, thisContext: ThisType<any>): any {
 		const name = this.name.get(stack);
 		const value = this.value.get(stack);
 		Object.defineProperty(thisContext, name, { value, configurable: true, enumerable: true, writable: true });
@@ -49,10 +49,10 @@ export class SetPropertyNode extends ObjectLiteralPropertyNode {
 	static fromJSON(node: SetPropertyNode, deserializer: NodeDeserializer): SetPropertyNode {
 		return new SetPropertyNode(deserializer(node.name), deserializer(node.value));
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return true;
 	}
-	get(stack: ScopedStack, thisContext: ThisType<any>): (v: any) => void {
+	get(stack: StackProvider, thisContext: ThisType<any>): (v: any) => void {
 		const name = this.name.get(stack);
 		const set: (v: any) => void = this.value.get(stack);
 		Object.defineProperty(thisContext, name, { set, configurable: true, enumerable: true });
@@ -65,10 +65,10 @@ export class GetPropertyNode extends ObjectLiteralPropertyNode {
 	static fromJSON(node: GetPropertyNode, deserializer: NodeDeserializer): GetPropertyNode {
 		return new GetPropertyNode(deserializer(node.name), deserializer(node.value));
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return true;
 	}
-	get(stack: ScopedStack, thisContext: ThisType<any>): () => any {
+	get(stack: StackProvider, thisContext: ThisType<any>): () => any {
 		const name = this.name.get(stack);
 		const get: () => any = this.value.get(stack);
 		Object.defineProperty(thisContext, name, { get, configurable: true, enumerable: true });
@@ -87,10 +87,10 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 	getProperties() {
 		return this.properties;
 	}
-	set(stack: ScopedStack) {
+	set(stack: StackProvider) {
 		throw new Error('LiteralObjectNode#set() has no implementation.');
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		const newObject = Object.create(null);
 		for (const property of this.properties) {
 			property.get(stack, newObject);

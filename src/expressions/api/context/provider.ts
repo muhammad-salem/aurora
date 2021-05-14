@@ -1,8 +1,8 @@
-import type { AsyncIterableInfo, AwaitPromiseInfo, ScopedContext, ScopedStack } from '../scope.js';
+import type { AsyncIterableInfo, AwaitPromiseInfo, ContextProvider, StackProvider } from '../scope.js';
 
-export class DefaultScopedContext<T extends object> implements ScopedContext {
+export class DefaultContextProvider<T extends object> implements ContextProvider {
 	static for<T extends object>(context: T) {
-		return new DefaultScopedContext(context);
+		return new DefaultContextProvider(context);
 	}
 	constructor(protected context: T) { }
 	get(propertyKey: PropertyKey): any {
@@ -19,62 +19,62 @@ export class DefaultScopedContext<T extends object> implements ScopedContext {
 	}
 }
 
-export class ReadOnlyScopedContext<T extends object> extends DefaultScopedContext<T> {
+export class ReadOnlyContextProvider<T extends object> extends DefaultContextProvider<T> {
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		// do nothing
 		return false;
 	}
 }
 
-export class EmptyScopedContext extends DefaultScopedContext<any> {
+export class EmptyContextProvider extends DefaultContextProvider<any> {
 	constructor() {
 		super(Object.create(null));
 	}
 }
 
-export abstract class AbstractScopedStack implements ScopedStack {
-	abstract readonly localScop: ScopedContext;
-	abstract readonly stack: Array<ScopedContext>;
+export abstract class AbstractScopedStack implements StackProvider {
+	abstract readonly localScop: ContextProvider;
+	abstract readonly stack: Array<ContextProvider>;
 
 	awaitPromise: Array<AwaitPromiseInfo> = [];
 
 	forAwaitAsyncIterable?: AsyncIterableInfo;
 
-	newStack(): ScopedStack {
-		const stack = new (this.constructor as (new ([]) => ScopedStack))(this.stack.slice());
+	newStack(): StackProvider {
+		const stack = new (this.constructor as (new ([]) => StackProvider))(this.stack.slice());
 		stack.add(this.localScop);
 		return stack;
 	}
-	stackFor(obj: any): ScopedStack {
+	stackFor(obj: any): StackProvider {
 		const stack = this.newStack();
 		stack.addProvider(obj);
 		return stack;
 	}
-	emptyScopeFor(obj: any | any[]): ScopedStack {
-		return new EmptyScopeProvider(DefaultScopedContext.for(obj));
+	emptyScopeFor(obj: any | any[]): StackProvider {
+		return new EmptyScopeProvider(DefaultContextProvider.for(obj));
 	}
-	add(...contexts: ScopedContext[]): number {
+	add(...contexts: ContextProvider[]): number {
 		return this.stack.unshift(...contexts);
 	}
-	remove(index: number = 0): ScopedContext {
+	remove(index: number = 0): ContextProvider {
 		const context = this.stack[index];
 		this.stack.splice(index, 1);
 		return context;
 	}
 	addProvider<T extends object>(obj: T): number {
-		return this.add(new DefaultScopedContext(obj));
+		return this.add(new DefaultContextProvider(obj));
 	}
-	addEmptyProvider(): ScopedContext {
-		const scope = new EmptyScopedContext();
+	addEmptyProvider(): ContextProvider {
+		const scope = new EmptyContextProvider();
 		this.add(scope);
 		return scope;
 	}
-	addReadOnlyProvider<T extends object>(provider: T): ScopedContext {
-		const scope = new ReadOnlyScopedContext<T>(provider);
+	addReadOnlyProvider<T extends object>(provider: T): ContextProvider {
+		const scope = new ReadOnlyContextProvider<T>(provider);
 		this.add(scope);
 		return scope;
 	}
-	findContext(propertyKey: PropertyKey): ScopedContext {
+	findContext(propertyKey: PropertyKey): ContextProvider {
 		if (this.localScop.has(propertyKey)) {
 			return this.localScop;
 		}
@@ -99,19 +99,19 @@ export abstract class AbstractScopedStack implements ScopedStack {
 }
 
 export class EmptyScopeProvider extends AbstractScopedStack {
-	readonly stack: Array<ScopedContext> = [];
-	constructor(public readonly localScop: ScopedContext) {
+	readonly stack: Array<ContextProvider> = [];
+	constructor(public readonly localScop: ContextProvider) {
 		super();
 	}
 }
 
 export class ScopeProvider extends AbstractScopedStack {
 	static for(context: any | Array<any>) {
-		return new ScopeProvider([DefaultScopedContext.for(context)]);
+		return new ScopeProvider([DefaultContextProvider.for(context)]);
 	}
-	readonly localScop: ScopedContext = new EmptyScopedContext();
-	readonly stack: Array<ScopedContext>;
-	constructor(stack: Array<ScopedContext>) {
+	readonly localScop: ContextProvider = new EmptyContextProvider();
+	readonly stack: Array<ContextProvider>;
+	constructor(stack: Array<ContextProvider>) {
 		super();
 		this.stack = stack;
 	}
@@ -122,14 +122,14 @@ export class ScopeProvider extends AbstractScopedStack {
 /**
  * crete new proxy handler object as scoped context
  */
-export class ScopeProxyHandler implements ProxyHandler<ScopedContext> {
-	has(target: ScopedContext, propertyKey: PropertyKey): boolean {
+export class ScopeProxyHandler implements ProxyHandler<ContextProvider> {
+	has(target: ContextProvider, propertyKey: PropertyKey): boolean {
 		return target.has(propertyKey);
 	}
-	get(target: ScopedContext, propertyKey: PropertyKey, receiver: any): any {
+	get(target: ContextProvider, propertyKey: PropertyKey, receiver: any): any {
 		return target.get(propertyKey);
 	}
-	set(target: ScopedContext, propertyKey: PropertyKey, value: any, receiver: any): boolean {
+	set(target: ContextProvider, propertyKey: PropertyKey, value: any, receiver: any): boolean {
 		return target.set(propertyKey, value);
 	}
 }
@@ -144,6 +144,6 @@ export type RevocableProxy<T> = {
 	revoke: () => void;
 };
 
-export function revocableProxyOfScopedContext<T extends ScopedContext>(context: T): RevocableProxy<T> {
+export function revocableProxyOfScopedContext<T extends ContextProvider>(context: T): RevocableProxy<T> {
 	return Proxy.revocable<T>(context, DefaultScopeProxyHandler);
 }

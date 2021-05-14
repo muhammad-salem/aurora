@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('array')
 export class ArrayLiteralNode extends AbstractExpressionNode {
@@ -14,10 +14,10 @@ export class ArrayLiteralNode extends AbstractExpressionNode {
 	getItems() {
 		return this.items;
 	}
-	set(stack: ScopedStack) {
+	set(stack: StackProvider) {
 		throw new Error("LiteralArrayNode#set() has no implementation.");
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		return this.items.map(item => item.get(stack));
 	}
 	entry(): string[] {

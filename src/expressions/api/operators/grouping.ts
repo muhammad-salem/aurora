@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { ScopedStack } from '../scope.js';
+import type { StackProvider } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -21,10 +21,10 @@ export class GroupingNode extends AbstractExpressionNode {
 	getNode() {
 		return this.node;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		this.node.set(stack, value);
 	}
-	get(stack: ScopedStack,) {
+	get(stack: StackProvider,) {
 		return this.node.get(stack);
 	}
 	entry(): string[] {

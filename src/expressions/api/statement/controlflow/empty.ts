@@ -1,6 +1,6 @@
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { ScopedStack } from '../../scope.js';
+import { StackProvider } from '../../scope.js';
 
 /**
  * The empty statement is a semicolon (;) indicating that no statement will be executed,
@@ -19,10 +19,10 @@ export class EmptyNode extends AbstractExpressionNode {
 	constructor() {
 		super();
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`EmptyNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		return void 0;
 	}
 	entry(): string[] {

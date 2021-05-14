@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { ScopedStack } from '../../scope.js';
+import type { StackProvider } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -29,10 +29,10 @@ export class IfElseNode extends AbstractExpressionNode {
 	getElseStatement() {
 		return this.elseStatement;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`IfElseNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		stack = stack.newStack();
 		const condition = this.condition.get(stack);
 		if (condition) {

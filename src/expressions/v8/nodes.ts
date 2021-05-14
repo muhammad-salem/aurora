@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import type { ScopedStack } from '../api/scope.js';
+import type { StackProvider } from '../api/scope.js';
 import { InfixExpressionNode } from '../api/abstract.js';
 import { ArithmeticNode, PostfixNode, PrefixNode } from '../api/operators/arithmetic.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
@@ -129,7 +129,7 @@ export function creteCommaExpression(nodes: ExpressionNode[]): ExpressionNode {
 	return new CommaNode(nodes);
 }
 
-const USELESS_SCOPE: ScopedStack = null as unknown as ScopedStack;//Object.create(null);
+const USELESS_SCOPE: StackProvider = null as unknown as StackProvider;//Object.create(null);
 
 export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode {
 	const expression = creteInfixExpression(op.getName(), x, y);

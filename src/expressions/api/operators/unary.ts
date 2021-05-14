@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 import { AccessNode } from '../definition/member.js';
 @Deserializer('unary')
 export class UnaryNode extends AbstractExpressionNode {
@@ -23,10 +23,10 @@ export class UnaryNode extends AbstractExpressionNode {
 	getNode() {
 		return this.node;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return this.node.set(stack, value);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		let value = this.node.get(stack);
 		return UnaryNode.Evaluations[this.op](value);
 	}
@@ -59,7 +59,7 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 	getNode() {
 		return this.node;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error('LiteralUnaryNode#set() has no implementation.');
 	}
 	entry(): string[] {
@@ -71,7 +71,7 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 		}
 		return [];
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		switch (this.op) {
 			case 'typeof': return this.getTypeof(stack, thisContext);
 			case 'void': return this.getVoid(stack, thisContext);
@@ -79,13 +79,13 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 			case 'await': return this.getAwait(stack, thisContext);
 		}
 	}
-	private getTypeof(stack: ScopedStack, thisContext?: any) {
+	private getTypeof(stack: StackProvider, thisContext?: any) {
 		return typeof this.node.get(stack);
 	}
-	private getVoid(stack: ScopedStack, thisContext?: any) {
+	private getVoid(stack: StackProvider, thisContext?: any) {
 		return void this.node.get(stack);
 	}
-	private getDelete(stack: ScopedStack, thisContext?: any) {
+	private getDelete(stack: StackProvider, thisContext?: any) {
 		if (this.node instanceof AccessNode) {
 			thisContext = thisContext || this.node.getLeft().get(stack);
 			const right = this.node.getRight();
@@ -98,7 +98,7 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 			}
 		}
 	}
-	private getAwait(stack: ScopedStack, thisContext?: any) {
+	private getAwait(stack: StackProvider, thisContext?: any) {
 		const promise = this.node.get(stack);
 		return new AwaitPromise(promise);
 	}

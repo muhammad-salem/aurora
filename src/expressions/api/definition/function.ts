@@ -1,5 +1,5 @@
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { ScopedStack } from '../scope.js';
+import type { StackProvider } from '../scope.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { IdentifierNode } from './values.js';
@@ -33,10 +33,10 @@ export class FormalParamterNode extends AbstractExpressionNode {
 	getDefaultValue() {
 		return this.defaultValue;
 	}
-	set(stack: ScopedStack, value: Function) {
+	set(stack: StackProvider, value: Function) {
 		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		throw new Error('ParamterNode#get() has no implementation.');
 	}
 	entry(): string[] {
@@ -85,10 +85,10 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	getName() {
 		return this.name;
 	}
-	set(stack: ScopedStack, value: Function) {
+	set(stack: StackProvider, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
-	private setParamter(stack: ScopedStack, args: any[]) {
+	private setParamter(stack: StackProvider, args: any[]) {
 		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
 		for (let i = 0; i < limit; i++) {
 			this.parameters[i].set(stack, args[i]);
@@ -97,7 +97,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			this.parameters[limit].set(stack, args.slice(limit));
 		}
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		const self = this;
 		let func: Function;
 		switch (this.type) {
@@ -280,10 +280,10 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	getStatements() {
 		return this.statements;
 	}
-	set(stack: ScopedStack, value: Function) {
+	set(stack: StackProvider, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
-	private setParamter(stack: ScopedStack, args: any[]) {
+	private setParamter(stack: StackProvider, args: any[]) {
 		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
 		for (let i = 0; i < limit; i++) {
 			this.parameters[i].set(stack, args[i]);
@@ -292,7 +292,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			this.parameters[limit].set(stack, args.slice(limit));
 		}
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		let func: Function;
 		switch (this.type) {
 			case ArrowFunctionType.ASYNC:

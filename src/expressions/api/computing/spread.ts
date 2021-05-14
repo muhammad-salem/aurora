@@ -1,7 +1,7 @@
 import type { ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('spread')
 export class SpreadNode extends AbstractExpressionNode {
@@ -14,10 +14,10 @@ export class SpreadNode extends AbstractExpressionNode {
 	getNode() {
 		return this.node;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error('SpreadSyntax.set() Method has no implementation.');
 	}
-	get(stack: ScopedStack): void {
+	get(stack: StackProvider): void {
 		const value = this.node.get(stack);
 		if (Array.isArray(value)) {
 			this.spreadFromArray(stack, value);
@@ -27,11 +27,11 @@ export class SpreadNode extends AbstractExpressionNode {
 			Object.keys(value).forEach(key => stack.localScop.set(key, value[key]));
 		}
 	}
-	private spreadFromArray(stack: ScopedStack, array: Array<any>): void {
+	private spreadFromArray(stack: StackProvider, array: Array<any>): void {
 		let length: number = stack.get('length');
 		array.forEach(value => stack.localScop.set(length++, value));
 	}
-	private spreadFromIterator(stack: ScopedStack, iterator: Iterator<any>): void {
+	private spreadFromIterator(stack: StackProvider, iterator: Iterator<any>): void {
 		let length: number = stack.get('length');
 		while (true) {
 			const iteratorResult = iterator.next();

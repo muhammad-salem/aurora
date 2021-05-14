@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ternary')
@@ -24,10 +24,10 @@ export class TernaryNode extends AbstractExpressionNode {
 	getExprIfFalse() {
 		return this.exprIfFalse;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`TernaryNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		return this.condition.get(stack) ? this.exprIfFalse.get(stack) : this.exprIfTrue.get(stack);
 	}
 	entry(): string[] {

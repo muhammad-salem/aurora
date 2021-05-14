@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { SpreadNode } from '../computing/spread.js';
 
@@ -36,10 +36,10 @@ export class PipelineNode extends AbstractExpressionNode {
 	getArgs() {
 		return this.args;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		const paramValue = this.param.get(stack);
 		const funCallBack = this.func.get(stack, thisContext) as Function;
 		const parameters: any[] = [];

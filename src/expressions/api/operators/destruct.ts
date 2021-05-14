@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('destruct')
 export class DestructuringAssignmentNode extends AbstractExpressionNode {
@@ -24,7 +24,7 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 	getRestKey() {
 		return this.restKey;
 	}
-	set(stack: ScopedStack) {
+	set(stack: StackProvider) {
 		const value = this.arrayOrObject.get(stack);
 		if (Array.isArray(value)) {
 			let lastIndex = -1;
@@ -69,7 +69,7 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		return this.set(stack);
 	}
 	entry(): string[] {

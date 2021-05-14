@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 export type ChainingType = 'property' | 'expression' | 'function';
 @Deserializer('chaining')
@@ -25,10 +25,10 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 	getType() {
 		return this.type;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`OptionalChainingNode.#set() has no implementation.`)
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		let value: any | Function;
 		if (thisContext) {
 			value = this.property.get(stack, thisContext);
@@ -51,7 +51,7 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	getThis(stack: ScopedStack): any {
+	getThis(stack: StackProvider): any {
 		return this.optional.get(stack);
 	}
 	entry(): string[] {

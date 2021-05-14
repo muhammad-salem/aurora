@@ -1,4 +1,4 @@
-import type { ScopedStack } from '../scope.js';
+import type { StackProvider } from '../scope.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -22,8 +22,8 @@ export abstract class AccessNode extends AbstractExpressionNode {
 			right: this.right.toJSON()
 		};
 	}
-	abstract get(stack: ScopedStack, thisContext?: any): any;
-	abstract set(stack: ScopedStack, value: any): any;
+	abstract get(stack: StackProvider, thisContext?: any): any;
+	abstract set(stack: StackProvider, value: any): any;
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
 }
@@ -33,10 +33,10 @@ export class MemberAccessNode extends AccessNode {
 	static fromJSON(node: MemberAccessNode, deserializer: NodeDeserializer): MemberAccessNode {
 		return new MemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return this.right.set(stack.stackFor(this.left.get(stack)), value);
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		const thisRef = thisContext ?? this.left.get(stack);
 		const value = this.right.get(stack, thisRef);
 		if (typeof value === 'function') {
@@ -59,10 +59,10 @@ export class ComputedMemberAccessNode extends AccessNode {
 	static fromJSON(node: ComputedMemberAccessNode, deserializer: NodeDeserializer): ComputedMemberAccessNode {
 		return new ComputedMemberAccessNode(deserializer(node.left), deserializer(node.right));
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return this.left.get(stack)[this.right.get(stack)] = value;
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		const thisRef = thisContext ?? this.left.get(stack);
 		const value = thisRef[this.right.get(stack)];
 		if (typeof value === 'function') {

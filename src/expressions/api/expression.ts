@@ -1,11 +1,11 @@
-import type { ScopedStack } from './scope.js';
+import type { StackProvider } from './scope.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
 export interface ExpressionNode {
-	set(stack: ScopedStack, value: any): any;
-	get(stack: ScopedStack, thisContext?: any): any;
+	set(stack: StackProvider, value: any): any;
+	get(stack: StackProvider, thisContext?: any): any;
 	entry(): string[];
 	event(parent?: string): string[];
 	toString(): string;

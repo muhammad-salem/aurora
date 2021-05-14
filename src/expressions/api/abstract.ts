@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
 import type { EvaluateNode } from './operators/types.js';
-import type { AwaitPromiseInfo, ScopedStack } from './scope.js';
+import type { AwaitPromiseInfo, StackProvider } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
@@ -14,8 +14,8 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		json.type = Reflect.get(this.constructor, 'type');
 		return json;
 	}
-	abstract set(stack: ScopedStack, value: any): any;
-	abstract get(stack: ScopedStack, thisContext?: any): any;
+	abstract set(stack: StackProvider, value: any): any;
+	abstract get(stack: StackProvider, thisContext?: any): any;
 	abstract entry(): string[];
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
@@ -38,7 +38,7 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 	set(context: object, value: any) {
 		throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
 	}
-	get(stack: ScopedStack): any {
+	get(stack: StackProvider): any {
 		const evalNode: EvaluateNode = {
 			left: this.left.get(stack),
 			right: this.right.get(stack)
@@ -72,6 +72,6 @@ export class ReturnValue {
 }
 
 export class AwaitPromise implements AwaitPromiseInfo {
-	node: { set(stack: ScopedStack, value: any): any; };
+	node: { set(stack: StackProvider, value: any): any; };
 	constructor(public promise: Promise<any>) { }
 }

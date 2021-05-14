@@ -1,6 +1,6 @@
 
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { ScopedStack } from '../../scope.js';
+import type { StackProvider } from '../../scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -30,13 +30,13 @@ export abstract class DeclarationsNode extends AbstractExpressionNode {
 	getVariables() {
 		return this.variables;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		if (Array.isArray(value)) {
 			throw new Error(`LetNode#set() has no implementation.`);
 		}
 		this.variables[0].variable.set(stack, value);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		for (const item of this.variables) {
 			const value = item.value?.get(stack);
 			if (value instanceof AwaitPromise) {

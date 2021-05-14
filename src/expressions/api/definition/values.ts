@@ -1,7 +1,7 @@
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('identifier')
 export class IdentifierNode extends AbstractExpressionNode {
@@ -14,10 +14,10 @@ export class IdentifierNode extends AbstractExpressionNode {
 	getProperty() {
 		return this.property;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		return stack.set(this.property, value) ? value : void 0;
 	}
-	get(stack: ScopedStack, thisContext?: any) {
+	get(stack: StackProvider, thisContext?: any) {
 		if (thisContext) {
 			return thisContext[this.property];
 		}
@@ -120,10 +120,10 @@ export class TemplateLiteralsNode extends AbstractExpressionNode {
 		super();
 	}
 
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`TemplateLiteralsNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		const tagged: Function = this.tag.get(stack);
 		const templateStringsArray = new TemplateArray(this.strings);
 		templateStringsArray.raw = templateStringsArray;

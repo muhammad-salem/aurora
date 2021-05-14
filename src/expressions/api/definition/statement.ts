@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopedStack } from '../scope.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('statement')
 export class StatementNode extends AbstractExpressionNode {
@@ -14,10 +14,10 @@ export class StatementNode extends AbstractExpressionNode {
 	getLines() {
 		return this.lines;
 	}
-	set(stack: ScopedStack, value: any) {
+	set(stack: StackProvider, value: any) {
 		throw new Error(`StatementNode#set() has no implementation.`);
 	}
-	get(stack: ScopedStack) {
+	get(stack: StackProvider) {
 		let value;
 		this.lines.forEach(node => value = node.get(stack));
 		return value;
