@@ -1,4 +1,4 @@
-import { ScopeProvider, ReadOnlyScopedContext, ScopedContext } from '@ibyar/expressions';
+import { ContextProvider, ReadOnlyContextProvider, ScopeProvider } from '@ibyar/expressions';
 import { PipeProvider, AsyncPipeProvider } from '../pipe/pipe.js';
 
 const Constant: { [k: string]: any } = {
@@ -71,7 +71,7 @@ const Constant: { [k: string]: any } = {
 
 };
 
-const readOnlyProvider = new ReadOnlyScopedContext(Constant);
+const readOnlyProvider = new ReadOnlyContextProvider(Constant);
 export const documentStack = new ScopeProvider([readOnlyProvider, new PipeProvider(), new AsyncPipeProvider()]);
 
 export class BindingNotification {
@@ -81,7 +81,7 @@ export class BindingNotification {
 		console.log(this.notification);
 	}
 }
-export class BindingContextProvider<T extends object> implements ScopedContext {
+export class BindingContextProvider<T extends object> implements ContextProvider {
 
 	static contextMapping = new WeakMap<object, BindingContextProvider<object>>();
 

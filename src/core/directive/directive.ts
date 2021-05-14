@@ -1,7 +1,7 @@
 import { DOMDirectiveNode } from '@ibyar/elements';
 import { ComponentRender } from '../view/render.js';
 
-import type { ExpressionNode, ScopedStack } from '@ibyar/expressions';
+import type { ExpressionNode, StackProvider } from '@ibyar/expressions';
 
 /**
  * A structural directive selector as '*if'
@@ -11,7 +11,7 @@ export class StructuralDirective<T> {
 		protected render: ComponentRender<T>,
 		protected comment: Comment,
 		protected directive: DOMDirectiveNode<ExpressionNode>,
-		protected directiveStack: ScopedStack
+		protected directiveStack: StackProvider
 	) { }
 }
 

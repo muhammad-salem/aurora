@@ -1,9 +1,6 @@
+import { AssignmentNode, ExpressionNode, MemberAccessNode, StackProvider, ThisNode } from '@ibyar/expressions';
 import {
-	AssignmentNode, ExpressionNode, MemberAccessNode,
-	ScopedStack, ThisNode
-} from '@ibyar/expressions';
-import {
-	CommentNode, DOMChild, DOMDirectiveNode,
+	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
 	isTagNameNative, isValidCustomElementName,
 	LiveAttribute, LiveTextContent, TextContent
@@ -39,7 +36,7 @@ export class ComponentRender<T> {
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
 	// viewChildMap: { [name: string]: any };
-	contextStack: ScopedStack;
+	contextStack: StackProvider;
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
@@ -139,7 +136,7 @@ export class ComponentRender<T> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: ScopedStack): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: StackProvider): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -161,18 +158,18 @@ export class ComponentRender<T> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(node: LiveTextContent<ExpressionNode>, contextStack: ScopedStack): Text {
+	createLiveText(node: LiveTextContent<ExpressionNode>, contextStack: StackProvider): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.stackFor({ this: liveText });
 		this.bind1Way(liveText, node, contextStack);
 		return liveText;
 	}
-	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: ScopedStack): DocumentFragment {
+	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: StackProvider): DocumentFragment {
 		const fragment = document.createDocumentFragment();
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
-	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: ScopedStack) {
+	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: StackProvider) {
 		if (child instanceof DOMElementNode) {
 			parent.append(this.createElement(child, contextStack));
 		} else if (child instanceof DOMDirectiveNode) {
@@ -191,7 +188,7 @@ export class ComponentRender<T> {
 			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
-	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: ScopedStack): HTMLElement {
+	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			element = document.createElement(node.tagName);
@@ -217,7 +214,7 @@ export class ComponentRender<T> {
 		}
 		return element;
 	}
-	createElement(node: DOMElementNode<ExpressionNode>, contextStack: ScopedStack): HTMLElement {
+	createElement(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
 		const element = this.createElementByTagName(node, contextStack);
 
 		// TODO: create stack with context for 'this' as element, and a list of attributes directive.
@@ -241,7 +238,7 @@ export class ComponentRender<T> {
 		}
 		return element;
 	}
-	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: ScopedStack): void {
+	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
@@ -301,7 +298,7 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode>, contextStack: ScopedStack) {
+	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode>, contextStack: StackProvider) {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
 		let rightNode = attr.valueNode;
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);
@@ -311,7 +308,7 @@ export class ComponentRender<T> {
 		this.subscribeExpressionNode(rightNode, contextStack, callback, element, attr.name);
 		callback();
 	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: ScopedStack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
+	subscribeExpressionNode(node: ExpressionNode, contextStack: StackProvider, callback: SourceFollowerCallback, object?: object, attrName?: string) {
 		node.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
@@ -330,7 +327,7 @@ export class ComponentRender<T> {
 			}
 		});
 	}
-	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: ScopedStack) {
+	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: StackProvider) {
 		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
 		let rightNode = attr.valueNode;
 		let forwardData = new AssignmentNode('=', leftNode, rightNode);

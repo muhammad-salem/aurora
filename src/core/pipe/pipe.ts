@@ -1,5 +1,4 @@
-import { ReadOnlyScopedContext } from '@ibyar/expressions';
-import { defineModel, Model } from '../model/change-detection.js';
+import { ReadOnlyContextProvider } from '@ibyar/expressions';
 import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
@@ -17,7 +16,7 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 	return Reflect.has(Object.getPrototypeOf(pipe), 'transform');
 }
 
-export class PipeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
+export class PipeProvider extends ReadOnlyContextProvider<Map<string, Function>> {
 	static PipeContext = new Map<string, Function>();
 	constructor() {
 		super(PipeProvider.PipeContext);
@@ -45,7 +44,7 @@ export class PipeProvider extends ReadOnlyScopedContext<Map<string, Function>> {
 	}
 }
 
-export class AsyncPipeProvider extends ReadOnlyScopedContext<object> {
+export class AsyncPipeProvider extends ReadOnlyContextProvider<object> {
 
 	static AsyncPipeContext = Object.create(null);
 	constructor() {
