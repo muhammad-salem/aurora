@@ -1,4 +1,4 @@
-import { AssignmentNode, ExpressionNode, MemberAccessNode, StackProvider, ThisNode } from '@ibyar/expressions';
+import { ExpressionNode, StackProvider } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
@@ -159,10 +159,10 @@ export class ComponentRender<T> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(node: LiveTextContent<ExpressionNode>, contextStack: StackProvider): Text {
+	createLiveText(textNode: LiveTextContent<ExpressionNode>, contextStack: StackProvider): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.stackFor({ this: liveText });
-		this.bind1Way(liveText, node, contextStack);
+		this.bind1Way(liveText, textNode, contextStack);
 		return liveText;
 	}
 	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: StackProvider): DocumentFragment {
@@ -179,10 +179,10 @@ export class ComponentRender<T> {
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
 			this.createDirective(child, comment, contextStack.newStack());
-		} else if (child instanceof TextContent) {
-			parent.append(this.createText(child));
 		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
+		} else if (child instanceof TextContent) {
+			parent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {
 			parent.append(this.createComment(child));
 		} else if (child instanceof DOMFragmentNode) {
@@ -218,7 +218,6 @@ export class ComponentRender<T> {
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
 		const element = this.createElementByTagName(node, contextStack);
 
-		// TODO: create stack with context for 'this' as element, and a list of attributes directive.
 		const elContext = new ElementContextProvider(element);
 		contextStack = contextStack.newStack();
 		contextStack.add(elContext);
@@ -231,7 +230,6 @@ export class ComponentRender<T> {
 				// <form #form="formDirective"></form>
 				// try to search in this element 'attribute directive' list
 				view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.value);
-
 			}
 		}
 		if (node.children) {
@@ -259,6 +257,7 @@ export class ComponentRender<T> {
 				} else {
 					Reflect.set(element, attr.name, attr.value);
 				}
+				// (attr.node as ExpressionNode).set(contextStack, attr.value);
 			});
 		}
 		if (node.twoWayBinding) {
@@ -285,7 +284,7 @@ export class ComponentRender<T> {
 				 */
 				if (typeof event.value === 'string') {
 					listener = ($event: Event) => {
-						event.valueNode.get(contextStack.stackFor({ $event }), this.view._model);
+						event.expression.get(contextStack.stackFor({ $event }), this.view._model);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -301,14 +300,11 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode>, contextStack: StackProvider) {
-		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
-		let rightNode = attr.valueNode;
-		let forwardData = new AssignmentNode('=', leftNode, rightNode);
+	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode> | LiveTextContent<ExpressionNode>, contextStack: StackProvider) {
 		const callback = () => {
-			forwardData.get(contextStack);
+			attr.expression.get(contextStack);
 		};
-		this.subscribeExpressionNode(rightNode, contextStack, callback, element, attr.name);
+		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name);
 		callback();
 	}
 	subscribeExpressionNode(node: ExpressionNode, contextStack: StackProvider, callback: SourceFollowerCallback, object?: object, attrName?: string) {
@@ -331,19 +327,13 @@ export class ComponentRender<T> {
 		});
 	}
 	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: StackProvider) {
-		let leftNode = new MemberAccessNode(ThisNode, attr.nameNode);
-		let rightNode = attr.valueNode;
-		let forwardData = new AssignmentNode('=', leftNode, rightNode);
-		let backwardData = new AssignmentNode('=', rightNode, leftNode);
-
 		const callback1 = () => {
-			forwardData.get(contextStack);
+			attr.expression.get(contextStack);
 		};
 		const callback2 = () => {
-			backwardData.get(contextStack);
+			attr.callbackExpression.get(contextStack);
 		};
-
-		rightNode.event().forEach(eventName => {
+		attr.expression.event().forEach(eventName => {
 			const context = contextStack.getProviderBy(eventName);
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {

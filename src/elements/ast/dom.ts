@@ -6,12 +6,15 @@ export class Attribute<N, V> {
 	constructor(public name: N, public value: V) { }
 }
 
+export class ElementAttribute<N, V, E> extends Attribute<N, V> {
+	expression: E;
+}
+
 /**
  * an attribute with its source value for binding
  */
-export class LiveAttribute<E> extends Attribute<string, string> {
-	nameNode: E;
-	valueNode: E;
+export class LiveAttribute<E> extends ElementAttribute<string, string, E> {
+	callbackExpression: E;
 }
 
 /**
@@ -27,10 +30,8 @@ export class TextContent extends Attribute<'textContent', string> {
 /**
  * a text that its content is binding to variable from the component model.
  */
-export class LiveTextContent<E> extends LiveAttribute<E>  {
-	constructor(text: string) {
-		super(TextContent.propName, text);
-	}
+export class LiveTextContent<E> extends TextContent {
+	expression: E;
 }
 
 /**
@@ -80,7 +81,7 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
 	 */
-	attributes: Attribute<string, string | number | boolean | object>[];
+	attributes: ElementAttribute<string, string | number | boolean | object, E>[];
 
 	/**
 	 * hold the attrs/inputs name marked as one way binding
@@ -90,7 +91,7 @@ export class BaseNode<E> extends DOMParentNode<E> {
 	/**
 	 * hold the name of events that should be connected to a listener
 	 */
-	outputs: LiveAttribute<E>[];
+	outputs: ElementAttribute<string, string, E>[];
 
 	/**
 	 * hold the name of attributes marked for 2 way data binding
@@ -104,9 +105,9 @@ export class BaseNode<E> extends DOMParentNode<E> {
 
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
-			this.attributes.push(new Attribute(attrName, value ?? true));
+			this.attributes.push(new ElementAttribute(attrName, value ?? true));
 		} else {
-			this.attributes = [new Attribute(attrName, value ?? true)];
+			this.attributes = [new ElementAttribute(attrName, value ?? true)];
 		}
 	}
 
@@ -247,6 +248,6 @@ export function parseTextChild<E>(text: string): Array<TextContent | LiveTextCon
 
 export function parseStringTemplate(text: string): string {
 	const node = parseTextChild(text);
-	const map = node.map(str => (str instanceof TextContent ? str.value : '${' + str.value + '}')).join('');
+	const map = node.map(str => (str instanceof LiveTextContent ? '${' + str.value + '}' : str.value)).join('');
 	return '`' + map + '`';
 }

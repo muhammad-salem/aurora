@@ -2,7 +2,7 @@ import { isEmptyElement } from '../attributes/tags.js';
 import {
 	DOMElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild, Attribute
+	DOMDirectiveNode, DOMNode, DOMChild, ElementAttribute
 } from '../ast/dom.js';
 import { NodeFactory } from '../ast/factory.js';
 
@@ -341,7 +341,7 @@ export class NodeParser {
 
 	checkNode(node: DOMElementNode<any>): DOMElementNode<any> | DOMDirectiveNode<any> {
 		if (node.attributes) {
-			let temp: Attribute<string, any> | Attribute<string, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
+			let temp: ElementAttribute<string, any, any> | ElementAttribute<string, any, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
