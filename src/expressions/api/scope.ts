@@ -91,7 +91,7 @@ export interface StackProvider extends ContextProvider {
 	 * 
 	 * @param obj create an empty stack for this provided object, as local scope context
 	 */
-	emptyScopeFor(obj: any | any[]): StackProvider;
+	emptyStackProviderWith(obj: any | any[]): StackProvider;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
 }

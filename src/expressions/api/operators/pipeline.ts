@@ -43,7 +43,7 @@ export class PipelineNode extends AbstractExpressionNode {
 		const paramValue = this.param.get(stack);
 		const funCallBack = this.func.get(stack, thisContext) as Function;
 		const parameters: any[] = [];
-		const parametersStack = stack.emptyScopeFor(parameters);
+		const parametersStack = stack.emptyStackProviderWith(parameters);
 		let indexed = false;
 		for (const arg of this.args) {
 			if (arg === '?') {

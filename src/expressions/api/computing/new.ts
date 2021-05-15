@@ -27,7 +27,7 @@ export class NewNode extends AbstractExpressionNode {
 		if (this.parameters) {
 			if (this.parameters.length > 0) {
 				const parameters: any[] = [];
-				const parametersStack = stack.emptyScopeFor(parameters);
+				const parametersStack = stack.emptyStackProviderWith(parameters);
 				for (const param of this.parameters) {
 					if (param instanceof SpreadNode) {
 						param.get(parametersStack);

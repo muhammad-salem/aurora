@@ -50,7 +50,7 @@ export abstract class AbstractScopedStack implements StackProvider {
 		stack.addProvider(obj);
 		return stack;
 	}
-	emptyScopeFor(obj: any | any[]): StackProvider {
+	emptyStackProviderWith(obj: any | any[]): StackProvider {
 		return new EmptyScopeProvider(DefaultContextProvider.for(obj));
 	}
 	add(...contexts: ContextProvider[]): number {

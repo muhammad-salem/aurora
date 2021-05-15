@@ -24,7 +24,7 @@ export class FunctionCallNode extends AbstractExpressionNode {
 	get(stack: StackProvider, thisContext?: any) {
 		const funCallBack = this.func.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
 		const parameters: any[] = [];
-		const parametersStack = stack.emptyScopeFor(parameters);
+		const parametersStack = stack.emptyStackProviderWith(parameters);
 		for (const arg of this.parameters) {
 			if (arg instanceof SpreadNode) {
 				arg.get(parametersStack);
