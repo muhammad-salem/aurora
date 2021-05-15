@@ -5,8 +5,8 @@ import { interval, Subscription } from 'rxjs';
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div style="color: var({{currentColor}});"> set style color by style="color: var({{currentColor}});"</div>
-	<div [style]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
+	<div styles="color: var({{currentColor}});"> set style color by style="color: var({{currentColor}});"</div>
+	<div [styles]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
 	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
 	<div *for="let color of colors">
@@ -100,9 +100,9 @@ import { interval, Subscription } from 'rxjs';
         </tbody>
     </table>
 
-	<table class="table">
+	<table class="table" aria-label="table">
 		<thead>
-			<tr [height]="heightPX + 'px'">
+			<tr elHeight="350px">
 				<th scope="col">#</th>
 				<th scope="col">First</th>
 				<th scope="col">Last</th>

@@ -83,6 +83,7 @@ see test for more help [`example`](example/)
 
 ## Built-in Directive
 
+#### Structure Directives
 - [x] *if
 - [x] *for
 - [x] *for in
@@ -90,8 +91,10 @@ see test for more help [`example`](example/)
 - [x] *for await
 - [x] *while
 - [x] *switch
-- [ ] *class
-- [ ] *style
+
+#### Attributes Directives
+- [x] *class
+- [x] *styles
 
 ## Built-in Pipes ( Pipeline operator '|>' )
 

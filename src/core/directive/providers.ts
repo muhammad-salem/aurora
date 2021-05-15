@@ -45,10 +45,8 @@ export class ElementContextProvider implements ContextProvider {
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		if (propertyKey in this.el) {
-			// check 'style' and 'class'
 			return Reflect.set(this.el, propertyKey, value);
 		}
-		this.el.setAttribute(propertyKey as string, value);
 		if (this.directiveMap.has(propertyKey as string)) {
 			const directive = this.directiveMap.get(propertyKey as string)!;
 			return Reflect.set(directive, propertyKey, value);

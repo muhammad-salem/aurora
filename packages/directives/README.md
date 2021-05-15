@@ -15,6 +15,7 @@ yarn add @ibyar/directives
 
 ## Supported Directive
 
+#### Structure Directives
 - [x] *if
 - [x] *for
 - [x] *for in
@@ -22,8 +23,10 @@ yarn add @ibyar/directives
 - [x] *for await
 - [x] *while
 - [x] *switch
-- [ ] *class
-- [ ] *style
+
+#### Attributes Directives
+- [x] *class
+- [x] *styles
 
 
 # How to use:
