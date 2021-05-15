@@ -33,13 +33,23 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 	}
 
 	protected renderAwaitDOMChild(node: ExpressionNode, callback: () => Promise<void>): void {
+		let promise: Promise<void> | undefined;
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
+			if (promise) {
+				promise.then(() => {
+					// prepare for another call
+					uiCallback(stack);
+				});
+				return;
+			}
 			stack.push(this);
 			this.removeOldElements();
 			this.fragment = document.createDocumentFragment();
-			callback().then(() => {
+			promise = callback();
+			promise.then(() => {
 				this.fragment.childNodes.forEach(child => this.elements.push(child));
 				this.comment.after(this.fragment);
+				promise = undefined;
 			});
 		};
 		this.render.subscribeExpressionNode(node, this.directiveStack, uiCallback);
