@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/types",
-	"version": "0.1.12",
+	"version": "0.2.0",
 	"description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",

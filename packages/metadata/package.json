@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/metadata",
-	"version": "0.1.12",
+	"version": "0.2.0",
 	"description": "Aurora metadata, basic functionality to save and load type metadata at runtime",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
