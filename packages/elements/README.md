@@ -1,6 +1,6 @@
 # Aurora Elements
 
-Aurora element, hold info about HTMLElements class, attributes and tag name.
+Aurora elements, hold info about HTMLElements class, attributes and tag name.
 
 ## `Install`
 
@@ -18,20 +18,19 @@ yarn add @ibyar/elements
 ```ts
 import { hasNativeAttr } from '@ibyar/elements';
 
-let div = document.createElement('div');
+const div = document.createElement('div');
 console.log(hasNativeAttr(div, 'for'));
 
 ```
 
 ```ts
-import { toJsxAttrComponent } from '@ibyar/elements';
+import { htmlParser } from '@ibyar/elements';
 
-let template = 
-`<div name="data-div">
-    <person-view [name]="alex" age="35" />
-</div>`;
-let jsxComponent = toJsxAttrComponent(template)
-console.log(jsxComponent);
+const template = `<div #div name="data-div" (click)="onDivClick($event)">
+    				<person-view [name]="alex" age="35" @edit="onPersonViewClick($event)" />
+				  </div>`;
+const htmlNode = htmlParser.toDomRootNode(template)(template)
+console.log(htmlNode);
 
 ```
 
