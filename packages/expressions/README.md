@@ -15,9 +15,9 @@ yarn add @ibyar/expression
 
 ## Example
 ```ts
-import { NodeExpression, parseJSExpression } from '@ibyar/expression';
+import { NodeExpression, JavaScriptParser, ScopeProvider } from '@ibyar/expression';
 
-let context:{[key: string]: any} = {
+const context:{[key: string]: any} = {
     a: 6,
     b: 4,
 
@@ -26,17 +26,19 @@ let context:{[key: string]: any} = {
         d: 3
     }
 };
-let exp = `a + b === g.c + g.d`;
 
-let expNode:NodeExpression = parseJSExpression(exp);
+const stack = ScopeProvider.for(context);
 
-console.log(expNode.toString());
-console.log(expNode.get(context));
+let expressionStr = `a + b === g.c + g.d`;
+
+let expression:NodeExpression = JavaScriptParser.parse(expressionStr);
+
+console.log(expression.toString());
+console.log(expression.get(stack));
 
 exp = `c = a + g.d`;
 expNode = parseJSExpression(exp);
-
-console.log(expNode.get(context));
+expression.get(stack);
 console.log(context.c);
 
 ```
