@@ -194,15 +194,15 @@ export class Components {
 			}
 		}
 
-		componentRef.inputs = componentRef.inputs || [];
-		componentRef.outputs = componentRef.outputs || [];
-		componentRef.viewChild = componentRef.viewChild || [];
-		componentRef.ViewChildren = componentRef.ViewChildren || [];
-		componentRef.hostBindings = componentRef.hostBindings || [];
-		componentRef.hostListeners = componentRef.hostListeners || [];
-		componentRef.encapsulation = componentRef.encapsulation || 'custom';
+		componentRef.inputs ||= [];
+		componentRef.outputs ||= [];
+		componentRef.viewChild ||= [];
+		componentRef.ViewChildren ||= [];
+		componentRef.hostBindings ||= [];
+		componentRef.hostListeners ||= [];
+		componentRef.encapsulation ||= 'custom';
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
-		componentRef.shadowDomMode = componentRef.shadowDomMode || 'open';
+		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
 
 		componentRef.modelClass = modelClass;
