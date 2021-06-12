@@ -60,24 +60,30 @@ declare global {
 	}
 }
 
+if (!Reflect.has(Symbol, 'metadata')) {
+	Reflect.set(Symbol, 'metadata', Symbol.for('metadata'));
+}
+
+const MetadataSymbol = Symbol as SymbolConstructor & { readonly metadata: unique symbol };
+
 export class Metadata {
 	static setMetadata(prototypeRef: Object, metadata: Metadata) {
-		Object.defineProperty(prototypeRef, 'metadata', { value: metadata });
+		Object.defineProperty(prototypeRef, MetadataSymbol.metadata, { value: metadata });
 	}
 	static createMetadata(prototypeRef: Object): Metadata {
 		const metadata: Metadata = new Metadata(prototypeRef);
-		Object.defineProperty(prototypeRef, 'metadata', { value: metadata });
+		Object.defineProperty(prototypeRef, MetadataSymbol.metadata, { value: metadata });
 		return metadata;
 	}
 	static getMetadata(prototypeRef: Object): Metadata {
-		return Reflect.get(prototypeRef, 'metadata');
+		return Reflect.get(prototypeRef, MetadataSymbol.metadata);
 	}
 
 	// propertyKey
 	[key: string]: MetadataRef;
-	classMetadataRef: MetadataRef;
+	'class': MetadataRef;
 
-	constructor(public prototypeRef: Object) {
+	constructor(prototypeRef: Object) {
 		Metadata.setMetadata(prototypeRef, this);
 	}
 	setMetadata(propertyKey: string, metadataKey: MetadataKey, value: MetadataRef): void {
@@ -134,9 +140,6 @@ export class Metadata {
 			}
 		} else if (metadataKey && !propertyKey) {
 			for (const key of Object.keys(this)) {
-				if (key === 'prototypeRef') {
-					continue;
-				}
 				if (metadataKey in this[key]) {
 					return true;
 				}
@@ -148,7 +151,7 @@ export class Metadata {
 	}
 
 	propertyKeys(): string[] {
-		return Object.keys(this).filter((key) => key !== 'prototypeRef');
+		return Object.keys(this);
 	}
 	metadataKeys(): string[] {
 		let parent = [];
@@ -202,7 +205,7 @@ function getMetadataOrDefineMap(target: Object): Metadata {
 
 export function defineMetadata(metadataKey: MetadataKey, metadataValue: any, target: Object, propertyKey: string): void {
 	getMetadataOrDefineMap(target).setMetadata(
-		propertyKey,
+		propertyKey || 'class',
 		metadataKey,
 		metadataValue
 	);
@@ -210,21 +213,21 @@ export function defineMetadata(metadataKey: MetadataKey, metadataValue: any, tar
 
 export function metadata(metadataKey: MetadataKey, metadataValue: any): Function {
 	function decorator(target: typeof Object, propertyKey?: string) {
-		getMetadataOrDefineMap(target).setMetadata(propertyKey || 'classMetadataRef', metadataKey, metadataValue);
+		getMetadataOrDefineMap(target).setMetadata(propertyKey || 'class', metadataKey, metadataValue);
 	}
 	return decorator;
 }
 
 export function hasMetadata(metadataKey: MetadataKey, target: object, propertyKey?: string): boolean {
-	return getMetadataOrDefineMap(target).hasMetadata(metadataKey, propertyKey);
+	return getMetadataOrDefineMap(target).hasMetadata(metadataKey, propertyKey || 'class');
 }
 
 export function getMetadata(metadataKey: MetadataKey, target: Function, propertyKey?: string): any {
-	return getMetadataOrDefineMap(target).getMetadata(propertyKey || 'classMetadataRef', metadataKey);
+	return getMetadataOrDefineMap(target).getMetadata(propertyKey || 'class', metadataKey);
 }
 
 export function getOwnMetadata(target: object, propertyKey: string): string[] | MetadataKey[] {
-	return getMetadataOrDefineMap(target).getOwnMetadataKeys(propertyKey);
+	return getMetadataOrDefineMap(target).getOwnMetadataKeys(propertyKey || 'class');
 }
 
 export function getPropertyKey(target: object): string[] {
