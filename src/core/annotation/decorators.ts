@@ -227,12 +227,22 @@ export function Component<T extends object>(opt: ComponentOptions<T>): Function 
 
 export function SelfSkip(name?: string): Function {
 	return (target: Function, propertyKey: string, index: number) => {
-		Reflect.defineMetadata('selfskip', { name, index }, target, propertyKey);
+		let metadata = Reflect.getMetadata('selfskip', target, propertyKey);
+		if (!metadata) {
+			metadata = {};
+			Reflect.defineMetadata('selfskip', metadata, target, propertyKey);
+		}
+		metadata[index] = name;
 	};
 }
 
 export function Optional(): Function {
 	return (target: Function, propertyKey: string, index: number) => {
-		Reflect.defineMetadata('optional', { index }, target, propertyKey);
+		let metadata = Reflect.getMetadata('optional', target, propertyKey);
+		if (!metadata) {
+			metadata = {};
+			Reflect.defineMetadata('optional', metadata, target, propertyKey);
+		}
+		metadata[index] = true;
 	};
 }
