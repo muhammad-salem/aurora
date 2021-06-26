@@ -19,7 +19,6 @@
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
- - Template can be a JSX template or  HTML template.
 
 
 ## `Install`
@@ -41,7 +40,7 @@ in your main `index.ts` file:
 
 see test for more help [`example`](example/)
 
-## 'HTML Template' and 'JSX' Features
+## 'HTML Template' Features
 
 | Support | HTML Template|
 | -------------------- | - |
