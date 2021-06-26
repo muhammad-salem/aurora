@@ -16,10 +16,10 @@
 	},
 	"dependencies": {
 		"@ibyar/core": "^0.2.0",
-		"tslib": "^2.2.0"
+		"tslib": "^2.3.0"
 	},
 	"devDependencies": {
-		"typescript": "^4.3.2"
+		"typescript": "^4.3.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
