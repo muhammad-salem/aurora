@@ -26,6 +26,12 @@ export interface Person {
 	selector: 'person-view',
 	templateUrl: personViewURL
 })
+
+@Component({
+	selector: 'person-view222',
+	extend: 'div'
+})
+@Service({ provideIn: 'root' })
 export class PersonModel implements OnInit {
 
 	@Input()
@@ -57,7 +63,7 @@ export class PersonModel implements OnInit {
 	@HostBinding('class.invalid')
 	invalid: boolean;
 
-	constructor(@Optional() private service: LogService) { }
+	constructor(@Optional() private service: LogService, @SelfSkip() private service2: LogService) { }
 
 	onInit(): void {
 		console.log('onInit', this);
@@ -101,7 +107,7 @@ export class PersonModel implements OnInit {
 		console.log(Reflect.metadata('component', 'dd'));
 	}
 
-	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person): string[] {
+	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {
 		return [];
 	}
 }
