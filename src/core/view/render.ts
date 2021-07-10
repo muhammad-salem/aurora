@@ -194,14 +194,7 @@ export class ComponentRender<T> {
 		if (isValidCustomElementName(node.tagName)) {
 			element = document.createElement(node.tagName);
 			if (element.constructor.name === 'HTMLElement') {
-				customElements.whenDefined(node.tagName).then(() => {
-					customElements.upgrade(element);
-					let ViewClass = customElements.get(node.tagName);
-					if (!(element instanceof ViewClass)) {
-						const newChild = this.createElement(node, contextStack);
-						element.replaceWith(newChild);
-					}
-				});
+				customElements.whenDefined(node.tagName).then(() => customElements.upgrade(element));
 			}
 		} else if (isTagNameNative(node.tagName)) {
 			// native tags // and custom tags can be used her
