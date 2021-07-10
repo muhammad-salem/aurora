@@ -192,9 +192,14 @@ export class ComponentRender<T> {
 	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
-			element = document.createElement(node.tagName);
-			if (element.constructor.name === 'HTMLElement') {
-				customElements.whenDefined(node.tagName).then(() => customElements.upgrade(element));
+			const ViewClass = customElements.get(node.tagName) as ((new () => HTMLElement) | undefined);
+			if (ViewClass) {
+				element = new ViewClass();
+			} else {
+				element = document.createElement(node.tagName);
+				if (element.constructor.name === 'HTMLElement') {
+					customElements.whenDefined(node.tagName).then(() => customElements.upgrade(element));
+				}
 			}
 		} else if (isTagNameNative(node.tagName)) {
 			// native tags // and custom tags can be used her
