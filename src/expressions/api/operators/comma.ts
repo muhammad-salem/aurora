@@ -27,7 +27,6 @@ export class CommaNode extends AbstractExpressionNode {
 		return [...this.expressions.flatMap(expression => expression.event())];
 	}
 	toString() {
-		const isObject = true;
 		return this.expressions.map(key => key.toString()).join(', ');
 	}
 	toJson(): object {

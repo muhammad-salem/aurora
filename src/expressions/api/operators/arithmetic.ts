@@ -1,5 +1,5 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode, InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
