@@ -230,6 +230,9 @@ export abstract class AbstractParser {
 			throw new Error(this.errorMessage(`Await Not In Async Context/Function`));
 		}
 	}
+	protected peekAnyIdentifier() {
+		return Token.isAnyIdentifier(this.peek().token);
+	}
 	protected errorMessage(message: string): string {
 		return this.scanner.createError(message);
 	}
@@ -413,8 +416,7 @@ export class JavaScriptParser extends AbstractParser {
 				return this.parseFunctionExpression(FunctionType.NORMAL);
 			case Token.CLASS:
 				this.consume(Token.CLASS);
-				// return this.parseClassDeclaration();
-				throw new Error(this.errorMessage(`'class': not supported now`));
+				return this.parseClassDeclaration();
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
@@ -1129,7 +1131,12 @@ export class JavaScriptParser extends AbstractParser {
 				return expression;
 			}
 			case Token.CLASS: {
-				throw new Error(this.errorMessage(`not supported`));
+				this.consume(Token.CLASS);
+				let name: ExpressionNode | undefined;
+				if (this.peekAnyIdentifier()) {
+					name = this.parseAndClassifyIdentifier(this.next());
+				}
+				return this.parseClassLiteral(name);
 			}
 			case Token.TEMPLATE_LITERALS:
 				return this.parseTemplateLiteral();
@@ -1279,14 +1286,20 @@ export class JavaScriptParser extends AbstractParser {
 		const body = this.parseFunctionBody();
 		return new ArrowFunctionNode(parameters, body, flag, rest);
 	}
-	protected parseNewTargetExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
-	}
 	protected parseRegExpLiteral(): ExpressionNode {
 		if (!this.scanner.scanRegExpPattern()) {
 			throw new Error('Unterminated RegExp');
 		}
 		return this.scanner.currentToken().getValue();
+	}
+	protected parseNewTargetExpression(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
+	}
+	protected parseClassDeclaration(): ExpressionNode {
+		throw new Error(this.errorMessage(`Expression (class) not supported.`));
+	}
+	protected parseClassLiteral(name?: ExpressionNode): ExpressionNode {
+		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
 	protected parseSuperExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (supper) not supported.'));
@@ -1601,7 +1614,6 @@ export class JavaScriptParser extends AbstractParser {
 		return this.peek().isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
 	}
 	protected parseLogicalExpression(): ExpressionNode {
-		// throw new Error(this.errorMessage('Method not implemented.'));
 		// LogicalExpression ::
 		//   LogicalORExpression
 		//   CoalesceExpression
@@ -1726,7 +1738,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parsePostfixContinuation(expression: ExpressionNode): ExpressionNode {
 		if (!this.isValidReferenceExpression(expression)) {
-			throw new Error(this.errorMessage(`Invalid Lhs In Postfix Op.`));
+			throw new Error(this.errorMessage(`Invalid LHS In Postfix Op.`));
 		}
 		const op = this.next();
 		return buildPostfixExpression(expression, op.token);
