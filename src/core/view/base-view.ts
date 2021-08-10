@@ -9,7 +9,13 @@ import { EventEmitter } from '../component/events.js';
 import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 
+const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
+
 export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+
+	if (FACTORY_CACHE.has(htmlElementType)) {
+		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
+	}
 	class CustomView<T> extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: T & Model & { [key: string]: any; };
 		_parentComponent: HTMLComponent<object>;
@@ -362,6 +368,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._model.emitChangeModel(eventName);
 		}
 	};
+	FACTORY_CACHE.set(htmlElementType, CustomView);
 	return CustomView;
 }
 
