@@ -1,4 +1,6 @@
-export * from './arrays.pipe.js';
+// array pipes
+export * from './array/slice.pipe.js';
+
 export * from './async.pipe.js';
 export * from './objects.pipe.js';
 
