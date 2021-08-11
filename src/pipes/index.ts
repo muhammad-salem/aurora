@@ -2,6 +2,9 @@
 export * from './async.pipe.js';
 
 // array pipes
+export * from './array/chunk.pipe.js';
+export * from './array/diff.pipe.js';
+export * from './array/every.pipe.js';
 export * from './array/slice.pipe.js';
 
 // object pipes
