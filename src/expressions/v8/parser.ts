@@ -3,7 +3,7 @@ import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
 	OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier,
-	AsyncIdentifier, NullNode, TemplateLiteralsNode, StringNode
+	AsyncIdentifier, NullNode, TemplateLiteralsNode, StringNode, AwaitIdentifier, ConstructorIdentifier, NameIdentifier, EvalIdentifier, ArgumentsIdentifier
 } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
@@ -42,15 +42,15 @@ import {
 } from './nodes.js';
 import { RelationalNode } from '../api/operators/relational.js';
 
-enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
-enum PropertyKind {
+export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
+export enum PropertyKind {
 	Value, Shorthand, ShorthandOrClassField,
 	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
 	Spread, NotSet
 }
-type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionType/*, name?: ExpressionNode */ };
-type FunctionInfo = { rest?: boolean };
-function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
+export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionType/*, name?: ExpressionNode */ };
+export type FunctionInfo = { rest?: boolean };
+export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
 	switch (token) {
 		case Token.COLON:
 			info.kind = PropertyKind.Value;
@@ -77,11 +77,26 @@ function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
 	return false;
 }
 
+export enum PreParserIdentifierType {
+	NullIdentifier = 'NullIdentifier',
+	UnknownIdentifier = 'UnknownIdentifier',
+	EvalIdentifier = 'EvalIdentifier',
+	ArgumentsIdentifier = 'ArgumentsIdentifier',
+	ConstructorIdentifier = 'ConstructorIdentifier',
+	AwaitIdentifier = 'AwaitIdentifier',
+	AsyncIdentifier = 'AsyncIdentifier',
+	NameIdentifier = 'NameIdentifier',
+	PrivateNameIdentifier = 'PrivateNameIdentifier'
+}
+
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
 	abstract scan(): ExpressionNode;
 	protected position() {
 		return this.scanner.getPos();
+	}
+	protected current() {
+		return this.scanner.currentToken();
 	}
 	protected next() {
 		return this.scanner.next();
@@ -416,7 +431,7 @@ export class JavaScriptParser extends AbstractParser {
 				return this.parseFunctionExpression(FunctionType.NORMAL);
 			case Token.CLASS:
 				this.consume(Token.CLASS);
-				return this.parseClassDeclaration();
+				return this.parseClassDeclaration(undefined, false);
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
@@ -845,11 +860,41 @@ export class JavaScriptParser extends AbstractParser {
 		return this.parseFunctionLiteral(flag, name);
 	}
 	protected parseIdentifier(): ExpressionNode | undefined {
-		const peek = this.peek();
-		if (peek.getValue() instanceof IdentifierNode) {
-			return this.next().getValue();
+		const next = this.next();
+		if (!Token.isValidIdentifier(next.token)) {
+			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
 		}
-		return void 0;
+		if (next.isType(Token.IDENTIFIER)) {
+			return next.getValue();
+		}
+		return this.getIdentifier();
+	}
+	protected getIdentifier(): ExpressionNode {
+		const current = this.current();
+		const string = current.getValue().toString();
+		switch (current.token) {
+			case Token.AWAIT:
+				return AwaitIdentifier;
+			case Token.ASYNC:
+				return AsyncIdentifier;
+			case Token.PRIVATE_NAME:
+				return new IdentifierNode(string);
+			default:
+				break;
+		}
+		if (string == 'constructor') {
+			return ConstructorIdentifier;
+		}
+		if (string == 'name') {
+			return NameIdentifier;
+		}
+		if (string == 'eval') {
+			return EvalIdentifier;
+		}
+		else if (string == 'arguments') {
+			return ArgumentsIdentifier;
+		}
+		throw new Error(this.errorMessage(`can't identify token ${string}`));
 	}
 	protected parseFunctionLiteral(flag: FunctionType, name?: ExpressionNode): ExpressionNode {
 		// Function ::
@@ -1133,10 +1178,12 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.CLASS: {
 				this.consume(Token.CLASS);
 				let name: ExpressionNode | undefined;
+				let isStrictReserved = false;
 				if (this.peekAnyIdentifier()) {
 					name = this.parseAndClassifyIdentifier(this.next());
+					isStrictReserved = Token.isStrictReservedWord(this.current().token);
 				}
-				return this.parseClassLiteral(name);
+				return this.parseClassLiteral(name, isStrictReserved);
 			}
 			case Token.TEMPLATE_LITERALS:
 				return this.parseTemplateLiteral();
@@ -1246,16 +1293,16 @@ export class JavaScriptParser extends AbstractParser {
 		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
 			if (this.isParenthesized(expression)) {
-				// Scanner:: Location loc(lhs_beg_pos, end_position());
+				// Scanner.Location loc(lhs_beg_pos, end_position());
 				// if (expression_scope() -> IsCertainlyDeclaration()) {
 				// 	impl() -> ReportMessageAt(loc,
-				// 		MessageTemplate:: kInvalidDestructuringTarget);
+				// 		MessageTemplate.kInvalidDestructuringTarget);
 				// } else {
 				// 	// Syntax Error if LHS is neither object literal nor an array literal
 				// 	// (Parenthesized literals are
 				// 	// CoverParenthesizedExpressionAndArrowParameterList).
 				// 	// #sec-assignment-operators-static-semantics-early-errors
-				// 	impl() -> ReportMessageAt(loc, MessageTemplate:: kInvalidLhsInAssignment);
+				// 	impl() -> ReportMessageAt(loc, MessageTemplate.kInvalidLhsInAssignment);
 				// }
 			}
 			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
@@ -1291,21 +1338,6 @@ export class JavaScriptParser extends AbstractParser {
 			throw new Error('Unterminated RegExp');
 		}
 		return this.scanner.currentToken().getValue();
-	}
-	protected parseNewTargetExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
-	}
-	protected parseClassDeclaration(): ExpressionNode {
-		throw new Error(this.errorMessage(`Expression (class) not supported.`));
-	}
-	protected parseClassLiteral(name?: ExpressionNode): ExpressionNode {
-		throw new Error(this.errorMessage(`Expression (class) not supported.`));
-	}
-	protected parseSuperExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (supper) not supported.'));
-	}
-	protected parseImportExpressions(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (import) not supported.'));
 	}
 	protected parseArrayLiteral(): ExpressionNode {
 		// ArrayLiteral ::
@@ -1903,5 +1935,20 @@ export class JavaScriptParser extends AbstractParser {
 		// // Hackily disambiguate o from o.next and o [Symbol.iterator]().
 		// // TODO(verwaest): Come up with a better solution.
 		// return new YieldNode(expression!);
+	}
+	protected parseNewTargetExpression(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
+	}
+	protected parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
+		throw new Error(this.errorMessage(`Expression (class) not supported.`));
+	}
+	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {
+		throw new Error(this.errorMessage(`Expression (class) not supported.`));
+	}
+	protected parseSuperExpression(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (supper) not supported.'));
+	}
+	protected parseImportExpressions(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (import) not supported.'));
 	}
 }

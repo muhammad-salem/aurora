@@ -357,8 +357,12 @@ export class TokenStreamImpl extends TokenStream {
 		let startPos = this.pos;
 		let i = startPos;
 		let hasLetter = false;
+		let isPrivate = false;
 		// check is private property 
-		if (this.expression.charAt(i) === '#') { i++; }
+		if (this.expression.charAt(i) === '#') {
+			isPrivate = true;
+			i++;
+		}
 		for (; i < this.expression.length; i++) {
 			const char = this.expression.charAt(i);
 			if (char.toUpperCase() === char.toLowerCase()) {
@@ -390,8 +394,13 @@ export class TokenStreamImpl extends TokenStream {
 				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
 
 				default:
-					node = new IdentifierNode(prop);
-					this.current = this.newToken(Token.IDENTIFIER, node);
+					if (isPrivate) {
+						node = new IdentifierNode(`#${prop}`);
+						this.current = this.newToken(Token.PRIVATE_NAME, node);
+					} else {
+						node = new IdentifierNode(prop);
+						this.current = this.newToken(Token.IDENTIFIER, node);
+					}
 					break;
 			}
 			this.pos += prop.length;

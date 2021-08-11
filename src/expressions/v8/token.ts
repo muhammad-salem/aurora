@@ -356,6 +356,7 @@ export class Token {
 	public static readonly IF = new Token('if', 0);
 	public static readonly IMPLEMENTS = new Token('implements', 0);
 	public static readonly IMPORT = new Token('import', 0);
+	public static readonly PRIVATE_NAME = new Token('PRIVATE_NAME', 0);
 	public static readonly IN = new Token('in', 10);
 	public static readonly INSTANCEOF = new Token('instanceof', 10);
 	public static readonly LET = new Token('let', 0);
@@ -385,7 +386,7 @@ export class Token {
 	public static readonly BIGINT = new Token('BIGINT', 0);
 	public static readonly STRING = new Token('STRING', 0);
 	public static readonly IDENTIFIER = new Token('IDENTIFIER', 0);
-	public static readonly TEMPLATE_LITERALS = new Token("TEMPLATE_LITERALS", 0);
+	public static readonly TEMPLATE_LITERALS = new Token('TEMPLATE_LITERALS', 0);
 	public static readonly ILLEGAL = new Token('ILLEGAL', 0);
 	public static readonly ESCAPED_KEYWORD = new Token('ESCAPED_KEYWORD', 0);
 	public static readonly WHITESPACE = new Token('WHITESPACE', 0);
@@ -654,7 +655,7 @@ export class Token {
 		return false;
 	}
 
-	static isUnary(token: Token) {
+	public static isUnary(token: Token) {
 		switch (token) {
 			case Token.ADD:
 			case Token.SUB:
@@ -701,6 +702,26 @@ export class Token {
 		}
 		return false;
 	}
+	public static isStrictReservedWord(token: Token) {
+		switch (token) {
+			case Token.IMPLEMENTS:
+			case Token.INTERFACE:
+			case Token.LET:
+			case Token.PACKAGE:
+			case Token.PRIVATE:
+			case Token.PROTECTED:
+			case Token.PUBLIC:
+			case Token.STATIC:
+				return true;
+		}
+		return false;
+	}
+
+	public static isValidIdentifier(token: Token) {
+		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
+		if (token == Token.AWAIT || token == Token.YIELD) return false;
+		return Token.isStrictReservedWord(token) && false;
+	}
 
 	constructor(private name: string, private precedence: number) { }
 	getName() {
@@ -726,5 +747,7 @@ export class TokenExpression {
 	test(func: (token: Token) => boolean): boolean {
 		return func(this.token);
 	}
-
+	toString(): string {
+		return JSON.stringify(this);
+	}
 }
