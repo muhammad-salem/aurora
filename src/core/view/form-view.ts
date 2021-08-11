@@ -4,7 +4,7 @@ import { CustomFormElement, HTMLFormElement, HTMLFormElementComponent } from '..
 import { baseFactoryView } from './base-view.js';
 
 export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLFormElementComponent<T>> {
-	let baseViewClass = baseFactoryView<T>(htmlElementType);
+	const baseViewClass = baseFactoryView<T>(htmlElementType);
 	class BaseFormView<T> extends baseViewClass implements CustomFormElement {
 
 		// Identify the element as a form-associated custom element

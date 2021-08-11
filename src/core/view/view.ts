@@ -16,26 +16,36 @@ import { baseFormFactoryView } from './form-view.js';
 export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, componentRef: ComponentRef<T>): TypeOf<HTMLComponent<T>> {
 	const htmlParent = componentRef.extend.classRef as TypeOf<HTMLElement>;
 	let viewClass: TypeOf<HTMLComponent<T>>;
+	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	if (componentRef.extend.name) {
 		if (isFormElement(componentRef.extend.name)) {
-			viewClass = class extends baseFormFactoryView<T>(htmlParent) {
-				constructor() {
-					super(componentRef, modelClass);
+			const classRename = {
+				[viewClassName]: class extends baseFormFactoryView<T>(htmlParent) {
+					constructor() {
+						super(componentRef, modelClass);
+					}
 				}
 			};
+			viewClass = classRename[viewClassName];
 		} else /*if (htmlParent !== HTMLElement)*/ {
-			viewClass = class extends baseFactoryView<T>(htmlParent) {
-				constructor() {
-					super(componentRef, modelClass);
+			const classRename = {
+				[viewClassName]: class extends baseFactoryView<T>(htmlParent) {
+					constructor() {
+						super(componentRef, modelClass);
+					}
 				}
 			};
+			viewClass = classRename[viewClassName];
 		}
 	} else {
-		viewClass = class extends baseFactoryView<T>(HTMLElement) {
-			constructor() {
-				super(componentRef, modelClass);
+		const classRename = {
+			[viewClassName]: class extends baseFactoryView<T>(HTMLElement) {
+				constructor() {
+					super(componentRef, modelClass);
+				}
 			}
 		};
+		viewClass = classRename[viewClassName];
 	}
 
 	componentRef.inputs.forEach((input) => {
@@ -117,10 +127,7 @@ export function isComponentModelClass(target: Constructable): target is Componen
 }
 
 export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>) {
-	const viewClassName = selector
-		.split('-')
-		.map(name => name.replace(/^\w/, char => char.toUpperCase()))
-		.join('');
+	const viewClassName = buildViewClassNameFromSelector(selector);
 	Object.defineProperty(viewClass, 'name', { value: viewClassName });
 	Object.defineProperty(modelClass, viewClassName, { value: viewClass });
 
@@ -131,7 +138,13 @@ export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, 
 	if (isComponentModelClass(modelClass)) {
 		modelClass.component[selector] = viewClassName;
 	}
+}
 
+export function buildViewClassNameFromSelector(selector: string) {
+	return selector
+		.split('-')
+		.map(name => name.replace(/^\w/, char => char.toUpperCase()))
+		.join('');
 }
 
 export function ComponentView<T>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
