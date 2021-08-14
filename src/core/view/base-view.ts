@@ -331,7 +331,6 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			if (isOnDestroy(this._model)) {
 				this._model.onDestroy();
 			}
-			console.log('disconnectedCallback');
 			this.emitChanges('destroy');
 		}
 
