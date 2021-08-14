@@ -221,13 +221,10 @@ export class ComponentRender<T> {
 		contextStack.add(elContext);
 		this.initAttribute(element, node, contextStack);
 		if (node.templateRefName) {
-			let view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.name);
+			Reflect.set(this.view, node.templateRefName.name, element);
+			const view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.name);
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
-			} else {
-				// <form #form="formDirective"></form>
-				// try to search in this element 'attribute directive' list
-				view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.value);
 			}
 		}
 		if (node.children) {
