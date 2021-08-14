@@ -34,7 +34,7 @@ export class UnaryNode extends AbstractExpressionNode {
 		return this.node.entry();
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.node.event(parent);
 	}
 	toString() {
 		return `${this.op}${this.node.toString()}`;
@@ -66,10 +66,7 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 		return this.node.entry();
 	}
 	event(parent?: string): string[] {
-		if (this.op === 'delete') {
-			return this.node.event(parent);
-		}
-		return [];
+		return this.node.event(parent);
 	}
 	get(stack: StackProvider, thisContext?: any) {
 		switch (this.op) {

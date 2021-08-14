@@ -48,7 +48,7 @@ export class NewNode extends AbstractExpressionNode {
 		return [...this.className.entry()].concat(this.parameters?.flatMap(param => param.entry()) || []);
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [...this.className.event()].concat(this.parameters?.flatMap(param => param.event()) || []);
 	}
 	toString(): string {
 		const parameters = this.parameters ? `(${this.parameters?.map(param => param.toString()).join(', ')})` : '';

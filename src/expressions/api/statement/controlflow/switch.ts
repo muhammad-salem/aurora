@@ -31,10 +31,10 @@ export class CaseExpression extends AbstractExpressionNode {
 		return this.block.get(stack);
 	}
 	entry(): string[] {
-		return [];
+		return this.value.entry();
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.value.event();
 	}
 	toString(): string {
 		return `case ${this.value.toString()}: ${this.block.toString()};`;
@@ -115,7 +115,7 @@ export class SwitchNode extends AbstractExpressionNode {
 		return void 0;
 	}
 	entry(): string[] {
-		return [];
+		return this.expression.entry().concat(this.cases.flatMap(item => item.entry()));
 	}
 	event(parent?: string): string[] {
 		return [

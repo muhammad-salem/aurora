@@ -21,10 +21,10 @@ export class ArrayLiteralNode extends AbstractExpressionNode {
 		return this.items.map(item => item.get(stack));
 	}
 	entry(): string[] {
-		return [];
+		return this.items.flatMap(item => item.entry());
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.items.flatMap(item => item.event());
 	}
 	toString() {
 		return this.items.map(item => item.toString()).toString();

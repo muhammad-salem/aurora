@@ -43,10 +43,10 @@ export class IfElseNode extends AbstractExpressionNode {
 		return void 0;
 	}
 	entry(): string[] {
-		return [];
+		return this.condition.entry().concat(this.thenStatement.entry()).concat(this.elseStatement?.entry() || []);
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.condition.event().concat(this.thenStatement.event()).concat(this.elseStatement?.event() || []);
 	}
 	toString(): string {
 		return `if (${this.condition.toString()}) ${this.thenStatement.toString()}${this.elseStatement ? ' else ' : ''}${this.elseStatement ? this.elseStatement.toString() : ''}`;

@@ -25,10 +25,10 @@ export class ThrowNode extends AbstractExpressionNode {
 		throw this.exception.get(stack);
 	}
 	entry(): string[] {
-		return [];
+		return this.exception.entry();
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.exception.event();
 	}
 	toString(): string {
 		return `throw ${this.exception.toString()}`;

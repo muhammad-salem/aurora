@@ -54,10 +54,10 @@ export class FormalParamterNode extends AbstractExpressionNode {
 		throw new Error('ParamterNode#get() has no implementation.');
 	}
 	entry(): string[] {
-		return [];
+		return this.identifier.entry().concat(this.defaultValue?.entry() || []);
 	}
 	event(): string[] {
-		return [];
+		return this.identifier.event().concat(this.defaultValue?.event() || []);
 	}
 	toString(): string {
 		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
@@ -235,11 +235,16 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		return [
 			...this.parameters.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
-			// ...this.funcBody.flatMap(line => line.entry())
+			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	event(): string[] {
-		return this.statements.flatMap(item => item.event());
+		// return this.statements.flatMap(item => item.event());
+		return [
+			...this.parameters.flatMap(param => param.event()),
+			/** remove for now, should return only object not defined in this function scope */
+			// ...this.statements.flatMap(statement => statement.entry())
+		];
 	}
 	toString(): string {
 		let declare: string;
@@ -369,11 +374,16 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		return [
 			...this.parameters.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
-			// ...this.funcBody.flatMap(line => line.entry())
+			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	event(): string[] {
-		return this.statements.flatMap(statement => statement.event());
+		// return this.statements.flatMap(statement => statement.event());
+		return [
+			...this.parameters.flatMap(param => param.event()),
+			/** remove for now, should return only object not defined in this function scope */
+			// ...this.statements.flatMap(statement => statement.entry())
+		];
 	}
 	toString(): string {
 		let str = this.type === ArrowFunctionType.ASYNC ? 'async ' : '';

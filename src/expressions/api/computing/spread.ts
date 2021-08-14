@@ -42,10 +42,10 @@ export class SpreadNode extends AbstractExpressionNode {
 		}
 	}
 	entry(): string[] {
-		return [];
+		return this.node.entry();
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.node.event();
 	}
 	toString(): string {
 		return `...${this.node.toString()}`;

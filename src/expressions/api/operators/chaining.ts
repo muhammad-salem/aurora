@@ -58,7 +58,7 @@ export class OptionalChainingNode extends AbstractExpressionNode {
 		return [...this.optional.entry(), ...this.property.entry()];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [...this.optional.event(), ...this.property.event()];
 	}
 	toString() {
 		return `${this.optional.toString()}?.${this.property.toString()}`;

@@ -27,10 +27,10 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
 		return value;
 	}
 	entry(): string[] {
-		return [];
+		return this.name.entry().concat(this.value.entry());
 	}
 	event(): string[] {
-		return [];
+		return this.name.event().concat(this.value.event());
 	}
 	toString(): string {
 		return `${this.name.toString()}: ${this.value.toString()}`;
@@ -98,10 +98,10 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 		return newObject;
 	}
 	entry(): string[] {
-		return [];
+		return this.properties.flatMap(property => property.entry());
 	}
 	event(parent?: string): string[] {
-		return [];
+		return this.properties.flatMap(property => property.event());
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;

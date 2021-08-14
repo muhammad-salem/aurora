@@ -38,7 +38,7 @@ export class FunctionCallNode extends AbstractExpressionNode {
 		return [...this.func.entry(), ...this.parameters.flatMap(param => param.entry())];
 	}
 	event(parent?: string): string[] {
-		return [];
+		return [...this.func.event(), ...this.parameters.flatMap(param => param.event())];
 	}
 	toString(): string {
 		return `${this.func.toString()}(${this.parameters.map(param => param.toString()).join(', ')})`;
