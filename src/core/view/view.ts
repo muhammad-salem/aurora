@@ -17,36 +17,16 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	const htmlParent = componentRef.extend.classRef as TypeOf<HTMLElement>;
 	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
-	if (componentRef.extend.name) {
-		if (isFormElement(componentRef.extend.name)) {
-			const classRename = {
-				[viewClassName]: class extends baseFormFactoryView<T>(htmlParent) {
-					constructor() {
-						super(componentRef, modelClass);
-					}
-				}
-			};
-			viewClass = classRename[viewClassName];
-		} else /*if (htmlParent !== HTMLElement)*/ {
-			const classRename = {
-				[viewClassName]: class extends baseFactoryView<T>(htmlParent) {
-					constructor() {
-						super(componentRef, modelClass);
-					}
-				}
-			};
-			viewClass = classRename[viewClassName];
-		}
-	} else {
-		const classRename = {
-			[viewClassName]: class extends baseFactoryView<T>(HTMLElement) {
-				constructor() {
-					super(componentRef, modelClass);
-				}
-			}
-		};
-		viewClass = classRename[viewClassName];
-	}
+	const htmlViewClassName = `HTML${viewClassName}Element`;
+	const parentClass = componentRef.extend.name
+		? (isFormElement(componentRef.extend.name)
+			? baseFormFactoryView<T>(htmlParent)
+			: baseFactoryView<T>(htmlParent)
+		)
+		: baseFactoryView<T>(HTMLElement);
+	viewClass = ({
+		[htmlViewClassName]: class extends parentClass { constructor() { super(componentRef, modelClass); } }
+	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {
 		let parentProperty = Object.getOwnPropertyDescriptor(
@@ -116,7 +96,10 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 			}
 		});
 	}
-	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass);
+	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
+	if (!Reflect.has(window, htmlViewClassName)) {
+		Reflect.set(window, htmlViewClassName, viewClass);
+	}
 	return viewClass;
 }
 
@@ -126,17 +109,15 @@ export function isComponentModelClass(target: Constructable): target is Componen
 	return Reflect.has(target, 'component');
 }
 
-export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>) {
-	const viewClassName = buildViewClassNameFromSelector(selector);
-	Object.defineProperty(viewClass, 'name', { value: viewClassName });
-	Object.defineProperty(modelClass, viewClassName, { value: viewClass });
+export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
+	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
 
 	if (!isComponentModelClass(modelClass)) {
 		Reflect.set(modelClass, 'component', {});
 	}
 
 	if (isComponentModelClass(modelClass)) {
-		modelClass.component[selector] = viewClassName;
+		modelClass.component[selector] = htmlViewClassName;
 	}
 }
 
