@@ -4,7 +4,7 @@ import {
 	findByTagName,
 	Tag, htmlParser, templateParser, DOMNode, DOMRenderNode
 } from '@ibyar/elements';
-import { findByModelClassOrCreat, setBootstrapTagNameMetadata } from '@ibyar/metadata';
+import { findByModelClassOrCreat, setBootstrapMetadata } from '@ibyar/metadata';
 
 import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
@@ -207,12 +207,10 @@ export class Components {
 
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
-		const componentRefName = componentRef.viewClass.name + 'ComponentRef';
-		setBootstrapTagNameMetadata(modelClass, componentRefName, componentRef);
+		setBootstrapMetadata(componentRef.viewClass, componentRef);
 
 		ClassRegistryProvider.registerComponent(modelClass);
 		ClassRegistryProvider.registerView(bootstrap.viewClass);
-		// setBootstrapMetadata(modelClass.prototype, componentRef);
 
 		const options: ElementDefinitionOptions = {};
 		const parentTagName = componentRef.extend?.name;
@@ -221,6 +219,7 @@ export class Components {
 				options.extends = parentTagName;
 			}
 		}
+
 
 		customElements.define(
 			componentRef?.selector as string,
