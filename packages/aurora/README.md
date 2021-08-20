@@ -353,4 +353,4 @@ npm install
 npm run build
 ```
 
-see test app for full [`example`](example/)
+see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/example)
