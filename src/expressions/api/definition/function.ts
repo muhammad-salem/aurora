@@ -5,7 +5,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { IdentifierNode } from './values.js';
 import { TerminateNode } from '../statement/controlflow/terminate.js';
 
-export enum FunctionType {
+export enum FunctionKind {
 	NORMAL = 'NORMAL',
 	ASYNC = 'ASYNC',
 	GENERATOR = 'GENERATOR',
@@ -30,7 +30,7 @@ export enum ArrowFunctionType {
 	ASYNC = 'ASYNC'
 }
 
-@Deserializer('paramter')
+@Deserializer('Paramter')
 export class FormalParamterNode extends AbstractExpressionNode {
 	static fromJSON(node: FormalParamterNode, deserializer: NodeDeserializer): FormalParamterNode {
 		return new FormalParamterNode(
@@ -71,57 +71,60 @@ export class FormalParamterNode extends AbstractExpressionNode {
 	}
 }
 
-@Deserializer('function')
+@Deserializer('FunctionDeclaration')
 export class FunctionDeclarationNode extends AbstractExpressionNode {
 	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
 		return new FunctionDeclarationNode(
-			node.parameters.map(deserializer),
-			node.statements.map(deserializer),
-			FunctionType[node.type],
-			node.name ? deserializer(node.name) as IdentifierNode : void 0,
+			node.params.map(deserializer),
+			node.body.map(deserializer),
+			FunctionKind[node.kind],
+			node.id ? deserializer(node.id) as IdentifierNode : void 0,
 			node.rest
 		);
 	}
 	constructor(
-		private parameters: ExpressionNode[], private statements: ExpressionNode[],
-		private type: FunctionType, private name?: ExpressionNode, private rest?: boolean) {
+		private params: ExpressionNode[], private body: ExpressionNode[],
+		private kind: FunctionKind, private id?: ExpressionNode, private rest?: boolean) {
 		super();
 	}
-	getParameters() {
-		return this.parameters;
+	getParams() {
+		return this.params;
 	}
-	getStatements() {
-		return this.statements;
+	getBody() {
+		return this.body;
 	}
-	getType() {
-		return this.type;
+	getKind() {
+		return this.kind;
 	}
-	getName() {
-		return this.name;
+	getId() {
+		return this.id;
+	}
+	getRest() {
+		return this.rest;
 	}
 	set(stack: StackProvider, value: Function) {
 		throw new Error('FunctionDeclarationNode#set() has no implementation.');
 	}
 	private setParamter(stack: StackProvider, args: any[]) {
-		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
+		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.parameters[i].set(stack, args[i]);
+			this.params[i].set(stack, args[i]);
 		}
 		if (this.rest) {
-			this.parameters[limit].set(stack, args.slice(limit));
+			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: StackProvider) {
 		const self = this;
 		let func: Function;
-		switch (this.type) {
-			case FunctionType.ASYNC:
+		switch (this.kind) {
+			case FunctionKind.ASYNC:
 				func = async function (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of self.statements) {
+					for (const state of self.body) {
 						returnValue = state.get(funcStack);
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
@@ -156,13 +159,13 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 					}
 				};
 				break;
-			case FunctionType.GENERATOR:
+			case FunctionKind.GENERATOR:
 				func = function* (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of self.statements) {
+					for (const state of self.body) {
 						returnValue = state.get(funcStack);
 						if (returnValue instanceof ReturnValue) {
 							return returnValue.value;
@@ -170,13 +173,13 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 					}
 				};
 				break;
-			case FunctionType.ASYNC_GENERATOR:
+			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of self.statements) {
+					for (const state of self.body) {
 						returnValue = state.get(funcStack);
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
@@ -211,13 +214,13 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 			default:
-			case FunctionType.NORMAL:
+			case FunctionKind.NORMAL:
 				func = function (this: ThisType<any>, ...args: any[]) {
 					const funcStack = stack.newStack();
 					funcStack.localScop.set('this', this);
 					self.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of self.statements) {
+					for (const state of self.body) {
 						returnValue = state.get(funcStack);
 						if (returnValue instanceof ReturnValue) {
 							return returnValue.value;
@@ -226,14 +229,14 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 				};
 				break;
 		}
-		if (this.name) {
-			this.name.set(stack, func);
+		if (this.id) {
+			this.id.set(stack, func);
 		}
 		return func;
 	}
 	entry(): string[] {
 		return [
-			...this.parameters.flatMap(param => param.entry()),
+			...this.params.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.statements.flatMap(statement => statement.entry())
 		];
@@ -241,85 +244,88 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 	event(): string[] {
 		// return this.statements.flatMap(item => item.event());
 		return [
-			...this.parameters.flatMap(param => param.event()),
+			...this.params.flatMap(param => param.event()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	toString(): string {
 		let declare: string;
-		switch (this.type) {
-			case FunctionType.ASYNC:
+		switch (this.kind) {
+			case FunctionKind.ASYNC:
 				declare = 'async function'; break;
-			case FunctionType.GENERATOR:
+			case FunctionKind.GENERATOR:
 				declare = 'function*'; break;
-			case FunctionType.ASYNC_GENERATOR:
+			case FunctionKind.ASYNC_GENERATOR:
 				declare = 'async function*'; break;
 			default:
-			case FunctionType.NORMAL:
+			case FunctionKind.NORMAL:
 				declare = 'function'; break;
 		}
-		return `${declare} ${this.name?.toString() || ''}(${this.parameters.map((param, index, array) => {
+		return `${declare} ${this.id?.toString() || ''}(${this.params.map((param, index, array) => {
 			if (index === array.length - 1 && this.rest) {
 				return '...' + param.toString();
 			} else {
 				return param.toString();
 			}
-		}).join(', ')}) ${this.statements.toString()}`;
+		}).join(', ')}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
-			parameters: this.parameters.map(param => param.toJSON()),
-			statements: this.statements.map(statement => statement.toJSON()),
-			type: this.type,
-			name: this.name?.toJSON(),
+			params: this.params.map(param => param.toJSON()),
+			body: this.body.map(statement => statement.toJSON()),
+			kind: this.kind,
+			id: this.id?.toJSON(),
 			rest: this.rest
 		};
 	}
 }
 
 
-@Deserializer('arrow')
+@Deserializer('ArrowFunctionExpression')
 export class ArrowFunctionNode extends AbstractExpressionNode {
 	static fromJSON(node: ArrowFunctionNode, deserializer: NodeDeserializer): ArrowFunctionNode {
 		return new ArrowFunctionNode(
-			node.parameters.map(deserializer),
-			node.statements.map(deserializer),
-			ArrowFunctionType[node.type],
+			node.params.map(deserializer),
+			node.body.map(deserializer),
+			ArrowFunctionType[node.kind],
 			node.rest
 		);
 	}
-	constructor(private parameters: ExpressionNode[], private statements: ExpressionNode[],
-		private type: ArrowFunctionType, private rest?: boolean) {
+	constructor(private params: ExpressionNode[], private body: ExpressionNode[],
+		private kind: ArrowFunctionType, private rest?: boolean) {
 		super();
 	}
-	getParameters() {
-		return this.parameters;
+	getParams() {
+		return this.params;
 	}
-	getStatements() {
-		return this.statements;
+	getBody() {
+		return this.body;
+	}
+	getRest() {
+		return this.rest;
 	}
 	set(stack: StackProvider, value: Function) {
-		throw new Error('FunctionDeclarationNode#set() has no implementation.');
+		throw new Error('ArrowFunctionNode#set() has no implementation.');
 	}
 	private setParamter(stack: StackProvider, args: any[]) {
-		const limit = this.rest ? this.parameters.length - 1 : this.parameters.length;
+		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.parameters[i].set(stack, args[i]);
+			this.params[i].set(stack, args[i]);
 		}
 		if (this.rest) {
-			this.parameters[limit].set(stack, args.slice(limit));
+			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: StackProvider) {
 		let func: Function;
-		switch (this.type) {
+		switch (this.kind) {
 			case ArrowFunctionType.ASYNC:
 				func = async (...args: any[]) => {
 					const funcStack = stack.newStack();
 					this.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of this.statements) {
+					for (const state of this.body) {
 						returnValue = state.get(funcStack);
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
@@ -359,7 +365,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 					const funcStack = stack.newStack();
 					this.setParamter(funcStack, args);
 					let returnValue: any;
-					for (const state of this.statements) {
+					for (const state of this.body) {
 						returnValue = state.get(funcStack);
 						if (returnValue instanceof ReturnValue) {
 							return returnValue.value;
@@ -372,7 +378,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	}
 	entry(): string[] {
 		return [
-			...this.parameters.flatMap(param => param.entry()),
+			...this.params.flatMap(param => param.entry()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.statements.flatMap(statement => statement.entry())
 		];
@@ -380,20 +386,20 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	event(): string[] {
 		// return this.statements.flatMap(statement => statement.event());
 		return [
-			...this.parameters.flatMap(param => param.event()),
+			...this.params.flatMap(param => param.event()),
 			/** remove for now, should return only object not defined in this function scope */
 			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	toString(): string {
-		let str = this.type === ArrowFunctionType.ASYNC ? 'async ' : '';
-		if (this.parameters.length === 0) {
+		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';
+		if (this.params.length === 0) {
 			str += '()';
-		} else if (this.parameters.length === 1) {
-			str += this.parameters[0].toString();
+		} else if (this.params.length === 1) {
+			str += this.params[0].toString();
 		} else {
 			str += '(';
-			str += this.parameters.map((param, index, array) => {
+			str += this.params.map((param, index, array) => {
 				if (index === array.length - 1 && this.rest) {
 					return '...' + param.toString();
 				} else {
@@ -403,14 +409,14 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			str += ')';
 		}
 		str += ' => ';
-		str += this.statements.toString();
+		str += this.body.toString();
 		return str;
 	}
 	toJson(): object {
 		return {
-			parameters: this.parameters.map(param => param.toJSON()),
-			statements: this.statements.map(item => item.toJSON()),
-			type: this.type,
+			params: this.params.map(param => param.toJSON()),
+			body: this.body.map(item => item.toJSON()),
+			kind: this.kind,
 			rest: this.rest
 		};
 	}

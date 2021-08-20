@@ -9,7 +9,7 @@ import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import {
 	ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode,
-	FunctionType, FormalParamterNode
+	FunctionKind, FormalParamterNode
 } from '../api/definition/function.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
 import { NewNode } from '../api/computing/new.js';
@@ -48,7 +48,7 @@ export enum PropertyKind {
 	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
 	Spread, NotSet
 }
-export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionType/*, name?: ExpressionNode */ };
+export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind/*, name?: ExpressionNode */ };
 export type FunctionInfo = { rest?: boolean };
 export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
 	switch (token) {
@@ -335,9 +335,9 @@ export class JavaScriptParser extends AbstractParser {
 					this.consume(Token.ASYNC);
 					this.consume(Token.FUNCTION);
 					if (this.peek().isType(Token.MUL)) {
-						return this.parseFunctionExpression(FunctionType.ASYNC_GENERATOR);
+						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
 					}
-					return this.parseFunctionExpression(FunctionType.ASYNC);
+					return this.parseFunctionExpression(FunctionKind.ASYNC);
 				}
 			default:
 				return this.parseExpressionOrLabelledStatement();
@@ -426,9 +426,9 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.FUNCTION);
 				if (this.peek().isType(Token.MUL)) {
 					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionType.GENERATOR);
+					return this.parseFunctionExpression(FunctionKind.GENERATOR);
 				}
-				return this.parseFunctionExpression(FunctionType.NORMAL);
+				return this.parseFunctionExpression(FunctionKind.NORMAL);
 			case Token.CLASS:
 				this.consume(Token.CLASS);
 				return this.parseClassDeclaration(undefined, false);
@@ -442,9 +442,9 @@ export class JavaScriptParser extends AbstractParser {
 					this.consume(Token.FUNCTION);
 					if (this.peek().isType(Token.MUL)) {
 						this.consume(Token.MUL);
-						return this.parseFunctionExpression(FunctionType.ASYNC_GENERATOR);
+						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
 					}
-					return this.parseFunctionExpression(FunctionType.ASYNC);
+					return this.parseFunctionExpression(FunctionKind.ASYNC);
 				}
 				break;
 			default:
@@ -452,7 +452,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.parseStatement();
 	}
-	protected parseFunctionExpression(type: FunctionType): ExpressionNode {
+	protected parseFunctionExpression(type: FunctionKind): ExpressionNode {
 		let funcName: ExpressionNode | undefined;
 		const peek = this.peek();
 		if (peek.isNotType(Token.L_PARENTHESES)) {
@@ -826,16 +826,16 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration(FunctionType.NORMAL);
+		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
 	}
 	protected parseFunctionDeclarationAndGenerator() {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
-			return this.parseHoistableDeclaration(FunctionType.GENERATOR);
+			return this.parseHoistableDeclaration(FunctionKind.GENERATOR);
 		}
-		return this.parseHoistableDeclaration(FunctionType.NORMAL);
+		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
 	}
-	protected parseHoistableDeclaration(flag: FunctionType): ExpressionNode {
+	protected parseHoistableDeclaration(flag: FunctionKind): ExpressionNode {
 		// FunctionDeclaration ::
 		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
 		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
@@ -849,9 +849,9 @@ export class JavaScriptParser extends AbstractParser {
 
 		// (FunctionType.ASYNC === flag || FunctionType.GENERATOR === flag);
 
-		if (FunctionType.ASYNC === flag && this.check(Token.MUL)) {
+		if (FunctionKind.ASYNC === flag && this.check(Token.MUL)) {
 			// Async generator
-			flag = FunctionType.ASYNC_GENERATOR;
+			flag = FunctionKind.ASYNC_GENERATOR;
 		}
 		let name: ExpressionNode | undefined;
 		if (this.peek().isNotType(Token.L_PARENTHESES)) {
@@ -896,7 +896,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		throw new Error(this.errorMessage(`can't identify token ${string}`));
 	}
-	protected parseFunctionLiteral(flag: FunctionType, name?: ExpressionNode): ExpressionNode {
+	protected parseFunctionLiteral(flag: FunctionKind, name?: ExpressionNode): ExpressionNode {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
@@ -1127,9 +1127,9 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.FUNCTION);
 				if (this.peek().isType(Token.MUL)) {
 					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionType.GENERATOR);
+					return this.parseFunctionExpression(FunctionKind.GENERATOR);
 				}
-				return this.parseFunctionExpression(FunctionType.NORMAL);
+				return this.parseFunctionExpression(FunctionKind.NORMAL);
 			case Token.SUPER: {
 				return this.parseSuperExpression();
 			}
@@ -1161,11 +1161,11 @@ export class JavaScriptParser extends AbstractParser {
 				const info: FunctionInfo = {};
 				if (peekToken.isType(Token.FUNCTION)) {
 					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionType.NORMAL);
+					expression = this.parseFunctionLiteral(FunctionKind.NORMAL);
 				} else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
 					this.consume(Token.ASYNC);
 					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionType.ASYNC);
+					expression = this.parseFunctionLiteral(FunctionKind.ASYNC);
 				} else {
 					expression = this.parseExpressionCoverGrammar(info);
 				}
@@ -1460,13 +1460,13 @@ export class JavaScriptParser extends AbstractParser {
 				return AsyncIdentifier;
 			}
 			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionType.ASYNC;
+			propInfo.funcFlag = FunctionKind.ASYNC;
 		}
 
 		if (this.check(Token.MUL)) {
 			// async*
 			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionType.ASYNC_GENERATOR;
+			propInfo.funcFlag = FunctionKind.ASYNC_GENERATOR;
 		}
 
 		nextToken = this.peek();
