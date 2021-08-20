@@ -128,25 +128,24 @@ class TemplateArray extends Array<string> implements TemplateStringsArray {
 	}
 }
 
-@Deserializer('TemplateLiteral')
-export class TemplateLiteralsNode extends AbstractExpressionNode {
-	static fromJSON(node: TemplateLiteralsNode, deserializer: NodeDeserializer): TemplateLiteralsNode {
-		return new TemplateLiteralsNode(
-			deserializer(node.tag),
-			node.strings,
-			node.expressions.map(deserializer)
+export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
+	static fromJSON(node: TemplateLiteralExpressionNode, deserializer: NodeDeserializer): TemplateLiteralExpressionNode {
+		return new TemplateLiteralExpressionNode(
+			node.quasis,
+			node.expressions.map(deserializer),
+			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	constructor(private tag: ExpressionNode, private strings: string[], private expressions: ExpressionNode[]) {
+	constructor(private quasis: string[], private expressions: ExpressionNode[], private tag?: ExpressionNode,) {
 		super();
 	}
 
 	set(stack: StackProvider, value: any) {
-		throw new Error(`TemplateLiteralsNode#set() has no implementation.`);
+		throw new Error(`TemplateLiteralExpressionNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		const tagged: Function = this.tag.get(stack);
-		const templateStringsArray = new TemplateArray(this.strings);
+		const tagged: Function = this.tag?.get(stack) || String.raw;
+		const templateStringsArray = new TemplateArray(this.quasis);
 		templateStringsArray.raw = templateStringsArray;
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
@@ -158,28 +157,39 @@ export class TemplateLiteralsNode extends AbstractExpressionNode {
 		return this.expressions.flatMap(expr => expr.event());
 	}
 	toString(): string {
-		let str = this.tag.toString();
-		if (str === 'String.raw') {
-			str = ``;
-		}
+		let str = this.tag?.toString() || '';
 		str += '`';
 		let i = 0;
-		for (; i < this.strings.length - 1; i++) {
-			str += this.strings[i];
+		for (; i < this.quasis.length - 1; i++) {
+			str += this.quasis[i];
 			str += '${';
 			str += this.expressions[i].toString();
 			str += '}';
 		}
-		str += this.strings[i];
+		str += this.quasis[i];
 		str += '`';
 		return str;
 	}
 	toJson(): object {
 		return {
-			tag: this.tag.toJSON(),
-			strings: this.strings,
-			expressions: this.expressions.map(expr => expr.toJSON())
+			quasis: this.quasis,
+			expressions: this.expressions.map(expr => expr.toJSON()),
+			tag: this.tag?.toJSON(),
 		};
+	}
+}
+
+@Deserializer('TemplateLiteral')
+export class TemplateLiteralNode extends TemplateLiteralExpressionNode {
+	constructor(quasis: string[], expressions: ExpressionNode[]) {
+		super(quasis, expressions);
+	}
+}
+
+@Deserializer('TaggedTemplateExpression')
+export class TaggedTemplateExpressionNode extends TemplateLiteralExpressionNode {
+	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
+		super(quasis, expressions, tag);
 	}
 }
 
@@ -262,11 +272,21 @@ export class NullishNode extends AbstractLiteralNode<null | undefined> {
 	}
 }
 
+@Deserializer('ThisExpression')
+export class ThisExpressionNode extends IdentifierNode {
+	static fromJSON(node: ThisExpressionNode): ThisExpressionNode {
+		return ThisNode;
+	}
+	constructor() {
+		super('this');
+	}
+}
+
 export const NullNode = Object.freeze(new NullishNode(null)) as NullishNode;
 export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as NullishNode;
 export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
 export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
-export const ThisNode = Object.freeze(new IdentifierNode('this')) as IdentifierNode;
+export const ThisNode = Object.freeze(new ThisExpressionNode()) as ThisExpressionNode;
 export const GlobalThisNode = Object.freeze(new IdentifierNode('globalThis')) as IdentifierNode;
 export const SymbolNode = Object.freeze(new IdentifierNode('Symbol')) as IdentifierNode;
 export const OfNode = Object.freeze(new IdentifierNode('of')) as IdentifierNode;

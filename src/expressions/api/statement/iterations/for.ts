@@ -10,42 +10,42 @@ import { TerminateNode } from '../controlflow/terminate.js';
  * If the condition is falsy, another statement can be executed.
  * 
  */
-@Deserializer('for')
+@Deserializer('ForStatement')
 export class ForNode extends AbstractExpressionNode {
 	static fromJSON(node: ForNode, deserializer: NodeDeserializer): ForNode {
 		return new ForNode(
-			deserializer(node.statement),
-			node.initialization && deserializer(node.initialization),
-			node.condition && deserializer(node.condition),
-			node.finalExpression && deserializer(node.finalExpression)
+			deserializer(node.body),
+			node.init && deserializer(node.init),
+			node.test && deserializer(node.test),
+			node.update && deserializer(node.update)
 		);
 	}
 	constructor(
-		private statement: ExpressionNode,
-		private initialization?: ExpressionNode,
-		private condition?: ExpressionNode,
-		private finalExpression?: ExpressionNode) {
+		private body: ExpressionNode,
+		private init?: ExpressionNode,
+		private test?: ExpressionNode,
+		private update?: ExpressionNode) {
 		super();
 	}
-	getStatement() {
-		return this.statement;
+	getBody() {
+		return this.body;
 	}
-	getInitialization() {
-		return this.initialization;
+	getInit() {
+		return this.init;
 	}
-	getCondition() {
-		return this.condition;
+	getTest() {
+		return this.test;
 	}
-	getFinalExpression() {
-		return this.finalExpression;
+	getUpdate() {
+		return this.update;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`ForNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
 		stack = stack.newStack();
-		for (this.initialization?.get(stack); this.condition?.get(stack) ?? true; this.finalExpression?.get(stack)) {
-			const result = this.statement.get(stack);
+		for (this.init?.get(stack); this.test?.get(stack) ?? true; this.update?.get(stack)) {
+			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -64,54 +64,54 @@ export class ForNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return [...this.initialization?.event() || [], ...this.condition?.event() || []];
+		return [...this.init?.event() || [], ...this.test?.event() || []];
 	}
 	toString(): string {
-		return `for (${this.initialization?.toString()};${this.condition?.toString()};${this.initialization?.toString()}) ${this.statement.toString()}`;
+		return `for (${this.init?.toString()};${this.test?.toString()};${this.init?.toString()}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
-			statement: this.statement.toJSON(),
-			initialization: this.initialization?.toJSON(),
-			condition: this.condition?.toJSON(),
-			finalExpression: this.finalExpression?.toJSON(),
+			body: this.body.toJSON(),
+			init: this.init?.toJSON(),
+			test: this.test?.toJSON(),
+			update: this.update?.toJSON(),
 		};
 	}
 }
 
-@Deserializer('for-of')
+@Deserializer('ForOfStatement')
 export class ForOfNode extends AbstractExpressionNode {
 	static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
 		return new ForOfNode(
-			deserializer(node.variable),
-			deserializer(node.iterable),
-			deserializer(node.statement)
+			deserializer(node.left),
+			deserializer(node.right),
+			deserializer(node.body)
 		);
 	}
 	constructor(
-		private variable: ExpressionNode,
-		private iterable: ExpressionNode,
-		private statement: ExpressionNode) {
+		private left: ExpressionNode,
+		private right: ExpressionNode,
+		private body: ExpressionNode) {
 		super();
 	}
-	getVariable() {
-		return this.variable;
+	getLeft() {
+		return this.left;
 	}
-	getIterable() {
-		return this.iterable;
+	getRight() {
+		return this.right;
 	}
-	getStatement() {
-		return this.statement;
+	getBody() {
+		return this.body;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		const iterable = <any[]>this.iterable.get(stack);
+		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
 			const forOfStack = stack.newStack();
-			this.variable.set(forOfStack, iterator);
-			const result = this.statement.get(forOfStack);
+			this.left.set(forOfStack, iterator);
+			const result = this.body.get(forOfStack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -130,54 +130,54 @@ export class ForOfNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return this.iterable.event();
+		return this.right.event();
 	}
 	toString(): string {
-		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
+		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
-			variable: this.variable.toJSON(),
-			iterable: this.iterable.toJSON(),
-			statement: this.statement.toJSON(),
+			left: this.left.toJSON(),
+			right: this.right.toJSON(),
+			body: this.body.toJSON(),
 		};
 	}
 }
 
-@Deserializer('for-in')
+@Deserializer('ForInStatement')
 export class ForInNode extends AbstractExpressionNode {
 	static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
 		return new ForInNode(
-			deserializer(node.variable),
-			deserializer(node.object),
-			deserializer(node.statement)
+			deserializer(node.left),
+			deserializer(node.right),
+			deserializer(node.body)
 		);
 	}
 	// variable of iterable
 	constructor(
-		private variable: ExpressionNode,
-		private object: ExpressionNode,
-		private statement: ExpressionNode) {
+		private left: ExpressionNode,
+		private right: ExpressionNode,
+		private body: ExpressionNode) {
 		super();
 	}
-	getVariable() {
-		return this.variable;
+	getLeft() {
+		return this.left;
 	}
-	getObject() {
-		return this.object;
+	getRight() {
+		return this.right;
 	}
-	getStatement() {
-		return this.statement;
+	getBody() {
+		return this.body;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		const iterable = <object>this.object.get(stack);
+		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
 			const forInStack = stack.newStack();
-			this.variable.set(forInStack, iterator);
-			const result = this.statement.get(forInStack);
+			this.left.set(forInStack, iterator);
+			const result = this.body.get(forInStack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -196,54 +196,54 @@ export class ForInNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return this.object.event();
+		return this.right.event();
 	}
 	toString(): string {
-		return `for (${this.variable.toString()} in ${this.object.toString()}) ${this.statement.toString()}`;
+		return `for (${this.left.toString()} in ${this.right.toString()}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
-			variable: this.variable.toJSON(),
-			object: this.object.toJSON(),
-			statement: this.statement.toJSON(),
+			left: this.left.toJSON(),
+			right: this.right.toJSON(),
+			body: this.body.toJSON(),
 		};
 	}
 }
 
-@Deserializer('for-await-of')
+@Deserializer('ForAwaitOfStatement')
 export class ForAwaitOfNode extends AbstractExpressionNode {
 	static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
 		return new ForAwaitOfNode(
-			deserializer(node.variable),
-			deserializer(node.iterable),
-			deserializer(node.statement)
+			deserializer(node.left),
+			deserializer(node.right),
+			deserializer(node.body)
 		);
 	}
 	// variable of iterable
 	constructor(
-		private variable: ExpressionNode,
-		private iterable: ExpressionNode,
-		private statement: ExpressionNode) {
+		private left: ExpressionNode,
+		private right: ExpressionNode,
+		private body: ExpressionNode) {
 		super();
 	}
-	getVariable() {
-		return this.variable;
+	getLeft() {
+		return this.left;
 	}
-	getIterable() {
-		return this.iterable;
+	getRight() {
+		return this.right;
 	}
-	getStatement() {
-		return this.statement;
+	getBody() {
+		return this.body;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		const iterable: AsyncIterable<any> = this.iterable.get(stack);
+		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
 			const forOfStack = stack.newStack();
-			this.variable.set(forOfStack, iterator);
-			const result = this.statement.get(forOfStack);
+			this.left.set(forOfStack, iterator);
+			const result = this.body.get(forOfStack);
 			return result;
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
@@ -252,16 +252,16 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		return [];
 	}
 	event(parent?: string): string[] {
-		return this.iterable.event();
+		return this.right.event();
 	}
 	toString(): string {
-		return `for (${this.variable?.toString()} of ${this.iterable.toString()}) ${this.statement.toString()}`;
+		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
-			variable: this.variable.toJSON(),
-			iterable: this.iterable.toJSON(),
-			statement: this.statement.toJSON(),
+			left: this.left.toJSON(),
+			right: this.right.toJSON(),
+			body: this.body.toJSON(),
 		};
 	}
 }

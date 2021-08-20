@@ -2,33 +2,33 @@ import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
-	OfNode, IdentifierNode, ThisNode, GetIdentifier, SetIdentifier,
-	AsyncIdentifier, NullNode, TemplateLiteralsNode, StringNode, AwaitIdentifier, ConstructorIdentifier, NameIdentifier, EvalIdentifier, ArgumentsIdentifier
+	OfNode, IdentifierNode, ThisNode,
+	GetIdentifier, SetIdentifier, AsyncIdentifier,
+	NullNode, StringNode, AwaitIdentifier,
+	ConstructorIdentifier, NameIdentifier,
+	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpressionNode, TemplateLiteralNode
 } from '../api/definition/values.js';
 import { EmptyNode } from '../api/statement/controlflow/empty.js';
 import { BlockNode } from '../api/statement/controlflow/block.js';
 import {
 	ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode,
-	FunctionKind, FormalParamterNode
+	FunctionKind, FormalParamterNode, FunctionExpressionNode
 } from '../api/definition/function.js';
 import { IfElseNode } from '../api/statement/controlflow/if.js';
 import { NewNode } from '../api/computing/new.js';
 import { SpreadNode } from '../api/computing/spread.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { GroupingNode } from '../api/operators/grouping.js';
-import { AccessNode, ComputedMemberAccessNode, MemberAccessNode } from '../api/definition/member.js';
-import {
-	GetPropertyNode, ObjectLiteralNode,
-	ObjectLiteralPropertyNode, SetPropertyNode
-} from '../api/definition/object.js';
+import { MemberExpression } from '../api/definition/member.js';
+import { ObjectLiteralNode, ObjectLiteralPropertyNode } from '../api/definition/object.js';
 import { ArrayLiteralNode } from '../api/definition/array.js';
-import { FunctionCallNode } from '../api/computing/call.js';
+import { CallExpressionNode } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { ThrowNode, TryCatchNode } from '../api/computing/throw.js';
+import { CatchClauseNode, ThrowNode, TryCatchNode } from '../api/computing/throw.js';
 import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
 import { TerminateNode } from '../api/statement/controlflow/terminate.js';
 import { ReturnNode } from '../api/computing/return.js';
-import { ConstNode, LetNode, Variable } from '../api/statement/declarations/declares.js';
+import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for.js';
 import { TernaryNode } from '../api/operators/ternary.js';
 import { PipelineNode } from '../api/operators/pipeline.js';
@@ -209,21 +209,21 @@ export abstract class AbstractParser {
 	protected isPattern(expression: ExpressionNode): expression is (ObjectLiteralNode | ArrayLiteralNode) {
 		return expression instanceof ObjectLiteralNode || expression instanceof ArrayLiteralNode;
 	}
-	protected isProperty(expression: ExpressionNode): expression is (MemberAccessNode | ComputedMemberAccessNode) {
-		return expression instanceof MemberAccessNode || expression instanceof ComputedMemberAccessNode;
+	protected isProperty(expression: ExpressionNode): expression is MemberExpression {
+		return expression instanceof MemberExpression;
 	}
 	protected isCallNew(expression: ExpressionNode): expression is NewNode {
 		return expression instanceof NewNode;
 	}
-	protected isCall(expression: ExpressionNode): expression is FunctionCallNode {
-		return expression instanceof FunctionCallNode;
+	protected isCall(expression: ExpressionNode): expression is CallExpressionNode {
+		return expression instanceof CallExpressionNode;
 	}
 	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyNode {
 		return expression instanceof EmptyNode;
 	}
 	protected isThisProperty(expression: ExpressionNode): boolean {
 		if (this.isProperty(expression)) {
-			if (expression.getLeft() === ThisNode || expression.getLeft().toString() === 'this') {
+			if (expression.getObject() === ThisNode || expression.getObject().toString() === 'this') {
 				return true;
 			}
 		}
@@ -364,18 +364,20 @@ export class JavaScriptParser extends AbstractParser {
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
 		}
-		let catchVar: ExpressionNode | undefined, catchBlock: ExpressionNode | undefined;
+		let catchBlock: ExpressionNode | undefined;
 		if (this.check(Token.CATCH)) {
 			// bool has_binding;
+			let catchVar: ExpressionNode | undefined;
 			const hasBinding = this.check(Token.L_PARENTHESES);
 			if (hasBinding) {
 				catchVar = this.parseIdentifier();
 				this.expect(Token.R_PARENTHESES);
 			}
-			catchBlock = this.parseBlock();
-			if (catchBlock instanceof BlockNode) {
-				catchBlock.isStatement = true;
+			const block = this.parseBlock();
+			if (block instanceof BlockNode) {
+				block.isStatement = true;
 			}
+			catchBlock = new CatchClauseNode(block, catchVar);
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
@@ -384,7 +386,7 @@ export class JavaScriptParser extends AbstractParser {
 				finallyBlock.isStatement = true;
 			}
 		}
-		return new TryCatchNode(tryBlock, catchVar, catchBlock, finallyBlock);
+		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
 	}
 	protected parseBlock(): ExpressionNode {
 		this.expect(Token.L_CURLY);
@@ -636,7 +638,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
 		// var converted into ==> 'let' by parser
 
-		let mode: 'const' | 'let';
+		let mode: 'const' | 'let' | 'var';
 		const token = this.peek().token;
 		switch (token) {
 			case Token.CONST:
@@ -644,13 +646,15 @@ export class JavaScriptParser extends AbstractParser {
 				mode = 'const';
 				break;
 			case Token.VAR:
+				this.consume(token);
+				mode = 'var';
 			case Token.LET:
 			default:
 				this.consume(token);
 				mode = 'let';
 				break;
 		}
-		const variables: Variable[] = [];
+		const variables: VariableNode[] = [];
 		do {
 
 			let name: ExpressionNode;
@@ -679,14 +683,9 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new Variable(name, value));
+			variables.push(new VariableNode(name, value));
 		} while (this.check(Token.COMMA));
-
-		if (mode === 'const') {
-			return new ConstNode(variables);
-		} else {
-			return new LetNode(variables);
-		}
+		return new VariableDeclarationNode(variables, mode);
 	}
 	protected parseBindingPattern(): ExpressionNode {
 		// Pattern ::
@@ -717,11 +716,11 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		else if (next.isType(Token.SET)) {
 			const value = this.parseFunctionDeclaration();
-			return new SetPropertyNode(next.getValue(), value);
+			return new ObjectLiteralPropertyNode(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
 			const value = this.parseFunctionDeclaration();
-			return new GetPropertyNode(next.getValue(), value);
+			return new ObjectLiteralPropertyNode(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
@@ -905,7 +904,7 @@ export class JavaScriptParser extends AbstractParser {
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseFunctionBody();
-		return new FunctionDeclarationNode(formals, body, flag, name, functionInfo.rest);
+		return new FunctionExpressionNode(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseFunctionBody(): ExpressionNode[] {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
@@ -1197,9 +1196,9 @@ export class JavaScriptParser extends AbstractParser {
 		const exprs = template.expressions.map(expr => JavaScriptParser.parse(expr));
 
 		if (tag) {
-			return new TemplateLiteralsNode(tag, template.strings, exprs);
+			return new TaggedTemplateExpressionNode(tag, template.strings, exprs);
 		} else {
-			return new TemplateLiteralsNode(JavaScriptParser.parse('String.raw'), template.strings, exprs);
+			return new TemplateLiteralNode(template.strings, exprs);
 		}
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
@@ -1395,12 +1394,12 @@ export class JavaScriptParser extends AbstractParser {
 		switch (propInfo.kind) {
 			case PropertyKind.Spread:
 				const spared: SpreadNode = nameExpression as SpreadNode;
-				return new ObjectLiteralPropertyNode(spared.getNode(), spared);
+				return new ObjectLiteralPropertyNode(spared.getArgument(), spared, 'init');
 
 			case PropertyKind.Value: {
 				this.consume(Token.COLON);
 				const value = this.parsePossibleDestructuringSubPattern();
-				return new ObjectLiteralPropertyNode(nameExpression, value);
+				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.Assign:
@@ -1425,7 +1424,7 @@ export class JavaScriptParser extends AbstractParser {
 				} else {
 					value = lhs;
 				}
-				return new ObjectLiteralPropertyNode(nameExpression, value);
+				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.Method: {
@@ -1434,14 +1433,14 @@ export class JavaScriptParser extends AbstractParser {
 				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 
 				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new ObjectLiteralPropertyNode(nameExpression, value);
+				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
 				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new (isGet ? GetPropertyNode : SetPropertyNode)(nameExpression, value);
+				return new ObjectLiteralPropertyNode(nameExpression, value, isGet ? 'get' : 'set');
 			}
 
 			case PropertyKind.ClassField:
@@ -1544,14 +1543,14 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_BRACKETS: {
 					this.consume(Token.L_BRACKETS);
 					const index = this.parseExpressionCoverGrammar();
-					expression = new ComputedMemberAccessNode(expression, index);
+					expression = new MemberExpression(expression, index, true);
 					this.expect(Token.R_BRACKETS);
 					break;
 				}
 				case Token.PERIOD: {
 					this.consume(Token.PERIOD);
 					const key: ExpressionNode = this.parsePropertyName();
-					expression = new MemberAccessNode(expression, key);
+					expression = new MemberExpression(expression, key, false);
 					break;
 				}
 				case Token.TEMPLATE_LITERALS: {
@@ -1742,7 +1741,7 @@ export class JavaScriptParser extends AbstractParser {
 					// "delete identifier" is a syntax error in strict mode.
 					throw new Error(this.errorMessage(`"delete identifier" is a syntax error in strict mode`));
 				}
-				if (expression instanceof AccessNode && expression.getRight().toString().startsWith('#')) {
+				if (expression instanceof MemberExpression && expression.getProperty().toString().startsWith('#')) {
 					throw new Error(this.errorMessage(`"Delete Private Field" is a syntax error`));
 				}
 			}
@@ -1794,7 +1793,7 @@ export class JavaScriptParser extends AbstractParser {
 				// async ( Arguments ) => ...
 				return this.expressionListToExpression(args);
 			}
-			result = new FunctionCallNode(result, args);
+			result = new CallExpressionNode(result, args);
 			if (!Token.isPropertyOrCall(this.peek().token)) return result;
 		}
 
@@ -1819,7 +1818,7 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_BRACKETS: {
 					this.consume(Token.L_BRACKETS);
 					const index = this.parseExpressionCoverGrammar();
-					result = new ComputedMemberAccessNode(result, index);
+					result = new MemberExpression(result, index, true);
 					this.expect(Token.R_BRACKETS);
 					break;
 				}
@@ -1831,7 +1830,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.consume(Token.PERIOD);
 					const key = this.parsePropertyName();
-					result = new MemberAccessNode(result, key);
+					result = new MemberExpression(result, key, false);
 					break;
 				}
 
@@ -1841,7 +1840,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (result.toString() === 'eval') {
 						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
 					}
-					result = new FunctionCallNode(result, args);
+					result = new CallExpressionNode(result, args);
 					break;
 				}
 

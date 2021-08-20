@@ -71,10 +71,10 @@ export class FormalParamterNode extends AbstractExpressionNode {
 	}
 }
 
-@Deserializer('FunctionDeclaration')
-export class FunctionDeclarationNode extends AbstractExpressionNode {
-	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
-		return new FunctionDeclarationNode(
+@Deserializer('FunctionExpression')
+export class FunctionExpressionNode extends AbstractExpressionNode {
+	static fromJSON(node: FunctionExpressionNode, deserializer: NodeDeserializer): FunctionExpressionNode {
+		return new FunctionExpressionNode(
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
@@ -103,7 +103,7 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 		return this.rest;
 	}
 	set(stack: StackProvider, value: Function) {
-		throw new Error('FunctionDeclarationNode#set() has no implementation.');
+		throw new Error('FunctionExpressionNode#set() has no implementation.');
 	}
 	private setParamter(stack: StackProvider, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
@@ -278,6 +278,15 @@ export class FunctionDeclarationNode extends AbstractExpressionNode {
 			id: this.id?.toJSON(),
 			rest: this.rest
 		};
+	}
+}
+
+@Deserializer('FunctionDeclaration')
+export class FunctionDeclarationNode extends FunctionExpressionNode {
+	constructor(
+		params: ExpressionNode[], body: ExpressionNode[],
+		kind: FunctionKind, id: ExpressionNode, rest?: boolean) {
+		super(params, body, kind, id, rest);
 	}
 }
 

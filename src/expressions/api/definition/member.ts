@@ -3,79 +3,66 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 
-export abstract class AccessNode extends AbstractExpressionNode {
-	constructor(protected left: ExpressionNode, protected right: ExpressionNode) {
+@Deserializer('MemberExpression')
+export class MemberExpression extends AbstractExpressionNode {
+	static fromJSON(node: MemberExpression, deserializer: NodeDeserializer): MemberExpression {
+		return new MemberExpression(deserializer(node.object), deserializer(node.property), node.computed);
+	}
+	constructor(protected object: ExpressionNode, protected property: ExpressionNode, private computed: boolean) {
 		super();
 	}
-	getLeft() {
-		return this.left;
+	getObject() {
+		return this.object;
 	}
-	getRight() {
-		return this.right;
+	getProperty() {
+		return this.property;
+	}
+	set(stack: StackProvider, value: any) {
+		if (this.computed) {
+			return this.object.get(stack)[this.property.get(stack)] = value;
+		}
+		return this.property.set(stack.stackFor(this.object.get(stack)), value);
+	}
+	get(stack: StackProvider, thisContext?: any) {
+		if (this.computed) {
+			const thisRef = thisContext ?? this.object.get(stack);
+			const value = thisRef[this.property.get(stack)];
+			if (typeof value === 'function') {
+				return (<Function>value).bind(thisRef);
+			}
+			return value;
+		}
+		const thisRef = thisContext ?? this.object.get(stack);
+		const value = this.property.get(stack, thisRef);
+		if (typeof value === 'function') {
+			return (<Function>value).bind(thisRef);
+		}
+		return value;
+	}
+	event(parent?: string): string[] {
+		if (this.computed) {
+			parent ??= '';
+			parent = `${parent}${this.object.event(parent)}`;
+			return [parent, `${parent}[${this.property.toString()}]`];
+		}
+		parent ||= '';
+		parent += this.object.toString() + '.';
+		return [...this.object.event(), ...this.property.event(parent)];
 	}
 	entry(): string[] {
-		return this.left.entry();
+		return this.object.entry();
+	}
+	toString() {
+		if (this.computed) {
+			return `${this.object.toString()}[${this.property.toString()}]`;
+		}
+		return `${this.object.toString()}.${this.property.toString()}`;
 	}
 	toJson(): object {
 		return {
-			left: this.left.toJSON(),
-			right: this.right.toJSON()
+			object: this.object.toJSON(),
+			property: this.property.toJSON(),
+			computed: this.computed
 		};
-	}
-	abstract get(stack: StackProvider, thisContext?: any): any;
-	abstract set(stack: StackProvider, value: any): any;
-	abstract event(parent?: string): string[];
-	abstract toString(): string;
-}
-
-@Deserializer('member')
-export class MemberAccessNode extends AccessNode {
-	static fromJSON(node: MemberAccessNode, deserializer: NodeDeserializer): MemberAccessNode {
-		return new MemberAccessNode(deserializer(node.left), deserializer(node.right));
-	}
-	set(stack: StackProvider, value: any) {
-		return this.right.set(stack.stackFor(this.left.get(stack)), value);
-	}
-	get(stack: StackProvider, thisContext?: any) {
-		const thisRef = thisContext ?? this.left.get(stack);
-		const value = this.right.get(stack, thisRef);
-		if (typeof value === 'function') {
-			return (<Function>value).bind(thisRef);
-		}
-		return value;
-	}
-	event(parent?: string): string[] {
-		parent ||= '';
-		parent += this.left.toString() + '.';
-		return [...this.left.event(), ...this.right.event(parent)];
-	}
-	toString() {
-		return `${this.left.toString()}.${this.right.toString()}`;
-	}
-}
-
-@Deserializer('computed-member')
-export class ComputedMemberAccessNode extends AccessNode {
-	static fromJSON(node: ComputedMemberAccessNode, deserializer: NodeDeserializer): ComputedMemberAccessNode {
-		return new ComputedMemberAccessNode(deserializer(node.left), deserializer(node.right));
-	}
-	set(stack: StackProvider, value: any) {
-		return this.left.get(stack)[this.right.get(stack)] = value;
-	}
-	get(stack: StackProvider, thisContext?: any) {
-		const thisRef = thisContext ?? this.left.get(stack);
-		const value = thisRef[this.right.get(stack)];
-		if (typeof value === 'function') {
-			return (<Function>value).bind(thisRef);
-		}
-		return value;
-	}
-	event(parent?: string): string[] {
-		parent ??= '';
-		parent = `${parent}${this.left.event(parent)}`;
-		return [parent, `${parent}[${this.right.toString()}]`];
-	}
-	toString() {
-		return `${this.left.toString()}[${this.right.toString()}]`;
 	}
 }

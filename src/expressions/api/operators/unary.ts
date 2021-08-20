@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
 import { StackProvider } from '../scope.js';
-import { AccessNode } from '../definition/member.js';
+import { MemberExpression } from '../definition/member.js';
 @Deserializer('unary')
 export class UnaryNode extends AbstractExpressionNode {
 	static fromJSON(node: UnaryNode, deserializer: NodeDeserializer): UnaryNode {
@@ -83,15 +83,15 @@ export class LiteralUnaryNode extends AbstractExpressionNode {
 		return void this.node.get(stack);
 	}
 	private getDelete(stack: StackProvider, thisContext?: any) {
-		if (this.node instanceof AccessNode) {
-			thisContext = thisContext || this.node.getLeft().get(stack);
-			const right = this.node.getRight();
-			if (right instanceof AccessNode) {
+		if (this.node instanceof MemberExpression) {
+			thisContext = thisContext || this.node.getObject().get(stack);
+			const right = this.node.getProperty();
+			if (right instanceof MemberExpression) {
 				// [Symbol.asyncIterator]
-				return delete thisContext[this.node.getRight().get(stack)];
+				return delete thisContext[this.node.getProperty().get(stack)];
 			} else {
 				// [10], ['string']
-				return delete thisContext[this.node.getRight().toString()];
+				return delete thisContext[this.node.getProperty().toString()];
 			}
 		}
 	}

@@ -9,7 +9,7 @@ import { StackProvider } from '../../scope.js';
  * but JavaScript only allows a single one, is possible using a block statement,
  * which combines several statements into a single one.
  */
-@Deserializer('empty')
+@Deserializer('EmptyStatement')
 export class EmptyNode extends AbstractExpressionNode {
 	static INSTANCE = Object.freeze(new EmptyNode()) as EmptyNode;
 	static fromJSON(node: EmptyNode): EmptyNode {

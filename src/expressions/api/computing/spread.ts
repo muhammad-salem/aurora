@@ -1,24 +1,24 @@
-import type { ExpressionNode } from '../expression.js';
+import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
 
-@Deserializer('spread')
+@Deserializer('SpreadElement')
 export class SpreadNode extends AbstractExpressionNode {
-	static fromJSON(nodeExp: SpreadNode): SpreadNode {
-		return new SpreadNode(nodeExp.node);
+	static fromJSON(node: SpreadNode, deserializer: NodeDeserializer): SpreadNode {
+		return new SpreadNode(deserializer(node.argument));
 	}
-	constructor(private node: ExpressionNode) {
+	constructor(private argument: ExpressionNode) {
 		super();
 	}
-	getNode() {
-		return this.node;
+	getArgument() {
+		return this.argument;
 	}
 	set(stack: StackProvider, value: any) {
-		throw new Error('SpreadSyntax.set() Method has no implementation.');
+		throw new Error('SpreadNode.set() Method has no implementation.');
 	}
 	get(stack: StackProvider): void {
-		const value = this.node.get(stack);
+		const value = this.argument.get(stack);
 		if (Array.isArray(value)) {
 			this.spreadFromArray(stack, value);
 		} else if (Reflect.has(value, Symbol.iterator)) {
@@ -42,15 +42,15 @@ export class SpreadNode extends AbstractExpressionNode {
 		}
 	}
 	entry(): string[] {
-		return this.node.entry();
+		return this.argument.entry();
 	}
 	event(parent?: string): string[] {
-		return this.node.event();
+		return this.argument.event();
 	}
 	toString(): string {
-		return `...${this.node.toString()}`;
+		return `...${this.argument.toString()}`;
 	}
 	toJson(): object {
-		return { node: this.node.toJSON() };
+		return { argument: this.argument.toJSON() };
 	}
 }
