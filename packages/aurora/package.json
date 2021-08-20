@@ -18,7 +18,7 @@
 		"@ibyar/core": "^0.2.1",
 		"@ibyar/directives": "^0.2.1",
 		"@ibyar/pipes": "^0.2.1",
-		"tslib": "^2.3.0"
+		"tslib": "^2.3.1"
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.2.1",
