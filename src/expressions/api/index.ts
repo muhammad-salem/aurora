@@ -21,8 +21,11 @@ export * from './computing/spread.js';
 export * from './computing/throw.js';
 
 
+
 export * from './operators/arithmetic.js';
 export * from './operators/assignment.js';
+export * from './operators/await.js';
+export * from './operators/binary.js';
 export * from './operators/chaining.js';
 export * from './operators/comma.js';
 export * from './operators/destruct.js';
@@ -35,6 +38,7 @@ export * from './operators/shift.js';
 export * from './operators/ternary.js';
 export * from './operators/types.js';
 export * from './operators/unary.js';
+export * from './operators/update.js';
 
 
 export * from './statement/controlflow/block.js';

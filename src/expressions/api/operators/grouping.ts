@@ -10,7 +10,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * before an expression with higher priority.
  * As it sounds, it groups what's inside of the parentheses.
  */
-@Deserializer('grouping')
+@Deserializer('GroupingExpression')
 export class GroupingNode extends AbstractExpressionNode {
 	static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
 		return new GroupingNode(deserializer(node.node as any));

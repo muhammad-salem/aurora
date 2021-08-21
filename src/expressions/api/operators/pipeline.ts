@@ -15,37 +15,37 @@ import { SpreadNode } from '../computing/spread.js';
  *  param |> func(arg1, ?, arg3)
  *  param |> func(arg1, ?, arg3, arg4, ?, arg6)
  */
-@Deserializer('pipeline')
+@Deserializer('PipelineExpression')
 export class PipelineNode extends AbstractExpressionNode {
 	static fromJSON(node: PipelineNode, deserializer: NodeDeserializer): PipelineNode {
 		return new PipelineNode(
-			deserializer(node.param),
-			deserializer(node.func),
-			node.args.map(arg => typeof arg === 'string' ? arg : deserializer(arg))
+			deserializer(node.left),
+			deserializer(node.right),
+			node.params.map(param => typeof param === 'string' ? param : deserializer(param))
 		);
 	}
-	constructor(private param: ExpressionNode, private func: ExpressionNode, private args: (ExpressionNode | '?' | '...?')[] = []) {
+	constructor(private left: ExpressionNode, private right: ExpressionNode, private params: (ExpressionNode | '?' | '...?')[] = []) {
 		super();
 	}
-	getParam() {
-		return this.param;
+	getLeft() {
+		return this.left;
 	}
-	getFunc() {
-		return this.func;
+	getRight() {
+		return this.right;
 	}
-	getArgs() {
-		return this.args;
+	getParams() {
+		return this.params;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider, thisContext?: any) {
-		const paramValue = this.param.get(stack);
-		const funCallBack = this.func.get(stack, thisContext) as Function;
+		const paramValue = this.left.get(stack);
+		const funCallBack = this.right.get(stack, thisContext) as Function;
 		const parameters: any[] = [];
 		const parametersStack = stack.emptyStackProviderWith(parameters);
 		let indexed = false;
-		for (const arg of this.args) {
+		for (const arg of this.params) {
 			if (arg === '?') {
 				parameters.push(paramValue);
 				indexed = true;
@@ -67,26 +67,26 @@ export class PipelineNode extends AbstractExpressionNode {
 	}
 	entry(): string[] {
 		return [
-			...this.func.entry(),
-			...this.param.entry(),
-			...(this.args.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(arg => arg.entry!())
+			...this.right.entry(),
+			...this.left.entry(),
+			...(this.params.filter(param => (param !== '?' && param !== '...?')) as ExpressionNode[]).flatMap(param => param.entry!())
 		];
 	}
 	event(parent?: string): string[] {
 		return [
-			...this.func.event(),
-			...this.param.event(),
-			...(this.args.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(arg => arg.event!())
+			...this.right.event(),
+			...this.left.event(),
+			...(this.params.filter(param => (param !== '?' && param !== '...?')) as ExpressionNode[]).flatMap(param => param.event!())
 		];
 	}
 	toString() {
-		return `${this.param.toString()} |> ${this.func.toString()}${this.args.flatMap(arg => `:${arg.toString()}`).join('')}`;
+		return `${this.left.toString()} |> ${this.right.toString()}${this.params.flatMap(param => `:${param.toString()}`).join('')}`;
 	}
 	toJson(): object {
 		return {
-			param: this.param.toJSON(),
-			func: this.func.toJSON(),
-			args: this.args?.map(arg => typeof arg === 'string' ? arg : arg.toJSON())
+			left: this.left.toJSON(),
+			right: this.right.toJSON(),
+			params: this.params?.map(param => typeof param === 'string' ? param : param.toJSON())
 		};
 	}
 }

@@ -79,12 +79,14 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
 			node.id ? deserializer(node.id) as IdentifierNode : void 0,
-			node.rest
+			node.rest,
+			node.generator
 		);
 	}
 	constructor(
 		private params: ExpressionNode[], private body: ExpressionNode[],
-		private kind: FunctionKind, private id?: ExpressionNode, private rest?: boolean) {
+		private kind: FunctionKind, private id?: ExpressionNode,
+		private rest?: boolean, private generator?: boolean) {
 		super();
 	}
 	getParams() {
@@ -276,7 +278,8 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 			body: this.body.map(statement => statement.toJSON()),
 			kind: this.kind,
 			id: this.id?.toJSON(),
-			rest: this.rest
+			rest: this.rest,
+			generator: this.generator
 		};
 	}
 }
@@ -285,8 +288,9 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 export class FunctionDeclarationNode extends FunctionExpressionNode {
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id: ExpressionNode, rest?: boolean) {
-		super(params, body, kind, id, rest);
+		kind: FunctionKind, id: ExpressionNode,
+		rest?: boolean, generator?: boolean) {
+		super(params, body, kind, id, rest, generator);
 	}
 }
 
@@ -298,11 +302,12 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			ArrowFunctionType[node.kind],
-			node.rest
+			node.rest,
+			node.generator
 		);
 	}
 	constructor(private params: ExpressionNode[], private body: ExpressionNode[],
-		private kind: ArrowFunctionType, private rest?: boolean) {
+		private kind: ArrowFunctionType, private rest?: boolean, private generator?: boolean) {
 		super();
 	}
 	getParams() {
@@ -425,8 +430,10 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		return {
 			params: this.params.map(param => param.toJSON()),
 			body: this.body.map(item => item.toJSON()),
+			expression: true,
 			kind: this.kind,
-			rest: this.rest
+			rest: this.rest,
+			generator: this.generator
 		};
 	}
 }

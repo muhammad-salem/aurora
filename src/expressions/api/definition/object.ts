@@ -2,6 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
+import { ScopeProvider } from '../context/provider.js';
 
 @Deserializer('Property')
 export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
@@ -18,7 +19,7 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode {
 		return this.value;
 	}
 	set(stack: StackProvider, value: any) {
-		throw new Error('ObjectLiteralPropertyNode#set() has no implementation');
+		this.key.set(stack, value);
 	}
 	get(stack: StackProvider, thisContext: ThisType<any>): any {
 		const name = this.key.get(stack);
@@ -72,7 +73,7 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 		return this.properties;
 	}
 	set(stack: StackProvider) {
-		throw new Error('LiteralObjectNode#set() has no implementation.');
+		throw new Error('ObjectLiteralNode#set() has no implementation.');
 	}
 	get(stack: StackProvider) {
 		const newObject = Object.create(null);
@@ -80,6 +81,44 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 			property.get(stack, newObject);
 		}
 		return newObject;
+	}
+	entry(): string[] {
+		return this.properties.flatMap(property => property.entry());
+	}
+	event(parent?: string): string[] {
+		return this.properties.flatMap(property => property.event());
+	}
+	toString() {
+		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
+	}
+	toJson(): object {
+		return {
+			properties: this.properties.map(item => item.toJSON())
+		};
+	}
+}
+
+@Deserializer('ObjectPattern')
+export class ObjectPatternNode extends AbstractExpressionNode {
+	static fromJSON(node: ObjectPatternNode, deserializer: NodeDeserializer): ObjectPatternNode {
+		return new ObjectPatternNode(node.properties.map(deserializer));
+	}
+	constructor(private properties: ExpressionNode[]) {
+		super();
+	}
+	getProperties() {
+		return this.properties;
+	}
+	set(stack: StackProvider, value: any) {
+		const mockedStack = stack.newStack();
+		mockedStack.addProvider(value);
+		for (const property of this.properties as ObjectLiteralPropertyNode[]) {
+			const value = property.getKey().get(mockedStack);
+			property.getKey().set(stack, value);
+		}
+	}
+	get(scopeProvider: StackProvider, valueContext: any) {
+		this.set(scopeProvider, valueContext);
 	}
 	entry(): string[] {
 		return this.properties.flatMap(property => property.entry());

@@ -4,7 +4,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
 
 export type ChainingType = 'property' | 'expression' | 'function';
-@Deserializer('chaining')
+@Deserializer('ChainExpression')
 export class OptionalChainingNode extends AbstractExpressionNode {
 	static fromJSON(node: OptionalChainingNode, deserializer: NodeDeserializer): OptionalChainingNode {
 		return new OptionalChainingNode(

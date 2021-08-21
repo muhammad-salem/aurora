@@ -1,7 +1,6 @@
 
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { StackProvider } from '../../scope.js';
-import type { ScopeProvider } from '../../context/provider.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -19,13 +18,13 @@ export class VariableNode extends AbstractExpressionNode {
 	set(stack: StackProvider, value: any) {
 		throw new Error(`VariableNode#set() has no implementation.`);
 	}
-	get(stack: ScopeProvider) {
+	get(stack: StackProvider) {
 		const value = this.init?.get(stack);
 		if (value instanceof AwaitPromise) {
 			value.node = this.id;
 			stack.resolveAwait(value);
 		} else {
-			stack.stack[0].set(this.id.get(stack), value);
+			this.id.set(stack, value);
 		}
 	}
 	entry(): string[] {
@@ -60,10 +59,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode {
 		return this.declarations;
 	}
 	set(stack: StackProvider, value: any) {
-		if (Array.isArray(value)) {
-			throw new Error(`DeclarationsNode#set() has no implementation.`);
-		}
-		(this.declarations[0] as VariableNode).id.set(stack, value);
+		throw new Error(`VariableDeclarationNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
 		stack.addEmptyProvider();
@@ -87,47 +83,3 @@ export class VariableDeclarationNode extends AbstractExpressionNode {
 		};
 	}
 }
-
-// @Deserializer('var')
-// export class VarNode extends DeclarationsNode {
-// 	static fromJSON(node: VarNode, deserializer: NodeDeserializer): VarNode {
-// 		return new VarNode(
-// 			node.declarations.map(deserializer),
-// 			'var'
-// 		);
-// 	}
-// }
-
-
-// /**
-//  * The let statement declares a block-scoped local variable,
-//  * optionally initializing it to a value.
-//  * 
-//  */
-// @Deserializer('let')
-// export class LetNode extends DeclarationsNode {
-// 	static fromJSON(node: LetNode, deserializer: NodeDeserializer): LetNode {
-// 		return new LetNode(
-// 			node.declarations.map(deserializer),
-// 			'let'
-// 		);
-// 	}
-// }
-
-// /**
-//  * Constants are block-scoped, much like variables declared using the let keyword.
-//  * The value of a constant can't be changed through reassignment,
-//  * and it can't be redeclare.
-//  * 
-//  * the impl set no constrain on the local variable
-//  *
-//  */
-// @Deserializer('const')
-// export class ConstNode extends DeclarationsNode {
-// 	static fromJSON(node: ConstNode, deserializer: NodeDeserializer): ConstNode {
-// 		return new ConstNode(
-// 			node.declarations.map(deserializer),
-// 			'const'
-// 		);
-// 	}
-// }

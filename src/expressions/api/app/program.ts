@@ -3,14 +3,15 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { StackProvider } from '../scope.js';
 
+export type ProgramSourceType = 'script' | 'module';
 
 @Deserializer('Program')
 export class ProgramNode extends AbstractExpressionNode {
 
 	static fromJSON(node: ProgramNode, deserializer: NodeDeserializer): ProgramNode {
-		return new ProgramNode(deserializer(node.body));
+		return new ProgramNode(node.sourceType, node.body.map(deserializer));
 	}
-	constructor(private body: ExpressionNode) {
+	constructor(private sourceType: ProgramSourceType, private body: ExpressionNode[]) {
 		super();
 	}
 
