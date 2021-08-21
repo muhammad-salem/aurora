@@ -77,7 +77,7 @@ export interface StackProvider extends ContextProvider {
 	findContext(propertyKey: PropertyKey): ContextProvider;
 
 	/**
-	 * crete chained stack based on this stack.
+	 * create chained stack based on this stack.
 	 */
 	newStack(): StackProvider;
 

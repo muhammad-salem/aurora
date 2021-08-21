@@ -3,25 +3,34 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { StackProvider } from '../scope.js';
 
-@Deserializer('identifier')
+/**
+ * An identifier is a sequence of characters in the code that identifies a variable, function, or property.
+ * In JavaScript, identifiers are case-sensitive and can contain Unicode letters, $, _, and digits (0-9),
+ * but may not start with a digit.
+ * An identifier differs from a string in that a string is data,
+ * while an identifier is part of the code. In JavaScript,
+ * there is no way to convert identifiers to strings,
+ * but sometimes it is possible to parse strings into identifiers.
+ */
+@Deserializer('Identifier')
 export class IdentifierNode extends AbstractExpressionNode {
 	static fromJSON(node: IdentifierNode): IdentifierNode {
-		return new IdentifierNode(node.property);
+		return new IdentifierNode(node.name);
 	}
-	constructor(private property: string | number) {
+	constructor(private name: string | number) {
 		super();
 	}
-	getProperty() {
-		return this.property;
+	getName() {
+		return this.name;
 	}
 	set(stack: StackProvider, value: any) {
-		return stack.set(this.property, value) ? value : void 0;
+		return stack.set(this.name, value) ? value : void 0;
 	}
 	get(stack: StackProvider, thisContext?: any) {
 		if (thisContext) {
-			return thisContext[this.property];
+			return thisContext[this.name];
 		}
-		return stack.get(this.property);
+		return stack.get(this.name);
 	}
 	entry(): string[] {
 		return [this.toString()];
@@ -33,15 +42,27 @@ export class IdentifierNode extends AbstractExpressionNode {
 		return [this.toString()];
 	}
 	toString(): string {
-		return String(this.property);
+		return String(this.name);
 	}
 	toJson(): object {
-		return { property: this.property };
+		return { name: this.name };
 	}
 }
 
-export abstract class AbstractLiteralNode<T> extends AbstractExpressionNode {
-	protected value: T;
+@Deserializer('Literal')
+export class AbstractLiteralNode<T> extends AbstractExpressionNode {
+	static fromJSON(node: AbstractLiteralNode<any>):
+		AbstractLiteralNode<string>
+		| AbstractLiteralNode<number>
+		| AbstractLiteralNode<bigint>
+		| AbstractLiteralNode<boolean>
+		| AbstractLiteralNode<RegExp>
+		| AbstractLiteralNode<null | undefined> {
+		return new AbstractLiteralNode(node.value);
+	}
+	constructor(protected value: T) {
+		super();
+	}
 	getValue() {
 		return this.value;
 	}
@@ -65,14 +86,14 @@ export abstract class AbstractLiteralNode<T> extends AbstractExpressionNode {
 	}
 }
 
-@Deserializer('string')
+@Deserializer('StringLiteral')
 export class StringNode extends AbstractLiteralNode<string> {
 	static fromJSON(node: StringNode): StringNode {
 		return new StringNode(node.value, node.quote);
 	}
 	private quote: string;
 	constructor(value: string, quote?: string) {
-		super();
+		super(value);
 		const firstChar = value.charAt(0);
 		if (quote) {
 			this.quote = quote;
@@ -107,25 +128,24 @@ class TemplateArray extends Array<string> implements TemplateStringsArray {
 	}
 }
 
-@Deserializer('template')
-export class TemplateLiteralsNode extends AbstractExpressionNode {
-	static fromJSON(node: TemplateLiteralsNode, deserializer: NodeDeserializer): TemplateLiteralsNode {
-		return new TemplateLiteralsNode(
-			deserializer(node.tag),
-			node.strings,
-			node.expressions.map(deserializer)
+export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
+	static fromJSON(node: TemplateLiteralExpressionNode, deserializer: NodeDeserializer): TemplateLiteralExpressionNode {
+		return new TemplateLiteralExpressionNode(
+			node.quasis,
+			node.expressions.map(deserializer),
+			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	constructor(private tag: ExpressionNode, private strings: string[], private expressions: ExpressionNode[]) {
+	constructor(private quasis: string[], private expressions: ExpressionNode[], private tag?: ExpressionNode,) {
 		super();
 	}
 
 	set(stack: StackProvider, value: any) {
-		throw new Error(`TemplateLiteralsNode#set() has no implementation.`);
+		throw new Error(`TemplateLiteralExpressionNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		const tagged: Function = this.tag.get(stack);
-		const templateStringsArray = new TemplateArray(this.strings);
+		const tagged: Function = this.tag?.get(stack) || String.raw;
+		const templateStringsArray = new TemplateArray(this.quasis);
 		templateStringsArray.raw = templateStringsArray;
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
@@ -137,51 +157,57 @@ export class TemplateLiteralsNode extends AbstractExpressionNode {
 		return this.expressions.flatMap(expr => expr.event());
 	}
 	toString(): string {
-		let str = this.tag.toString();
-		if (str === 'String.raw') {
-			str = ``;
-		}
+		let str = this.tag?.toString() || '';
 		str += '`';
 		let i = 0;
-		for (; i < this.strings.length - 1; i++) {
-			str += this.strings[i];
+		for (; i < this.quasis.length - 1; i++) {
+			str += this.quasis[i];
 			str += '${';
 			str += this.expressions[i].toString();
 			str += '}';
 		}
-		str += this.strings[i];
+		str += this.quasis[i];
 		str += '`';
 		return str;
 	}
 	toJson(): object {
 		return {
-			tag: this.tag.toJSON(),
-			strings: this.strings,
-			expressions: this.expressions.map(expr => expr.toJSON())
+			quasis: this.quasis,
+			expressions: this.expressions.map(expr => expr.toJSON()),
+			tag: this.tag?.toJSON(),
 		};
 	}
 }
 
+@Deserializer('TemplateLiteral')
+export class TemplateLiteralNode extends TemplateLiteralExpressionNode {
+	constructor(quasis: string[], expressions: ExpressionNode[]) {
+		super(quasis, expressions);
+	}
+}
 
-@Deserializer('number')
+@Deserializer('TaggedTemplateExpression')
+export class TaggedTemplateExpressionNode extends TemplateLiteralExpressionNode {
+	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
+		super(quasis, expressions, tag);
+	}
+}
+
+
+@Deserializer('NumberLiteral')
 export class NumberNode extends AbstractLiteralNode<number> {
 	static fromJSON(node: NumberNode): NumberNode {
 		return new NumberNode(node.value);
 	}
 	constructor(value: number) {
-		super();
-		this.value = value;
+		super(value);
 	}
 }
 
-@Deserializer('bigint')
+@Deserializer('BigIntLiteral')
 export class BigIntNode extends AbstractLiteralNode<bigint> {
 	static fromJSON(node: BigIntNode): BigIntNode {
 		return new BigIntNode(BigInt(String(node.value)));
-	}
-	constructor(value: bigint) {
-		super();
-		this.value = value;
 	}
 	toString(): string {
 		return `${this.value}n`;
@@ -190,29 +216,27 @@ export class BigIntNode extends AbstractLiteralNode<bigint> {
 		return { value: this.value.toString() };
 	}
 }
-@Deserializer('regexp')
+@Deserializer('RegExpLiteral')
 export class RegExpNode extends AbstractLiteralNode<RegExp> {
-	static fromJSON(node: RegExpNode & { source: string, flags: string }): RegExpNode {
-		return new RegExpNode(new RegExp(node.source, node.flags));
-	}
-	constructor(value: RegExp) {
-		super();
-		this.value = value;
+	static fromJSON(node: RegExpNode & { regex: { pattern: string, flags: string } }): RegExpNode {
+		return new RegExpNode(new RegExp(node.regex.pattern, node.regex.flags));
 	}
 	toString(): string {
 		return `${this.value}n`;
 	}
 	toJson(): object {
 		return {
-			source: this.value.source,
-			flags: this.value.flags
-		};
+			regex: {
+				pattern: this.value.source,
+				flags: this.value.flags
+			}
+		};;
 	}
 }
 
 export const TRUE = String(true);
 export const FALSE = String(false);
-@Deserializer('boolean')
+@Deserializer('BooleanLiteral')
 export class BooleanNode extends AbstractLiteralNode<boolean> {
 	static fromJSON(node: BooleanNode): BooleanNode {
 		switch (String(node.value)) {
@@ -222,16 +246,12 @@ export class BooleanNode extends AbstractLiteralNode<boolean> {
 				return FalseNode;
 		}
 	}
-	constructor(value: boolean) {
-		super();
-		this.value = value;
-	}
 }
 
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
-@Deserializer('nullish')
+@Deserializer('NullishLiteral')
 export class NullishNode extends AbstractLiteralNode<null | undefined> {
 	static fromJSON(node: NullishNode): NullishNode {
 		switch (String(node.value)) {
@@ -239,10 +259,6 @@ export class NullishNode extends AbstractLiteralNode<null | undefined> {
 			case UNDEFINED:
 			default: return UndefinedNode;
 		}
-	}
-	constructor(value: null | undefined) {
-		super();
-		this.value = value;
 	}
 
 	toString(): string {
@@ -256,11 +272,21 @@ export class NullishNode extends AbstractLiteralNode<null | undefined> {
 	}
 }
 
+@Deserializer('ThisExpression')
+export class ThisExpressionNode extends IdentifierNode {
+	static fromJSON(node: ThisExpressionNode): ThisExpressionNode {
+		return ThisNode;
+	}
+	constructor() {
+		super('this');
+	}
+}
+
 export const NullNode = Object.freeze(new NullishNode(null)) as NullishNode;
 export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as NullishNode;
 export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
 export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
-export const ThisNode = Object.freeze(new IdentifierNode('this')) as IdentifierNode;
+export const ThisNode = Object.freeze(new ThisExpressionNode()) as ThisExpressionNode;
 export const GlobalThisNode = Object.freeze(new IdentifierNode('globalThis')) as IdentifierNode;
 export const SymbolNode = Object.freeze(new IdentifierNode('Symbol')) as IdentifierNode;
 export const OfNode = Object.freeze(new IdentifierNode('of')) as IdentifierNode;

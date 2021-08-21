@@ -1,111 +1,77 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { StackProvider } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
-import { StackProvider } from '../scope.js';
-import { AccessNode } from '../definition/member.js';
-@Deserializer('unary')
+import { AbstractExpressionNode } from '../abstract.js';
+import { MemberExpression } from '../definition/member.js';
+
+export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof';
+@Deserializer('UnaryExpression')
 export class UnaryNode extends AbstractExpressionNode {
 	static fromJSON(node: UnaryNode, deserializer: NodeDeserializer): UnaryNode {
-		return new UnaryNode(node.op, deserializer(node.node));
+		return new UnaryNode(node.operator, deserializer(node.argument));
 	}
 	static Evaluations: { [key: string]: (value: any) => any } = {
 		'+': (value: string) => { return +value; },
 		'-': (value: number) => { return -value; },
 		'~': (value: number) => { return ~value; },
 		'!': (value: any) => { return !value; },
+		'void': (value: any) => { return void value; },
+		'typeof': (value: any) => { return typeof value; },
 	};
-	constructor(private op: string, private node: ExpressionNode) {
+	constructor(private operator: UnaryOperator, private argument: ExpressionNode) {
 		super();
 	}
 	getOperator() {
-		return this.op;
+		return this.operator;
 	}
-	getNode() {
-		return this.node;
-	}
-	set(stack: StackProvider, value: any) {
-		return this.node.set(stack, value);
-	}
-	get(stack: StackProvider) {
-		let value = this.node.get(stack);
-		return UnaryNode.Evaluations[this.op](value);
-	}
-	entry(): string[] {
-		return this.node.entry();
-	}
-	event(parent?: string): string[] {
-		return this.node.event(parent);
-	}
-	toString() {
-		return `${this.op}${this.node.toString()}`;
-	}
-	toJson(): object {
-		return {
-			op: this.op,
-			node: this.node.toJSON()
-		};
-	}
-}
-
-
-@Deserializer('literal-unary')
-export class LiteralUnaryNode extends AbstractExpressionNode {
-	static fromJSON(node: LiteralUnaryNode, serializer: NodeDeserializer): LiteralUnaryNode {
-		return new LiteralUnaryNode(node.op, serializer(node.node));
-	}
-	constructor(private op: string, private node: ExpressionNode) {
-		super();
-	}
-	getNode() {
-		return this.node;
+	getArgument() {
+		return this.argument;
 	}
 	set(stack: StackProvider, value: any) {
-		throw new Error('LiteralUnaryNode#set() has no implementation.');
-	}
-	entry(): string[] {
-		return this.node.entry();
-	}
-	event(parent?: string): string[] {
-		return this.node.event(parent);
+		return this.argument.set(stack, value);
 	}
 	get(stack: StackProvider, thisContext?: any) {
-		switch (this.op) {
-			case 'typeof': return this.getTypeof(stack, thisContext);
-			case 'void': return this.getVoid(stack, thisContext);
+		switch (this.operator) {
 			case 'delete': return this.getDelete(stack, thisContext);
-			case 'await': return this.getAwait(stack, thisContext);
+			default:
+				const value = this.argument.get(stack);
+				return UnaryNode.Evaluations[this.operator](value);
 		}
 	}
-	private getTypeof(stack: StackProvider, thisContext?: any) {
-		return typeof this.node.get(stack);
-	}
-	private getVoid(stack: StackProvider, thisContext?: any) {
-		return void this.node.get(stack);
-	}
 	private getDelete(stack: StackProvider, thisContext?: any) {
-		if (this.node instanceof AccessNode) {
-			thisContext = thisContext || this.node.getLeft().get(stack);
-			const right = this.node.getRight();
-			if (right instanceof AccessNode) {
+		if (this.argument instanceof MemberExpression) {
+			thisContext = thisContext || this.argument.getObject().get(stack);
+			const right = this.argument.getProperty();
+			if (right instanceof MemberExpression) {
 				// [Symbol.asyncIterator]
-				return delete thisContext[this.node.getRight().get(stack)];
+				return delete thisContext[this.argument.getProperty().get(stack)];
 			} else {
 				// [10], ['string']
-				return delete thisContext[this.node.getRight().toString()];
+				return delete thisContext[this.argument.getProperty().toString()];
 			}
 		}
 	}
-	private getAwait(stack: StackProvider, thisContext?: any) {
-		const promise = this.node.get(stack);
-		return new AwaitPromise(promise);
+	entry(): string[] {
+		return this.argument.entry();
+	}
+	event(parent?: string): string[] {
+		return this.argument.event(parent);
 	}
 	toString() {
-		return `${this.op} ${this.node.toString()}`;
+		switch (this.operator) {
+			case 'void':
+			case 'delete':
+			case 'typeof':
+				return `${this.operator} ${this.argument.toString()}`;
+			default:
+				return `${this.operator}${this.argument.toString()}`;
+		}
 	}
 	toJson(): object {
 		return {
-			op: this.op,
-			node: this.node.toJSON()
+			operator: this.operator,
+			argument: this.argument.toJSON(),
+			prefix: true
 		};
 	}
 }

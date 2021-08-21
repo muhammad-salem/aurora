@@ -2,7 +2,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
 
-@Deserializer('comment')
+@Deserializer('CommentExpression')
 export class CommentNode extends AbstractExpressionNode {
 	static fromJSON(nodeExp: CommentNode): CommentNode {
 		return new CommentNode(nodeExp.comment);

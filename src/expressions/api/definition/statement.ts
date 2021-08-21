@@ -3,35 +3,35 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
 
-@Deserializer('statement')
+@Deserializer('ExpressionStatement')
 export class StatementNode extends AbstractExpressionNode {
 	static fromJSON(node: StatementNode, deserializer: NodeDeserializer): StatementNode {
-		return new StatementNode(node.lines.map(line => deserializer(line)));
+		return new StatementNode(node.body.map(line => deserializer(line)));
 	}
-	constructor(private lines: ExpressionNode[]) {
+	constructor(private body: ExpressionNode[]) {
 		super();
 	}
-	getLines() {
-		return this.lines;
+	getBody() {
+		return this.body;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`StatementNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
 		let value;
-		this.lines.forEach(node => value = node.get(stack));
+		this.body.forEach(node => value = node.get(stack));
 		return value;
 	}
 	entry(): string[] {
-		return this.lines.flatMap(node => node.entry());
+		return this.body.flatMap(node => node.entry());
 	}
 	event(parent?: string): string[] {
-		return this.lines.flatMap(node => node.event(parent));
+		return this.body.flatMap(node => node.event(parent));
 	}
 	toString(): string {
-		return this.lines.map(node => node.toString()).join('; ').concat(';');
+		return this.body.map(node => node.toString()).join('; ').concat(';');
 	}
 	toJson(): object {
-		return { lines: this.lines.map(line => line.toJSON()) };
+		return { body: this.body.map(exp => exp.toJSON()) };
 	}
 }

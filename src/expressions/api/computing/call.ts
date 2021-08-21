@@ -4,28 +4,30 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('call')
-export class FunctionCallNode extends AbstractExpressionNode {
-	static fromJSON(node: FunctionCallNode, deserializer: NodeDeserializer): FunctionCallNode {
-		return new FunctionCallNode(deserializer(node.func), node.parameters.map(param => deserializer(param)));
+@Deserializer('CallExpression')
+export class CallExpressionNode extends AbstractExpressionNode {
+	static fromJSON(node: CallExpressionNode, deserializer: NodeDeserializer): CallExpressionNode {
+		return new CallExpressionNode(deserializer(node.callee), node.arguments.map(param => deserializer(param)));
 	}
-	constructor(private func: ExpressionNode, private parameters: ExpressionNode[]) {
+	private arguments: ExpressionNode[];
+	constructor(private callee: ExpressionNode, params: ExpressionNode[]) {
 		super();
+		this.arguments = params;
 	}
-	getFunc() {
-		return this.func;
+	getCallee() {
+		return this.callee;
 	}
 	getParameters() {
-		return this.parameters;
+		return this.arguments;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider, thisContext?: any) {
-		const funCallBack = this.func.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
+		const funCallBack = this.callee.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
 		const parameters: any[] = [];
 		const parametersStack = stack.emptyStackProviderWith(parameters);
-		for (const arg of this.parameters) {
+		for (const arg of this.arguments) {
 			if (arg instanceof SpreadNode) {
 				arg.get(parametersStack);
 			} else {
@@ -35,18 +37,18 @@ export class FunctionCallNode extends AbstractExpressionNode {
 		return funCallBack.call(thisContext, ...parameters);
 	}
 	entry(): string[] {
-		return [...this.func.entry(), ...this.parameters.flatMap(param => param.entry())];
+		return [...this.callee.entry(), ...this.arguments.flatMap(arg => arg.entry())];
 	}
 	event(parent?: string): string[] {
-		return [...this.func.event(), ...this.parameters.flatMap(param => param.event())];
+		return [...this.callee.event(), ...this.arguments.flatMap(arg => arg.event())];
 	}
 	toString(): string {
-		return `${this.func.toString()}(${this.parameters.map(param => param.toString()).join(', ')})`;
+		return `${this.callee.toString()}(${this.arguments.map(arg => arg.toString()).join(', ')})`;
 	}
 	toJson(): object {
 		return {
-			func: this.func.toJSON(),
-			parameters: this.parameters.map(param => param.toJSON())
+			callee: this.callee.toJSON(),
+			arguments: this.arguments.map(arg => arg.toJSON())
 		};
 	}
 }

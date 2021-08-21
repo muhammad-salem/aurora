@@ -1,5 +1,6 @@
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
+import { ExportNode } from '../../module/export.js';
 import { StackProvider } from '../../scope.js';
 
 /**
@@ -10,7 +11,7 @@ import { StackProvider } from '../../scope.js';
  * and continues execution of the loop with the next iteration.
  *
  */
-@Deserializer('terminate')
+@Deserializer('TerminateStatement')
 export class TerminateNode extends AbstractExpressionNode {
 	static readonly BreakSymbol = Symbol.for('break');
 	static readonly ContinueSymbol = Symbol.for('continue');
@@ -19,11 +20,14 @@ export class TerminateNode extends AbstractExpressionNode {
 	static fromJSON(node: TerminateNode): TerminateNode {
 		return String(node.symbol) === 'break' ? TerminateNode.BREAK_INSTANCE : TerminateNode.CONTINUE_INSTANCE;
 	}
-	private constructor(private symbol: Symbol) {
+	constructor(private symbol: Symbol, private label?: ExportNode) {
 		super();
 	}
 	getSymbol() {
 		return this.symbol;
+	}
+	getLabel() {
+		this.label;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`TerminateNode#set() has no implementation.`);
@@ -41,6 +45,16 @@ export class TerminateNode extends AbstractExpressionNode {
 		return this.symbol.description!;
 	}
 	toJson(): object {
-		return { symbol: this.symbol.description };
+		return { symbol: this.symbol.description, label: this.label };
 	}
+}
+
+@Deserializer('BreakStatement')
+export class BreakNode extends TerminateNode {
+
+}
+
+@Deserializer('ContinueStatement')
+export class ContinueNode extends TerminateNode {
+
 }

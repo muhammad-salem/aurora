@@ -1,5 +1,4 @@
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
-import type { EvaluateNode } from './operators/types.js';
 import type { AwaitPromiseInfo, StackProvider } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
@@ -10,9 +9,10 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		return this.constructor as NodeExpressionClass<ExpressionNode>;
 	}
 	toJSON(key?: string): NodeJsonType {
-		const json = this.toJson(key) as NodeJsonType;
-		json.type = Reflect.get(this.constructor, 'type');
-		return json;
+		return Object.assign(
+			{ type: Reflect.get(this.constructor, 'type') },
+			this.toJson(key) as NodeJsonType
+		);
 	}
 	abstract set(stack: StackProvider, value: any): any;
 	abstract get(stack: StackProvider, thisContext?: any): any;
@@ -21,13 +21,12 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
-
-export abstract class InfixExpressionNode extends AbstractExpressionNode {
-	constructor(protected op: string, protected left: ExpressionNode, protected right: ExpressionNode) {
+export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
+	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode) {
 		super();
 	}
 	getOperator() {
-		return this.op;
+		return this.operator;
 	}
 	getLeft() {
 		return this.left;
@@ -36,16 +35,9 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 		return this.right;
 	}
 	set(context: object, value: any) {
-		throw new Error(`${this.constructor.name}#set() of (${this.op}) has no implementation.`);
+		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
-	get(stack: StackProvider): any {
-		const evalNode: EvaluateNode = {
-			left: this.left.get(stack),
-			right: this.right.get(stack)
-		};
-		return this.evalNode(evalNode);
-	}
-	abstract evalNode(evalNode: EvaluateNode): any;
+	abstract get(stack: StackProvider): any;
 	entry(): string[] {
 		return [...this.left.entry(), ...this.right.entry()];
 	}
@@ -53,11 +45,11 @@ export abstract class InfixExpressionNode extends AbstractExpressionNode {
 		return [...this.left.event(), ...this.right.event()];
 	}
 	toString() {
-		return `${this.left.toString()} ${this.op} ${this.right.toString()}`;
+		return `${this.left.toString()} ${this.operator} ${this.right.toString()}`;
 	}
 	toJson(key: string): object {
 		return {
-			op: this.op,
+			op: this.operator,
 			left: this.left.toJSON(),
 			right: this.right.toJSON()
 		};

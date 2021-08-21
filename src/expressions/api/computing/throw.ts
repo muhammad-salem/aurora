@@ -7,106 +7,147 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * The expression whose value is to be returned. 
  * If omitted, undefined is returned instead.
  */
-@Deserializer('throw')
+@Deserializer('ThrowStatement')
 export class ThrowNode extends AbstractExpressionNode {
 	static fromJSON(node: ThrowNode, deserializer: NodeDeserializer): ThrowNode {
-		return new ThrowNode(deserializer(node.exception));
+		return new ThrowNode(deserializer(node.argument));
 	}
-	constructor(private exception: ExpressionNode) {
+	constructor(private argument: ExpressionNode) {
 		super();
 	}
-	getException() {
-		return this.exception;
+	getArgument() {
+		return this.argument;
 	}
 	set(stack: StackProvider, value: any) {
-		throw new Error(`ReturnNode#set() has no implementation.`);
+		throw new Error(`ThrowNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		throw this.exception.get(stack);
+		throw this.argument.get(stack);
 	}
 	entry(): string[] {
-		return this.exception.entry();
+		return this.argument.entry();
 	}
 	event(parent?: string): string[] {
-		return this.exception.event();
+		return this.argument.event();
 	}
 	toString(): string {
-		return `throw ${this.exception.toString()}`;
+		return `throw ${this.argument.toString()}`;
 	}
 	toJson(): object {
-		return { exception: this.exception?.toJSON() };
+		return { argument: this.argument?.toJSON() };
 	}
 }
 
-@Deserializer('try')
+
+@Deserializer('CatchClause')
+export class CatchClauseNode extends AbstractExpressionNode {
+	static fromJSON(node: CatchClauseNode, deserializer: NodeDeserializer): CatchClauseNode {
+		return new CatchClauseNode(
+			deserializer(node.param),
+			deserializer(node.body)
+		);
+	}
+	constructor(private body: ExpressionNode, private param?: ExpressionNode,) {
+		super();
+	}
+	getParam() {
+		return this.param;
+	}
+	getBody() {
+		return this.body;
+	}
+	set(stack: StackProvider, error: any) {
+		this.param?.set(stack, error);
+	}
+	get(stack: StackProvider, thisContext?: any) {
+		return this.body.get(stack);
+	}
+	entry(): string[] {
+		return [];
+	}
+	event(parent?: string): string[] {
+		return [];
+	}
+	toString(): string {
+		// return `catch ${this.catchVar ? `(${this.catchVar.toString()})`;
+		return `catch (${this.param?.toString() || ''}) ${this.body.toString()}`;
+	}
+	toJson(key?: string): { [key: string]: any; } {
+		return {
+			param: this.param?.toJSON(),
+			body: this.body.toJSON()
+		};
+	}
+
+}
+
+@Deserializer('TryStatement')
 export class TryCatchNode extends AbstractExpressionNode {
 	static fromJSON(node: TryCatchNode, deserializer: NodeDeserializer): TryCatchNode {
 		return new TryCatchNode(
-			deserializer(node.tryBlock),
-			node.catchVar ? deserializer(node.catchVar) : void 0,
-			node.catchBlock ? deserializer(node.catchBlock) : void 0,
-			node.finallyBlock ? deserializer(node.finallyBlock) : void 0
+			deserializer(node.block),
+			node.handler ? deserializer(node.handler) : void 0,
+			node.finalizer ? deserializer(node.finalizer) : void 0
 		);
 	}
-	constructor(private tryBlock: ExpressionNode, private catchVar?: ExpressionNode, private catchBlock?: ExpressionNode, private finallyBlock?: ExpressionNode) {
+	constructor(private block: ExpressionNode, private handler?: ExpressionNode, private finalizer?: ExpressionNode) {
 		super();
 	}
-	getCondition() {
-		return this.tryBlock;
+	getBlock() {
+		return this.block;
 	}
-	getTHenStatement() {
-		return this.catchBlock;
+	getHandler() {
+		return this.handler;
 	}
-	getElseStatement() {
-		return this.finallyBlock;
+	getFinalizer() {
+		return this.finalizer;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`TryCatchNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		if (this.tryBlock && this.catchBlock && this.finallyBlock) {
+		if (this.block && this.handler && this.finalizer) {
 			try {
-				this.tryBlock.get(stack.newStack());
+				this.block.get(stack.newStack());
 			} catch (error) {
 				const catchScope = stack.newStack();
-				this.catchVar?.set(catchScope, error);
-				this.catchBlock.get(catchScope);
+				this.handler.set(catchScope, error);
+				this.handler.get(catchScope);
 			} finally {
-				this.finallyBlock.get(stack.newStack());
+				this.finalizer.get(stack.newStack());
 			}
-		} else if (this.tryBlock && this.catchBlock) {
+		} else if (this.block && this.handler) {
 			try {
-				this.tryBlock.get(stack.newStack());
+				this.block.get(stack.newStack());
 			} catch (error) {
 				const catchScope = stack.newStack();
-				this.catchVar?.set(catchScope, error);
-				this.catchBlock.get(catchScope);
+				this.handler.set(catchScope, error);
+				this.handler.get(catchScope);
 			}
-		} else if (this.tryBlock && this.finallyBlock) {
+		} else if (this.block && this.finalizer) {
 			try {
-				this.tryBlock.get(stack.newStack());
+				this.block.get(stack.newStack());
 			} finally {
-				this.finallyBlock.get(stack.newStack());
+				this.finalizer.get(stack.newStack());
 			}
 		} else {
 			throw new Error(`Uncaught SyntaxError: Missing catch or finally after try`);
 		}
 	}
 	entry(): string[] {
-		return this.tryBlock.entry().concat(this.catchBlock?.entry() || []).concat(this.finallyBlock?.entry() || []);
+		return this.block.entry().concat(this.handler?.entry() || []).concat(this.finalizer?.entry() || []);
 	}
 	event(parent?: string): string[] {
-		return this.tryBlock.event().concat(this.catchBlock?.event() || []).concat(this.finallyBlock?.event() || []);
+		return this.block.event().concat(this.handler?.event() || []).concat(this.finalizer?.event() || []);
 	}
 	toString(): string {
-		return `try ${this.tryBlock.toString()} ${this.catchBlock ? `catch ${this.catchVar ? `(${this.catchVar.toString()})` : ''}${this.catchBlock.toString()}` : ''} ${this.finallyBlock ? `finally ${this.finallyBlock.toString()}` : ''}`;
+		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;
 	}
 	toJson(): object {
 		return {
-			tryBlock: this.tryBlock.toJSON(),
-			catchVar: this.catchVar?.toJSON(),
-			catchBlock: this.catchBlock?.toJSON(),
-			finallyBlock: this.finallyBlock?.toJSON(),
+			block: this.block.toJSON(),
+			handler: this.handler?.toJSON(),
+			finalizer: this.finalizer?.toJSON(),
 		};
 	}
 }

@@ -7,34 +7,34 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * The expression whose value is to be returned. 
  * If omitted, undefined is returned instead.
  */
-@Deserializer('return')
+@Deserializer('ReturnStatement')
 export class ReturnNode extends AbstractExpressionNode {
 	static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
-		return new ReturnNode(node.node ? deserializer(node.node) : void 0);
+		return new ReturnNode(node.argument ? deserializer(node.argument) : void 0);
 	}
-	constructor(private node?: ExpressionNode) {
+	constructor(private argument?: ExpressionNode) {
 		super();
 	}
-	getNode() {
-		return this.node;
+	getArgument() {
+		return this.argument;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`ReturnNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		return new ReturnValue(this.node?.get(stack));
+		return new ReturnValue(this.argument?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}
 	entry(): string[] {
-		return this.node?.entry() || [];
+		return this.argument?.entry() || [];
 	}
 	event(parent?: string): string[] {
-		return this.node?.event(parent) || [];
+		return this.argument?.event(parent) || [];
 	}
 	toString(): string {
-		return `return ${this.node?.toString() || ''}`;
+		return `return ${this.argument?.toString() || ''}`;
 	}
 	toJson(): object {
-		return { node: this.node?.toJSON() };
+		return { argument: this.argument?.toJSON() };
 	}
 }

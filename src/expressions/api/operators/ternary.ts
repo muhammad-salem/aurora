@@ -3,47 +3,47 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { StackProvider } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('ternary')
-export class TernaryNode extends AbstractExpressionNode {
-	static fromJSON(node: TernaryNode, deserializer: NodeDeserializer): TernaryNode {
-		return new TernaryNode(
-			deserializer(node.condition),
-			deserializer(node.exprIfTrue),
-			deserializer(node.exprIfFalse)
+@Deserializer('ConditionalExpression')
+export class ConditionalExpressionNode extends AbstractExpressionNode {
+	static fromJSON(node: ConditionalExpressionNode, deserializer: NodeDeserializer): ConditionalExpressionNode {
+		return new ConditionalExpressionNode(
+			deserializer(node.test),
+			deserializer(node.alternate),
+			deserializer(node.consequent)
 		);
 	}
-	constructor(private condition: ExpressionNode, private exprIfTrue: ExpressionNode, private exprIfFalse: ExpressionNode) {
+	constructor(private test: ExpressionNode, private alternate: ExpressionNode, private consequent: ExpressionNode) {
 		super();
 	}
-	getLogical() {
-		return this.condition;
+	getTest() {
+		return this.test;
 	}
-	getExprIfTrue() {
-		return this.exprIfTrue;
+	getAlternate() {
+		return this.alternate;
 	}
-	getExprIfFalse() {
-		return this.exprIfFalse;
+	getConsequent() {
+		return this.consequent;
 	}
 	set(stack: StackProvider, value: any) {
 		throw new Error(`TernaryNode#set() has no implementation.`);
 	}
 	get(stack: StackProvider) {
-		return this.condition.get(stack) ? this.exprIfFalse.get(stack) : this.exprIfTrue.get(stack);
+		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);
 	}
 	entry(): string[] {
-		return [...this.condition.entry(), ...this.exprIfTrue.entry(), ...this.exprIfFalse.entry()];
+		return [...this.test.entry(), ...this.alternate.entry(), ...this.consequent.entry()];
 	}
 	event(parent?: string): string[] {
 		return [];
 	}
 	toString() {
-		return `${this.condition.toString()} ? (${this.exprIfTrue.toString()}):(${this.exprIfFalse.toString()})`;
+		return `${this.test.toString()} ? (${this.alternate.toString()}):(${this.consequent.toString()})`;
 	}
 	toJson(): object {
 		return {
-			condition: this.condition.toJSON(),
-			exprIfTrue: this.exprIfTrue.toJSON(),
-			exprIfFalse: this.exprIfFalse.toJSON()
+			test: this.test.toJSON(),
+			alternate: this.alternate.toJSON(),
+			consequent: this.consequent.toJSON()
 		};
 	}
 }

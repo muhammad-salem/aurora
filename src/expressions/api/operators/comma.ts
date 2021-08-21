@@ -3,7 +3,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { StackProvider } from '../scope.js';
 
-@Deserializer('comma')
+@Deserializer('SequenceExpression')
 export class CommaNode extends AbstractExpressionNode {
 	static fromJSON(node: CommaNode, deserializer: NodeDeserializer): CommaNode {
 		return new CommaNode(node.expressions.map(expression => deserializer(expression as any)));

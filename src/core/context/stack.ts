@@ -62,13 +62,9 @@ const Constant: { [k: string]: any } = {
 	Array: {
 		isArray: Array.isArray,
 	},
-	// symbol
 	Symbol,
-	// string
-	String: {
-		raw: String.raw
-	},
-
+	String,
+	Number,
 };
 
 const readOnlyProvider = new ReadOnlyContextProvider(Constant);
