@@ -43,8 +43,8 @@ export class ThrowNode extends AbstractExpressionNode {
 export class CatchClauseNode extends AbstractExpressionNode {
 	static fromJSON(node: CatchClauseNode, deserializer: NodeDeserializer): CatchClauseNode {
 		return new CatchClauseNode(
-			deserializer(node.param),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.param ? deserializer(node.param) : void 0,
 		);
 	}
 	constructor(private body: ExpressionNode, private param?: ExpressionNode,) {

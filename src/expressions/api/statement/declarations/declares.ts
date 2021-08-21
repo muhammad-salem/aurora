@@ -59,7 +59,10 @@ export class VariableDeclarationNode extends AbstractExpressionNode {
 		return this.declarations;
 	}
 	set(stack: StackProvider, value: any) {
-		throw new Error(`VariableDeclarationNode#set() has no implementation.`);
+		if (Array.isArray(value)) {
+			throw new Error(`VariableDeclarationNode#set() has no implementation.`);
+		}
+		(this.declarations[0] as VariableNode).id.set(stack, value);
 	}
 	get(stack: StackProvider) {
 		stack.addEmptyProvider();

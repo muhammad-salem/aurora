@@ -183,7 +183,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];
-				if (inputDefaultValue !== null || inputDefaultValue !== undefined) {
+				if (inputDefaultValue !== null && inputDefaultValue !== undefined) {
 					this._setAttributeHelper(input.viewAttribute, inputDefaultValue);
 				}
 			});

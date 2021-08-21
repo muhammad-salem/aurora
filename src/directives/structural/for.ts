@@ -36,9 +36,9 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 	handelForNode(forNode: ForNode) {
 		return () => {
 			for (
-				forNode.getInitialization()?.get(this.directiveStack);
-				forNode.getCondition()?.get(this.directiveStack) ?? true;
-				forNode.getFinalExpression()?.get(this.directiveStack)
+				forNode.getInit()?.get(this.directiveStack);
+				forNode.getTest()?.get(this.directiveStack) ?? true;
+				forNode.getUpdate()?.get(this.directiveStack)
 			) {
 				// insert/remove
 				this.updateView(this.directiveStack);
@@ -47,30 +47,30 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 	}
 	handelForOfNode(forOfNode: ForOfNode): () => void {
 		return () => {
-			const iterable = <any[]>forOfNode.getIterable().get(this.directiveStack);
+			const iterable = <any[]>forOfNode.getRight().get(this.directiveStack);
 			for (const iterator of iterable) {
 				const stack = this.directiveStack.newStack();
-				forOfNode.getVariable().set(stack, iterator);
+				forOfNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}
 		};
 	}
 	handelForInNode(forInNode: ForInNode): () => void {
 		return () => {
-			const iterable = <object>forInNode.getObject().get(this.directiveStack);
+			const iterable = <object>forInNode.getRight().get(this.directiveStack);
 			for (const iterator in iterable) {
 				const stack = this.directiveStack.newStack();
-				forInNode.getVariable().set(stack, iterator);
+				forInNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}
 		};
 	}
 	handelForAwaitOfNode(forAwaitOfNode: ForAwaitOfNode): () => Promise<any> {
 		return async () => {
-			const iterable: AsyncIterable<any> = forAwaitOfNode.getIterable().get(this.directiveStack);
+			const iterable: AsyncIterable<any> = forAwaitOfNode.getRight().get(this.directiveStack);
 			for await (const iterator of iterable) {
 				const stack = this.directiveStack.newStack();
-				forAwaitOfNode.getVariable().set(stack, iterator);
+				forAwaitOfNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}
 		};

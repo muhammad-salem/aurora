@@ -19,13 +19,13 @@ export class WhileDirective<T> extends AbstractStructuralDirective<T> {
 		let initializer: ExpressionNode;
 		let condition: ExpressionNode;
 		if (whileNode instanceof StatementNode) {
-			if (whileNode.getLines().length > 2) {
+			if (whileNode.getBody().length > 2) {
 				throw new Error(`syntax error: ${this.directive.directiveValue}`);
 			}
-			initializer = whileNode.getLines()[0];
-			condition = whileNode.getLines()[1];
+			initializer = whileNode.getBody()[0];
+			condition = whileNode.getBody()[1];
 		} else if (whileNode instanceof WhileNode) {
-			condition = whileNode.getCondition();
+			condition = whileNode.getTest();
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}

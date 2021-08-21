@@ -97,7 +97,7 @@ export class SwitchNode extends AbstractExpressionNode {
 		// need to fix statements execution and support default case
 		stack = stack.newStack();
 		const result = this.discriminant.get(stack);
-		const values = this.cases.map(item => item.getValue().get(stack));
+		const values = this.cases.map(item => item.getTest().get(stack));
 		let startIndex = values.findIndex(item => result === item);
 		if (startIndex === -1) {
 			// search for default statement
@@ -121,8 +121,8 @@ export class SwitchNode extends AbstractExpressionNode {
 		return [
 			...this.discriminant.event(),
 			...this.cases
-				.filter(c => c.getValue() !== DefaultExpression.DefaultNode)
-				.flatMap(c => c.getValue().event())
+				.filter(c => c.getTest() !== DefaultExpression.DefaultNode)
+				.flatMap(c => c.getTest().event())
 		];
 	}
 	toString(): string {
