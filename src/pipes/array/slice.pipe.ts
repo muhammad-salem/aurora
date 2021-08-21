@@ -51,20 +51,20 @@ export class SlicePipe<T> implements PipeTransform<Array<T>, Array<T>> {
 	 *   - **if positive**: return all items before `end` index of the list or string.
 	 *   - **if negative**: return all items before `end` index from the end of the list or string.
 	 */
-	transform(value: ReadonlyArray<T>, start: number, end?: number): Array<T>;
-	transform(value: null | undefined, start: number, end?: number): null;
-	transform(value: ReadonlyArray<T> | null | undefined, start: number, end?: number): Array<T> | null;
-	transform(value: string, start: number, end?: number): string;
-	transform(value: string | null | undefined, start: number, end?: number): string | null;
-	transform(value: ReadonlyArray<T> | string | null | undefined, start: number, end?: number):
+	transform(input: ReadonlyArray<T>, start: number, end?: number): Array<T>;
+	transform(input: null | undefined, start: number, end?: number): null;
+	transform(input: ReadonlyArray<T> | null | undefined, start: number, end?: number): Array<T> | null;
+	transform(input: string, start: number, end?: number): string;
+	transform(input: string | null | undefined, start: number, end?: number): string | null;
+	transform(input: ReadonlyArray<T> | string | null | undefined, start: number, end?: number):
 		Array<T> | string | null {
-		if (value == null) return null;
+		if (input == null) return null;
 
-		if (!this.supports(value)) {
-			throw Error(`InvalidPipeArgument: '${value}' of '${SlicePipe.name}' pipe`);
+		if (!this.supports(input)) {
+			throw Error(`InvalidPipeArgument: '${input}' of '${SlicePipe.name}' pipe`);
 		}
 
-		return value.slice(start, end);
+		return input.slice(start, end);
 	}
 
 	private supports(obj: any): boolean {
