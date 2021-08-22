@@ -1,8 +1,8 @@
-import type { EvaluateNode, EvaluateType } from './types.js';
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import { InfixExpressionNode } from '../abstract.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import type { EvaluateNode, EvaluateType } from './types';
+import type { NodeDeserializer, ExpressionNode } from '../expression';
+import { InfixExpressionNode } from '../abstract';
+import { Deserializer } from '../deserialize/deserialize';
+import { StackProvider } from '../scope';
 
 export type AssignmentOperator =
 	'=' | '+=' | '-=' | '*=' | '**=' | '/=' | '%='

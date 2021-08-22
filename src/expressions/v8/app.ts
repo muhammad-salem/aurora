@@ -1,10 +1,10 @@
-// import type { ExpressionNode } from '../api/expression.js';
+// import type { ExpressionNode } from '../api/expression';
 // import {
 // 	AssignmentNode, ConstNode, FunctionType,
 // 	LetNode, NullNode, StringNode, Variable
-// } from '../api/index.js';
-// import { JavaScriptParser, PropertyKind } from './parser.js';
-// import { Token } from './token.js';
+// } from '../api/index';
+// import { JavaScriptParser, PropertyKind } from './parser';
+// import { Token } from './token';
 
 
 // export type ClassInfo = {

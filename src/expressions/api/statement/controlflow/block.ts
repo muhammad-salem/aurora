@@ -1,8 +1,8 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
-import { Deserializer } from '../../deserialize/deserialize.js';
-import { StackProvider } from '../../scope.js';
-import { TerminateNode } from './terminate.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression';
+import { AbstractExpressionNode, ReturnValue } from '../../abstract';
+import { Deserializer } from '../../deserialize/deserialize';
+import { StackProvider } from '../../scope';
+import { TerminateNode } from './terminate';
 
 /**
  * A block statement (or compound statement in other languages) is used to group zero or more statements.

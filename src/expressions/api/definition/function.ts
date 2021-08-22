@@ -1,9 +1,9 @@
-import type { ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { StackProvider } from '../scope.js';
-import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { IdentifierNode } from './values.js';
-import { TerminateNode } from '../statement/controlflow/terminate.js';
+import type { ExpressionNode, NodeDeserializer } from '../expression';
+import type { StackProvider } from '../scope';
+import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract';
+import { Deserializer } from '../deserialize/deserialize';
+import { IdentifierNode } from './values';
+import { TerminateNode } from '../statement/controlflow/terminate';
 
 export enum FunctionKind {
 	NORMAL = 'NORMAL',

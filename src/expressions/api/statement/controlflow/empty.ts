@@ -1,6 +1,6 @@
-import { AbstractExpressionNode } from '../../abstract.js';
-import { Deserializer } from '../../deserialize/deserialize.js';
-import { StackProvider } from '../../scope.js';
+import { AbstractExpressionNode } from '../../abstract';
+import { Deserializer } from '../../deserialize/deserialize';
+import { StackProvider } from '../../scope';
 
 /**
  * The empty statement is a semicolon (;) indicating that no statement will be executed,

@@ -1,8 +1,8 @@
-import type { EvaluateNode, EvaluateType } from './types.js';
-import type { StackProvider } from '../scope.js';
-import type { NodeDeserializer } from '../expression.js';
-import { InfixExpressionNode } from '../abstract.js';
-import { Deserializer } from '../deserialize/deserialize.js';
+import type { EvaluateNode, EvaluateType } from './types';
+import type { StackProvider } from '../scope';
+import type { NodeDeserializer } from '../expression';
+import { InfixExpressionNode } from '../abstract';
+import { Deserializer } from '../deserialize/deserialize';
 
 export type BinaryOperator =
 	'==' | '!=' | '===' | '!=='

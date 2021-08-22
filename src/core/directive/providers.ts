@@ -1,7 +1,7 @@
 import { ContextProvider } from '@ibyar/expressions';
-import { isOnInit } from '../component/lifecycle.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
-import { AttributeDirective } from './directive.js';
+import { isOnInit } from '../component/lifecycle';
+import { ClassRegistryProvider } from '../providers/provider';
+import { AttributeDirective } from './directive';
 
 type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
 

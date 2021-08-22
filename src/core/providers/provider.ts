@@ -1,6 +1,6 @@
 
 import { getBootstrapMetadata } from '@ibyar/metadata';
-import { ComponentRef, DirectiveRef, PipeRef, PropertyRef, ServiceRef } from '../component/component.js';
+import { ComponentRef, DirectiveRef, PipeRef, PropertyRef, ServiceRef } from '../component/component';
 
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 

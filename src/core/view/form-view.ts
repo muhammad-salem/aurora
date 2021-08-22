@@ -1,7 +1,7 @@
-import type { TypeOf } from '../utils/typeof.js';
-import { ComponentRef } from '../component/component.js';
-import { CustomFormElement, HTMLFormElement, HTMLFormElementComponent } from '../component/custom-element.js';
-import { baseFactoryView } from './base-view.js';
+import type { TypeOf } from '../utils/typeof';
+import { ComponentRef } from '../component/component';
+import { CustomFormElement, HTMLFormElement, HTMLFormElementComponent } from '../component/custom-element';
+import { baseFactoryView } from './base-view';
 
 export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLFormElementComponent<T>> {
 	const baseViewClass = baseFactoryView<T>(htmlElementType);

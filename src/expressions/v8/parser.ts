@@ -1,46 +1,46 @@
-import type { ExpressionNode } from '../api/expression.js';
-import { Token, TokenExpression } from './token.js';
-import { PreTemplateLiteral, TokenStream } from './stream.js';
+import type { ExpressionNode } from '../api/expression';
+import { Token, TokenExpression } from './token';
+import { PreTemplateLiteral, TokenStream } from './stream';
 import {
 	OfNode, IdentifierNode, ThisNode,
 	GetIdentifier, SetIdentifier, AsyncIdentifier,
 	NullNode, StringNode, AwaitIdentifier,
 	ConstructorIdentifier, NameIdentifier,
 	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpressionNode, TemplateLiteralNode
-} from '../api/definition/values.js';
-import { EmptyNode } from '../api/statement/controlflow/empty.js';
-import { BlockNode } from '../api/statement/controlflow/block.js';
+} from '../api/definition/values';
+import { EmptyNode } from '../api/statement/controlflow/empty';
+import { BlockNode } from '../api/statement/controlflow/block';
 import {
 	ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode,
 	FunctionKind, FormalParamterNode, FunctionExpressionNode
-} from '../api/definition/function.js';
-import { IfElseNode } from '../api/statement/controlflow/if.js';
-import { NewNode } from '../api/computing/new.js';
-import { SpreadNode } from '../api/computing/spread.js';
-import { AssignmentNode, AssignmentOperator } from '../api/operators/assignment.js';
-import { GroupingNode } from '../api/operators/grouping.js';
-import { MemberExpression } from '../api/definition/member.js';
-import { ObjectLiteralNode, ObjectLiteralPropertyNode, ObjectPatternNode } from '../api/definition/object.js';
-import { ArrayLiteralNode, ArrayPatternNode } from '../api/definition/array.js';
-import { CallExpressionNode } from '../api/computing/call.js';
-import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { CatchClauseNode, ThrowNode, TryCatchNode } from '../api/computing/throw.js';
-import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
-import { TerminateNode } from '../api/statement/controlflow/terminate.js';
-import { ReturnNode } from '../api/computing/return.js';
-import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for.js';
-import { ConditionalExpressionNode } from '../api/operators/ternary.js';
-import { PipelineNode } from '../api/operators/pipeline.js';
-import { LogicalNode, LogicalOperator } from '../api/operators/logical.js';
-import { CommaNode } from '../api/operators/comma.js';
-import { OptionalChainingNode } from '../api/operators/chaining.js';
-import { StatementNode } from '../api/definition/statement.js';
+} from '../api/definition/function';
+import { IfElseNode } from '../api/statement/controlflow/if';
+import { NewNode } from '../api/computing/new';
+import { SpreadNode } from '../api/computing/spread';
+import { AssignmentNode, AssignmentOperator } from '../api/operators/assignment';
+import { GroupingNode } from '../api/operators/grouping';
+import { MemberExpression } from '../api/definition/member';
+import { ObjectLiteralNode, ObjectLiteralPropertyNode, ObjectPatternNode } from '../api/definition/object';
+import { ArrayLiteralNode, ArrayPatternNode } from '../api/definition/array';
+import { CallExpressionNode } from '../api/computing/call';
+import { DoWhileNode, WhileNode } from '../api/statement/iterations/while';
+import { CatchClauseNode, ThrowNode, TryCatchNode } from '../api/computing/throw';
+import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch';
+import { TerminateNode } from '../api/statement/controlflow/terminate';
+import { ReturnNode } from '../api/computing/return';
+import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares';
+import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for';
+import { ConditionalExpressionNode } from '../api/operators/ternary';
+import { PipelineNode } from '../api/operators/pipeline';
+import { LogicalNode, LogicalOperator } from '../api/operators/logical';
+import { CommaNode } from '../api/operators/comma';
+import { OptionalChainingNode } from '../api/operators/chaining';
+import { StatementNode } from '../api/definition/statement';
 import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
-} from './nodes.js';
-import { BinaryExpressionNode } from '../api/index.js';
+} from './nodes';
+import { BinaryExpressionNode } from '../api/index';
 
 export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
 export enum PropertyKind {

@@ -1,13 +1,13 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { TypeOf } from '../utils/typeof';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
-} from '../component/lifecycle.js';
-import { ComponentRef, PropertyRef } from '../component/component.js';
-import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom-element.js';
-import { EventEmitter } from '../component/events.js';
-import { defineModel, Model } from '../model/change-detection.js';
-import { ComponentRender } from './render.js';
+} from '../component/lifecycle';
+import { ComponentRef, PropertyRef } from '../component/component';
+import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom-element';
+import { EventEmitter } from '../component/events';
+import { defineModel, Model } from '../model/change-detection';
+import { ComponentRender } from './render';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 

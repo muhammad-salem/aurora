@@ -1,4 +1,4 @@
-import type { StackProvider } from './scope.js';
+import type { StackProvider } from './scope';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;

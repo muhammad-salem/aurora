@@ -1,8 +1,8 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { AbstractExpressionNode } from '../abstract.js';
-import { MemberExpression } from '../definition/member.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression';
+import type { StackProvider } from '../scope';
+import { Deserializer } from '../deserialize/deserialize';
+import { AbstractExpressionNode } from '../abstract';
+import { MemberExpression } from '../definition/member';
 
 export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof';
 @Deserializer('UnaryExpression')

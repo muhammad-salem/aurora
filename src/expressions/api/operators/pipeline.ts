@@ -1,8 +1,8 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import { AbstractExpressionNode } from '../abstract.js';
-import { StackProvider } from '../scope.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { SpreadNode } from '../computing/spread.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression';
+import { AbstractExpressionNode } from '../abstract';
+import { StackProvider } from '../scope';
+import { Deserializer } from '../deserialize/deserialize';
+import { SpreadNode } from '../computing/spread';
 
 /**
  * pipeline ('|>') operator support syntax:

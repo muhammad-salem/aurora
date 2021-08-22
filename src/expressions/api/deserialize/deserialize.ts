@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, NodeExpressionClass } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, NodeExpressionClass } from '../expression';
 
 type FromJSON = (node: ExpressionNode, deserializer: NodeDeserializer) => ExpressionNode;
 

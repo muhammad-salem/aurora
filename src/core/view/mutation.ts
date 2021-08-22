@@ -1,4 +1,4 @@
-import { Observable } from '../utils/observable.js';
+import { Observable } from '../utils/observable';
 
 export class ElementMutation {
 

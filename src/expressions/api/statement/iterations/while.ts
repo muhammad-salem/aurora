@@ -1,8 +1,8 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { StackProvider } from '../../scope.js';
-import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
-import { Deserializer } from '../../deserialize/deserialize.js';
-import { TerminateNode } from '../controlflow/terminate.js';
+import type { NodeDeserializer, ExpressionNode } from '../../expression';
+import type { StackProvider } from '../../scope';
+import { AbstractExpressionNode, ReturnValue } from '../../abstract';
+import { Deserializer } from '../../deserialize/deserialize';
+import { TerminateNode } from '../controlflow/terminate';
 
 /**
  * The while statement creates a loop that executes a specified

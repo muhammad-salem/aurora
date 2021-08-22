@@ -1,12 +1,12 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { TypeOf } from '../utils/typeof';
 import { isFormElement } from '@ibyar/elements';
-import { ComponentRef } from '../component/component.js';
-import { HTMLComponent } from '../component/custom-element.js';
-import { EventEmitter, Subscription } from '../component/events.js';
-import { ToCamelCase } from '../utils/utils.js';
-import { Constructable } from '../providers/injector.js';
-import { baseFactoryView } from './base-view.js';
-import { baseFormFactoryView } from './form-view.js';
+import { ComponentRef } from '../component/component';
+import { HTMLComponent } from '../component/custom-element';
+import { EventEmitter, Subscription } from '../component/events';
+import { ToCamelCase } from '../utils/utils';
+import { Constructable } from '../providers/injector';
+import { baseFactoryView } from './base-view';
+import { baseFormFactoryView } from './form-view';
 
 /**
  * 

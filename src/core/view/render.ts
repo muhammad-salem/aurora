@@ -5,20 +5,20 @@ import {
 	isTagNameNative, isValidCustomElementName,
 	LiveAttribute, LiveTextContent, TextContent
 } from '@ibyar/elements';
-import { ComponentRef, ListenerRef } from '../component/component.js';
-import { ElementMutation } from './mutation.js';
-import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
-import { documentStack } from '../context/stack.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
-import { EventEmitter } from '../component/events.js';
-import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
-import { hasAttr } from '../utils/elements-util.js';
+import { ComponentRef, ListenerRef } from '../component/component';
+import { ElementMutation } from './mutation';
+import { HTMLComponent, isHTMLComponent } from '../component/custom-element';
+import { documentStack } from '../context/stack';
+import { ClassRegistryProvider } from '../providers/provider';
+import { EventEmitter } from '../component/events';
+import { isOnDestroy, isOnInit } from '../component/lifecycle';
+import { hasAttr } from '../utils/elements-util';
 import {
 	addChangeListener, isModel, Model,
 	SourceFollowerCallback, subscribe1way, subscribe2way
-} from '../model/change-detection.js';
-import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
-import { ElementContextProvider } from '../directive/providers.js';
+} from '../model/change-detection';
+import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe';
+import { ElementContextProvider } from '../directive/providers';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {

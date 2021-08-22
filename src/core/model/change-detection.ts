@@ -1,4 +1,4 @@
-import { isHTMLComponent } from '../component/custom-element.js';
+import { isHTMLComponent } from '../component/custom-element';
 
 export type SourceFollowerCallback = (stack: any[]) => void;
 export interface Model {

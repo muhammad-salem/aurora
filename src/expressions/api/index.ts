@@ -1,50 +1,50 @@
-export * from './expression.js';
-export * from './scope.js';
-export * from './abstract.js';
+export * from './expression';
+export * from './scope';
+export * from './abstract';
 
-export * from './deserialize/deserialize.js';
-export * from './context/provider.js';
+export * from './deserialize/deserialize';
+export * from './context/provider';
 
-export * from './definition/values.js';
-export * from './definition/array.js';
-// export * from './definition/comment.js';
-export * from './definition/function.js';
-export * from './definition/member.js';
-export * from './definition/object.js';
-export * from './definition/statement.js';
-
-
-export * from './computing/call.js';
-export * from './computing/new.js';
-export * from './computing/return.js';
-export * from './computing/spread.js';
-export * from './computing/throw.js';
+export * from './definition/values';
+export * from './definition/array';
+// export * from './definition/comment';
+export * from './definition/function';
+export * from './definition/member';
+export * from './definition/object';
+export * from './definition/statement';
 
 
-
-export * from './operators/assignment.js';
-export * from './operators/await.js';
-export * from './operators/binary.js';
-export * from './operators/chaining.js';
-export * from './operators/comma.js';
-export * from './operators/destruct.js';
-export * from './operators/grouping.js';
-export * from './operators/logical.js';
-export * from './operators/pipeline.js';
-export * from './operators/ternary.js';
-export * from './operators/types.js';
-export * from './operators/unary.js';
-export * from './operators/update.js';
+export * from './computing/call';
+export * from './computing/new';
+export * from './computing/return';
+export * from './computing/spread';
+export * from './computing/throw';
 
 
-export * from './statement/controlflow/block.js';
-export * from './statement/controlflow/empty.js';
-export * from './statement/controlflow/if.js';
-export * from './statement/controlflow/switch.js';
-export * from './statement/controlflow/terminate.js';
+
+export * from './operators/assignment';
+export * from './operators/await';
+export * from './operators/binary';
+export * from './operators/chaining';
+export * from './operators/comma';
+export * from './operators/destruct';
+export * from './operators/grouping';
+export * from './operators/logical';
+export * from './operators/pipeline';
+export * from './operators/ternary';
+export * from './operators/types';
+export * from './operators/unary';
+export * from './operators/update';
 
 
-export * from './statement/declarations/declares.js';
+export * from './statement/controlflow/block';
+export * from './statement/controlflow/empty';
+export * from './statement/controlflow/if';
+export * from './statement/controlflow/switch';
+export * from './statement/controlflow/terminate';
 
-export * from './statement/iterations/for.js';
-export * from './statement/iterations/while.js';
+
+export * from './statement/declarations/declares';
+
+export * from './statement/iterations/for';
+export * from './statement/iterations/while';

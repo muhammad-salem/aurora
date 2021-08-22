@@ -1,5 +1,5 @@
 import { DOMDirectiveNode } from '@ibyar/elements';
-import { ComponentRender } from '../view/render.js';
+import { ComponentRender } from '../view/render';
 
 import type { ExpressionNode, StackProvider } from '@ibyar/expressions';
 

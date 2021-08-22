@@ -1,7 +1,7 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression';
+import type { StackProvider } from '../scope';
+import { Deserializer } from '../deserialize/deserialize';
+import { AbstractExpressionNode, AwaitPromise } from '../abstract';
 
 
 @Deserializer('AwaitExpression')

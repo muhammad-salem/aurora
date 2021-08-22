@@ -1,6 +1,6 @@
 import { Directive } from '@ibyar/core';
 import { ExpressionNode, ForAwaitOfNode, ForInNode, ForNode, ForOfNode } from '@ibyar/expressions';
-import { AbstractStructuralDirective } from './structural.js';
+import { AbstractStructuralDirective } from './structural';
 
 @Directive({
 	selector: '*for',

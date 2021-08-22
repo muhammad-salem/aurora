@@ -1,6 +1,6 @@
 import { hasNativeAttr } from '@ibyar/elements';
-import { ComponentRef } from '../component/component.js';
-import { isHTMLComponent } from '../component/custom-element.js';
+import { ComponentRef } from '../component/component';
+import { isHTMLComponent } from '../component/custom-element';
 
 export function hasComponentAttr(element: HTMLElement, attr: string): boolean {
 	if (isHTMLComponent(element)) {

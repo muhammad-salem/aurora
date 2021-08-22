@@ -1,5 +1,5 @@
 import { ReadOnlyContextProvider } from '@ibyar/expressions';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { ClassRegistryProvider } from '../providers/provider';
 
 /**
  * Pipes are used as singleton

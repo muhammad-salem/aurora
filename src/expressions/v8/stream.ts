@@ -1,10 +1,10 @@
-import { ExpressionNode } from '../api/expression.js';
-import { Token, TokenExpression } from './token.js';
+import { ExpressionNode } from '../api/expression';
+import { Token, TokenExpression } from './token';
 import {
 	BigIntNode, GlobalThisNode, NumberNode, OfNode, IdentifierNode,
 	RegExpNode, StringNode, SymbolNode, AsNode
-} from '../api/definition/values.js';
-import { TerminateNode } from '../api/statement/controlflow/terminate.js';
+} from '../api/definition/values';
+import { TerminateNode } from '../api/statement/controlflow/terminate';
 
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 

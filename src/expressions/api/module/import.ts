@@ -1,7 +1,7 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import { AbstractExpressionNode } from '../abstract.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression';
+import { AbstractExpressionNode } from '../abstract';
+import { Deserializer } from '../deserialize/deserialize';
+import { StackProvider } from '../scope';
 
 export class ImportAliasName {
 	constructor(public importName: ExpressionNode, protected _aliasName?: ExpressionNode) { }

@@ -1,20 +1,20 @@
-import type { ExpressionNode } from '../api/expression.js';
-import type { StackProvider } from '../api/scope.js';
-import { AssignmentNode } from '../api/operators/assignment.js';
-import { LogicalNode } from '../api/operators/logical.js';
-import { UnaryNode } from '../api/operators/unary.js';
-import { ConditionalExpressionNode } from '../api/operators/ternary.js';
-import { PipelineNode } from '../api/operators/pipeline.js';
-import { CommaNode } from '../api/operators/comma.js';
-import { Token, TokenExpression } from './token.js';
+import type { ExpressionNode } from '../api/expression';
+import type { StackProvider } from '../api/scope';
+import { AssignmentNode } from '../api/operators/assignment';
+import { LogicalNode } from '../api/operators/logical';
+import { UnaryNode } from '../api/operators/unary';
+import { ConditionalExpressionNode } from '../api/operators/ternary';
+import { PipelineNode } from '../api/operators/pipeline';
+import { CommaNode } from '../api/operators/comma';
+import { Token, TokenExpression } from './token';
 import {
 	AbstractLiteralNode, BigIntNode, NumberNode,
 	BooleanNode, TrueNode, FalseNode,
 	NullNode, StringNode, UndefinedNode
-} from '../api/definition/values.js';
-import { AwaitExpressionNode } from '../api/operators/await.js';
-import { UpdateExpressionNode } from '../api/operators/update.js';
-import { BinaryExpressionNode } from '../api/index.js';
+} from '../api/definition/values';
+import { AwaitExpressionNode } from '../api/operators/await';
+import { UpdateExpressionNode } from '../api/operators/update';
+import { BinaryExpressionNode } from '../api/index';
 
 export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): ExpressionNode {
 	switch (op) {
