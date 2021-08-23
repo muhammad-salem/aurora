@@ -76,7 +76,7 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 		throw new Error('ObjectLiteralNode#set() has no implementation.');
 	}
 	get(stack: StackProvider) {
-		const newObject = Object.create(null);
+		const newObject = {};
 		for (const property of this.properties) {
 			property.get(stack, newObject);
 		}
@@ -109,16 +109,15 @@ export class ObjectPatternNode extends AbstractExpressionNode {
 	getProperties() {
 		return this.properties;
 	}
-	set(stack: StackProvider, value: any) {
-		const mockedStack = stack.newStack();
-		mockedStack.addProvider(value);
+	set(stack: StackProvider, objectValue: any) {
 		for (const property of this.properties as ObjectLiteralPropertyNode[]) {
-			const value = property.getKey().get(mockedStack);
-			property.getKey().set(stack, value);
+			const propertyName = property.getKey().toString();
+			const propertyValue = objectValue[propertyName];
+			property.getKey().set(stack, propertyValue);
 		}
 	}
-	get(scopeProvider: StackProvider, valueContext: any) {
-		this.set(scopeProvider, valueContext);
+	get(scopeProvider: StackProvider, objectValue: any) {
+		this.set(scopeProvider, objectValue);
 	}
 	entry(): string[] {
 		return this.properties.flatMap(property => property.entry());
