@@ -1,7 +1,7 @@
-import type { StackProvider } from '../scope';
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import { Deserializer } from '../deserialize/deserialize';
-import { AbstractExpressionNode } from '../abstract';
+import type { StackProvider } from '../scope.js';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import { Deserializer } from '../deserialize/deserialize.js';
+import { AbstractExpressionNode } from '../abstract.js';
 
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode {

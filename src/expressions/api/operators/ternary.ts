@@ -1,7 +1,7 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import { AbstractExpressionNode } from '../abstract';
-import { StackProvider } from '../scope';
-import { Deserializer } from '../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { StackProvider } from '../scope.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ConditionalExpression')
 export class ConditionalExpressionNode extends AbstractExpressionNode {

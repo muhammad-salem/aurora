@@ -1,7 +1,7 @@
 import { Directive } from '@ibyar/core';
 import { DOMChild, DOMDirectiveNode } from '@ibyar/elements';
 import { ExpressionNode, JavaScriptParser, StackProvider, SwitchNode } from '@ibyar/expressions';
-import { AbstractStructuralDirective } from './structural';
+import { AbstractStructuralDirective } from './structural.js';
 
 
 @Directive({

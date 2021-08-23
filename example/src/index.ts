@@ -4,7 +4,7 @@ import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 import '@popperjs/core';
-export * from './app-root/app-root-component';
+export * from './app-root/app-root-component.js';
 
 export * from './person-app/person';
 export * from './person-app/person-app';

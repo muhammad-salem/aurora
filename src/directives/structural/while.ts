@@ -1,6 +1,6 @@
 import { Directive } from '@ibyar/core';
 import { ExpressionNode, StatementNode, WhileNode } from '@ibyar/expressions';
-import { AbstractStructuralDirective } from './structural';
+import { AbstractStructuralDirective } from './structural.js';
 
 @Directive({
 	selector: '*while',

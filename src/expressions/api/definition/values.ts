@@ -1,7 +1,7 @@
-import type { ExpressionNode, NodeDeserializer } from '../expression';
-import { Deserializer } from '../deserialize/deserialize';
-import { AbstractExpressionNode } from '../abstract';
-import { StackProvider } from '../scope';
+import type { ExpressionNode, NodeDeserializer } from '../expression.js';
+import { Deserializer } from '../deserialize/deserialize.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { StackProvider } from '../scope.js';
 
 /**
  * An identifier is a sequence of characters in the code that identifies a variable, function, or property.

@@ -1,6 +1,6 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import { InfixExpressionNode } from '../abstract';
-import { Deserializer } from '../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import { InfixExpressionNode } from '../abstract.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 export type LogicalOperator = '||' | '&&' | '??';
 

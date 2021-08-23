@@ -1,8 +1,8 @@
 
-import type { NodeDeserializer, ExpressionNode } from '../../expression';
-import type { StackProvider } from '../../scope';
-import { AbstractExpressionNode, AwaitPromise } from '../../abstract';
-import { Deserializer } from '../../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { StackProvider } from '../../scope.js';
+import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
+import { Deserializer } from '../../deserialize/deserialize.js';
 
 @Deserializer('VariableDeclarator')
 export class VariableNode extends AbstractExpressionNode {

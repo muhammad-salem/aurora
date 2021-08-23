@@ -1,10 +1,10 @@
-import { isEmptyElement } from '../attributes/tags';
+import { isEmptyElement } from '../attributes/tags.js';
 import {
 	DOMElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DOMFragmentNode,
 	DOMDirectiveNode, DOMNode, DOMChild, ElementAttribute
-} from '../ast/dom';
-import { NodeFactory } from '../ast/factory';
+} from '../ast/dom.js';
+import { NodeFactory } from '../ast/factory.js';
 
 type Token = (token: string) => Token;
 

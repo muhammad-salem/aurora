@@ -1,5 +1,5 @@
 import { ContextProvider, ReadOnlyContextProvider, ScopeProvider } from '@ibyar/expressions';
-import { PipeProvider, AsyncPipeProvider } from '../pipe/pipe';
+import { PipeProvider, AsyncPipeProvider } from '../pipe/pipe.js';
 
 const Constant: { [k: string]: any } = {
 	// math

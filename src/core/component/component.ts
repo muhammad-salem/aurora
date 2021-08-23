@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof';
+import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions';
 import {
 	findByTagName,
@@ -6,15 +6,15 @@ import {
 } from '@ibyar/elements';
 import { findByModelClassOrCreat, setBootstrapMetadata } from '@ibyar/metadata';
 
-import { HTMLComponent } from './custom-element';
-import { ClassRegistryProvider } from '../providers/provider';
-import { AttributeDirective, StructuralDirective } from '../directive/directive';
-import { initCustomElementView } from '../view/view';
-import { buildExpressionNodes } from '../html/expression';
+import { HTMLComponent } from './custom-element.js';
+import { ClassRegistryProvider } from '../providers/provider.js';
+import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
+import { initCustomElementView } from '../view/view.js';
+import { buildExpressionNodes } from '../html/expression.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
-} from '../annotation/decorators';
+} from '../annotation/decorators.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, private _viewName?: string) { }

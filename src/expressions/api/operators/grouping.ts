@@ -1,7 +1,7 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import type { StackProvider } from '../scope';
-import { AbstractExpressionNode } from '../abstract';
-import { Deserializer } from '../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { StackProvider } from '../scope.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 /**
  * The grouping operator consists of a pair of parentheses around

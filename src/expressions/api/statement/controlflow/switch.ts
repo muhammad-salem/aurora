@@ -1,10 +1,10 @@
 
-import type { NodeDeserializer, ExpressionNode } from '../../expression';
-import type { StackProvider } from '../../scope';
-import { AbstractExpressionNode } from '../../abstract';
-import { Deserializer } from '../../deserialize/deserialize';
-import { TerminateNode } from './terminate';
-import { IdentifierNode } from '../../definition/values';
+import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { StackProvider } from '../../scope.js';
+import { AbstractExpressionNode } from '../../abstract.js';
+import { Deserializer } from '../../deserialize/deserialize.js';
+import { TerminateNode } from './terminate.js';
+import { IdentifierNode } from '../../definition/values.js';
 
 
 @Deserializer('SwitchCase')

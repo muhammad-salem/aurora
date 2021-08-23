@@ -1,8 +1,8 @@
-import type { TypeOf } from '../utils/typeof';
+import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions';
 import { DOMNode, DOMRenderNode } from '@ibyar/elements';
-import { Components } from '../component/component';
-import { fetchHtml, TemplateUrl } from '../utils/path';
+import { Components } from '../component/component.js';
+import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
 export interface DirectiveOptions {
 	selector: string;

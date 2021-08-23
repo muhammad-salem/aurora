@@ -1,7 +1,7 @@
 import {
 	DOMElementNode, DOMDirectiveNode, DOMChild,
 	BaseNode, DOMFragmentNode, parseTextChild, DOMNode
-} from './dom';
+} from './dom.js';
 
 export interface NodeAttr {
 	[attr: string]: string;

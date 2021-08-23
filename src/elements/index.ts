@@ -1,11 +1,11 @@
-export * from './attributes/tags';
-export * from './attributes/attributes';
-export * from './attributes/form';
+export * from './attributes/tags.js';
+export * from './attributes/attributes.js';
+export * from './attributes/form.js';
 
-export * from './ast/dom';
-export * from './ast/factory';
+export * from './ast/dom.js';
+export * from './ast/factory.js';
 
-export * from './node/html-parser';
+export * from './node/html-parser.js';
 
-export * from './template/template-parser';
+export * from './template/template-parser.js';
 

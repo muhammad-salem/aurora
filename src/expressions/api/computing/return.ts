@@ -1,7 +1,7 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import type { StackProvider } from '../scope';
-import { AbstractExpressionNode, ReturnValue } from '../abstract';
-import { Deserializer } from '../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { StackProvider } from '../scope.js';
+import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 /**
  * The expression whose value is to be returned. 

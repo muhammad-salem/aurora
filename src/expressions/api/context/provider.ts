@@ -1,4 +1,4 @@
-import type { AsyncIterableInfo, AwaitPromiseInfo, ContextProvider, StackProvider } from '../scope';
+import type { AsyncIterableInfo, AwaitPromiseInfo, ContextProvider, StackProvider } from '../scope.js';
 
 export class DefaultContextProvider<T extends object> implements ContextProvider {
 	static for<T extends object>(context: T) {

@@ -1,8 +1,8 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression';
-import type { StackProvider } from '../scope';
-import { AbstractExpressionNode } from '../abstract';
-import { SpreadNode } from './spread';
-import { Deserializer } from '../deserialize/deserialize';
+import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { StackProvider } from '../scope.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { SpreadNode } from './spread.js';
+import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('CallExpression')
 export class CallExpressionNode extends AbstractExpressionNode {

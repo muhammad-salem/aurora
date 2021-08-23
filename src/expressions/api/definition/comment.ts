@@ -1,6 +1,6 @@
-import { AbstractExpressionNode } from '../abstract';
-import { Deserializer } from '../deserialize/deserialize';
-import { StackProvider } from '../scope';
+import { AbstractExpressionNode } from '../abstract.js';
+import { Deserializer } from '../deserialize/deserialize.js';
+import { StackProvider } from '../scope.js';
 
 @Deserializer('CommentExpression')
 export class CommentNode extends AbstractExpressionNode {

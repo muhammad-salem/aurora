@@ -1,4 +1,4 @@
-import type { ExpressionNode } from '../api/expression';
+import type { ExpressionNode } from '../api/expression.js';
 
 export class Token {
 
