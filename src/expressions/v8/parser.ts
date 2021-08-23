@@ -1526,7 +1526,7 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				propertyName = this.parsePropertyName();
+				propertyName = new StringNode(this.parsePropertyName().toString());
 				break;
 		}
 		if (propInfo.kind === PropertyKind.NotSet) {
