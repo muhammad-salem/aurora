@@ -1,4 +1,4 @@
-import type { StackProvider } from './scope.js';
+import type { ScopeType, StackProvider } from './scope.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
@@ -26,4 +26,16 @@ export type NodeDeserializer<T = ExpressionNode> = (node: T) => T;
  */
 export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
 	fromJSON(node: T, deserializer: NodeDeserializer): T;
+}
+
+export interface CanDeclareVariable {
+	/**
+	 * declare variable in the current local scope (block),
+	 * or closest function scope (global) scop,
+	 * the propertyName will be calculated at runtime
+	 * @param stack the stack which an identifier will be declared
+	 * @param propertyValue the initial value of identifer
+	 * @param scope which scop to declare this identifier
+	 */
+	declareVariable(stack: StackProvider, scopeType: ScopeType, propertyValue?: any): any;
 }

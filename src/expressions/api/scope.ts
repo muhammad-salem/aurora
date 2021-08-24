@@ -28,9 +28,17 @@ export interface ContextProvider {
 	getProviderBy(propertyKey: PropertyKey): object | undefined;
 }
 
+export type ScopeType = 'block' | 'function';
+export type AwaitPromiseInfoNode = {
+	set(stack: StackProvider, value: any): any;
+	declareVariable(stack: StackProvider, propertyValue: any, scopeType: ScopeType): any;
+};
 export interface AwaitPromiseInfo {
 	promise: Promise<any>;
-	node: { set(stack: StackProvider, value: any): any; };
+	node: AwaitPromiseInfoNode;
+
+	declareVariable: boolean;
+	scopeType: ScopeType;
 }
 
 export interface AsyncIterableInfo {
@@ -94,4 +102,12 @@ export interface StackProvider extends ContextProvider {
 	emptyStackProviderWith(obj: any | any[]): StackProvider;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
+
+	declareVariable(scopeType: ScopeType, propertyKey: PropertyKey, propertyValue?: any): any;
+
+	pushScope(context: ContextProvider): void;
+	popScope(): ContextProvider;
+
+	addBlockScope(): ContextProvider;
+	addFunctionScope(): ContextProvider;
 }
