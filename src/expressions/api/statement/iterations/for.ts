@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { StackProvider } from '../../scope.js';
+import type { Stack } from '../../scope.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
@@ -39,10 +39,10 @@ export class ForNode extends AbstractExpressionNode {
 	getUpdate() {
 		return this.update;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ForNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		stack = stack.newStack();
 		for (this.init?.get(stack); this.test?.get(stack) ?? true; this.update?.get(stack)) {
 			const result = this.body.get(stack);
@@ -103,10 +103,10 @@ export class ForOfNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
 			const forOfStack = stack.newStack();
@@ -169,10 +169,10 @@ export class ForInNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
 			const forInStack = stack.newStack();
@@ -235,10 +235,10 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
 			const forOfStack = stack.newStack();

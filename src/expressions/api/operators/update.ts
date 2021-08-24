@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -30,10 +30,10 @@ export class UpdateExpressionNode extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		this.argument.set(stack, value);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const num = { value: this.argument.get(stack) as number };
 		const returnValue = this.prefix
 			? UpdateExpressionNode.PrefixEvaluations[this.operator](num)

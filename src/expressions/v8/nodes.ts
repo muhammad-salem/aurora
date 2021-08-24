@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import type { StackProvider } from '../api/scope.js';
+import type { Stack } from '../api/scope.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { LogicalNode } from '../api/operators/logical.js';
 import { UnaryNode } from '../api/operators/unary.js';
@@ -121,7 +121,7 @@ export function creteCommaExpression(nodes: ExpressionNode[]): ExpressionNode {
 	return new CommaNode(nodes);
 }
 
-const USELESS_SCOPE: StackProvider = null as unknown as StackProvider;//Object.create(null);
+const USELESS_STACK: Stack = null as unknown as Stack;//Object.create(null);
 
 export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode {
 	const expression = creteInfixExpression(op.getName(), x, y);
@@ -132,7 +132,7 @@ export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: Exp
 			|| (x instanceof BigIntNode && y instanceof BigIntNode)
 			|| (x instanceof BooleanNode && y instanceof BooleanNode)
 		)) {
-		const result = expression.get(USELESS_SCOPE);
+		const result = expression.get(USELESS_STACK);
 		if (result !== false) {
 			return result;
 		}
@@ -161,7 +161,7 @@ export function coverValue(value: any) {
 export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
 	let result = cretePrefixExpression(op.getName(), expression);
 	if (expression instanceof AbstractLiteralNode) {
-		const value = result.get(USELESS_SCOPE);
+		const value = result.get(USELESS_STACK);
 		const temp = coverValue(value);
 		if (temp !== false) {
 			result = temp;
@@ -173,7 +173,7 @@ export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
 export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
 	let result = cretePostfixExpression(op.getName(), expression);
 	if (expression instanceof AbstractLiteralNode) {
-		const value = result.get(USELESS_SCOPE);
+		const value = result.get(USELESS_STACK);
 		const temp = coverValue(value);
 		if (temp !== false) {
 			result = temp;

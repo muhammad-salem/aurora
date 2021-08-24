@@ -1,7 +1,7 @@
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 
 @Deserializer('module')
 export class ModuleNode extends AbstractExpressionNode {
@@ -29,10 +29,10 @@ export class ModuleNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider) {
+	set(stack: Stack) {
 		throw new Error(`ModuleNode.#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		throw new Error(`ModuleNode.#get() has no implementation.`);
 	}
 	entry(): string[] {

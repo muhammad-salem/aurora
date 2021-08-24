@@ -1,6 +1,6 @@
 
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { StackProvider } from '../../scope.js';
+import type { Stack } from '../../scope.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from './terminate.js';
@@ -24,10 +24,10 @@ export class CaseExpression extends AbstractExpressionNode {
 	getConsequent() {
 		return this.consequent;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`CaseExpression#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
 	entry(): string[] {
@@ -90,10 +90,10 @@ export class SwitchNode extends AbstractExpressionNode {
 	getCases() {
 		return this.cases;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`SwitchNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		// need to fix statements execution and support default case
 		stack = stack.newStack();
 		const result = this.discriminant.get(stack);

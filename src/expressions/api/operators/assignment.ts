@@ -2,7 +2,7 @@ import type { EvaluateNode, EvaluateType } from './types.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 
 export type AssignmentOperator =
 	'=' | '+=' | '-=' | '*=' | '**=' | '/=' | '%='
@@ -80,10 +80,10 @@ export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
 	constructor(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode) {
 		super(operator, left, right);
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);
 	}
-	get(stack: StackProvider): any {
+	get(stack: Stack): any {
 		switch (this.operator) {
 			case '&&=':
 			case '||=':

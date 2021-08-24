@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
 
@@ -15,7 +15,7 @@ export class AwaitExpressionNode extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error('AwaitExpressionNode#set() has no implementation.');
 	}
 	entry(): string[] {
@@ -24,7 +24,7 @@ export class AwaitExpressionNode extends AbstractExpressionNode {
 	event(parent?: string): string[] {
 		return this.argument.event(parent);
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		const promise = this.argument.get(stack);
 		return new AwaitPromise(promise);
 	}

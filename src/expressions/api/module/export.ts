@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 
 export class ExportAliasName {
 	constructor(public exportName: ExpressionNode, protected _aliasName?: ExpressionNode) { }
@@ -88,10 +88,10 @@ export class ExportNode extends AbstractExpressionNode {
 	getExportList() {
 		return this.exportList;
 	}
-	set(stack: StackProvider) {
+	set(stack: Stack) {
 		throw new Error(`ExportNode.#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		throw new Error(`ExportNode.#get() has no implementation.`);
 	}
 	entry(): string[] {

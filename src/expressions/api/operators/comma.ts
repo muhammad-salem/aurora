@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 
 @Deserializer('SequenceExpression')
 export class CommaNode extends AbstractExpressionNode {
@@ -14,10 +14,10 @@ export class CommaNode extends AbstractExpressionNode {
 	getExpressions() {
 		return this.expressions;
 	}
-	set(stack: StackProvider) {
+	set(stack: Stack) {
 		throw new Error(`CommaNode.#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		return this.expressions.map(expr => expr.get(stack)).pop();
 	}
 	entry(): string[] {

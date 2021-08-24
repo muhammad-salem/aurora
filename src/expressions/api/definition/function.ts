@@ -1,5 +1,5 @@
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { IdentifierNode } from './values.js';
@@ -47,10 +47,10 @@ export class FormalParamterNode extends AbstractExpressionNode {
 	getDefaultValue() {
 		return this.defaultValue;
 	}
-	set(stack: StackProvider, value: Function) {
+	set(stack: Stack, value: Function) {
 		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		throw new Error('ParamterNode#get() has no implementation.');
 	}
 	entry(): string[] {
@@ -84,9 +84,9 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 		);
 	}
 	constructor(
-		private params: ExpressionNode[], private body: ExpressionNode[],
-		private kind: FunctionKind, private id?: ExpressionNode,
-		private rest?: boolean, private generator?: boolean) {
+		protected params: ExpressionNode[], protected body: ExpressionNode[],
+		protected kind: FunctionKind, protected id?: ExpressionNode,
+		protected rest?: boolean, protected generator?: boolean) {
 		super();
 	}
 	getParams() {
@@ -104,10 +104,10 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 	getRest() {
 		return this.rest;
 	}
-	set(stack: StackProvider, value: Function) {
+	set(stack: Stack, value: Function) {
 		throw new Error('FunctionExpressionNode#set() has no implementation.');
 	}
-	private setParamter(stack: StackProvider, args: any[]) {
+	private setParamter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
@@ -116,7 +116,7 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const self = this;
 		let func: Function;
 		switch (this.kind) {
@@ -131,7 +131,11 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
-								awaitRef.node.set(funcStack, awaitValue);
+								if (awaitRef.declareVariable) {
+									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+								} else {
+									awaitRef.node.set(funcStack, awaitValue);
+								}
 							}
 							funcStack.awaitPromise.splice(0);
 						}
@@ -186,7 +190,11 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
-								awaitRef.node.set(funcStack, awaitValue);
+								if (awaitRef.declareVariable) {
+									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+								} else {
+									awaitRef.node.set(funcStack, awaitValue);
+								}
 							}
 							funcStack.awaitPromise.splice(0);
 						}
@@ -286,6 +294,16 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('FunctionDeclaration')
 export class FunctionDeclarationNode extends FunctionExpressionNode {
+	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
+		return new FunctionDeclarationNode(
+			node.params.map(deserializer),
+			node.body.map(deserializer),
+			FunctionKind[node.kind],
+			deserializer(node.id!),
+			node.rest,
+			node.generator
+		);
+	}
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
 		kind: FunctionKind, id: ExpressionNode,
@@ -319,10 +337,10 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 	getRest() {
 		return this.rest;
 	}
-	set(stack: StackProvider, value: Function) {
+	set(stack: Stack, value: Function) {
 		throw new Error('ArrowFunctionNode#set() has no implementation.');
 	}
-	private setParamter(stack: StackProvider, args: any[]) {
+	private setParamter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
@@ -331,7 +349,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		let func: Function;
 		switch (this.kind) {
 			case ArrowFunctionType.ASYNC:
@@ -344,7 +362,11 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 						if (funcStack.awaitPromise.length > 0) {
 							for (const awaitRef of funcStack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
-								awaitRef.node.set(funcStack, awaitValue);
+								if (awaitRef.declareVariable) {
+									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+								} else {
+									awaitRef.node.set(funcStack, awaitValue);
+								}
 							}
 							funcStack.awaitPromise.splice(0);
 						}

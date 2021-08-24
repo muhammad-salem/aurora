@@ -1,5 +1,5 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import type { NodeDeserializer } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -76,7 +76,7 @@ export class BinaryExpressionNode extends InfixExpressionNode<BinaryOperator> {
 	set(context: object, value: any) {
 		throw new Error(`BinaryExpressionNode#set() for operator:(${this.operator}) has no implementation.`);
 	}
-	get(stack: StackProvider): any {
+	get(stack: Stack): any {
 		const evalNode: EvaluateNode = {
 			left: this.left.get(stack),
 			right: this.right.get(stack)

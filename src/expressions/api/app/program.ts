@@ -1,7 +1,7 @@
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import type { ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 
 export type ProgramSourceType = 'script' | 'module';
 
@@ -15,10 +15,10 @@ export class ProgramNode extends AbstractExpressionNode {
 		super();
 	}
 
-	set(stack: StackProvider, value: any): any {
+	set(stack: Stack, value: any): any {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	get(stack: StackProvider, thisContext?: any): any {
+	get(stack: Stack, thisContext?: any): any {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 	entry(): string[] {

@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ConditionalExpression')
@@ -24,10 +24,10 @@ export class ConditionalExpressionNode extends AbstractExpressionNode {
 	getConsequent() {
 		return this.consequent;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`TernaryNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);
 	}
 	entry(): string[] {

@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadNode } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -20,10 +20,10 @@ export class CallExpressionNode extends AbstractExpressionNode {
 	getParameters() {
 		return this.arguments;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		const funCallBack = this.callee.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
 		const parameters: any[] = [];
 		const parametersStack = stack.emptyStackProviderWith(parameters);

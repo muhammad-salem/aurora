@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -18,10 +18,10 @@ export class ThrowNode extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ThrowNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
 	entry(): string[] {
@@ -56,10 +56,10 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, error: any) {
+	set(stack: Stack, error: any) {
 		this.param?.set(stack, error);
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
 	entry(): string[] {
@@ -102,10 +102,10 @@ export class TryCatchNode extends AbstractExpressionNode {
 	getFinalizer() {
 		return this.finalizer;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`TryCatchNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		if (this.block && this.handler && this.finalizer) {
 			try {
 				this.block.get(stack.newStack());

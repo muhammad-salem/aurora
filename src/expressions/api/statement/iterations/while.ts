@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
-import type { StackProvider } from '../../scope.js';
+import type { Stack } from '../../scope.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { TerminateNode } from '../controlflow/terminate.js';
@@ -27,10 +27,10 @@ export class WhileNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		stack = stack.newStack();
 		const condition = this.test.get(stack);
 		while (condition) {
@@ -83,10 +83,10 @@ export class DoWhileNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		stack = stack.newStack();
 		const condition = this.test.get(stack);
 		do {

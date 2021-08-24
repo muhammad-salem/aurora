@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 import { SpreadNode } from '../computing/spread.js';
 
 @Deserializer('ArrayExpression')
@@ -15,10 +15,10 @@ export class ArrayLiteralNode extends AbstractExpressionNode {
 	getElements() {
 		return this.elements;
 	}
-	set(stack: StackProvider) {
+	set(stack: Stack) {
 		throw new Error("ArrayPatternNode#set() has no implementation.");
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
 	}
 	entry(): string[] {
@@ -49,7 +49,7 @@ export class ArrayPatternNode extends AbstractExpressionNode {
 	getElements() {
 		return this.elements;
 	}
-	set(stack: StackProvider, values: any[]) {
+	set(stack: Stack, values: any[]) {
 		for (let index = 0; index < this.elements.length; index++) {
 			const elem = this.elements[index];
 			if (elem instanceof SpreadNode) {
@@ -60,7 +60,7 @@ export class ArrayPatternNode extends AbstractExpressionNode {
 			elem.set(stack, values[index]);
 		}
 	}
-	get(scopeProvider: StackProvider, values: any[]) {
+	get(scopeProvider: Stack, values: any[]) {
 		this.set(scopeProvider, values);
 	}
 	entry(): string[] {

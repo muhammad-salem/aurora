@@ -3,7 +3,9 @@ export * from './scope.js';
 export * from './abstract.js';
 
 export * from './deserialize/deserialize.js';
-export * from './context/provider.js';
+// export * from './context/provider.js';
+export * from './context/scope.js';
+export * from './context/stack.js';
 
 export * from './definition/values.js';
 export * from './definition/array.js';

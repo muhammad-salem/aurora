@@ -1,4 +1,4 @@
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -17,13 +17,13 @@ export class MemberExpression extends AbstractExpressionNode {
 	getProperty() {
 		return this.property;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		if (this.computed) {
 			return this.object.get(stack)[this.property.get(stack)] = value;
 		}
 		return this.property.set(stack.stackFor(this.object.get(stack)), value);
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		if (this.computed) {
 			const thisRef = thisContext ?? this.object.get(stack);
 			const value = thisRef[this.property.get(stack)];

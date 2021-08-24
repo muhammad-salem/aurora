@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
-import { AwaitPromiseInfo, AwaitPromiseInfoNode, ScopeType, StackProvider } from './scope.js';
+import { AwaitPromiseInfo, AwaitPromiseInfoNode, ScopeType, Stack } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
@@ -14,8 +14,8 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 			this.toJson(key) as NodeJsonType
 		);
 	}
-	abstract set(stack: StackProvider, value: any): any;
-	abstract get(stack: StackProvider, thisContext?: any): any;
+	abstract set(stack: Stack, value: any): any;
+	abstract get(stack: Stack, thisContext?: any): any;
 	abstract entry(): string[];
 	abstract event(parent?: string): string[];
 	abstract toString(): string;
@@ -37,7 +37,7 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 	set(context: object, value: any) {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
-	abstract get(stack: StackProvider): any;
+	abstract get(stack: Stack): any;
 	entry(): string[] {
 		return [...this.left.entry(), ...this.right.entry()];
 	}

@@ -1,7 +1,7 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { StackProvider } from '../../scope.js';
+import { Stack } from '../../scope.js';
 import { TerminateNode } from './terminate.js';
 
 /**
@@ -19,10 +19,10 @@ export class BlockNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`BlockNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const stackForBlock = stack.newStack();
 		for (const node of this.body) {
 			const value = node.get(stackForBlock);

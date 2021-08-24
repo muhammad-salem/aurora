@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -18,10 +18,10 @@ export class ReturnNode extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`ReturnNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		return new ReturnValue(this.argument?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}

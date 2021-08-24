@@ -48,7 +48,7 @@ export enum PropertyKind {
 	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
 	Spread, NotSet
 }
-export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind/*, name?: ExpressionNode */ };
+export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind, name: string };
 export type FunctionInfo = { rest?: boolean };
 export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
 	switch (token) {
@@ -1416,7 +1416,7 @@ export class JavaScriptParser extends AbstractParser {
 				// CoverInitializedName
 				//    IdentifierReference Initializer?
 
-				const lhs = new IdentifierNode(nameExpression.toString());
+				const lhs = new IdentifierNode(propInfo.name);
 				if (!this.isAssignableIdentifier(lhs)) {
 					throw new Error(this.errorMessage('Strict Eval Arguments'));
 				}
@@ -1500,7 +1500,8 @@ export class JavaScriptParser extends AbstractParser {
 				//   12.3 -> "12.3"
 				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
-				propertyName = new StringNode((nextToken.getValue().toString()));
+				propInfo.name = nextToken.getValue().toString();
+				propertyName = new StringNode(propInfo.name);
 				break;
 			case Token.L_BRACKETS:
 				// [Symbol.iterator]
@@ -1510,6 +1511,7 @@ export class JavaScriptParser extends AbstractParser {
 				if (propInfo.kind === PropertyKind.NotSet) {
 					parsePropertyKindFromToken(this.peek().token, propInfo);
 				}
+				propInfo.name = propertyName.toString();
 				return propertyName;
 			case Token.ELLIPSIS:
 				if (propInfo.kind == PropertyKind.NotSet) {
@@ -1523,10 +1525,13 @@ export class JavaScriptParser extends AbstractParser {
 					if (this.peek().isNotType(Token.R_CURLY)) {
 						throw new Error(this.errorMessage('Element After Rest'));
 					}
+					propInfo.name = propertyName.toString();
 					return propertyName;
 				}
 			default:
-				propertyName = new StringNode(this.parsePropertyName().toString());
+				// propertyName = new StringNode(this.parsePropertyName().toString());
+				propertyName = this.parsePropertyName();
+				propInfo.name = propertyName.toString();
 				break;
 		}
 		if (propInfo.kind === PropertyKind.NotSet) {

@@ -1,6 +1,6 @@
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { StackProvider } from '../scope.js';
+import { Stack } from '../scope.js';
 
 @Deserializer('CommentExpression')
 export class CommentNode extends AbstractExpressionNode {
@@ -19,7 +19,7 @@ export class CommentNode extends AbstractExpressionNode {
 	 * @param context execution stack/scope context
 	 * @param value any paramter
 	 */
-	set(stack: StackProvider, ...values: any[]) {
+	set(stack: Stack, ...values: any[]) {
 
 	}
 
@@ -27,7 +27,7 @@ export class CommentNode extends AbstractExpressionNode {
 	 * used when define a function
 	 * @param context execution stack/scope context
 	 */
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 
 	}
 	entry(): string[] {

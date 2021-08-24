@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
-import type { StackProvider } from '../scope.js';
+import type { Stack } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { MemberExpression } from '../definition/member.js';
@@ -27,10 +27,10 @@ export class UnaryNode extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		return this.argument.set(stack, value);
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		switch (this.operator) {
 			case 'delete': return this.getDelete(stack, thisContext);
 			default:
@@ -38,7 +38,7 @@ export class UnaryNode extends AbstractExpressionNode {
 				return UnaryNode.Evaluations[this.operator](value);
 		}
 	}
-	private getDelete(stack: StackProvider, thisContext?: any) {
+	private getDelete(stack: Stack, thisContext?: any) {
 		if (this.argument instanceof MemberExpression) {
 			thisContext = thisContext || this.argument.getObject().get(stack);
 			const right = this.argument.getProperty();

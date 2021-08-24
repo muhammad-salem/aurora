@@ -1,11 +1,11 @@
-import type { ScopeType, StackProvider } from './scope.js';
+import type { ScopeType, Stack } from './scope.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
 export interface ExpressionNode {
-	set(stack: StackProvider, value: any): any;
-	get(stack: StackProvider, thisContext?: any): any;
+	set(stack: Stack, value: any): any;
+	get(stack: Stack, thisContext?: any): any;
 	entry(): string[];
 	event(parent?: string): string[];
 	toString(): string;
@@ -37,5 +37,5 @@ export interface CanDeclareVariable {
 	 * @param propertyValue the initial value of identifer
 	 * @param scope which scop to declare this identifier
 	 */
-	declareVariable(stack: StackProvider, scopeType: ScopeType, propertyValue?: any): any;
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
 }

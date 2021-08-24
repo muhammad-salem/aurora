@@ -1,7 +1,7 @@
-import type { ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { CanDeclareVariable, ExpressionNode, NodeDeserializer } from '../expression.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { StackProvider } from '../scope.js';
+import { ScopeType, Stack } from '../scope.js';
 
 /**
  * An identifier is a sequence of characters in the code that identifies a variable, function, or property.
@@ -13,7 +13,7 @@ import { StackProvider } from '../scope.js';
  * but sometimes it is possible to parse strings into identifiers.
  */
 @Deserializer('Identifier')
-export class IdentifierNode extends AbstractExpressionNode {
+export class IdentifierNode extends AbstractExpressionNode implements CanDeclareVariable {
 	static fromJSON(node: IdentifierNode): IdentifierNode {
 		return new IdentifierNode(node.name);
 	}
@@ -23,14 +23,17 @@ export class IdentifierNode extends AbstractExpressionNode {
 	getName() {
 		return this.name;
 	}
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		return stack.set(this.name, value) ? value : void 0;
 	}
-	get(stack: StackProvider, thisContext?: any) {
+	get(stack: Stack, thisContext?: any) {
 		if (thisContext) {
 			return thisContext[this.name];
 		}
 		return stack.get(this.name);
+	}
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
+		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
 	entry(): string[] {
 		return [this.toString()];
@@ -140,10 +143,10 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		super();
 	}
 
-	set(stack: StackProvider, value: any) {
+	set(stack: Stack, value: any) {
 		throw new Error(`TemplateLiteralExpressionNode#set() has no implementation.`);
 	}
-	get(stack: StackProvider) {
+	get(stack: Stack) {
 		const tagged: Function = this.tag?.get(stack) || String.raw;
 		const templateStringsArray = new TemplateArray(this.quasis);
 		templateStringsArray.raw = templateStringsArray;
