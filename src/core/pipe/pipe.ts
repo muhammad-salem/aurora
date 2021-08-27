@@ -1,4 +1,4 @@
-import { ReadOnlyContextProvider } from '@ibyar/expressions';
+import { ReadOnlyScope } from '@ibyar/expressions';
 import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
@@ -16,10 +16,10 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 	return Reflect.has(Object.getPrototypeOf(pipe), 'transform');
 }
 
-export class PipeProvider extends ReadOnlyContextProvider<Map<string, Function>> {
+export class PipeProvider extends ReadOnlyScope<Map<string, Function>> {
 	static PipeContext = new Map<string, Function>();
 	constructor() {
-		super(PipeProvider.PipeContext);
+		super(PipeProvider.PipeContext, 'block');
 	}
 	has(pipeName: string): boolean {
 		if (this.context.has(pipeName)) {
@@ -44,11 +44,11 @@ export class PipeProvider extends ReadOnlyContextProvider<Map<string, Function>>
 	}
 }
 
-export class AsyncPipeProvider extends ReadOnlyContextProvider<object> {
+export class AsyncPipeProvider extends ReadOnlyScope<object> {
 
 	static AsyncPipeContext = Object.create(null);
 	constructor() {
-		super(AsyncPipeProvider.AsyncPipeContext);
+		super(AsyncPipeProvider.AsyncPipeContext, 'block');
 	}
 	has(pipeName: string): boolean {
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);

@@ -1,6 +1,6 @@
 import { Directive } from '@ibyar/core';
 import { DOMChild, DOMDirectiveNode } from '@ibyar/elements';
-import { ExpressionNode, JavaScriptParser, StackProvider, SwitchNode } from '@ibyar/expressions';
+import { ExpressionNode, JavaScriptParser, Stack, SwitchNode } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
 
@@ -66,7 +66,7 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 		}
 		return callback;
 	}
-	private _updateSwitchCaseView(children: DOMChild<ExpressionNode>[], stack: StackProvider) {
+	private _updateSwitchCaseView(children: DOMChild<ExpressionNode>[], stack: Stack) {
 		const fragment = document.createDocumentFragment();
 		for (const child of children) {
 			this.render.appendChildToParent(fragment, child, stack);

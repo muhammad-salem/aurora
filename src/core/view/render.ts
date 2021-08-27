@@ -1,4 +1,4 @@
-import { ExpressionNode, StackProvider } from '@ibyar/expressions';
+import { ExpressionNode, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
@@ -37,13 +37,13 @@ export class ComponentRender<T> {
 	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
 	// viewChildMap: { [name: string]: any };
-	contextStack: StackProvider;
+	contextStack: Stack;
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
-		this.contextStack = documentStack.newStack();
-		this.contextStack.addProvider(this.view);
-		this.contextStack.addProvider(this.view._model);
+		this.contextStack = documentStack.copyStack();
+		this.contextStack.pushBlockScopeFor(this.view);
+		this.contextStack.pushBlockScopeFor(this.view._model);
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -137,7 +137,7 @@ export class ComponentRender<T> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: StackProvider): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -159,18 +159,19 @@ export class ComponentRender<T> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(textNode: LiveTextContent<ExpressionNode>, contextStack: StackProvider): Text {
+	createLiveText(textNode: LiveTextContent<ExpressionNode>, contextStack: Stack): Text {
 		const liveText = new Text('');
-		contextStack = contextStack.stackFor({ this: liveText });
+		contextStack = contextStack.copyStack();
+		contextStack.pushBlockScopeFor({ this: liveText });
 		this.bind1Way(liveText, textNode, contextStack);
 		return liveText;
 	}
-	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: StackProvider): DocumentFragment {
+	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: Stack): DocumentFragment {
 		const fragment = document.createDocumentFragment();
 		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
 		return fragment;
 	}
-	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: StackProvider) {
+	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: Stack) {
 		if (child instanceof DOMElementNode) {
 			parent.append(this.createElement(child, contextStack));
 		} else if (child instanceof DOMDirectiveNode) {
@@ -178,7 +179,7 @@ export class ComponentRender<T> {
 			parent.append(comment);
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
-			this.createDirective(child, comment, contextStack.newStack());
+			this.createDirective(child, comment, contextStack.copyStack());
 		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof TextContent) {
@@ -189,7 +190,7 @@ export class ComponentRender<T> {
 			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
-	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
+	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			const ViewClass = customElements.get(node.tagName) as ((new () => HTMLElement) | undefined);
@@ -213,12 +214,12 @@ export class ComponentRender<T> {
 		}
 		return element;
 	}
-	createElement(node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): HTMLElement {
+	createElement(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
 		const element = this.createElementByTagName(node, contextStack);
 
 		const elContext = new ElementContextProvider(element);
-		contextStack = contextStack.newStack();
-		contextStack.add(elContext);
+		contextStack = contextStack.copyStack();
+		contextStack.pushScope(elContext);
 		this.initAttribute(element, node, contextStack);
 		if (node.templateRefName) {
 			Reflect.set(this.view, node.templateRefName.name, element);
@@ -234,7 +235,7 @@ export class ComponentRender<T> {
 		}
 		return element;
 	}
-	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: StackProvider): void {
+	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: Stack): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
@@ -279,7 +280,9 @@ export class ComponentRender<T> {
 				 */
 				if (typeof event.value === 'string') {
 					listener = ($event: Event) => {
-						event.expression.get(contextStack.stackFor({ $event }), this.view._model);
+						const stack = contextStack.copyStack();
+						stack.pushBlockScopeFor({ $event });
+						event.expression.get(stack, this.view._model);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -295,16 +298,16 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode> | LiveTextContent<ExpressionNode>, contextStack: StackProvider) {
+	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode> | LiveTextContent<ExpressionNode>, contextStack: Stack) {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
 		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name);
 		callback();
 	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: StackProvider, callback: SourceFollowerCallback, object?: object, attrName?: string) {
+	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
 		node.event().forEach(eventName => {
-			const context = contextStack.getProviderBy(eventName);
+			const context = contextStack.findScope(eventName)?.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
@@ -314,14 +317,14 @@ export class ComponentRender<T> {
 					}
 					const pipeContext: { [key: string]: Function; } = {};
 					pipeContext[eventName] = pipe.transform.bind(pipe);
-					contextStack.addProvider(pipeContext);
+					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe1way(context, eventName, callback, object, attrName);
 				}
 			}
 		});
 	}
-	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: StackProvider) {
+	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: Stack) {
 		const callback1 = () => {
 			attr.expression.get(contextStack);
 		};
@@ -329,7 +332,7 @@ export class ComponentRender<T> {
 			attr.callbackExpression.get(contextStack);
 		};
 		attr.expression.event().forEach(eventName => {
-			const context = contextStack.getProviderBy(eventName);
+			const context = contextStack.findScope(eventName)?.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
@@ -339,7 +342,7 @@ export class ComponentRender<T> {
 					}
 					const pipeContext: { [key: string]: Function } = {};
 					pipeContext[eventName] = pipe.transform.bind(pipe);
-					contextStack.addProvider(pipeContext);
+					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
 				}

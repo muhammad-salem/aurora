@@ -49,7 +49,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		return () => {
 			const iterable = <any[]>forOfNode.getRight().get(this.directiveStack);
 			for (const iterator of iterable) {
-				const stack = this.directiveStack.newStack();
+				const stack = this.directiveStack.copyStack();
 				forOfNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}
@@ -59,7 +59,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		return () => {
 			const iterable = <object>forInNode.getRight().get(this.directiveStack);
 			for (const iterator in iterable) {
-				const stack = this.directiveStack.newStack();
+				const stack = this.directiveStack.copyStack();
 				forInNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}
@@ -69,7 +69,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		return async () => {
 			const iterable: AsyncIterable<any> = forAwaitOfNode.getRight().get(this.directiveStack);
 			for await (const iterator of iterable) {
-				const stack = this.directiveStack.newStack();
+				const stack = this.directiveStack.copyStack();
 				forAwaitOfNode.getLeft().set(stack, iterator);
 				this.updateView(stack);
 			}

@@ -1,15 +1,13 @@
-import { ContextProvider } from '@ibyar/expressions';
+import { Scope } from '@ibyar/expressions';
 import { isOnInit } from '../component/lifecycle.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective } from './directive.js';
 
-type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
-
-export class ElementContextProvider implements ContextProvider {
-
+export type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
+export class ElementContextProvider extends Scope<ElementContext> {
 	private directiveMap: Map<string, AttributeDirective> = new Map();
-	private context: ElementContext = {} as ElementContext;
 	constructor(private el: HTMLElement) {
+		super({} as ElementContext, 'block');
 		this.context.this = el;
 	}
 	getElement() {
@@ -87,8 +85,5 @@ export class ElementContextProvider implements ContextProvider {
 			return true;
 		}
 		return false;
-	}
-	getProviderBy(propertyKey: string): any {
-		return this.context;
 	}
 }

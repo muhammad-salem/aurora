@@ -1,4 +1,4 @@
-import { ContextProvider, ReadOnlyContextProvider, ScopeProvider } from '@ibyar/expressions';
+import { ReadOnlyScope, Scope, Stack } from '@ibyar/expressions';
 import { PipeProvider, AsyncPipeProvider } from '../pipe/pipe.js';
 
 const Constant: { [k: string]: any } = {
@@ -67,45 +67,11 @@ const Constant: { [k: string]: any } = {
 	Number,
 };
 
-const readOnlyProvider = new ReadOnlyContextProvider(Constant);
-export const documentStack = new ScopeProvider([readOnlyProvider, new PipeProvider(), new AsyncPipeProvider()]);
-
-export class BindingNotification {
-	notification: Array<PropertyKey> = [];
-	notify(propertyKey: PropertyKey) {
-		this.notification.push(propertyKey);
-		console.log(this.notification);
-	}
-}
-export class BindingContextProvider<T extends object> implements ContextProvider {
-
-	static contextMapping = new WeakMap<object, BindingContextProvider<object>>();
-
-	static createOrGetProvider<T extends object>(object: T): BindingContextProvider<T> {
-		if (this.contextMapping.has(object)) {
-			return this.contextMapping.get(object) as BindingContextProvider<T>;
-		}
-		const notifier = new BindingNotification();
-		const provider = new BindingContextProvider(object, notifier);
-		this.contextMapping.set(object, provider);
-		return provider;
-	}
-	constructor(protected context: T, private notifier: BindingNotification) { }
-	getNotifier() {
-		return this.notifier;
-	}
-	get(propertyKey: PropertyKey): any {
-		return Reflect.get(this.context, propertyKey);
-	}
-	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-		const hasSet = Reflect.set(this.context, propertyKey, value);
-		this.notifier.notify(propertyKey);
-		return hasSet;
-	}
-	has(propertyKey: PropertyKey): boolean {
-		return propertyKey in this.context;
-	}
-	getProviderBy(): T | undefined {
-		return this.context;
-	}
-}
+const CONSTANT_SCOPE = new ReadOnlyScope(Constant, 'block');
+export const documentStack = new Stack(
+	[
+		CONSTANT_SCOPE,
+		new PipeProvider(),
+		new AsyncPipeProvider()
+	]
+);

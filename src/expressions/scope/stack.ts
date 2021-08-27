@@ -106,13 +106,19 @@ export interface Stack {
 	pushBlockScopeFor<T extends object>(context: T): Scope<T>;
 
 	pushFunctionScopeFor<T extends object>(context: T): Scope<T>;
+
+	copyStack(): Stack;
 }
 
 export class Stack implements Stack {
 	awaitPromise: AwaitPromiseInfo[];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
-	protected readonly stack: Array<Scope<any>> = [];
+	protected readonly stack: Array<Scope<any>>;
+
+	constructor(stack?: Array<Scope<any>>) {
+		this.stack = stack ?? [];
+	}
 
 	has(propertyKey: PropertyKey): boolean {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
@@ -197,4 +203,7 @@ export class Stack implements Stack {
 		return true;
 	}
 
+	copyStack(): Stack {
+		return new Stack(this.stack.slice());
+	}
 }
