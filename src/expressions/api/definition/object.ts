@@ -46,8 +46,7 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode implements
 	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
 		const propertyName = this.key.get(stack);
 		const propertyValue = objectValue[propertyName];
-		const variableName = this.value.get(stack);
-		stack.declareVariable(variableName, scopeType, propertyValue);
+		(this.value as ExpressionNode & CanDeclareVariable).declareVariable(stack, scopeType, propertyValue);
 	}
 	entry(): string[] {
 		return this.key.entry().concat(this.value.entry());

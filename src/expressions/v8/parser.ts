@@ -1529,8 +1529,8 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				// propertyName = new StringNode(this.parsePropertyName().toString());
-				propertyName = this.parsePropertyName();
+				propertyName = new StringNode(this.parsePropertyName().toString());
+				// propertyName = this.parsePropertyName();
 				propInfo.name = propertyName.toString();
 				break;
 		}

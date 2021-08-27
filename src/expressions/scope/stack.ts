@@ -111,6 +111,9 @@ export interface Stack {
 }
 
 export class Stack implements Stack {
+	static for(...contexts: Scope<any>[]): Stack {
+		return new Stack(contexts.map(context => new Scope(context, 'block')));
+	}
 	awaitPromise: AwaitPromiseInfo[];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
