@@ -139,7 +139,9 @@ export class Stack implements Stack {
 		if (scopeType === 'block') {
 			return this.lastScope().set(propertyKey, propertyValue);
 		}
-		for (const scope of this.stack) {
+		let lastIndex = this.stack.length;
+		while (lastIndex--) {
+			const scope = this.stack[lastIndex];
 			if (scope.type === scopeType) {
 				scope.set(propertyKey, propertyValue);
 				break;
