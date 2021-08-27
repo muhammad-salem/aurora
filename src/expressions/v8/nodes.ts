@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import type { Stack } from '../api/scope.js';
+import type { Stack } from '../scope/stack.js';
 import { AssignmentNode } from '../api/operators/assignment.js';
 import { LogicalNode } from '../api/operators/logical.js';
 import { UnaryNode } from '../api/operators/unary.js';

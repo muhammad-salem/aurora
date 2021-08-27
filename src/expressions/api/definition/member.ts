@@ -1,5 +1,5 @@
-import type { Stack } from '../scope.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Stack } from '../../scope/stack.js';
 import type { IdentifierNode } from './values.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';

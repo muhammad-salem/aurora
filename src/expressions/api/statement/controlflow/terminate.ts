@@ -1,7 +1,7 @@
+import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { ExportNode } from '../../module/export.js';
-import { Stack } from '../../scope.js';
 
 /**
  * The break statement terminates the current loop, switch, or label statement

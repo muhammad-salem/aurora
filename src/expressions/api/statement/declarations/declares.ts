@@ -1,6 +1,7 @@
 
 import type { NodeDeserializer, ExpressionNode, CanDeclareVariable } from '../../expression.js';
-import type { AwaitPromiseInfoNode, ScopeType, Stack } from '../../scope.js';
+import type { AwaitPromiseInfoNode, Stack } from '../../../scope/stack.js';
+import type { ScopeType } from '../../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 

@@ -1,5 +1,6 @@
+import type { ScopeType } from '../scope/scope.js';
+import type { AwaitPromiseInfo, AwaitPromiseInfoNode, Stack } from '../scope/stack.js';
 import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
-import { AwaitPromiseInfo, AwaitPromiseInfoNode, ScopeType, Stack } from './scope.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {

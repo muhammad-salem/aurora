@@ -1,7 +1,8 @@
 import type { CanDeclareVariable, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { ScopeType } from '../../scope/scope.js';
+import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { ScopeType, Stack } from '../scope.js';
 
 /**
  * An identifier is a sequence of characters in the code that identifies a variable, function, or property.

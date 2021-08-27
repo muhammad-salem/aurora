@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { Stack } from '../scope.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ConditionalExpression')
