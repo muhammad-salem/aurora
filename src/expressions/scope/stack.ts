@@ -114,6 +114,9 @@ export class Stack implements Stack {
 	static for(...contexts: Scope<any>[]): Stack {
 		return new Stack(contexts.map(context => new Scope(context, 'block')));
 	}
+	static forScopes(...scopes: Scope<any>[]): Stack {
+		return new Stack(scopes);
+	}
 	awaitPromise: AwaitPromiseInfo[];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
@@ -134,7 +137,7 @@ export class Stack implements Stack {
 	}
 	declareVariable(scopeType: ScopeType, propertyKey: PropertyKey, propertyValue?: any) {
 		if (scopeType === 'block') {
-			return this.stack[0].set(propertyKey, propertyValue);
+			return this.lastScope().set(propertyKey, propertyValue);
 		}
 		for (const scope of this.stack) {
 			if (scope.type === scopeType) {
