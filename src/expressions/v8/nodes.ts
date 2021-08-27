@@ -60,6 +60,8 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '&':
 		case '^':
 		case '|':
+		case '>?':
+		case '<?':
 		case '<=>':
 			return new BinaryExpressionNode(op, left, right);
 		default:
