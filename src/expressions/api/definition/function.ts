@@ -122,26 +122,26 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 		switch (this.kind) {
 			case FunctionKind.ASYNC:
 				func = async function (this: ThisType<any>, ...args: any[]) {
-					const funcStack = stack.newStack();
-					funcStack.localScop.set('this', this);
-					self.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					stack.declareVariable('function', 'this', this);
+					self.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
-						returnValue = state.get(funcStack);
-						if (funcStack.awaitPromise.length > 0) {
-							for (const awaitRef of funcStack.awaitPromise) {
+						returnValue = state.get(stack);
+						if (stack.awaitPromise.length > 0) {
+							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
 								} else {
-									awaitRef.node.set(funcStack, awaitValue);
+									awaitRef.node.set(stack, awaitValue);
 								}
 							}
-							funcStack.awaitPromise.splice(0);
+							stack.awaitPromise.splice(0);
 						}
-						else if (funcStack.forAwaitAsyncIterable) {
-							for await (let iterator of funcStack.forAwaitAsyncIterable.iterable) {
-								const result = funcStack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						else if (stack.forAwaitAsyncIterable) {
+							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
 								if (TerminateNode.ContinueSymbol === result) {
 									continue;
 								}
@@ -153,54 +153,58 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 									break;
 								}
 							}
-							funcStack.forAwaitAsyncIterable = undefined;
+							stack.forAwaitAsyncIterable = undefined;
 						}
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
 								returnValue = await returnValue.promise;
+								stack.popScope();
 								return returnValue;
 							}
 						}
 					}
+					stack.popScope();
 				};
 				break;
 			case FunctionKind.GENERATOR:
 				func = function* (this: ThisType<any>, ...args: any[]) {
-					const funcStack = stack.newStack();
-					funcStack.localScop.set('this', this);
-					self.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					stack.declareVariable('function', 'this', this);
+					self.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
-						returnValue = state.get(funcStack);
+						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
+							stack.popScope();
 							return returnValue.value;
 						}
 					}
+					stack.popScope();
 				};
 				break;
 			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: ThisType<any>, ...args: any[]) {
-					const funcStack = stack.newStack();
-					funcStack.localScop.set('this', this);
-					self.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					stack.declareVariable('function', 'this', this);
+					self.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
-						returnValue = state.get(funcStack);
-						if (funcStack.awaitPromise.length > 0) {
-							for (const awaitRef of funcStack.awaitPromise) {
+						returnValue = state.get(stack);
+						if (stack.awaitPromise.length > 0) {
+							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
 								} else {
-									awaitRef.node.set(funcStack, awaitValue);
+									awaitRef.node.set(stack, awaitValue);
 								}
 							}
-							funcStack.awaitPromise.splice(0);
+							stack.awaitPromise.splice(0);
 						}
-						else if (funcStack.forAwaitAsyncIterable) {
-							for await (let iterator of funcStack.forAwaitAsyncIterable.iterable) {
-								const result = funcStack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						else if (stack.forAwaitAsyncIterable) {
+							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
 								if (TerminateNode.ContinueSymbol === result) {
 									continue;
 								}
@@ -209,33 +213,38 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 								}
 								else if (result instanceof ReturnValue) {
 									returnValue = result;
+									stack.popScope();
 									break;
 								}
 							}
-							funcStack.forAwaitAsyncIterable = undefined;
+							stack.forAwaitAsyncIterable = undefined;
 						}
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
+								stack.popScope();
 								return await returnValue.promise;
 							}
 						}
 					}
+					stack.popScope();
 				};
 				break;
 			default:
 			case FunctionKind.NORMAL:
 				func = function (this: ThisType<any>, ...args: any[]) {
-					const funcStack = stack.newStack();
-					funcStack.localScop.set('this', this);
-					self.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					stack.declareVariable('function', 'this', this);
+					self.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
-						returnValue = state.get(funcStack);
+						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
+							stack.popScope();
 							return returnValue.value;
 						}
 					}
+					stack.popScope();
 				};
 				break;
 		}
@@ -354,25 +363,27 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		switch (this.kind) {
 			case ArrowFunctionType.ASYNC:
 				func = async (...args: any[]) => {
-					const funcStack = stack.newStack();
-					this.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
+					// stack.declareVariable('function', 'this', this);
+					this.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of this.body) {
-						returnValue = state.get(funcStack);
-						if (funcStack.awaitPromise.length > 0) {
-							for (const awaitRef of funcStack.awaitPromise) {
+						returnValue = state.get(stack);
+						if (stack.awaitPromise.length > 0) {
+							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(funcStack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
 								} else {
-									awaitRef.node.set(funcStack, awaitValue);
+									awaitRef.node.set(stack, awaitValue);
 								}
 							}
-							funcStack.awaitPromise.splice(0);
+							stack.awaitPromise.splice(0);
 						}
-						else if (funcStack.forAwaitAsyncIterable) {
-							for await (let iterator of funcStack.forAwaitAsyncIterable.iterable) {
-								const result = funcStack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						else if (stack.forAwaitAsyncIterable) {
+							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
 								if (TerminateNode.ContinueSymbol === result) {
 									continue;
 								}
@@ -384,29 +395,35 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 									break;
 								}
 							}
-							funcStack.forAwaitAsyncIterable = undefined;
+							stack.forAwaitAsyncIterable = undefined;
 						}
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
+								stack.popScope();
 								return await returnValue.promise;
 							}
 						}
 					}
+					stack.popScope();
 				};
 				break;
 			default:
 			case ArrowFunctionType.NORMAL:
 				func = (...args: any[]) => {
-					const funcStack = stack.newStack();
-					this.setParamter(funcStack, args);
+					stack.pushFunctionScope();
+					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
+					// stack.declareVariable('function', 'this', this);
+					this.setParamter(stack, args);
 					let returnValue: any;
 					for (const state of this.body) {
-						returnValue = state.get(funcStack);
+						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
+							stack.popScope();
 							return returnValue.value;
 						}
 					}
+					stack.popScope();
 				};
 				break;
 		}
