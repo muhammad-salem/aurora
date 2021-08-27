@@ -151,7 +151,7 @@ export class Stack implements Stack {
 				return scope;
 			}
 		}
-		return this.stack[0];
+		return this.lastScope();
 	}
 	resolveAwait(value: AwaitPromiseInfo): void {
 		this.awaitPromise.push(value);
