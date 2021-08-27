@@ -1,11 +1,12 @@
+
+import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { Stack } from '../scope.js';
 
 @Deserializer('CommentExpression')
-export class CommentNode extends AbstractExpressionNode {
-	static fromJSON(nodeExp: CommentNode): CommentNode {
-		return new CommentNode(nodeExp.comment);
+export class CommentExpression extends AbstractExpressionNode {
+	static fromJSON(nodeExp: CommentExpression): CommentExpression {
+		return new CommentExpression(nodeExp.comment);
 	}
 	constructor(private comment: string) {
 		super();

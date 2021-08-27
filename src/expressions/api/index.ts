@@ -1,15 +1,11 @@
 export * from './expression.js';
-export * from './scope.js';
 export * from './abstract.js';
 
 export * from './deserialize/deserialize.js';
-// export * from './context/provider.js';
-export * from './context/scope.js';
-export * from './context/stack.js';
 
 export * from './definition/values.js';
 export * from './definition/array.js';
-// export * from './definition/comment.js';
+export * from './definition/comment.js';
 export * from './definition/function.js';
 export * from './definition/member.js';
 export * from './definition/object.js';

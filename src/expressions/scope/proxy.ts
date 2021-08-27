@@ -1,4 +1,4 @@
-import { Scope } from '../scope.js';
+import type { Scope } from './scope.js';
 
 /**
  * crete new proxy handler object as scoped context

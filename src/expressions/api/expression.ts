@@ -1,4 +1,5 @@
-import type { ScopeType, Stack } from './scope.js';
+import type { ScopeType } from '../scope/scope.js';
+import type { Stack } from '../scope/stack.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
