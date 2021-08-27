@@ -19,9 +19,11 @@ export class IfDirective<T> extends StructuralDirective<T> implements OnInit {
 
 		const conditionNode = JavaScriptParser.parse(this.directive.directiveValue.toString());
 		let lastConditionValue = false;
-		const callback: SourceFollowerCallback = (stack: any[]) => {
-			stack.push(this);
-			const condition = conditionNode.get(this.directiveStack);
+		const callback: SourceFollowerCallback = (stackTrace: any[]) => {
+			stackTrace.push(this);
+			const stack = this.directiveStack.copyStack();
+			stack.pushBlockScope();
+			const condition = conditionNode.get(stack);
 			if (lastConditionValue !== condition) {
 				lastConditionValue = condition;
 				this._updateView(condition);
