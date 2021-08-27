@@ -141,7 +141,7 @@ export class ComponentRender<T> {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
-			const structural = new directiveRef.modelClass(this, comment, directive, directiveStack);
+			const structural = new directiveRef.modelClass(this, comment, directive, directiveStack.copyStack());
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
