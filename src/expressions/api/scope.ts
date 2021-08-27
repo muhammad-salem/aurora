@@ -5,29 +5,35 @@ export interface Scope<T> {
 	type: ScopeType;
 
 	/**
-	 * get the first context provider that have `propertyKey`
+	 * get value of `propertyKey` in current context
 	 * @param propertyKey 
 	 */
 	get(propertyKey: PropertyKey): any;
 
 	/**
-	 * set the value of `propertyKey` in its context provider with `value`.
+	 * set the value of `propertyKey` in current context, could be instilled with `value`.
 	 * @param propertyKey 
 	 * @param value 
 	 * @param receiver 
 	 */
-	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean;
+	set(propertyKey: PropertyKey, value?: any, receiver?: any): boolean;
 
 	/**
-	 * search for a scope context that have propertyKey
+	 * is current context has `propertyKey` in hash map keys
 	 * @param propertyKey 
 	 */
 	has(propertyKey: PropertyKey): boolean;
 
 	/**
-	 * get context object for this scope
+	 * get current context object of this scope
 	 */
-	getScopeContext(): T | undefined;
+	getContext(): T | undefined;
+
+	/**
+	 * get value of `propertyKey` in current context
+	 * @param propertyKey 
+	 */
+	getScope<V extends object>(propertyKey: PropertyKey): Scope<V>;
 }
 
 export type AwaitPromiseInfoNode = ExpressionNode & CanDeclareVariable;
@@ -100,72 +106,38 @@ export interface Stack {
 	 * if not found will return the stack local scop as a default value
 	 * @param propertyKey the property key
 	 */
-	findScope<T = any>(propertyKey: PropertyKey): Scope<T>;
-
-	// /**
-	//  * add one or many context scopes on the top of the current stack
-	//  * @param contexts 
-	//  * @returns the stack length
-	//  */
-	// add(...contexts: Scope[]): number;
-
-	// /**
-	//  * remove the scope context with the `index` from this stack 
-	//  * @param index the index to remove from this stack `array`
-	//  * @returns the context scope that removed
-	//  */
-	// remove(index: number): Scope;
-
-	/**
-	//  * add an `object` as a context provider on the top of this stack.
-	//  * @param obj 
-	//  * @returns the index of new object in this stack
-	//  */
-	// addProvider<T extends object>(obj: T): number;
-
-	// /**
-	//  * add an empty provider to this scop
-	//  */
-	// addEmptyProvider(): Scope;
-
-	// /**
-	//  * add an readonly provider to this scop, you cant set any value in this provider
-	//  */
-	// addReadOnlyProvider<T extends object>(provider: T): Scope;
-
-	/**
-	 * search for the first context that have property key
-	 * if not found will return the stack local scop as a default value
-	 * @param propertyKey the property key
-	 */
-	// findContext(propertyKey: PropertyKey): Scope;
-
-	/**
-	 * 
-	 * @param obj create an empty stack for this provided object, as local scope context
-	 */
-	// emptyStackProviderWith(obj: any | any[]): StackProvider;
+	findScope<T extends object>(propertyKey: PropertyKey): Scope<T>;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
-	popScope<T = any>(): Scope<T>;
-	removeScope<T = any>(scope: Scope<T>): void;
+
+	/**
+	 * get a reference to the last scope in this stack
+	 */
+	lastScope<T extends object>(): Scope<T>;
+
+	/**
+	 * clear every thing after this scope, and even this scope
+	 * @param scope 
+	 */
+	clearTo<T extends object>(scope: Scope<T>): boolean;
+
+	/**
+	 * clear every thing after this scope, but not this scope
+	 * @param scope 
+	 */
+	clearTill<T extends object>(scope: Scope<T>): boolean;
+
+	popScope<T extends object>(): Scope<T>;
+
+	removeScope<T extends object>(scope: Scope<T>): void;
 
 	pushScope<T extends object>(scope: Scope<T>): void;
 
 	pushBlockScope<T extends object>(): Scope<T>;
+
 	pushFunctionScope<T extends object>(): Scope<T>;
 
 	pushBlockScopeFor<T extends object>(context: T): Scope<T>;
+
 	pushFunctionScopeFor<T extends object>(context: T): Scope<T>;
-
-	// /**
-	//  * create chained stack based on this stack.
-	//  */
-	// newStack(): Stack;
-
-	// /**
-	//  * 
-	//  * @param obj create chained stack for provided object
-	//  */
-	// stackFor(obj: any): Stack;
 }

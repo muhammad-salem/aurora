@@ -31,8 +31,8 @@ export class WhileNode extends AbstractExpressionNode {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		stack = stack.newStack();
 		const condition = this.test.get(stack);
+		const whileBlock = stack.pushBlockScope();
 		while (condition) {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
@@ -44,9 +44,11 @@ export class WhileNode extends AbstractExpressionNode {
 				break;
 			}
 			if (result instanceof ReturnValue) {
+				stack.clearTo(whileBlock);
 				return result;
 			}
 		}
+		stack.clearTo(whileBlock);
 		return void 0;
 	}
 	entry(): string[] {
@@ -87,8 +89,7 @@ export class DoWhileNode extends AbstractExpressionNode {
 		throw new Error(`WhileNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		stack = stack.newStack();
-		const condition = this.test.get(stack);
+		const whileBlock = stack.pushBlockScope();
 		do {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
@@ -100,9 +101,11 @@ export class DoWhileNode extends AbstractExpressionNode {
 				break;
 			}
 			if (result instanceof ReturnValue) {
+				stack.clearTo(whileBlock);
 				return result;
 			}
 		} while (this.test.get(stack));
+		stack.clearTo(whileBlock);
 		return void 0;
 	}
 	entry(): string[] {

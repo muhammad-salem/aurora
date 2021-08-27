@@ -33,12 +33,17 @@ export class IfElseNode extends AbstractExpressionNode {
 		throw new Error(`IfElseNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		stack = stack.newStack();
 		const condition = this.test.get(stack);
 		if (condition) {
-			return this.consequent.get(stack);
+			const ifBlock = stack.pushBlockScope();
+			const value = this.consequent.get(stack);
+			stack.clearTo(ifBlock);
+			return value;
 		} else if (this.alternate) {
-			return this.alternate.get(stack);
+			const elseBlock = stack.pushBlockScope();
+			const value = this.alternate.get(stack);
+			stack.clearTo(elseBlock);
+			return value;
 		}
 		return void 0;
 	}

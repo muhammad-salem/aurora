@@ -1,5 +1,6 @@
 import type { Stack } from '../scope.js';
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { IdentifierNode } from './values.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 
@@ -18,10 +19,25 @@ export class MemberExpression extends AbstractExpressionNode {
 		return this.property;
 	}
 	set(stack: Stack, value: any) {
+		const objectContext = this.object.get(stack);
+		const objectScope = stack.pushBlockScopeFor(objectContext);
+
+
+		let propertyName: PropertyKey;
 		if (this.computed) {
-			return this.object.get(stack)[this.property.get(stack)] = value;
+			propertyName = this.property.get(stack);
+		} else {
+			propertyName = (this.property as IdentifierNode).getName();
 		}
-		return this.property.set(stack.stackFor(this.object.get(stack)), value);
+
+		if (!objectScope.has(propertyName)) {
+			objectScope.set(propertyName, undefined);
+		}
+		let status = this.computed
+			? objectScope.set(propertyName, value)
+			: this.property.set(stack, value);
+		stack.popScope();
+		return status;
 	}
 	get(stack: Stack, thisContext?: any) {
 		if (this.computed) {

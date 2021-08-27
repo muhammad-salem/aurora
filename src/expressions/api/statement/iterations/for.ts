@@ -43,7 +43,7 @@ export class ForNode extends AbstractExpressionNode {
 		throw new Error(`ForNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		stack = stack.newStack();
+		const forBlock = stack.pushBlockScope();
 		for (this.init?.get(stack); this.test?.get(stack) ?? true; this.update?.get(stack)) {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
@@ -55,9 +55,11 @@ export class ForNode extends AbstractExpressionNode {
 				break;
 			}
 			if (result instanceof ReturnValue) {
+				stack.clearTo(forBlock);
 				return result;
 			}
 		}
+		stack.clearTo(forBlock);
 		return void 0;
 	}
 	entry(): string[] {
@@ -109,9 +111,9 @@ export class ForOfNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
-			const forOfStack = stack.newStack();
-			this.left.set(forOfStack, iterator);
-			const result = this.body.get(forOfStack);
+			const forBlock = stack.pushBlockScope();
+			this.left.set(stack, iterator);
+			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -121,8 +123,10 @@ export class ForOfNode extends AbstractExpressionNode {
 				break;
 			}
 			else if (result instanceof ReturnValue) {
+				stack.clearTo(forBlock);
 				return result;
 			}
+			stack.clearTo(forBlock);
 		}
 		return void 0;
 	}
@@ -175,9 +179,9 @@ export class ForInNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
-			const forInStack = stack.newStack();
-			this.left.set(forInStack, iterator);
-			const result = this.body.get(forInStack);
+			const forBlock = stack.pushBlockScope();
+			this.left.set(stack, iterator);
+			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
 			if (TerminateNode.ContinueSymbol === result) {
@@ -187,8 +191,10 @@ export class ForInNode extends AbstractExpressionNode {
 				break;
 			}
 			else if (result instanceof ReturnValue) {
+				stack.clearTo(forBlock);
 				return result;
 			}
+			stack.clearTo(forBlock);
 		}
 		return void 0;
 	}
@@ -241,9 +247,11 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
-			const forOfStack = stack.newStack();
-			this.left.set(forOfStack, iterator);
-			const result = this.body.get(forOfStack);
+			const forBlock = stack.pushBlockScope();
+			// const forOfStack = stack.newStack();
+			this.left.set(stack, iterator);
+			const result = this.body.get(stack);
+			stack.clearTo(forBlock);
 			return result;
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };

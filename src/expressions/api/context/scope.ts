@@ -1,21 +1,22 @@
-import { Scope, ScopeType } from '../scope.js';
+import { Scope as ScopeInterface, ScopeType } from '../scope.js';
 
-export class Scop<T extends object> implements Scope<T> {
+export class Scope<T extends object> implements ScopeInterface<T> {
 	static for<T extends object>(context: T, type: ScopeType) {
-		return new Scop(context, type);
+		return new Scope(context, type);
 	}
 	static blockScopeFor<T extends object>(context: T) {
-		return new Scop(context, 'block');
+		return new Scope(context, 'block');
 	}
 	static functionScopeFor<T extends object>(context: T) {
-		return new Scop(context, 'function');
+		return new Scope(context, 'function');
 	}
 	static emptyBlockScope<T extends object>() {
-		return new Scop({} as T, 'block');
+		return new Scope({} as T, 'block');
 	}
 	static emptyFunctionScope<T extends object>() {
-		return new Scop({} as T, 'function');
+		return new Scope({} as T, 'function');
 	}
+	private scopeMap = new Map<PropertyKey, ScopeInterface<any>>();
 	constructor(protected context: T, public type: ScopeType) { }
 	get(propertyKey: PropertyKey): any {
 		return Reflect.get(this.context, propertyKey);
@@ -26,12 +27,22 @@ export class Scop<T extends object> implements Scope<T> {
 	has(propertyKey: PropertyKey): boolean {
 		return propertyKey in this.context;
 	}
-	getScopeContext(): T | undefined {
+	getContext(): T | undefined {
 		return this.context;
+	}
+	getScope<V extends object>(propertyKey: PropertyKey): ScopeInterface<V> {
+		let scope = this.scopeMap.get(propertyKey);
+		if (scope) {
+			return scope;
+		}
+		const scopeContext = this.get(propertyKey);
+		scope = new Scope(scopeContext, 'block');
+		this.scopeMap.set(propertyKey, scope);
+		return scope;
 	}
 }
 
-export class ReadOnlyScope<T extends object> extends Scop<T> {
+export class ReadOnlyScope<T extends object> extends Scope<T> {
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		// do nothing
 		return false;

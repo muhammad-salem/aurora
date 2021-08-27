@@ -24,12 +24,21 @@ export class CallExpressionNode extends AbstractExpressionNode {
 		throw new Error(`FunctionCallNode#set() has no implementation.`);
 	}
 	get(stack: Stack, thisContext?: any) {
-		const funCallBack = this.callee.get(thisContext ? stack.stackFor(thisContext) : stack) as Function;
+		let funCallBack: Function;
+		if (!thisContext) {
+			funCallBack = this.callee.get(stack) as Function;
+		} else {
+			stack.pushBlockScopeFor(thisContext);
+			funCallBack = this.callee.get(stack) as Function;
+			stack.popScope();
+		}
 		const parameters: any[] = [];
-		const parametersStack = stack.emptyStackProviderWith(parameters);
 		for (const arg of this.arguments) {
 			if (arg instanceof SpreadNode) {
-				arg.get(parametersStack);
+				stack.pushBlockScopeFor(parameters);
+				arg.get(stack);
+				stack.popScope();
+				break;
 			} else {
 				parameters.push(arg.get(stack));
 			}

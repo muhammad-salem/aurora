@@ -1,8 +1,8 @@
 import type {
 	AsyncIterableInfo, AwaitPromiseInfo,
-	Scope, ScopeType, Stack as StackInterface
+	ScopeType, Stack as StackInterface
 } from '../scope.js';
-import { Scop } from './scope.js';
+import { Scope } from './scope.js';
 
 export class Stack implements StackInterface {
 	awaitPromise: AwaitPromiseInfo[];
@@ -30,7 +30,7 @@ export class Stack implements StackInterface {
 			}
 		}
 	}
-	findScope<T = any>(propertyKey: PropertyKey): Scope<T> {
+	findScope<T extends object>(propertyKey: PropertyKey): Scope<T> {
 		let lastIndex = this.stack.length;
 		while (lastIndex--) {
 			const scope = this.stack[lastIndex];
@@ -43,10 +43,10 @@ export class Stack implements StackInterface {
 	resolveAwait(value: AwaitPromiseInfo): void {
 		this.awaitPromise.push(value);
 	}
-	popScope<T = any>(): Scope<T> {
+	popScope<T extends object>(): Scope<T> {
 		return this.stack.pop()!;
 	}
-	removeScope<T = any>(scope: Scope<T>): void {
+	removeScope<T extends object>(scope: Scope<T>): void {
 		const index = this.stack.lastIndexOf(scope);
 		this.stack.splice(index, 1);
 	}
@@ -54,24 +54,43 @@ export class Stack implements StackInterface {
 		this.stack.push(scope);
 	}
 	pushBlockScope<T extends object>(): Scope<T> {
-		const scope = Scop.emptyBlockScope<T>();
+		const scope = Scope.emptyBlockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
 	pushFunctionScope<T extends object>(): Scope<T> {
-		const scope = Scop.emptyFunctionScope<T>();
+		const scope = Scope.emptyFunctionScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
 	pushBlockScopeFor<T extends object>(context: T): Scope<T> {
-		const scope = Scop.blockScopeFor(context);
+		const scope = Scope.blockScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
 	pushFunctionScopeFor<T extends object>(context: T): Scope<T> {
-		const scope = Scop.functionScopeFor(context);
+		const scope = Scope.functionScopeFor(context);
 		this.stack.push(scope);
 		return scope;
+	}
+	lastScope<T extends object>(): Scope<T> {
+		return this.stack[this.stack.length - 1];
+	}
+	clearTo<T extends object>(scope: Scope<T>): boolean {
+		const index = this.stack.lastIndexOf(scope);
+		if (index === -1) {
+			return false;
+		}
+		this.stack.splice(index);
+		return true;
+	}
+	clearTill<T extends object>(scope: Scope<T>): boolean {
+		const index = this.stack.lastIndexOf(scope);
+		if (index === -1) {
+			return false;
+		}
+		this.stack.splice(index + 1);
+		return true;
 	}
 
 }

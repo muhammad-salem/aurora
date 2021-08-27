@@ -23,22 +23,25 @@ export class BlockNode extends AbstractExpressionNode {
 		throw new Error(`BlockNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		const stackForBlock = stack.newStack();
+		const blockScope = stack.pushBlockScope();
 		for (const node of this.body) {
-			const value = node.get(stackForBlock);
+			const value = node.get(stack);
 			if (this.isStatement) {
 				switch (true) {
 					case TerminateNode.BreakSymbol === value:
 					case TerminateNode.ContinueSymbol === value:
 					case value instanceof ReturnValue:
+						stack.clearTo(blockScope);
 						return value;
 				}
 			} else {
 				if (value instanceof ReturnValue) {
+					stack.clearTo(blockScope);
 					return value.value;
 				}
 			}
 		}
+		stack.clearTo(blockScope);
 	}
 	entry(): string[] {
 		return this.body.flatMap(node => node.entry());

@@ -106,33 +106,52 @@ export class TryCatchNode extends AbstractExpressionNode {
 		throw new Error(`TryCatchNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
+		const scope = stack.lastScope();
 		if (this.block && this.handler && this.finalizer) {
 			try {
-				this.block.get(stack.newStack());
+				const blockScope = stack.pushBlockScope();
+				this.block.get(stack);
+				stack.clearTo(blockScope);
 			} catch (error) {
-				const catchScope = stack.newStack();
-				this.handler.set(catchScope, error);
-				this.handler.get(catchScope);
+				stack.clearTill(scope);
+				const blockScope = stack.pushBlockScope();
+				this.handler.set(stack, error);
+				this.handler.get(stack);
+				stack.clearTo(blockScope);
 			} finally {
-				this.finalizer.get(stack.newStack());
+				stack.clearTill(scope);
+				const blockScope = stack.pushBlockScope();
+				this.finalizer.get(stack);
+				stack.clearTo(blockScope);
 			}
 		} else if (this.block && this.handler) {
 			try {
-				this.block.get(stack.newStack());
+				const blockScope = stack.pushBlockScope();
+				this.block.get(stack);
+				stack.clearTo(blockScope);
 			} catch (error) {
-				const catchScope = stack.newStack();
-				this.handler.set(catchScope, error);
-				this.handler.get(catchScope);
+				stack.clearTill(scope);
+				const blockScope = stack.pushBlockScope();
+				stack.clearTo(blockScope);
+				this.handler.set(stack, error);
+				this.handler.get(stack);
+				stack.clearTo(blockScope);
 			}
 		} else if (this.block && this.finalizer) {
 			try {
-				this.block.get(stack.newStack());
+				const blockScope = stack.pushBlockScope();
+				this.block.get(stack);
+				stack.clearTo(blockScope);
 			} finally {
-				this.finalizer.get(stack.newStack());
+				stack.clearTill(scope);
+				const blockScope = stack.pushBlockScope();
+				this.finalizer.get(stack);
+				stack.clearTo(blockScope);
 			}
 		} else {
 			throw new Error(`Uncaught SyntaxError: Missing catch or finally after try`);
 		}
+		stack.clearTill(scope);
 	}
 	entry(): string[] {
 		return this.block.entry().concat(this.handler?.entry() || []).concat(this.finalizer?.entry() || []);

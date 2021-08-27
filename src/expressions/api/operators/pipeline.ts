@@ -43,7 +43,7 @@ export class PipelineNode extends AbstractExpressionNode {
 		const paramValue = this.left.get(stack);
 		const funCallBack = this.right.get(stack, thisContext) as Function;
 		const parameters: any[] = [];
-		const parametersStack = stack.emptyStackProviderWith(parameters);
+		// const parametersStack = stack.emptyStackProviderWith(parameters);
 		let indexed = false;
 		for (const arg of this.params) {
 			if (arg === '?') {
@@ -54,7 +54,9 @@ export class PipelineNode extends AbstractExpressionNode {
 				indexed = true;
 			} else {
 				if (arg instanceof SpreadNode) {
-					arg.get(parametersStack);
+					stack.pushBlockScopeFor(parameters);
+					arg.get(stack);
+					stack.popScope();
 				} else {
 					parameters.push(arg.get(stack));
 				}

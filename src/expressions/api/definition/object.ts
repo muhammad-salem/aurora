@@ -2,7 +2,6 @@ import type { NodeDeserializer, ExpressionNode, CanDeclareVariable } from '../ex
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopeType, Stack } from '../scope.js';
-import { ScopeProvider } from '../context/provider.js';
 
 @Deserializer('Property')
 export class ObjectLiteralPropertyNode extends AbstractExpressionNode implements CanDeclareVariable {

@@ -95,7 +95,7 @@ export class SwitchNode extends AbstractExpressionNode {
 	}
 	get(stack: Stack) {
 		// need to fix statements execution and support default case
-		stack = stack.newStack();
+		// stack = stack.newStack();
 		const result = this.discriminant.get(stack);
 		const values = this.cases.map(item => item.getTest().get(stack));
 		let startIndex = values.findIndex(item => result === item);
@@ -106,12 +106,14 @@ export class SwitchNode extends AbstractExpressionNode {
 				return;
 			}
 		}
+		const caseBlock = stack.pushBlockScope();
 		for (let index = startIndex; index < this.cases.length; index++) {
 			const returnValue = this.cases[index].get(stack);
 			if (returnValue === TerminateNode.BreakSymbol) {
 				break;
 			}
 		}
+		stack.clearTo(caseBlock);
 		return void 0;
 	}
 	entry(): string[] {
