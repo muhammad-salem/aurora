@@ -42,6 +42,7 @@ export class ComponentRender<T> {
 		this.componentRef = this.view.getComponentRef();
 		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
 		this.contextStack = documentStack.copyStack();
+		this.contextStack.pushFunctionScope(); // for protection
 		this.contextStack.pushBlockScopeFor(this.view);
 		this.contextStack.pushBlockScopeFor(this.view._model);
 	}
