@@ -7,6 +7,12 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 
 @Deserializer('VariableDeclarator')
 export class VariableNode extends AbstractExpressionNode implements CanDeclareVariable {
+	static fromJSON(node: VariableNode, deserializer: NodeDeserializer): VariableNode {
+		return new VariableNode(
+			deserializer(node.id),
+			node.init ? deserializer(node.id) : void 0
+		);
+	}
 	constructor(public id: ExpressionNode, public init?: ExpressionNode) {
 		super();
 	}
