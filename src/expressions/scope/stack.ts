@@ -112,9 +112,15 @@ export interface Stack {
 
 export class Stack implements Stack {
 	static for(...contexts: Scope<any>[]): Stack {
+		if (contexts.length === 0) {
+			return new Stack();
+		}
 		return new Stack(contexts.map(context => new Scope(context, 'block')));
 	}
 	static forScopes(...scopes: Scope<any>[]): Stack {
+		if (scopes.length === 0) {
+			scopes.push(Scope.emptyFunctionScope());
+		}
 		return new Stack(scopes);
 	}
 	awaitPromise: AwaitPromiseInfo[];
@@ -123,7 +129,7 @@ export class Stack implements Stack {
 	protected readonly stack: Array<Scope<any>>;
 
 	constructor(stack?: Array<Scope<any>>) {
-		this.stack = stack ?? [];
+		this.stack = stack ?? [Scope.emptyFunctionScope()];
 	}
 
 	has(propertyKey: PropertyKey): boolean {
