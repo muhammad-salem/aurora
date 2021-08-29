@@ -8,6 +8,7 @@ import { AbstractStructuralDirective } from './structural.js';
 	selector: '*if',
 })
 export class IfDirective<T> extends AbstractStructuralDirective<T> /*implements OnInit */ {
+	lastTest: boolean;
 	elseTemplateNode: DOMElementNode<ExpressionNode> | undefined;
 	getStatement(): string {
 		const [test, alternate] = this.directive.directiveValue.toString().split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
@@ -23,11 +24,16 @@ export class IfDirective<T> extends AbstractStructuralDirective<T> /*implements 
 			this.elseTemplateNode = this.findTemplate(elseTemplateName, this.render.template);
 		}
 		return () => {
-			const test = <object>ifNode.getTest().get(this.directiveStack);
-			if (test) {
-				this.appendChildToParent(this.directive.children, this.directiveStack);
-			} else if (this.elseTemplateNode) {
-				this.appendChildToParent(this.elseTemplateNode.children, this.directiveStack);
+			const stack = this.directiveStack.copyStack();
+			stack.pushBlockScope();
+			const test = ifNode.getTest().get(stack);
+			if (test !== this.lastTest) {
+				this.lastTest = test;
+				if (test) {
+					this.appendChildToParent(this.directive.children, stack);
+				} else if (this.elseTemplateNode) {
+					this.appendChildToParent(this.elseTemplateNode.children, stack);
+				}
 			}
 		};
 	}

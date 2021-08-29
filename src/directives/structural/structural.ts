@@ -7,11 +7,10 @@ import {
 } from '@ibyar/elements';
 
 export abstract class AbstractStructuralDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
-	private elements: ChildNode[] = [];
-	private fragment: DocumentFragment;
-
-	abstract getCallback(node: ExpressionNode): () => void | Promise<void>;
+	protected elements: ChildNode[] = [];
+	protected fragment: DocumentFragment;
 	abstract getStatement(): string;
+	abstract getCallback(node: ExpressionNode): () => void | Promise<void>;
 
 	onInit() {
 		const statement = this.getStatement();
@@ -19,11 +18,9 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 		const callback = this.getCallback(node);
 		this.onRender(node, callback);
 	}
-
 	onRender(node: ExpressionNode, callback: () => void) {
 		this.renderDOMChild(node, callback);
 	}
-
 	protected renderDOMChild(node: ExpressionNode, callback: () => void): void {
 		const uiCallback: SourceFollowerCallback = (stack: any[]) => {
 			stack.push(this);
@@ -33,7 +30,7 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 			this.fragment.childNodes.forEach(child => this.elements.push(child));
 			this.comment.after(this.fragment);
 		};
-		this.render.subscribeExpressionNode(node, this.directiveStack, uiCallback);
+		this.render.subscribeExpressionNode(node, this.directiveStack, uiCallback, this);
 		uiCallback([]);
 	}
 
@@ -57,7 +54,7 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 				promise = undefined;
 			});
 		};
-		this.render.subscribeExpressionNode(node, this.directiveStack, uiCallback);
+		this.render.subscribeExpressionNode(node, this.directiveStack, uiCallback, this);
 		uiCallback([]);
 	}
 	protected updateView(stack: Stack) {
@@ -67,13 +64,11 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 		for (const child of children) {
 			this.render.appendChildToParent(this.fragment, child, stack);
 		}
-
 	}
 	private removeOldElements() {
 		if (this.elements.length > 0) {
-			const parent: Node = this.comment.parentNode!;
 			for (const elm of this.elements) {
-				parent.removeChild(elm);
+				elm.remove();
 			}
 			this.elements.splice(0);
 		}
