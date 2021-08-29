@@ -1,5 +1,10 @@
 import { OnDestroy, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
 import { ExpressionNode, JavaScriptParser, Stack } from '@ibyar/expressions';
+import {
+	DOMChild,
+	DOMDirectiveNode, DOMElementNode,
+	DOMFragmentNode, DOMNode,
+} from '@ibyar/elements';
 
 export abstract class AbstractStructuralDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
 	private elements: ChildNode[] = [];
@@ -56,9 +61,13 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 		uiCallback([]);
 	}
 	protected updateView(stack: Stack) {
-		for (const child of this.directive.children) {
+		this.appendChildToParent(this.directive.children, stack);
+	}
+	protected appendChildToParent(children: DOMChild<ExpressionNode>[], stack: Stack) {
+		for (const child of children) {
 			this.render.appendChildToParent(this.fragment, child, stack);
 		}
+
 	}
 	private removeOldElements() {
 		if (this.elements.length > 0) {
@@ -68,6 +77,31 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 			}
 			this.elements.splice(0);
 		}
+	}
+	protected findTemplate(templateRefName: string, template: DOMNode<ExpressionNode>): DOMElementNode<ExpressionNode> | undefined {
+		if (template instanceof DOMElementNode) {
+			if (template.templateRefName?.name === templateRefName) {
+				return template;
+			}
+			if (template.children) {
+				for (const child of template.children) {
+					const childTemplate = this.findTemplate(templateRefName, child);
+					if (childTemplate) {
+						return childTemplate;
+					}
+				}
+			}
+		} else if (template instanceof DOMDirectiveNode || template instanceof DOMFragmentNode) {
+			if (template.children) {
+				for (const child of template.children) {
+					const childTemplate = this.findTemplate(templateRefName, child);
+					if (childTemplate) {
+						return childTemplate;
+					}
+				}
+			}
+		}
+		return undefined;
 	}
 	onDestroy() {
 		this.removeOldElements();
