@@ -17,45 +17,45 @@ export class Subscription<T> {
 	}
 }
 
-interface Subscrip {
+interface Subscribe {
 	next?: any;
 	error?: any;
 	complete?: any;
 }
 
 export class EventEmitter<T> {
-	private subscripers: Map<Subscription<T>, Subscrip> = new Map();
+	private subscribers: Map<Subscription<T>, Subscribe> = new Map();
 	constructor() { }
 	emit(value?: T): void {
-		this.subscripers.forEach((subscrip) => {
+		this.subscribers.forEach((subscribe) => {
 			try {
-				subscrip.next(value);
+				subscribe.next(value);
 			} catch (error) {
 				try {
-					if (subscrip.error) {
-						subscrip.error(error);
+					if (subscribe.error) {
+						subscribe.error(error);
 					}
 				} catch (error) {
-					console.error('error: handeling event');
+					console.error('error: handling event', error);
 				}
 			} finally {
 				try {
-					if (subscrip.complete) {
-						subscrip.complete();
+					if (subscribe.complete) {
+						subscribe.complete();
 					}
 				} catch (error) {
-					console.error('error: handeling event');
+					console.error('error: handling event', error);
 				}
 			}
 		});
 	}
 	subscribe(next?: any, error?: any, complete?: any): Subscription<T> {
 		const subscription: Subscription<T> = new Subscription(this);
-		this.subscripers.set(subscription, { next, error, complete });
+		this.subscribers.set(subscription, { next, error, complete });
 		return subscription;
 	}
 
 	remove(subscription: Subscription<T>) {
-		this.subscripers.delete(subscription);
+		this.subscribers.delete(subscription);
 	}
 }
