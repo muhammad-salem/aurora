@@ -17,6 +17,8 @@ const source = `
 	console.log('younger', sara.age <? alex.age);
 	console.log('typeof', typeof alex);
 	console.log('typeof', typeof alex.age);
+	console.log('regex 1', /regex/g.test('reg'));
+	console.log('regex 2', /regex/g.test('regex'));
 	`
 	+
 	'let stringLiteralExample = `${alex.firstName} and ${sara.firstName} are friends`; console.log({stringLiteralExample})';
