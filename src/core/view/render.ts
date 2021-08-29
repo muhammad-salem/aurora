@@ -18,7 +18,7 @@ import {
 	SourceFollowerCallback, subscribe1way, subscribe2way
 } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
-import { ElementContextProvider } from '../directive/providers.js';
+import { ElementReactiveScope } from '../directive/providers.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -218,7 +218,7 @@ export class ComponentRender<T> {
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
 		const element = this.createElementByTagName(node, contextStack);
 
-		const elContext = new ElementContextProvider(element);
+		const elContext = new ElementReactiveScope(element);
 		contextStack = contextStack.copyStack();
 		contextStack.pushScope(elContext);
 		this.initAttribute(element, node, contextStack);

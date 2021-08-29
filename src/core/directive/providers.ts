@@ -4,7 +4,7 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective } from './directive.js';
 
 export type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
-export class ElementContextProvider extends Scope<ElementContext> {
+export class ElementReactiveScope extends Scope<ElementContext> {
 	private directiveMap: Map<string, AttributeDirective> = new Map();
 	constructor(private el: HTMLElement) {
 		super({} as ElementContext, 'block');
