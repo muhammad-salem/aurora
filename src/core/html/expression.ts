@@ -2,11 +2,11 @@ import {
 	BaseNode, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode,
 	DOMParentNode, ElementAttribute, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { AssignmentNode, ExpressionNode, JavaScriptParser, MemberExpression, ThisNode } from '@ibyar/expressions';
+import { AssignmentExpression, ExpressionNode, JavaScriptParser, MemberExpression, ThisNode } from '@ibyar/expressions';
 
 const ThisTextContent = JavaScriptParser.parse('this.textContent');
 function parseLiveText(text: LiveTextContent<ExpressionNode>) {
-	text.expression = new AssignmentNode('=', ThisTextContent, JavaScriptParser.parse(text.value));
+	text.expression = new AssignmentExpression('=', ThisTextContent, JavaScriptParser.parse(text.value));
 }
 
 function convertToTitleCase(string: string) {
@@ -17,14 +17,14 @@ function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
 	const elementExpression = new MemberExpression(ThisNode, JavaScriptParser.parse(convertToTitleCase(attr.name)), false);
 	const modelExpression = JavaScriptParser.parse(attr.value);
 
-	attr.expression = new AssignmentNode('=', elementExpression, modelExpression);
-	attr.callbackExpression = new AssignmentNode('=', modelExpression, elementExpression);
+	attr.expression = new AssignmentExpression('=', elementExpression, modelExpression);
+	attr.callbackExpression = new AssignmentExpression('=', modelExpression, elementExpression);
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
 	const elementExpression = new MemberExpression(ThisNode, JavaScriptParser.parse(convertToTitleCase(attr.name)), false);
 	const modelExpression = JavaScriptParser.parse(attr.value);
-	attr.expression = new AssignmentNode('=', elementExpression, modelExpression);
+	attr.expression = new AssignmentExpression('=', elementExpression, modelExpression);
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string, ExpressionNode>) {

@@ -1,5 +1,5 @@
 import { Directive } from '@ibyar/core';
-import { ExpressionNode, StatementNode, WhileNode } from '@ibyar/expressions';
+import { ExpressionNode, ExpressionStatement, WhileNode } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
 @Directive({
@@ -18,7 +18,7 @@ export class WhileDirective<T> extends AbstractStructuralDirective<T> {
 	getCallback(whileNode: ExpressionNode): () => void {
 		let initializer: ExpressionNode;
 		let condition: ExpressionNode;
-		if (whileNode instanceof StatementNode) {
+		if (whileNode instanceof ExpressionStatement) {
 			if (whileNode.getBody().length > 2) {
 				throw new Error(`syntax error: ${this.directive.directiveValue}`);
 			}

@@ -1,6 +1,6 @@
 import { Directive } from '@ibyar/core';
-import { DOMChild, DOMDirectiveNode } from '@ibyar/elements';
-import { ExpressionNode, JavaScriptParser, Stack, SwitchNode } from '@ibyar/expressions';
+import { DOMDirectiveNode } from '@ibyar/elements';
+import { ExpressionNode, JavaScriptParser, SwitchStatement } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
 
@@ -42,7 +42,7 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 		}
 		this.directiveStack.pushFunctionScope();
 		let callback: () => void;
-		if (switchNode instanceof SwitchNode) {
+		if (switchNode instanceof SwitchStatement) {
 			callback = () => {
 				const expressionValue = switchNode.getDiscriminant().get(this.directiveStack);
 				let child: DOMDirectiveNode<ExpressionNode> | undefined;

@@ -1,5 +1,5 @@
 import { Directive } from '@ibyar/core';
-import { ExpressionNode, IfElseNode } from '@ibyar/expressions';
+import { ExpressionNode, IfStatement } from '@ibyar/expressions';
 import { DOMElementNode } from '@ibyar/elements';
 import { AbstractStructuralDirective } from './structural.js';
 
@@ -17,7 +17,7 @@ export class IfDirective<T> extends AbstractStructuralDirective<T> /*implements 
 		}
 		return `if(${test}) { }`;
 	}
-	getCallback(ifNode: IfElseNode): () => void {
+	getCallback(ifNode: IfStatement): () => void {
 		const alternate = ifNode.getAlternate();
 		if (alternate) {
 			const elseTemplateName: string = alternate.get(this.directiveStack);
