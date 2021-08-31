@@ -58,7 +58,17 @@ const source = `
 	console.log('regex 2', /regex/g.test('regex'));
 	`
 	+
-	'let stringLiteralExample = `${alex.firstName} and ${sara.firstName} are friends`; console.log({stringLiteralExample})';
+	'let stringLiteralExample = `${alex.firstName} and ${sara.firstName} are friends`; console.log({stringLiteralExample});'
+	+
+	`
+	function latex(str) {
+		return { "cooked": str[0], "raw": str.raw[0] }
+	}
+	`
+	+
+	'let taggedStringLiteral = latex`Hi\n${2+3}!`; console.log({taggedStringLiteral});'
+	;
+
 const ast = JavaScriptParser.parse(source);
 const esTree = ast.toJSON();
 const esTreeString = JSON.stringify(ast, void 0, 2);
@@ -70,7 +80,7 @@ const context = {
 	Symbol
 };
 const stack = Stack.for(context);
-const globalScope = Scope.emptyFunctionScope();
+const globalScope = Scope.functionScope();
 stack.pushScope(globalScope);
 ast.get(stack);
 console.log(
