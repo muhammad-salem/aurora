@@ -1,4 +1,4 @@
-import { DOMDirectiveNode } from '@ibyar/elements';
+import { DOMDirectiveNode, DOMElementNode } from '@ibyar/elements';
 import { ComponentRender } from '../view/render.js';
 
 import type { ExpressionNode, Stack } from '@ibyar/expressions';
@@ -13,6 +13,9 @@ export class StructuralDirective<T> {
 		protected directive: DOMDirectiveNode<ExpressionNode>,
 		protected directiveStack: Stack
 	) { }
+	protected findTemplate(templateRefName: string): DOMElementNode<ExpressionNode> | undefined {
+		return this.render.templateRefMap.get(templateRefName);
+	}
 }
 
 /**

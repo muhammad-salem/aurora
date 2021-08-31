@@ -34,15 +34,13 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' 
 export class ComponentRender<T> {
 	componentRef: ComponentRef<T>;
 	template: DOMNode<ExpressionNode>;
-	templateRegExp: RegExp;
 	nativeElementMutation: ElementMutation;
-	// viewChildMap: { [name: string]: any };
 	contextStack: Stack;
+	templateRefMap = new Map<string, DOMElementNode<ExpressionNode>>();
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
-		this.templateRegExp = (/\{\{((\w| |\.|\+|-|\*|\\)*(\(\))?)\}\}/g);
 		this.contextStack = documentStack.copyStack();
-		this.contextStack.pushFunctionScope(); // for protection
+		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushBlockScopeFor(this.view);
 		this.contextStack.pushBlockScopeFor(this.view._model);
 	}
@@ -65,18 +63,37 @@ export class ComponentRender<T> {
 			} else {
 				rootRef = this.view;
 			}
+			this.initTemplateRefMap(this.template);
 			const rootFragment = document.createDocumentFragment();
 			this.appendChildToParent(rootFragment, this.template, this.contextStack);
 			rootRef.append(rootFragment);
-			// this.componentRef.viewChild
-			// 	.filter(child => child.selector instanceof HTMLElement)
-			// 	.forEach(child => {
-			// 		// view child support by child class reference, matching with the first 'HTMLElement' element
-			// 		// let selectorName: string = view.selector as string;
-			// 		// if (Reflect.has(this.viewChildMap, selectorName)) {
-			// 		// 	Reflect.set(this.view._model, view.modelName, this.viewChildMap[selectorName]);
-			// 		// }
-			// 	});
+		}
+	}
+	isTemplateRefName(template: DOMNode<ExpressionNode>): template is DOMElementNode<ExpressionNode> {
+		if (template instanceof DOMElementNode) {
+			if (template.tagName === 'template' && template.templateRefName) {
+				return true;
+			}
+		}
+		return false;
+	}
+	initTemplateRefMap(domNode: DOMNode<ExpressionNode>) {
+		if (domNode instanceof DOMElementNode || domNode instanceof DOMDirectiveNode || domNode instanceof DOMFragmentNode) {
+			if (domNode.children) {
+				const toRemove: { index: number, template: DOMElementNode<ExpressionNode> }[] = [];
+				for (let index = 0; index < domNode.children.length; index++) {
+					const child = domNode.children[index];
+					if (this.isTemplateRefName(child)) {
+						toRemove.unshift({ index, template: child });
+					} else {
+						this.initTemplateRefMap(child);
+					}
+				}
+				toRemove.forEach(info => {
+					this.templateRefMap.set(info.template.templateRefName.name, info.template);
+					domNode.children.splice(info.index, 1);
+				});
+			}
 		}
 	}
 	initHostListener(): void {
@@ -169,7 +186,7 @@ export class ComponentRender<T> {
 	}
 	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: Stack): DocumentFragment {
 		const fragment = document.createDocumentFragment();
-		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack), contextStack);
+		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack));
 		return fragment;
 	}
 	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: Stack) {
@@ -191,7 +208,7 @@ export class ComponentRender<T> {
 			parent.append(this.createDocumentFragment(child, contextStack));
 		}
 	}
-	createElementByTagName(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
+	createElementByTagName(node: DOMElementNode<ExpressionNode>): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			const ViewClass = customElements.get(node.tagName) as ((new () => HTMLElement) | undefined);
@@ -216,8 +233,7 @@ export class ComponentRender<T> {
 		return element;
 	}
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
-		const element = this.createElementByTagName(node, contextStack);
-
+		const element = this.createElementByTagName(node);
 		const elContext = new ElementReactiveScope(element);
 		contextStack = contextStack.copyStack();
 		contextStack.pushScope(elContext);
