@@ -5,17 +5,17 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export type LogicalOperator = '||' | '&&' | '??';
 
 @Deserializer('LogicalExpression')
-export class LogicalNode extends InfixExpressionNode<LogicalOperator> {
-	static fromJSON(node: LogicalNode, deserializer: NodeDeserializer): LogicalNode {
-		return new LogicalNode(
+export class LogicalExpression extends InfixExpressionNode<LogicalOperator> {
+	static fromJSON(node: LogicalExpression, deserializer: NodeDeserializer): LogicalExpression {
+		return new LogicalExpression(
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right)
 		);
 	}
-	static Evaluations: { [key: string]: (exp: LogicalNode, context: any) => any } = {
+	static Evaluations: { [key: string]: (exp: LogicalExpression, context: any) => any } = {
 
-		'&&': (exp: LogicalNode, context: any) => {
+		'&&': (exp: LogicalExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (value) {
 				value = exp.right.get(context);
@@ -23,7 +23,7 @@ export class LogicalNode extends InfixExpressionNode<LogicalOperator> {
 			return value;
 		},
 
-		'||': (exp: LogicalNode, context: any) => {
+		'||': (exp: LogicalExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (!value) {
 				value = exp.right.get(context);
@@ -31,7 +31,7 @@ export class LogicalNode extends InfixExpressionNode<LogicalOperator> {
 			return value;
 		},
 
-		'??': (exp: LogicalNode, context: any) => {
+		'??': (exp: LogicalExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (value === undefined || value === null) {
 				value = exp.right.get(context);
@@ -41,6 +41,6 @@ export class LogicalNode extends InfixExpressionNode<LogicalOperator> {
 
 	};
 	get(context: object) {
-		return LogicalNode.Evaluations[this.operator](this, context);
+		return LogicalExpression.Evaluations[this.operator](this, context);
 	}
 }

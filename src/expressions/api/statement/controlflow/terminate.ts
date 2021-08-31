@@ -1,7 +1,7 @@
 import type { Stack } from '../../../scope/stack.js';
+import type { ExpressionNode } from '../../expression.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { ExportNode } from '../../module/export.js';
 
 /**
  * The break statement terminates the current loop, switch, or label statement
@@ -11,16 +11,9 @@ import { ExportNode } from '../../module/export.js';
  * and continues execution of the loop with the next iteration.
  *
  */
-@Deserializer('TerminateStatement')
-export class TerminateNode extends AbstractExpressionNode {
-	static readonly BreakSymbol = Symbol.for('break');
-	static readonly ContinueSymbol = Symbol.for('continue');
-	static readonly BREAK_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.BreakSymbol)) as TerminateNode;
-	static readonly CONTINUE_INSTANCE = Object.freeze(new TerminateNode(TerminateNode.ContinueSymbol)) as TerminateNode;
-	static fromJSON(node: TerminateNode): TerminateNode {
-		return String(node.symbol) === 'break' ? TerminateNode.BREAK_INSTANCE : TerminateNode.CONTINUE_INSTANCE;
-	}
-	constructor(private symbol: Symbol, private label?: ExportNode) {
+class TerminateStatement extends AbstractExpressionNode {
+
+	constructor(private symbol: Symbol, private label?: ExpressionNode) {
 		super();
 	}
 	getSymbol() {
@@ -30,7 +23,7 @@ export class TerminateNode extends AbstractExpressionNode {
 		this.label;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`TerminateNode#set() has no implementation.`);
+		throw new Error(`TerminateStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return this.symbol;
@@ -50,11 +43,19 @@ export class TerminateNode extends AbstractExpressionNode {
 }
 
 @Deserializer('BreakStatement')
-export class BreakNode extends TerminateNode {
-
+export class BreakStatement extends TerminateStatement {
+	static readonly BreakSymbol = Symbol.for('break');
+	static readonly BREAK_INSTANCE = Object.freeze(new BreakStatement(BreakStatement.BreakSymbol)) as BreakStatement;
+	static fromJSON(node: BreakStatement): BreakStatement {
+		return BreakStatement.BREAK_INSTANCE;
+	}
 }
 
 @Deserializer('ContinueStatement')
-export class ContinueNode extends TerminateNode {
-
+export class ContinueStatement extends TerminateStatement {
+	static readonly ContinueSymbol = Symbol.for('continue');
+	static readonly CONTINUE_INSTANCE = Object.freeze(new ContinueStatement(ContinueStatement.ContinueSymbol)) as ContinueStatement;
+	static fromJSON(node: ContinueStatement): ContinueStatement {
+		return ContinueStatement.CONTINUE_INSTANCE;
+	}
 }

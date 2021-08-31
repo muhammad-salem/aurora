@@ -11,9 +11,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * As it sounds, it groups what's inside of the parentheses.
  */
 @Deserializer('GroupingExpression')
-export class GroupingNode extends AbstractExpressionNode {
-	static fromJSON(node: GroupingNode, deserializer: NodeDeserializer): GroupingNode {
-		return new GroupingNode(deserializer(node.node as any));
+export class GroupingExpression extends AbstractExpressionNode {
+	static fromJSON(node: GroupingExpression, deserializer: NodeDeserializer): GroupingExpression {
+		return new GroupingExpression(deserializer(node.node as any));
 	}
 	constructor(private node: ExpressionNode) {
 		super();

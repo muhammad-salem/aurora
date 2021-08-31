@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { SpreadNode } from '../computing/spread.js';
+import { SpreadElement } from '../computing/spread.js';
 
 /**
  * pipeline ('|>') operator support syntax:
@@ -16,9 +16,9 @@ import { SpreadNode } from '../computing/spread.js';
  *  param |> func(arg1, ?, arg3, arg4, ?, arg6)
  */
 @Deserializer('PipelineExpression')
-export class PipelineNode extends AbstractExpressionNode {
-	static fromJSON(node: PipelineNode, deserializer: NodeDeserializer): PipelineNode {
-		return new PipelineNode(
+export class PipelineExpression extends AbstractExpressionNode {
+	static fromJSON(node: PipelineExpression, deserializer: NodeDeserializer): PipelineExpression {
+		return new PipelineExpression(
 			deserializer(node.left),
 			deserializer(node.right),
 			node.params.map(param => typeof param === 'string' ? param : deserializer(param))
@@ -53,7 +53,7 @@ export class PipelineNode extends AbstractExpressionNode {
 				parameters.push(...paramValue);
 				indexed = true;
 			} else {
-				if (arg instanceof SpreadNode) {
+				if (arg instanceof SpreadElement) {
 					stack.pushBlockScopeFor(parameters);
 					arg.get(stack);
 					stack.popScope();

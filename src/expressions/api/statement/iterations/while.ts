@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { TerminateNode } from '../controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../controlflow/terminate.js';
 
 /**
  * The while statement creates a loop that executes a specified
@@ -37,10 +37,10 @@ export class WhileNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (TerminateNode.ContinueSymbol === result) {
+			if (ContinueStatement.ContinueSymbol === result) {
 				continue;
 			}
-			if (TerminateNode.BreakSymbol === result) {
+			if (BreakStatement.BreakSymbol === result) {
 				break;
 			}
 			if (result instanceof ReturnValue) {
@@ -94,10 +94,10 @@ export class DoWhileNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (TerminateNode.ContinueSymbol === result) {
+			if (ContinueStatement.ContinueSymbol === result) {
 				continue;
 			}
-			if (TerminateNode.BreakSymbol === result) {
+			if (BreakStatement.BreakSymbol === result) {
 				break;
 			}
 			if (result instanceof ReturnValue) {

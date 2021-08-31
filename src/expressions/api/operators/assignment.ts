@@ -12,9 +12,9 @@ export type AssignmentOperator =
 	| '%%=' | '>?=' | '<?=';
 
 @Deserializer('AssignmentExpression')
-export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
-	static fromJSON(node: AssignmentNode, deserializer: NodeDeserializer): AssignmentNode {
-		return new AssignmentNode(
+export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator>  {
+	static fromJSON(node: AssignmentExpression, deserializer: NodeDeserializer): AssignmentExpression {
+		return new AssignmentExpression(
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right)
@@ -46,9 +46,9 @@ export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
 
 	};
 
-	static LogicalEvaluations: { [key: string]: (exp: AssignmentNode, context: any) => any } = {
+	static LogicalEvaluations: { [key: string]: (exp: AssignmentExpression, context: any) => any } = {
 
-		'&&=': (exp: AssignmentNode, context: any) => {
+		'&&=': (exp: AssignmentExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (value) {
 				value = exp.right.get(context);
@@ -57,7 +57,7 @@ export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
 			return value;
 		},
 
-		'||=': (exp: AssignmentNode, context: any) => {
+		'||=': (exp: AssignmentExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (!value) {
 				value = exp.right.get(context);
@@ -66,7 +66,7 @@ export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
 			return value;
 		},
 
-		'??=': (exp: AssignmentNode, context: any) => {
+		'??=': (exp: AssignmentExpression, context: any) => {
 			let value = exp.left.get(context);
 			if (value === undefined || value === null) {
 				value = exp.right.get(context);
@@ -88,13 +88,13 @@ export class AssignmentNode extends InfixExpressionNode<AssignmentOperator>  {
 			case '&&=':
 			case '||=':
 			case '??=':
-				return AssignmentNode.LogicalEvaluations[this.operator](this, stack);
+				return AssignmentExpression.LogicalEvaluations[this.operator](this, stack);
 		}
 		const evalNode: EvaluateNode = {
 			left: this.left.get(stack),
 			right: this.right.get(stack)
 		};
-		const value = AssignmentNode.Evaluations[this.operator](evalNode);
+		const value = AssignmentExpression.Evaluations[this.operator](evalNode);
 		this.set(stack, value);
 		return value;
 	}

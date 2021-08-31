@@ -5,9 +5,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 
 export type ChainingType = 'property' | 'expression' | 'function';
 @Deserializer('ChainExpression')
-export class OptionalChainingNode extends AbstractExpressionNode {
-	static fromJSON(node: OptionalChainingNode, deserializer: NodeDeserializer): OptionalChainingNode {
-		return new OptionalChainingNode(
+export class ChainExpression extends AbstractExpressionNode {
+	static fromJSON(node: ChainExpression, deserializer: NodeDeserializer): ChainExpression {
+		return new ChainExpression(
 			deserializer(node.optional),
 			deserializer(node.property),
 			node.type

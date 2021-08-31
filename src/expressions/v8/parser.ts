@@ -2,45 +2,45 @@ import type { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
-	OfNode, IdentifierNode, ThisNode,
+	OfNode, Identifier, ThisNode,
 	GetIdentifier, SetIdentifier, AsyncIdentifier,
-	NullNode, StringNode, AwaitIdentifier,
+	NullNode, StringLiteral, AwaitIdentifier,
 	ConstructorIdentifier, NameIdentifier,
-	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpressionNode, TemplateLiteralNode
+	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpression, TemplateLiteral
 } from '../api/definition/values.js';
-import { EmptyNode } from '../api/statement/controlflow/empty.js';
-import { BlockNode } from '../api/statement/controlflow/block.js';
+import { EmptyStatement } from '../api/statement/controlflow/empty.js';
+import { BlockStatement } from '../api/statement/controlflow/block.js';
 import {
-	ArrowFunctionNode, ArrowFunctionType, FunctionDeclarationNode,
-	FunctionKind, FormalParamterNode, FunctionExpressionNode
+	ArrowFunctionExpression, ArrowFunctionType, FunctionDeclaration,
+	FunctionKind, Paramter, FunctionExpression
 } from '../api/definition/function.js';
-import { IfElseNode } from '../api/statement/controlflow/if.js';
-import { NewNode } from '../api/computing/new.js';
-import { SpreadNode } from '../api/computing/spread.js';
-import { AssignmentNode, AssignmentOperator } from '../api/operators/assignment.js';
-import { GroupingNode } from '../api/operators/grouping.js';
+import { IfStatement } from '../api/statement/controlflow/if.js';
+import { NewExpression } from '../api/computing/new.js';
+import { SpreadElement } from '../api/computing/spread.js';
+import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
+import { GroupingExpression } from '../api/operators/grouping.js';
 import { MemberExpression } from '../api/definition/member.js';
-import { ObjectLiteralNode, ObjectLiteralPropertyNode, ObjectPatternNode } from '../api/definition/object.js';
-import { ArrayLiteralNode, ArrayPatternNode } from '../api/definition/array.js';
-import { CallExpressionNode } from '../api/computing/call.js';
+import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
+import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
+import { CallExpression } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { CatchClauseNode, ThrowNode, TryCatchNode } from '../api/computing/throw.js';
-import { CaseExpression, DefaultExpression, SwitchNode } from '../api/statement/controlflow/switch.js';
-import { TerminateNode } from '../api/statement/controlflow/terminate.js';
-import { ReturnNode } from '../api/computing/return.js';
+import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
+import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/controlflow/switch.js';
+import { BreakStatement, ContinueStatement } from '../api/statement/controlflow/terminate.js';
+import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for.js';
-import { ConditionalExpressionNode } from '../api/operators/ternary.js';
-import { PipelineNode } from '../api/operators/pipeline.js';
-import { LogicalNode, LogicalOperator } from '../api/operators/logical.js';
-import { CommaNode } from '../api/operators/comma.js';
-import { OptionalChainingNode } from '../api/operators/chaining.js';
-import { StatementNode } from '../api/definition/statement.js';
+import { ConditionalExpression } from '../api/operators/ternary.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
+import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
+import { SequenceExpression } from '../api/operators/comma.js';
+import { ChainExpression } from '../api/operators/chaining.js';
+import { ExpressionStatement } from '../api/definition/statement.js';
 import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
-import { BinaryExpressionNode } from '../api/index.js';
+import { BinaryExpression } from '../api/index.js';
 
 export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
 export enum PropertyKind {
@@ -190,15 +190,15 @@ export abstract class AbstractParser {
 				return false;
 		}
 	}
-	protected isIdentifier(expression: ExpressionNode): expression is IdentifierNode {
-		return expression instanceof IdentifierNode;
+	protected isIdentifier(expression: ExpressionNode): expression is Identifier {
+		return expression instanceof Identifier;
 	}
-	protected isParenthesized(expression: ExpressionNode): expression is (GroupingNode | CommaNode) {
-		return expression instanceof GroupingNode || expression instanceof CommaNode;
+	protected isParenthesized(expression: ExpressionNode): expression is (GroupingExpression | SequenceExpression) {
+		return expression instanceof GroupingExpression || expression instanceof SequenceExpression;
 	}
 	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
 		// return expression instanceof AssignmentNode;
-		if (!(expression instanceof IdentifierNode)) {
+		if (!(expression instanceof Identifier)) {
 			return false;
 		}
 		if (this.isEvalOrArguments(expression)) {
@@ -206,20 +206,20 @@ export abstract class AbstractParser {
 		}
 		return true;
 	}
-	protected isPattern(expression: ExpressionNode): expression is (ObjectPatternNode | ArrayPatternNode) {
-		return expression instanceof ObjectPatternNode || expression instanceof ArrayPatternNode;
+	protected isPattern(expression: ExpressionNode): expression is (ObjectPattern | ArrayPattern) {
+		return expression instanceof ObjectPattern || expression instanceof ArrayPattern;
 	}
 	protected isProperty(expression: ExpressionNode): expression is MemberExpression {
 		return expression instanceof MemberExpression;
 	}
-	protected isCallNew(expression: ExpressionNode): expression is NewNode {
-		return expression instanceof NewNode;
+	protected isCallNew(expression: ExpressionNode): expression is NewExpression {
+		return expression instanceof NewExpression;
 	}
-	protected isCall(expression: ExpressionNode): expression is CallExpressionNode {
-		return expression instanceof CallExpressionNode;
+	protected isCall(expression: ExpressionNode): expression is CallExpression {
+		return expression instanceof CallExpression;
 	}
-	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyNode {
-		return expression instanceof EmptyNode;
+	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyStatement {
+		return expression instanceof EmptyStatement;
 	}
 	protected isThisProperty(expression: ExpressionNode): boolean {
 		if (this.isProperty(expression)) {
@@ -264,7 +264,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (list.length === 1) {
 			return list[0];
 		}
-		return new StatementNode(list);
+		return new ExpressionStatement(list);
 	}
 
 	/**
@@ -291,7 +291,7 @@ export class JavaScriptParser extends AbstractParser {
 				return this.parseBlock();
 			case Token.SEMICOLON:
 				this.consume(Token.SEMICOLON);
-				return EmptyNode.INSTANCE;
+				return EmptyStatement.INSTANCE;
 			case Token.IF:
 				return this.parseIfStatement();
 			case Token.DO:
@@ -357,7 +357,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
-		if (tryBlock instanceof BlockNode) {
+		if (tryBlock instanceof BlockStatement) {
 			tryBlock.isStatement = true;
 		}
 		let peek = this.peek();
@@ -374,7 +374,7 @@ export class JavaScriptParser extends AbstractParser {
 				this.expect(Token.R_PARENTHESES);
 			}
 			const block = this.parseBlock();
-			if (block instanceof BlockNode) {
+			if (block instanceof BlockStatement) {
 				block.isStatement = true;
 			}
 			catchBlock = new CatchClauseNode(block, catchVar);
@@ -382,7 +382,7 @@ export class JavaScriptParser extends AbstractParser {
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
-			if (finallyBlock instanceof BlockNode) {
+			if (finallyBlock instanceof BlockStatement) {
 				finallyBlock.isStatement = true;
 			}
 		}
@@ -391,12 +391,12 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseBlock(): ExpressionNode {
 		this.expect(Token.L_CURLY);
 		const statements: ExpressionNode[] = [];
-		const block = new BlockNode(statements, false);
+		const block = new BlockStatement(statements, false);
 		while (this.peek().isNotType(Token.R_CURLY)) {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
 				return block;
-			} else if (stat instanceof EmptyNode) {
+			} else if (stat instanceof EmptyStatement) {
 				continue;
 			}
 			statements.push(stat);
@@ -475,7 +475,7 @@ export class JavaScriptParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.consume(Token.R_PARENTHESES);
 		const thenStatement = this.parseStatement();
-		if (thenStatement instanceof BlockNode) {
+		if (thenStatement instanceof BlockStatement) {
 			thenStatement.isStatement = true;
 		}
 		let elseStatement;
@@ -483,14 +483,14 @@ export class JavaScriptParser extends AbstractParser {
 			this.consume(Token.ELSE);
 			elseStatement = this.parseStatement();
 		}
-		return new IfElseNode(condition, thenStatement, elseStatement);
+		return new IfStatement(condition, thenStatement, elseStatement);
 	}
 	protected parseDoWhileStatement(): ExpressionNode {
 		// DoStatement ::
 		//   'do' Statement 'while' '(' Expression ')' ';'
 		this.consume(Token.DO);
 		const body = this.parseStatement();
-		if (body instanceof BlockNode) {
+		if (body instanceof BlockStatement) {
 			body.isStatement = true;
 		}
 		this.expect(Token.WHILE);
@@ -508,7 +508,7 @@ export class JavaScriptParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseStatement();
-		if (body instanceof BlockNode) {
+		if (body instanceof BlockStatement) {
 			body.isStatement = true;
 		}
 		return new WhileNode(condition, body);
@@ -522,7 +522,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		const exception = this.parseExpression();
 		this.expectSemicolon();
-		return new ThrowNode(exception);
+		return new ThrowStatement(exception);
 	}
 	protected parseSwitchStatement(): ExpressionNode {
 		// SwitchStatement ::
@@ -536,8 +536,8 @@ export class JavaScriptParser extends AbstractParser {
 		const tag = this.parseExpression();
 		this.expect(Token.R_PARENTHESES);
 
-		const cases: CaseExpression[] = [];
-		const switchStatement = new SwitchNode(tag, cases);
+		const cases: SwitchCase[] = [];
+		const switchStatement = new SwitchStatement(tag, cases);
 
 		let defaultSeen = false;
 		this.expect(Token.L_CURLY);
@@ -563,8 +563,8 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				statements.push(statement);
 			}
-			const block = new BlockNode(statements, true);
-			const clause = defaultSeen ? new DefaultExpression(block) : new CaseExpression(label!, block);
+			const block = new BlockStatement(statements, true);
+			const clause = defaultSeen ? new DefaultExpression(block) : new SwitchCase(label!, block);
 			cases.push(clause);
 		}
 		this.expect(Token.R_CURLY);
@@ -586,11 +586,11 @@ export class JavaScriptParser extends AbstractParser {
 		if (peek.isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
 			initializer = this.parseVariableDeclarations();
 		} else if (peek.isType(Token.SEMICOLON)) {
-			initializer = EmptyNode.INSTANCE;
+			initializer = EmptyStatement.INSTANCE;
 		} else {
 			initializer = this.parseExpressionCoverGrammar();
 		}
-		if (initializer instanceof BinaryExpressionNode) {
+		if (initializer instanceof BinaryExpression) {
 			// x in y 
 			const objectNode = initializer.getRight();
 			initializer = initializer.getLeft();
@@ -603,7 +603,7 @@ export class JavaScriptParser extends AbstractParser {
 			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
 			this.expect(Token.R_PARENTHESES)
 			const statement = this.parseStatement();
-			if (statement instanceof BlockNode) {
+			if (statement instanceof BlockStatement) {
 				statement.isStatement = true;
 			}
 			if (isAwait && forMode === 'OF') {
@@ -628,7 +628,7 @@ export class JavaScriptParser extends AbstractParser {
 			this.expect(Token.R_PARENTHESES);
 		}
 		const body = this.parseStatement();
-		if (body instanceof BlockNode) {
+		if (body instanceof BlockStatement) {
 			body.isStatement = true;
 		}
 		return new ForNode(body, initializer, condition, finalExpression);
@@ -715,11 +715,11 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		else if (next.isType(Token.SET)) {
 			const value = this.parseFunctionDeclaration();
-			return new ObjectLiteralPropertyNode(next.getValue(), value, 'set');
+			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
 			const value = this.parseFunctionDeclaration();
-			return new ObjectLiteralPropertyNode(next.getValue(), value, 'get');
+			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
@@ -734,7 +734,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.CONTINUE);
 		this.expectSemicolon();
-		return TerminateNode.CONTINUE_INSTANCE;
+		return ContinueStatement.CONTINUE_INSTANCE;
 	}
 	protected parseBreakStatement(): ExpressionNode {
 		// BreakStatement ::
@@ -743,7 +743,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.BREAK);
 		this.expectSemicolon();
-		return TerminateNode.BREAK_INSTANCE;
+		return BreakStatement.BREAK_INSTANCE;
 	}
 	protected parseReturnStatement(): ExpressionNode {
 		// ReturnStatement ::
@@ -765,7 +765,7 @@ export class JavaScriptParser extends AbstractParser {
 			returnValue = this.parseExpression();
 		}
 		this.expectSemicolon()
-		return new ReturnNode(returnValue);
+		return new ReturnStatement(returnValue);
 	}
 	protected parseExpressionOrLabelledStatement(): ExpressionNode {
 		// ExpressionStatement | LabelledStatement ::
@@ -876,7 +876,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.ASYNC:
 				return AsyncIdentifier;
 			case Token.PRIVATE_NAME:
-				return new IdentifierNode(`#${string}`);
+				return new Identifier(`#${string}`);
 			default:
 				break;
 		}
@@ -903,7 +903,7 @@ export class JavaScriptParser extends AbstractParser {
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseFunctionBody();
-		return new FunctionExpressionNode(formals, body, flag, name, functionInfo.rest);
+		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseFunctionBody(): ExpressionNode[] {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
@@ -970,15 +970,15 @@ export class JavaScriptParser extends AbstractParser {
 		//   BindingElement[?Yield, ?GeneratorParameter]
 		functionInfo.rest = this.check(Token.ELLIPSIS);
 		let pattern = this.parseBindingPattern(true);
-		let initializer: FormalParamterNode;
+		let initializer: Paramter;
 		if (this.check(Token.ASSIGN)) {
 			if (functionInfo.rest) {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			const value = this.parseAssignmentExpression();
-			initializer = new FormalParamterNode(pattern, value);
+			initializer = new Paramter(pattern, value);
 		} else {
-			initializer = new FormalParamterNode(pattern);
+			initializer = new Paramter(pattern);
 		}
 		return initializer;
 	}
@@ -1033,7 +1033,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
 		if (list.length === 1) { return list[0]; }
-		return new CommaNode(list);
+		return new SequenceExpression(list);
 	}
 	protected parseMemberExpression(): ExpressionNode {
 		// MemberExpression ::
@@ -1052,14 +1052,14 @@ export class JavaScriptParser extends AbstractParser {
 		const result = this.parsePrimaryExpression();
 		return this.parseMemberExpressionContinuation(result);
 	}
-	protected toParamterNode(expression: ExpressionNode): FormalParamterNode {
-		if (expression instanceof AssignmentNode) {
-			return new FormalParamterNode(expression.getLeft(), expression.getRight());
+	protected toParamterNode(expression: ExpressionNode): Paramter {
+		if (expression instanceof AssignmentExpression) {
+			return new Paramter(expression.getLeft(), expression.getRight());
 		}
-		if (expression instanceof GroupingNode) {
-			return new FormalParamterNode(expression.getNode());
+		if (expression instanceof GroupingExpression) {
+			return new Paramter(expression.getNode());
 		}
-		return new FormalParamterNode(expression);
+		return new Paramter(expression);
 	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
@@ -1094,8 +1094,8 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			if (this.peek().isType(Token.ARROW)) {
 				const name = this.parseAndClassifyIdentifier(token);
-				const params: FormalParamterNode[] = [];
-				if (name instanceof CommaNode) {
+				const params: Paramter[] = [];
+				if (name instanceof SequenceExpression) {
 					params.push(...name.getExpressions().map(this.toParamterNode));
 				} else {
 					params.push(this.toParamterNode(name));
@@ -1195,9 +1195,9 @@ export class JavaScriptParser extends AbstractParser {
 		const exprs = template.expressions.map(expr => JavaScriptParser.parse(expr));
 
 		if (tag) {
-			return new TaggedTemplateExpressionNode(tag, template.strings, exprs);
+			return new TaggedTemplateExpression(tag, template.strings, exprs);
 		} else {
-			return new TemplateLiteralNode(template.strings, exprs);
+			return new TemplateLiteral(template.strings, exprs);
 		}
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
@@ -1216,14 +1216,14 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.peek().isType(Token.L_PARENTHESES)) {
 			// NewExpression with arguments.
 			const args: ExpressionNode[] = this.parseArguments();
-			classRef = new NewNode(classRef, args);
+			classRef = new NewExpression(classRef, args);
 			// The expression can still continue with . or [ after the arguments.
 			return this.parseMemberExpressionContinuation(classRef);
 		}
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
 			throw new Error(this.errorMessage(`parsing new xxx?.yyy at position`));
 		}
-		return new NewNode(classRef);
+		return new NewExpression(classRef);
 	}
 	protected parseArguments(maybeArrow?: ParsingArrowHeadFlag): ExpressionNode[] {
 		// Arguments ::
@@ -1236,7 +1236,7 @@ export class JavaScriptParser extends AbstractParser {
 			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
 			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
 				if (isSpread) {
-					if (argument instanceof AssignmentNode) {
+					if (argument instanceof AssignmentExpression) {
 						throw new Error(this.errorMessage(` Rest parameter may not have a default initializer'`));
 					}
 					if (this.peek().isType(Token.COMMA)) {
@@ -1245,7 +1245,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 			}
 			if (isSpread) {
-				argument = new SpreadNode(argument);
+				argument = new SpreadElement(argument);
 			}
 			args.push(argument);
 			if (!this.check(Token.COMMA)) break;
@@ -1273,14 +1273,14 @@ export class JavaScriptParser extends AbstractParser {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
-			if (expression instanceof CommaNode) {
-				const params = expression.getExpressions().map(expr => new FormalParamterNode(expr));
+			if (expression instanceof SequenceExpression) {
+				const params = expression.getExpressions().map(expr => new Paramter(expr));
 				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
 			}
-			if (expression instanceof GroupingNode) {
-				return this.parseArrowFunctionLiteral([new FormalParamterNode(expression.getNode())], ArrowFunctionType.NORMAL);
+			if (expression instanceof GroupingExpression) {
+				return this.parseArrowFunctionLiteral([new Paramter(expression.getNode())], ArrowFunctionType.NORMAL);
 			}
-			return this.parseArrowFunctionLiteral([new FormalParamterNode(expression)], ArrowFunctionType.NORMAL);
+			return this.parseArrowFunctionLiteral([new Paramter(expression)], ArrowFunctionType.NORMAL);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {
@@ -1321,7 +1321,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (!Token.isAssignment(op)) {
 			throw new Error(this.errorMessage(`Invalid Destructuring Target`));
 		}
-		return new AssignmentNode(op.getName() as AssignmentOperator, expression, right);
+		return new AssignmentExpression(op.getName() as AssignmentOperator, expression, right);
 	}
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
@@ -1329,7 +1329,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
 		this.consume(Token.ARROW);
 		const body = this.parseFunctionBody();
-		return new ArrowFunctionNode(parameters, body, flag, rest);
+		return new ArrowFunctionExpression(parameters, body, flag, rest);
 	}
 	protected parseRegExpLiteral(): ExpressionNode {
 		if (!this.scanner.scanRegExpPattern()) {
@@ -1352,7 +1352,7 @@ export class JavaScriptParser extends AbstractParser {
 				continue;
 			} else if (this.check(Token.ELLIPSIS)) {
 				const argument: ExpressionNode = this.parsePossibleDestructuringSubPattern();
-				elem = new SpreadNode(argument);
+				elem = new SpreadElement(argument);
 
 				if (firstSpreadIndex < 0) {
 					firstSpreadIndex = values.length;
@@ -1366,9 +1366,9 @@ export class JavaScriptParser extends AbstractParser {
 			values.push(elem);
 		}
 		if (isPattern) {
-			return new ArrayPatternNode(values);
+			return new ArrayPattern(values);
 		}
-		return new ArrayLiteralNode(values);
+		return new ArrayExpression(values);
 	}
 	protected parsePossibleDestructuringSubPattern(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
@@ -1387,9 +1387,9 @@ export class JavaScriptParser extends AbstractParser {
 			}
 		}
 		if (isPattern) {
-			return new ObjectPatternNode(properties);
+			return new ObjectPattern(properties);
 		}
-		return new ObjectLiteralNode(properties);
+		return new ObjectExpression(properties);
 	}
 	protected parseObjectPropertyDefinition(): ExpressionNode {
 		const propInfo = { kind: PropertyKind.NotSet } as Required<PropertyKindInfo>;
@@ -1397,13 +1397,13 @@ export class JavaScriptParser extends AbstractParser {
 
 		switch (propInfo.kind) {
 			case PropertyKind.Spread:
-				const spared: SpreadNode = nameExpression as SpreadNode;
-				return new ObjectLiteralPropertyNode(spared.getArgument(), spared, 'init');
+				const spared: SpreadElement = nameExpression as SpreadElement;
+				return new Property(spared.getArgument(), spared, 'init');
 
 			case PropertyKind.Value: {
 				this.consume(Token.COLON);
 				const value = this.parsePossibleDestructuringSubPattern();
-				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
+				return new Property(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.Assign:
@@ -1416,7 +1416,7 @@ export class JavaScriptParser extends AbstractParser {
 				// CoverInitializedName
 				//    IdentifierReference Initializer?
 
-				const lhs = new IdentifierNode(propInfo.name);
+				const lhs = new Identifier(propInfo.name);
 				if (!this.isAssignableIdentifier(lhs)) {
 					throw new Error(this.errorMessage('Strict Eval Arguments'));
 				}
@@ -1424,11 +1424,11 @@ export class JavaScriptParser extends AbstractParser {
 				if (this.peek().isType(Token.ASSIGN)) {
 					this.consume(Token.ASSIGN);
 					const rhs = this.parseAssignmentExpression();
-					value = new AssignmentNode(Token.ASSIGN.getName() as AssignmentOperator, lhs, rhs);
+					value = new AssignmentExpression(Token.ASSIGN.getName() as AssignmentOperator, lhs, rhs);
 				} else {
 					value = lhs;
 				}
-				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
+				return new Property(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.Method: {
@@ -1437,14 +1437,14 @@ export class JavaScriptParser extends AbstractParser {
 				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 
 				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new ObjectLiteralPropertyNode(nameExpression, value, 'init');
+				return new Property(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
 				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new ObjectLiteralPropertyNode(nameExpression, value, isGet ? 'get' : 'set');
+				return new Property(nameExpression, value, isGet ? 'get' : 'set');
 			}
 
 			case PropertyKind.ClassField:
@@ -1501,7 +1501,7 @@ export class JavaScriptParser extends AbstractParser {
 				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
 				propInfo.name = nextToken.getValue().toString();
-				propertyName = new StringNode(propInfo.name);
+				propertyName = new StringLiteral(propInfo.name);
 				break;
 			case Token.L_BRACKETS:
 				// [Symbol.iterator]
@@ -1529,7 +1529,7 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				propertyName = new StringNode(this.parsePropertyName().toString());
+				propertyName = new StringLiteral(this.parsePropertyName().toString());
 				// propertyName = this.parsePropertyName();
 				propInfo.name = propertyName.toString();
 				break;
@@ -1576,12 +1576,12 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parsePropertyName(): ExpressionNode {
 		const next = this.next();
-		if (next.getValue() instanceof IdentifierNode) {
+		if (next.getValue() instanceof Identifier) {
 			return next.getValue();
 		}
 		// check keyword as identifier
 		if (Token.isPropertyName(next.token)) {
-			return new IdentifierNode(next.token.getName());
+			return new Identifier(next.token.getName());
 		}
 		throw new Error(this.errorMessage(`Parsing property expression: Unexpected Token`));
 	}
@@ -1618,7 +1618,7 @@ export class JavaScriptParser extends AbstractParser {
 						} else {
 							const arg = this.parseLogicalExpression();
 							if (isSpread) {
-								args.push(new SpreadNode(arg));
+								args.push(new SpreadElement(arg));
 							} else {
 								args.push(arg);
 							}
@@ -1641,7 +1641,7 @@ export class JavaScriptParser extends AbstractParser {
 				default:
 					break;
 			}
-			expression = new PipelineNode(expression, func, args);
+			expression = new PipelineExpression(expression, func, args);
 		}
 		return expression;
 	}
@@ -1800,11 +1800,11 @@ export class JavaScriptParser extends AbstractParser {
 			const args = this.parseArguments(ParsingArrowHeadFlag.AsyncArrowFunction);
 			if (this.peek().isType(Token.ARROW)) {
 				// async () => ...
-				if (!args.length) return new EmptyNode;
+				if (!args.length) return new EmptyStatement;
 				// async ( Arguments ) => ...
 				return this.expressionListToExpression(args);
 			}
-			result = new CallExpressionNode(result, args);
+			result = new CallExpression(result, args);
 			if (!Token.isPropertyOrCall(this.peek().token)) return result;
 		}
 
@@ -1821,7 +1821,7 @@ export class JavaScriptParser extends AbstractParser {
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
 					const key = this.parsePropertyName();
-					result = new OptionalChainingNode(result, key, 'property');
+					result = new ChainExpression(result, key, 'property');
 					break;
 				}
 
@@ -1851,7 +1851,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (result.toString() === 'eval') {
 						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
 					}
-					result = new CallExpressionNode(result, args);
+					result = new CallExpression(result, args);
 					break;
 				}
 
@@ -1899,7 +1899,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		expression = list.pop()!;
 		expression = list.reverse()
-			.reduce((previous, current) => new LogicalNode(Token.NULLISH.getName() as LogicalOperator, current, previous), expression);
+			.reduce((previous, current) => new LogicalExpression(Token.NULLISH.getName() as LogicalOperator, current, previous), expression);
 		return expression;
 	}
 	protected parseConditionalContinuation(expression: ExpressionNode): ExpressionNode {
@@ -1907,7 +1907,7 @@ export class JavaScriptParser extends AbstractParser {
 		const left: ExpressionNode = this.parseAssignmentExpression();
 		this.expect(Token.COLON);
 		const right = this.parseAssignmentExpression();
-		return new ConditionalExpressionNode(expression, left, right);
+		return new ConditionalExpression(expression, left, right);
 	}
 	protected parseYieldExpression(): ExpressionNode {
 		// YieldExpression ::

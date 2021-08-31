@@ -4,9 +4,9 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ConditionalExpression')
-export class ConditionalExpressionNode extends AbstractExpressionNode {
-	static fromJSON(node: ConditionalExpressionNode, deserializer: NodeDeserializer): ConditionalExpressionNode {
-		return new ConditionalExpressionNode(
+export class ConditionalExpression extends AbstractExpressionNode {
+	static fromJSON(node: ConditionalExpression, deserializer: NodeDeserializer): ConditionalExpression {
+		return new ConditionalExpression(
 			deserializer(node.test),
 			deserializer(node.alternate),
 			deserializer(node.consequent)
@@ -25,7 +25,7 @@ export class ConditionalExpressionNode extends AbstractExpressionNode {
 		return this.consequent;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`TernaryNode#set() has no implementation.`);
+		throw new Error(`ConditionalExpression#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);

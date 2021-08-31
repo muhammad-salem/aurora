@@ -4,9 +4,9 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('SequenceExpression')
-export class CommaNode extends AbstractExpressionNode {
-	static fromJSON(node: CommaNode, deserializer: NodeDeserializer): CommaNode {
-		return new CommaNode(node.expressions.map(expression => deserializer(expression as any)));
+export class SequenceExpression extends AbstractExpressionNode {
+	static fromJSON(node: SequenceExpression, deserializer: NodeDeserializer): SequenceExpression {
+		return new SequenceExpression(node.expressions.map(expression => deserializer(expression as any)));
 	}
 	constructor(private expressions: ExpressionNode[]) {
 		super();
@@ -15,7 +15,7 @@ export class CommaNode extends AbstractExpressionNode {
 		return this.expressions;
 	}
 	set(stack: Stack) {
-		throw new Error(`CommaNode.#set() has no implementation.`);
+		throw new Error(`SequenceExpression.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return this.expressions.map(expr => expr.get(stack)).pop();

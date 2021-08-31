@@ -14,9 +14,9 @@ export type BinaryOperator =
 	| '**' | '%%' | '>?' | '<?' | '<=>';
 
 @Deserializer('BinaryExpression')
-export class BinaryExpressionNode extends InfixExpressionNode<BinaryOperator> {
-	static fromJSON(node: BinaryExpressionNode, deserializer: NodeDeserializer): BinaryExpressionNode {
-		return new BinaryExpressionNode(
+export class BinaryExpression extends InfixExpressionNode<BinaryOperator> {
+	static fromJSON(node: BinaryExpression, deserializer: NodeDeserializer): BinaryExpression {
+		return new BinaryExpression(
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right)
@@ -74,13 +74,13 @@ export class BinaryExpressionNode extends InfixExpressionNode<BinaryOperator> {
 		}
 	};
 	set(context: object, value: any) {
-		throw new Error(`BinaryExpressionNode#set() for operator:(${this.operator}) has no implementation.`);
+		throw new Error(`BinaryExpression#set() for operator:(${this.operator}) has no implementation.`);
 	}
 	get(stack: Stack): any {
 		const evalNode: EvaluateNode = {
 			left: this.left.get(stack),
 			right: this.right.get(stack)
 		};
-		return BinaryExpressionNode.Evaluations[this.operator](evalNode);
+		return BinaryExpression.Evaluations[this.operator](evalNode);
 	}
 }

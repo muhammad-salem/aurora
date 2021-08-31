@@ -4,9 +4,9 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('ExpressionStatement')
-export class StatementNode extends AbstractExpressionNode {
-	static fromJSON(node: StatementNode, deserializer: NodeDeserializer): StatementNode {
-		return new StatementNode(node.body.map(line => deserializer(line)));
+export class ExpressionStatement extends AbstractExpressionNode {
+	static fromJSON(node: ExpressionStatement, deserializer: NodeDeserializer): ExpressionStatement {
+		return new ExpressionStatement(node.body.map(line => deserializer(line)));
 	}
 	constructor(private body: ExpressionNode[]) {
 		super();
@@ -15,7 +15,7 @@ export class StatementNode extends AbstractExpressionNode {
 		return this.body;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`StatementNode#set() has no implementation.`);
+		throw new Error(`ExpressionStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		let value;

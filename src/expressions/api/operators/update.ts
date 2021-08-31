@@ -6,9 +6,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export type UpdateOperator = '++' | '--';
 
 @Deserializer('UpdateExpression')
-export class UpdateExpressionNode extends AbstractExpressionNode {
-	static fromJSON(node: UpdateExpressionNode, deserializer: NodeDeserializer): UpdateExpressionNode {
-		return new UpdateExpressionNode(node.operator, deserializer(node.argument), node.prefix);
+export class UpdateExpression extends AbstractExpressionNode {
+	static fromJSON(node: UpdateExpression, deserializer: NodeDeserializer): UpdateExpression {
+		return new UpdateExpression(node.operator, deserializer(node.argument), node.prefix);
 	}
 
 	static PostfixEvaluations: { [key: string]: (num: { value: number }) => number } = {
@@ -36,8 +36,8 @@ export class UpdateExpressionNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		const num = { value: this.argument.get(stack) as number };
 		const returnValue = this.prefix
-			? UpdateExpressionNode.PrefixEvaluations[this.operator](num)
-			: UpdateExpressionNode.PostfixEvaluations[this.operator](num);
+			? UpdateExpression.PrefixEvaluations[this.operator](num)
+			: UpdateExpression.PostfixEvaluations[this.operator](num);
 		this.set(stack, num.value);
 		return returnValue;
 	}

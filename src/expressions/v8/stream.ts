@@ -1,10 +1,10 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	BigIntNode, GlobalThisNode, NumberNode, OfNode, IdentifierNode,
-	RegExpNode, StringNode, SymbolNode, AsNode
+	BigIntLiteral, GlobalThisNode, NumberLiteral, OfNode, Identifier,
+	RegExpLiteral, StringLiteral, SymbolNode, AsNode
 } from '../api/definition/values.js';
-import { TerminateNode } from '../api/statement/controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../api/statement/controlflow/terminate.js';
 
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 
@@ -247,7 +247,7 @@ export class TokenStreamImpl extends TokenStream {
 				this.pos = index + 1;
 				if (this.expression.charAt(index - 1) !== '\\') {
 					const rawString = this.expression.substring(startPos + 1, index);
-					const stringNode = new StringNode(this.unescape(rawString), quote);
+					const stringNode = new StringLiteral(this.unescape(rawString), quote);
 					this.current = this.newToken(Token.STRING, stringNode);
 					return true;
 				}
@@ -395,10 +395,10 @@ export class TokenStreamImpl extends TokenStream {
 
 				default:
 					if (isPrivate) {
-						node = new IdentifierNode(`#${prop}`);
+						node = new Identifier(`#${prop}`);
 						this.current = this.newToken(Token.PRIVATE_NAME, node);
 					} else {
-						node = new IdentifierNode(prop);
+						node = new Identifier(prop);
 						this.current = this.newToken(Token.IDENTIFIER, node);
 					}
 					break;
@@ -478,7 +478,7 @@ export class TokenStreamImpl extends TokenStream {
 					currentPos++;
 				}
 			}
-			const regexNode = new RegExpNode(new RegExp(pattern, flags));
+			const regexNode = new RegExpLiteral(new RegExp(pattern, flags));
 			this.current = this.newToken(Token.REGEXP_LITERAL, regexNode);
 			this.pos = currentPos;
 			return true;
@@ -583,7 +583,7 @@ export class TokenStreamImpl extends TokenStream {
 		}
 
 		if (valid) {
-			const numNode = new NumberNode(parseInt(this.expression.substring(startPos, pos), radix));
+			const numNode = new NumberLiteral(parseInt(this.expression.substring(startPos, pos), radix));
 			this.current = this.newToken(Token.NUMBER, numNode);
 			this.pos = pos;
 		}
@@ -641,11 +641,11 @@ export class TokenStreamImpl extends TokenStream {
 
 		if (valid) {
 			if (this.expression.charAt(pos) === 'n') {
-				const bigintNode = new BigIntNode(BigInt(this.expression.substring(startPos, pos)));
+				const bigintNode = new BigIntLiteral(BigInt(this.expression.substring(startPos, pos)));
 				this.current = this.newToken(Token.BIGINT, bigintNode);
 				pos++;
 			} else {
-				const numNode = new NumberNode(parseFloat(this.expression.substring(startPos, pos)));
+				const numNode = new NumberLiteral(parseFloat(this.expression.substring(startPos, pos)));
 				this.current = this.newToken(Token.NUMBER, numNode);
 			}
 			this.pos = pos;
@@ -983,7 +983,7 @@ export class TokenStreamImpl extends TokenStream {
 			// return false;
 			case 'b':
 				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.BREAK, TerminateNode.BREAK_INSTANCE);
+					this.current = this.newToken(Token.BREAK, BreakStatement.BREAK_INSTANCE);
 					this.pos += 5;
 					return true;
 				}
@@ -1006,7 +1006,7 @@ export class TokenStreamImpl extends TokenStream {
 					this.pos += 6;
 					return true;
 				} else if (/continue[\s;]/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(Token.CONTINUE, TerminateNode.CONTINUE_INSTANCE);
+					this.current = this.newToken(Token.CONTINUE, ContinueStatement.CONTINUE_INSTANCE);
 					this.pos += 8;
 					return true;
 				}

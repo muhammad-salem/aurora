@@ -6,9 +6,9 @@ import { MemberExpression } from '../definition/member.js';
 
 export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof';
 @Deserializer('UnaryExpression')
-export class UnaryNode extends AbstractExpressionNode {
-	static fromJSON(node: UnaryNode, deserializer: NodeDeserializer): UnaryNode {
-		return new UnaryNode(node.operator, deserializer(node.argument));
+export class UnaryExpression extends AbstractExpressionNode {
+	static fromJSON(node: UnaryExpression, deserializer: NodeDeserializer): UnaryExpression {
+		return new UnaryExpression(node.operator, deserializer(node.argument));
 	}
 	static Evaluations: { [key: string]: (value: any) => any } = {
 		'+': (value: string) => { return +value; },
@@ -35,7 +35,7 @@ export class UnaryNode extends AbstractExpressionNode {
 			case 'delete': return this.getDelete(stack, thisContext);
 			default:
 				const value = this.argument.get(stack);
-				return UnaryNode.Evaluations[this.operator](value);
+				return UnaryExpression.Evaluations[this.operator](value);
 		}
 	}
 	private getDelete(stack: Stack, thisContext?: any) {

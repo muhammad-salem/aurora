@@ -3,14 +3,14 @@ import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { TerminateNode } from './terminate.js';
-import { IdentifierNode } from '../../definition/values.js';
+import { BreakStatement } from './terminate.js';
+import { Identifier } from '../../definition/values.js';
 
 
 @Deserializer('SwitchCase')
-export class CaseExpression extends AbstractExpressionNode {
-	static fromJSON(node: CaseExpression, deserializer: NodeDeserializer): CaseExpression {
-		return new CaseExpression(
+export class SwitchCase extends AbstractExpressionNode {
+	static fromJSON(node: SwitchCase, deserializer: NodeDeserializer): SwitchCase {
+		return new SwitchCase(
 			deserializer(node.test),
 			deserializer(node.consequent)
 		);
@@ -25,7 +25,7 @@ export class CaseExpression extends AbstractExpressionNode {
 		return this.consequent;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`CaseExpression#set() has no implementation.`);
+		throw new Error(`SwitchCase#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return this.consequent.get(stack);
@@ -48,9 +48,9 @@ export class CaseExpression extends AbstractExpressionNode {
 }
 
 @Deserializer('default')
-export class DefaultExpression extends CaseExpression {
+export class DefaultExpression extends SwitchCase {
 	static DEFAULT_KEYWORD = 'default';
-	static DefaultNode = Object.freeze(new IdentifierNode(DefaultExpression.DEFAULT_KEYWORD)) as IdentifierNode;
+	static DefaultNode = Object.freeze(new Identifier(DefaultExpression.DEFAULT_KEYWORD)) as Identifier;
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
 		return new DefaultExpression(deserializer(node.consequent));
 	}
@@ -73,15 +73,15 @@ export class DefaultExpression extends CaseExpression {
  * as well as statements in cases that follow the matching case.
  * 
  */
-@Deserializer('switch')
-export class SwitchNode extends AbstractExpressionNode {
-	static fromJSON(node: SwitchNode, deserializer: NodeDeserializer): SwitchNode {
-		return new SwitchNode(
+@Deserializer('SwitchStatement')
+export class SwitchStatement extends AbstractExpressionNode {
+	static fromJSON(node: SwitchStatement, deserializer: NodeDeserializer): SwitchStatement {
+		return new SwitchStatement(
 			deserializer(node.discriminant),
-			node.cases.map(deserializer) as CaseExpression[]
+			node.cases.map(deserializer) as SwitchCase[]
 		);
 	}
-	constructor(private discriminant: ExpressionNode, private cases: CaseExpression[]) {
+	constructor(private discriminant: ExpressionNode, private cases: SwitchCase[]) {
 		super();
 	}
 	getDiscriminant() {
@@ -91,7 +91,7 @@ export class SwitchNode extends AbstractExpressionNode {
 		return this.cases;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`SwitchNode#set() has no implementation.`);
+		throw new Error(`SwitchStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		// need to fix statements execution and support default case
@@ -109,7 +109,7 @@ export class SwitchNode extends AbstractExpressionNode {
 		const caseBlock = stack.pushBlockScope();
 		for (let index = startIndex; index < this.cases.length; index++) {
 			const returnValue = this.cases[index].get(stack);
-			if (returnValue === TerminateNode.BreakSymbol) {
+			if (returnValue === BreakStatement.BreakSymbol) {
 				break;
 			}
 		}

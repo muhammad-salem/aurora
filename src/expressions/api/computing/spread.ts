@@ -4,9 +4,9 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('SpreadElement')
-export class SpreadNode extends AbstractExpressionNode {
-	static fromJSON(node: SpreadNode, deserializer: NodeDeserializer): SpreadNode {
-		return new SpreadNode(deserializer(node.argument));
+export class SpreadElement extends AbstractExpressionNode {
+	static fromJSON(node: SpreadElement, deserializer: NodeDeserializer): SpreadElement {
+		return new SpreadElement(deserializer(node.argument));
 	}
 	constructor(private argument: ExpressionNode) {
 		super();
@@ -15,7 +15,7 @@ export class SpreadNode extends AbstractExpressionNode {
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error('SpreadNode.set() Method has no implementation.');
+		throw new Error('SpreadElement.set() Method has no implementation.');
 	}
 	get(stack: Stack): void {
 		const value = this.argument.get(stack);

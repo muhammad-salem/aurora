@@ -5,9 +5,9 @@ import { AbstractExpressionNode, AwaitPromise } from '../abstract.js';
 
 
 @Deserializer('AwaitExpression')
-export class AwaitExpressionNode extends AbstractExpressionNode {
-	static fromJSON(node: AwaitExpressionNode, serializer: NodeDeserializer): AwaitExpressionNode {
-		return new AwaitExpressionNode(serializer(node.argument));
+export class AwaitExpression extends AbstractExpressionNode {
+	static fromJSON(node: AwaitExpression, serializer: NodeDeserializer): AwaitExpression {
+		return new AwaitExpression(serializer(node.argument));
 	}
 	constructor(private argument: ExpressionNode) {
 		super();
@@ -16,7 +16,7 @@ export class AwaitExpressionNode extends AbstractExpressionNode {
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error('AwaitExpressionNode#set() has no implementation.');
+		throw new Error('AwaitExpression#set() has no implementation.');
 	}
 	entry(): string[] {
 		return this.argument.entry();

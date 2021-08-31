@@ -1,13 +1,13 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { SpreadNode } from './spread.js';
+import { SpreadElement } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('NewExpression')
-export class NewNode extends AbstractExpressionNode {
-	static fromJSON(node: NewNode, deserializer: NodeDeserializer): NewNode {
-		return new NewNode(deserializer(node.className), node.arguments?.map(deserializer));
+export class NewExpression extends AbstractExpressionNode {
+	static fromJSON(node: NewExpression, deserializer: NodeDeserializer): NewExpression {
+		return new NewExpression(deserializer(node.className), node.arguments?.map(deserializer));
 	}
 	private arguments?: ExpressionNode[];
 	constructor(private className: ExpressionNode, parameters?: ExpressionNode[]) {
@@ -21,7 +21,7 @@ export class NewNode extends AbstractExpressionNode {
 		return this.arguments;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`NewNode#set() has no implementation.`);
+		throw new Error(`NewExpression#set() has no implementation.`);
 	}
 	get(stack: Stack,) {
 		const classRef = this.className.get(stack);
@@ -30,7 +30,7 @@ export class NewNode extends AbstractExpressionNode {
 			if (this.arguments.length > 0) {
 				const parameters: any[] = [];
 				for (const param of this.arguments) {
-					if (param instanceof SpreadNode) {
+					if (param instanceof SpreadElement) {
 						stack.pushBlockScopeFor(parameters);
 						param.get(stack);
 						stack.popScope();

@@ -14,9 +14,9 @@ import { AbstractExpressionNode } from '../abstract.js';
  * but sometimes it is possible to parse strings into identifiers.
  */
 @Deserializer('Identifier')
-export class IdentifierNode extends AbstractExpressionNode implements CanDeclareVariable {
-	static fromJSON(node: IdentifierNode): IdentifierNode {
-		return new IdentifierNode(node.name);
+export class Identifier extends AbstractExpressionNode implements CanDeclareVariable {
+	static fromJSON(node: Identifier): Identifier {
+		return new Identifier(node.name);
 	}
 	constructor(private name: string | number) {
 		super();
@@ -54,15 +54,15 @@ export class IdentifierNode extends AbstractExpressionNode implements CanDeclare
 }
 
 @Deserializer('Literal')
-export class AbstractLiteralNode<T> extends AbstractExpressionNode {
-	static fromJSON(node: AbstractLiteralNode<any>):
-		AbstractLiteralNode<string>
-		| AbstractLiteralNode<number>
-		| AbstractLiteralNode<bigint>
-		| AbstractLiteralNode<boolean>
-		| AbstractLiteralNode<RegExp>
-		| AbstractLiteralNode<null | undefined> {
-		return new AbstractLiteralNode(node.value);
+export class Literal<T> extends AbstractExpressionNode {
+	static fromJSON(node: Literal<any>):
+		Literal<string>
+		| Literal<number>
+		| Literal<bigint>
+		| Literal<boolean>
+		| Literal<RegExp>
+		| Literal<null | undefined> {
+		return new Literal(node.value);
 	}
 	constructor(protected value: T) {
 		super();
@@ -91,9 +91,9 @@ export class AbstractLiteralNode<T> extends AbstractExpressionNode {
 }
 
 @Deserializer('StringLiteral')
-export class StringNode extends AbstractLiteralNode<string> {
-	static fromJSON(node: StringNode): StringNode {
-		return new StringNode(node.value, node.quote);
+export class StringLiteral extends Literal<string> {
+	static fromJSON(node: StringLiteral): StringLiteral {
+		return new StringLiteral(node.value, node.quote);
 	}
 	private quote: string;
 	constructor(value: string, quote?: string) {
@@ -184,14 +184,14 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 }
 
 @Deserializer('TemplateLiteral')
-export class TemplateLiteralNode extends TemplateLiteralExpressionNode {
+export class TemplateLiteral extends TemplateLiteralExpressionNode {
 	constructor(quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions);
 	}
 }
 
 @Deserializer('TaggedTemplateExpression')
-export class TaggedTemplateExpressionNode extends TemplateLiteralExpressionNode {
+export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions, tag);
 	}
@@ -199,9 +199,9 @@ export class TaggedTemplateExpressionNode extends TemplateLiteralExpressionNode 
 
 
 @Deserializer('NumberLiteral')
-export class NumberNode extends AbstractLiteralNode<number> {
-	static fromJSON(node: NumberNode): NumberNode {
-		return new NumberNode(node.value);
+export class NumberLiteral extends Literal<number> {
+	static fromJSON(node: NumberLiteral): NumberLiteral {
+		return new NumberLiteral(node.value);
 	}
 	constructor(value: number) {
 		super(value);
@@ -209,9 +209,9 @@ export class NumberNode extends AbstractLiteralNode<number> {
 }
 
 @Deserializer('BigIntLiteral')
-export class BigIntNode extends AbstractLiteralNode<bigint> {
-	static fromJSON(node: BigIntNode): BigIntNode {
-		return new BigIntNode(BigInt(String(node.value)));
+export class BigIntLiteral extends Literal<bigint> {
+	static fromJSON(node: BigIntLiteral): BigIntLiteral {
+		return new BigIntLiteral(BigInt(String(node.value)));
 	}
 	toString(): string {
 		return `${this.value}n`;
@@ -221,9 +221,9 @@ export class BigIntNode extends AbstractLiteralNode<bigint> {
 	}
 }
 @Deserializer('RegExpLiteral')
-export class RegExpNode extends AbstractLiteralNode<RegExp> {
-	static fromJSON(node: RegExpNode & { regex: { pattern: string, flags: string } }): RegExpNode {
-		return new RegExpNode(new RegExp(node.regex.pattern, node.regex.flags));
+export class RegExpLiteral extends Literal<RegExp> {
+	static fromJSON(node: RegExpLiteral & { regex: { pattern: string, flags: string } }): RegExpLiteral {
+		return new RegExpLiteral(new RegExp(node.regex.pattern, node.regex.flags));
 	}
 	toString(): string {
 		return `${this.value}n`;
@@ -241,8 +241,8 @@ export class RegExpNode extends AbstractLiteralNode<RegExp> {
 export const TRUE = String(true);
 export const FALSE = String(false);
 @Deserializer('BooleanLiteral')
-export class BooleanNode extends AbstractLiteralNode<boolean> {
-	static fromJSON(node: BooleanNode): BooleanNode {
+export class BooleanLiteral extends Literal<boolean> {
+	static fromJSON(node: BooleanLiteral): BooleanLiteral {
 		switch (String(node.value)) {
 			case TRUE: return TrueNode;
 			case FALSE:
@@ -256,8 +256,8 @@ export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
 @Deserializer('NullishLiteral')
-export class NullishNode extends AbstractLiteralNode<null | undefined> {
-	static fromJSON(node: NullishNode): NullishNode {
+export class NullishLiteral extends Literal<null | undefined> {
+	static fromJSON(node: NullishLiteral): NullishLiteral {
 		switch (String(node.value)) {
 			case NULL: return NullNode;
 			case UNDEFINED:
@@ -277,8 +277,8 @@ export class NullishNode extends AbstractLiteralNode<null | undefined> {
 }
 
 @Deserializer('ThisExpression')
-export class ThisExpressionNode extends IdentifierNode {
-	static fromJSON(node: ThisExpressionNode): ThisExpressionNode {
+export class ThisExpression extends Identifier {
+	static fromJSON(node: ThisExpression): ThisExpression {
 		return ThisNode;
 	}
 	constructor() {
@@ -286,20 +286,20 @@ export class ThisExpressionNode extends IdentifierNode {
 	}
 }
 
-export const NullNode = Object.freeze(new NullishNode(null)) as NullishNode;
-export const UndefinedNode = Object.freeze(new NullishNode(undefined)) as NullishNode;
-export const TrueNode = Object.freeze(new BooleanNode(true)) as BooleanNode;
-export const FalseNode = Object.freeze(new BooleanNode(false)) as BooleanNode;
-export const ThisNode = Object.freeze(new ThisExpressionNode()) as ThisExpressionNode;
-export const GlobalThisNode = Object.freeze(new IdentifierNode('globalThis')) as IdentifierNode;
-export const SymbolNode = Object.freeze(new IdentifierNode('Symbol')) as IdentifierNode;
-export const OfNode = Object.freeze(new IdentifierNode('of')) as IdentifierNode;
-export const AsNode = Object.freeze(new IdentifierNode('as')) as IdentifierNode;
-export const GetIdentifier = Object.freeze(new IdentifierNode('get')) as IdentifierNode;
-export const SetIdentifier = Object.freeze(new IdentifierNode('set')) as IdentifierNode;
-export const AsyncIdentifier = Object.freeze(new IdentifierNode('async')) as IdentifierNode;
-export const AwaitIdentifier = Object.freeze(new IdentifierNode('await')) as IdentifierNode;
-export const ConstructorIdentifier = Object.freeze(new IdentifierNode('constructor')) as IdentifierNode;
-export const NameIdentifier = Object.freeze(new IdentifierNode('name')) as IdentifierNode;
-export const EvalIdentifier = Object.freeze(new IdentifierNode('eval')) as IdentifierNode;
-export const ArgumentsIdentifier = Object.freeze(new IdentifierNode('arguments')) as IdentifierNode;
+export const NullNode = Object.freeze(new NullishLiteral(null)) as NullishLiteral;
+export const UndefinedNode = Object.freeze(new NullishLiteral(undefined)) as NullishLiteral;
+export const TrueNode = Object.freeze(new BooleanLiteral(true)) as BooleanLiteral;
+export const FalseNode = Object.freeze(new BooleanLiteral(false)) as BooleanLiteral;
+export const ThisNode = Object.freeze(new ThisExpression()) as ThisExpression;
+export const GlobalThisNode = Object.freeze(new Identifier('globalThis')) as Identifier;
+export const SymbolNode = Object.freeze(new Identifier('Symbol')) as Identifier;
+export const OfNode = Object.freeze(new Identifier('of')) as Identifier;
+export const AsNode = Object.freeze(new Identifier('as')) as Identifier;
+export const GetIdentifier = Object.freeze(new Identifier('get')) as Identifier;
+export const SetIdentifier = Object.freeze(new Identifier('set')) as Identifier;
+export const AsyncIdentifier = Object.freeze(new Identifier('async')) as Identifier;
+export const AwaitIdentifier = Object.freeze(new Identifier('await')) as Identifier;
+export const ConstructorIdentifier = Object.freeze(new Identifier('constructor')) as Identifier;
+export const NameIdentifier = Object.freeze(new Identifier('name')) as Identifier;
+export const EvalIdentifier = Object.freeze(new Identifier('eval')) as Identifier;
+export const ArgumentsIdentifier = Object.freeze(new Identifier('arguments')) as Identifier;

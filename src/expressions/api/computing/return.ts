@@ -8,9 +8,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * If omitted, undefined is returned instead.
  */
 @Deserializer('ReturnStatement')
-export class ReturnNode extends AbstractExpressionNode {
-	static fromJSON(node: ReturnNode, deserializer: NodeDeserializer): ReturnNode {
-		return new ReturnNode(node.argument ? deserializer(node.argument) : void 0);
+export class ReturnStatement extends AbstractExpressionNode {
+	static fromJSON(node: ReturnStatement, deserializer: NodeDeserializer): ReturnStatement {
+		return new ReturnStatement(node.argument ? deserializer(node.argument) : void 0);
 	}
 	constructor(private argument?: ExpressionNode) {
 		super();
@@ -19,7 +19,7 @@ export class ReturnNode extends AbstractExpressionNode {
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`ReturnNode#set() has no implementation.`);
+		throw new Error(`ReturnStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return new ReturnValue(this.argument?.get(stack));

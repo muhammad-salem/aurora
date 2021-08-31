@@ -5,9 +5,9 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('Property')
-export class ObjectLiteralPropertyNode extends AbstractExpressionNode implements CanDeclareVariable {
-	static fromJSON(node: ObjectLiteralPropertyNode, deserializer: NodeDeserializer): ObjectLiteralPropertyNode {
-		return new ObjectLiteralPropertyNode(deserializer(node.key), deserializer(node.value), node.kind);
+export class Property extends AbstractExpressionNode implements CanDeclareVariable {
+	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
+		return new Property(deserializer(node.key), deserializer(node.value), node.kind);
 	}
 	constructor(protected key: ExpressionNode, protected value: ExpressionNode, protected kind: 'init' | 'get' | 'set') {
 		super();
@@ -67,9 +67,9 @@ export class ObjectLiteralPropertyNode extends AbstractExpressionNode implements
 }
 
 @Deserializer('ObjectExpression')
-export class ObjectLiteralNode extends AbstractExpressionNode {
-	static fromJSON(node: ObjectLiteralNode, deserializer: NodeDeserializer): ObjectLiteralNode {
-		return new ObjectLiteralNode(node.properties.map(deserializer));
+export class ObjectExpression extends AbstractExpressionNode {
+	static fromJSON(node: ObjectExpression, deserializer: NodeDeserializer): ObjectExpression {
+		return new ObjectExpression(node.properties.map(deserializer));
 	}
 	constructor(private properties: ExpressionNode[]) {
 		super();
@@ -78,7 +78,7 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 		return this.properties;
 	}
 	set(stack: Stack) {
-		throw new Error('ObjectLiteralNode#set() has no implementation.');
+		throw new Error('ObjectExpression#set() has no implementation.');
 	}
 	get(stack: Stack) {
 		const newObject = {};
@@ -104,9 +104,9 @@ export class ObjectLiteralNode extends AbstractExpressionNode {
 }
 
 @Deserializer('ObjectPattern')
-export class ObjectPatternNode extends AbstractExpressionNode implements CanDeclareVariable {
-	static fromJSON(node: ObjectPatternNode, deserializer: NodeDeserializer): ObjectPatternNode {
-		return new ObjectPatternNode(node.properties.map(deserializer));
+export class ObjectPattern extends AbstractExpressionNode implements CanDeclareVariable {
+	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
+		return new ObjectPattern(node.properties.map(deserializer));
 	}
 	constructor(private properties: ExpressionNode[]) {
 		super();
@@ -115,13 +115,13 @@ export class ObjectPatternNode extends AbstractExpressionNode implements CanDecl
 		return this.properties;
 	}
 	set(stack: Stack, objectValue: any) {
-		throw new Error('ObjectPatternNode#set() has no implementation.');
+		throw new Error('ObjectPattern#set() has no implementation.');
 	}
 	get(scopeProvider: Stack, objectValue: any) {
 		this.declareVariable(scopeProvider, 'block', objectValue);
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
-		for (const property of this.properties as ObjectLiteralPropertyNode[]) {
+		for (const property of this.properties as Property[]) {
 			property.declareVariable(stack, scopeType, objectValue);
 		}
 	}

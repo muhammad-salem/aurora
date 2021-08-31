@@ -10,17 +10,17 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  * which combines several statements into a single one.
  */
 @Deserializer('EmptyStatement')
-export class EmptyNode extends AbstractExpressionNode {
-	static INSTANCE = Object.freeze(new EmptyNode()) as EmptyNode;
-	static fromJSON(node: EmptyNode): EmptyNode {
-		return EmptyNode.INSTANCE;
+export class EmptyStatement extends AbstractExpressionNode {
+	static INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
+	static fromJSON(node: EmptyStatement): EmptyStatement {
+		return EmptyStatement.INSTANCE;
 	}
 	private semicolon = ';';
 	constructor() {
 		super();
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`EmptyNode#set() has no implementation.`);
+		throw new Error(`EmptyStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return void 0;

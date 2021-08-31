@@ -2,8 +2,8 @@ import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { IdentifierNode } from './values.js';
-import { TerminateNode } from '../statement/controlflow/terminate.js';
+import { Identifier } from './values.js';
+import { BreakStatement, ContinueStatement } from '../statement/controlflow/terminate.js';
 
 export enum FunctionKind {
 	NORMAL = 'NORMAL',
@@ -31,11 +31,11 @@ export enum ArrowFunctionType {
 }
 
 @Deserializer('Paramter')
-export class FormalParamterNode extends AbstractExpressionNode {
-	static fromJSON(node: FormalParamterNode, deserializer: NodeDeserializer): FormalParamterNode {
-		return new FormalParamterNode(
+export class Paramter extends AbstractExpressionNode {
+	static fromJSON(node: Paramter, deserializer: NodeDeserializer): Paramter {
+		return new Paramter(
 			deserializer(node.identifier),
-			node.defaultValue ? deserializer(node.defaultValue) as IdentifierNode : void 0
+			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
 	constructor(private identifier: ExpressionNode, private defaultValue?: ExpressionNode) {
@@ -51,7 +51,7 @@ export class FormalParamterNode extends AbstractExpressionNode {
 		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
 	get(stack: Stack) {
-		throw new Error('ParamterNode#get() has no implementation.');
+		throw new Error('Paramter#get() has no implementation.');
 	}
 	entry(): string[] {
 		return this.identifier.entry().concat(this.defaultValue?.entry() || []);
@@ -72,13 +72,13 @@ export class FormalParamterNode extends AbstractExpressionNode {
 }
 
 @Deserializer('FunctionExpression')
-export class FunctionExpressionNode extends AbstractExpressionNode {
-	static fromJSON(node: FunctionExpressionNode, deserializer: NodeDeserializer): FunctionExpressionNode {
-		return new FunctionExpressionNode(
+export class FunctionExpression extends AbstractExpressionNode {
+	static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
+		return new FunctionExpression(
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
-			node.id ? deserializer(node.id) as IdentifierNode : void 0,
+			node.id ? deserializer(node.id) as Identifier : void 0,
 			node.rest,
 			node.generator
 		);
@@ -105,7 +105,7 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 		return this.rest;
 	}
 	set(stack: Stack, value: Function) {
-		throw new Error('FunctionExpressionNode#set() has no implementation.');
+		throw new Error('FunctionExpression#set() has no implementation.');
 	}
 	private setParamter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
@@ -142,10 +142,10 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 						else if (stack.forAwaitAsyncIterable) {
 							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (TerminateNode.ContinueSymbol === result) {
+								if (ContinueStatement.ContinueSymbol === result) {
 									continue;
 								}
-								else if (TerminateNode.BreakSymbol === result) {
+								else if (BreakStatement.BreakSymbol === result) {
 									break;
 								}
 								else if (result instanceof ReturnValue) {
@@ -205,10 +205,10 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 						else if (stack.forAwaitAsyncIterable) {
 							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (TerminateNode.ContinueSymbol === result) {
+								if (ContinueStatement.ContinueSymbol === result) {
 									continue;
 								}
-								else if (TerminateNode.BreakSymbol === result) {
+								else if (BreakStatement.BreakSymbol === result) {
 									break;
 								}
 								else if (result instanceof ReturnValue) {
@@ -302,9 +302,9 @@ export class FunctionExpressionNode extends AbstractExpressionNode {
 }
 
 @Deserializer('FunctionDeclaration')
-export class FunctionDeclarationNode extends FunctionExpressionNode {
-	static fromJSON(node: FunctionDeclarationNode, deserializer: NodeDeserializer): FunctionDeclarationNode {
-		return new FunctionDeclarationNode(
+export class FunctionDeclaration extends FunctionExpression {
+	static fromJSON(node: FunctionDeclaration, deserializer: NodeDeserializer): FunctionDeclaration {
+		return new FunctionDeclaration(
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
@@ -323,9 +323,9 @@ export class FunctionDeclarationNode extends FunctionExpressionNode {
 
 
 @Deserializer('ArrowFunctionExpression')
-export class ArrowFunctionNode extends AbstractExpressionNode {
-	static fromJSON(node: ArrowFunctionNode, deserializer: NodeDeserializer): ArrowFunctionNode {
-		return new ArrowFunctionNode(
+export class ArrowFunctionExpression extends AbstractExpressionNode {
+	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
+		return new ArrowFunctionExpression(
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			ArrowFunctionType[node.kind],
@@ -347,7 +347,7 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 		return this.rest;
 	}
 	set(stack: Stack, value: Function) {
-		throw new Error('ArrowFunctionNode#set() has no implementation.');
+		throw new Error('ArrowFunctionExpression#set() has no implementation.');
 	}
 	private setParamter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
@@ -384,10 +384,10 @@ export class ArrowFunctionNode extends AbstractExpressionNode {
 						else if (stack.forAwaitAsyncIterable) {
 							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (TerminateNode.ContinueSymbol === result) {
+								if (ContinueStatement.ContinueSymbol === result) {
 									continue;
 								}
-								else if (TerminateNode.BreakSymbol === result) {
+								else if (BreakStatement.BreakSymbol === result) {
 									break;
 								}
 								else if (result instanceof ReturnValue) {

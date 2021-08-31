@@ -2,12 +2,12 @@ import type { NodeDeserializer, ExpressionNode } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { SpreadNode } from '../computing/spread.js';
+import { SpreadElement } from '../computing/spread.js';
 
 @Deserializer('ArrayExpression')
-export class ArrayLiteralNode extends AbstractExpressionNode {
-	static fromJSON(node: ArrayLiteralNode, deserializer: NodeDeserializer): ArrayLiteralNode {
-		return new ArrayLiteralNode(node.elements.map(expression => deserializer(expression)));
+export class ArrayExpression extends AbstractExpressionNode {
+	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
+		return new ArrayExpression(node.elements.map(expression => deserializer(expression)));
 	}
 	constructor(private elements: ExpressionNode[]) {
 		super();
@@ -16,7 +16,7 @@ export class ArrayLiteralNode extends AbstractExpressionNode {
 		return this.elements;
 	}
 	set(stack: Stack) {
-		throw new Error("ArrayPatternNode#set() has no implementation.");
+		throw new Error("ArrayExpression#set() has no implementation.");
 	}
 	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
@@ -39,9 +39,9 @@ export class ArrayLiteralNode extends AbstractExpressionNode {
 
 
 @Deserializer('ArrayPattern')
-export class ArrayPatternNode extends AbstractExpressionNode {
-	static fromJSON(node: ArrayPatternNode, deserializer: NodeDeserializer): ArrayPatternNode {
-		return new ArrayPatternNode(node.elements.map(expression => deserializer(expression)));
+export class ArrayPattern extends AbstractExpressionNode {
+	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
+		return new ArrayPattern(node.elements.map(expression => deserializer(expression)));
 	}
 	constructor(private elements: ExpressionNode[]) {
 		super();
@@ -52,7 +52,7 @@ export class ArrayPatternNode extends AbstractExpressionNode {
 	set(stack: Stack, values: any[]) {
 		for (let index = 0; index < this.elements.length; index++) {
 			const elem = this.elements[index];
-			if (elem instanceof SpreadNode) {
+			if (elem instanceof SpreadElement) {
 				const rest = values.slice(index);
 				elem.set(stack, rest);
 				break;

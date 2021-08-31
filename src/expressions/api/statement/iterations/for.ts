@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { TerminateNode } from '../controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../controlflow/terminate.js';
 
 
 /**
@@ -48,10 +48,10 @@ export class ForNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (TerminateNode.ContinueSymbol === result) {
+			if (ContinueStatement.ContinueSymbol === result) {
 				continue;
 			}
-			if (TerminateNode.BreakSymbol === result) {
+			if (BreakStatement.BreakSymbol === result) {
 				break;
 			}
 			if (result instanceof ReturnValue) {
@@ -116,10 +116,10 @@ export class ForOfNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (TerminateNode.ContinueSymbol === result) {
+			if (ContinueStatement.ContinueSymbol === result) {
 				continue;
 			}
-			else if (TerminateNode.BreakSymbol === result) {
+			else if (BreakStatement.BreakSymbol === result) {
 				break;
 			}
 			else if (result instanceof ReturnValue) {
@@ -184,10 +184,10 @@ export class ForInNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (TerminateNode.ContinueSymbol === result) {
+			if (ContinueStatement.ContinueSymbol === result) {
 				continue;
 			}
-			else if (TerminateNode.BreakSymbol === result) {
+			else if (BreakStatement.BreakSymbol === result) {
 				break;
 			}
 			else if (result instanceof ReturnValue) {

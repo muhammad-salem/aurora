@@ -8,9 +8,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
  * If omitted, undefined is returned instead.
  */
 @Deserializer('ThrowStatement')
-export class ThrowNode extends AbstractExpressionNode {
-	static fromJSON(node: ThrowNode, deserializer: NodeDeserializer): ThrowNode {
-		return new ThrowNode(deserializer(node.argument));
+export class ThrowStatement extends AbstractExpressionNode {
+	static fromJSON(node: ThrowStatement, deserializer: NodeDeserializer): ThrowStatement {
+		return new ThrowStatement(deserializer(node.argument));
 	}
 	constructor(private argument: ExpressionNode) {
 		super();
@@ -19,7 +19,7 @@ export class ThrowNode extends AbstractExpressionNode {
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`ThrowNode#set() has no implementation.`);
+		throw new Error(`ThrowStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		throw this.argument.get(stack);

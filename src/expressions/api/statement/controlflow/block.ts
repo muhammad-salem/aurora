@@ -2,16 +2,16 @@ import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { TerminateNode } from './terminate.js';
+import { BreakStatement, ContinueStatement } from './terminate.js';
 
 /**
  * A block statement (or compound statement in other languages) is used to group zero or more statements.
  * The block is delimited by a pair of braces ("curly brackets") and may optionally be labelled:
  */
 @Deserializer('BlockStatement')
-export class BlockNode extends AbstractExpressionNode {
-	static fromJSON(node: BlockNode, deserializer: NodeDeserializer): BlockNode {
-		return new BlockNode(node.body.map(line => deserializer(line)), node.isStatement);
+export class BlockStatement extends AbstractExpressionNode {
+	static fromJSON(node: BlockStatement, deserializer: NodeDeserializer): BlockStatement {
+		return new BlockStatement(node.body.map(line => deserializer(line)), node.isStatement);
 	}
 	constructor(private body: ExpressionNode[], public isStatement: boolean) {
 		super();
@@ -20,7 +20,7 @@ export class BlockNode extends AbstractExpressionNode {
 		return this.body;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`BlockNode#set() has no implementation.`);
+		throw new Error(`BlockStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		const blockScope = stack.pushBlockScope();
@@ -28,8 +28,8 @@ export class BlockNode extends AbstractExpressionNode {
 			const value = node.get(stack);
 			if (this.isStatement) {
 				switch (true) {
-					case TerminateNode.BreakSymbol === value:
-					case TerminateNode.ContinueSymbol === value:
+					case BreakStatement.BreakSymbol === value:
+					case ContinueStatement.ContinueSymbol === value:
 					case value instanceof ReturnValue:
 						stack.clearTo(blockScope);
 						return value;

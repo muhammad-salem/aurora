@@ -6,10 +6,10 @@ import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 export type ProgramSourceType = 'script' | 'module';
 
 @Deserializer('Program')
-export class ProgramNode extends AbstractExpressionNode {
+export class Program extends AbstractExpressionNode {
 
-	static fromJSON(node: ProgramNode, deserializer: NodeDeserializer): ProgramNode {
-		return new ProgramNode(node.sourceType, node.body.map(deserializer));
+	static fromJSON(node: Program, deserializer: NodeDeserializer): Program {
+		return new Program(node.sourceType, node.body.map(deserializer));
 	}
 	constructor(private sourceType: ProgramSourceType, private body: ExpressionNode[]) {
 		super();

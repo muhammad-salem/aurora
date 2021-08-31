@@ -9,9 +9,9 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  * 
  */
 @Deserializer('IfStatement')
-export class IfElseNode extends AbstractExpressionNode {
-	static fromJSON(node: IfElseNode, deserializer: NodeDeserializer): IfElseNode {
-		return new IfElseNode(
+export class IfStatement extends AbstractExpressionNode {
+	static fromJSON(node: IfStatement, deserializer: NodeDeserializer): IfStatement {
+		return new IfStatement(
 			deserializer(node.test),
 			deserializer(node.consequent),
 			node.alternate ? deserializer(node.alternate) : void 0
@@ -30,7 +30,7 @@ export class IfElseNode extends AbstractExpressionNode {
 		return this.alternate;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`IfElseNode#set() has no implementation.`);
+		throw new Error(`IfStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		const condition = this.test.get(stack);

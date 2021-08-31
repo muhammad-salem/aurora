@@ -1,20 +1,20 @@
 import type { ExpressionNode } from '../api/expression.js';
 import type { Stack } from '../scope/stack.js';
-import { AssignmentNode } from '../api/operators/assignment.js';
-import { LogicalNode } from '../api/operators/logical.js';
-import { UnaryNode } from '../api/operators/unary.js';
-import { ConditionalExpressionNode } from '../api/operators/ternary.js';
-import { PipelineNode } from '../api/operators/pipeline.js';
-import { CommaNode } from '../api/operators/comma.js';
+import { AssignmentExpression } from '../api/operators/assignment.js';
+import { LogicalExpression } from '../api/operators/logical.js';
+import { UnaryExpression } from '../api/operators/unary.js';
+import { ConditionalExpression } from '../api/operators/ternary.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
+import { SequenceExpression } from '../api/operators/comma.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	AbstractLiteralNode, BigIntNode, NumberNode,
-	BooleanNode, TrueNode, FalseNode,
-	NullNode, StringNode, UndefinedNode
+	Literal, BigIntLiteral, NumberLiteral,
+	BooleanLiteral, TrueNode, FalseNode,
+	NullNode, StringLiteral, UndefinedNode
 } from '../api/definition/values.js';
-import { AwaitExpressionNode } from '../api/operators/await.js';
-import { UpdateExpressionNode } from '../api/operators/update.js';
-import { BinaryExpressionNode } from '../api/index.js';
+import { AwaitExpression } from '../api/operators/await.js';
+import { UpdateExpression } from '../api/operators/update.js';
+import { BinaryExpression } from '../api/index.js';
 
 export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): ExpressionNode {
 	switch (op) {
@@ -33,11 +33,11 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '&&=':
 		case '||=':
 		case '??=':
-			return new AssignmentNode(op, left, right);
+			return new AssignmentExpression(op, left, right);
 		case '&&':
 		case '||':
 		case '??':
-			return new LogicalNode(op, left, right);
+			return new LogicalExpression(op, left, right);
 		case '**':
 		case '*':
 		case '/':
@@ -63,7 +63,7 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '>?':
 		case '<?':
 		case '<=>':
-			return new BinaryExpressionNode(op, left, right);
+			return new BinaryExpression(op, left, right);
 		default:
 			throw new Error(`Not Supported Operator: ${op}`);
 	}
@@ -72,7 +72,7 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 export function createTernaryExpression(op: string, logical: ExpressionNode, ifTrue: ExpressionNode, ifFalse: ExpressionNode): ExpressionNode {
 	switch (op) {
 		case '?':
-			return new ConditionalExpressionNode(logical, ifTrue, ifFalse);
+			return new ConditionalExpression(logical, ifTrue, ifFalse);
 		default:
 			throw new Error(`${op} is not ternary operator`);
 
@@ -82,7 +82,7 @@ export function createTernaryExpression(op: string, logical: ExpressionNode, ifT
 export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ('?' | ExpressionNode)[]): ExpressionNode {
 	switch (op) {
 		case '|>':
-			return new PipelineNode(param, func, args);
+			return new PipelineExpression(param, func, args);
 		default:
 			throw new Error(`${op} is not pipeline operator`);
 
@@ -93,7 +93,7 @@ export function cretePrefixExpression(op: string, node: ExpressionNode): Express
 	switch (op) {
 		case '++':
 		case '--':
-			return new UpdateExpressionNode(op, node, true);
+			return new UpdateExpression(op, node, true);
 		case '+':
 		case '-':
 		case '!':
@@ -101,9 +101,9 @@ export function cretePrefixExpression(op: string, node: ExpressionNode): Express
 		case 'typeof':
 		case 'void':
 		case 'delete':
-			return new UnaryNode(op, node);
+			return new UnaryExpression(op, node);
 		case 'await':
-			return new AwaitExpressionNode(node);
+			return new AwaitExpression(node);
 		default:
 			throw new Error(`${op} is not prefix operator`);
 	}
@@ -113,14 +113,14 @@ export function cretePostfixExpression(op: string, node: ExpressionNode): Expres
 	switch (op) {
 		case '++':
 		case '--':
-			return new UpdateExpressionNode(op, node, false);
+			return new UpdateExpression(op, node, false);
 		default:
 			throw new Error(`${op} is not postfix operator`);
 	}
 }
 
 export function creteCommaExpression(nodes: ExpressionNode[]): ExpressionNode {
-	return new CommaNode(nodes);
+	return new SequenceExpression(nodes);
 }
 
 const USELESS_STACK: Stack = null as unknown as Stack;//Object.create(null);
@@ -129,17 +129,17 @@ export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: Exp
 	const expression = creteInfixExpression(op.getName(), x, y);
 	if (expression
 		&& (
-			(x instanceof NumberNode && y instanceof NumberNode)
-			|| (x instanceof StringNode && y instanceof StringNode)
-			|| (x instanceof BigIntNode && y instanceof BigIntNode)
-			|| (x instanceof BooleanNode && y instanceof BooleanNode)
+			(x instanceof NumberLiteral && y instanceof NumberLiteral)
+			|| (x instanceof StringLiteral && y instanceof StringLiteral)
+			|| (x instanceof BigIntLiteral && y instanceof BigIntLiteral)
+			|| (x instanceof BooleanLiteral && y instanceof BooleanLiteral)
 		)) {
 		const result = expression.get(USELESS_STACK);
 		if (result !== false) {
 			switch (true) {
-				case typeof result === 'number': return new NumberNode(result);
-				case typeof result === 'string': return new StringNode(result);
-				case typeof result === 'bigint': return new BigIntNode(result);
+				case typeof result === 'number': return new NumberLiteral(result);
+				case typeof result === 'string': return new StringLiteral(result);
+				case typeof result === 'bigint': return new BigIntLiteral(result);
 				case typeof result === 'boolean': return result ? TrueNode : FalseNode;
 				default:
 					break;
@@ -152,9 +152,9 @@ export function coverValue(value: any) {
 	switch (typeof value) {
 		case 'undefined': return UndefinedNode;
 		case 'boolean': return value ? TrueNode : FalseNode;
-		case 'number': return new NumberNode(value);
-		case 'bigint': return new BigIntNode(value);
-		case 'string': return new StringNode(value);
+		case 'number': return new NumberLiteral(value);
+		case 'bigint': return new BigIntLiteral(value);
+		case 'string': return new StringLiteral(value);
 		case 'object':
 			if (value === null) {
 				return NullNode;
@@ -169,7 +169,7 @@ export function coverValue(value: any) {
 
 export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
 	let result = cretePrefixExpression(op.getName(), expression);
-	if (expression instanceof AbstractLiteralNode) {
+	if (expression instanceof Literal) {
 		const value = result.get(USELESS_STACK);
 		const temp = coverValue(value);
 		if (temp !== false) {
@@ -181,7 +181,7 @@ export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
 
 export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
 	let result = cretePostfixExpression(op.getName(), expression);
-	if (expression instanceof AbstractLiteralNode) {
+	if (expression instanceof Literal) {
 		const value = result.get(USELESS_STACK);
 		const temp = coverValue(value);
 		if (temp !== false) {
