@@ -14,7 +14,7 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 		const callback = this.getCallback(node);
 		this.onRender(node, callback);
 	}
-	onRender(node: ExpressionNode, callback: () => void) {
+	protected onRender(node: ExpressionNode, callback: () => void) {
 		this.renderDOMChild(node, callback);
 	}
 	protected renderDOMChild(node: ExpressionNode, callback: () => void): void {
@@ -61,7 +61,7 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 			this.render.appendChildToParent(this.fragment, child, stack);
 		}
 	}
-	private removeOldElements() {
+	protected removeOldElements() {
 		if (this.elements.length > 0) {
 			for (const elm of this.elements) {
 				elm.remove();
