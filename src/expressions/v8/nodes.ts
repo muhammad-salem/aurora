@@ -136,7 +136,14 @@ export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: Exp
 		)) {
 		const result = expression.get(USELESS_STACK);
 		if (result !== false) {
-			return result;
+			switch (true) {
+				case typeof result === 'number': return new NumberNode(result);
+				case typeof result === 'string': return new StringNode(result);
+				case typeof result === 'bigint': return new BigIntNode(result);
+				case typeof result === 'boolean': return result ? TrueNode : FalseNode;
+				default:
+					break;
+			}
 		}
 	}
 	return expression!;
