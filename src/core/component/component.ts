@@ -1,8 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions';
 import {
-	findByTagName,
-	Tag, htmlParser, templateParser, DOMNode, DOMRenderNode
+	findByTagName, Tag, htmlParser, templateParser,
+	DOMNode, DOMRenderNode, canAttachShadow
 } from '@ibyar/elements';
 import { findByModelClassOrCreat, setBootstrapMetadata } from '@ibyar/metadata';
 
@@ -204,6 +204,10 @@ export class Components {
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
+
+		if (componentRef.isShadowDom && componentRef.extend.name) {
+			componentRef.isShadowDom = canAttachShadow(componentRef.extend.name);
+		}
 
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
