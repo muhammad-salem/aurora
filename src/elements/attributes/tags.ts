@@ -54,7 +54,7 @@ export const NativeTags: Tag[] = [
 	{ name: 'del', classRef: HTMLModElement },
 	{ name: 'details', classRef: HTMLDetailsElement },
 	{ name: 'dfn', classRef: HTMLElement },
-	{ name: 'dialog', classRef: window.HTMLDialogElement || HTMLElement },
+	// { name: 'dialog', classRef: window.HTMLDialogElement || HTMLElement },
 	{ name: 'div', classRef: HTMLDivElement },
 	{ name: 'dl', classRef: HTMLDListElement },
 	{ name: 'dt', classRef: HTMLElement },
