@@ -29,6 +29,7 @@ export class WhileDirective<T> extends AbstractStructuralDirective<T> {
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
+		this.directiveStack.pushFunctionScope();
 		const callback = () => {
 			if (initializer) {
 				initializer.get(this.directiveStack);

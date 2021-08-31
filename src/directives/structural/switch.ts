@@ -40,6 +40,7 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 		for (const directive of this.caseElements) {
 			this.caseExpressions.push(JavaScriptParser.parse(String(directive.directiveValue)));
 		}
+		this.directiveStack.pushFunctionScope();
 		let callback: () => void;
 		if (switchNode instanceof SwitchNode) {
 			callback = () => {
@@ -59,17 +60,11 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 						return;
 					}
 				}
-				this._updateSwitchCaseView(child.children, this.directiveStack);
+				this.appendChildToParent(child.children, this.directiveStack);
 			};
 		} else {
 			throw new Error(`syntax error: ${this.directive.directiveValue}`);
 		}
 		return callback;
-	}
-	private _updateSwitchCaseView(children: DOMChild<ExpressionNode>[], stack: Stack) {
-		const fragment = document.createDocumentFragment();
-		for (const child of children) {
-			this.render.appendChildToParent(fragment, child, stack);
-		}
 	}
 }
