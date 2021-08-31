@@ -40,6 +40,12 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			const model = new modelClass(/* resolve dependency injection*/);
 			this._model = defineModel(model);
 
+			// if model had view decorator
+			if (this._componentRef.view) {
+				// this._model[componentRef.view] = this;
+				Reflect.set(this._model, this._componentRef.view, this);
+			}
+
 			this._setAttributeNative = this.setAttribute;
 			this._getAttributeNative = this.getAttribute;
 			this._addEventListenerNative = this.addEventListener;
@@ -226,12 +232,6 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			if (this.childNodes.length === 0) {
 				// setup ui view
 				this._render.initView();
-
-				// if model had view decorator
-				if (this._componentRef.view) {
-					// this._model[componentRef.view] = this;
-					Reflect.set(this._model, this._componentRef.view, this);
-				}
 
 				// init Host Listener events
 				this._render.initHostListener();
