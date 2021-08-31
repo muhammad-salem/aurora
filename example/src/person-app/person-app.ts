@@ -8,7 +8,7 @@ import { url as templateUrl } from './person-app.html';
 })
 export class PersonApp {
 	@Input()
-	appVersion: string = '21.8.31';
+	appVersion: string = '21.9.1';
 
 	title = 'Testing Components';
 
