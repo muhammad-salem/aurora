@@ -1,10 +1,6 @@
 import { OnDestroy, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
 import { ExpressionNode, JavaScriptParser, Stack } from '@ibyar/expressions';
-import {
-	DOMChild,
-	DOMDirectiveNode, DOMElementNode,
-	DOMFragmentNode, DOMNode,
-} from '@ibyar/elements';
+import { DOMChild } from '@ibyar/elements';
 
 export abstract class AbstractStructuralDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
 	protected elements: ChildNode[] = [];
@@ -72,31 +68,6 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 			}
 			this.elements.splice(0);
 		}
-	}
-	protected findTemplate(templateRefName: string, template: DOMNode<ExpressionNode>): DOMElementNode<ExpressionNode> | undefined {
-		if (template instanceof DOMElementNode) {
-			if (template.templateRefName?.name === templateRefName) {
-				return template;
-			}
-			if (template.children) {
-				for (const child of template.children) {
-					const childTemplate = this.findTemplate(templateRefName, child);
-					if (childTemplate) {
-						return childTemplate;
-					}
-				}
-			}
-		} else if (template instanceof DOMDirectiveNode || template instanceof DOMFragmentNode) {
-			if (template.children) {
-				for (const child of template.children) {
-					const childTemplate = this.findTemplate(templateRefName, child);
-					if (childTemplate) {
-						return childTemplate;
-					}
-				}
-			}
-		}
-		return undefined;
 	}
 	onDestroy() {
 		this.removeOldElements();

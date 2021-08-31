@@ -21,13 +21,13 @@ export class IfDirective<T> extends AbstractStructuralDirective<T> /*implements 
 		const alternate = ifNode.getAlternate();
 		if (alternate) {
 			const elseTemplateName: string = alternate.get(this.directiveStack);
-			this.elseTemplateNode = this.findTemplate(elseTemplateName, this.render.template);
+			this.elseTemplateNode = this.findTemplate(elseTemplateName);
 		}
 		return () => {
 			const stack = this.directiveStack.copyStack();
 			stack.pushBlockScope();
 			const test = ifNode.getTest().get(stack);
-			if (test !== this.lastTest) {
+			if (test !== this.lastTest || (test === this.lastTest && test === undefined)) {
 				this.lastTest = test;
 				if (test) {
 					this.appendChildToParent(this.directive.children, stack);
