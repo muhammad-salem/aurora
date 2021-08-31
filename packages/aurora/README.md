@@ -38,7 +38,7 @@ in your main `index.ts` file:
 /// <reference types="@ibyar/types" />
 ```
 
-see test for more help [`example`](example/)
+see test for more help [`example`](https://github.com/ibyar/aurora/tree/dev/example)
 
 ## 'HTML Template' Features
 
