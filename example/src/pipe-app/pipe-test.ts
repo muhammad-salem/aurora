@@ -20,7 +20,6 @@ import { interval, Subscription } from 'rxjs';
 			{{d}}
 		</for>
 	</if>
-	<style>.bs-color{color: var({{currentColor}});}</style>
     <table class="table">
         <thead>
             <tr>

@@ -8,12 +8,12 @@ import { url as templateUrl } from './person-app.html';
 })
 export class PersonApp {
 	@Input()
-	appVersion: string = '20.9.29';
+	appVersion: string = '21.8.31';
 
 	title = 'Testing Components';
 
 	@Input()
-	appName = 'testing framework';
+	appName = 'Ibyar Aurora';
 
 	@Input()
 	name = 'alice';
@@ -37,7 +37,6 @@ export class PersonApp {
 					if (this.i < 3) {
 						return Promise.resolve({ value: this.i++, done: false });
 					}
-
 					return Promise.resolve({ done: true });
 				}
 			};
