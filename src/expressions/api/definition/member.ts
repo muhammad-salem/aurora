@@ -1,10 +1,11 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 
 @Deserializer('MemberExpression')
-export class MemberExpression extends AbstractExpressionNode {
+export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: MemberExpression, deserializer: NodeDeserializer): MemberExpression {
 		return new MemberExpression(deserializer(node.object), deserializer(node.property), node.computed);
 	}
@@ -29,20 +30,25 @@ export class MemberExpression extends AbstractExpressionNode {
 		return result;
 	}
 	get(stack: Stack, thisContext?: any) {
+		const objectRef = thisContext ?? this.object.get(stack);
+		let value; AnalyserNode;
 		if (this.computed) {
-			const thisRef = thisContext ?? this.object.get(stack);
-			const value = thisRef[this.property.get(stack)];
-			if (typeof value === 'function') {
-				return (<Function>value).bind(thisRef);
-			}
-			return value;
+			value = objectRef[this.property.get(stack)];
+		} else {
+			value = this.property.get(stack, objectRef);
 		}
-		const thisRef = thisContext ?? this.object.get(stack);
-		const value = this.property.get(stack, thisRef);
 		if (typeof value === 'function') {
-			return (<Function>value).bind(thisRef);
+			return (<Function>value).bind(objectRef);
 		}
 		return value;
+	}
+	findScope<T extends object>(stack: Stack): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
+	findScope<T extends object>(stack: Stack, objectSCope?: Scope<any>): Scope<T> | undefined {
+		if (!objectSCope) {
+			objectSCope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
+		}
+		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectSCope);
 	}
 	event(parent?: string): string[] {
 		if (this.computed) {

@@ -1,11 +1,12 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 export type ChainingType = 'property' | 'expression' | 'function';
 @Deserializer('ChainExpression')
-export class ChainExpression extends AbstractExpressionNode {
+export class ChainExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: ChainExpression, deserializer: NodeDeserializer): ChainExpression {
 		return new ChainExpression(
 			deserializer(node.optional),
@@ -26,7 +27,7 @@ export class ChainExpression extends AbstractExpressionNode {
 		return this.type;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error(`OptionalChainingNode.#set() has no implementation.`)
+		throw new Error(`ChainExpression.#set() has no implementation.`)
 	}
 	get(stack: Stack, thisContext?: any) {
 		let value: any | Function;
@@ -51,8 +52,16 @@ export class ChainExpression extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	getThis(stack: Stack): any {
-		return this.optional.get(stack);
+	findScope<T extends object>(stack: Stack): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
+	findScope<T extends object>(stack: Stack, objectSCope?: Scope<any>): Scope<T> | undefined {
+		if (!objectSCope) {
+			objectSCope = (this.optional as ExpressionNode & CanFindScope).findScope(stack);
+		}
+		if (!objectSCope) {
+			return;
+		}
+		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectSCope);
 	}
 	entry(): string[] {
 		return [...this.optional.entry(), ...this.property.entry()];

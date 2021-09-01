@@ -1,4 +1,4 @@
-import type { ScopeType } from '../scope/scope.js';
+import type { Scope, ScopeType } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
 
 export type NodeType = { type: string };
@@ -39,4 +39,19 @@ export interface CanDeclareVariable {
 	 * @param scope which scop to declare this identifier
 	 */
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
+}
+
+
+/**
+ * An interface meant to be implemented by MemberExpression,
+ * Identifier and ChainExpression and all Literal expressions
+ */
+export interface CanFindScope {
+	/**
+	 * try to search for scope of this expression, is meant to be used 
+	 * @param stack 
+	 */
+	findScope<T extends object>(stack: Stack): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined;
 }

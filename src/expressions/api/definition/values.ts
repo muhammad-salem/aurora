@@ -1,5 +1,8 @@
-import type { CanDeclareVariable, ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { ScopeType } from '../../scope/scope.js';
+import type {
+	CanDeclareVariable, ExpressionNode,
+	NodeDeserializer, CanFindScope
+} from '../expression.js';
+import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -14,7 +17,7 @@ import { AbstractExpressionNode } from '../abstract.js';
  * but sometimes it is possible to parse strings into identifiers.
  */
 @Deserializer('Identifier')
-export class Identifier extends AbstractExpressionNode implements CanDeclareVariable {
+export class Identifier extends AbstractExpressionNode implements CanDeclareVariable, CanFindScope {
 	static fromJSON(node: Identifier): Identifier {
 		return new Identifier(node.name);
 	}
@@ -32,6 +35,14 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareVari
 			return thisContext[this.name];
 		}
 		return stack.get(this.name);
+	}
+	findScope<T extends object>(stack: Stack): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
+	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined {
+		if (scope) {
+			return scope.getScope(this.name);
+		}
+		return stack.findScope(this.name);
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
@@ -54,7 +65,7 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareVari
 }
 
 @Deserializer('Literal')
-export class Literal<T> extends AbstractExpressionNode {
+export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: Literal<any>):
 		Literal<string>
 		| Literal<number>
@@ -75,6 +86,14 @@ export class Literal<T> extends AbstractExpressionNode {
 	}
 	get(): T {
 		return this.value;
+	}
+	findScope<V extends object>(stack: Stack): Scope<V>;
+	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
+	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
+		if (scope) {
+			return scope.getScope<V>(this.value as any);
+		}
+		return stack.findScope(this.value as any);
 	}
 	entry(): string[] {
 		return [];
