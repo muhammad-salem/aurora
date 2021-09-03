@@ -31,7 +31,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	get(stack: Stack, thisContext?: any) {
 		const objectRef = thisContext ?? this.object.get(stack);
-		let value; AnalyserNode;
+		let value;
 		if (this.computed) {
 			value = objectRef[this.property.get(stack)];
 		} else {
