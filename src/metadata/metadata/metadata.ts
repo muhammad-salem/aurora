@@ -151,8 +151,8 @@ export class Metadata {
 				return metadataKey in this[propertyKey];
 			}
 		} else if (metadataKey && !propertyKey) {
-			for (const key of Object.keys(this)) {
-				if (metadataKey in this[key]) {
+			for (const key of (Object.keys(this) as PropertyKey[]).concat(Object.getOwnPropertySymbols(metadata))) {
+				if (metadataKey in this[key as string]) {
 					return true;
 				}
 			}
@@ -173,8 +173,8 @@ export class Metadata {
 		return parent
 			.map((proto) => Metadata.getMetadata(proto))
 			.filter(metadata => metadata)
-			.flatMap(metadata => Object.keys(metadata))
-			.filter(key => (key !== PROPERTY_TYPE.toString() || key !== 'class'));
+			.flatMap(metadata => [...Object.keys(this), ...Object.getOwnPropertySymbols(metadata)] as (string)[])
+			.filter(key => (key !== PROPERTY_TYPE as any && key !== 'class'));
 	}
 	metadataKeys(): string[] {
 		let parent = [];
