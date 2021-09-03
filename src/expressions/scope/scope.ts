@@ -32,7 +32,7 @@ export interface Scope<T> {
 	 * get value of `propertyKey` in current context
 	 * @param propertyKey 
 	 */
-	getScope<V extends object>(propertyKey: PropertyKey): Scope<V>;
+	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined;
 }
 
 export class Scope<T extends object> implements Scope<T> {
@@ -65,12 +65,15 @@ export class Scope<T extends object> implements Scope<T> {
 	getContext(): T | undefined {
 		return this.context;
 	}
-	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> {
+	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined {
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
 			return scope;
 		}
 		const scopeContext = this.get(propertyKey);
+		if (typeof scopeContext === 'undefined') {
+			return;
+		}
 		scope = new Scope(scopeContext, 'block');
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
@@ -169,12 +172,15 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		}
 		return result;
 	}
-	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> {
+	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> | undefined {
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
 			return scope as ReactiveScope<V>;
 		}
 		const scopeContext = this.get(propertyKey);
+		if (typeof scopeContext === 'undefined') {
+			return;
+		}
 		const childName = this.getEventName(propertyKey);
 		scope = new ReactiveScope(scopeContext, 'block', childName, this.observer);
 		this.scopeMap.set(propertyKey, scope);
@@ -188,7 +194,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 			}
 			return `${String(this.name)}.${String(child)}`;
 		}
-		return `${String(child)}`;
+		return String(child);
 	}
 
 	subscribe(callback: (propertyKey: PropertyKey, oldValue: any, newValue: any) => void): Subscription<T> {
