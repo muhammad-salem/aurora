@@ -40,9 +40,12 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareVari
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined {
 		if (scope) {
-			return scope.getScope(this.name);
+			scope = scope.getScope(this.name);
+		} else {
+			scope = stack.findScope(this.name);
+			scope = scope.getScope(this.name);
 		}
-		return stack.findScope(this.name);
+		return scope.getContext() && scope;
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
@@ -91,9 +94,12 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
 	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
 		if (scope) {
-			return scope.getScope<V>(this.value as any);
+			scope = scope.getScope(this.value as any);
+		} else {
+			scope = stack.findScope(this.value as any);
+			scope = scope.getScope(this.value as any);
 		}
-		return stack.findScope(this.value as any);
+		return scope.getContext() && scope;
 	}
 	entry(): string[] {
 		return [];
