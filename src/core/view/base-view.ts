@@ -1,4 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
+import { defineInstancePropertyMap } from '@ibyar/metadata';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -38,6 +39,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 				});
 			}
 			const model = new modelClass(/* resolve dependency injection*/);
+			defineInstancePropertyMap(model);
 			this._model = defineModel(model);
 
 			// if model had view decorator
