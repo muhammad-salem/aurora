@@ -2,11 +2,22 @@ import { Component, HTMLComponent, Input, isModel, View } from '@ibyar/aurora';
 
 export type AppSelector = string | (string | { tag: string, is?: string })[]
 
+const APP = Symbol.for('app-parent');
+class AppParent {
+	@Input()
+	date: AppSelector;
+
+	@Input('app')
+	[APP]: string;
+
+	name: string;
+}
+
 @Component({
 	selector: 'app-root',
 	template: `<div [innerHTML]="apps"></div>`
 })
-export class AppRoot {
+export class AppRoot extends AppParent {
 
 	@Input('selector')
 	appSelector: AppSelector;
