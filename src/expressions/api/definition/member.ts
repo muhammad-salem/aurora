@@ -33,6 +33,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	get(stack: Stack, thisContext?: any) {
 		const objectRef = thisContext ?? this.object.get(stack);
+		if (typeof objectRef === 'undefined') {
+			throw new TypeError(`Cannot read property '${this.property.toString()}' of undefined`);
+		}
 		let value;
 		if (this.computed) {
 			value = objectRef[this.property.get(stack)];
