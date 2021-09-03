@@ -1,2 +1,2 @@
-export * from './metadata.js';
-export * from './bootstrap-data.js';
+export * from './metadata/metadata.js';
+export * from './store/bootstrap.js';
