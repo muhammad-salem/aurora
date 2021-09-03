@@ -25,6 +25,11 @@
 		"ibyar",
 		"template-syntax",
 		"template-expression",
-		"typescript"
+		"typescript",
+		"estree",
+		"parser",
+		"v8",
+		"stack",
+		"scope"
 	]
 }
