@@ -42,8 +42,10 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 				case 'property':
 				case 'function':
 					value = (<ExpressionNode>this.property).get(stack, object);
+					break;
 				case 'expression':
 					value = object[(<ExpressionNode>this.property).get(stack, object)];
+					break;
 			}
 			thisContext = object;
 		}
@@ -54,14 +56,14 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 	}
 	findScope<T extends object>(stack: Stack): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
-	findScope<T extends object>(stack: Stack, objectSCope?: Scope<any>): Scope<T> | undefined {
-		if (!objectSCope) {
-			objectSCope = (this.optional as ExpressionNode & CanFindScope).findScope(stack);
+	findScope<T extends object>(stack: Stack, objectScope?: Scope<any>): Scope<T> | undefined {
+		if (!objectScope) {
+			objectScope = (this.optional as ExpressionNode & CanFindScope).findScope(stack);
+			if (typeof objectScope === 'undefined') {
+				return objectScope;
+			}
 		}
-		if (!objectSCope) {
-			return;
-		}
-		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectSCope);
+		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
 	entry(): string[] {
 		return [...this.optional.entry(), ...this.property.entry()];
