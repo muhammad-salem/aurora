@@ -1,3 +1,8 @@
+/**
+ * @module
+ * https://rbuckton.github.io/reflect-metadata/
+ */
+
 export type MetadataKey = 'design:type' | 'design:paramtypes' | 'design:returntype'
 	| 'selfskip' | 'optional'
 	| 'input' | 'output'
@@ -43,7 +48,7 @@ declare global {
 		function getMetadata(metadataKey: MetadataKey, target: object): any[];
 		function getMetadata(metadataKey: MetadataKey, target: object, propertyKey: string | symbol): any;
 
-		function getPropertyKey(target: object): string[];
+		function getPropertyKeys(target: object): string[];
 
 		function getOwnMetadata(metadataKey: void, target: object): Metadata;
 		function getOwnMetadata(metadataKey: MetadataKey, target: object): any[];
@@ -57,6 +62,8 @@ declare global {
 
 		function deleteMetadata(metadataKey: MetadataKey, target: object): void;
 		function deleteMetadata(metadataKey: MetadataKey, target: object, propertyKey: string | symbol): void;
+
+		function getMetadataMap(prototypeRef: Object): Metadata | undefined;
 	}
 }
 
@@ -65,6 +72,8 @@ if (!Reflect.has(Symbol, 'metadata')) {
 }
 
 const MetadataSymbol = Symbol as SymbolConstructor & { readonly metadata: unique symbol };
+
+const PROPERTY_TYPE = Symbol.for('PROPERTY_TYPE');
 
 export class Metadata {
 	static setMetadata(prototypeRef: Object, metadata: Metadata) {
@@ -83,8 +92,11 @@ export class Metadata {
 	[key: string]: MetadataRef;
 	'class': MetadataRef;
 
+	[PROPERTY_TYPE]: object;
+
 	constructor(prototypeRef: Object) {
 		Metadata.setMetadata(prototypeRef, this);
+		this[PROPERTY_TYPE] = prototypeRef;
 	}
 	setMetadata(propertyKey: string, metadataKey: MetadataKey, value: MetadataRef): void {
 		this[propertyKey] = this[propertyKey] || {};
@@ -151,17 +163,26 @@ export class Metadata {
 	}
 
 	propertyKeys(): string[] {
-		return Object.keys(this);
-	}
-	metadataKeys(): string[] {
 		let parent = [];
-		let target = this.prototypeRef;
+		let target = this[PROPERTY_TYPE];
 		while (target) {
 			parent.push(target);
 			target = Object.getPrototypeOf(target);
-			if (target?.constructor) {
-				target = target.constructor.prototype;
-			}
+			target = target?.constructor.prototype;
+		}
+		return parent
+			.map((proto) => Metadata.getMetadata(proto))
+			.filter(metadata => metadata)
+			.flatMap(metadata => Object.keys(metadata))
+			.filter(key => (key !== PROPERTY_TYPE.toString() || key !== 'class'));
+	}
+	metadataKeys(): string[] {
+		let parent = [];
+		let target = this[PROPERTY_TYPE];
+		while (target) {
+			parent.push(target);
+			target = Object.getPrototypeOf(target);
+			target = target?.constructor.prototype;
 		}
 		return parent
 			.map((proto) => Metadata.getMetadata(proto))
@@ -174,7 +195,8 @@ export class Metadata {
 		if (propertyKey) {
 			return Object.keys(this[propertyKey]);
 		}
-		return this.propertyKeys()
+		return Object.keys(this)
+			.filter(key => (key !== PROPERTY_TYPE.toString()))
 			.map((key) => this[key])
 			.flatMap((metaRef) => Object.keys(metaRef));
 	}
@@ -188,12 +210,6 @@ export class Metadata {
 	}
 }
 
-// Map<string, MetadataRef>
-//    property name: ==> {key: value}
-function getMetadataMap(target: Object): Metadata {
-	let prototype = typeof target === 'function' ? target.prototype : target;
-	return Metadata.getMetadata(prototype);
-}
 function getMetadataOrDefineMap(target: Object): Metadata {
 	let prototype = typeof target === 'function' ? target.prototype : target;
 	let metadata: Metadata = Metadata.getMetadata(prototype);
@@ -230,7 +246,7 @@ export function getOwnMetadata(target: object, propertyKey: string): string[] | 
 	return getMetadataOrDefineMap(target).getOwnMetadataKeys(propertyKey || 'class');
 }
 
-export function getPropertyKey(target: object): string[] {
+export function getPropertyKeys(target: object): string[] {
 	return getMetadataOrDefineMap(target).propertyKeys();
 }
 
@@ -243,5 +259,7 @@ Object.defineProperty(Reflect, 'metadata', { value: metadata });
 Object.defineProperty(Reflect, 'hasMetadata', { value: hasMetadata });
 Object.defineProperty(Reflect, 'getMetadata', { value: getMetadata });
 Object.defineProperty(Reflect, 'getOwnMetadata', { value: getOwnMetadata });
-Object.defineProperty(Reflect, 'getPropertyKey', { value: getPropertyKey });
+Object.defineProperty(Reflect, 'getPropertyKeys', { value: getPropertyKeys });
 Object.defineProperty(Reflect, 'getMetadataKeys', { value: getMetadataKeys });
+Object.defineProperty(Reflect, 'getMetadataMap', { value: Metadata.getMetadata });
+
