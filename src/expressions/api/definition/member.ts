@@ -19,15 +19,17 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		return this.property;
 	}
 	set(stack: Stack, value: any) {
-		const objectContext = this.object.get(stack);
+		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
+		let propertyKey: PropertyKey;
 		if (this.computed) {
-			const propertyKey = this.property.get(stack);
-			return objectContext[propertyKey] = value;
+			propertyKey = this.property.get(stack);
+			objectScope.set(propertyKey, value);
+		} else {
+			stack.pushScope(objectScope);
+			this.property.set(stack, value);
+			stack.clearTo(objectScope);
 		}
-		const objectScope = stack.pushBlockScopeFor(objectContext);
-		const result = this.property.set(stack, value);
-		stack.clearTo(objectScope);
-		return result;
+		return value;
 	}
 	get(stack: Stack, thisContext?: any) {
 		const objectRef = thisContext ?? this.object.get(stack);
@@ -44,11 +46,11 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	findScope<T extends object>(stack: Stack): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
-	findScope<T extends object>(stack: Stack, objectSCope?: Scope<any>): Scope<T> | undefined {
-		if (!objectSCope) {
-			objectSCope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
+	findScope<T extends object>(stack: Stack, objectScope?: Scope<any>): Scope<T> | undefined {
+		if (!objectScope) {
+			objectScope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
 		}
-		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectSCope);
+		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
 	event(parent?: string): string[] {
 		if (this.computed) {
