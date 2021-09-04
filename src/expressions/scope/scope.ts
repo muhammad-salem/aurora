@@ -1,5 +1,6 @@
 
-export type ScopeType = 'block' | 'function';
+export type ScopeType = 'block' | 'function' | 'class' | 'module' | 'global';
+
 export interface Scope<T> {
 	type: ScopeType;
 
