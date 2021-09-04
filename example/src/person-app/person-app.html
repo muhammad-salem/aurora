@@ -31,11 +31,11 @@
 <hr>
 
 <h1>For Loop Directive</h1>
-<h5>*for="const i = 0; i &lt; people.length; i++"</h5>
+<h5>*for="let index = 0; index &lt; people.length; index++"</h5>
 <div class="row">
-	<div class="col-3" *for="const i = 0; i < people.length; i++">
-		<p>Name: <span>{{people[i].name}}</span></p>
-		<p>Age: <span>{{people[i].age}}</span></p>
+	<div class="col-3" *for="let index = 0; index < people.length; index++">
+		<p>Name: <span>{{people[index].name}}</span></p>
+		<p>Age: <span>{{people[index].age}}</span></p>
 	</div>
 </div>
 
