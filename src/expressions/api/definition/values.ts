@@ -21,7 +21,7 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareVari
 	static fromJSON(node: Identifier): Identifier {
 		return new Identifier(node.name);
 	}
-	constructor(private name: string | number) {
+	constructor(protected name: string | number) {
 		super();
 	}
 	getName() {

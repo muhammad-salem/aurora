@@ -1,9 +1,11 @@
 import type { Stack } from '../../scope/stack.js';
+import type { ScopeType } from '../../scope/scope.js';
 import type { CanDeclareVariable, ExpressionNode, NodeDeserializer } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { FunctionExpression, Identifier } from '../index.js';
-import { ScopeType } from '../../scope/scope.js';
+import { Identifier } from '../definition/values.js';
+import { MemberExpression } from '../definition/member.js';
+import { FunctionExpression } from '../definition/function.js';
 
 
 /**
@@ -14,36 +16,21 @@ import { ScopeType } from '../../scope/scope.js';
  * In the future, it will represent other meta properties as well.
  */
 @Deserializer('MetaProperty')
-export class MetaProperty extends AbstractExpressionNode {
+export class MetaProperty extends MemberExpression {
 	static fromJSON(node: MetaProperty, deserializer: NodeDeserializer<any>): MetaProperty {
 		return new MetaProperty(
 			deserializer(node.meta),
 			deserializer(node.property)
 		);
 	}
-	constructor(private meta: Identifier, private property: Identifier) {
-		super();
+	constructor(private meta: Identifier, property: Identifier) {
+		super(meta, property, false);
 	}
 	getMeta() {
 		return this.meta;
 	}
-	getProperty() {
-		return this.property;
-	}
-	set(stack: Stack, value: any) {
-		throw new Error('Method not implemented.');
-	}
-	get(stack: Stack, thisContext?: any) {
-		throw new Error('Method not implemented.');
-	}
-	entry(): string[] {
-		throw new Error('Method not implemented.');
-	}
-	event(parent?: string): string[] {
-		throw new Error('Method not implemented.');
-	}
 	toString(): string {
-		throw new Error('Method not implemented.');
+		return `${this.meta.toString()}.${this.property.toString()}`;
 	}
 	toJson(key?: string): { [key: string]: any; } {
 		return {
@@ -57,36 +44,21 @@ export class MetaProperty extends AbstractExpressionNode {
  * A private identifier refers to private class elements. For a private name #a, its name is a.
  */
 @Deserializer('PrivateIdentifier')
-export class PrivateIdentifier extends AbstractExpressionNode {
+export class PrivateIdentifier extends Identifier {
 	static fromJSON(node: PrivateIdentifier): PrivateIdentifier {
 		return new PrivateIdentifier(
-			node.name
+			node.name as string
 		);
 	}
-	constructor(private name: string) {
-		super();
-	}
-	getName() {
-		return this.name;
-	}
-	set(stack: Stack, value: any) {
-		throw new Error('Method not implemented.');
-	}
-	get(stack: Stack, thisContext?: any) {
-		throw new Error('Method not implemented.');
-	}
-	entry(): string[] {
-		throw new Error('Method not implemented.');
-	}
-	event(parent?: string): string[] {
-		throw new Error('Method not implemented.');
+	constructor(private privateName: string) {
+		super('ɵ_' + privateName);
 	}
 	toString(): string {
-		throw new Error('Method not implemented.');
+		return `#${this.privateName}`;
 	}
 	toJson(key?: string): { [key: string]: any; } {
 		return {
-			name: this.name
+			name: this.privateName
 		};
 	}
 }
@@ -97,7 +69,7 @@ export type MethodDefinitionKind = 'constructor' | 'method' | 'set' | 'get';
  * - When key is a PrivateIdentifier, computed must be false and kind can not be "constructor".
  */
 @Deserializer('MethodDefinition')
-export class MethodDefinition extends AbstractExpressionNode {
+export class MethodDefinition extends AbstractExpressionNode implements CanDeclareVariable {
 	static fromJSON(node: MethodDefinition, deserializer: NodeDeserializer<any>): MethodDefinition {
 		return new MethodDefinition(
 			node.kind,
@@ -107,9 +79,7 @@ export class MethodDefinition extends AbstractExpressionNode {
 			node.static
 		);
 	}
-
 	private 'static': boolean;
-
 	constructor(
 		private kind: MethodDefinitionKind,
 		private key: ExpressionNode | PrivateIdentifier,
@@ -141,6 +111,9 @@ export class MethodDefinition extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('Method not implemented.');
 	}
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
+		throw new Error('Method not implemented.');
+	}
 	entry(): string[] {
 		throw new Error('Method not implemented.');
 	}
@@ -167,7 +140,7 @@ export class MethodDefinition extends AbstractExpressionNode {
  * - When key is a PrivateIdentifier, computed must be false.
  */
 @Deserializer('PropertyDefinition')
-export class PropertyDefinition extends AbstractExpressionNode {
+export class PropertyDefinition extends AbstractExpressionNode implements CanDeclareVariable {
 	static fromJSON(node: PropertyDefinition, deserializer: NodeDeserializer<any>): PropertyDefinition {
 		return new PropertyDefinition(
 			deserializer(node.key),
@@ -201,6 +174,9 @@ export class PropertyDefinition extends AbstractExpressionNode {
 		throw new Error('Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
 	entry(): string[] {
