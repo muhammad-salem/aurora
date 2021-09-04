@@ -48,8 +48,47 @@ export class MetaProperty extends AbstractExpressionNode {
 	}
 }
 
+/**
+ * A private identifier refers to private class elements. For a private name #a, its name is a.
+ */
+@Deserializer('PrivateIdentifier')
+export class PrivateIdentifier extends AbstractExpressionNode {
+	static fromJSON(node: PrivateIdentifier): PrivateIdentifier {
+		return new PrivateIdentifier(
+			node.name
+		);
+	}
+
+	constructor(private name: string) {
+		super();
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	entry(): string[] {
+		throw new Error('Method not implemented.');
+	}
+	event(parent?: string): string[] {
+		throw new Error('Method not implemented.');
+	}
+	toString(): string {
+		throw new Error('Method not implemented.');
+	}
+	toJson(key?: string): { [key: string]: any; } {
+		return {
+			name: this.name
+		};
+	}
+}
+
 export type MethodDefinitionKind = 'constructor' | 'method' | 'set' | 'get';
 
+/**
+ * - When key is a PrivateIdentifier, computed must be false and kind can not be "constructor".
+ */
 @Deserializer('MethodDefinition')
 export class MethodDefinition extends AbstractExpressionNode {
 	static fromJSON(node: MethodDefinition, deserializer: NodeDeserializer<any>): MethodDefinition {
@@ -66,7 +105,7 @@ export class MethodDefinition extends AbstractExpressionNode {
 
 	constructor(
 		private kind: MethodDefinitionKind,
-		private key: ExpressionNode,
+		private key: ExpressionNode | PrivateIdentifier,
 		private value: FunctionExpression,
 
 		private computed: boolean,
@@ -101,6 +140,54 @@ export class MethodDefinition extends AbstractExpressionNode {
 }
 
 
+
+/**
+ * - When key is a PrivateIdentifier, computed must be false.
+ */
+@Deserializer('PropertyDefinition')
+export class PropertyDefinition extends AbstractExpressionNode {
+	static fromJSON(node: PropertyDefinition, deserializer: NodeDeserializer<any>): PropertyDefinition {
+		return new PropertyDefinition(
+			deserializer(node.key),
+			node.computed,
+			node.static,
+			node.value && deserializer(node.value)
+		);
+	}
+	private 'static': boolean;
+	constructor(
+		private key: ExpressionNode | PrivateIdentifier,
+		private computed: boolean,
+		isStatic: boolean,
+		private value?: ExpressionNode) {
+		super();
+		this.static = isStatic;
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	entry(): string[] {
+		throw new Error('Method not implemented.');
+	}
+	event(parent?: string): string[] {
+		throw new Error('Method not implemented.');
+	}
+	toString(): string {
+		throw new Error('Method not implemented.');
+	}
+	toJson(key?: string): { [key: string]: any; } {
+		return {
+			key: this.key.toJSON(),
+			computed: this.computed,
+			static: this.static,
+			value: this.value?.toJSON()
+		};
+	}
+}
+
 @Deserializer('ClassBody')
 export class ClassBody extends AbstractExpressionNode {
 	static fromJSON(node: ClassBody, deserializer: NodeDeserializer<any>): ClassBody {
@@ -109,7 +196,7 @@ export class ClassBody extends AbstractExpressionNode {
 		);
 	}
 
-	constructor(private body: MethodDefinition[]) {
+	constructor(private body: (MethodDefinition | PropertyDefinition)[]) {
 		super();
 	}
 	set(stack: Stack, value: any) {
