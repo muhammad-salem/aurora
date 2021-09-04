@@ -46,11 +46,29 @@ export class Scope<T extends object> implements Scope<T> {
 	static functionScopeFor<T extends object>(context: T) {
 		return new Scope(context, 'function');
 	}
+	static classScopeFor<T extends object>(context: T) {
+		return new Scope(context, 'class');
+	}
+	static moduleScopeFor<T extends object>(context: T) {
+		return new Scope(context, 'module');
+	}
+	static globalScopeFor<T extends object>(context: T) {
+		return new Scope(context, 'global');
+	}
 	static blockScope<T extends object>() {
 		return new Scope({} as T, 'block');
 	}
 	static functionScope<T extends object>() {
 		return new Scope({} as T, 'function');
+	}
+	static classScope<T extends object>() {
+		return new Scope({} as T, 'class');
+	}
+	static moduleScope<T extends object>() {
+		return new Scope({} as T, 'module');
+	}
+	static globalScope<T extends object>() {
+		return new this({} as T, 'global');
 	}
 	protected scopeMap = new Map<PropertyKey, Scope<any>>();
 	constructor(protected context: T, public type: ScopeType) { }
@@ -88,8 +106,32 @@ export class ReadOnlyScope<T extends object> extends Scope<T> {
 	static blockScopeFor<T extends object>(context: T) {
 		return new ReadOnlyScope(context, 'block');
 	}
+	static functionScopeFor<T extends object>(context: T) {
+		return new ReadOnlyScope(context, 'function');
+	}
+	static classScopeFor<T extends object>(context: T) {
+		return new ReadOnlyScope(context, 'class');
+	}
+	static moduleScopeFor<T extends object>(context: T) {
+		return new ReadOnlyScope(context, 'module');
+	}
+	static globalScopeFor<T extends object>(context: T) {
+		return new ReadOnlyScope(context, 'global');
+	}
 	static blockScope<T extends object>() {
 		return new ReadOnlyScope({} as T, 'block');
+	}
+	static functionScope<T extends object>() {
+		return new ReadOnlyScope({} as T, 'function');
+	}
+	static classScope<T extends object>() {
+		return new ReadOnlyScope({} as T, 'class');
+	}
+	static moduleScope<T extends object>() {
+		return new ReadOnlyScope({} as T, 'module');
+	}
+	static globalScope<T extends object>() {
+		return new ReadOnlyScope({} as T, 'global');
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
 		// do nothing
@@ -150,11 +192,29 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 	static functionScopeFor<T extends object>(context: T) {
 		return new ReactiveScope(context, 'function');
 	}
+	static classScopeFor<T extends object>(context: T) {
+		return new ReactiveScope(context, 'class');
+	}
+	static moduleScopeFor<T extends object>(context: T) {
+		return new ReactiveScope(context, 'module');
+	}
+	static globalScopeFor<T extends object>(context: T) {
+		return new ReactiveScope(context, 'global');
+	}
 	static blockScope<T extends object>() {
 		return new ReactiveScope({} as T, 'block');
 	}
 	static functionScope<T extends object>() {
 		return new ReactiveScope({} as T, 'function');
+	}
+	static classScope<T extends object>() {
+		return new ReactiveScope({} as T, 'class');
+	}
+	static moduleScope<T extends object>() {
+		return new ReactiveScope({} as T, 'module');
+	}
+	static globalScope<T extends object>() {
+		return new ReactiveScope({} as T, 'global');
 	}
 	private observer: ValueChangeObserver<T>;
 	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<T>) {

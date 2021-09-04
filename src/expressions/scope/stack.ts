@@ -124,7 +124,7 @@ export class Stack implements Stack {
 		if (contexts.length === 0) {
 			return new Stack();
 		}
-		return new Stack(contexts.map(context => new Scope(context, 'block')));
+		return new Stack(contexts.map(context => new Scope(context, 'global')));
 	}
 	static forScopes(...scopes: Scope<any>[]): Stack {
 		if (scopes.length === 0) {
@@ -195,6 +195,21 @@ export class Stack implements Stack {
 		this.stack.push(scope);
 		return scope;
 	}
+	pushClassScope<T extends object>(): Scope<T> {
+		const scope = Scope.classScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
+	pushModuleScope<T extends object>(): Scope<T> {
+		const scope = Scope.moduleScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
+	pushGlobalScope<T extends object>(): Scope<T> {
+		const scope = Scope.globalScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
 	pushBlockScopeFor<T extends object>(context: T): Scope<T> {
 		const scope = Scope.blockScopeFor(context);
 		this.stack.push(scope);
@@ -205,7 +220,21 @@ export class Stack implements Stack {
 		this.stack.push(scope);
 		return scope;
 	}
-
+	pushClassScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = Scope.classScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
+	pushModuleScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = Scope.moduleScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
+	pushGlobalScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = Scope.globalScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
 	pushBlockReactiveScope<T extends object>(): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScope<T>();
 		this.stack.push(scope);
@@ -216,6 +245,21 @@ export class Stack implements Stack {
 		this.stack.push(scope);
 		return scope;
 	}
+	pushClassReactiveScope<T extends object>(): Scope<T> {
+		const scope = ReactiveScope.classScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
+	pushModuleReactiveScope<T extends object>(): Scope<T> {
+		const scope = ReactiveScope.moduleScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
+	pushGlobalReactiveScope<T extends object>(): Scope<T> {
+		const scope = ReactiveScope.globalScope<T>();
+		this.stack.push(scope);
+		return scope;
+	}
 	pushBlockReactiveScopeFor<T extends object>(context: T): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScopeFor(context);
 		this.stack.push(scope);
@@ -223,6 +267,21 @@ export class Stack implements Stack {
 	}
 	pushFunctionReactiveScopeFor<T extends object>(context: T): ReactiveScope<T> {
 		const scope = ReactiveScope.functionScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
+	pushClassReactiveScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = ReactiveScope.classScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
+	pushModuleReactiveScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = ReactiveScope.moduleScopeFor(context);
+		this.stack.push(scope);
+		return scope;
+	}
+	pushGlobalReactiveScopeFor<T extends object>(context: T): Scope<T> {
+		const scope = ReactiveScope.globalScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
