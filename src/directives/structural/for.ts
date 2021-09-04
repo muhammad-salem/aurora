@@ -9,7 +9,6 @@ import { AbstractStructuralDirective } from './structural.js';
 	selector: '*for',
 })
 export class ForDirective<T> extends AbstractStructuralDirective<T> {
-
 	getStatement() {
 		if (/^await ?\(.*\)$/g.test(this.directive.directiveValue)) {
 			return `for ${this.directive.directiveValue} { }`;
@@ -35,18 +34,22 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		}
 		return callback;
 	}
-
 	handelForNode(forNode: ForNode) {
 		return () => {
-			const stack = this.directiveStack.copyStack();
-			stack.pushBlockScope();
+			let stack = this.directiveStack.copyStack();
+			let initScope = stack.pushFunctionScope();
+			forNode.getInit()?.get(stack);
 			for (
-				forNode.getInit()?.get(stack);
+				/** executed by common/directive stack*/;
 				forNode.getTest()?.get(stack) ?? true;
 				forNode.getUpdate()?.get(stack)
 			) {
 				// insert/remove
 				this.updateView(stack);
+				// each element child (in a for loop) should had its own stack
+				const context = Object.assign({}, initScope.getContext());
+				stack = this.directiveStack.copyStack();
+				initScope = stack.pushFunctionScopeFor(context);
 			}
 		};
 	}
