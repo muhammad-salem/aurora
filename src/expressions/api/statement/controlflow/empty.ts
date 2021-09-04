@@ -25,7 +25,7 @@ export class EmptyStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return void 0;
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {

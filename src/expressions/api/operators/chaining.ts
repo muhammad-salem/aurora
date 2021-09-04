@@ -65,8 +65,8 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	event(parent?: string): string[] {
-		return [...this.optional.event(), ...this.property.event()];
+	events(parent?: string): string[] {
+		return [...this.optional.events(), ...this.property.events()];
 	}
 	toString() {
 		return `${this.optional.toString()}?.${this.property.toString()}`;

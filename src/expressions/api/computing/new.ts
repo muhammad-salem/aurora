@@ -48,8 +48,8 @@ export class NewExpression extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	event(parent?: string): string[] {
-		return [...this.className.event()].concat(this.arguments?.flatMap(arg => arg.event()) || []);
+	events(parent?: string): string[] {
+		return [...this.className.events()].concat(this.arguments?.flatMap(arg => arg.events()) || []);
 	}
 	toString(): string {
 		const parameters = this.arguments ? `(${this.arguments?.map(arg => arg.toString()).join(', ')})` : '';

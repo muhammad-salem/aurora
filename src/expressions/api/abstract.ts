@@ -16,7 +16,7 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	}
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
-	abstract event(parent?: string): string[];
+	abstract events(parent?: string): string[];
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
@@ -37,8 +37,8 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
 	abstract get(stack: Stack): any;
-	event(parent?: string): string[] {
-		return [...this.left.event(), ...this.right.event()];
+	events(parent?: string): string[] {
+		return [...this.left.events(), ...this.right.events()];
 	}
 	toString() {
 		return `${this.left.toString()} ${this.operator} ${this.right.toString()}`;

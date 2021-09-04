@@ -27,8 +27,8 @@ export class GroupingExpression extends AbstractExpressionNode {
 	get(stack: Stack,) {
 		return this.node.get(stack);
 	}
-	event(parent?: string): string[] {
-		return this.node.event(parent);
+	events(parent?: string): string[] {
+		return this.node.events(parent);
 	}
 	toString(): string {
 		return `(${this.node.toString()})`;

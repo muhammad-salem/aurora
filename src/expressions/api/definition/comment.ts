@@ -31,7 +31,7 @@ export class CommentExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {

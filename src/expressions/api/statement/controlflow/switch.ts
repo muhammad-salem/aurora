@@ -30,8 +30,8 @@ export class SwitchCase extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
-	event(parent?: string): string[] {
-		return this.test.event();
+	events(parent?: string): string[] {
+		return this.test.events();
 	}
 	toString(): string {
 		return `case ${this.test.toString()}: ${this.consequent.toString()};`;
@@ -113,12 +113,12 @@ export class SwitchStatement extends AbstractExpressionNode {
 		stack.clearTo(caseBlock);
 		return void 0;
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [
-			...this.discriminant.event(),
+			...this.discriminant.events(),
 			...this.cases
 				.filter(c => c.getTest() !== DefaultExpression.DefaultNode)
-				.flatMap(c => c.getTest().event())
+				.flatMap(c => c.getTest().events())
 		];
 	}
 	toString(): string {

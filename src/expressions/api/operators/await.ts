@@ -18,8 +18,8 @@ export class AwaitExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error('AwaitExpression#set() has no implementation.');
 	}
-	event(parent?: string): string[] {
-		return this.argument.event(parent);
+	events(parent?: string): string[] {
+		return this.argument.events(parent);
 	}
 	get(stack: Stack, thisContext?: any) {
 		const promise = this.argument.get(stack);

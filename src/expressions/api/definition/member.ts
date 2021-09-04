@@ -55,15 +55,15 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		if (this.computed) {
 			parent ??= '';
-			parent = `${parent}${this.object.event(parent)}`;
+			parent = `${parent}${this.object.events(parent)}`;
 			return [parent, `${parent}[${this.property.toString()}]`];
 		}
 		parent ||= '';
 		parent += this.object.toString() + '.';
-		return [...this.object.event(), ...this.property.event(parent)];
+		return [...this.object.events(), ...this.property.events(parent)];
 	}
 	toString() {
 		if (this.computed) {

@@ -62,8 +62,8 @@ export class ForNode extends AbstractExpressionNode {
 		stack.clearTo(forBlock);
 		return void 0;
 	}
-	event(parent?: string): string[] {
-		return [...this.init?.event() || [], ...this.test?.event() || []];
+	events(parent?: string): string[] {
+		return [...this.init?.events() || [], ...this.test?.events() || []];
 	}
 	toString(): string {
 		return `for (${this.init?.toString()};${this.test?.toString()};${this.init?.toString()}) ${this.body.toString()}`;
@@ -127,8 +127,8 @@ export class ForOfNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	event(parent?: string): string[] {
-		return this.right.event();
+	events(parent?: string): string[] {
+		return this.right.events();
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;
@@ -192,8 +192,8 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	event(parent?: string): string[] {
-		return this.right.event();
+	events(parent?: string): string[] {
+		return this.right.events();
 	}
 	toString(): string {
 		return `for (${this.left.toString()} in ${this.right.toString()}) ${this.body.toString()}`;
@@ -247,8 +247,8 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
 	}
-	event(parent?: string): string[] {
-		return this.right.event();
+	events(parent?: string): string[] {
+		return this.right.events();
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;

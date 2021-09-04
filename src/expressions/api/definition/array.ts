@@ -21,8 +21,8 @@ export class ArrayExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
 	}
-	event(parent?: string): string[] {
-		return this.elements.flatMap(item => item.event());
+	events(parent?: string): string[] {
+		return this.elements.flatMap(item => item.events());
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();
@@ -60,8 +60,8 @@ export class ArrayPattern extends AbstractExpressionNode {
 	get(scopeProvider: Stack, values: any[]) {
 		this.set(scopeProvider, values);
 	}
-	event(parent?: string): string[] {
-		return this.elements.flatMap(item => item.event());
+	events(parent?: string): string[] {
+		return this.elements.flatMap(item => item.events());
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();

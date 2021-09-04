@@ -47,8 +47,8 @@ export class IfStatement extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	event(parent?: string): string[] {
-		return this.test.event().concat(this.consequent.event()).concat(this.alternate?.event() || []);
+	events(parent?: string): string[] {
+		return this.test.events().concat(this.consequent.events()).concat(this.alternate?.events() || []);
 	}
 	toString(): string {
 		return `if (${this.test.toString()}) ${this.consequent.toString()}${this.alternate ? ' else ' : ''}${this.alternate ? this.alternate.toString() : ''}`;

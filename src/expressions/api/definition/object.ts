@@ -48,8 +48,8 @@ export class Property extends AbstractExpressionNode implements CanDeclareVariab
 		const propertyValue = objectValue[propertyName];
 		(this.value as ExpressionNode & CanDeclareVariable).declareVariable(stack, scopeType, propertyValue);
 	}
-	event(): string[] {
-		return this.key.event().concat(this.value.event());
+	events(): string[] {
+		return this.key.events().concat(this.value.events());
 	}
 	toString(): string {
 		return `${this.key.toString()}: ${this.value.toString()}`;
@@ -84,8 +84,8 @@ export class ObjectExpression extends AbstractExpressionNode {
 		}
 		return newObject;
 	}
-	event(parent?: string): string[] {
-		return this.properties.flatMap(property => property.event());
+	events(parent?: string): string[] {
+		return this.properties.flatMap(property => property.events());
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
@@ -119,8 +119,8 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareV
 			property.declareVariable(stack, scopeType, objectValue);
 		}
 	}
-	event(parent?: string): string[] {
-		return this.properties.flatMap(property => property.event());
+	events(parent?: string): string[] {
+		return this.properties.flatMap(property => property.events());
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;

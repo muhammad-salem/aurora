@@ -53,8 +53,8 @@ export class Paramter extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error('Paramter#get() has no implementation.');
 	}
-	event(): string[] {
-		return this.identifier.event().concat(this.defaultValue?.event() || []);
+	events(): string[] {
+		return this.identifier.events().concat(this.defaultValue?.events() || []);
 	}
 	toString(): string {
 		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
@@ -250,9 +250,9 @@ export class FunctionExpression extends AbstractExpressionNode {
 		}
 		return func;
 	}
-	event(): string[] {
+	events(): string[] {
 		return [
-			...this.params.flatMap(param => param.event()),
+			...this.params.flatMap(param => param.events()),
 		];
 	}
 	toString(): string {
@@ -416,9 +416,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		}
 		return func;
 	}
-	event(): string[] {
+	events(): string[] {
 		return [
-			...this.params.flatMap(param => param.event()),
+			...this.params.flatMap(param => param.events()),
 		];
 	}
 	toString(): string {

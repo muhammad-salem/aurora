@@ -28,7 +28,7 @@ class TerminateStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.symbol;
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {

@@ -41,8 +41,8 @@ export class UpdateExpression extends AbstractExpressionNode {
 		this.set(stack, num.value);
 		return returnValue;
 	}
-	event(parent?: string): string[] {
-		return this.argument.event(parent);
+	events(parent?: string): string[] {
+		return this.argument.events(parent);
 	}
 	toString() {
 		if (this.prefix) {

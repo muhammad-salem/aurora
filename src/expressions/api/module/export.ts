@@ -94,7 +94,7 @@ export class ExportNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ExportNode.#get() has no implementation.`);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString() {

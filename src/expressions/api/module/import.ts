@@ -78,7 +78,7 @@ export class ImportNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ImportNode.#get() has no implementation.`);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString() {

@@ -43,8 +43,8 @@ export class BlockStatement extends AbstractExpressionNode {
 		}
 		stack.clearTo(blockScope);
 	}
-	event(parent?: string): string[] {
-		return this.body.flatMap(node => node.event(parent));
+	events(parent?: string): string[] {
+		return this.body.flatMap(node => node.events(parent));
 	}
 	toString(): string {
 		return `{ ${this.body.map(node => node.toString()).join('; ')}; }`;

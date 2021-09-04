@@ -48,7 +48,7 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareVari
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		if (parent) {
 			return [parent + this.toString()];
 		}
@@ -94,7 +94,7 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		scope = stack.findScope(this.value as any);
 		return scope.getScope(this.value as any);
 	}
-	event(): string[] {
+	events(): string[] {
 		return [];
 	}
 	toString(): string {
@@ -169,8 +169,8 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
 	}
-	event(): string[] {
-		return this.expressions.flatMap(expr => expr.event());
+	events(): string[] {
+		return this.expressions.flatMap(expr => expr.events());
 	}
 	toString(): string {
 		let str = this.tag?.toString() || '';

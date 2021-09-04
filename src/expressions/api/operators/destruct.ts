@@ -72,8 +72,8 @@ export class DestructuringAssignmentNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.set(stack);
 	}
-	event(parent?: string): string[] {
-		return [...this.keys.flatMap(key => key.event()), ...(this.restKey?.event() || [])];
+	events(parent?: string): string[] {
+		return [...this.keys.flatMap(key => key.events()), ...(this.restKey?.events() || [])];
 	}
 	toString() {
 		return `{${this.keys.map(key => key.toString()).join(', ')}${this.restKey ? ', ...' : ''}${this.restKey?.toString()}} = ${this.arrayOrObject.toString()}`;

@@ -51,8 +51,8 @@ export class WhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	event(parent?: string): string[] {
-		return this.test.event();
+	events(parent?: string): string[] {
+		return this.test.events();
 	}
 	toString(): string {
 		return `while (${this.test.toString()}) ${this.body.toString()}`;
@@ -105,7 +105,7 @@ export class DoWhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {

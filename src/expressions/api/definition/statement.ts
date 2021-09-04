@@ -22,8 +22,8 @@ export class ExpressionStatement extends AbstractExpressionNode {
 		this.body.forEach(node => value = node.get(stack));
 		return value;
 	}
-	event(parent?: string): string[] {
-		return this.body.flatMap(node => node.event(parent));
+	events(parent?: string): string[] {
+		return this.body.flatMap(node => node.events(parent));
 	}
 	toString(): string {
 		return this.body.map(node => node.toString()).join('; ').concat(';');

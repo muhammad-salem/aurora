@@ -35,8 +35,8 @@ export class ModuleNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ModuleNode.#get() has no implementation.`);
 	}
-	event(parent?: string): string[] {
-		return this.body.flatMap(exp => exp.event());
+	events(parent?: string): string[] {
+		return this.body.flatMap(exp => exp.events());
 	}
 	toString(): string {
 		const importString = this.importList.map(imp => imp.toString()).join('\n');

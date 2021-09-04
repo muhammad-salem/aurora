@@ -20,8 +20,8 @@ export class SequenceExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.expressions.map(expr => expr.get(stack)).pop();
 	}
-	event(parent?: string): string[] {
-		return [...this.expressions.flatMap(expression => expression.event())];
+	events(parent?: string): string[] {
+		return [...this.expressions.flatMap(expression => expression.events())];
 	}
 	toString() {
 		return this.expressions.map(key => key.toString()).join(', ');

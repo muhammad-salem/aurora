@@ -30,7 +30,7 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString() {

@@ -51,8 +51,8 @@ export class UnaryExpression extends AbstractExpressionNode {
 			}
 		}
 	}
-	event(parent?: string): string[] {
-		return this.argument.event(parent);
+	events(parent?: string): string[] {
+		return this.argument.events(parent);
 	}
 	toString() {
 		switch (this.operator) {

@@ -67,11 +67,11 @@ export class PipelineExpression extends AbstractExpressionNode {
 		}
 		return funCallBack.call(thisContext, paramValue, ...parameters);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [
-			...this.right.event(),
-			...this.left.event(),
-			...(this.params.filter(param => (param !== '?' && param !== '...?')) as ExpressionNode[]).flatMap(param => param.event!())
+			...this.right.events(),
+			...this.left.events(),
+			...(this.params.filter(param => (param !== '?' && param !== '...?')) as ExpressionNode[]).flatMap(param => param.events!())
 		];
 	}
 	toString() {

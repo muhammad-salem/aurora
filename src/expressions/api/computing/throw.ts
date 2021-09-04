@@ -24,8 +24,8 @@ export class ThrowStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	event(parent?: string): string[] {
-		return this.argument.event();
+	events(parent?: string): string[] {
+		return this.argument.events();
 	}
 	toString(): string {
 		return `throw ${this.argument.toString()}`;
@@ -59,7 +59,7 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
-	event(parent?: string): string[] {
+	events(parent?: string): string[] {
 		return [];
 	}
 	toString(): string {
@@ -147,8 +147,8 @@ export class TryCatchNode extends AbstractExpressionNode {
 		}
 		stack.clearTill(scope);
 	}
-	event(parent?: string): string[] {
-		return this.block.event().concat(this.handler?.event() || []).concat(this.finalizer?.event() || []);
+	events(parent?: string): string[] {
+		return this.block.events().concat(this.handler?.events() || []).concat(this.finalizer?.events() || []);
 	}
 	toString(): string {
 		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;

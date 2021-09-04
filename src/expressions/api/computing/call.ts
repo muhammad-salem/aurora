@@ -45,8 +45,8 @@ export class CallExpression extends AbstractExpressionNode {
 		}
 		return funCallBack.call(thisContext, ...parameters);
 	}
-	event(parent?: string): string[] {
-		return [...this.callee.event(), ...this.arguments.flatMap(arg => arg.event())];
+	events(parent?: string): string[] {
+		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
 	}
 	toString(): string {
 		return `${this.callee.toString()}(${this.arguments.map(arg => arg.toString()).join(', ')})`;

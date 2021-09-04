@@ -5,11 +5,45 @@ export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
 export interface ExpressionNode {
+
+	/**
+	 * assign the value to this expression in stack.
+	 * 
+	 * most ExpressionNode will not implement this method, and will throw an exception.
+	 * @param stack 
+	 * @param value 
+	 */
 	set(stack: Stack, value: any): any;
+
+	/**
+	 * execute/get the code for this expression and return the result value.
+	 * @param stack 
+	 * @param thisContext 
+	 */
 	get(stack: Stack, thisContext?: any): any;
-	event(parent?: string): string[];
+
+	/**
+	 * get all the events form this expression
+	 * @param parent 
+	 */
+	events(parent?: string): string[];
+
+	/**
+	 * re-write this expression as a javascript source 
+	 */
 	toString(): string;
+
+	/**
+	 * used to map this object to represent an estree expression
+	 * @param key 
+	 */
 	toJSON(key?: string): NodeJsonType;
+
+	/**
+	 * just a helper method to force class that implement this interface to
+	 * have a static method `fromJSON` to help reconstruct this ExpressionNode
+	 * with all necessary implementation to execute the code
+	 */
 	getClass(): NodeExpressionClass<ExpressionNode>;
 }
 
@@ -34,7 +68,7 @@ export interface CanDeclareVariable {
 	 * or closest function scope (global) scop,
 	 * the propertyName will be calculated at runtime
 	 * @param stack the stack which an identifier will be declared
-	 * @param propertyValue the initial value of identifer
+	 * @param propertyValue the initial value of identifier
 	 * @param scope which scop to declare this identifier
 	 */
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
