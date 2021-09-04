@@ -40,9 +40,6 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareVa
 			(this.id as (ExpressionNode & CanDeclareVariable)).declareVariable(stack, scopeType, value);
 		}
 	}
-	entry(): string[] {
-		return [];
-	}
 	event(parent?: string): string[] {
 		return [];
 	}
@@ -81,9 +78,6 @@ export class VariableDeclarationNode extends AbstractExpressionNode {
 		for (const item of this.declarations as (ExpressionNode & CanDeclareVariable)[]) {
 			item.declareVariable(stack, this.kind === 'var' ? 'function' : 'block');
 		}
-	}
-	entry(): string[] {
-		return this.declarations.flatMap(v => v.entry());
 	}
 	event(parent?: string): string[] {
 		return this.declarations.flatMap(v => v.event());

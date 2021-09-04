@@ -53,9 +53,6 @@ export class Paramter extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error('Paramter#get() has no implementation.');
 	}
-	entry(): string[] {
-		return this.identifier.entry().concat(this.defaultValue?.entry() || []);
-	}
 	event(): string[] {
 		return this.identifier.event().concat(this.defaultValue?.event() || []);
 	}
@@ -253,19 +250,9 @@ export class FunctionExpression extends AbstractExpressionNode {
 		}
 		return func;
 	}
-	entry(): string[] {
-		return [
-			...this.params.flatMap(param => param.entry()),
-			/** remove for now, should return only object not defined in this function scope */
-			// ...this.statements.flatMap(statement => statement.entry())
-		];
-	}
 	event(): string[] {
-		// return this.statements.flatMap(item => item.event());
 		return [
 			...this.params.flatMap(param => param.event()),
-			/** remove for now, should return only object not defined in this function scope */
-			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	toString(): string {
@@ -429,19 +416,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		}
 		return func;
 	}
-	entry(): string[] {
-		return [
-			...this.params.flatMap(param => param.entry()),
-			/** remove for now, should return only object not defined in this function scope */
-			// ...this.statements.flatMap(statement => statement.entry())
-		];
-	}
 	event(): string[] {
-		// return this.statements.flatMap(statement => statement.event());
 		return [
 			...this.params.flatMap(param => param.event()),
-			/** remove for now, should return only object not defined in this function scope */
-			// ...this.statements.flatMap(statement => statement.entry())
 		];
 	}
 	toString(): string {

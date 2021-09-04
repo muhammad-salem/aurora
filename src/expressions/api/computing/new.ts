@@ -48,9 +48,6 @@ export class NewExpression extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	entry(): string[] {
-		return [...this.className.entry()].concat(this.arguments?.flatMap(arg => arg.entry()) || []);
-	}
 	event(parent?: string): string[] {
 		return [...this.className.event()].concat(this.arguments?.flatMap(arg => arg.event()) || []);
 	}

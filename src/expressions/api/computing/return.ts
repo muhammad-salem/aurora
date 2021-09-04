@@ -25,9 +25,6 @@ export class ReturnStatement extends AbstractExpressionNode {
 		return new ReturnValue(this.argument?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}
-	entry(): string[] {
-		return this.argument?.entry() || [];
-	}
 	event(parent?: string): string[] {
 		return this.argument?.event(parent) || [];
 	}

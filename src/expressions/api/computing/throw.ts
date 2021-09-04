@@ -24,9 +24,6 @@ export class ThrowStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	entry(): string[] {
-		return this.argument.entry();
-	}
 	event(parent?: string): string[] {
 		return this.argument.event();
 	}
@@ -61,9 +58,6 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	}
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
-	}
-	entry(): string[] {
-		return [];
 	}
 	event(parent?: string): string[] {
 		return [];
@@ -152,9 +146,6 @@ export class TryCatchNode extends AbstractExpressionNode {
 			throw new Error(`Uncaught SyntaxError: Missing catch or finally after try`);
 		}
 		stack.clearTill(scope);
-	}
-	entry(): string[] {
-		return this.block.entry().concat(this.handler?.entry() || []).concat(this.finalizer?.entry() || []);
 	}
 	event(parent?: string): string[] {
 		return this.block.event().concat(this.handler?.event() || []).concat(this.finalizer?.event() || []);

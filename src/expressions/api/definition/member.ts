@@ -65,9 +65,6 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		parent += this.object.toString() + '.';
 		return [...this.object.event(), ...this.property.event(parent)];
 	}
-	entry(): string[] {
-		return this.object.entry();
-	}
 	toString() {
 		if (this.computed) {
 			return `${this.object.toString()}[${this.property.toString()}]`;

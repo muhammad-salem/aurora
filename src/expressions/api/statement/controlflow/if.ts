@@ -47,9 +47,6 @@ export class IfStatement extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	entry(): string[] {
-		return this.test.entry().concat(this.consequent.entry()).concat(this.alternate?.entry() || []);
-	}
 	event(parent?: string): string[] {
 		return this.test.event().concat(this.consequent.event()).concat(this.alternate?.event() || []);
 	}

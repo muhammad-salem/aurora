@@ -62,9 +62,6 @@ export class ForNode extends AbstractExpressionNode {
 		stack.clearTo(forBlock);
 		return void 0;
 	}
-	entry(): string[] {
-		return [];
-	}
 	event(parent?: string): string[] {
 		return [...this.init?.event() || [], ...this.test?.event() || []];
 	}
@@ -129,9 +126,6 @@ export class ForOfNode extends AbstractExpressionNode {
 			stack.clearTo(forBlock);
 		}
 		return void 0;
-	}
-	entry(): string[] {
-		return [];
 	}
 	event(parent?: string): string[] {
 		return this.right.event();
@@ -198,9 +192,6 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	entry(): string[] {
-		return [];
-	}
 	event(parent?: string): string[] {
 		return this.right.event();
 	}
@@ -255,9 +246,6 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			return result;
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
-	}
-	entry(): string[] {
-		return [];
 	}
 	event(parent?: string): string[] {
 		return this.right.event();

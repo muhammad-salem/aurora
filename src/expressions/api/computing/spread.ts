@@ -41,9 +41,6 @@ export class SpreadElement extends AbstractExpressionNode {
 			stack.declareVariable('block', length++, iteratorResult.value);
 		}
 	}
-	entry(): string[] {
-		return this.argument.entry();
-	}
 	event(parent?: string): string[] {
 		return this.argument.event();
 	}

@@ -21,9 +21,6 @@ export class Program extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any): any {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	entry(): string[] {
-		throw new Error(`${this.constructor.name}#set() has no implementation.`);
-	}
 	event(parent?: string): string[] {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}

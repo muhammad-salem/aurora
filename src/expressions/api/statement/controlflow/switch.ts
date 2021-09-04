@@ -30,9 +30,6 @@ export class SwitchCase extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
-	entry(): string[] {
-		return this.test.entry();
-	}
 	event(parent?: string): string[] {
 		return this.test.event();
 	}
@@ -115,9 +112,6 @@ export class SwitchStatement extends AbstractExpressionNode {
 		}
 		stack.clearTo(caseBlock);
 		return void 0;
-	}
-	entry(): string[] {
-		return this.discriminant.entry().concat(this.cases.flatMap(item => item.entry()));
 	}
 	event(parent?: string): string[] {
 		return [

@@ -7,7 +7,6 @@ export type NodeJsonType = { [key: string]: any } & NodeType;
 export interface ExpressionNode {
 	set(stack: Stack, value: any): any;
 	get(stack: Stack, thisContext?: any): any;
-	entry(): string[];
 	event(parent?: string): string[];
 	toString(): string;
 	toJSON(key?: string): NodeJsonType;
