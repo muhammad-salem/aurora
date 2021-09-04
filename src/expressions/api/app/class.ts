@@ -21,9 +21,14 @@ export class MetaProperty extends AbstractExpressionNode {
 			deserializer(node.property)
 		);
 	}
-
 	constructor(private meta: Identifier, private property: Identifier) {
 		super();
+	}
+	getMeta() {
+		return this.meta;
+	}
+	getProperty() {
+		return this.property;
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -58,9 +63,11 @@ export class PrivateIdentifier extends AbstractExpressionNode {
 			node.name
 		);
 	}
-
 	constructor(private name: string) {
 		super();
+	}
+	getName() {
+		return this.name;
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -113,6 +120,21 @@ export class MethodDefinition extends AbstractExpressionNode {
 		super();
 		this.static = isStatic;
 	}
+	getKind() {
+		return this.kind;
+	}
+	getKey() {
+		return this.key;
+	}
+	getValue() {
+		return this.value;
+	}
+	isComputed() {
+		return this.computed;
+	}
+	isStatic() {
+		return this.static;
+	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -163,6 +185,18 @@ export class PropertyDefinition extends AbstractExpressionNode {
 		super();
 		this.static = isStatic;
 	}
+	getKey() {
+		return this.key;
+	}
+	getValue() {
+		return this.value;
+	}
+	isComputed() {
+		return this.computed;
+	}
+	isStatic() {
+		return this.static;
+	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -195,9 +229,11 @@ export class ClassBody extends AbstractExpressionNode {
 			node.body.map(deserializer)
 		);
 	}
-
 	constructor(private body: (MethodDefinition | PropertyDefinition)[]) {
 		super();
+	}
+	getBody() {
+		return this.body;
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -227,6 +263,15 @@ export class Class extends AbstractExpressionNode {
 		protected id?: Identifier,
 		protected superClass?: ExpressionNode) {
 		super();
+	}
+	getBody() {
+		return this.body;
+	}
+	getId() {
+		return this.id;
+	}
+	getSuperClass() {
+		return this.superClass;
 	}
 
 	set(stack: Stack) {
@@ -285,4 +330,3 @@ export class ClassExpression extends Class {
 		);
 	}
 }
-
