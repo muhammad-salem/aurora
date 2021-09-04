@@ -143,7 +143,7 @@ export class ComponentRender<T> {
 		// }
 		else {
 			// listen to internal changes
-			// TODO: need to resolve paramter
+			// TODO: need to resolve parameter
 			addChangeListener(sourceModel, eventName, () => this.view._model[listener.modelCallbackName]());
 		}
 	}
@@ -323,7 +323,7 @@ export class ComponentRender<T> {
 		callback();
 	}
 	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
-		node.event().forEach(eventName => {
+		node.events().forEach(eventName => {
 			const context = contextStack.findScope(eventName)?.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
@@ -348,7 +348,7 @@ export class ComponentRender<T> {
 		const callback2 = () => {
 			attr.callbackExpression.get(contextStack);
 		};
-		attr.expression.event().forEach(eventName => {
+		attr.expression.events().forEach(eventName => {
 			const context = contextStack.findScope(eventName)?.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
