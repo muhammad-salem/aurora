@@ -1,3 +1,4 @@
+import type { ReactiveScope } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
@@ -13,6 +14,8 @@ export interface CustomElement {
 export interface BaseComponent<T extends Object> extends CustomElement {
 
 	_model: T & Model & { [key: string]: any };
+	_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
+	_viewScope: ReactiveScope<HTMLComponent<T>>;
 
 	getComponentRef(): ComponentRef<T>;
 

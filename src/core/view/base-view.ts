@@ -1,3 +1,4 @@
+import type { ReactiveScope } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
 import { defineInstancePropertyMap } from '@ibyar/metadata';
 import {
@@ -28,6 +29,9 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		_addEventListenerNative: Function;
 
 		_componentRef: ComponentRef<T>;
+
+		_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
+		_viewScope: ReactiveScope<CustomView<T>>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
