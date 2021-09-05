@@ -29,15 +29,15 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {
-		let parentProperty = Object.getOwnPropertyDescriptor(
+		const parentProperty = Object.getOwnPropertyDescriptor(
 			htmlParent.prototype,
 			input.viewAttribute
 		);
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
-			get(): any {
+			get(this: HTMLComponent<T>): any {
 				return this._model[input.modelProperty] || parentProperty?.get?.call(this);
 			},
-			set(value: any) {
+			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
 				this._model[input.modelProperty] = value;
 				if (parentProperty?.set) {
 					parentProperty.set.call(this, value);
@@ -64,7 +64,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 				// return this._model[output.modelProperty];
 				return eventListener;
 			},
-			set(event: string | Function): void {
+			set(this: HTMLComponent<T>, event: string | Function): void {
 				if (!event) {
 					if (subscription) {
 						subscription.unsubscribe();
