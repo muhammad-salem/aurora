@@ -118,7 +118,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 		let func: Function;
 		switch (this.kind) {
 			case FunctionKind.ASYNC:
-				func = async function (this: ThisType<any>, ...args: any[]) {
+				func = async function (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParamter(stack, args);
@@ -165,7 +165,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionKind.GENERATOR:
-				func = function* (this: ThisType<any>, ...args: any[]) {
+				func = function* (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParamter(stack, args);
@@ -181,7 +181,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				};
 				break;
 			case FunctionKind.ASYNC_GENERATOR:
-				func = async function* (this: ThisType<any>, ...args: any[]) {
+				func = async function* (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParamter(stack, args);
@@ -229,7 +229,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				break;
 			default:
 			case FunctionKind.NORMAL:
-				func = function (this: ThisType<any>, ...args: any[]) {
+				func = function (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParamter(stack, args);
