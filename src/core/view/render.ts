@@ -41,8 +41,8 @@ export class ComponentRender<T> {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushFunctionScope(); // to protect documentStack
-		this.view._viewScope = this.contextStack.pushBlockReactiveScopeFor(this.view);
-		this.view._modelScope = this.contextStack.pushBlockReactiveScopeFor(this.view._model);
+		this.contextStack.pushScope(this.view._viewScope);
+		this.contextStack.pushScope(this.view._modelScope);
 	}
 	initView(): void {
 		if (this.componentRef.template) {
