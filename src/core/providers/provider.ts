@@ -1,7 +1,8 @@
 
-import { getBootstrapMetadata } from '@ibyar/metadata';
-import { ComponentRef, DirectiveRef, PipeRef, PropertyRef, ServiceRef } from '../component/component.js';
-
+import {
+	Components, ComponentRef, DirectiveRef,
+	PipeRef, PropertyRef, ServiceRef
+} from '../component/component.js';
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 
 export class ClassRegistry {
@@ -29,8 +30,7 @@ export class ClassRegistry {
 
 	hasComponent<T>(selector: string): boolean {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> =
-				getBootstrapMetadata(modelClass.prototype);
+			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return true;
 			}
@@ -39,8 +39,7 @@ export class ClassRegistry {
 	}
 	getComponentRef<T>(selector: string): ComponentRef<T> | undefined {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> =
-				getBootstrapMetadata(modelClass.prototype);
+			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return componentRef;
 			}
@@ -50,8 +49,7 @@ export class ClassRegistry {
 	getComponent<T>(selector: string) {
 		// this.componentSet.
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> =
-				getBootstrapMetadata(modelClass.prototype);
+			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return modelClass;
 			}
@@ -91,8 +89,7 @@ export class ClassRegistry {
 
 	hasDirective<T>(selector: string): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> =
-				getBootstrapMetadata(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return true;
 			}
@@ -102,8 +99,7 @@ export class ClassRegistry {
 
 	directiveHasInput<T>(input: string): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> =
-				getBootstrapMetadata(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
 			if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
 				return true;
 			}
@@ -113,8 +109,7 @@ export class ClassRegistry {
 
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> =
-				getBootstrapMetadata(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return directiveRef;
 			}
@@ -125,7 +120,7 @@ export class ClassRegistry {
 
 	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
 		for (const pipeClass of this.pipeSet) {
-			const pipeRef: PipeRef<T> = getBootstrapMetadata(pipeClass.prototype);
+			const pipeRef: PipeRef<T> = Components.getBootstrap(pipeClass.prototype);
 			if (pipeRef.name === pipeName) {
 				return pipeRef;
 			}
@@ -135,7 +130,7 @@ export class ClassRegistry {
 
 	getService<T>(serviceName: string): ServiceRef<T> | undefined {
 		for (const serviceClass of this.serviceSet) {
-			const serviceRef: ServiceRef<T> = getBootstrapMetadata(serviceClass.prototype);
+			const serviceRef: ServiceRef<T> = Components.getBootstrap(serviceClass.prototype);
 			if (serviceRef.name === serviceName) {
 				return serviceRef;
 			}

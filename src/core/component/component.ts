@@ -4,7 +4,6 @@ import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DOMNode, DOMRenderNode, canAttachShadow
 } from '@ibyar/elements';
-import { findByModelClassOrCreat, setBootstrapMetadata } from '@ibyar/metadata';
 
 import { HTMLComponent } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
@@ -24,7 +23,11 @@ export class PropertyRef {
 }
 
 export class ChildRef {
-	constructor(public modelName: string, public selector: string | { new(): HTMLElement; prototype: HTMLElement } | CustomElementConstructor, public childOptions?: ChildOptions) { }
+	constructor(
+		public modelName: string,
+		public selector: string | { new(): HTMLElement; prototype: HTMLElement } | CustomElementConstructor,
+		public childOptions?: ChildOptions
+	) { }
 }
 
 export class ListenerRef {
@@ -91,46 +94,67 @@ export interface ComponentRef<T> {
 
 export class Components {
 
+	static getOrCreateBootstrap<T extends {}>(target: Object): T {
+		let bootstrap: T = Reflect.getMetadata('aurora:bootstrap', target);
+		if (!bootstrap) {
+			bootstrap = {} as T;
+			Reflect.defineMetadata('aurora:bootstrap', bootstrap, target);
+		}
+		return bootstrap;
+	}
+
+	static getBootstrap<T extends {}>(target: Object): T {
+		return Reflect.getMetadata('aurora:bootstrap', target);
+	}
+
+	static getComponentRef<T>(target: object): ComponentRef<T> {
+		return Reflect.getMetadata('aurora:metadata', target);
+	}
+
+	static setComponentRef<T>(target: object, componentRef: ComponentRef<T>): void {
+		Reflect.defineMetadata('aurora:metadata', componentRef, target);
+	}
+
 	static addOptional(modelProperty: Object) {
 	}
 
 	static addInput(modelProperty: Object, modelName: string, viewName: string) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.inputs = bootstrap.inputs || [];
 		bootstrap.inputs.push(new PropertyRef(modelName, viewName));
 	}
 
 	static addOutput(modelProperty: Object, modelName: string, viewName: string) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.outputs = bootstrap.outputs || [];
 		bootstrap.outputs.push(new PropertyRef(modelName, viewName));
 	}
 
 	static setComponentView(modelProperty: Object, modelName: string) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.view = modelName;
 	}
 
 	static addViewChild(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.viewChild = bootstrap.viewChild || [];
 		bootstrap.viewChild.push(new ChildRef(modelName, selector, childOptions));
 	}
 
 	static addViewChildren(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.ViewChildren = bootstrap.ViewChildren || [];
 		bootstrap.ViewChildren.push(new ChildRef(modelName, selector));
 	}
 
 	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.hostListeners = bootstrap.hostListeners || [];
 		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
 	}
 
 	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelProperty);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.hostBinding = bootstrap.hostBinding || [];
 		bootstrap.hostBinding.push(
 			new HostBindingRef(propertyKey, hostPropertyName)
@@ -138,7 +162,7 @@ export class Components {
 	}
 
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -147,7 +171,7 @@ export class Components {
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -156,7 +180,7 @@ export class Components {
 	}
 
 	static defineService(modelClass: Function, opts: ServiceOptions) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -166,7 +190,7 @@ export class Components {
 	}
 
 	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
-		var bootstrap: BootstrapMetadata = findByModelClassOrCreat(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
 
 		var componentRef: ComponentRef<T> = opts as unknown as ComponentRef<T>;
 		for (const key in bootstrap) {
@@ -211,7 +235,8 @@ export class Components {
 
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
-		setBootstrapMetadata(componentRef.viewClass, componentRef);
+		Components.setComponentRef(componentRef.modelClass, componentRef);
+		Components.setComponentRef(componentRef.viewClass, componentRef);
 
 		ClassRegistryProvider.registerComponent(modelClass);
 		ClassRegistryProvider.registerView(bootstrap.viewClass);

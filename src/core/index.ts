@@ -1,4 +1,4 @@
-/// <reference types='@ibyar/metadata' />
+import 'reflect-metadata';
 
 export * from './annotation/decorators.js';
 

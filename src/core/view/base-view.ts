@@ -1,6 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
 import { ReactiveScope } from '@ibyar/expressions';
-import { defineInstancePropertyMap } from '@ibyar/metadata';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -12,6 +11,20 @@ import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
+
+function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T) {
+	if (typeof instance !== 'object') {
+		return;
+	}
+	const prototype = Object.getPrototypeOf(instance);
+	if (!prototype) {
+		return;
+	}
+	const keys = Reflect.getMetadataKeys(prototype);
+	keys
+		.filter(key => !Reflect.has(instance, key))
+		.forEach(key => Reflect.set(instance, key, undefined));
+}
 
 export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 
