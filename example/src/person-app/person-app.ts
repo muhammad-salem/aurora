@@ -1,10 +1,9 @@
 import { Component, Input, View, HostListener, isModel } from '@ibyar/aurora';
 import { Person, PersonModel } from './person';
-import { url as templateUrl } from './person-app.html';
 
 @Component({
 	selector: 'person-app',
-	templateUrl: templateUrl
+	templateUrl: '/web_modules/@ibyar/example/dist/person-app/person-app.html'
 })
 export class PersonApp {
 	@Input()

@@ -4,8 +4,6 @@ import {
 	View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
-import { url as personViewURL } from './person-view.html';
-
 @Service({ provideIn: 'root' })
 export class LogService {
 	constructor() { }
@@ -24,7 +22,15 @@ export interface Person {
 
 @Component({
 	selector: 'person-view',
-	templateUrl: personViewURL
+	template: `
+			<p id="p-name" #nameArea class="{{className}}" onclick="onResize()">
+				Person name is {{person.name}}
+			</p>
+			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
+			<div *if="person.age >= 18">
+				Can have licence
+				<p>Data</p>
+			</div>`
 })
 
 @Component({
