@@ -23,6 +23,7 @@
 	"keywords": [
 		"aurora",
 		"ibyar",
+		"expressions",
 		"template-syntax",
 		"template-expression",
 		"typescript",
@@ -30,6 +31,10 @@
 		"parser",
 		"v8",
 		"stack",
-		"scope"
+		"scope",
+		"expression",
+		"js",
+		"eval",
+		"evaluation"
 	]
 }
