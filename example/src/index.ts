@@ -1,4 +1,3 @@
-/// <reference types="@ibyar/types" />
 
 import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';

@@ -6,9 +6,6 @@
 		},
 		{
 			"path": "../expressions/tsconfig.json"
-		},
-		{
-			"path": "../metadata/tsconfig.json"
 		}
 	]
 }
