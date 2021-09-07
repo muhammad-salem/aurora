@@ -3,7 +3,7 @@
 
 for packageDir in packages/* ; do
     for sub in "$packageDir"/** ; do
-        if [[ !($sub == *.json ||  $sub == *.md) ]]
+        if [[ !($sub == *.json || $sub == *.md || $sub == *LICENSE*) ]]
         then
             rm -rf $sub
         fi
