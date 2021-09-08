@@ -31,15 +31,6 @@ npm i --save @ibyar/aurora
 yarn add @ibyar/aurora
 ```
 
-- for import resources files as module you can get help by adding reference of `@ibyar/types`
-in your main `index.ts` file:
-
-```ts
-/// <reference types="@ibyar/types" />
-```
-
-see test for more help [`example`](https://github.com/ibyar/aurora/tree/dev/example)
-
 ## 'HTML Template' Features
 
 | Support | HTML Template|
@@ -159,6 +150,10 @@ see test for more help [`example`](https://github.com/ibyar/aurora/tree/dev/exam
 [shadow-event]: https://developers.google.com/web/fundamentals/web-components/shadowdom#events
 [template-id]: https://developers.google.com/web/fundamentals/web-components/customelements#fromtemplate
 [two-component]:https://github.com/salemebo/aurora-ts/blob/master/test/multi-component/m-person.tsx
+
+
+### How to use:
+
 
 
 ### `HTML -- template parser example`
