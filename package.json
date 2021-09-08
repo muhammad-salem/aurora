@@ -4,7 +4,8 @@
 	"license": "MIT",
 	"workspaces": [
 		"packages/*",
-		"example"
+		"example",
+		"bundles/*"
 	],
 	"dependencies": {
 		"tslib": "^2.3.1"

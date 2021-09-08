@@ -1,0 +1,21 @@
+{
+	"references": [
+		{
+			"path": "../../example/tsconfig.json"
+		}
+	],
+	"compilerOptions": {
+		"outDir": "./dist/",
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"module": "ES2020",
+		"target": "ES2021",
+		"jsx": "react",
+		"allowJs": true,
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"composite": true,
+		"tsBuildInfoFile": "./tsBuild.info"
+	}
+}
