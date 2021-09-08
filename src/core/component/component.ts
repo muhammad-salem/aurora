@@ -91,28 +91,30 @@ export interface ComponentRef<T> {
 	shadowDomDelegatesFocus: boolean;
 }
 
+const AuroraBootstrap = Symbol.for('aurora:bootstrap');
+const AuroraMetadata = Symbol.for('aurora:metadata');
 
 export class Components {
 
 	static getOrCreateBootstrap<T extends {}>(target: Object): T {
-		let bootstrap: T = Reflect.getMetadata('aurora:bootstrap', target);
+		let bootstrap: T = Reflect.getMetadata(AuroraBootstrap, target);
 		if (!bootstrap) {
 			bootstrap = {} as T;
-			Reflect.defineMetadata('aurora:bootstrap', bootstrap, target);
+			Reflect.defineMetadata(AuroraBootstrap, bootstrap, target);
 		}
 		return bootstrap;
 	}
 
 	static getBootstrap<T extends {}>(target: Object): T {
-		return Reflect.getMetadata('aurora:bootstrap', target);
+		return Reflect.getMetadata(AuroraBootstrap, target);
 	}
 
 	static getComponentRef<T>(target: object): ComponentRef<T> {
-		return Reflect.getMetadata('aurora:metadata', target);
+		return Reflect.getMetadata(AuroraMetadata, target);
 	}
 
 	static setComponentRef<T>(target: object, componentRef: ComponentRef<T>): void {
-		Reflect.defineMetadata('aurora:metadata', componentRef, target);
+		Reflect.defineMetadata(AuroraMetadata, componentRef, target);
 	}
 
 	static addOptional(modelProperty: Object) {
