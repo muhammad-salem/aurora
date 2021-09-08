@@ -1,21 +1,28 @@
 {
-	"references": [
-		{
-			"path": "../../example/tsconfig.json"
-		}
-	],
 	"compilerOptions": {
 		"outDir": "./dist/",
-		"noImplicitAny": true,
 		"sourceMap": true,
-		"module": "ES2020",
-		"target": "ES2021",
-		"jsx": "react",
-		"allowJs": true,
-		"moduleResolution": "node",
+		"declaration": true,
+		"importHelpers": true,
+		"inlineSources": false,
+		"declarationMap": false,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictBindCallApply": true,
+		"downlevelIteration": true,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
-		"composite": true,
-		"tsBuildInfoFile": "./tsBuild.info"
+		"moduleResolution": "Node",
+		"module": "ES2020",
+		"target": "ES2021",
+		"lib": [
+			"ES2021",
+			"dom"
+		],
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"removeComments": true,
+		"jsx": "react",
+		"allowJs": true
 	}
 }
