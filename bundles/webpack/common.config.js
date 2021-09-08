@@ -16,6 +16,13 @@ module.exports = {
 				test: /\.css$/,
 				use: [MiniCssExtractPlugin.loader, 'css-loader'],
 			},
+			{
+				test: /\.html$/i,
+				loader: 'html-loader',
+				options: {
+					esModule: true
+				},
+			},
 		],
 	},
 	plugins: [
@@ -28,7 +35,7 @@ module.exports = {
 		}),
 	],
 	resolve: {
-		extensions: ['.tsx', '.ts', '.js', '.css'],
+		extensions: ['.tsx', '.ts', '.js', '.css', '.html'],
 	},
 	output: {
 		filename: 'bundle.js',
