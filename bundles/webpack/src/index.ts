@@ -1,4 +1,4 @@
-/// <reference types="./html" />
+/// <reference types="@ibyar/types" />
 import '@ibyar/example';
 import { Component } from '@ibyar/core';
 import helloTemplate from './hello.html';
