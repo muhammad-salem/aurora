@@ -15,13 +15,12 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.3.0",
-		"@ibyar/directives": "^0.3.0",
-		"@ibyar/pipes": "^0.3.0",
+		"@ibyar/core": "^0.3.1",
+		"@ibyar/directives": "^0.3.1",
+		"@ibyar/pipes": "^0.3.1",
 		"tslib": "^2.3.1"
 	},
 	"devDependencies": {
-		"@ibyar/types": "^0.3.0",
 		"typescript": "^4.4.2"
 	},
 	"scripts": {
