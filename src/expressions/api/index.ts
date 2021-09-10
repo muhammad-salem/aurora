@@ -8,6 +8,7 @@ export * from './definition/array.js';
 export * from './definition/comment.js';
 export * from './definition/function.js';
 export * from './definition/member.js';
+export * from './definition/bind.js';
 export * from './definition/object.js';
 export * from './definition/statement.js';
 
@@ -46,3 +47,11 @@ export * from './statement/declarations/declares.js';
 
 export * from './statement/iterations/for.js';
 export * from './statement/iterations/while.js';
+
+// :: bind operator
+
+// |:> pipeline bind operator
+// :|>
+// |>: 
+// ::|>
+
