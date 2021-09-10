@@ -17,7 +17,22 @@ import { FunctionExpression } from '../definition/function.js';
  */
 @Deserializer('MetaProperty')
 export class MetaProperty extends MemberExpression {
+
+	public static NewTarget = new MetaProperty(new Identifier('new'), new Identifier('target'));
+
+	public static ImportMeta = new MetaProperty(new Identifier('import'), new Identifier('meta'));
+
+	private static getJsonName(identifier: ExpressionNode): string {
+		return Reflect.get(identifier, 'name');
+	}
+
 	static fromJSON(node: MetaProperty, deserializer: NodeDeserializer<any>): MetaProperty {
+		if (MetaProperty.getJsonName(node.meta) === 'new' && MetaProperty.getJsonName(node.property) === 'target') {
+			return MetaProperty.NewTarget;
+		}
+		else if (MetaProperty.getJsonName(node.meta) === 'new' && MetaProperty.getJsonName(node.property) === 'meta') {
+			return MetaProperty.ImportMeta;
+		}
 		return new MetaProperty(
 			deserializer(node.meta),
 			deserializer(node.property)
