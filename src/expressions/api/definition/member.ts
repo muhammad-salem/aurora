@@ -42,9 +42,6 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		} else {
 			value = this.property.get(stack, objectRef);
 		}
-		if (typeof value === 'function') {
-			return (<Function>value).bind(objectRef);
-		}
 		return value;
 	}
 	findScope<T extends object>(stack: Stack): Scope<T>;

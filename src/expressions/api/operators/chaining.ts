@@ -49,9 +49,6 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 			}
 			thisContext = object;
 		}
-		if (typeof value === 'function') {
-			return (<Function>value).bind(thisContext);
-		}
 		return value;
 	}
 	findScope<T extends object>(stack: Stack): Scope<T>;
