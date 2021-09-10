@@ -14,9 +14,25 @@ export class Token {
 
 	/**
 	 * ___ |> ___ : ___ : ?
-	 * ___ |> ___ ( ___, ___ ,? )
+	 * ___ |> ___ ( ___, ___ , ?)
 	 */
 	public static readonly PIPELINE = new Token('|>', 3);
+
+	/**
+	 * ___ :|> ___ : ___
+	 * ___ :|> ___ ( ___, ___ )
+	 */
+	public static readonly BIND_PIPELINE = new Token(':|>', 3);
+
+	/**
+	 * ___ ?|> ___ : ___
+	 */
+	public static readonly CONDITIONAL_PIPELINE = new Token('?|>', 3);
+
+	/**
+	 * ___ ?:|> ___ : ___
+	 */
+	public static readonly CONDITIONAL_BIND_PIPELINE = new Token('?:|>', 3);
 
 	/**
 	 * ___ || ___
@@ -124,12 +140,16 @@ export class Token {
 	public static readonly GT = new Token('>', 10);
 
 	/**
-	 * ___++,  ++___
+	 * ___++
+	 * 
+	 * ++___
 	 */
 	public static readonly INC = new Token('++', 0);
 
 	/**
-	 * ___--, --___
+	 * ___--
+	 * 
+	 * --___
 	 */
 	public static readonly DEC = new Token('--', 0);
 
@@ -269,9 +289,27 @@ export class Token {
 	public static readonly PERIOD = new Token('.', 0);
 
 	/**
-	 * ___ ?. ___, ___?.[___], ___?.()
+	 * ___ ?. ___
+	 * 
+	 *  ___?.[___]
+	 * 
+	 *  ___?.()
 	 */
 	public static readonly QUESTION_PERIOD = new Token('?.', 0);
+
+	/**
+	 * ___ :: ___
+	 */
+	public static readonly BIND = new Token('::', 0);
+
+	/**
+	 * ___ ?:: ___
+	 * 
+	 *  ___?::[___]
+	 * 
+	 *  ___?::()
+	 */
+	public static readonly QUESTION_BIND = new Token('?::', 0);
 
 	/**
 	 * (
