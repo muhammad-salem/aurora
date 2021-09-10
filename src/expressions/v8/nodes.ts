@@ -1,12 +1,12 @@
 import type { ExpressionNode } from '../api/expression.js';
 import type { Stack } from '../scope/stack.js';
+import { Token, TokenExpression } from './token.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { LogicalExpression } from '../api/operators/logical.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
+import { PipelineExpression, BindPipelineExpression } from '../api/operators/pipeline.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import { Token, TokenExpression } from './token.js';
 import {
 	Literal, BigIntLiteral, NumberLiteral,
 	BooleanLiteral, TrueNode, FalseNode,
@@ -14,7 +14,7 @@ import {
 } from '../api/definition/values.js';
 import { AwaitExpression } from '../api/operators/await.js';
 import { UpdateExpression } from '../api/operators/update.js';
-import { BinaryExpression } from '../api/index.js';
+import { BinaryExpression } from '../api/operators/binary.js';
 
 export function creteInfixExpression(op: string, left: ExpressionNode, right: ExpressionNode): ExpressionNode {
 	switch (op) {
@@ -79,12 +79,14 @@ export function createTernaryExpression(op: string, logical: ExpressionNode, ifT
 	}
 }
 
-export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ('?' | ExpressionNode)[]): ExpressionNode {
+export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ('?' | '...?' | ExpressionNode)[]): ExpressionNode {
 	switch (op) {
 		case '|>':
 			return new PipelineExpression(param, func, args);
+		case ':|>':
+			return new BindPipelineExpression(param, func, args as ExpressionNode[]);
 		default:
-			throw new Error(`${op} is not pipeline operator`);
+			throw new Error(`operator ${op} is not supported `);
 
 	}
 }
