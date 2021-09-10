@@ -5,6 +5,7 @@
 // } from '../api/index.js';
 // import { JavaScriptParser, PropertyKind } from './parser.js';
 // import { Token } from './token.js';
+// import { MetaProperty } from '../api/app/class.js';
 
 
 // export type ClassInfo = {
@@ -191,7 +192,12 @@
 
 // export class JavaScriptAppParser extends JavaScriptParser {
 // 	protected parseNewTargetExpression(): ExpressionNode {
-// 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
+// 		this.consume(Token.PERIOD);
+//		 const target: ExpressionNode = this.parsePropertyName();
+//		 if (target.toString() !== 'target') {
+//		 	throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
+//		 }
+//		 return MetaProperty.NewTarget;
 // 	}
 // 	protected parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
 // 		// ClassDeclaration ::
