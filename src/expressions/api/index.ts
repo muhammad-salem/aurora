@@ -17,6 +17,7 @@ export * from './computing/call.js';
 export * from './computing/new.js';
 export * from './computing/return.js';
 export * from './computing/spread.js';
+export * from './computing/rest.js';
 export * from './computing/throw.js';
 
 
