@@ -1506,8 +1506,8 @@ export class JavaScriptParser extends AbstractParser {
 				//   12.3 -> "12.3"
 				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
-				propInfo.name = nextToken.getValue().toString();
-				propertyName = new StringLiteral(propInfo.name);
+				propertyName = nextToken.getValue();
+				propInfo.name = (propertyName as StringLiteral).getValue();
 				break;
 			case Token.L_BRACKETS:
 				// [Symbol.iterator]
