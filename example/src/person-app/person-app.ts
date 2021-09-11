@@ -11,6 +11,7 @@ import { Person, PersonModel } from './person';
 
 		<h1 [textContent]="title"></h1>
 
+		{{personUtils.getDetails(person1)}}
 		<person-edit #personEdit [(person)]="person1" (save)="printPerson($event)"></person-edit>
 
 		<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
@@ -138,6 +139,14 @@ export class PersonApp {
 					return Promise.resolve({ done: true });
 				}
 			};
+		}
+	};
+
+	personUtils = {
+		x: 3,
+		getDetails(person: Person) {
+			console.log(this);
+			return `${person.name} is ${person.age} years old.`;
 		}
 	};
 
