@@ -349,3 +349,8 @@ npm run build
 ```
 
 see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/example)
+
+## WebPack bundle
+
+see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
+
