@@ -9,6 +9,7 @@ import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom
 import { EventEmitter } from '../component/events.js';
 import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
+import { ElementModelReactiveScope } from '../component/provider.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -59,7 +60,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			defineInstancePropertyMap(model);
 			this._model = defineModel(model);
 
-			this._modelScope = ReactiveScope.blockScopeFor(this._model);
+			this._modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
 			this._viewScope = ReactiveScope.blockScopeFor(this);
 
 			// if model had view decorator
