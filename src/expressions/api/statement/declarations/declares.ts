@@ -1,19 +1,19 @@
 
-import type { NodeDeserializer, ExpressionNode, CanDeclareVariable } from '../../expression.js';
-import type { AwaitPromiseInfoNode, Stack } from '../../../scope/stack.js';
+import type { NodeDeserializer, ExpressionNode, DeclareExpression } from '../../expression.js';
+import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
 @Deserializer('VariableDeclarator')
-export class VariableNode extends AbstractExpressionNode implements CanDeclareVariable {
+export class VariableNode extends AbstractExpressionNode implements DeclareExpression {
 	static fromJSON(node: VariableNode, deserializer: NodeDeserializer): VariableNode {
 		return new VariableNode(
-			deserializer(node.id),
+			deserializer(node.id) as DeclareExpression,
 			node.init ? deserializer(node.id) : void 0
 		);
 	}
-	constructor(public id: ExpressionNode, public init?: ExpressionNode) {
+	constructor(public id: DeclareExpression, public init?: ExpressionNode) {
 		super();
 	}
 	getId() {
@@ -28,16 +28,20 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareVa
 	get(stack: Stack) {
 		this.declareVariable(stack, 'block');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType) {
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
+		if (propertyValue) {
+			this.id.declareVariable(stack, scopeType, propertyValue);
+			return;
+		}
 		const value = this.init?.get(stack);
 		if (value instanceof AwaitPromise) {
-			value.node = this.id as AwaitPromiseInfoNode;
+			value.node = this.id;
 			value.declareVariable = true;
 			value.scopeType = scopeType;
 			value.node.declareVariable(stack, scopeType);
 			stack.resolveAwait(value);
 		} else {
-			(this.id as (ExpressionNode & CanDeclareVariable)).declareVariable(stack, scopeType, value);
+			this.id.declareVariable(stack, scopeType, value);
 		}
 	}
 	events(parent?: string): string[] {
@@ -55,14 +59,14 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareVa
 }
 
 @Deserializer('VariableDeclaration')
-export class VariableDeclarationNode extends AbstractExpressionNode {
+export class VariableDeclarationNode extends AbstractExpressionNode implements DeclareExpression {
 	static fromJSON(node: VariableDeclarationNode, deserializer: NodeDeserializer): VariableDeclarationNode {
 		return new VariableDeclarationNode(
-			node.declarations.map(deserializer),
+			node.declarations.map(deserializer) as VariableNode[],
 			node.kind
 		);
 	}
-	constructor(protected declarations: ExpressionNode[], protected kind: 'var' | 'let' | 'const') {
+	constructor(protected declarations: VariableNode[], protected kind: 'var' | 'let' | 'const') {
 		super();
 	}
 	getDeclarations() {
@@ -72,12 +76,15 @@ export class VariableDeclarationNode extends AbstractExpressionNode {
 		if (Array.isArray(value)) {
 			throw new Error(`VariableDeclarationNode#set() has no implementation.`);
 		}
-		(this.declarations[0] as VariableNode).id.set(stack, value);
+		this.declarations[0].id.set(stack, value);
 	}
 	get(stack: Stack) {
-		for (const item of this.declarations as (ExpressionNode & CanDeclareVariable)[]) {
+		for (const item of this.declarations) {
 			item.declareVariable(stack, this.kind === 'var' ? 'function' : 'block');
 		}
+	}
+	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
+		this.declarations[0].declareVariable(stack, this.kind === 'var' ? 'function' : 'block', propertyValue);
 	}
 	events(parent?: string): string[] {
 		return this.declarations.flatMap(v => v.events());
