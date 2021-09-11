@@ -67,7 +67,7 @@ export class PipelineExpression extends AbstractExpressionNode {
 		if (!indexed) {
 			parameters.unshift(paramValue);
 		}
-		return funCallBack(parameters);
+		return funCallBack(...parameters);
 	}
 	events(parent?: string): string[] {
 		return [
