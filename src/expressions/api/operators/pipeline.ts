@@ -68,11 +68,11 @@ export class PipelineExpression extends AbstractExpressionNode {
 			parameters.unshift(paramValue);
 		}
 		const funCallBack = this.right.get(stack) as Function;
-		let thisArg: any;
 		if (this.right instanceof MemberExpression) {
-			thisArg = this.right.getObject().get(stack);
+			const thisArg = this.right.getObject().get(stack);
+			return funCallBack.apply(thisArg, parameters);
 		}
-		return funCallBack.apply(thisArg, parameters);
+		return funCallBack(...parameters);
 	}
 	events(parent?: string): string[] {
 		return [

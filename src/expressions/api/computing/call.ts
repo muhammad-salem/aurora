@@ -37,11 +37,11 @@ export class CallExpression extends AbstractExpressionNode {
 			}
 		}
 		const funCallBack: Function = this.callee.get(stack) as Function;
-		let thisArg: any;
 		if (this.callee instanceof MemberExpression) {
-			thisArg = this.callee.getObject().get(stack);
+			const thisArg = this.callee.getObject().get(stack);
+			return funCallBack.apply(thisArg, parameters);
 		}
-		return funCallBack.apply(thisArg, parameters);
+		return funCallBack(...parameters);
 	}
 	events(parent?: string): string[] {
 		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
