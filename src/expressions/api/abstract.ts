@@ -1,6 +1,10 @@
 import type { ScopeType } from '../scope/scope.js';
-import type { AwaitPromiseInfo, AwaitPromiseInfoNode, Stack } from '../scope/stack.js';
-import type { NodeDeserializer, ExpressionNode, NodeExpressionClass, NodeJsonType } from './expression.js';
+import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	NodeExpressionClass, NodeJsonType,
+	DeclareExpression
+} from './expression.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
@@ -60,7 +64,7 @@ export class ReturnValue {
 }
 
 export class AwaitPromise implements AwaitPromiseInfo {
-	node: AwaitPromiseInfoNode;
+	node: DeclareExpression;
 	declareVariable: boolean;
 	scopeType: ScopeType;
 	constructor(public promise: Promise<any>) { }
