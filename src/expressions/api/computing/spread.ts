@@ -15,7 +15,7 @@ export class SpreadElement extends AbstractExpressionNode {
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error('SpreadElement.set() Method has no implementation.');
+		throw new Error('SpreadElement#set() Method has no implementation.');
 	}
 	get(stack: Stack): void {
 		const value = this.argument.get(stack);
@@ -23,8 +23,6 @@ export class SpreadElement extends AbstractExpressionNode {
 			this.spreadFromArray(stack, value);
 		} else if (Reflect.has(value, Symbol.iterator)) {
 			this.spreadFromIterator(stack, value);
-		} else {
-			Object.keys(value).forEach(key => stack.declareVariable('block', key, value[key]));
 		}
 	}
 	private spreadFromArray(stack: Stack, array: Array<any>): void {
