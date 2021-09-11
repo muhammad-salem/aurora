@@ -3,7 +3,7 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
-import { BreakStatement, ContinueStatement } from '../statement/controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
 
 export enum FunctionKind {
 	NORMAL = 'NORMAL',
@@ -30,10 +30,10 @@ export enum ArrowFunctionType {
 	ASYNC = 'ASYNC'
 }
 
-@Deserializer('Paramter')
-export class Paramter extends AbstractExpressionNode {
-	static fromJSON(node: Paramter, deserializer: NodeDeserializer): Paramter {
-		return new Paramter(
+@Deserializer('Param')
+export class Param extends AbstractExpressionNode {
+	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
+		return new Param(
 			deserializer(node.identifier),
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);

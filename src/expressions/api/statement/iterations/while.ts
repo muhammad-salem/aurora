@@ -2,7 +2,7 @@ import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement, ContinueStatement } from '../controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../control/terminate.js';
 
 /**
  * The while statement creates a loop that executes a specified
