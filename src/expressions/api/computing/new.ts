@@ -23,7 +23,7 @@ export class NewExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error(`NewExpression#set() has no implementation.`);
 	}
-	get(stack: Stack,) {
+	get(stack: Stack) {
 		const classRef = this.className.get(stack);
 		let value: any;
 		if (this.arguments) {

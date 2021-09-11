@@ -3,6 +3,7 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadElement } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { MemberExpression } from '../definition/member.js';
 
 @Deserializer('CallExpression')
 export class CallExpression extends AbstractExpressionNode {
@@ -23,15 +24,7 @@ export class CallExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error(`CallExpression#set() has no implementation.`);
 	}
-	get(stack: Stack, thisContext?: any) {
-		let funCallBack: Function;
-		if (!thisContext) {
-			funCallBack = this.callee.get(stack) as Function;
-		} else {
-			stack.pushBlockScopeFor(thisContext);
-			funCallBack = this.callee.get(stack) as Function;
-			stack.popScope();
-		}
+	get(stack: Stack) {
 		const parameters: any[] = [];
 		for (const arg of this.arguments) {
 			if (arg instanceof SpreadElement) {
@@ -43,7 +36,12 @@ export class CallExpression extends AbstractExpressionNode {
 				parameters.push(arg.get(stack));
 			}
 		}
-		return funCallBack.call(thisContext, ...parameters);
+		const funCallBack: Function = this.callee.get(stack) as Function;
+		let thisArg: any;
+		if (this.callee instanceof MemberExpression) {
+			thisArg = this.callee.getObject().get(stack);
+		}
+		return funCallBack.apply(thisArg, parameters);
 	}
 	events(parent?: string): string[] {
 		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];

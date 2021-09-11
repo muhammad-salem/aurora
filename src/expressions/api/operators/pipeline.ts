@@ -3,6 +3,7 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { SpreadElement } from '../computing/spread.js';
+import { MemberExpression } from '../definition/member.js';
 
 /**
  * pipeline ('|>') operator support syntax:
@@ -44,7 +45,6 @@ export class PipelineExpression extends AbstractExpressionNode {
 	}
 	get(stack: Stack) {
 		const paramValue = this.left.get(stack);
-		const funCallBack = this.right.get(stack) as Function;
 		const parameters: any[] = [];
 		let indexed = false;
 		for (const arg of this.arguments) {
@@ -67,7 +67,12 @@ export class PipelineExpression extends AbstractExpressionNode {
 		if (!indexed) {
 			parameters.unshift(paramValue);
 		}
-		return funCallBack(...parameters);
+		const funCallBack = this.right.get(stack) as Function;
+		let thisArg: any;
+		if (this.right instanceof MemberExpression) {
+			thisArg = this.right.getObject().get(stack);
+		}
+		return funCallBack.apply(thisArg, parameters);
 	}
 	events(parent?: string): string[] {
 		return [
