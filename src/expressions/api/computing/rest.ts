@@ -22,44 +22,7 @@ export class RestElement extends AbstractExpressionNode implements DeclareExpres
 		throw new Error('RestElement#get() Method has no implementation.');
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any {
-		let restValue: any;
-		if (Array.isArray(propertyValue)) {
-			restValue = this.getFromArray(stack, propertyValue);
-		} else if (Reflect.has(propertyValue, Symbol.iterator)) {
-			restValue = this.getFromIterator(stack, propertyValue);
-		} else {
-			restValue = this.getFromObject(stack, propertyValue);
-		}
-		this.argument.declareVariable(stack, 'block', restValue);
-	}
-	private getFromArray(stack: Stack, array: Array<any>) {
-		const length: number = stack.get('length');
-
-		return array.slice(length);
-	}
-	private getFromIterator(stack: Stack, iterator: Iterator<any>) {
-		const restArray = [];
-		while (true) {
-			const iteratorResult = iterator.next();
-			if (iteratorResult.done) {
-				break;
-			}
-			restArray.push(iteratorResult.value);
-		}
-		return restArray;
-	}
-	private getFromObject(stack: Stack, objectValue: { [key: PropertyKey]: any }) {
-		const context = stack.lastScope<typeof objectValue>().getContext()!;
-		const keys: PropertyKey[] = [];
-		keys.push(...Object.keys(objectValue));
-		keys.push(...Object.getOwnPropertySymbols(objectValue));
-		const restObject: typeof objectValue = {};
-		for (const key of keys) {
-			if (!(key in context)) {
-				restObject[key] = objectValue[key];
-			}
-		}
-		return restObject;
+		this.argument.declareVariable(stack, scopeType, propertyValue);
 	}
 	events(parent?: string): string[] {
 		return this.argument.events();

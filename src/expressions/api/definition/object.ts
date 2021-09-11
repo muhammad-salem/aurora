@@ -1,15 +1,16 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareVariable } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DeclareExpression } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import type { ScopeType } from '../../scope/scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { RestElement } from '../computing/rest.js';
 
 @Deserializer('Property')
-export class Property extends AbstractExpressionNode implements CanDeclareVariable {
+export class Property extends AbstractExpressionNode implements DeclareExpression {
 	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
-		return new Property(deserializer(node.key), deserializer(node.value), node.kind);
+		return new Property(deserializer(node.key), deserializer(node.value) as DeclareExpression, node.kind);
 	}
-	constructor(protected key: ExpressionNode, protected value: ExpressionNode, protected kind: 'init' | 'get' | 'set') {
+	constructor(protected key: ExpressionNode, protected value: DeclareExpression | ExpressionNode, protected kind: 'init' | 'get' | 'set') {
 		super();
 	}
 	getKey() {
@@ -46,7 +47,7 @@ export class Property extends AbstractExpressionNode implements CanDeclareVariab
 	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
 		const propertyName = this.key.get(stack);
 		const propertyValue = objectValue[propertyName];
-		(this.value as ExpressionNode & CanDeclareVariable).declareVariable(stack, scopeType, propertyValue);
+		(this.value as DeclareExpression).declareVariable(stack, scopeType, propertyValue);
 	}
 	events(): string[] {
 		return this.key.events().concat(this.value.events());
@@ -66,9 +67,9 @@ export class Property extends AbstractExpressionNode implements CanDeclareVariab
 @Deserializer('ObjectExpression')
 export class ObjectExpression extends AbstractExpressionNode {
 	static fromJSON(node: ObjectExpression, deserializer: NodeDeserializer): ObjectExpression {
-		return new ObjectExpression(node.properties.map(deserializer));
+		return new ObjectExpression(node.properties.map(deserializer) as Property[]);
 	}
-	constructor(private properties: ExpressionNode[]) {
+	constructor(private properties: Property[]) {
 		super();
 	}
 	getProperties() {
@@ -98,11 +99,11 @@ export class ObjectExpression extends AbstractExpressionNode {
 }
 
 @Deserializer('ObjectPattern')
-export class ObjectPattern extends AbstractExpressionNode implements CanDeclareVariable {
+export class ObjectPattern extends AbstractExpressionNode implements DeclareExpression {
 	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
-		return new ObjectPattern(node.properties.map(deserializer));
+		return new ObjectPattern(node.properties.map(deserializer) as (Property | RestElement)[]);
 	}
-	constructor(private properties: ExpressionNode[]) {
+	constructor(private properties: (Property | RestElement)[]) {
 		super();
 	}
 	getProperties() {
@@ -111,13 +112,29 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareV
 	set(stack: Stack, objectValue: any) {
 		throw new Error('ObjectPattern#set() has no implementation.');
 	}
-	get(scopeProvider: Stack, objectValue: any) {
-		this.declareVariable(scopeProvider, 'block', objectValue);
+	get(scopeProvider: Stack) {
+		throw new Error('ObjectPattern#get() has no implementation.');
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
-		for (const property of this.properties as Property[]) {
+		for (const property of this.properties) {
+			if (property instanceof RestElement) {
+				objectValue = this.getFromObject(stack, objectValue);
+			}
 			property.declareVariable(stack, scopeType, objectValue);
 		}
+	}
+	private getFromObject(stack: Stack, objectValue: { [key: PropertyKey]: any }) {
+		const keys: PropertyKey[] = [];
+		keys.push(...Object.keys(objectValue));
+		keys.push(...Object.getOwnPropertySymbols(objectValue));
+		const restObject: typeof objectValue = {};
+		const context = stack.lastScope<typeof objectValue>().getContext()!;
+		for (const key of keys) {
+			if (!(key in context)) {
+				restObject[key] = objectValue[key];
+			}
+		}
+		return restObject;
 	}
 	events(parent?: string): string[] {
 		return this.properties.flatMap(property => property.events());
