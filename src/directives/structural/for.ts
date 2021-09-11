@@ -34,6 +34,14 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		}
 		return callback;
 	}
+
+	/**
+	 * will remove support of normal for expression,
+	 * can't handle stack in a good way
+	 * @deprecated
+	 * @param forNode 
+	 * @returns 
+	 */
 	handelForNode(forNode: ForNode) {
 		return () => {
 			let stack = this.directiveStack.copyStack();

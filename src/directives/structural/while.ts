@@ -2,6 +2,11 @@ import { Directive } from '@ibyar/core';
 import { ExpressionNode, ExpressionStatement, WhileNode } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
+/**
+ * While Directive Syntax
+ * *while="let index = 0; index < people.length"
+ * 
+ */
 @Directive({
 	selector: '*while',
 })
@@ -15,6 +20,13 @@ export class WhileDirective<T> extends AbstractStructuralDirective<T> {
 			return `while (${statement}) { }`;
 		}
 	}
+
+	/**
+	 * @deprecated will not support, normal while, can't handle stack in a good wat
+	 * use `let; condition` syntax instead
+	 * @param whileNode 
+	 * @returns 
+	 */
 	getCallback(whileNode: ExpressionNode): () => void {
 		let initializer: ExpressionNode;
 		let condition: ExpressionNode;
