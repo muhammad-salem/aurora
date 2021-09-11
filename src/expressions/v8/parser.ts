@@ -1,4 +1,4 @@
-import type { ExpressionNode } from '../api/expression.js';
+import type { CanDeclareVariable, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
@@ -8,13 +8,13 @@ import {
 	ConstructorIdentifier, NameIdentifier,
 	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpression, TemplateLiteral
 } from '../api/definition/values.js';
-import { EmptyStatement } from '../api/statement/controlflow/empty.js';
-import { BlockStatement } from '../api/statement/controlflow/block.js';
+import { EmptyStatement } from '../api/statement/control/empty.js';
+import { BlockStatement } from '../api/statement/control/block.js';
 import {
 	ArrowFunctionExpression, ArrowFunctionType,
 	FunctionKind, Paramter, FunctionExpression
 } from '../api/definition/function.js';
-import { IfStatement } from '../api/statement/controlflow/if.js';
+import { IfStatement } from '../api/statement/control/if.js';
 import { NewExpression } from '../api/computing/new.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
@@ -26,8 +26,8 @@ import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
-import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/controlflow/switch.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/controlflow/terminate.js';
+import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
+import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for.js';
@@ -684,7 +684,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableNode(name, value));
+			variables.push(new VariableNode(name as ExpressionNode & CanDeclareVariable, value));
 		} while (this.check(Token.COMMA));
 		return new VariableDeclarationNode(variables, mode);
 	}

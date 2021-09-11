@@ -36,11 +36,11 @@ export * from './operators/unary.js';
 export * from './operators/update.js';
 
 
-export * from './statement/controlflow/block.js';
-export * from './statement/controlflow/empty.js';
-export * from './statement/controlflow/if.js';
-export * from './statement/controlflow/switch.js';
-export * from './statement/controlflow/terminate.js';
+export * from './statement/control/block.js';
+export * from './statement/control/empty.js';
+export * from './statement/control/if.js';
+export * from './statement/control/switch.js';
+export * from './statement/control/terminate.js';
 
 
 export * from './statement/declarations/declares.js';

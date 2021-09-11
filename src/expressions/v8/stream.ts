@@ -4,7 +4,7 @@ import {
 	BigIntLiteral, GlobalThisNode, NumberLiteral, OfNode, Identifier,
 	RegExpLiteral, StringLiteral, SymbolNode, AsNode
 } from '../api/definition/values.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/controlflow/terminate.js';
+import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 
