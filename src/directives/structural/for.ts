@@ -59,7 +59,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 			for (const iterator of iterable) {
 				const stack = this.directiveStack.copyStack();
 				stack.pushBlockScope();
-				forOfNode.getLeft().set(stack, iterator);
+				forOfNode.getLeft().declareVariable(stack, 'block', iterator);
 				this.updateView(stack);
 			}
 		};
@@ -70,7 +70,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 			for (const iterator in iterable) {
 				const stack = this.directiveStack.copyStack();
 				stack.pushBlockScope();
-				forInNode.getLeft().set(stack, iterator);
+				forInNode.getLeft().declareVariable(stack, 'block', iterator);
 				this.updateView(stack);
 			}
 		};
@@ -81,7 +81,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 			for await (const iterator of iterable) {
 				const stack = this.directiveStack.copyStack();
 				stack.pushBlockScope();
-				forAwaitOfNode.getLeft().set(stack, iterator);
+				forAwaitOfNode.getLeft().declareVariable(stack, 'block', iterator);
 				this.updateView(stack);
 			}
 		};
