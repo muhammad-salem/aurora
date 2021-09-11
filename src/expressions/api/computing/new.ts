@@ -31,9 +31,9 @@ export class NewExpression extends AbstractExpressionNode {
 				const parameters: any[] = [];
 				for (const param of this.arguments) {
 					if (param instanceof SpreadElement) {
-						stack.pushBlockScopeFor(parameters);
+						const paramScope = stack.pushBlockScopeFor(parameters);
 						param.get(stack);
-						stack.popScope();
+						stack.clearTo(paramScope);
 						break;
 					} else {
 						parameters.push(param.get(stack));

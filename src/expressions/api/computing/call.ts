@@ -35,9 +35,9 @@ export class CallExpression extends AbstractExpressionNode {
 		const parameters: any[] = [];
 		for (const arg of this.arguments) {
 			if (arg instanceof SpreadElement) {
-				stack.pushBlockScopeFor(parameters);
+				const paramScope = stack.pushBlockScopeFor(parameters);
 				arg.get(stack);
-				stack.popScope();
+				stack.clearTo(paramScope);
 				break;
 			} else {
 				parameters.push(arg.get(stack));
