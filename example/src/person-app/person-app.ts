@@ -11,7 +11,15 @@ import { Person, PersonModel } from './person';
 
 		<h1 [textContent]="title"></h1>
 
-		{{personUtils.getDetails(person1)}}
+		<div class="row">
+			<div class="col-4">
+				{{personUtils.getDetails(person1)}}
+			</div>
+			<for expression="let {key, value} of person1 |> keyvalue">
+				<div class="col-4">{{key}}: {{value}}</div>
+			</for>
+		</div>
+
 		<person-edit #personEdit [(person)]="person1" (save)="printPerson($event)"></person-edit>
 
 		<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
