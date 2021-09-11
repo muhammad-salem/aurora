@@ -3,6 +3,9 @@ import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { BreakStatement, ContinueStatement } from '../control/terminate.js';
+import { VariableDeclarationNode } from '../declarations/declares.js';
+import { ArrayPattern } from '../../definition/array.js';
+import { ObjectPattern } from '../../definition/object.js';
 
 
 /**
@@ -78,17 +81,19 @@ export class ForNode extends AbstractExpressionNode {
 	}
 }
 
+export type ForDeclaration = VariableDeclarationNode | ObjectPattern | ArrayPattern;
+
 @Deserializer('ForOfStatement')
 export class ForOfNode extends AbstractExpressionNode {
 	static fromJSON(node: ForOfNode, deserializer: NodeDeserializer): ForOfNode {
 		return new ForOfNode(
-			deserializer(node.left),
+			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body)
 		);
 	}
 	constructor(
-		private left: ExpressionNode,
+		private left: ForDeclaration,
 		private right: ExpressionNode,
 		private body: ExpressionNode) {
 		super();
@@ -109,7 +114,7 @@ export class ForOfNode extends AbstractExpressionNode {
 		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.set(stack, iterator);
+			this.left.declareVariable(stack, 'block', iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
@@ -146,14 +151,14 @@ export class ForOfNode extends AbstractExpressionNode {
 export class ForInNode extends AbstractExpressionNode {
 	static fromJSON(node: ForInNode, deserializer: NodeDeserializer): ForInNode {
 		return new ForInNode(
-			deserializer(node.left),
+			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body)
 		);
 	}
 	// variable of iterable
 	constructor(
-		private left: ExpressionNode,
+		private left: VariableDeclarationNode | ObjectPattern | ArrayPattern,
 		private right: ExpressionNode,
 		private body: ExpressionNode) {
 		super();
@@ -174,7 +179,7 @@ export class ForInNode extends AbstractExpressionNode {
 		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.set(stack, iterator);
+			this.left.declareVariable(stack, 'block', iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
@@ -211,14 +216,14 @@ export class ForInNode extends AbstractExpressionNode {
 export class ForAwaitOfNode extends AbstractExpressionNode {
 	static fromJSON(node: ForAwaitOfNode, deserializer: NodeDeserializer): ForAwaitOfNode {
 		return new ForAwaitOfNode(
-			deserializer(node.left),
+			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body)
 		);
 	}
 	// variable of iterable
 	constructor(
-		private left: ExpressionNode,
+		private left: ForDeclaration,
 		private right: ExpressionNode,
 		private body: ExpressionNode) {
 		super();
@@ -239,8 +244,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
 			const forBlock = stack.pushBlockScope();
-			// const forOfStack = stack.newStack();
-			this.left.set(stack, iterator);
+			this.left.declareVariable(stack, 'block', iterator);
 			const result = this.body.get(stack);
 			stack.clearTo(forBlock);
 			return result;

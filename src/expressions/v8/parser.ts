@@ -31,7 +31,7 @@ import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode } from '../api/statement/iterations/for.js';
+import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
@@ -598,7 +598,7 @@ export class JavaScriptParser extends AbstractParser {
 			initializer = initializer.getLeft();
 			this.expect(Token.R_PARENTHESES)
 			const statement = this.parseStatement();
-			return new ForInNode(initializer, objectNode, statement);
+			return new ForInNode(initializer as ForDeclaration, objectNode, statement);
 		}
 		const forMode = this.checkInOrOf();
 		if (forMode) {
@@ -609,11 +609,11 @@ export class JavaScriptParser extends AbstractParser {
 				statement.isStatement = true;
 			}
 			if (isAwait && forMode === 'OF') {
-				return new ForAwaitOfNode(initializer, object, statement);
+				return new ForAwaitOfNode(initializer as ForDeclaration, object, statement);
 			} else if (forMode === 'OF') {
-				return new ForOfNode(initializer, object, statement);
+				return new ForOfNode(initializer as ForDeclaration, object, statement);
 			} else if (forMode === 'IN') {
-				return new ForInNode(initializer, object, statement);
+				return new ForInNode(initializer as ForDeclaration, object, statement);
 			} else {
 				throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
 			}

@@ -47,13 +47,13 @@ export class ArrayPattern extends AbstractExpressionNode implements DeclareExpre
 	getElements() {
 		return this.elements;
 	}
-	set(stack: Stack, values: any[]) {
+	set(stack: Stack, values: any) {
 		throw new Error('ArrayPattern#set() has no implementation.');
 	}
 	get(scopeProvider: Stack) {
 		throw new Error('ArrayPattern#get() has no implementation.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, values: any[]) {
+	declareVariable(stack: Stack, scopeType: ScopeType, values: any) {
 		if (Array.isArray(values)) {
 			this.declareVariableFromArray(stack, scopeType, values);
 		} else if (Reflect.has(values, Symbol.iterator)) {
