@@ -38,10 +38,6 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
-		_setAttributeNative: Function;
-		_getAttributeNative: Function;
-		_addEventListenerNative: Function;
-
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
@@ -68,14 +64,6 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 				// this._model[componentRef.view] = this;
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-
-			this._setAttributeNative = this.setAttribute;
-			this._getAttributeNative = this.getAttribute;
-			this._addEventListenerNative = this.addEventListener;
-
-			this.setAttribute = this._setAttribute;
-			this.getAttribute = this._getAttribute;
-			this.addEventListener = this._addEventListener;
 
 			this._render = new ComponentRender(this);
 		}
@@ -166,31 +154,31 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			return Reflect.has(this._model, propName);
 		}
 
-		_setAttributeHelper(attrViewName: string, value: any): void {
+		private setAttributeHelper(attrViewName: string, value: any): void {
 			if (value === null || value === undefined) {
 				return;
 			}
 			if (typeof value === 'boolean') {
 				if (value) {
-					this._setAttributeNative(attrViewName, '');
+					super.setAttribute(attrViewName, '');
 				} else {
 					this.removeAttribute(attrViewName);
 				}
 			} else {
-				this._setAttributeNative(attrViewName, String(value));
+				super.setAttribute(attrViewName, String(value));
 			}
 		}
 
-		_setAttribute(attrViewName: string, value: any): void {
+		setAttribute(attrViewName: string, value: any): void {
 			if (value === null || value === undefined) {
 				return;
 			}
 			this.setInputValue(attrViewName, value);
-			this._setAttributeHelper(attrViewName, value);
+			this.setAttributeHelper(attrViewName, value);
 		}
 
-		_getAttribute(attrViewName: string): string | null {
-			return this.getInputValue(attrViewName);
+		getAttribute(attrViewName: string): string | null {
+			return this.getInputValue(attrViewName) ?? super.getAttribute(attrViewName);
 		}
 
 		attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -213,7 +201,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];
 				if (inputDefaultValue !== null && inputDefaultValue !== undefined) {
-					this._setAttributeHelper(input.viewAttribute, inputDefaultValue);
+					this.setAttributeHelper(input.viewAttribute, inputDefaultValue);
 				}
 			});
 
@@ -358,9 +346,9 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		}
 
 		// events api
-		_addEventListener(eventName: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
+		addEventListener(eventName: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
 			if ('on' + eventName in this) {
-				this._addEventListenerNative(eventName, (event: Event) => {
+				super.addEventListener(eventName, (event: Event) => {
 					(listener as Function)(event);
 				}, options);
 				return;
