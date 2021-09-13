@@ -900,7 +900,8 @@ export class TokenStreamImpl extends TokenStream {
 						this.current = this.newToken(Token.NE_STRICT_ASSIGN);
 						this.pos += 3;
 					} else {
-						return false;
+						this.current = this.newToken(Token.NOT);
+						this.pos++;
 					}
 				} else {
 					this.current = this.newToken(Token.NOT);
