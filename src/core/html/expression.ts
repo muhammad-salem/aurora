@@ -2,19 +2,23 @@ import {
 	BaseNode, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode,
 	DOMParentNode, ElementAttribute, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { AssignmentExpression, ExpressionNode, JavaScriptParser, MemberExpression, ThisNode } from '@ibyar/expressions';
+import { AssignmentExpression, ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
 
 const ThisTextContent = JavaScriptParser.parse('this.textContent');
 function parseLiveText(text: LiveTextContent<ExpressionNode>) {
 	text.expression = new AssignmentExpression('=', ThisTextContent, JavaScriptParser.parse(text.value));
 }
 
-function convertToTitleCase(string: string) {
-	const dashSplits = string.split('-');
+function convertToMemberAccessStyle(source: string) {
+	const dashSplits = source.split('-');
+	if (dashSplits.length === 1) {
+		return source;
+	}
 	return dashSplits[0] + dashSplits.splice(1).map(s => (s[0].toUpperCase() + s.substring(1))).join('');
 }
 function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
-	const elementExpression = new MemberExpression(ThisNode, JavaScriptParser.parse(convertToTitleCase(attr.name)), false);
+	const elementSource = `this.${JavaScriptParser.parse(convertToMemberAccessStyle(attr.name))}`;
+	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(attr.value);
 
 	attr.expression = new AssignmentExpression('=', elementExpression, modelExpression);
@@ -22,7 +26,8 @@ function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
-	const elementExpression = new MemberExpression(ThisNode, JavaScriptParser.parse(convertToTitleCase(attr.name)), false);
+	const elementSource = `this.${JavaScriptParser.parse(convertToMemberAccessStyle(attr.name))}`;
+	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(attr.value);
 	attr.expression = new AssignmentExpression('=', elementExpression, modelExpression);
 }
@@ -32,7 +37,7 @@ function parseOutputExpression(attr: ElementAttribute<string, string, Expression
 }
 
 function parseElementAttribute(attr: ElementAttribute<string, any, ExpressionNode>) {
-	attr.expression = JavaScriptParser.parse('this.' + convertToTitleCase(attr.name));
+	attr.expression = JavaScriptParser.parse('this.' + convertToMemberAccessStyle(attr.name));
 }
 
 
