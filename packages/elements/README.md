@@ -13,7 +13,7 @@
 [downloads-url]: https://npmjs.org/package/@ibyar/elements
 [license-img]: https://img.shields.io/github/license/ibyar/aurora
 [license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
-[npm-dep-url]: https://img.shields.io/david/ibyar/elements.svg?maxAge=2592000
+[npm-dep-url]: https://img.shields.io/david/ibyar/aurora?path=packages%2Felements
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
