@@ -895,6 +895,13 @@ export class TokenStreamImpl extends TokenStream {
 						this.current = this.newToken(Token.NE);
 						this.pos += 2;
 					}
+				} else if (this.expression.charAt(this.pos + 1) === '!') {
+					if (this.expression.charAt(this.pos + 2) === '=') {
+						this.current = this.newToken(Token.NE_STRICT_ASSIGN);
+						this.pos += 3;
+					} else {
+						return false;
+					}
 				} else {
 					this.current = this.newToken(Token.NOT);
 					this.pos++;

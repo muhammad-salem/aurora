@@ -269,6 +269,12 @@ export class Token {
 	public static readonly NULLISH_ASSIGN = new Token('??=', 2);
 
 	/**
+	 * update operator
+	 * ___ !!= ___
+	 */
+	public static readonly NE_STRICT_ASSIGN = new Token('!!=', 2);
+
+	/**
 	 * ___ <<= ___
 	 */
 	public static readonly SHL_ASSIGN = new Token('<<=', 2);

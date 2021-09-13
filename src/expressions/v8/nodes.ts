@@ -33,6 +33,7 @@ export function creteInfixExpression(op: string, left: ExpressionNode, right: Ex
 		case '&&=':
 		case '||=':
 		case '??=':
+		case '!!=':
 			return new AssignmentExpression(op, left, right);
 		case '&&':
 		case '||':
