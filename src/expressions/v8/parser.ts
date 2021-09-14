@@ -33,7 +33,7 @@ import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
+import { PipelineExpression, BindPipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { ChainExpression } from '../api/operators/chaining.js';
@@ -1705,7 +1705,7 @@ export class JavaScriptParser extends AbstractParser {
 				default:
 					break;
 			}
-			expression = new PipelineExpression(expression, func, args);
+			expression = new BindPipelineExpression(expression, func, args);
 		}
 		return expression;
 	}
