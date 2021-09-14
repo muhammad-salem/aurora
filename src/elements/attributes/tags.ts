@@ -2,7 +2,7 @@
 export type TagClassRef = typeof HTMLElement;
 
 export interface Tag {
-	readonly name: string | null;
+	readonly name?: string;
 	readonly classRef: TagClassRef;
 }
 
@@ -21,7 +21,7 @@ function isMedia(name: string) {
 	return name.includes('video') || name.includes('audio');
 }
 
-export const DefaultTag: Tag = { name: null, classRef: HTMLElement };
+export const DefaultTag: Tag = Object.freeze({ classRef: HTMLElement });
 
 /**
  * see https://html.spec.whatwg.org/multipage/indices.html#element-interfaces
@@ -325,6 +325,13 @@ export function findByTagName(tagName: string | undefined): Tag {
 	if (!tagName || tagName === '' || tagName === 'none' || tagName === 'child') {
 		return DefaultTag;
 	}
+	if (isValidCustomElementName(tagName)) {
+		const classRef = customElements.get(tagName);
+		if (classRef) {
+			return { classRef };
+		}
+		throw new Error('Custom Element is not defined yet');
+	}
 	for (const tag of NativeTags) {
 		if (tag.name === tagName) {
 			return tag;
@@ -360,13 +367,13 @@ export function isHTMLUnknownElementTagName(tagName: string): boolean {
 	return true;
 }
 
-export function getTagName(classRef: TagClassRef): string | null {
+export function getTagName(classRef: TagClassRef): string | undefined {
 	for (const tag of NativeTags) {
 		if (tag.classRef === classRef) {
 			return tag.name;
 		}
 	}
-	return null;
+	return undefined;
 }
 
 export const EmptyElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
