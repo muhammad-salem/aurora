@@ -9,8 +9,7 @@ export type AssignmentOperator =
 	| '<<=' | '>>=' | '>>>='
 	| '|=' | '^=' | '&='
 	| '||=' | '&&=' | '??='
-	| '%%=' | '>?=' | '<?='
-	| '!!=';
+	| '%%=' | '>?=' | '<?=';
 
 @Deserializer('AssignmentExpression')
 export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator>  {
@@ -76,15 +75,6 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 			return value;
 		},
 
-		'!!=': (exp: AssignmentExpression, context: any) => {
-			const lv = exp.left.get(context);
-			const rv = exp.right.get(context);
-			if (lv !== rv) {
-				exp.set(context, rv);
-			}
-			return rv;
-		},
-
 	};
 
 	constructor(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode) {
@@ -98,7 +88,6 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 			case '&&=':
 			case '||=':
 			case '??=':
-			case '!!=':
 				return AssignmentExpression.LogicalEvaluations[this.operator](this, stack);
 		}
 		const evalNode: EvaluateNode = {

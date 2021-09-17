@@ -269,12 +269,6 @@ export class Token {
 	public static readonly NULLISH_ASSIGN = new Token('??=', 2);
 
 	/**
-	 * update operator
-	 * ___ !!= ___
-	 */
-	public static readonly NE_STRICT_ASSIGN = new Token('!!=', 2);
-
-	/**
 	 * ___ <<= ___
 	 */
 	public static readonly SHL_ASSIGN = new Token('<<=', 2);
@@ -553,7 +547,6 @@ export class Token {
 			case Token.SHL_ASSIGN:
 			case Token.SAR_ASSIGN:
 			case Token.SHR_ASSIGN:
-			case Token.NE_STRICT_ASSIGN:
 				return true;
 		}
 		return false;
@@ -563,7 +556,6 @@ export class Token {
 			case Token.AND_ASSIGN:
 			case Token.OR_ASSIGN:
 			case Token.NULLISH_ASSIGN:
-			case Token.NE_STRICT_ASSIGN:
 				return true;
 		}
 		return false;
