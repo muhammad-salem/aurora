@@ -8,10 +8,14 @@ import { MemberExpression } from '../definition/member.js';
 @Deserializer('CallExpression')
 export class CallExpression extends AbstractExpressionNode {
 	static fromJSON(node: CallExpression, deserializer: NodeDeserializer): CallExpression {
-		return new CallExpression(deserializer(node.callee), node.arguments.map(param => deserializer(param)));
+		return new CallExpression(
+			deserializer(node.callee),
+			node.arguments.map(param => deserializer(param)),
+			node.optional
+		);
 	}
 	private arguments: ExpressionNode[];
-	constructor(private callee: ExpressionNode, params: ExpressionNode[]) {
+	constructor(private callee: ExpressionNode, params: ExpressionNode[], private optional: boolean = false) {
 		super();
 		this.arguments = params;
 	}
@@ -24,7 +28,11 @@ export class CallExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error(`CallExpression#set() has no implementation.`);
 	}
-	get(stack: Stack) {
+	get(stack: Stack, thisContext?: any) {
+		const funCallBack: Function = this.callee.get(stack) as Function;
+		if (this.optional && (funCallBack === null || funCallBack === undefined)) {
+			return;
+		}
 		const parameters: any[] = [];
 		for (const arg of this.arguments) {
 			if (arg instanceof SpreadElement) {
@@ -36,12 +44,10 @@ export class CallExpression extends AbstractExpressionNode {
 				parameters.push(arg.get(stack));
 			}
 		}
-		const funCallBack: Function = this.callee.get(stack) as Function;
-		if (this.callee instanceof MemberExpression) {
-			const thisArg = this.callee.getObject().get(stack);
-			return funCallBack.apply(thisArg, parameters);
+		if (!thisContext && this.callee instanceof MemberExpression) {
+			thisContext = this.callee.getObject().get(stack);
 		}
-		return funCallBack(...parameters);
+		return funCallBack.apply(thisContext, parameters);
 	}
 	events(parent?: string): string[] {
 		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
@@ -52,7 +58,8 @@ export class CallExpression extends AbstractExpressionNode {
 	toJson(): object {
 		return {
 			callee: this.callee.toJSON(),
-			arguments: this.arguments.map(arg => arg.toJSON())
+			arguments: this.arguments.map(arg => arg.toJSON()),
+			optional: this.optional
 		};
 	}
 }

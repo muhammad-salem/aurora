@@ -21,7 +21,7 @@ import { RestElement } from '../api/computing/rest.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { GroupingExpression } from '../api/operators/grouping.js';
 import { MemberExpression } from '../api/definition/member.js';
-import { BindExpression, ChainBindExpression } from '../api/definition/bind.js';
+import { BindExpression } from '../api/definition/bind.js';
 import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
@@ -1887,7 +1887,7 @@ export class JavaScriptParser extends AbstractParser {
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
 					const key = this.parsePropertyName();
-					result = new ChainExpression(result, key, 'property');
+					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1895,7 +1895,7 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_BRACKETS: {
 					this.consume(Token.L_BRACKETS);
 					const index = this.parseExpressionCoverGrammar();
-					result = new MemberExpression(result, index, true);
+					result = new MemberExpression(result, index, true, isOptional);
 					this.expect(Token.R_BRACKETS);
 					break;
 				}
@@ -1907,7 +1907,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.consume(Token.PERIOD);
 					const key = this.parsePropertyName();
-					result = new MemberExpression(result, key, false);
+					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1917,7 +1917,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (result.toString() === 'eval') {
 						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
 					}
-					result = new CallExpression(result, args);
+					result = new CallExpression(result, args, isOptional);
 					break;
 				}
 
@@ -1928,7 +1928,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.consume(Token.BIND);
 					const key = this.parsePropertyName();
-					result = new BindExpression(result, key, false);
+					result = new BindExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1941,7 +1941,7 @@ export class JavaScriptParser extends AbstractParser {
 					isOptional = true;
 					optionalChaining = true;
 					const key = this.parsePropertyName();
-					result = new ChainBindExpression(result, key, false);
+					result = new BindExpression(result, key, true, isOptional);
 					break;
 				}
 
@@ -1958,6 +1958,9 @@ export class JavaScriptParser extends AbstractParser {
 				isOptional = false;
 			}
 		} while (Token.isPropertyOrCall(this.peek().token));
+		if (optionalChaining) {
+			result = new ChainExpression(result);
+		}
 		return result;
 	}
 	protected parseAwaitExpression(): ExpressionNode {

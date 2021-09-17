@@ -7,9 +7,18 @@ import { AbstractExpressionNode } from '../abstract.js';
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: MemberExpression, deserializer: NodeDeserializer): MemberExpression {
-		return new MemberExpression(deserializer(node.object), deserializer(node.property), node.computed);
+		return new MemberExpression(
+			deserializer(node.object),
+			deserializer(node.property),
+			node.computed,
+			node.optional
+		);
 	}
-	constructor(protected object: ExpressionNode, protected property: ExpressionNode, private computed: boolean) {
+	constructor(
+		protected object: ExpressionNode,
+		protected property: ExpressionNode,
+		private computed: boolean,
+		private optional: boolean = false) {
 		super();
 	}
 	getObject() {
@@ -33,8 +42,11 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	get(stack: Stack, thisContext?: any) {
 		const objectRef = thisContext ?? this.object.get(stack);
-		if (typeof objectRef === 'undefined') {
-			throw new TypeError(`Cannot read property '${this.property.toString()}' of undefined`);
+		if (objectRef === undefined || objectRef === null) {
+			if (this.optional) {
+				return;
+			}
+			throw new TypeError(`Cannot read property '${this.property.toString()}' of ${objectRef}`);
 		}
 		let value;
 		if (this.computed) {
@@ -72,7 +84,8 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		return {
 			object: this.object.toJSON(),
 			property: this.property.toJSON(),
-			computed: this.computed
+			computed: this.computed,
+			optional: this.optional
 		};
 	}
 }
