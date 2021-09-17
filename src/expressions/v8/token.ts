@@ -553,6 +553,7 @@ export class Token {
 			case Token.SHL_ASSIGN:
 			case Token.SAR_ASSIGN:
 			case Token.SHR_ASSIGN:
+			case Token.NE_STRICT_ASSIGN:
 				return true;
 		}
 		return false;
@@ -562,6 +563,7 @@ export class Token {
 			case Token.AND_ASSIGN:
 			case Token.OR_ASSIGN:
 			case Token.NULLISH_ASSIGN:
+			case Token.NE_STRICT_ASSIGN:
 				return true;
 		}
 		return false;
