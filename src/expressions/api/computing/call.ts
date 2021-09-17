@@ -53,7 +53,7 @@ export class CallExpression extends AbstractExpressionNode {
 		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
 	}
 	toString(): string {
-		return `${this.callee.toString()}(${this.arguments.map(arg => arg.toString()).join(', ')})`;
+		return `${this.callee.toString()}${this.optional ? '?.' : ''}(${this.arguments.map(arg => arg.toString()).join(', ')})`;
 	}
 	toJson(): object {
 		return {

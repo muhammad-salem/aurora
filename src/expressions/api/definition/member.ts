@@ -76,9 +76,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	toString() {
 		if (this.computed) {
-			return `${this.object.toString()}[${this.property.toString()}]`;
+			return `${this.object.toString()}${this.optional ? '?.' : ''}[${this.property.toString()}]`;
 		}
-		return `${this.object.toString()}.${this.property.toString()}`;
+		return `${this.object.toString()}${this.optional ? '?.' : '.'}${this.property.toString()}`;
 	}
 	toJson(): object {
 		return {

@@ -69,9 +69,9 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 	}
 	toString() {
 		if (this.computed) {
-			return `${this.object.toString()}::[${this.property.toString()}]`;
+			return `${this.object.toString()}${this.optional ? '?::' : '::'}[${this.property.toString()}]`;
 		}
-		return `${this.object.toString()}::${this.property.toString()}`;
+		return `${this.object.toString()}${this.optional ? '?::' : '::'}${this.property.toString()}`;
 	}
 	toJson(): object {
 		return {
