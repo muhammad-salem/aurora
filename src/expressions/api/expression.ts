@@ -34,7 +34,7 @@ export interface ExpressionNode {
 	toString(): string;
 
 	/**
-	 * used to map this object to represent an estree expression
+	 * used to map this object to represent an [ESTree](https://github.com/estree/estree) json object
 	 * @param key 
 	 */
 	toJSON(key?: string): NodeJsonType;
