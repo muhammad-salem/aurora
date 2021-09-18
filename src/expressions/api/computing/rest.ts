@@ -1,15 +1,15 @@
-import type { DeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { ScopeType } from '../../index.js';
 
 @Deserializer('RestElement')
-export class RestElement extends AbstractExpressionNode implements DeclareExpression {
+export class RestElement extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: RestElement, deserializer: NodeDeserializer): RestElement {
-		return new RestElement(deserializer(node.argument) as DeclareExpression);
+		return new RestElement(deserializer(node.argument) as CanDeclareExpression);
 	}
-	constructor(private argument: DeclareExpression) {
+	constructor(private argument: CanDeclareExpression) {
 		super();
 	}
 	getArgument() {

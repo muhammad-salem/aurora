@@ -1,4 +1,4 @@
-import type { DeclareExpression, ExpressionNode } from '../api/expression.js';
+import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
@@ -685,7 +685,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableNode(name as DeclareExpression, value));
+			variables.push(new VariableNode(name as CanDeclareExpression, value));
 		} while (this.check(Token.COMMA));
 		return new VariableDeclarationNode(variables, mode);
 	}
@@ -716,12 +716,12 @@ export class JavaScriptParser extends AbstractParser {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value as DeclareExpression, 'set');
+			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value as DeclareExpression, 'get');
+			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
@@ -1353,9 +1353,10 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.COMMA);
 				continue;
 			} else if (this.check(Token.ELLIPSIS)) {
-				const argument: ExpressionNode = this.parsePossibleDestructuringSubPattern();
-				const constr = isPattern ? RestElement : SpreadElement;
-				elem = new constr(argument as DeclareExpression);
+				const argument = this.parsePossibleDestructuringSubPattern();
+				elem = isPattern
+					? new RestElement(argument as CanDeclareExpression)
+					: new SpreadElement(argument)
 
 				if (firstSpreadIndex < 0) {
 					firstSpreadIndex = values.length;
@@ -1369,7 +1370,7 @@ export class JavaScriptParser extends AbstractParser {
 			values.push(elem);
 		}
 		if (isPattern) {
-			return new ArrayPattern(values as DeclareExpression[]);
+			return new ArrayPattern(values as CanDeclareExpression[]);
 		}
 		return new ArrayExpression(values);
 	}
@@ -1402,7 +1403,7 @@ export class JavaScriptParser extends AbstractParser {
 			case PropertyKind.Spread:
 				let value: SpreadElement | RestElement = nameExpression as SpreadElement;
 				if (isPattern) {
-					value = new RestElement(value.getArgument() as DeclareExpression);
+					value = new RestElement(value.getArgument() as CanDeclareExpression);
 				}
 				return new Property(value.getArgument(), value, 'init');
 
