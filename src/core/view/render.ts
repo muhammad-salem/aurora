@@ -197,7 +197,7 @@ export class ComponentRender<T> {
 			parent.append(comment);
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
-			this.createDirective(child, comment, contextStack.copyStack());
+			this.createDirective(child, comment, contextStack);
 		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof TextContent) {

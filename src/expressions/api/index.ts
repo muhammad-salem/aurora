@@ -27,7 +27,6 @@ export * from './operators/await.js';
 export * from './operators/binary.js';
 export * from './operators/chaining.js';
 export * from './operators/comma.js';
-export * from './operators/destruct.js';
 export * from './operators/grouping.js';
 export * from './operators/logical.js';
 export * from './operators/pipeline.js';

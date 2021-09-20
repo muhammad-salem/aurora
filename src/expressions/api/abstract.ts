@@ -3,7 +3,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode,
 	NodeExpressionClass, NodeJsonType,
-	DeclareExpression
+	CanDeclareExpression
 } from './expression.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
@@ -64,7 +64,7 @@ export class ReturnValue {
 }
 
 export class AwaitPromise implements AwaitPromiseInfo {
-	node: DeclareExpression;
+	node: CanDeclareExpression;
 	declareVariable: boolean;
 	scopeType: ScopeType;
 	constructor(public promise: Promise<any>) { }

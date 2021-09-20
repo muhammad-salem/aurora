@@ -73,7 +73,7 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 				exp.set(context, value);
 			}
 			return value;
-		}
+		},
 
 	};
 

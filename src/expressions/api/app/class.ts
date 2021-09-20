@@ -1,6 +1,6 @@
 import type { Stack } from '../../scope/stack.js';
 import type { ScopeType } from '../../scope/scope.js';
-import type { DeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
@@ -84,7 +84,7 @@ export type MethodDefinitionKind = 'constructor' | 'method' | 'set' | 'get';
  * - When key is a PrivateIdentifier, computed must be false and kind can not be "constructor".
  */
 @Deserializer('MethodDefinition')
-export class MethodDefinition extends AbstractExpressionNode implements DeclareExpression {
+export class MethodDefinition extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: MethodDefinition, deserializer: NodeDeserializer<any>): MethodDefinition {
 		return new MethodDefinition(
 			node.kind,
@@ -152,7 +152,7 @@ export class MethodDefinition extends AbstractExpressionNode implements DeclareE
  * - When key is a PrivateIdentifier, computed must be false.
  */
 @Deserializer('PropertyDefinition')
-export class PropertyDefinition extends AbstractExpressionNode implements DeclareExpression {
+export class PropertyDefinition extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: PropertyDefinition, deserializer: NodeDeserializer<any>): PropertyDefinition {
 		return new PropertyDefinition(
 			deserializer(node.key),
@@ -285,7 +285,7 @@ export class Class extends AbstractExpressionNode {
 }
 
 @Deserializer('ClassDeclaration')
-export class ClassDeclaration extends Class implements DeclareExpression {
+export class ClassDeclaration extends Class implements CanDeclareExpression {
 	static fromJSON(node: ClassDeclaration, deserializer: NodeDeserializer<any>): ClassDeclaration {
 		return new ClassDeclaration(
 			deserializer(node.body),

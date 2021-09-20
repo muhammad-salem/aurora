@@ -1,19 +1,19 @@
 
-import type { NodeDeserializer, ExpressionNode, DeclareExpression } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
 @Deserializer('VariableDeclarator')
-export class VariableNode extends AbstractExpressionNode implements DeclareExpression {
+export class VariableNode extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: VariableNode, deserializer: NodeDeserializer): VariableNode {
 		return new VariableNode(
-			deserializer(node.id) as DeclareExpression,
+			deserializer(node.id) as CanDeclareExpression,
 			node.init ? deserializer(node.id) : void 0
 		);
 	}
-	constructor(public id: DeclareExpression, public init?: ExpressionNode) {
+	constructor(public id: CanDeclareExpression, public init?: ExpressionNode) {
 		super();
 	}
 	getId() {
@@ -59,7 +59,7 @@ export class VariableNode extends AbstractExpressionNode implements DeclareExpre
 }
 
 @Deserializer('VariableDeclaration')
-export class VariableDeclarationNode extends AbstractExpressionNode implements DeclareExpression {
+export class VariableDeclarationNode extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: VariableDeclarationNode, deserializer: NodeDeserializer): VariableDeclarationNode {
 		return new VariableDeclarationNode(
 			node.declarations.map(deserializer) as VariableNode[],

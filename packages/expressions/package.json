@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/expressions",
-	"version": "0.3.2",
+	"version": "0.3.5",
 	"description": "Aurora expression, an template expression evaluation",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
@@ -15,7 +15,7 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"typescript": "^4.4.2"
+		"typescript": "^4.4.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

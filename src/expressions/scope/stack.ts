@@ -1,10 +1,10 @@
-import type { DeclareExpression } from '../api/expression.js';
+import type { CanDeclareExpression } from '../api/expression.js';
 import { ReactiveScope, Scope, ScopeType } from './scope.js';
 
 
 export interface AwaitPromiseInfo {
 	promise: Promise<any>;
-	node: DeclareExpression;
+	node: CanDeclareExpression;
 
 	declareVariable: boolean;
 	scopeType: ScopeType;

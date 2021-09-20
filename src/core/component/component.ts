@@ -253,7 +253,7 @@ export class Components {
 
 
 		customElements.define(
-			componentRef?.selector as string,
+			componentRef.selector as string,
 			componentRef.viewClass as CustomElementConstructor,
 			options
 		);

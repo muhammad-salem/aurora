@@ -1,4 +1,4 @@
-import type { DeclareExpression, ExpressionNode } from '../api/expression.js';
+import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
@@ -21,7 +21,7 @@ import { RestElement } from '../api/computing/rest.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { GroupingExpression } from '../api/operators/grouping.js';
 import { MemberExpression } from '../api/definition/member.js';
-import { BindExpression, ChainBindExpression } from '../api/definition/bind.js';
+import { BindExpression } from '../api/definition/bind.js';
 import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
@@ -33,7 +33,7 @@ import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
+import { PipelineExpression, BindPipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { ChainExpression } from '../api/operators/chaining.js';
@@ -685,7 +685,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableNode(name as DeclareExpression, value));
+			variables.push(new VariableNode(name as CanDeclareExpression, value));
 		} while (this.check(Token.COMMA));
 		return new VariableDeclarationNode(variables, mode);
 	}
@@ -716,12 +716,12 @@ export class JavaScriptParser extends AbstractParser {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value as DeclareExpression, 'set');
+			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value as DeclareExpression, 'get');
+			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
@@ -1353,9 +1353,10 @@ export class JavaScriptParser extends AbstractParser {
 				this.consume(Token.COMMA);
 				continue;
 			} else if (this.check(Token.ELLIPSIS)) {
-				const argument: ExpressionNode = this.parsePossibleDestructuringSubPattern();
-				const constr = isPattern ? RestElement : SpreadElement;
-				elem = new constr(argument as DeclareExpression);
+				const argument = this.parsePossibleDestructuringSubPattern();
+				elem = isPattern
+					? new RestElement(argument as CanDeclareExpression)
+					: new SpreadElement(argument)
 
 				if (firstSpreadIndex < 0) {
 					firstSpreadIndex = values.length;
@@ -1369,7 +1370,7 @@ export class JavaScriptParser extends AbstractParser {
 			values.push(elem);
 		}
 		if (isPattern) {
-			return new ArrayPattern(values as DeclareExpression[]);
+			return new ArrayPattern(values as CanDeclareExpression[]);
 		}
 		return new ArrayExpression(values);
 	}
@@ -1402,7 +1403,7 @@ export class JavaScriptParser extends AbstractParser {
 			case PropertyKind.Spread:
 				let value: SpreadElement | RestElement = nameExpression as SpreadElement;
 				if (isPattern) {
-					value = new RestElement(value.getArgument() as DeclareExpression);
+					value = new RestElement(value.getArgument() as CanDeclareExpression);
 				}
 				return new Property(value.getArgument(), value, 'init');
 
@@ -1705,7 +1706,7 @@ export class JavaScriptParser extends AbstractParser {
 				default:
 					break;
 			}
-			expression = new PipelineExpression(expression, func, args);
+			expression = new BindPipelineExpression(expression, func, args);
 		}
 		return expression;
 	}
@@ -1887,7 +1888,7 @@ export class JavaScriptParser extends AbstractParser {
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
 					const key = this.parsePropertyName();
-					result = new ChainExpression(result, key, 'property');
+					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1895,7 +1896,7 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_BRACKETS: {
 					this.consume(Token.L_BRACKETS);
 					const index = this.parseExpressionCoverGrammar();
-					result = new MemberExpression(result, index, true);
+					result = new MemberExpression(result, index, true, isOptional);
 					this.expect(Token.R_BRACKETS);
 					break;
 				}
@@ -1907,7 +1908,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.consume(Token.PERIOD);
 					const key = this.parsePropertyName();
-					result = new MemberExpression(result, key, false);
+					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1917,7 +1918,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (result.toString() === 'eval') {
 						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
 					}
-					result = new CallExpression(result, args);
+					result = new CallExpression(result, args, isOptional);
 					break;
 				}
 
@@ -1928,7 +1929,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.consume(Token.BIND);
 					const key = this.parsePropertyName();
-					result = new BindExpression(result, key, false);
+					result = new BindExpression(result, key, false, isOptional);
 					break;
 				}
 
@@ -1941,7 +1942,7 @@ export class JavaScriptParser extends AbstractParser {
 					isOptional = true;
 					optionalChaining = true;
 					const key = this.parsePropertyName();
-					result = new ChainBindExpression(result, key, false);
+					result = new BindExpression(result, key, true, isOptional);
 					break;
 				}
 
@@ -1958,6 +1959,9 @@ export class JavaScriptParser extends AbstractParser {
 				isOptional = false;
 			}
 		} while (Token.isPropertyOrCall(this.peek().token));
+		if (optionalChaining) {
+			result = new ChainExpression(result);
+		}
 		return result;
 	}
 	protected parseAwaitExpression(): ExpressionNode {

@@ -34,7 +34,7 @@ export interface ExpressionNode {
 	toString(): string;
 
 	/**
-	 * used to map this object to represent an estree expression
+	 * used to map this object to represent an [ESTree](https://github.com/estree/estree) json object
 	 * @param key 
 	 */
 	toJSON(key?: string): NodeJsonType;
@@ -62,7 +62,7 @@ export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T>
 	fromJSON(node: T, deserializer: NodeDeserializer): T;
 }
 
-export interface DeclareExpression extends ExpressionNode {
+export interface CanDeclareExpression extends ExpressionNode {
 	/**
 	 * declare variable in the current local scope (block),
 	 * or closest function scope (global) scop,
