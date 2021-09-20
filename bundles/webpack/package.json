@@ -1,5 +1,5 @@
 {
-	"name": "@ibyar/webpack-demo",
+	"name": "@ibyar/webpack",
 	"version": "0.3.5",
 	"description": "A web pack demo to work with @ibyar/aurora package to build web components",
 	"private": true,
@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",
-		"css-loader": "^6.2.0",
+		"css-loader": "^6.3.0",
 		"html-loader": "^2.1.2",
 		"html-webpack-plugin": "^5.3.2",
 		"mini-css-extract-plugin": "^2.3.0",
@@ -24,7 +24,9 @@
 		"webpack-cli": "^4.8.0",
 		"webpack-dev-server": "^4.2.1"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC"
+	"keywords": [
+		"webpack",
+		"aurora",
+		"ibyar"
+	]
 }
