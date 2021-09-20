@@ -2,6 +2,7 @@
 	"name": "@ibyar/webpack",
 	"version": "0.3.5",
 	"description": "A web pack demo to work with @ibyar/aurora package to build web components",
+	"license": "MIT",
 	"private": true,
 	"scripts": {
 		"serve": "webpack serve --config ./webpack.dev.js",
