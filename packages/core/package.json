@@ -30,6 +30,10 @@
 		"aurora",
 		"ibyar",
 		"custom-elements",
+		"web-components",
+		"webcomponents",
+		"shadow-dom",
+		"shadowdom",
 		"dependency-injection",
 		"reflect-metadata",
 		"services",
@@ -48,7 +52,6 @@
 		"elements-info",
 		"element",
 		"interceptor",
-		"shadow-dom",
 		"typescript"
 	]
 }

@@ -354,3 +354,5 @@ see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/examp
 
 see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
 
+see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
+
