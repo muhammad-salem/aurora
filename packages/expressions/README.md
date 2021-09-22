@@ -94,5 +94,66 @@ console.log(
 
 ```
 
-## follow ast of [estree](https://github.com/estree/estree/)
+## follow ast of [ESTree](https://github.com/estree/estree/)
+
+### Feature
+
+ - [V8 JavaScript engine](https://github.com/v8/v8) to parse js source code.
+ - for now this parser does not provide any info about `SourceLocation`
+
+## Future Feature
+
+ - class expression
+ - Import/Export module
+ - Custom Factory Builder to convert the code to ESTree directly or to like now to Expression node
+
+## Operators
+
+| Operator type          | Individual operators                                    |
+| ---------------------- | ------------------------------------------------------- |
+| member                 | `. []`                                                  |
+| call / create instance | `() new`                                                |
+| negation/increment     | `! ~ - + ++ -- typeof void delete`                      |
+| multiply/divide        | `* / % ** %%`                                           |
+| addition/subtraction   | `+ -`                                                   |
+| bitwise shift          | `<< >> >>>`                                             |
+| relational             | `< <= > >= >? <? <=> in instanceof`                               |
+| equality               | `== != === !==`                                         |
+| bitwise-and            | `&`                                                     |
+| bitwise-xor            | `^`                                                     |
+| bitwise-or             | `\|`                                                    |
+| logical-and            | `&&`                                                    |
+| logical-or             | `\|\|`                                                  |
+| conditional            | `?:`                                                    |
+| assignment             | `= += -= *= **= /= %= <<= >>= >>>= &= ^= \|= &&= \|\|= ??= >?= <?= %%=` |
+| comma                  | `,`                                                     |
+
+non-ecma operator are `%% >? <? <=> >?= <?= %%=`
+
+
+## Pipeline Operator |> Support
+
+- supported pipeline operators `|> :|> ?|> ?:|> <| <|: ?<| ?<|:` and `|>> <<|`.
+
+- support the following F# syntax:
+ 
+```js
+function add(x, y) { return x + y };
+const a = 88;
+argument 	|> map
+			|> function(x) { console.log(x); return x; }
+			|> (x) => { console.log(x); return x; }
+			|> add(a) // y = a, x will be th return value from the arrow function
+
+```
+
+- support angular like pipeline syntax
+
+```js
+function add(x, y, z) { return x + y + z };
+const a = 88;
+const b = 99;
+const c  = 11;
+const b =  a |> add:b:c; // === add(a, b, c)
+```
 
