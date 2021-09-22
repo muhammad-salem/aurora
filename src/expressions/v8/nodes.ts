@@ -5,7 +5,6 @@ import { AssignmentExpression } from '../api/operators/assignment.js';
 import { LogicalExpression } from '../api/operators/logical.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression, BindPipelineExpression } from '../api/operators/pipeline.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import {
 	Literal, BigIntLiteral, NumberLiteral,
@@ -75,18 +74,6 @@ export function createTernaryExpression(op: string, logical: ExpressionNode, ifT
 			return new ConditionalExpression(logical, ifTrue, ifFalse);
 		default:
 			throw new Error(`${op} is not ternary operator`);
-
-	}
-}
-
-export function createPipelineExpression(op: string, param: ExpressionNode, func: ExpressionNode, args?: ('?' | '...?' | ExpressionNode)[]): ExpressionNode {
-	switch (op) {
-		case '|>':
-			return new PipelineExpression(param, func, args);
-		case ':|>':
-			return new BindPipelineExpression(param, func, args as ExpressionNode[]);
-		default:
-			throw new Error(`operator ${op} is not supported `);
 
 	}
 }

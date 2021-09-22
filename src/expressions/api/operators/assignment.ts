@@ -28,7 +28,6 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 
 		'/=': (evalNode: EvaluateNode) => { return evalNode.left /= evalNode.right; },
 		'%=': (evalNode: EvaluateNode) => { return evalNode.left %= evalNode.right; },
-		'%%=': (evalNode: EvaluateNode) => { return evalNode.left %= ((evalNode.left % evalNode.right) + evalNode.right) % evalNode.right; },
 
 		'+=': (evalNode: EvaluateNode) => { return evalNode.left += evalNode.right; },
 		'-=': (evalNode: EvaluateNode) => { return evalNode.left -= evalNode.right; },
@@ -41,6 +40,7 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 		'^=': (evalNode: EvaluateNode) => { return evalNode.left ^= evalNode.right; },
 		'|=': (evalNode: EvaluateNode) => { return evalNode.left |= evalNode.right; },
 
+		'%%=': (evalNode: EvaluateNode) => { return evalNode.left %= ((evalNode.left % evalNode.right) + evalNode.right) % evalNode.right; },
 		'>?=': (evalNode: EvaluateNode) => { return evalNode.left = evalNode.left > evalNode.right ? evalNode.left : evalNode.right; },
 		'<?=': (evalNode: EvaluateNode) => { return evalNode.left = evalNode.left > evalNode.right ? evalNode.right : evalNode.left; },
 

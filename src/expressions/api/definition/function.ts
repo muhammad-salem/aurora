@@ -51,7 +51,7 @@ export class Param extends AbstractExpressionNode {
 		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
 	get(stack: Stack) {
-		throw new Error('Paramter#get() has no implementation.');
+		throw new Error('Param#get() has no implementation.');
 	}
 	events(): string[] {
 		return this.identifier.events().concat(this.defaultValue?.events() || []);
@@ -104,7 +104,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: Function) {
 		throw new Error('FunctionExpression#set() has no implementation.');
 	}
-	private setParamter(stack: Stack, args: any[]) {
+	private setParameter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
@@ -121,7 +121,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				func = async function (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
-					self.setParamter(stack, args);
+					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
@@ -168,7 +168,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				func = function* (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
-					self.setParamter(stack, args);
+					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
@@ -184,7 +184,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				func = async function* (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
-					self.setParamter(stack, args);
+					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
@@ -232,7 +232,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				func = function (this: any, ...args: any[]) {
 					stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
-					self.setParamter(stack, args);
+					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
@@ -336,7 +336,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: Function) {
 		throw new Error('ArrowFunctionExpression#set() has no implementation.');
 	}
-	private setParamter(stack: Stack, args: any[]) {
+	private setParameter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
@@ -353,7 +353,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 					stack.pushFunctionScope();
 					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
 					// stack.declareVariable('function', 'this', this);
-					this.setParamter(stack, args);
+					this.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of this.body) {
 						returnValue = state.get(stack);
@@ -401,7 +401,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 					stack.pushFunctionScope();
 					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
 					// stack.declareVariable('function', 'this', this);
-					this.setParamter(stack, args);
+					this.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of this.body) {
 						returnValue = state.get(stack);
