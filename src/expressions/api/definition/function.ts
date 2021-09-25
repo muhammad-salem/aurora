@@ -1,4 +1,4 @@
-import type { ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -82,7 +82,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 	}
 	constructor(
 		protected params: ExpressionNode[], protected body: ExpressionNode[],
-		protected kind: FunctionKind, protected id?: ExpressionNode,
+		protected kind: FunctionKind, protected id?: CanDeclareExpression,
 		protected rest?: boolean, protected generator?: boolean) {
 		super();
 	}
@@ -245,9 +245,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 				};
 				break;
 		}
-		if (this.id) {
-			this.id.set(stack, func);
-		}
+		this.id?.declareVariable(stack, 'block', func);
 		return func;
 	}
 	events(): string[] {
@@ -295,14 +293,14 @@ export class FunctionDeclaration extends FunctionExpression {
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
-			deserializer(node.id!),
+			deserializer(node.id!) as CanDeclareExpression,
 			node.rest,
 			node.generator
 		);
 	}
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id: ExpressionNode,
+		kind: FunctionKind, id: CanDeclareExpression,
 		rest?: boolean, generator?: boolean) {
 		super(params, body, kind, id, rest, generator);
 	}
