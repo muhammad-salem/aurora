@@ -755,6 +755,17 @@ export class Token {
 		return false;
 	}
 
+	public static isPipelineOperator(token: Token) {
+		switch (token) {
+			case Token.PIPELINE:
+			case Token.BIND_PIPELINE:
+			case Token.CONDITIONAL_PIPELINE:
+			case Token.CONDITIONAL_BIND_PIPELINE:
+				return true;
+		}
+		return false;
+	}
+
 	public static isValidIdentifier(token: Token) {
 		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
 		if (token == Token.AWAIT || token == Token.YIELD) return false;
