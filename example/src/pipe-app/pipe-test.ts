@@ -109,9 +109,9 @@ import { interval, Subscription } from 'rxjs';
 			</tr>
 		</thead>
 		<tbody>
-			<for expression="let index = 0, row=table[index]; index < table.length; index++, row=table[index]">
-				<tr *if="row.age > 20">
-					<th scope="row">{{index}}</th>
+			<for expression="let row of table; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
+				<tr [class]="{'table-info': isEven, 'table-danger': isOdd}">
+					<th scope="row">{{ ({idx, tableLength, isEven, isOdd, isFirst, isLast }) |> json }}</th>
 					<td>{{row.firstName}}</td>
 					<td>{{row.lastName}}</td>
 					<td>{{row.age}}</td>
