@@ -29,7 +29,7 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 		this.declareVariable(stack, 'block');
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
-		if (propertyValue) {
+		if (propertyValue !== undefined) {
 			this.id.declareVariable(stack, scopeType, propertyValue);
 			return;
 		}
