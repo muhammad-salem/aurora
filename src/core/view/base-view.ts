@@ -10,6 +10,7 @@ import { EventEmitter } from '../component/events.js';
 import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
+import { ElementReactiveScope } from '../directive/providers.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -41,7 +42,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
-		_viewScope: ReactiveScope<CustomView<T>>;
+		_viewScope: ElementReactiveScope;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -57,14 +58,20 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._model = defineModel(model);
 
 			this._modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
-			this._viewScope = ReactiveScope.blockScopeFor(this);
+			this._viewScope = new ElementReactiveScope(this);
 
 			// if model had view decorator
 			if (this._componentRef.view) {
 				// this._model[componentRef.view] = this;
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-
+			this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
+				this.setInputValue(viewProperty, newValue);
+			});
+			// this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
+			// 	console.log('emit model', modelProperty, oldValue, newValue);
+			// 	// this.emitChanges(modelProperty as string);
+			// });
 			this._render = new ComponentRender(this);
 		}
 
@@ -125,13 +132,13 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			}
 		}
 
-		setInputValue(viewProp: string, value: any): void {
-			const inputRef = this.getInput(viewProp);
+		setInputValue(viewProp: PropertyKey, value: any): void {
+			const inputRef = this.getInput(viewProp as string);
 			if (inputRef) {
 				// console.log('about to change input', inputRef.modelProperty, value);
-				Reflect.set(this._model, inputRef.modelProperty, value);
-				// this._changeObservable.emit(viewProp);
-				this._model.emitChangeModel(inputRef.modelProperty);
+				// Reflect.set(this._model, inputRef.modelProperty, value);
+				// this._model.emitChangeModel(inputRef.modelProperty);
+				this._modelScope.set(inputRef.modelProperty, value);
 			}
 		}
 
@@ -156,23 +163,20 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 
 		private setAttributeHelper(attrViewName: string, value: any): void {
 			if (value === null || value === undefined) {
-				return;
+				this.removeAttribute(attrViewName);
 			}
-			if (typeof value === 'boolean') {
+			else if (typeof value === 'boolean') {
 				if (value) {
 					super.setAttribute(attrViewName, '');
 				} else {
 					this.removeAttribute(attrViewName);
 				}
 			} else {
-				super.setAttribute(attrViewName, String(value));
+				super.setAttribute(attrViewName, value);
 			}
 		}
 
 		setAttribute(attrViewName: string, value: any): void {
-			if (value === null || value === undefined) {
-				return;
-			}
 			this.setInputValue(attrViewName, value);
 			this.setAttributeHelper(attrViewName, value);
 		}

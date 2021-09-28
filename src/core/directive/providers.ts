@@ -1,10 +1,10 @@
-import { Scope } from '@ibyar/expressions';
+import { ReactiveScope } from '@ibyar/expressions';
 import { isOnInit } from '../component/lifecycle.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective } from './directive.js';
 
 export type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
-export class ElementReactiveScope extends Scope<ElementContext> {
+export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 	private directiveMap: Map<string, AttributeDirective> = new Map();
 	constructor(private el: HTMLElement) {
 		super({} as ElementContext, 'block');
