@@ -11,8 +11,8 @@ import {
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import {
-	ArrowFunctionExpression, ArrowFunctionType,
-	FunctionKind, Param, FunctionExpression
+	ArrowFunctionExpression, ArrowFunctionType, FunctionKind,
+	Param, FunctionExpression, FunctionDeclaration
 } from '../api/definition/function.js';
 import { IfStatement } from '../api/statement/control/if.js';
 import { NewExpression } from '../api/computing/new.js';
@@ -905,6 +905,9 @@ export class JavaScriptParser extends AbstractParser {
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseFunctionBody();
+		if (name) {
+			return new FunctionDeclaration(formals, body, flag, name as CanDeclareExpression, functionInfo.rest);
+		}
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseFunctionBody(): ExpressionNode[] {
