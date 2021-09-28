@@ -119,7 +119,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 		switch (this.kind) {
 			case FunctionKind.ASYNC:
 				func = async function (this: any, ...args: any[]) {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
@@ -156,33 +156,33 @@ export class FunctionExpression extends AbstractExpressionNode {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
 								returnValue = await returnValue.promise;
-								stack.popScope();
+								stack.clearTo(scope);
 								return returnValue;
 							}
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 			case FunctionKind.GENERATOR:
 				func = function* (this: any, ...args: any[]) {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.popScope();
+							stack.clearTo(scope);
 							return returnValue.value;
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: any, ...args: any[]) {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
@@ -210,7 +210,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 								}
 								else if (result instanceof ReturnValue) {
 									returnValue = result;
-									stack.popScope();
+									stack.clearTo(scope);
 									break;
 								}
 							}
@@ -219,29 +219,29 @@ export class FunctionExpression extends AbstractExpressionNode {
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
-								stack.popScope();
+								stack.clearTo(scope);
 								return await returnValue.promise;
 							}
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 			default:
 			case FunctionKind.NORMAL:
 				func = function (this: any, ...args: any[]) {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const state of self.body) {
 						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.popScope();
+							stack.clearTo(scope);
 							return returnValue.value;
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 		}
@@ -348,7 +348,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		switch (this.kind) {
 			case ArrowFunctionType.ASYNC:
 				func = async (...args: any[]) => {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
 					// stack.declareVariable('function', 'this', this);
 					this.setParameter(stack, args);
@@ -385,18 +385,18 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
-								stack.popScope();
+								stack.clearTo(scope);
 								return await returnValue.promise;
 							}
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 			default:
 			case ArrowFunctionType.NORMAL:
 				func = (...args: any[]) => {
-					stack.pushFunctionScope();
+					const scope = stack.pushFunctionScope();
 					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
 					// stack.declareVariable('function', 'this', this);
 					this.setParameter(stack, args);
@@ -404,11 +404,11 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 					for (const state of this.body) {
 						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.popScope();
+							stack.clearTo(scope);
 							return returnValue.value;
 						}
 					}
-					stack.popScope();
+					stack.clearTo(scope);
 				};
 				break;
 		}
