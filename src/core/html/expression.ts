@@ -17,19 +17,33 @@ function convertToMemberAccessStyle(source: string) {
 	}
 	return dashSplits[0] + dashSplits.splice(1).map(s => (s[0].toUpperCase() + s.substring(1))).join('');
 }
+
+/**
+ * warp js code with `()` if necessary
+ * 
+ * `{name: 'alex'}` will be `({name: 'alex'})`
+ * 
+ * @param params 
+ */
+function checkAndValidateObjectSyntax(source: string) {
+	if (source.startsWith('{')) {
+		return `(${source})`;
+	}
+	return source;
+}
 function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
-	const elementSource = `this.${JavaScriptParser.parse(convertToMemberAccessStyle(attr.name))}`;
+	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
-	const modelExpression = JavaScriptParser.parse(attr.value);
+	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
 
 	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
 	attr.callbackExpression = new AssignmentExpression('=', modelExpression, elementExpression);
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
-	const elementSource = `this.${JavaScriptParser.parse(convertToMemberAccessStyle(attr.name))}`;
+	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
-	const modelExpression = JavaScriptParser.parse(attr.value);
+	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
 	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
 }
 
