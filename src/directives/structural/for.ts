@@ -30,7 +30,7 @@ type ForAlias = 'index' | 'count' | 'first' | 'last' | 'even' | 'odd';
  * - even: boolean: True when the item has an even index in the iterable.
  * - odd: boolean: True when the item has an odd index in the iterable.
  * 
- * ** `for await (...)` and `for( ...; ... ; ...)` not have value of `count` or `last`.
+ * ** `for await (...)` and `for( ...; ...; ...)` not have value of `count` or `last`.
  * 
  * *for="let user of users; index as i; first as isFirst"
  */
@@ -42,11 +42,11 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 	private alias: { [key in ForAlias]?: string };
 	getStatement() {
 		const lines = this.directive.directiveValue.split(';');
-		const forStatement = lines[0];
-		if (lines.length > 1) {
-			lines.splice(0, 1);
+		const aliased = lines.filter(str => /\s+as\s+/g.test(str));
+		const forStatement = lines.filter(str => !(/\s+as\s+/g.test(str))).join(';');
+		if (aliased.length > 0) {
 			this.alias = {};
-			lines.map(line => line.split(/\s+as\s+/g))
+			aliased.map(line => line.split(/\s+as\s+/g))
 				.map(parts => parts.map(str => str.trim()))
 				.forEach(keyValue => this.alias[keyValue[0] as ForAlias] = keyValue[1]);
 		}
@@ -60,7 +60,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		} else {
 			// let x of y ==> for (const x of y) {}
 			// const x in y ==> for (const x in y) {}
-			// const x =0; x < y.length; x++;
+			// const x = 0; x < y.length; x++;
 			return `for(${forStatement}) { }`;
 		}
 	}

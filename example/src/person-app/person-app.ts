@@ -45,14 +45,14 @@ import { Person, PersonModel } from './person';
 
 		<hr>
 
-		<!-- <h1>For Loop Directive</h1>
+		<h1>For Loop Directive</h1>
 		<h5>*for="let index = 0; index &lt; people.length; index++"</h5>
 		<div class="row">
 			<div class="col-3" *for="let index = 0; index < people.length; index++">
 				<p>Name: <span>{{people[index].name}}</span></p>
 				<p>Age: <span>{{people[index].age}}</span></p>
 			</div>
-		</div> -->
+		</div>
 
 		<h1>For Of Directive</h1>
 		<h5>*for="let user of people"</h5>
