@@ -22,7 +22,6 @@
 		"tslib": "^2.3.1"
 	},
 	"devDependencies": {
-		"@ibyar/esmpack": "^0.1.93",
 		"typescript": "^4.4.3"
 	},
 	"scripts": {
