@@ -137,7 +137,14 @@ non-ecma operator are `%% >? <? <=> >?= <?= %%=`
 
 ```js
 x |> methodName1:arg2:arg3
-  |> methodName2(arg1, ?, ...arg3)
+  |> methodName2(arg1, ?, ...arg3);
+
+
+function add(x, y, z) { return x + y + z };
+const a = 88;
+const b = 99;
+const c  = 11;
+const z =  a |> add:b:c; // === add(a, b, c)
 ```
  
 
@@ -152,14 +159,3 @@ argument 	|> map
 			|> methodName3(a)
 
 ```
-
-- support angular like pipeline syntax
-
-```js
-function add(x, y, z) { return x + y + z };
-const a = 88;
-const b = 99;
-const c  = 11;
-const b =  a |> add:b:c; // === add(a, b, c)
-```
-
