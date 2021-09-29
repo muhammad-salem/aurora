@@ -859,25 +859,9 @@ export class TokenStreamImpl extends TokenStream {
 						this.current = this.newToken(Token.NULLISH);
 						this.pos += 2;
 					}
-				} else if (this.expression.charAt(this.pos + 1) === ':') {
-					if (this.expression.charAt(this.pos + 2) === '|') {
-						if (this.expression.charAt(this.pos + 3) === '>') {
-							this.current = this.newToken(Token.CONDITIONAL_BIND_PIPELINE);
-							this.pos += 4;
-						} else {
-							return false;
-						}
-					} else if (this.expression.charAt(this.pos + 2) === ':') {
-						this.current = this.newToken(Token.QUESTION_BIND);
-						this.pos += 3;
-					}
-				} else if (this.expression.charAt(this.pos + 1) === '|') {
-					if (this.expression.charAt(this.pos + 2) === '>') {
-						this.current = this.newToken(Token.CONDITIONAL_PIPELINE);
-						this.pos += 3;
-					} else {
-						return false;
-					}
+				} else if (this.expression.substring(this.pos + 1, this.pos + 3) == '::') {
+					this.current = this.newToken(Token.QUESTION_BIND);
+					this.pos += 3;
 				} else if (this.expression.charAt(this.pos + 1) === '.') {
 					this.current = this.newToken(Token.QUESTION_PERIOD);
 					this.pos += 2;
@@ -912,14 +896,7 @@ export class TokenStreamImpl extends TokenStream {
 				return true;
 			// no break
 			case ':':
-				if (this.expression.charAt(this.pos + 1) === '|') {
-					if (this.expression.charAt(this.pos + 2) === '>') {
-						this.current = this.newToken(Token.BIND_PIPELINE);
-						this.pos += 3;
-					} else {
-						return false;
-					}
-				} else if (this.expression.charAt(this.pos + 1) === ':') {
+				if (this.expression.charAt(this.pos + 1) === ':') {
 					this.current = this.newToken(Token.QUESTION_BIND);
 					this.pos += 2;
 				} else {

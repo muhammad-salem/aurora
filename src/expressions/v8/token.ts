@@ -19,22 +19,6 @@ export class Token {
 	public static readonly PIPELINE = new Token('|>', 3);
 
 	/**
-	 * ___ :|> ___ : ___
-	 * ___ :|> ___ ( ___, ___ )
-	 */
-	public static readonly BIND_PIPELINE = new Token(':|>', 3);
-
-	/**
-	 * ___ ?|> ___ : ___
-	 */
-	public static readonly CONDITIONAL_PIPELINE = new Token('?|>', 3);
-
-	/**
-	 * ___ ?:|> ___ : ___
-	 */
-	public static readonly CONDITIONAL_BIND_PIPELINE = new Token('?:|>', 3);
-
-	/**
 	 * ___ || ___
 	 */
 	public static readonly OR = new Token('||', 4);
@@ -758,9 +742,6 @@ export class Token {
 	public static isPipelineOperator(token: Token) {
 		switch (token) {
 			case Token.PIPELINE:
-			case Token.BIND_PIPELINE:
-			case Token.CONDITIONAL_PIPELINE:
-			case Token.CONDITIONAL_BIND_PIPELINE:
 				return true;
 		}
 		return false;
