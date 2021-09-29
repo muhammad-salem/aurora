@@ -1638,10 +1638,12 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_PARENTHESES:
 					// es2020 syntax
 					this.consume(Token.L_PARENTHESES);
+					let indexed = false;
 					while (this.peek().isNotType(Token.R_PARENTHESES)) {
 						const isSpread = this.check(Token.ELLIPSIS);
 						if (this.peek().isType(Token.CONDITIONAL)) {
 							this.consume(Token.CONDITIONAL);
+							indexed = true;
 							if (isSpread) {
 								args.push('...?');
 							} else {
@@ -1657,6 +1659,10 @@ export class JavaScriptParser extends AbstractParser {
 						}
 					}
 					this.expect(Token.R_PARENTHESES);
+					// should be indexed, has partial operator
+					if (!indexed) {
+						throw new Error(this.errorMessage('should use partial operator `?` in pipeline with a multi argument call'));
+					}
 					break;
 				default:
 					break;
