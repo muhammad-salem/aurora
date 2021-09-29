@@ -22,7 +22,7 @@ export class CallExpression extends AbstractExpressionNode {
 	getCallee() {
 		return this.callee;
 	}
-	getParameters() {
+	getArguments() {
 		return this.arguments;
 	}
 	set(stack: Stack, value: any) {

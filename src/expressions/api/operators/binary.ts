@@ -29,18 +29,18 @@ export class BinaryExpression extends InfixExpressionNode<BinaryOperator> {
 		'===': (evalNode: EvaluateNode) => { return evalNode.left === evalNode.right; },
 		'!==': (evalNode: EvaluateNode) => { return evalNode.left !== evalNode.right; },
 
+		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
+		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
+
+		'>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
+		'>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
+
 		'*': (evalNode: EvaluateNode) => { return evalNode.left * evalNode.right; },
 		'/': (evalNode: EvaluateNode) => { return evalNode.left / evalNode.right; },
 		'%': (evalNode: EvaluateNode) => { return evalNode.left % evalNode.right; },
 
 		'+': (evalNode: EvaluateNode) => { return evalNode.left + evalNode.right; },
 		'-': (evalNode: EvaluateNode) => { return evalNode.left - evalNode.right; },
-
-		'<': (evalNode: EvaluateNode) => { return evalNode.left < evalNode.right; },
-		'<=': (evalNode: EvaluateNode) => { return evalNode.left <= evalNode.right; },
-
-		'>': (evalNode: EvaluateNode) => { return evalNode.left > evalNode.right; },
-		'>=': (evalNode: EvaluateNode) => { return evalNode.left >= evalNode.right; },
 
 		'in': (evalNode: EvaluateNode) => { return evalNode.left in evalNode.right; },
 		'instanceof': (evalNode: EvaluateNode) => { return evalNode.left instanceof evalNode.right; },

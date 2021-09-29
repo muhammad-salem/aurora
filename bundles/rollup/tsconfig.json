@@ -1,0 +1,36 @@
+{
+	"compilerOptions": {
+		"rootDir": "./src/",
+		"outDir": "./dist/",
+		"sourceMap": true,
+		"declaration": true,
+		"importHelpers": true,
+		"inlineSources": false,
+		"declarationMap": false,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictBindCallApply": true,
+		"downlevelIteration": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"moduleResolution": "Node",
+		"module": "ES2020",
+		"target": "ES2021",
+		"lib": [
+			"ES2021",
+			"dom"
+		],
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"removeComments": true,
+		"jsx": "react",
+		"allowJs": true
+	},
+	"include": [
+	  "src/**/*.ts",
+	  "src/**/*.tsx"
+	],
+   "files": [
+	 "src/index.ts"
+   ],
+}

@@ -234,7 +234,7 @@ export class ComponentRender<T> {
 	}
 	createElement(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
 		const element = this.createElementByTagName(node);
-		const elContext = new ElementReactiveScope(element);
+		const elContext = isHTMLComponent(element) ? element._viewScope : new ElementReactiveScope(element);
 		contextStack = contextStack.copyStack();
 		contextStack.pushScope(elContext);
 		this.initAttribute(element, node, contextStack);

@@ -11,8 +11,8 @@ import {
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import {
-	ArrowFunctionExpression, ArrowFunctionType,
-	FunctionKind, Param, FunctionExpression
+	ArrowFunctionExpression, ArrowFunctionType, FunctionKind,
+	Param, FunctionExpression, FunctionDeclaration
 } from '../api/definition/function.js';
 import { IfStatement } from '../api/statement/control/if.js';
 import { NewExpression } from '../api/computing/new.js';
@@ -33,7 +33,7 @@ import { ReturnStatement } from '../api/computing/return.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression, BindPipelineExpression } from '../api/operators/pipeline.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { ChainExpression } from '../api/operators/chaining.js';
@@ -905,6 +905,9 @@ export class JavaScriptParser extends AbstractParser {
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseFunctionBody();
+		if (name) {
+			return new FunctionDeclaration(formals, body, flag, name as CanDeclareExpression, functionInfo.rest);
+		}
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseFunctionBody(): ExpressionNode[] {
@@ -1635,10 +1638,12 @@ export class JavaScriptParser extends AbstractParser {
 				case Token.L_PARENTHESES:
 					// es2020 syntax
 					this.consume(Token.L_PARENTHESES);
+					let indexed = false;
 					while (this.peek().isNotType(Token.R_PARENTHESES)) {
 						const isSpread = this.check(Token.ELLIPSIS);
 						if (this.peek().isType(Token.CONDITIONAL)) {
 							this.consume(Token.CONDITIONAL);
+							indexed = true;
 							if (isSpread) {
 								args.push('...?');
 							} else {
@@ -1654,59 +1659,15 @@ export class JavaScriptParser extends AbstractParser {
 						}
 					}
 					this.expect(Token.R_PARENTHESES);
+					// should be indexed, has partial operator
+					if (!indexed) {
+						throw new Error(this.errorMessage('should use partial operator `?` in pipeline with a multi argument call'));
+					}
 					break;
 				default:
 					break;
 			}
 			expression = new PipelineExpression(expression, func, args);
-		}
-		return expression;
-	}
-	protected parseBindPipelineExpression(expression: ExpressionNode): ExpressionNode {
-		// ConditionalExpression ::
-		//   LogicalExpression
-		//   expression ':|>' function [':' expression [':' expression | '?'| '...?'] ] *
-		//   expression ':|>' function '('[expression ',' (? | ...?)]* ')'
-		//
-		//   expression ':|>' function ':' expression [':' expression ]*]
-		//   expression ':|>' function '(' expression [',' expression ]* ')'
-
-		while (this.peek().isType(Token.BIND_PIPELINE)) {
-			this.consume(Token.BIND_PIPELINE);
-			const func = this.parseMemberExpression(); //this.parseLogicalExpression();
-			let args: ExpressionNode[] = [];
-			switch (this.peek().token) {
-				case Token.COLON:
-					// support angular pipeline syntax
-					do {
-						this.consume(Token.COLON);
-						const isSpread = this.check(Token.ELLIPSIS);
-						const arg = this.parseLogicalExpression();
-						if (isSpread) {
-							args.push(new SpreadElement(arg));
-						} else {
-							args.push(arg);
-						}
-					} while (this.peek().isType(Token.COLON));
-					break;
-				case Token.L_PARENTHESES:
-					// es2020 syntax
-					this.consume(Token.L_PARENTHESES);
-					while (this.peek().isNotType(Token.R_PARENTHESES)) {
-						const isSpread = this.check(Token.ELLIPSIS);
-						const arg = this.parseLogicalExpression();
-						if (isSpread) {
-							args.push(new SpreadElement(arg));
-						} else {
-							args.push(arg);
-						}
-					}
-					this.expect(Token.R_PARENTHESES);
-					break;
-				default:
-					break;
-			}
-			expression = new BindPipelineExpression(expression, func, args);
 		}
 		return expression;
 	}
@@ -1718,7 +1679,6 @@ export class JavaScriptParser extends AbstractParser {
 
 		let expression: ExpressionNode = this.parseLogicalExpression();
 		expression = this.parsePipelineExpression(expression);
-		expression = this.parseBindPipelineExpression(expression);
 		return this.peek().isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
 	}
 	protected parseLogicalExpression(): ExpressionNode {
