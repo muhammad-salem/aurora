@@ -133,17 +133,23 @@ non-ecma operator are `%% >? <? <=> >?= <?= %%=`
 
 ## Pipeline Operator |> Support
 
-- supported pipeline operators `|> :|> ?|> ?:|> <| <|: ?<| ?<|:` and `|>> <<|`.
+- support angular-like syntax and partial operator for a call syntax:
 
-- support the following F# syntax:
+```js
+x |> methodName1:arg2:arg3
+  |> methodName2(arg1, ?, ...arg3)
+```
  
+
+- will add support for syntax like:
+
 ```js
 function add(x, y) { return x + y };
 const a = 88;
 argument 	|> map
 			|> function(x) { console.log(x); return x; }
 			|> (x) => { console.log(x); return x; }
-			|> add(a) // y = a, x will be th return value from the arrow function
+			|> add(a)
 
 ```
 
