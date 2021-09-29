@@ -149,7 +149,7 @@ const a = 88;
 argument 	|> map
 			|> function(x) { console.log(x); return x; }
 			|> (x) => { console.log(x); return x; }
-			|> add(a)
+			|> methodName3(a)
 
 ```
 
