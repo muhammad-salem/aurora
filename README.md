@@ -20,6 +20,8 @@
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
+This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
+
 
 ## `Install`
 
@@ -356,3 +358,12 @@ see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/d
 
 see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
 
+## Dependencies
+ 
+ - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
+ - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
+ - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
+ - [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions)	a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8) follow, [ESTree](https://github.com/estree/estree/) for generate ast object.
+ - [@ibyar/elements](https://npmjs.org/package/@ibyar/elements)			parse html and extract bind expression and structural directive
+ - [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
+ - [tslib](https://www.npmjs.com/package/tslib)
