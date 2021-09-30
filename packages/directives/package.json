@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/directives",
-	"version": "0.3.7",
+	"version": "0.3.8",
 	"description": "Aurora directives had the built-in directives for aurora project",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
@@ -15,9 +15,9 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.3.7",
-		"@ibyar/elements": "^0.3.7",
-		"@ibyar/expressions": "^0.3.7",
+		"@ibyar/core": "^0.3.8",
+		"@ibyar/elements": "^0.3.8",
+		"@ibyar/expressions": "^0.3.8",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.3.1"
 	},
