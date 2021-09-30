@@ -48,7 +48,7 @@ const source = `
 	setTimeout(() => console.log('setTimeout', alex), 500);
 	const sara = { firstName: 'sara', lastName: 'jon', age: 28, [Symbol.toStringTag]: 'SARA'};
 	console.log(sara['age']);
-	console.log('toStringTag', sara[Symbol.toStringTag]);
+	console.log('toStringTag', Object.prototype.toString.call(sara));
 	console.log('compare', sara.age <=> alex.age);
 	console.log('older', sara.age >? alex.age);
 	console.log('younger', sara.age <? alex.age);
@@ -77,7 +77,8 @@ const context = {
 	Promise,
 	setTimeout,
 	console,
-	Symbol
+	Symbol,
+	Object
 };
 const stack = Stack.for(context);
 const globalScope = Scope.functionScope();
