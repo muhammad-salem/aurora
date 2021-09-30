@@ -1,6 +1,6 @@
 import { JavaScriptParser, ReactiveScope, Stack } from '@ibyar/expressions';
 
-const source = `x |> (z => y = z + 1) |> log`;
+const source = `x |> function(s) {return s;} |> (z => y = z + 1) |> log`;
 
 const ast = JavaScriptParser.parse(source);
 const GlobalContext = {
