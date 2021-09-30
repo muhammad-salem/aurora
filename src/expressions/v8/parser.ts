@@ -1174,7 +1174,11 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				this.expect(Token.R_PARENTHESES);
 				if (this.peek().isType(Token.ARROW)) {
-					expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
+					if (expression instanceof SequenceExpression) {
+						expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
+					} else {
+						expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
+					}
 				}
 				return expression;
 			}
@@ -1607,69 +1611,115 @@ export class JavaScriptParser extends AbstractParser {
 		// [~Await]PipelineExpression[?In, ?Yield, ?Await] |> LogicalORExpression[?In, ?Yield, ?Await]
 		// [+Await]PipelineExpression[? In, ? Yield, ? Await] |> [lookahead ∉ { await }]LogicalORExpression[? In, ? Yield, ? Await]
 
-
-		while (this.peek().isType(Token.PIPELINE)) {
-			this.consume(Token.PIPELINE);
-			const func = this.parseMemberExpression(); //this.parseLogicalExpression();
-			let args: (ExpressionNode | '?' | '...?')[] = [];
-			switch (this.peek().token) {
-				case Token.COLON:
-					// support angular pipeline syntax
-					do {
-						this.consume(Token.COLON);
-						const isSpread = this.check(Token.ELLIPSIS);
-						if (this.peek().isType(Token.CONDITIONAL)) {
-							this.consume(Token.CONDITIONAL);
-							if (isSpread) {
-								args.push('...?');
-							} else {
-								args.push('?');
-							}
-						} else {
-							const arg = this.parseLogicalExpression();
-							if (isSpread) {
-								args.push(new SpreadElement(arg));
-							} else {
-								args.push(arg);
-							}
-						}
-					} while (this.peek().isType(Token.COLON));
-					break;
-				case Token.L_PARENTHESES:
-					// es2020 syntax
-					this.consume(Token.L_PARENTHESES);
-					let indexed = false;
-					while (this.peek().isNotType(Token.R_PARENTHESES)) {
-						const isSpread = this.check(Token.ELLIPSIS);
-						if (this.peek().isType(Token.CONDITIONAL)) {
-							this.consume(Token.CONDITIONAL);
-							indexed = true;
-							if (isSpread) {
-								args.push('...?');
-							} else {
-								args.push('?');
-							}
-						} else {
-							const arg = this.parseLogicalExpression();
-							if (isSpread) {
-								args.push(new SpreadElement(arg));
-							} else {
-								args.push(arg);
-							}
-						}
-					}
-					this.expect(Token.R_PARENTHESES);
-					// should be indexed, has partial operator
-					if (!indexed) {
-						throw new Error(this.errorMessage('should use partial operator `?` in pipeline with a multi argument call'));
-					}
-					break;
-				default:
-					break;
-			}
-			expression = new PipelineExpression(expression, func, args);
+		let token: Token;
+		while (Token.isPipelineOperator(token = this.peek().token)) {
+			this.consume(token);
+			expression = this.parsePipelineBody(expression);
 		}
 		return expression;
+	}
+	protected parsePipelineBody(lhs: ExpressionNode): ExpressionNode {
+		let body: ExpressionNode | undefined;
+		let token = this.peek();
+		// parse function
+		switch (token.token) {
+			case Token.FUNCTION:
+				this.consume(Token.FUNCTION);
+				if (this.peek().isType(Token.MUL)) {
+					this.consume(Token.MUL);
+					body = this.parseFunctionExpression(FunctionKind.GENERATOR);
+					break;
+				}
+				body = this.parseFunctionExpression(FunctionKind.NORMAL);
+				break;
+			case Token.ASYNC:
+				if (this.peekAhead().isType(Token.FUNCTION)) {
+					this.consume(Token.ASYNC);
+					this.consume(Token.FUNCTION);
+					if (this.peek().isType(Token.MUL)) {
+						this.consume(Token.MUL);
+						body = this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
+						break;
+					}
+					body = this.parseFunctionExpression(FunctionKind.ASYNC);
+					break;
+				}
+				break;
+			default:
+				break;
+		}
+		if (body) {
+			return new PipelineExpression(lhs, body);
+		}
+		if (token.isType(Token.L_PARENTHESES)) {
+			// parse arrow function
+			// x |> ( y => y+1 )
+			body = this.parsePrimaryExpression();
+			return new PipelineExpression(lhs, body);
+		}
+
+		// parse angular-like and f# and partial operator syntax
+		const func = this.parseMemberExpression(); //this.parseLogicalExpression();
+		let args: (ExpressionNode | '?' | '...?')[] = [];
+		switch (this.peek().token) {
+			case Token.COLON:
+				// support angular pipeline syntax
+				do {
+					this.consume(Token.COLON);
+					const isSpread = this.check(Token.ELLIPSIS);
+					if (this.peek().isType(Token.CONDITIONAL)) {
+						this.consume(Token.CONDITIONAL);
+						if (isSpread) {
+							args.push('...?');
+						} else {
+							args.push('?');
+						}
+					} else {
+						const arg = this.parseAssignmentExpressionCoverGrammar();
+						if (isSpread) {
+							args.push(new SpreadElement(arg));
+						} else {
+							args.push(arg);
+						}
+					}
+				} while (this.peek().isType(Token.COLON));
+				break;
+			case Token.L_PARENTHESES:
+				// es2022 syntax, F# & partial operator
+				this.consume(Token.L_PARENTHESES);
+				let indexed = false;
+				while (this.peek().isNotType(Token.R_PARENTHESES)) {
+					const isSpread = this.check(Token.ELLIPSIS);
+					if (this.peek().isType(Token.CONDITIONAL)) {
+						this.consume(Token.CONDITIONAL);
+						indexed = true;
+						if (isSpread) {
+							args.push('...?');
+						} else {
+							args.push('?');
+						}
+					} else {
+						const arg = this.parseAssignmentExpressionCoverGrammar();
+						if (isSpread) {
+							args.push(new SpreadElement(arg));
+						} else {
+							args.push(arg);
+						}
+					}
+					this.check(Token.COMMA);
+				}
+				this.expect(Token.R_PARENTHESES);
+				// should be indexed, has partial operator
+				if (!indexed) {
+					// z |> method(x, y) === method(x, y)(z)
+					body = new CallExpression(func, args as ExpressionNode[]);
+					return new PipelineExpression(lhs, body);
+				}
+				break;
+			default:
+				break;
+		}
+		return new PipelineExpression(lhs, func, args);
 	}
 	protected parseConditionalExpression(): ExpressionNode {
 		// ConditionalExpression ::

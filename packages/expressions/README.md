@@ -48,7 +48,7 @@ const source = `
 	setTimeout(() => console.log('setTimeout', alex), 500);
 	const sara = { firstName: 'sara', lastName: 'jon', age: 28, [Symbol.toStringTag]: 'SARA'};
 	console.log(sara['age']);
-	console.log('toStringTag', sara[Symbol.toStringTag]);
+	console.log('toStringTag', Object.prototype.toString.call(sara));
 	console.log('compare', sara.age <=> alex.age);
 	console.log('older', sara.age >? alex.age);
 	console.log('younger', sara.age <? alex.age);
@@ -69,7 +69,16 @@ const source = `
 	'let taggedStringLiteral = latex`Hi\n${2+3}!`; console.log({taggedStringLiteral});'
 	;
 
-const ast = JavaScriptParser.parse(source);
+const pipeSource = `
+const add = (arg1, arg2) => arg1 + arg2;
+a
+	|> function(s) {return s;}
+	|> (c => b = c + 1)
+	|> add(?, 2)
+	|> add(3, ?)
+	|> console.log:4:5;`;
+
+const ast = JavaScriptParser.parse(source + pipeSource);
 const esTree = ast.toJSON();
 const esTreeString = JSON.stringify(ast, void 0, 2);
 console.log({ esTree, esTreeString });
@@ -77,10 +86,14 @@ const context = {
 	Promise,
 	setTimeout,
 	console,
-	Symbol
+	Symbol,
+	Object
 };
 const stack = Stack.for(context);
-const globalScope = Scope.functionScope();
+const globalScope = Scope.functionScopeFor({
+	a: 7,
+	b: undefined
+});
 stack.pushScope(globalScope);
 ast.get(stack);
 console.log(
@@ -133,27 +146,26 @@ non-ecma operator are `%% >? <? <=> >?= <?= %%=`
 
 ## Pipeline Operator |> Support
 
-- supported pipeline operators `|> :|> ?|> ?:|> <| <|: ?<| ?<|:` and `|>> <<|`.
+- support angular-like syntax and partial operator for a call syntax:
 
-- support the following F# syntax:
- 
+```js
+x |> methodName1:arg2:arg3
+  |> methodName2(arg1, ?, ...arg3);
+
+
+function add(x, y, z) { return x + y + z };
+const a = 88;
+const b = 99;
+const c  = 11;
+const z =  a |> add:b:c; // === add(a, b, c)
+```
+
 ```js
 function add(x, y) { return x + y };
 const a = 88;
 argument 	|> map
 			|> function(x) { console.log(x); return x; }
 			|> (x) => { console.log(x); return x; }
-			|> add(a) // y = a, x will be th return value from the arrow function
+			|> methodName3(a)
 
 ```
-
-- support angular like pipeline syntax
-
-```js
-function add(x, y, z) { return x + y + z };
-const a = 88;
-const b = 99;
-const c  = 11;
-const b =  a |> add:b:c; // === add(a, b, c)
-```
-
