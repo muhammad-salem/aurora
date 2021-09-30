@@ -391,6 +391,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						}
 					}
 					stack.clearTo(scope);
+					if (this.body.length === 1) {
+						return returnValue;
+					}
 				};
 				break;
 			default:
@@ -409,6 +412,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						}
 					}
 					stack.clearTo(scope);
+					if (this.body.length === 1) {
+						return returnValue;
+					}
 				};
 				break;
 		}
