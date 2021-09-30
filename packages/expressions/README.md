@@ -69,7 +69,16 @@ const source = `
 	'let taggedStringLiteral = latex`Hi\n${2+3}!`; console.log({taggedStringLiteral});'
 	;
 
-const ast = JavaScriptParser.parse(source);
+const pipeSource = `
+const add = (arg1, arg2) => arg1 + arg2;
+a
+	|> function(s) {return s;}
+	|> (c => b = c + 1)
+	|> add(?, 2)
+	|> add(3, ?)
+	|> console.log:4:5;`;
+
+const ast = JavaScriptParser.parse(source + pipeSource);
 const esTree = ast.toJSON();
 const esTreeString = JSON.stringify(ast, void 0, 2);
 console.log({ esTree, esTreeString });
@@ -81,7 +90,10 @@ const context = {
 	Object
 };
 const stack = Stack.for(context);
-const globalScope = Scope.functionScope();
+const globalScope = Scope.functionScopeFor({
+	a: 7,
+	b: undefined
+});
 stack.pushScope(globalScope);
 ast.get(stack);
 console.log(
@@ -147,9 +159,6 @@ const b = 99;
 const c  = 11;
 const z =  a |> add:b:c; // === add(a, b, c)
 ```
- 
-
-- will add support for syntax like:
 
 ```js
 function add(x, y) { return x + y };
