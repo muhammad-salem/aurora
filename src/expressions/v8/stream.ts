@@ -1171,7 +1171,10 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	public createError(message: String): string {
 		let coords = this.getCoordinates();
-		return `@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}\n\t==> ${message}`;
+		const subStart = Math.max(0, this.pos - 25);
+		const subEnd = Math.min(this.pos + 25, this.expression.length);
+		return `@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}
+			${message}
+			\`${this.expression.substring(subStart, subEnd)}\``;
 	}
 }
-
