@@ -18,6 +18,9 @@
 		"@ibyar/core": "^0.3.7",
 		"@ibyar/directives": "^0.3.7",
 		"@ibyar/pipes": "^0.3.7",
+		"@ibyar/elements": "^0.3.7",
+		"@ibyar/expressions": "^0.3.7",
+		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.3.1"
 	},
 	"devDependencies": {
