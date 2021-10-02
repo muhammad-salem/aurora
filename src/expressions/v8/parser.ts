@@ -910,17 +910,20 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
-	protected parseFunctionBody(): ExpressionNode[] {
+	protected parseArrowFunctionBody(): ExpressionNode | ExpressionNode[] {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
 		if (isExpression) {
 			const expression = this.parseAssignmentExpression();
-			return [expression];
+			return expression;
 		} else {
-			this.expect(Token.L_CURLY);
-			const list = this.parseStatementList(Token.R_CURLY);
-			this.expect(Token.R_CURLY);
-			return list;
+			return this.parseFunctionBody();
 		}
+	}
+	protected parseFunctionBody(): ExpressionNode[] {
+		this.expect(Token.L_CURLY);
+		const list = this.parseStatementList(Token.R_CURLY);
+		this.expect(Token.R_CURLY);
+		return list;
 	}
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
 		// StatementList ::
@@ -1337,7 +1340,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
 		this.consume(Token.ARROW);
-		const body = this.parseFunctionBody();
+		const body = this.parseArrowFunctionBody();
 		return new ArrowFunctionExpression(parameters, body, flag, rest);
 	}
 	protected parseRegExpLiteral(): ExpressionNode {

@@ -312,13 +312,15 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
 		return new ArrowFunctionExpression(
 			node.params.map(deserializer),
-			node.body.map(deserializer),
+			Array.isArray(node.body)
+				? node.body.map(deserializer)
+				: deserializer(node.body),
 			ArrowFunctionType[node.kind],
 			node.rest,
 			node.generator
 		);
 	}
-	constructor(private params: ExpressionNode[], private body: ExpressionNode[],
+	constructor(private params: ExpressionNode[], private body: ExpressionNode | ExpressionNode[],
 		private kind: ArrowFunctionType, private rest?: boolean, private generator?: boolean) {
 		super();
 	}
@@ -353,7 +355,8 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 					// stack.declareVariable('function', 'this', this);
 					this.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of this.body) {
+					const statements = Array.isArray(this.body) ? this.body : [this.body];
+					for (const state of statements) {
 						returnValue = state.get(stack);
 						if (stack.awaitPromise.length > 0) {
 							for (const awaitRef of stack.awaitPromise) {
@@ -391,7 +394,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						}
 					}
 					stack.clearTo(scope);
-					if (this.body.length === 1) {
+					if (!Array.isArray(this.body)) {
 						return returnValue;
 					}
 				};
@@ -404,7 +407,8 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 					// stack.declareVariable('function', 'this', this);
 					this.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of this.body) {
+					const statements = Array.isArray(this.body) ? this.body : [this.body];
+					for (const state of statements) {
 						returnValue = state.get(stack);
 						if (returnValue instanceof ReturnValue) {
 							stack.clearTo(scope);
@@ -412,7 +416,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						}
 					}
 					stack.clearTo(scope);
-					if (this.body.length === 1) {
+					if (!Array.isArray(this.body)) {
 						return returnValue;
 					}
 				};
@@ -449,7 +453,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 	toJson(): object {
 		return {
 			params: this.params.map(param => param.toJSON()),
-			body: this.body.map(item => item.toJSON()),
+			body: Array.isArray(this.body) ? this.body.map(item => item.toJSON()) : this.body.toJSON(),
 			expression: true,
 			kind: this.kind,
 			rest: this.rest,
