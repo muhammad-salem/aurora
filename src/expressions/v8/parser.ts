@@ -30,6 +30,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
+import { YieldExpression } from '../api/computing/yield.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
@@ -2021,7 +2022,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   'yield' ([no line terminator] '*'? AssignmentExpression)?
 		this.consume(Token.YIELD);
 		let delegating = false;  // yield*
-		let expression: ExpressionNode;
+		let expression: ExpressionNode | undefined;
 		if (this.check(Token.MUL)) {
 			delegating = true;
 		}
@@ -2046,12 +2047,7 @@ export class JavaScriptParser extends AbstractParser {
 				expression = this.parseAssignmentExpressionCoverGrammar();
 				break;
 		}
-		// }
-
-		throw new Error(this.errorMessage(`Yield expression is not supported now.`));
-		// // Hackily disambiguate o from o.next and o [Symbol.iterator]().
-		// // TODO(verwaest): Come up with a better solution.
-		// return new YieldNode(expression!);
+		return new YieldExpression(delegating, expression);
 	}
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));

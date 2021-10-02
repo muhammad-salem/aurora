@@ -1,7 +1,7 @@
 import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
-import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
+import { AbstractExpressionNode, AwaitPromise, ReturnValue, YieldDelegateValue, YieldValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
 import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
@@ -199,6 +199,10 @@ export class FunctionExpression extends FunctionBaseExpression {
 						if (returnValue instanceof ReturnValue) {
 							self.clearFunctionScope(stack, innerScopes);
 							return returnValue.value;
+						} else if (returnValue instanceof YieldValue) {
+							yield returnValue.value;
+						} else if (returnValue instanceof YieldDelegateValue) {
+							yield* returnValue.value;
 						}
 					}
 					self.clearFunctionScope(stack, innerScopes);
@@ -238,6 +242,10 @@ export class FunctionExpression extends FunctionBaseExpression {
 									returnValue = returnValue.value;
 									if (returnValue instanceof AwaitPromise) {
 										return await returnValue.promise;
+									} else if (returnValue instanceof YieldValue) {
+										yield returnValue.value;
+									} else if (returnValue instanceof YieldDelegateValue) {
+										yield* returnValue.value;
 									}
 									return returnValue;
 								}

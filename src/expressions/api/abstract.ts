@@ -68,6 +68,20 @@ export class ReturnValue {
 	}
 }
 
+export class YieldValue {
+	constructor(public value: any) { }
+	getValue() {
+		return this.value;
+	}
+}
+
+export class YieldDelegateValue {
+	constructor(public value: any) { }
+	getValue() {
+		return this.value;
+	}
+}
+
 export class AwaitPromise implements AwaitPromiseInfo {
 	node: CanDeclareExpression;
 	declareVariable: boolean;
