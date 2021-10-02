@@ -118,7 +118,7 @@ console.log(
 
  - class expression
  - Import/Export module
- - Custom Factory Builder to convert the code to ESTree directly or to like now to Expression node
+ - Custom Factory Builder to convert the code to ESTree directly or to executable expression node
 
 ## Operators
 
