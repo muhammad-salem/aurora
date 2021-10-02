@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -88,6 +89,7 @@ export class ExportNode extends AbstractExpressionNode {
 	getExportList() {
 		return this.exportList;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ExportNode.#set() has no implementation.`);
 	}

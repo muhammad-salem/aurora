@@ -1,5 +1,6 @@
 
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -23,6 +24,10 @@ export class SwitchCase extends AbstractExpressionNode {
 	}
 	getConsequent() {
 		return this.consequent;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.test.shareVariables(scopeList);
+		this.consequent.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`SwitchCase#set() has no implementation.`);
@@ -86,6 +91,10 @@ export class SwitchStatement extends AbstractExpressionNode {
 	}
 	getCases() {
 		return this.cases;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.discriminant.shareVariables(scopeList);
+		this.cases.forEach(item => item.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`SwitchStatement#set() has no implementation.`);

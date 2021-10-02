@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -17,6 +18,9 @@ export class ThrowStatement extends AbstractExpressionNode {
 	}
 	getArgument() {
 		return this.argument;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.argument.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ThrowStatement#set() has no implementation.`);
@@ -53,6 +57,7 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, error: any) {
 		this.param?.set(stack, error);
 	}
@@ -96,6 +101,7 @@ export class TryCatchNode extends AbstractExpressionNode {
 	getFinalizer() {
 		return this.finalizer;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`TryCatchNode#set() has no implementation.`);
 	}

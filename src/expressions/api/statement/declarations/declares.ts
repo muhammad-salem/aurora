@@ -1,5 +1,6 @@
 
 import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../../expression.js';
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
@@ -21,6 +22,9 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 	}
 	getInit() {
 		return this.init;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.init?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`VariableNode#set() has no implementation.`);
@@ -71,6 +75,9 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	}
 	getDeclarations() {
 		return this.declarations;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.declarations.forEach(declaration => declaration.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		if (Array.isArray(value)) {

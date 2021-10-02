@@ -1,5 +1,5 @@
 import type { Stack } from '../../scope/stack.js';
-import type { ScopeType } from '../../scope/scope.js';
+import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -44,6 +44,7 @@ export class MetaProperty extends MemberExpression {
 	getMeta() {
 		return this.meta;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
 		return `${this.meta.toString()}.${this.property.toString()}`;
 	}
@@ -68,6 +69,7 @@ export class PrivateIdentifier extends Identifier {
 	constructor(private privateName: string) {
 		super('ɵ_' + privateName);
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
 		return `#${this.privateName}`;
 	}
@@ -120,6 +122,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	isStatic() {
 		return this.static;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -182,6 +185,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	isStatic() {
 		return this.static;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -220,6 +224,7 @@ export class ClassBody extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -255,7 +260,7 @@ export class Class extends AbstractExpressionNode {
 	getSuperClass() {
 		return this.superClass;
 	}
-
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`Class.#set() has no implementation.`);
 	}

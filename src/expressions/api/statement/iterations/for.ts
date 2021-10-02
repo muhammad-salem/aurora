@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -41,6 +42,12 @@ export class ForNode extends AbstractExpressionNode {
 	}
 	getUpdate() {
 		return this.update;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.init?.shareVariables(scopeList);
+		this.test?.shareVariables(scopeList);
+		this.update?.shareVariables(scopeList);
+		this.body.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ForNode#set() has no implementation.`);
@@ -107,6 +114,10 @@ export class ForOfNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.right.shareVariables(scopeList);
+		this.body.shareVariables(scopeList);
+	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
@@ -172,6 +183,10 @@ export class ForInNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.right.shareVariables(scopeList);
+		this.body.shareVariables(scopeList);
+	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ForOfNode#set() has no implementation.`);
 	}
@@ -236,6 +251,10 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 	}
 	getBody() {
 		return this.body;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.right.shareVariables(scopeList);
+		this.body.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ForAwaitOfNode#set() has no implementation.`);

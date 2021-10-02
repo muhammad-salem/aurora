@@ -27,6 +27,7 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	getName() {
 		return this.name;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		return stack.set(this.name, value) ? value : void 0;
 	}
@@ -79,6 +80,7 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	getValue() {
 		return this.value;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set() {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
@@ -158,7 +160,9 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 	constructor(private quasis: string[], private expressions: ExpressionNode[], private tag?: ExpressionNode,) {
 		super();
 	}
-
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.expressions.forEach(value => value.shareVariables(scopeList));
+	}
 	set(stack: Stack, value: any) {
 		throw new Error(`TemplateLiteralExpressionNode#set() has no implementation.`);
 	}

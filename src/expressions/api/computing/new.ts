@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadElement } from './spread.js';
@@ -19,6 +20,9 @@ export class NewExpression extends AbstractExpressionNode {
 	}
 	getArguments() {
 		return this.arguments;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.arguments?.forEach(param => param.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`NewExpression#set() has no implementation.`);

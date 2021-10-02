@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -13,6 +14,9 @@ export class SequenceExpression extends AbstractExpressionNode {
 	}
 	getExpressions() {
 		return this.expressions;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.expressions.forEach(statement => statement.shareVariables(scopeList));
 	}
 	set(stack: Stack) {
 		throw new Error(`SequenceExpression.#set() has no implementation.`);

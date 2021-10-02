@@ -27,6 +27,7 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 	getProperty() {
 		return this.property;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error("BindExpression#set() has no implementation.");
 	}

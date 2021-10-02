@@ -1,3 +1,4 @@
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ExpressionNode } from '../../expression.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -22,6 +23,7 @@ class TerminateStatement extends AbstractExpressionNode {
 	getLabel() {
 		this.label;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`TerminateStatement#set() has no implementation.`);
 	}

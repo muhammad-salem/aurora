@@ -1,3 +1,4 @@
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -19,6 +20,7 @@ export class EmptyStatement extends AbstractExpressionNode {
 	constructor() {
 		super();
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`EmptyStatement#set() has no implementation.`);
 	}

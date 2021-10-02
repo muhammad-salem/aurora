@@ -1,6 +1,6 @@
 import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../expression.js';
+import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
-import type { ScopeType } from '../../scope/scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
@@ -21,6 +21,9 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 	}
 	set(stack: Stack, value: any) {
 		this.key.set(stack, value);
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.value.shareVariables(scopeList);
 	}
 	get(stack: Stack, thisContext: ThisType<any>): any {
 		const name = this.key.get(stack);
@@ -78,6 +81,9 @@ export class ObjectExpression extends AbstractExpressionNode {
 	set(stack: Stack) {
 		throw new Error('ObjectExpression#set() has no implementation.');
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.properties.forEach(prop => prop.shareVariables(scopeList));
+	}
 	get(stack: Stack) {
 		const newObject = {};
 		for (const property of this.properties) {
@@ -109,6 +115,7 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 	getProperties() {
 		return this.properties;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, objectValue: any) {
 		throw new Error('ObjectPattern#set() has no implementation.');
 	}

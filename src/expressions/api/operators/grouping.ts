@@ -1,4 +1,5 @@
 import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -20,6 +21,9 @@ export class GroupingExpression extends AbstractExpressionNode {
 	}
 	getNode() {
 		return this.node;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.node.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		this.node.set(stack, value);
