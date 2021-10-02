@@ -7,6 +7,27 @@ export type NodeJsonType = { [key: string]: any } & NodeType;
 export interface ExpressionNode {
 
 	/**
+	 * pass scope list from outer function to inner function,
+	 * 
+	 * all other end point expression should do nothing,
+	 *  if this function executed.
+	 * 
+	 * @param scopeList all outer function scopes given to the inner function,
+	 * this solution ignore the fact that some inner function has no need to
+	 * get shared variables, as its implementation never say that
+	 * ```js
+	 * function f(d) {
+	 * 		function g() {
+	 * 			const a = ({ d }) => d;
+	 * 			return a;
+	 * 		}
+	 * 		return [d, g];
+	 * }
+	 * ```
+	 */
+	shareVariables(scopeList: Scope<any>[]): void;
+
+	/**
 	 * assign the value to this expression in stack.
 	 * 
 	 * most ExpressionNode will not implement this method, and will throw an exception.
@@ -81,7 +102,7 @@ export interface CanDeclareExpression extends ExpressionNode {
  */
 export interface CanFindScope {
 	/**
-	 * try to search for scope of this expression, is meant to be used 
+	 * try to search for scope of this expression
 	 * @param stack 
 	 */
 	findScope<T extends object>(stack: Stack): Scope<T>;

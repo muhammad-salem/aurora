@@ -1,5 +1,6 @@
 import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
+import { Scope } from '../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
@@ -25,6 +26,7 @@ export enum FunctionKind {
 	BASE_CONSTRUCTOR = 'BASE_CONSTRUCTOR',
 
 }
+
 export enum ArrowFunctionType {
 	NORMAL = 'NORMAL',
 	ASYNC = 'ASYNC'
@@ -47,6 +49,9 @@ export class Param extends AbstractExpressionNode {
 	getDefaultValue() {
 		return this.defaultValue;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.defaultValue?.shareVariables(scopeList);
+	}
 	set(stack: Stack, value: Function) {
 		this.identifier.set(stack, value || this.defaultValue?.get(stack));
 	}
@@ -68,8 +73,25 @@ export class Param extends AbstractExpressionNode {
 	}
 }
 
+export abstract class FunctionBaseExpression extends AbstractExpressionNode {
+	private sharedVariables: Scope<any>[];
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.sharedVariables = scopeList;
+	}
+	initFunctionScope(stack: Stack) {
+		const scope = Scope.functionScope<object>();
+		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
+		innerScopes.push(scope);
+		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
+		return innerScopes;
+	}
+	clearFunctionScope(stack: Stack, innerScopes: Scope<any>[]) {
+		stack.clearTo(innerScopes[0]);
+	}
+}
+
 @Deserializer('FunctionExpression')
-export class FunctionExpression extends AbstractExpressionNode {
+export class FunctionExpression extends FunctionBaseExpression {
 	static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
 		return new FunctionExpression(
 			node.params.map(deserializer),
@@ -102,7 +124,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 		return this.rest;
 	}
 	set(stack: Stack, value: Function) {
-		throw new Error('FunctionExpression#set() has no implementation.');
+		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 	private setParameter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
@@ -119,12 +141,13 @@ export class FunctionExpression extends AbstractExpressionNode {
 		switch (this.kind) {
 			case FunctionKind.ASYNC:
 				func = async function (this: any, ...args: any[]) {
-					const scope = stack.pushFunctionScope();
+					const innerScopes = self.initFunctionScope(stack);
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of self.body) {
-						returnValue = state.get(stack);
+					for (const statement of self.body) {
+						statement.shareVariables(innerScopes);
+						returnValue = statement.get(stack);
 						if (stack.awaitPromise.length > 0) {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
@@ -156,38 +179,40 @@ export class FunctionExpression extends AbstractExpressionNode {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
 								returnValue = await returnValue.promise;
-								stack.clearTo(scope);
+								self.clearFunctionScope(stack, innerScopes);
 								return returnValue;
 							}
 						}
 					}
-					stack.clearTo(scope);
+					self.clearFunctionScope(stack, innerScopes);
 				};
 				break;
 			case FunctionKind.GENERATOR:
 				func = function* (this: any, ...args: any[]) {
-					const scope = stack.pushFunctionScope();
+					const innerScopes = self.initFunctionScope(stack);
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of self.body) {
-						returnValue = state.get(stack);
+					for (const statement of self.body) {
+						statement.shareVariables(innerScopes);
+						returnValue = statement.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.clearTo(scope);
+							self.clearFunctionScope(stack, innerScopes);
 							return returnValue.value;
 						}
 					}
-					stack.clearTo(scope);
+					self.clearFunctionScope(stack, innerScopes);
 				};
 				break;
 			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: any, ...args: any[]) {
-					const scope = stack.pushFunctionScope();
+					const innerScopes = self.initFunctionScope(stack);
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of self.body) {
-						returnValue = state.get(stack);
+					for (const statement of self.body) {
+						statement.shareVariables(innerScopes);
+						returnValue = statement.get(stack);
 						if (stack.awaitPromise.length > 0) {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
@@ -209,9 +234,12 @@ export class FunctionExpression extends AbstractExpressionNode {
 									break;
 								}
 								else if (result instanceof ReturnValue) {
-									returnValue = result;
-									stack.clearTo(scope);
-									break;
+									self.clearFunctionScope(stack, innerScopes);
+									returnValue = returnValue.value;
+									if (returnValue instanceof AwaitPromise) {
+										return await returnValue.promise;
+									}
+									return returnValue;
 								}
 							}
 							stack.forAwaitAsyncIterable = undefined;
@@ -219,29 +247,30 @@ export class FunctionExpression extends AbstractExpressionNode {
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
-								stack.clearTo(scope);
 								return await returnValue.promise;
 							}
+							return returnValue;
 						}
 					}
-					stack.clearTo(scope);
+					self.clearFunctionScope(stack, innerScopes);
 				};
 				break;
 			default:
 			case FunctionKind.NORMAL:
 				func = function (this: any, ...args: any[]) {
-					const scope = stack.pushFunctionScope();
+					const innerScopes = self.initFunctionScope(stack);
 					stack.declareVariable('function', 'this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
-					for (const state of self.body) {
-						returnValue = state.get(stack);
+					for (const statement of self.body) {
+						statement.shareVariables(innerScopes);
+						returnValue = statement.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.clearTo(scope);
+							self.clearFunctionScope(stack, innerScopes);
 							return returnValue.value;
 						}
 					}
-					stack.clearTo(scope);
+					self.clearFunctionScope(stack, innerScopes);
 				};
 				break;
 		}
@@ -308,7 +337,7 @@ export class FunctionDeclaration extends FunctionExpression {
 
 
 @Deserializer('ArrowFunctionExpression')
-export class ArrowFunctionExpression extends AbstractExpressionNode {
+export class ArrowFunctionExpression extends FunctionBaseExpression {
 	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
 		return new ArrowFunctionExpression(
 			node.params.map(deserializer),
@@ -350,13 +379,12 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		switch (this.kind) {
 			case ArrowFunctionType.ASYNC:
 				func = async (...args: any[]) => {
-					const scope = stack.pushFunctionScope();
-					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
-					// stack.declareVariable('function', 'this', this);
+					const innerScopes = this.initFunctionScope(stack);
 					this.setParameter(stack, args);
 					let returnValue: any;
 					const statements = Array.isArray(this.body) ? this.body : [this.body];
 					for (const state of statements) {
+						state.shareVariables(innerScopes);
 						returnValue = state.get(stack);
 						if (stack.awaitPromise.length > 0) {
 							for (const awaitRef of stack.awaitPromise) {
@@ -388,12 +416,12 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
-								stack.clearTo(scope);
+								this.clearFunctionScope(stack, innerScopes);
 								return await returnValue.promise;
 							}
 						}
 					}
-					stack.clearTo(scope);
+					this.clearFunctionScope(stack, innerScopes);
 					if (!Array.isArray(this.body)) {
 						return returnValue;
 					}
@@ -402,20 +430,19 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 			default:
 			case ArrowFunctionType.NORMAL:
 				func = (...args: any[]) => {
-					const scope = stack.pushFunctionScope();
-					// should find a way to get the value of this without interfering with the ArrowFunctionNode implementation
-					// stack.declareVariable('function', 'this', this);
+					const innerScopes = this.initFunctionScope(stack);
 					this.setParameter(stack, args);
 					let returnValue: any;
 					const statements = Array.isArray(this.body) ? this.body : [this.body];
-					for (const state of statements) {
-						returnValue = state.get(stack);
+					for (const statement of statements) {
+						statement.shareVariables(innerScopes);
+						returnValue = statement.get(stack);
 						if (returnValue instanceof ReturnValue) {
-							stack.clearTo(scope);
+							this.clearFunctionScope(stack, innerScopes);
 							return returnValue.value;
 						}
 					}
-					stack.clearTo(scope);
+					this.clearFunctionScope(stack, innerScopes);
 					if (!Array.isArray(this.body)) {
 						return returnValue;
 					}
