@@ -3,28 +3,35 @@ import type { Scope } from './scope.js';
 /**
  * crete new proxy handler object as scoped context
  */
-export class ScopeProxyHandler implements ProxyHandler<Scope<any>> {
-	has(target: Scope<any>, propertyKey: PropertyKey): boolean {
-		return target.has(propertyKey);
+export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
+	constructor(private scope: Scope<T>) { }
+	has(model: T, propertyKey: PropertyKey): boolean {
+		return this.scope.has(propertyKey);
 	}
-	get(target: Scope<any>, propertyKey: PropertyKey, receiver: any): any {
-		return target.get(propertyKey);
+	get(model: T, propertyKey: PropertyKey, receiver: any): any {
+		return this.scope.get(propertyKey);
 	}
-	set(target: Scope<any>, propertyKey: PropertyKey, value: any, receiver: any): boolean {
-		return target.set(propertyKey, value);
+	set(model: T, propertyKey: PropertyKey, value: any, receiver: any): boolean {
+		return this.scope.set(propertyKey, value);
+	}
+	deleteProperty(model: T, propertyKey: string | symbol): boolean {
+		const isDelete = Reflect.deleteProperty(model, propertyKey);
+		if (isDelete) {
+			this.scope.set(propertyKey, undefined);
+		}
+		return isDelete;
 	}
 }
-
-/**
- * a default scoped proxy handler is enough
- */
-const DefaultScopeProxyHandler = new ScopeProxyHandler();
 
 export type RevocableProxy<T> = {
 	proxy: T;
 	revoke: () => void;
 };
 
-export function revocableProxyOfScopedContext<T extends Scope<any>>(context: T): RevocableProxy<T> {
-	return Proxy.revocable<T>(context, DefaultScopeProxyHandler);
+export function createRevocableProxyForContext<T extends object>(context: T, scope: Scope<T>): RevocableProxy<T> {
+	return Proxy.revocable<T>(context, new ScopeProxyHandler(scope));
+}
+
+export function createProxyForContext<T extends object>(context: T, scope: Scope<T>): T {
+	return new Proxy<T>(context, new ScopeProxyHandler(scope));
 }
