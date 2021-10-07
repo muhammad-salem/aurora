@@ -25,6 +25,12 @@ export interface Scope<T> {
 	has(propertyKey: PropertyKey): boolean;
 
 	/**
+	 * delete property from context
+	 * @param propertyKey 
+	 */
+	delete(propertyKey: PropertyKey): boolean;
+
+	/**
 	 * get current context object of this scope
 	 */
 	getContext(): T | undefined;
@@ -81,6 +87,9 @@ export class Scope<T extends object> implements Scope<T> {
 	has(propertyKey: PropertyKey): boolean {
 		return propertyKey in this.context;
 	}
+	delete(propertyKey: PropertyKey): boolean {
+		return Reflect.deleteProperty(this.context, propertyKey);
+	}
 	getContext(): T | undefined {
 		return this.context;
 	}
@@ -134,6 +143,10 @@ export class ReadOnlyScope<T extends object> extends Scope<T> {
 		return new ReadOnlyScope({} as T, 'global');
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+		// do nothing
+		return false;
+	}
+	delete(propertyKey: PropertyKey): boolean {
 		// do nothing
 		return false;
 	}
@@ -232,6 +245,14 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 			this.observer?.emit(propertyKey, oldValue, newValue);
 		}
 		return result;
+	}
+	delete(propertyKey: PropertyKey): boolean {
+		const oldValue = Reflect.get(this.context, propertyKey);
+		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
+		if (isDelete && oldValue !== undefined) {
+			this.observer?.emit(propertyKey, oldValue, undefined);
+		}
+		return isDelete;
 	}
 	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> | undefined {
 		let scope = this.scopeMap.get(propertyKey);
