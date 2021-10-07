@@ -161,11 +161,22 @@ const z =  a |> add:b:c; // === add(a, b, c)
 ```
 
 ```js
+function map(num){
+	return { number: num };
+}
+function plus(num1){
+	return function(num2){
+		return num1 + num2;
+	};
+}
 function add(x, y) { return x + y };
-const a = 88;
-argument 	|> map
-			|> function(x) { console.log(x); return x; }
-			|> (x) => { console.log(x); return x; }
-			|> methodName3(a)
-
+const a = 88, b = 11;
+b 	|> function(x) { console.log(x); return x; }
+	|> x => { console.log(x); return x; }
+	|> (x => x + 10)
+	|> plus(a)
+	|> add(99, ?)
+	|> add : 88 : ?
+	|> add : ? : 77
+	|> map
 ```
