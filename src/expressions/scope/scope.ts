@@ -36,8 +36,8 @@ export interface Scope<T> {
 	getContext(): T | undefined;
 
 	/**
-	 * get value of `propertyKey` in current context
-	 * @param propertyKey 
+	 * get a scope for an object named as `propertyKey` from cache map
+	 * @param propertyKey the name of the property
 	 */
 	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined;
 }
