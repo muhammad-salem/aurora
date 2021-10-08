@@ -1,11 +1,11 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope } from '@ibyar/expressions';
+import { createProxyForContext, ReactiveScope } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
 } from '../component/lifecycle.js';
 import { ComponentRef, PropertyRef } from '../component/component.js';
-import { BaseComponent, CustomElement, HTMLComponent } from '../component/custom-element.js';
+import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
@@ -34,7 +34,8 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
 	}
 	class CustomView<T> extends htmlElementType implements BaseComponent<T>, CustomElement {
-		_model: T & Model & { [key: string]: any; };
+		_model: ModelType<T>;
+		_proxyModel: ModelType<T>;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
@@ -57,8 +58,9 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			defineInstancePropertyMap(model);
 			this._model = defineModel(model);
 
-			this._modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
 			this._viewScope = new ElementReactiveScope(this);
+			this._modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
+			this._proxyModel = createProxyForContext(this._model, this._modelScope);
 
 			// if model had view decorator
 			if (this._componentRef.view) {
@@ -68,16 +70,16 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
 				this.setInputValue(viewProperty, newValue);
 			});
-			// this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
-			// 	console.log('emit model', modelProperty, oldValue, newValue);
-			// 	// this.emitChanges(modelProperty as string);
-			// });
+			this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
+				console.log('emit model', modelProperty, oldValue, newValue);
+				// this.emitChanges(modelProperty as string);
+			});
 			this._render = new ComponentRender(this);
 		}
 
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._model.doCheck();
+				this._proxyModel.doCheck();
 			}
 		};
 
@@ -195,7 +197,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 				this._model.emitChangeModel(inputRef.modelProperty);
 			}
 			if (isOnChanges(this._model)) {
-				this._model.onChanges();
+				this._proxyModel.onChanges();
 			}
 			this.doBlockCallback();
 		}
@@ -222,19 +224,19 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isOnChanges(this._model)) {
-				this._model.onChanges();
+				this._proxyModel.onChanges();
 			}
 			if (isOnInit(this._model)) {
-				this._model.onInit();
+				this._proxyModel.onInit();
 			}
 			if (isDoCheck(this._model)) {
-				this._model.doCheck();
+				this._proxyModel.doCheck();
 			}
 			if (isAfterContentInit(this._model)) {
-				this._model.afterContentInit();
+				this._proxyModel.afterContentInit();
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._model.afterContentChecked();
+				this._proxyModel.afterContentChecked();
 			}
 
 			// if (!this.hasParentComponent()) {
@@ -253,20 +255,20 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._model.afterViewInit();
+				this._proxyModel.afterViewInit();
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._model.afterViewChecked();
+				this._proxyModel.afterViewChecked();
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._model.doCheck();
+					this._proxyModel.doCheck();
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._model.afterContentChecked();
+					this._proxyModel.afterContentChecked();
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._model.afterViewChecked();
+					this._proxyModel.afterViewChecked();
 				}
 				this.emitRootChanges();
 			};
@@ -344,7 +346,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			// notify first, then call model.onDestroy func
 			// this._changeObservable.emit('destroy');
 			if (isOnDestroy(this._model)) {
-				this._model.onDestroy();
+				this._proxyModel.onDestroy();
 			}
 			this.emitChanges('destroy');
 		}
