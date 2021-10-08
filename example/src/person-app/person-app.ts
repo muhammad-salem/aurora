@@ -161,11 +161,11 @@ export class PersonApp {
 	@HostListener('person1:select')
 	onClose(data: any) {
 		console.log('AppRoot => person1:select', data);
-		setTimeout(() => {
-			if (isModel(this)) {
-				this.emitChangeModel('asyncIterable');
-			}
-		}, 3000);
+		// setTimeout(() => {
+		// 	if (isModel(this)) {
+		// 		this.emitChangeModel('asyncIterable');
+		// 	}
+		// }, 3000);
 	}
 
 	@HostListener('personEdit:input')

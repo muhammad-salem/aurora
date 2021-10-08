@@ -42,9 +42,9 @@ export class VideoPlayList {
 	playVideo(fileName: string) {
 		this.file = fileName;
 		console.log(fileName);
-		if (isModel(this)) {
-			this.emitChangeModel('file');
-		}
+		// if (isModel(this)) {
+		// 	this.emitChangeModel('file');
+		// }
 	}
 
 }

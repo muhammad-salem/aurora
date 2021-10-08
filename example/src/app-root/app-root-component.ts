@@ -19,23 +19,20 @@ class AppParent {
 })
 export class AppRoot extends AppParent {
 
-	@Input('selector')
-	appSelector: AppSelector;
-
 	apps: string = 'no apps provided';
 
 	@View()
 	view: HTMLComponent<AppRoot>;
 
-	setAppSelector(selectors: AppSelector) {
-		this.appSelector = selectors;
-		if (typeof this.appSelector === 'string') {
-			this.apps = this.appSelector.split(',')
+	@Input()
+	set selectors(selectors: AppSelector) {
+		if (typeof selectors === 'string') {
+			this.apps = selectors.split(',')
 				.map(selector => selector.trim())
 				.map(selector => `<${selector} ></${selector}>`)
 				.join('\n');
-		} else if (Array.isArray(this.appSelector)) {
-			this.apps = this.appSelector
+		} else if (Array.isArray(selectors)) {
+			this.apps = selectors
 				.map(selector => {
 					if (typeof selector === 'string') {
 						return `<${selector} ></${selector}>`;
