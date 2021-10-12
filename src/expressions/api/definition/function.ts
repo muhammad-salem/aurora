@@ -1,7 +1,13 @@
-import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type {
+	CanDeclareExpression, DependencyVariables,
+	ExpressionNode, NodeDeserializer
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
-import { AbstractExpressionNode, AwaitPromise, ReturnValue, YieldDelegateValue, YieldValue } from '../abstract.js';
+import {
+	AbstractExpressionNode, AwaitPromise, ReturnValue,
+	YieldDelegateValue, YieldValue
+} from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
 import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
@@ -58,7 +64,7 @@ export class Param extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
 	}
-	events(): string[] {
+	events(): DependencyVariables {
 		return this.identifier.events().concat(this.defaultValue?.events() || []);
 	}
 	toString(): string {
@@ -285,10 +291,8 @@ export class FunctionExpression extends FunctionBaseExpression {
 		this.id?.declareVariable(stack, 'block', func);
 		return func;
 	}
-	events(): string[] {
-		return [
-			...this.params.flatMap(param => param.events()),
-		];
+	events(): DependencyVariables {
+		return this.params.flatMap(param => param.events());
 	}
 	toString(): string {
 		let declare: string;
@@ -459,10 +463,8 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 		}
 		return func;
 	}
-	events(): string[] {
-		return [
-			...this.params.flatMap(param => param.events()),
-		];
+	events(): DependencyVariables {
+		return this.params.flatMap(param => param.events());
 	}
 	toString(): string {
 		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -72,8 +72,8 @@ export class ForNode extends AbstractExpressionNode {
 		stack.clearTo(forBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
-		return [...this.init?.events() || [], ...this.test?.events() || []];
+	events(): DependencyVariables {
+		return [...(this.init?.events() || []), ...(this.test?.events() || [])];
 	}
 	toString(): string {
 		return `for (${this.init?.toString()};${this.test?.toString()};${this.init?.toString()}) ${this.body.toString()}`;
@@ -143,7 +143,7 @@ export class ForOfNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return this.right.events();
 	}
 	toString(): string {
@@ -212,7 +212,7 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return this.right.events();
 	}
 	toString(): string {
@@ -270,7 +270,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return this.right.events();
 	}
 	toString(): string {

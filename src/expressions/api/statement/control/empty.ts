@@ -2,6 +2,7 @@ import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
+import { DependencyVariables } from '../../expression.js';
 
 /**
  * The empty statement is a semicolon (;) indicating that no statement will be executed,
@@ -27,7 +28,7 @@ export class EmptyStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString(): string {

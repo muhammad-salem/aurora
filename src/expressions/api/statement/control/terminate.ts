@@ -1,6 +1,6 @@
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
-import type { ExpressionNode } from '../../expression.js';
+import type { DependencyVariables, ExpressionNode } from '../../expression.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -30,7 +30,7 @@ class TerminateStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.symbol;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString(): string {

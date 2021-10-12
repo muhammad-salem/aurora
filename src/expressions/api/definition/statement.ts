@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -26,8 +26,8 @@ export class ExpressionStatement extends AbstractExpressionNode {
 		this.body.forEach(node => value = node.get(stack));
 		return value;
 	}
-	events(parent?: string): string[] {
-		return this.body.flatMap(node => node.events(parent));
+	events(): DependencyVariables {
+		return this.body.flatMap(node => node.events());
 	}
 	toString(): string {
 		return this.body.map(node => node.toString()).join('; ').concat(';');

@@ -1,5 +1,5 @@
 
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, DependencyVariables } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
@@ -48,7 +48,7 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 			this.id.declareVariable(stack, scopeType, value);
 		}
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString() {

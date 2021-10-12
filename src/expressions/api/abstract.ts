@@ -3,7 +3,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode,
 	NodeExpressionClass, NodeJsonType,
-	CanDeclareExpression
+	CanDeclareExpression, DependencyVariables
 } from './expression.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
@@ -21,7 +21,7 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	abstract shareVariables(scopeList: Scope<any>[]): void;
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
-	abstract events(parent?: string): string[];
+	abstract events(): DependencyVariables;
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
@@ -46,8 +46,8 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
 	abstract get(stack: Stack): any;
-	events(parent?: string): string[] {
-		return [...this.left.events(), ...this.right.events()];
+	events(): DependencyVariables {
+		return this.left.events().concat(this.right.events());
 	}
 	toString() {
 		return `${this.left.toString()} ${this.operator} ${this.right.toString()}`;

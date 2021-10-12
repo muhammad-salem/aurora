@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -31,8 +31,8 @@ export class GroupingExpression extends AbstractExpressionNode {
 	get(stack: Stack,) {
 		return this.node.get(stack);
 	}
-	events(parent?: string): string[] {
-		return this.node.events(parent);
+	events(): DependencyVariables {
+		return this.node.events();
 	}
 	toString(): string {
 		return `(${this.node.toString()})`;

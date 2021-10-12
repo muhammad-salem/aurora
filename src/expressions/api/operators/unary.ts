@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -61,8 +61,8 @@ export class UnaryExpression extends AbstractExpressionNode {
 			return scope.delete(propertyKey);
 		}
 	}
-	events(parent?: string): string[] {
-		return this.argument.events(parent);
+	events(): DependencyVariables {
+		return this.argument.events();
 	}
 	toString() {
 		switch (this.operator) {

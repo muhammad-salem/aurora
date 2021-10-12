@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope
+	NodeDeserializer, CanFindScope, DependencyVariables
 } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -49,11 +49,8 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	events(parent?: string): string[] {
-		if (parent) {
-			return [parent + this.toString()];
-		}
-		return [this.toString()];
+	events(): DependencyVariables {
+		return this.name;
 	}
 	toString(): string {
 		return String(this.name);
@@ -91,12 +88,12 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
 	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
 		if (scope) {
-			return scope.getScope(this.value as any);
+			return scope.getScope<V>(this.value as any);
 		}
-		scope = stack.findScope(this.value as any);
-		return scope.getScope(this.value as any);
+		scope = stack.findScope<V>(this.value as any);
+		return scope.getScope<V>(this.value as any);
 	}
-	events(): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString(): string {
@@ -173,7 +170,7 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
 	}
-	events(): string[] {
+	events(): DependencyVariables {
 		return this.expressions.flatMap(expr => expr.events());
 	}
 	toString(): string {

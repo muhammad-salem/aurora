@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, YieldDelegateValue, YieldValue } from '../abstract.js';
@@ -28,8 +28,8 @@ export class YieldExpression extends AbstractExpressionNode {
 		}
 		return new YieldValue(value);
 	}
-	events(parent?: string): string[] {
-		return this.argument?.events(parent) || [];
+	events(): DependencyVariables {
+		return this.argument?.events() || [];
 	}
 	toString(): string {
 		return `yield${this.delegate ? '*' : ''} ${this.argument?.toString() || ''}`;

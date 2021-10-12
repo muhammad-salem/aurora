@@ -98,13 +98,11 @@ export class Scope<T extends object> implements Scope<T> {
 		return this.context;
 	}
 	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined {
+		const scopeContext = this.get(propertyKey);
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
+			scope.context = scopeContext;
 			return scope;
-		}
-		const scopeContext = this.get(propertyKey);
-		if (typeof scopeContext === 'undefined') {
-			return;
 		}
 		scope = new Scope(scopeContext, 'block');
 		this.scopeMap.set(propertyKey, scope);
@@ -255,13 +253,11 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		return isDelete;
 	}
 	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> | undefined {
+		const scopeContext = this.get(propertyKey);
 		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<V>;
 		if (scope) {
+			scope.context = scopeContext;
 			return scope;
-		}
-		const scopeContext = this.get(propertyKey);
-		if (typeof scopeContext === 'undefined') {
-			return;
 		}
 		const childName = this.getEventName(propertyKey);
 		scope = new ReactiveScope(scopeContext, 'block', childName, this.observer);

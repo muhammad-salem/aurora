@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -65,15 +65,8 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	events(parent?: string): string[] {
-		if (this.computed) {
-			parent ??= '';
-			parent = `${parent}${this.object.events(parent)}`;
-			return [parent, `${parent}[${this.property.toString()}]`];
-		}
-		parent ||= '';
-		parent += this.object.toString() + '.';
-		return [...this.object.events(), ...this.property.events(parent)];
+	events(): DependencyVariables {
+		return this.object.events().concat(this.property.events());
 	}
 	toString() {
 		if (this.computed) {

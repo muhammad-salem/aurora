@@ -1,8 +1,8 @@
+import type { DependencyVariables, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import type { ExpressionNode, NodeDeserializer } from '../expression.js';
 
 export type ProgramSourceType = 'script' | 'module';
 
@@ -22,13 +22,13 @@ export class Program extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any): any {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 	toString(): string {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	toJson(key?: string): { [key: string]: any } {
+	toJson(): { [key: string]: any } {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 

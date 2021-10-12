@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -56,7 +56,7 @@ export class WhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return this.test.events();
 	}
 	toString(): string {
@@ -114,7 +114,7 @@ export class DoWhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString(): string {

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -80,7 +80,7 @@ export class ImportNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ImportNode.#get() has no implementation.`);
 	}
-	events(parent?: string): string[] {
+	events(): DependencyVariables {
 		return [];
 	}
 	toString() {

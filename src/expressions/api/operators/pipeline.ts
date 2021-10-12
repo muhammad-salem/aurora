@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -82,12 +82,12 @@ export class PipelineExpression extends AbstractExpressionNode {
 		}
 		return funCallBack(...parameters);
 	}
-	events(parent?: string): string[] {
-		return [
-			...this.right.events(),
-			...this.left.events(),
-			...(this.arguments.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(param => param.events!())
-		];
+	events(): DependencyVariables {
+		return this.right.events()
+			.concat(this.left.events())
+			.concat(
+				(this.arguments.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(param => param.events!())
+			);
 	}
 	toString() {
 		return `${this.left.toString()} |> ${this.right.toString()}${this.arguments.flatMap(arg => `:${arg.toString()}`).join('')}`;

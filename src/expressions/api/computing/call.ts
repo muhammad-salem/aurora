@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -53,8 +53,8 @@ export class CallExpression extends AbstractExpressionNode {
 		}
 		return funCallBack.apply(thisContext, parameters);
 	}
-	events(parent?: string): string[] {
-		return [...this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
+	events(): DependencyVariables {
+		return [this.callee.events(), ...this.arguments.flatMap(arg => arg.events())];
 	}
 	toString(): string {
 		return `${this.callee.toString()}${this.optional ? '?.' : ''}(${this.arguments.map(arg => arg.toString()).join(', ')})`;
