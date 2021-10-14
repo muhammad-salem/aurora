@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora expression, an template expression evaluation, with stack and scope.
+Aurora expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
 
@@ -128,7 +128,7 @@ console.log(
 | multiply/divide        | `* / % ** %%`                                           |
 | addition/subtraction   | `+ -`                                                   |
 | bitwise shift          | `<< >> >>>`                                             |
-| relational             | `< <= > >= >? <? <=> in instanceof`                               |
+| relational             | `< <= > >= >? <? <=> in instanceof`                     |
 | equality               | `== != === !==`                                         |
 | bitwise-and            | `&`                                                     |
 | bitwise-xor            | `^`                                                     |
@@ -136,6 +136,7 @@ console.log(
 | logical-and            | `&&`                                                    |
 | logical-or             | `\|\|`                                                  |
 | conditional            | `?:`                                                    |
+| pipeline               | `|>`                                                    |
 | assignment             | `= += -= *= **= /= %= <<= >>= >>>= &= ^= \|= &&= \|\|= ??= >?= <?= %%=` |
 | comma                  | `,`                                                     |
 
