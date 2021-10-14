@@ -259,6 +259,9 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 			scope.context = scopeContext;
 			return scope;
 		}
+		if (typeof scopeContext === 'undefined') {
+			return;
+		}
 		const childName = this.getEventName(propertyKey);
 		scope = new ReactiveScope(scopeContext, 'block', childName, this.observer);
 		this.scopeMap.set(propertyKey, scope);
