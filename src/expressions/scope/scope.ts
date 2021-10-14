@@ -240,7 +240,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer.emit(propertyKey, oldValue, newValue);
+			this.observer.emit(this.getEventName(propertyKey), oldValue, newValue);
 		}
 		return result;
 	}
@@ -248,7 +248,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
 		if (isDelete && oldValue !== undefined) {
-			this.observer?.emit(propertyKey, oldValue, undefined);
+			this.observer.emit(this.getEventName(propertyKey), oldValue, undefined);
 		}
 		return isDelete;
 	}
