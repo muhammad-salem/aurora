@@ -70,9 +70,22 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
 				this.setInputValue(viewProperty, newValue);
 			});
+			let source: any[] | undefined;
 			this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
+				console.log('event name', modelProperty);
+				if (oldValue == newValue) {
+					return;
+				}
 				console.log('emit model', modelProperty, oldValue, newValue);
 				// this.emitChanges(modelProperty as string);
+				if (source) {
+					source.push(modelProperty);
+					this._model.emitChangeModel(modelProperty as string, source);
+				} else {
+					source = [modelProperty]
+					this._model.emitChangeModel(modelProperty as string, source);
+					source = undefined;
+				}
 			});
 			this._render = new ComponentRender(this);
 		}
