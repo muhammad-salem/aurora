@@ -4,7 +4,8 @@ import type { Stack } from '../scope/stack.js';
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
-export type DependencyVariables = PropertyKey | Array<PropertyKey | PropertyKey[] | DependencyVariables>;
+export type ExpressionEventPath = { path: string, computed: boolean, optional: boolean };
+export type ExpressionEventMap = { [key: string]: ExpressionEventMap | undefined };
 
 export interface ExpressionNode {
 
@@ -46,6 +47,48 @@ export interface ExpressionNode {
 	get(stack: Stack, thisContext?: any): any;
 
 	/**
+	 * get all dependencies form an expression node
+	 *
+	 * tha return from this method, is represent an answer for what identifiers this expression depends-on.
+	 * 
+	 *
+	 * ex:
+	 * ```js
+	 * x + y;
+	 * ```
+	 *
+	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
+	 * - for `x` identifier:	the answer should be node `x`,
+	 * - for `y` identifier:	the answer should be node `y`.
+	 *
+	 * so, the return from `+` will be `[ node 'x', node 'y']`
+	 *
+	 * and:
+	 * - `x.y.z * a` ==> `[ member node `x.y.z`, identifier 'a']`
+	 * @param parent
+	 */
+	dependency(hasParent: boolean): ExpressionNode[];
+
+	/**
+	 * ex:
+	 * ```js
+	 * x + y;
+	 * ```
+	 *
+	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
+	 * - for `x` identifier:	the answer should be node `x`,
+	 * - for `y` identifier:	the answer should be node `y`.
+	 *
+	 * so, the return from `+` will be `['x', 'y']`
+	 *
+	 * and:
+	 * - `x.y.z` ==> `['x', 'y', 'z']`
+	 * - `x[y].z` ==> ['x', ]
+	 * @param hasParent required for member and chaining operators
+	 */
+	dependencyPath(): ExpressionEventPath[];
+
+	/**
 	 * get all the events form this expression
 	 * 
 	 * tha return from this method, is represent an answer for what is this expression depends-on as identifier name
@@ -56,18 +99,24 @@ export interface ExpressionNode {
 	 * ```
 	 * 
 	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
-	 * - for `x` identifier:	the answer should be `x`
-	 * - for `y` identifier:	the answer should be `y`
+	 * - for `x` identifier: the answer should be `x`
+	 * - for `y` identifier: the answer should be `y`
+	 * the final output will be 
 	 * 
-	 * so, the return from `+` will be `['x', 'y']`
+	 * so, the return from `+` will be `{ x: undefined, y: undefined }`
 	 * 
 	 * and:
-	 * - `x.y.z * a` ==> `[ ['x', 'y', 'z'], 'a']`
-	 * - `x[Symbol.toStringTag] + 'Class' + classType + array[3]` ==> `[ [ 'x', Symbol.toStringTag ], 'classType', ['array'] ]`
-	 * - `'name'` ==> []
+	 * - `x.y.z * a` ==> `{ x: { y: { z: undefined }, a: undefined } }`
+	 * - `x.y.z > x.y.h.g` ==> `{ x: { y: { z: undefined, h: { g: undefined} } } }`
+	 * - `x[Symbol.toStringTag] + 'Class' + classType + array[3]` ==> `{ x: { 'Symbol.toStringTag': undefined }, classType: undefined,  array: { 3: undefined }  }`
+	 * - `'name'` ==> {}
+	 * - ```js
+	 * user[firstName + `son of ${fatherName}`]
+	 * ``` ==> `{ user: { 'firstName:fatherName': undefined }, firstName: undefined, fatherName: undefined }`
 	 * @param parent 
 	 */
-	events(): DependencyVariables;
+	events(): ExpressionEventMap;
+
 
 	/**
 	 * re-write this expression as a javascript source 

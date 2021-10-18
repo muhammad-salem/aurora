@@ -2,8 +2,7 @@ import type { Scope, ScopeType } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode,
-	NodeExpressionClass, NodeJsonType,
-	CanDeclareExpression, DependencyVariables
+	NodeExpressionClass, NodeJsonType, CanDeclareExpression, ExpressionEventMap, ExpressionEventPath
 } from './expression.js';
 
 export abstract class AbstractExpressionNode implements ExpressionNode {
@@ -18,10 +17,35 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		json.type = Reflect.get(this.constructor, 'type');
 		return json;
 	}
+	events(): ExpressionEventMap {
+		const dependencyNodes = this.dependency(false);
+		const eventMap: ExpressionEventMap = {};
+		for (const node of dependencyNodes) {
+			const dependencyPath = node.dependencyPath();
+			this.pathExpressionEventMap(eventMap, dependencyPath);
+		}
+		return eventMap;
+	}
+	private pathExpressionEventMap(eventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
+		let lastMap = eventMap;
+		let index = 0;
+		for (const key of path) {
+			let eventMap = lastMap[key];
+			if (eventMap) {
+				lastMap = eventMap;
+				continue;
+			}
+			if ((index++) === path.length - 1) {
+				lastMap[key] = undefined;
+			}
+			lastMap = lastMap[key] = {};
+		}
+	}
 	abstract shareVariables(scopeList: Scope<any>[]): void;
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
-	abstract events(): DependencyVariables;
+	abstract dependency(hasParent: boolean): ExpressionNode[];
+	abstract dependencyPath(): ExpressionEventPath[];
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
@@ -46,8 +70,14 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
 	abstract get(stack: Stack): any;
-	events(): DependencyVariables {
-		return this.left.events().concat(this.right.events());
+	dependency(hasParent?: boolean): ExpressionNode[] {
+		return [
+			this.left,
+			this.right
+		];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.left.dependencyPath().concat(this.right.dependencyPath());
 	}
 	toString() {
 		return `${this.left.toString()} ${this.operator} ${this.right.toString()}`;

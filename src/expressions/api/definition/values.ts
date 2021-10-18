@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope, DependencyVariables
+	NodeDeserializer, CanFindScope, ExpressionEventPath
 } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -49,8 +49,11 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	events(): DependencyVariables {
-		return this.name;
+	dependency(hasParent: boolean): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): string[] {
+		return [this.toString()];
 	}
 	toString(): string {
 		return String(this.name);
@@ -93,8 +96,14 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		scope = stack.findScope<V>(this.value as any);
 		return scope.getScope<V>(this.value as any);
 	}
-	events(): DependencyVariables {
+	dependency(hasParent: boolean): ExpressionNode[] {
+		if (hasParent) {
+			return [this];
+		}
 		return [];
+	}
+	dependencyPath(): string[] {
+		return [String(this.value)];
 	}
 	toString(): string {
 		return String(this.value);
@@ -172,6 +181,12 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 	}
 	events(): DependencyVariables {
 		return this.expressions.flatMap(expr => expr.events());
+	}
+	dependency(hasParent: boolean): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return [this.toString()];
 	}
 	toString(): string {
 		let str = this.tag?.toString() || '';
