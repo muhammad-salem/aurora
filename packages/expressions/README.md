@@ -3,22 +3,20 @@
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
 [![LICENSE][license-img]][license-url]
-![npm-dependencies][npm-dep-url]
 [![lerna][lerna-img]][lerna-url]
 ![GitHub contributors][contributors]
 
-[npm-image]: https://img.shields.io/npm/v/@ibyar/expressions.svg
+[npm-image]: https://img.shields.io/npm/v/@ibyar/expressions.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url]: https://npmjs.org/package/@ibyar/expressions
 [downloads-image]: https://img.shields.io/npm/dt/@ibyar/expressions
 [downloads-url]: https://npmjs.org/package/@ibyar/expressions
 [license-img]: https://img.shields.io/github/license/ibyar/aurora
 [license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
-[npm-dep-url]: https://img.shields.io/david/ibyar/aurora?path=packages%2Fexpressions
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora expression, an template expression evaluation, with stack and scope.
+Aurora expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
 
@@ -130,7 +128,7 @@ console.log(
 | multiply/divide        | `* / % ** %%`                                           |
 | addition/subtraction   | `+ -`                                                   |
 | bitwise shift          | `<< >> >>>`                                             |
-| relational             | `< <= > >= >? <? <=> in instanceof`                               |
+| relational             | `< <= > >= >? <? <=> in instanceof`                     |
 | equality               | `== != === !==`                                         |
 | bitwise-and            | `&`                                                     |
 | bitwise-xor            | `^`                                                     |
@@ -138,6 +136,7 @@ console.log(
 | logical-and            | `&&`                                                    |
 | logical-or             | `\|\|`                                                  |
 | conditional            | `?:`                                                    |
+| pipeline               | `|>`                                                    |
 | assignment             | `= += -= *= **= /= %= <<= >>= >>>= &= ^= \|= &&= \|\|= ??= >?= <?= %%=` |
 | comma                  | `,`                                                     |
 
