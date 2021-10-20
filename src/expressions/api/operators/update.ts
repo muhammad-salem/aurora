@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -45,8 +45,11 @@ export class UpdateExpression extends AbstractExpressionNode {
 		this.set(stack, num.value);
 		return returnValue;
 	}
-	events(): DependencyVariables {
-		return this.argument.events();
+	dependency(): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument.dependencyPath();
 	}
 	toString() {
 		if (this.prefix) {

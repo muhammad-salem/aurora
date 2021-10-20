@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
@@ -29,8 +29,11 @@ export class ReturnStatement extends AbstractExpressionNode {
 		return new ReturnValue(this.argument?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}
-	events(): DependencyVariables {
-		return this.argument?.events() || [];
+	dependency(): ExpressionNode[] {
+		return this.argument?.dependency() || [];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument?.dependencyPath() || [];
 	}
 	toString(): string {
 		return `return ${this.argument?.toString() || ''}`;

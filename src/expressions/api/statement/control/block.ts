@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -47,8 +47,11 @@ export class BlockStatement extends AbstractExpressionNode {
 		}
 		stack.clearTo(blockScope);
 	}
-	events(): DependencyVariables {
-		return this.body.flatMap(node => node.events(parent));
+	dependency(): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.body.flatMap(node => node.dependencyPath());
 	}
 	toString(): string {
 		return `{ ${this.body.map(node => node.toString()).join('; ')}; }`;

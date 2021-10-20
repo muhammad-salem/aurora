@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -52,8 +52,11 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 		const propertyValue = objectValue[propertyName];
 		(this.value as CanDeclareExpression).declareVariable(stack, scopeType, propertyValue);
 	}
-	events(): DependencyVariables {
-		return this.key.events().concat(this.value.events());
+	dependency(): ExpressionNode[] {
+		return this.key.dependency().concat(this.value.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.key.dependencyPath().concat(this.value.dependencyPath());
 	}
 	toString(): string {
 		return `${this.key.toString()}: ${this.value.toString()}`;
@@ -91,8 +94,11 @@ export class ObjectExpression extends AbstractExpressionNode {
 		}
 		return newObject;
 	}
-	events(): DependencyVariables {
-		return this.properties.flatMap(property => property.events());
+	dependency(): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath());
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
@@ -143,8 +149,11 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 		}
 		return restObject;
 	}
-	events(): DependencyVariables {
-		return this.properties.flatMap(property => property.events());
+	dependency(): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath());
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -26,8 +26,11 @@ export class AwaitExpression extends AbstractExpressionNode {
 		const promise = this.argument.get(stack);
 		return new AwaitPromise(promise);
 	}
-	events(): DependencyVariables {
-		return this.argument.events();
+	dependency(): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument.dependencyPath();
 	}
 	toString() {
 		return `await ${this.argument.toString()}`;

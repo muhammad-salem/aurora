@@ -1,5 +1,5 @@
 
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, DependencyVariables } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
@@ -48,8 +48,11 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 			this.id.declareVariable(stack, scopeType, value);
 		}
 	}
-	events(): DependencyVariables {
-		return [];
+	dependency(): ExpressionNode[] {
+		return this.init?.dependency() || [];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.init?.dependencyPath() || [];
 	}
 	toString() {
 		return `${this.id.toString()}${this.init ? ` = ${this.init.toString()}` : ''}`;
@@ -93,8 +96,11 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		this.declarations[0].declareVariable(stack, this.kind === 'var' ? 'function' : 'block', propertyValue);
 	}
-	events(parent?: string): string[] {
-		return this.declarations.flatMap(v => v.events());
+	dependency(): ExpressionNode[] {
+		return this.declarations.flatMap(declareVariable => declareVariable.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.declarations.flatMap(declareVariable => declareVariable.dependencyPath());
 	}
 	toString(): string {
 		return `${this.kind} ${this.declarations.map(v => v.toString()).join(', ')}`;

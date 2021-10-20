@@ -1,4 +1,7 @@
-import type { CanDeclareExpression, DependencyVariables, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type {
+	CanDeclareExpression, ExpressionEventPath,
+	ExpressionNode, NodeDeserializer
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -132,7 +135,10 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(): DependencyVariables {
+	dependency(): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -195,7 +201,10 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(): DependencyVariables {
+	dependency(): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -231,7 +240,10 @@ export class ClassBody extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(): DependencyVariables {
+	dependency(): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -267,8 +279,11 @@ export class Class extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`Class.#get() has no implementation.`);
 	}
-	events(): DependencyVariables {
-		return [];
+	dependency(): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		throw new Error('Method not implemented.');
 	}
 	toString() {
 		let classDeclaration = 'class ';

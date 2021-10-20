@@ -49,11 +49,12 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	dependency(hasParent: boolean): ExpressionNode[] {
+	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): string[] {
-		return [this.toString()];
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		const path: ExpressionEventPath[] = [{ computed: false, path: this.toString() }];
+		return computed ? [{ computed, path: this.toString(), computedPath: path }] : path;
 	}
 	toString(): string {
 		return String(this.name);
@@ -96,14 +97,11 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		scope = stack.findScope<V>(this.value as any);
 		return scope.getScope<V>(this.value as any);
 	}
-	dependency(hasParent: boolean): ExpressionNode[] {
-		if (hasParent) {
-			return [this];
-		}
-		return [];
+	dependency(computed: true): ExpressionNode[] {
+		return computed ? [this] : [];
 	}
-	dependencyPath(): string[] {
-		return [String(this.value)];
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return computed ? [{ computed, path: String(this.value), computedPath: [] }] : [];
 	}
 	toString(): string {
 		return String(this.value);
@@ -179,14 +177,11 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
 	}
-	events(): DependencyVariables {
-		return this.expressions.flatMap(expr => expr.events());
-	}
-	dependency(hasParent: boolean): ExpressionNode[] {
-		return [this];
+	dependency(): ExpressionNode[] {
+		return this.expressions.flatMap(exp => exp.dependency());
 	}
 	dependencyPath(): ExpressionEventPath[] {
-		return [this.toString()];
+		return this.expressions.flatMap(exp => exp.dependencyPath());
 	}
 	toString(): string {
 		let str = this.tag?.toString() || '';

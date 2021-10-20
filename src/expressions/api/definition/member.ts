@@ -1,8 +1,12 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope, DependencyVariables, ExpressionEventPath } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	CanFindScope, ExpressionEventPath
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
+import { Literal } from './values.js';
 
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
@@ -65,18 +69,22 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	// events(): DependencyVariables {
-	// 	return this.object.events().concat(this.property.events());
-	// }
-
-	dependency(hasParent: boolean): ExpressionNode[] {
-		return [
-			this
-		];
+	dependency(): ExpressionNode[] {
+		return [this];
 	}
 	dependencyPath(): ExpressionEventPath[] {
-
-		return [];
+		if (this.computed) {
+			const objPath = this.object.dependencyPath();
+			const propertyDependency = this.property.dependency(true);
+			const propertyDependencyPath = propertyDependency.flatMap(exp => exp.dependencyPath(true));
+			const computedPath: ExpressionEventPath = {
+				computed: true,
+				path: propertyDependencyPath.map(prop => prop.path).join(':'),
+				computedPath: propertyDependencyPath.flatMap(prop => prop.computed ? prop.computedPath : []),
+			};
+			return objPath.concat(computedPath);
+		}
+		return this.object.dependencyPath().concat(this.property.dependencyPath());
 	}
 	toString() {
 		if (this.computed) {

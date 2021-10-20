@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope, DependencyVariables } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	CanFindScope, ExpressionEventPath
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -27,8 +30,11 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 	findScope<T extends object>(stack: Stack, objectScope?: Scope<any>): Scope<T> | undefined {
 		return (this.expression as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	events(): DependencyVariables {
-		return this.expression.events();
+	dependency(): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.expression.dependencyPath();
 	}
 	toString() {
 		return this.expression.toString();

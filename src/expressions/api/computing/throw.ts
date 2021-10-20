@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -28,8 +28,11 @@ export class ThrowStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	events(): DependencyVariables {
-		return this.argument.events();
+	dependency(): ExpressionNode[] {
+		return this.argument.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument.dependencyPath();
 	}
 	toString(): string {
 		return `throw ${this.argument.toString()}`;
@@ -64,11 +67,13 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(): ExpressionNode[] {
+		return this.body.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.body.dependencyPath();
 	}
 	toString(): string {
-		// return `catch ${this.catchVar ? `(${this.catchVar.toString()})`;
 		return `catch (${this.param?.toString() || ''}) ${this.body.toString()}`;
 	}
 	toJson(key?: string): { [key: string]: any; } {
@@ -153,8 +158,15 @@ export class TryCatchNode extends AbstractExpressionNode {
 		}
 		stack.clearTill(scope);
 	}
-	events(): DependencyVariables {
-		return this.block.events().concat(this.handler?.events() || []).concat(this.finalizer?.events() || []);
+	dependency(): ExpressionNode[] {
+		return this.block.dependency()
+			.concat(this.handler?.dependency() || [])
+			.concat(this.finalizer?.dependency() || []);
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.block.dependencyPath()
+			.concat(this.handler?.dependencyPath() || [])
+			.concat(this.finalizer?.dependencyPath() || []);
 	}
 	toString(): string {
 		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;

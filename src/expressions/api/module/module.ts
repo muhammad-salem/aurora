@@ -1,4 +1,4 @@
-import type { DependencyVariables, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -37,8 +37,11 @@ export class ModuleNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ModuleNode.#get() has no implementation.`);
 	}
-	events(): DependencyVariables {
-		return this.body.flatMap(exp => exp.events());
+	dependency(): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.body.flatMap(exp => exp.dependencyPath());
 	}
 	toString(): string {
 		const importString = this.importList.map(imp => imp.toString()).join('\n');

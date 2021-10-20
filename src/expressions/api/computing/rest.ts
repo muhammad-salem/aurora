@@ -1,4 +1,4 @@
-import type { CanDeclareExpression, DependencyVariables, NodeDeserializer } from '../expression.js';
+import type { CanDeclareExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -28,8 +28,11 @@ export class RestElement extends AbstractExpressionNode implements CanDeclareExp
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any {
 		this.argument.declareVariable(stack, scopeType, propertyValue);
 	}
-	events(): DependencyVariables {
-		return this.argument.events();
+	dependency(): ExpressionNode[] {
+		return this.argument.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument.dependencyPath();
 	}
 	toString(): string {
 		return `...${this.argument.toString()}`;

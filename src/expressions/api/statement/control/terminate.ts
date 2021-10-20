@@ -1,6 +1,6 @@
+import type { ExpressionEventPath, ExpressionNode } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
-import type { DependencyVariables, ExpressionNode } from '../../expression.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -30,7 +30,10 @@ class TerminateStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.symbol;
 	}
-	events(): DependencyVariables {
+	dependency(): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(): ExpressionEventPath[] {
 		return [];
 	}
 	toString(): string {

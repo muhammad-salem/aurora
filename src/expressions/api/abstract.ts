@@ -5,6 +5,25 @@ import type {
 	NodeExpressionClass, NodeJsonType, CanDeclareExpression, ExpressionEventMap, ExpressionEventPath
 } from './expression.js';
 
+function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
+	let lastMap = rootEventMap;
+	let index = 0;
+	for (const node of path) {
+		const scopeName = node.path;
+		let eventMap = lastMap[scopeName];
+		if (eventMap) {
+			lastMap = eventMap;
+			continue;
+		}
+		if ((index++) === path.length - 1) {
+			lastMap[scopeName] = undefined;
+		}
+		lastMap = lastMap[scopeName] = {};
+		if (node.computed) {
+			initPathExpressionEventMap(rootEventMap, node.computedPath);
+		}
+	}
+}
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
@@ -18,34 +37,19 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		return json;
 	}
 	events(): ExpressionEventMap {
-		const dependencyNodes = this.dependency(false);
+		const dependencyNodes = this.dependency();
 		const eventMap: ExpressionEventMap = {};
 		for (const node of dependencyNodes) {
 			const dependencyPath = node.dependencyPath();
-			this.pathExpressionEventMap(eventMap, dependencyPath);
+			initPathExpressionEventMap(eventMap, dependencyPath);
 		}
 		return eventMap;
-	}
-	private pathExpressionEventMap(eventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
-		let lastMap = eventMap;
-		let index = 0;
-		for (const key of path) {
-			let eventMap = lastMap[key];
-			if (eventMap) {
-				lastMap = eventMap;
-				continue;
-			}
-			if ((index++) === path.length - 1) {
-				lastMap[key] = undefined;
-			}
-			lastMap = lastMap[key] = {};
-		}
 	}
 	abstract shareVariables(scopeList: Scope<any>[]): void;
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
-	abstract dependency(hasParent: boolean): ExpressionNode[];
-	abstract dependencyPath(): ExpressionEventPath[];
+	abstract dependency(hasParent?: true): ExpressionNode[];
+	abstract dependencyPath(hasParent?: true): ExpressionEventPath[];
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
@@ -70,11 +74,8 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
 	abstract get(stack: Stack): any;
-	dependency(hasParent?: boolean): ExpressionNode[] {
-		return [
-			this.left,
-			this.right
-		];
+	dependency(): ExpressionNode[] {
+		return this.left.dependency().concat(this.right.dependency());
 	}
 	dependencyPath(): ExpressionEventPath[] {
 		return this.left.dependencyPath().concat(this.right.dependencyPath());

@@ -4,7 +4,7 @@ import type { Stack } from '../scope/stack.js';
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
-export type ExpressionEventPath = { path: string, computed: boolean, optional: boolean };
+export type ExpressionEventPath = { computed: false, path: string } | { computed: true, path: string, computedPath: ExpressionEventPath[] };
 export type ExpressionEventMap = { [key: string]: ExpressionEventMap | undefined };
 
 export interface ExpressionNode {
@@ -65,9 +65,9 @@ export interface ExpressionNode {
 	 *
 	 * and:
 	 * - `x.y.z * a` ==> `[ member node `x.y.z`, identifier 'a']`
-	 * @param parent
+	 * @param computed
 	 */
-	dependency(hasParent: boolean): ExpressionNode[];
+	dependency(computed?: true): ExpressionNode[];
 
 	/**
 	 * ex:
@@ -84,9 +84,9 @@ export interface ExpressionNode {
 	 * and:
 	 * - `x.y.z` ==> `['x', 'y', 'z']`
 	 * - `x[y].z` ==> ['x', ]
-	 * @param hasParent required for member and chaining operators
+	 * @param computed required for member and chaining operators
 	 */
-	dependencyPath(): ExpressionEventPath[];
+	dependencyPath(computed?: true): ExpressionEventPath[];
 
 	/**
 	 * get all the events form this expression

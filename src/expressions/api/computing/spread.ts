@@ -1,4 +1,4 @@
-import type { DependencyVariables, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -43,8 +43,11 @@ export class SpreadElement extends AbstractExpressionNode {
 			stack.declareVariable('block', length++, iteratorResult.value);
 		}
 	}
-	events(): DependencyVariables {
-		return this.argument.events();
+	dependency(): ExpressionNode[] {
+		return this.argument.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.argument.dependencyPath();
 	}
 	toString(): string {
 		return `...${this.argument.toString()}`;

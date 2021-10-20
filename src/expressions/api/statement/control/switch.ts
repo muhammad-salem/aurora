@@ -1,5 +1,5 @@
 
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -35,8 +35,11 @@ export class SwitchCase extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
-	events(): DependencyVariables {
-		return this.test.events();
+	dependency(): ExpressionNode[] {
+		return this.test.dependency().concat(this.consequent.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.test.dependencyPath().concat(this.consequent.dependencyPath());
 	}
 	toString(): string {
 		return `case ${this.test.toString()}: ${this.consequent.toString()};`;
@@ -122,13 +125,11 @@ export class SwitchStatement extends AbstractExpressionNode {
 		stack.clearTo(caseBlock);
 		return void 0;
 	}
-	events(): DependencyVariables {
-		return this.discriminant.events()
-			.concat(
-				this.cases
-					.filter(c => c.getTest() !== DefaultExpression.DefaultNode)
-					.flatMap(c => c.getTest().events())
-			);
+	dependency(): ExpressionNode[] {
+		return this.discriminant.dependency().concat(this.cases.flatMap(expCase => expCase.dependency()));
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.discriminant.dependencyPath().concat(this.cases.flatMap(expCase => expCase.dependencyPath()));
 	}
 	toString(): string {
 		return `switch (${this.discriminant.toString()}) {${this.cases.map(item => item.toString())}`;

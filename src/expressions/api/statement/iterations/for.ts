@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, DependencyVariables } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -72,8 +72,19 @@ export class ForNode extends AbstractExpressionNode {
 		stack.clearTo(forBlock);
 		return void 0;
 	}
-	events(): DependencyVariables {
-		return [...(this.init?.events() || []), ...(this.test?.events() || [])];
+	dependency(): ExpressionNode[] {
+		let dependency: ExpressionNode[] = this.body.dependency();
+		this.init && (dependency = dependency.concat(this.init.dependency()));
+		this.test && (dependency = dependency.concat(this.test.dependency()));
+		this.update && (dependency = dependency.concat(this.update.dependency()));
+		return dependency;
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		let dependencyPath: ExpressionEventPath[] = this.body.dependencyPath();
+		this.init && (dependencyPath = dependencyPath.concat(this.init.dependencyPath()));
+		this.test && (dependencyPath = dependencyPath.concat(this.test.dependencyPath()));
+		this.update && (dependencyPath = dependencyPath.concat(this.update.dependencyPath()));
+		return dependencyPath;
 	}
 	toString(): string {
 		return `for (${this.init?.toString()};${this.test?.toString()};${this.init?.toString()}) ${this.body.toString()}`;
@@ -143,8 +154,11 @@ export class ForOfNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	events(): DependencyVariables {
-		return this.right.events();
+	dependency(): ExpressionNode[] {
+		return this.right.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.right.dependencyPath();
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;
@@ -212,8 +226,11 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	events(): DependencyVariables {
-		return this.right.events();
+	dependency(): ExpressionNode[] {
+		return this.right.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.right.dependencyPath();
 	}
 	toString(): string {
 		return `for (${this.left.toString()} in ${this.right.toString()}) ${this.body.toString()}`;
@@ -270,8 +287,11 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
 	}
-	events(): DependencyVariables {
-		return this.right.events();
+	dependency(): ExpressionNode[] {
+		return this.right.dependency();
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.right.dependencyPath();
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;

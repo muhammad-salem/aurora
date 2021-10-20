@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope, DependencyVariables } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -64,8 +64,11 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	events(): DependencyVariables {
-		return this.object.events().concat(this.property.events());
+	dependency(): ExpressionNode[] {
+		return this.object.dependency().concat(this.property.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.object.dependencyPath().concat(this.property.dependencyPath());
 	}
 	toString() {
 		if (this.computed) {

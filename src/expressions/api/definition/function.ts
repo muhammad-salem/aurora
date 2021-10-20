@@ -1,7 +1,4 @@
-import type {
-	CanDeclareExpression, DependencyVariables,
-	ExpressionNode, NodeDeserializer
-} from '../expression.js';
+import type { CanDeclareExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
 import {
@@ -64,8 +61,11 @@ export class Param extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
 	}
-	events(): DependencyVariables {
-		return this.identifier.events().concat(this.defaultValue?.events() || []);
+	dependency(): ExpressionNode[] {
+		return this.defaultValue ? [this.defaultValue] : [];
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.defaultValue?.dependencyPath() || [];
 	}
 	toString(): string {
 		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
@@ -291,8 +291,11 @@ export class FunctionExpression extends FunctionBaseExpression {
 		this.id?.declareVariable(stack, 'block', func);
 		return func;
 	}
-	events(): DependencyVariables {
-		return this.params.flatMap(param => param.events());
+	dependency(): ExpressionNode[] {
+		return this.params.flatMap(param => param.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath());
 	}
 	toString(): string {
 		let declare: string;
@@ -463,8 +466,11 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 		}
 		return func;
 	}
-	events(): DependencyVariables {
-		return this.params.flatMap(param => param.events());
+	dependency(): ExpressionNode[] {
+		return this.params.flatMap(param => param.dependency());
+	}
+	dependencyPath(): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath());
 	}
 	toString(): string {
 		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';
