@@ -39,11 +39,11 @@ export enum ArrowFunctionType {
 export class Param extends AbstractExpressionNode {
 	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
 		return new Param(
-			deserializer(node.identifier),
+			deserializer(node.identifier) as CanDeclareExpression,
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
-	constructor(private identifier: ExpressionNode, private defaultValue?: ExpressionNode) {
+	constructor(private identifier: CanDeclareExpression, private defaultValue?: ExpressionNode) {
 		super();
 	}
 	getIdentifier() {
@@ -56,7 +56,7 @@ export class Param extends AbstractExpressionNode {
 		this.defaultValue?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: Function) {
-		this.identifier.set(stack, value || this.defaultValue?.get(stack));
+		this.identifier.declareVariable?.(stack, 'function', value);
 	}
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');

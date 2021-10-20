@@ -1,6 +1,10 @@
 import { JavaScriptParser, ReactiveScope, Stack } from '@ibyar/expressions';
 
 const source = `
+function logPos({ x, y }) {
+	console.log('x = ', x, ', y = ', y);
+}
+logPos({x: 4, y: 6});
 
 function add(x) {
 	console.log('outer x:', x);
