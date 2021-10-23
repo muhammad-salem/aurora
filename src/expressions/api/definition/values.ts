@@ -49,10 +49,10 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		const path: ExpressionEventPath[] = [{ computed: false, path: this.toString() }];
 		return computed ? [{ computed, path: this.toString(), computedPath: path }] : path;
 	}
@@ -100,7 +100,7 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	dependency(computed: true): ExpressionNode[] {
 		return computed ? [this] : [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		if (!computed) {
 			return [];
 		}
@@ -183,10 +183,10 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
 	}
-	dependency(): ExpressionNode[] {
-		return this.expressions.flatMap(exp => exp.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.expressions.flatMap(exp => exp.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.expressions.flatMap(exp => exp.dependencyPath(computed));
 	}
 	toString(): string {

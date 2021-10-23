@@ -29,10 +29,10 @@ export class ReturnStatement extends AbstractExpressionNode {
 		return new ReturnValue(this.argument?.get(stack));
 		// nothing should be written after this operation in a function body.
 	}
-	dependency(): ExpressionNode[] {
-		return this.argument?.dependency() || [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument?.dependency(computed) || [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.argument?.dependencyPath(computed) || [];
 	}
 	toString(): string {

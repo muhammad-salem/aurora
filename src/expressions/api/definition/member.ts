@@ -69,10 +69,10 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		if (this.computed) {
 			const objPath = this.object.dependencyPath(computed);
 			const propertyDependency = this.property.dependency(true);

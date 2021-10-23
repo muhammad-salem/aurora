@@ -37,10 +37,10 @@ export class ModuleNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ModuleNode.#get() has no implementation.`);
 	}
-	dependency(): ExpressionNode[] {
-		return this.body.flatMap(exp => exp.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.body.flatMap(exp => exp.dependencyPath(computed));
 	}
 	toString(): string {

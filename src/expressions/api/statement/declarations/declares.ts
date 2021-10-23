@@ -48,10 +48,10 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 			this.id.declareVariable(stack, scopeType, value);
 		}
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.init?.dependency() || [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.init?.dependencyPath(computed) || [];
 	}
 	toString() {
@@ -96,10 +96,10 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		this.declarations[0].declareVariable(stack, this.kind === 'var' ? 'function' : 'block', propertyValue);
 	}
-	dependency(): ExpressionNode[] {
-		return this.declarations.flatMap(declareVariable => declareVariable.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.declarations.flatMap(declareVariable => declareVariable.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.declarations.flatMap(declareVariable => declareVariable.dependencyPath(computed));
 	}
 	toString(): string {

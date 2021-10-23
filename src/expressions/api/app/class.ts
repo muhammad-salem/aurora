@@ -135,10 +135,10 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -201,10 +201,10 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -240,10 +240,10 @@ export class ClassBody extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('Method not implemented.');
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -279,10 +279,10 @@ export class Class extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`Class.#get() has no implementation.`);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString() {

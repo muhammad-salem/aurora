@@ -45,10 +45,10 @@ export class UpdateExpression extends AbstractExpressionNode {
 		this.set(stack, num.value);
 		return returnValue;
 	}
-	dependency(): ExpressionNode[] {
-		return [this];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.argument.dependencyPath(computed);
 	}
 	toString() {

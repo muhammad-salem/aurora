@@ -28,10 +28,10 @@ export class ThrowStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	dependency(): ExpressionNode[] {
-		return this.argument.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
@@ -67,10 +67,10 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.body.dependency();
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.body.dependencyPath(computed);
 	}
 	toString(): string {
@@ -158,12 +158,12 @@ export class TryCatchNode extends AbstractExpressionNode {
 		}
 		stack.clearTill(scope);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.block.dependency()
 			.concat(this.handler?.dependency() || [])
 			.concat(this.finalizer?.dependency() || []);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.block.dependencyPath(computed)
 			.concat(
 				this.handler?.dependencyPath(computed) || [],

@@ -53,10 +53,10 @@ export class CallExpression extends AbstractExpressionNode {
 		}
 		return funCallBack.apply(thisContext, parameters);
 	}
-	dependency(): ExpressionNode[] {
-		return this.callee.dependency().concat(this.arguments.flatMap(param => param.dependency()));
+	dependency(computed?: true): ExpressionNode[] {
+		return this.callee.dependency(computed).concat(this.arguments.flatMap(param => param.dependency(computed)));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.callee.dependencyPath(computed).concat(this.arguments.flatMap(param => param.dependencyPath(computed)));
 	}
 	toString(): string {

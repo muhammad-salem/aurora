@@ -72,14 +72,14 @@ export class ForNode extends AbstractExpressionNode {
 		stack.clearTo(forBlock);
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
-		let dependency: ExpressionNode[] = this.body.dependency();
-		this.init && (dependency = dependency.concat(this.init.dependency()));
-		this.test && (dependency = dependency.concat(this.test.dependency()));
-		this.update && (dependency = dependency.concat(this.update.dependency()));
+	dependency(computed?: true): ExpressionNode[] {
+		let dependency: ExpressionNode[] = this.body.dependency(computed);
+		this.init && (dependency = dependency.concat(this.init.dependency(computed)));
+		this.test && (dependency = dependency.concat(this.test.dependency(computed)));
+		this.update && (dependency = dependency.concat(this.update.dependency(computed)));
 		return dependency;
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		let dependencyPath: ExpressionEventPath[] = this.body.dependencyPath(computed);
 		this.init && (dependencyPath = dependencyPath.concat(this.init.dependencyPath(computed)));
 		this.test && (dependencyPath = dependencyPath.concat(this.test.dependencyPath(computed)));
@@ -154,10 +154,10 @@ export class ForOfNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
-		return this.right.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.right.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.right.dependencyPath(computed);
 	}
 	toString(): string {
@@ -226,10 +226,10 @@ export class ForInNode extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
-		return this.right.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.right.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.right.dependencyPath(computed);
 	}
 	toString(): string {
@@ -287,10 +287,10 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		};
 		stack.forAwaitAsyncIterable = { iterable, forAwaitBody };
 	}
-	dependency(): ExpressionNode[] {
-		return this.right.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.right.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.right.dependencyPath(computed);
 	}
 	toString(): string {

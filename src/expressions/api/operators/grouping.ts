@@ -31,10 +31,10 @@ export class GroupingExpression extends AbstractExpressionNode {
 	get(stack: Stack,) {
 		return this.node.get(stack);
 	}
-	dependency(): ExpressionNode[] {
-		return this.node.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.node.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.node.dependencyPath(computed);
 	}
 	toString(): string {

@@ -47,10 +47,10 @@ export class BlockStatement extends AbstractExpressionNode {
 		}
 		stack.clearTo(blockScope);
 	}
-	dependency(): ExpressionNode[] {
-		return this.body.flatMap(exp => exp.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {

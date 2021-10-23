@@ -23,10 +23,10 @@ export class Program extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {

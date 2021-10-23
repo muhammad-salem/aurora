@@ -53,14 +53,14 @@ export class IfStatement extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
-		return this.test.dependency()
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed)
 			.concat(
-				this.consequent.dependency(),
-				this.alternate?.dependency() || []
+				this.consequent.dependency(computed),
+				this.alternate?.dependency(computed) || []
 			);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.test.dependencyPath(computed).concat(
 			this.consequent.dependencyPath(computed),
 			this.alternate?.dependencyPath(computed) || []

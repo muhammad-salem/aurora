@@ -30,10 +30,10 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 	findScope<T extends object>(stack: Stack, objectScope?: Scope<any>): Scope<T> | undefined {
 		return (this.expression as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	dependency(): ExpressionNode[] {
-		return [this];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.expression.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.expression.dependencyPath(computed);
 	}
 	toString() {

@@ -64,10 +64,10 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	dependency(): ExpressionNode[] {
-		return this.object.dependency().concat(this.property.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.object.dependency(computed).concat(this.property.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.object.dependencyPath(computed).concat(this.property.dependencyPath(computed));
 	}
 	toString() {

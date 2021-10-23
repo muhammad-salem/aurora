@@ -26,10 +26,10 @@ export class ExpressionStatement extends AbstractExpressionNode {
 		this.body.forEach(node => value = node.get(stack));
 		return value;
 	}
-	dependency(): ExpressionNode[] {
-		return this.body.flatMap(exp => exp.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {

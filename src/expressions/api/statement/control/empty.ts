@@ -28,10 +28,10 @@ export class EmptyStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString(): string {

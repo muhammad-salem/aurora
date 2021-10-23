@@ -35,10 +35,10 @@ export class SwitchCase extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
-	dependency(): ExpressionNode[] {
-		return this.test.dependency().concat(this.consequent.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed).concat(this.consequent.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.test.dependencyPath(computed).concat(this.consequent.dependencyPath(computed));
 	}
 	toString(): string {
@@ -61,6 +61,12 @@ export class DefaultExpression extends SwitchCase {
 	}
 	constructor(block: ExpressionNode) {
 		super(DefaultExpression.DefaultNode, block);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return this.consequent.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.consequent.dependencyPath(computed);
 	}
 	toString(): string {
 		return `default: ${this.consequent.toString()};`;
@@ -125,10 +131,10 @@ export class SwitchStatement extends AbstractExpressionNode {
 		stack.clearTo(caseBlock);
 		return void 0;
 	}
-	dependency(): ExpressionNode[] {
-		return this.discriminant.dependency().concat(this.cases.flatMap(expCase => expCase.dependency()));
+	dependency(computed?: true): ExpressionNode[] {
+		return this.discriminant.dependency(computed).concat(this.cases.flatMap(expCase => expCase.dependency(computed)));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.discriminant.dependencyPath(computed).concat(this.cases.flatMap(expCase => expCase.dependencyPath(computed)));
 	}
 	toString(): string {

@@ -18,10 +18,10 @@ export class CommentExpression extends AbstractExpressionNode {
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, ...values: any[]) { }
 	get(stack: Stack) { }
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString(): string {

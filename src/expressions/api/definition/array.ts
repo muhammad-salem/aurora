@@ -26,10 +26,10 @@ export class ArrayExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
 	}
-	dependency(): ExpressionNode[] {
-		return this.elements.flatMap(item => item.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
@@ -102,10 +102,10 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 			}
 		}
 	}
-	dependency(): ExpressionNode[] {
-		return this.elements.flatMap(item => item.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {

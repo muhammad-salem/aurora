@@ -80,10 +80,10 @@ export class ImportNode extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`ImportNode.#get() has no implementation.`);
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString() {

@@ -61,10 +61,10 @@ export class Param extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.defaultValue ? [this.defaultValue] : [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.defaultValue?.dependencyPath(computed) || [];
 	}
 	toString(): string {
@@ -291,10 +291,10 @@ export class FunctionExpression extends FunctionBaseExpression {
 		this.id?.declareVariable(stack, 'block', func);
 		return func;
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
@@ -466,10 +466,10 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 		}
 		return func;
 	}
-	dependency(): ExpressionNode[] {
+	dependency(computed?: true): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {

@@ -36,10 +36,14 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);
 	}
-	dependency(): ExpressionNode[] {
-		return [this];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed)
+			.concat(
+				this.alternate.dependency(computed),
+				this.consequent.dependency(computed)
+			);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.test.dependencyPath(computed)
 			.concat(
 				this.alternate.dependencyPath(computed),

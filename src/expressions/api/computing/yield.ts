@@ -28,10 +28,10 @@ export class YieldExpression extends AbstractExpressionNode {
 		}
 		return new YieldValue(value);
 	}
-	dependency(): ExpressionNode[] {
-		return this.argument?.dependency() || [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument?.dependency(computed) || [];
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.argument?.dependencyPath(computed) || [];
 	}
 	toString(): string {

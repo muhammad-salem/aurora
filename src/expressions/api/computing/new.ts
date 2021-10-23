@@ -52,11 +52,11 @@ export class NewExpression extends AbstractExpressionNode {
 		}
 		return value;
 	}
-	dependency(): ExpressionNode[] {
-		return this.className.dependency()
-			.concat(this.arguments?.flatMap(parm => parm.dependency()) || []);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.className.dependency(computed)
+			.concat(this.arguments?.flatMap(parm => parm.dependency(computed)) || []);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.className.dependencyPath(computed)
 			.concat(this.arguments?.flatMap(param => param.dependencyPath(computed)) || []);
 	}

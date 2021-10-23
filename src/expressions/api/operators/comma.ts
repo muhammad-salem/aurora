@@ -24,10 +24,10 @@ export class SequenceExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.expressions.map(expr => expr.get(stack)).pop();
 	}
-	dependency(): ExpressionNode[] {
-		return this.expressions.flatMap(exp => exp.dependency());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.expressions.flatMap(exp => exp.dependency(computed));
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.expressions.flatMap(expression => expression.dependencyPath(computed));
 	}
 	toString() {

@@ -28,10 +28,10 @@ export class RestElement extends AbstractExpressionNode implements CanDeclareExp
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any {
 		this.argument.declareVariable(stack, scopeType, propertyValue);
 	}
-	dependency(): ExpressionNode[] {
-		return this.argument.dependency();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
 	}
-	dependencyPath(computed: true): ExpressionEventPath[] {
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
