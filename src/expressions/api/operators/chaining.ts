@@ -33,8 +33,8 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.expression.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.expression.dependencyPath(computed);
 	}
 	toString() {
 		return this.expression.toString();

@@ -51,8 +51,8 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 	dependency(): ExpressionNode[] {
 		return this.init?.dependency() || [];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.init?.dependencyPath() || [];
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.init?.dependencyPath(computed) || [];
 	}
 	toString() {
 		return `${this.id.toString()}${this.init ? ` = ${this.init.toString()}` : ''}`;
@@ -99,8 +99,8 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	dependency(): ExpressionNode[] {
 		return this.declarations.flatMap(declareVariable => declareVariable.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.declarations.flatMap(declareVariable => declareVariable.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.declarations.flatMap(declareVariable => declareVariable.dependencyPath(computed));
 	}
 	toString(): string {
 		return `${this.kind} ${this.declarations.map(v => v.toString()).join(', ')}`;

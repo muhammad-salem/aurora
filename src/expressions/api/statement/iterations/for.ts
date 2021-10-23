@@ -79,11 +79,11 @@ export class ForNode extends AbstractExpressionNode {
 		this.update && (dependency = dependency.concat(this.update.dependency()));
 		return dependency;
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		let dependencyPath: ExpressionEventPath[] = this.body.dependencyPath();
-		this.init && (dependencyPath = dependencyPath.concat(this.init.dependencyPath()));
-		this.test && (dependencyPath = dependencyPath.concat(this.test.dependencyPath()));
-		this.update && (dependencyPath = dependencyPath.concat(this.update.dependencyPath()));
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		let dependencyPath: ExpressionEventPath[] = this.body.dependencyPath(computed);
+		this.init && (dependencyPath = dependencyPath.concat(this.init.dependencyPath(computed)));
+		this.test && (dependencyPath = dependencyPath.concat(this.test.dependencyPath(computed)));
+		this.update && (dependencyPath = dependencyPath.concat(this.update.dependencyPath(computed)));
 		return dependencyPath;
 	}
 	toString(): string {
@@ -157,8 +157,8 @@ export class ForOfNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.right.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.right.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.right.dependencyPath(computed);
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;
@@ -229,8 +229,8 @@ export class ForInNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.right.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.right.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.right.dependencyPath(computed);
 	}
 	toString(): string {
 		return `for (${this.left.toString()} in ${this.right.toString()}) ${this.body.toString()}`;
@@ -290,8 +290,8 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.right.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.right.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.right.dependencyPath(computed);
 	}
 	toString(): string {
 		return `for (${this.left?.toString()} of ${this.right.toString()}) ${this.body.toString()}`;

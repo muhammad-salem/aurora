@@ -85,10 +85,10 @@ export class PipelineExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.right.dependencyPath()
-			.concat(this.left.dependencyPath())
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.right.dependencyPath(computed)
 			.concat(
+				this.left.dependencyPath(computed),
 				(this.arguments
 					.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[])
 					.flatMap(param => param.dependencyPath!())

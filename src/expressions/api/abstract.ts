@@ -7,7 +7,7 @@ import type {
 
 function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
 	let lastMap = rootEventMap;
-	let index = 0;
+	// let index = 0;
 	for (const node of path) {
 		const scopeName = node.path;
 		let eventMap = lastMap[scopeName];
@@ -15,9 +15,10 @@ function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: Expr
 			lastMap = eventMap;
 			continue;
 		}
-		if ((index++) === path.length - 1) {
-			lastMap[scopeName] = undefined;
-		}
+		// if ((index++) === path.length - 1) {
+		// 	lastMap[scopeName] = undefined;
+		// 	continue;
+		// }
 		lastMap = lastMap[scopeName] = {};
 		if (node.computed) {
 			initPathExpressionEventMap(rootEventMap, node.computedPath);

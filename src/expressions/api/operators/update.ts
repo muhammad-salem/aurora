@@ -48,8 +48,8 @@ export class UpdateExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.argument.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString() {
 		if (this.prefix) {

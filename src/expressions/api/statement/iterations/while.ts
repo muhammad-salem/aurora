@@ -59,8 +59,8 @@ export class WhileNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.test.dependency().concat(this.body.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.test.dependencyPath().concat(this.body.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(this.body.dependencyPath(computed));
 	}
 	toString(): string {
 		return `while (${this.test.toString()}) ${this.body.toString()}`;
@@ -120,8 +120,8 @@ export class DoWhileNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.body.dependency().concat(this.test.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.body.dependencyPath().concat(this.test.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.body.dependencyPath(computed).concat(this.test.dependencyPath(computed));
 	}
 	toString(): string {
 		return `do {${this.body.toString()}} while (${this.test.toString()})`;

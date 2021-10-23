@@ -27,8 +27,8 @@ export class SequenceExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.expressions.flatMap(exp => exp.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.expressions.flatMap(expression => expression.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.expressions.flatMap(expression => expression.dependencyPath(computed));
 	}
 	toString() {
 		return this.expressions.map(key => key.toString()).join(', ');

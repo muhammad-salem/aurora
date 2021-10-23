@@ -56,8 +56,8 @@ export class CallExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.callee.dependency().concat(this.arguments.flatMap(param => param.dependency()));
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.callee.dependencyPath().concat(this.arguments.flatMap(param => param.dependencyPath()));
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.callee.dependencyPath(computed).concat(this.arguments.flatMap(param => param.dependencyPath(computed)));
 	}
 	toString(): string {
 		return `${this.callee.toString()}${this.optional ? '?.' : ''}(${this.arguments.map(arg => arg.toString()).join(', ')})`;

@@ -72,9 +72,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		if (this.computed) {
-			const objPath = this.object.dependencyPath();
+			const objPath = this.object.dependencyPath(computed);
 			const propertyDependency = this.property.dependency(true);
 			const propertyDependencyPath = propertyDependency.flatMap(exp => exp.dependencyPath(true));
 			const computedPath: ExpressionEventPath = {
@@ -84,7 +84,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			};
 			return objPath.concat(computedPath);
 		}
-		return this.object.dependencyPath().concat(this.property.dependencyPath());
+		return this.object.dependencyPath(computed).concat(this.property.dependencyPath(computed));
 	}
 	toString() {
 		if (this.computed) {

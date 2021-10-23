@@ -29,8 +29,8 @@ export class ExpressionStatement extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.body.flatMap(exp => exp.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.body.flatMap(node => node.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
 		return this.body.map(node => node.toString()).join('; ').concat(';');

@@ -31,8 +31,8 @@ export class ThrowStatement extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.argument.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.argument.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
 		return `throw ${this.argument.toString()}`;
@@ -70,8 +70,8 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.body.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.body.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.body.dependencyPath(computed);
 	}
 	toString(): string {
 		return `catch (${this.param?.toString() || ''}) ${this.body.toString()}`;
@@ -163,10 +163,12 @@ export class TryCatchNode extends AbstractExpressionNode {
 			.concat(this.handler?.dependency() || [])
 			.concat(this.finalizer?.dependency() || []);
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.block.dependencyPath()
-			.concat(this.handler?.dependencyPath() || [])
-			.concat(this.finalizer?.dependencyPath() || []);
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.block.dependencyPath(computed)
+			.concat(
+				this.handler?.dependencyPath(computed) || [],
+				this.finalizer?.dependencyPath(computed) || []
+			);
 	}
 	toString(): string {
 		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;

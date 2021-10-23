@@ -38,8 +38,8 @@ export class SwitchCase extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.test.dependency().concat(this.consequent.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.test.dependencyPath().concat(this.consequent.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(this.consequent.dependencyPath(computed));
 	}
 	toString(): string {
 		return `case ${this.test.toString()}: ${this.consequent.toString()};`;
@@ -128,8 +128,8 @@ export class SwitchStatement extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.discriminant.dependency().concat(this.cases.flatMap(expCase => expCase.dependency()));
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.discriminant.dependencyPath().concat(this.cases.flatMap(expCase => expCase.dependencyPath()));
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.discriminant.dependencyPath(computed).concat(this.cases.flatMap(expCase => expCase.dependencyPath(computed)));
 	}
 	toString(): string {
 		return `switch (${this.discriminant.toString()}) {${this.cases.map(item => item.toString())}`;

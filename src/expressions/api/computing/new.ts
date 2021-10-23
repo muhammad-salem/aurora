@@ -56,9 +56,9 @@ export class NewExpression extends AbstractExpressionNode {
 		return this.className.dependency()
 			.concat(this.arguments?.flatMap(parm => parm.dependency()) || []);
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.className.dependencyPath()
-			.concat(this.arguments?.flatMap(param => param.dependencyPath()) || []);
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.className.dependencyPath(computed)
+			.concat(this.arguments?.flatMap(param => param.dependencyPath(computed)) || []);
 	}
 	toString(): string {
 		const parameters = this.arguments ? `(${this.arguments?.map(arg => arg.toString()).join(', ')})` : '';

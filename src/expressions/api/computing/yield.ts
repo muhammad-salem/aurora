@@ -31,8 +31,8 @@ export class YieldExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.argument?.dependency() || [];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.argument?.dependencyPath() || [];
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.argument?.dependencyPath(computed) || [];
 	}
 	toString(): string {
 		return `yield${this.delegate ? '*' : ''} ${this.argument?.toString() || ''}`;

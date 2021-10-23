@@ -67,8 +67,8 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 	dependency(): ExpressionNode[] {
 		return this.object.dependency().concat(this.property.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.object.dependencyPath().concat(this.property.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.object.dependencyPath(computed).concat(this.property.dependencyPath(computed));
 	}
 	toString() {
 		if (this.computed) {

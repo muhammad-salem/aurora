@@ -29,8 +29,8 @@ export class ArrayExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.elements.flatMap(item => item.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.elements.flatMap(item => item.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();
@@ -105,8 +105,8 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 	dependency(): ExpressionNode[] {
 		return this.elements.flatMap(item => item.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.elements.flatMap(item => item.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();

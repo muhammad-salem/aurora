@@ -40,8 +40,8 @@ export class ModuleNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.body.flatMap(exp => exp.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.body.flatMap(exp => exp.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.body.flatMap(exp => exp.dependencyPath(computed));
 	}
 	toString(): string {
 		const importString = this.importList.map(imp => imp.toString()).join('\n');

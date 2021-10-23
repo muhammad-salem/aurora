@@ -5,7 +5,7 @@ export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
 export type ExpressionEventPath = { computed: false, path: string } | { computed: true, path: string, computedPath: ExpressionEventPath[] };
-export type ExpressionEventMap = { [key: string]: ExpressionEventMap | undefined };
+export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 
 export interface ExpressionNode {
 

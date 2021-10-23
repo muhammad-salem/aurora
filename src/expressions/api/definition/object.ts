@@ -55,8 +55,8 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 	dependency(): ExpressionNode[] {
 		return this.key.dependency().concat(this.value.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.key.dependencyPath().concat(this.value.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.key.dependencyPath(computed).concat(this.value.dependencyPath(computed));
 	}
 	toString(): string {
 		return `${this.key.toString()}: ${this.value.toString()}`;
@@ -97,8 +97,8 @@ export class ObjectExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.properties.flatMap(property => property.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath(computed));
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
@@ -152,8 +152,8 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 	dependency(): ExpressionNode[] {
 		return [this];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.properties.flatMap(property => property.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath(computed));
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;

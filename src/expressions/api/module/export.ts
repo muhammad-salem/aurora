@@ -99,7 +99,7 @@ export class ExportNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return [];
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString() {

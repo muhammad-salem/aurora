@@ -26,7 +26,7 @@ export class Program extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {

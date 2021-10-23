@@ -60,10 +60,10 @@ export class IfStatement extends AbstractExpressionNode {
 				this.alternate?.dependency() || []
 			);
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.test.dependencyPath().concat(
-			this.consequent.dependencyPath(),
-			this.alternate?.dependencyPath() || []
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(
+			this.consequent.dependencyPath(computed),
+			this.alternate?.dependencyPath(computed) || []
 		);
 	}
 	toString(): string {

@@ -34,8 +34,8 @@ export class GroupingExpression extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.node.dependency();
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.node.dependencyPath();
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.node.dependencyPath(computed);
 	}
 	toString(): string {
 		return `(${this.node.toString()})`;

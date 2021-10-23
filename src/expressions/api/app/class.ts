@@ -138,7 +138,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	dependency(): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -204,7 +204,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	dependency(): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -243,7 +243,7 @@ export class ClassBody extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
@@ -282,7 +282,7 @@ export class Class extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
-	dependencyPath(): ExpressionEventPath[] {
+	dependencyPath(computed: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString() {

@@ -64,8 +64,8 @@ export class Param extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.defaultValue ? [this.defaultValue] : [];
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.defaultValue?.dependencyPath() || [];
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.defaultValue?.dependencyPath(computed) || [];
 	}
 	toString(): string {
 		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
@@ -294,8 +294,8 @@ export class FunctionExpression extends FunctionBaseExpression {
 	dependency(): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.params.flatMap(param => param.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
 		let declare: string;
@@ -469,8 +469,8 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 	dependency(): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.params.flatMap(param => param.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
 		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';

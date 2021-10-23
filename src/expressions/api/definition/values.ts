@@ -101,7 +101,13 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		return computed ? [this] : [];
 	}
 	dependencyPath(computed: true): ExpressionEventPath[] {
-		return computed ? [{ computed, path: String(this.value), computedPath: [] }] : [];
+		if (!computed) {
+			return [];
+		}
+		// return computed ? [{ computed, path: String(this.value), computedPath: [] }] : [];
+		// const path: ExpressionEventPath[] = [{ computed: false, path: String(this.value) }];
+		const path: ExpressionEventPath[] = [{ computed, path: String(this.value), computedPath: [] }];
+		return [{ computed, path: String(this.value), computedPath: path }];
 	}
 	toString(): string {
 		return String(this.value);
@@ -180,8 +186,8 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 	dependency(): ExpressionNode[] {
 		return this.expressions.flatMap(exp => exp.dependency());
 	}
-	dependencyPath(): ExpressionEventPath[] {
-		return this.expressions.flatMap(exp => exp.dependencyPath());
+	dependencyPath(computed: true): ExpressionEventPath[] {
+		return this.expressions.flatMap(exp => exp.dependencyPath(computed));
 	}
 	toString(): string {
 		let str = this.tag?.toString() || '';
