@@ -4,7 +4,9 @@ import type { Stack } from '../scope/stack.js';
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
-export type ExpressionEventPath = { computed: false, path: string } | { computed: true, path: string, computedPath: ExpressionEventPath[] };
+export type ExpressionEventPathDotNotation = { computed: false, path: string };
+export type ExpressionEventPathBracketNotation = { computed: true, path: string, computedPath: ExpressionEventPath[][] };
+export type ExpressionEventPath = ExpressionEventPathDotNotation | ExpressionEventPathBracketNotation;
 export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 
 export interface ExpressionNode {

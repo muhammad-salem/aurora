@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode,
-	CanFindScope, ExpressionEventPath
+	CanFindScope, ExpressionEventPath, ExpressionEventPathBracketNotation
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -76,11 +76,12 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		if (this.computed) {
 			const objPath = this.object.dependencyPath(computed);
 			const propertyDependency = this.property.dependency(true);
-			const propertyDependencyPath = propertyDependency.flatMap(exp => exp.dependencyPath(true));
+			const propertyDependencyPath = propertyDependency.map(exp => exp.dependencyPath(true));
+
 			const computedPath: ExpressionEventPath = {
 				computed: true,
-				path: propertyDependencyPath.map(prop => prop.path).join(':'),
-				computedPath: propertyDependencyPath.flatMap(prop => prop.computed ? prop.computedPath : []),
+				path: ':' + propertyDependencyPath.flatMap(paths => paths).map(prop => prop.path).join(':'),
+				computedPath: propertyDependencyPath.flatMap(paths => paths.flatMap(prop => prop.computed ? prop.computedPath : [])),
 			};
 			return objPath.concat(computedPath);
 		}

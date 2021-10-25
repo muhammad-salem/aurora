@@ -54,7 +54,7 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		const path: ExpressionEventPath[] = [{ computed: false, path: this.toString() }];
-		return computed ? [{ computed, path: this.toString(), computedPath: path }] : path;
+		return computed ? [{ computed, path: this.toString(), computedPath: [path] }] : path;
 	}
 	toString(): string {
 		return String(this.name);
@@ -101,13 +101,7 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		return computed ? [this] : [];
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		if (!computed) {
-			return [];
-		}
-		// return computed ? [{ computed, path: String(this.value), computedPath: [] }] : [];
-		// const path: ExpressionEventPath[] = [{ computed: false, path: String(this.value) }];
-		const path: ExpressionEventPath[] = [{ computed, path: String(this.value), computedPath: [] }];
-		return [{ computed, path: String(this.value), computedPath: path }];
+		return computed ? [{ computed: false, path: this.toString() }] : [];
 	}
 	toString(): string {
 		return String(this.value);

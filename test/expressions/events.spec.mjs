@@ -1,13 +1,16 @@
-import { JavaScriptParser, ReactiveScope, Stack } from '@ibyar/expressions';
+import { JavaScriptParser } from '@ibyar/expressions';
 
 const source = `
 
-// foo = x.y.z;
+foo = x.y.z;
 
-// bar = a[b].c;
+bar = a[b].c;
 
 zoo = g['name' + h + j][34 + 'age' + uu].qwe[mmm];
 
+zoo = g['name' + h + j]
+
+foo[bar[x + y] + z]
 `;
 
 
@@ -17,19 +20,4 @@ const ast = JavaScriptParser.parse(source);
 
 const events = ast.events();
 
-console.log(events);
-
-// const GlobalContext = {
-// 	console,
-// };
-
-// const stack = Stack.for(GlobalContext);
-// const reactiveScope = ReactiveScope.functionScopeFor({
-
-// });
-// reactiveScope.subscribe((p, o, n) => console.log('update', { p, o, n }));
-// stack.pushScope(reactiveScope);
-// // execute the code
-// ast.get(stack);
-
-
+console.log(JSON.stringify(events));

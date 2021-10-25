@@ -21,7 +21,7 @@ function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: Expr
 		// }
 		lastMap = lastMap[scopeName] = {};
 		if (node.computed) {
-			initPathExpressionEventMap(rootEventMap, node.computedPath);
+			node.computedPath.forEach(path => initPathExpressionEventMap(rootEventMap, path));
 		}
 	}
 }
