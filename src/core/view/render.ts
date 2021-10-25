@@ -19,6 +19,7 @@ import {
 } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 import { ElementReactiveScope } from '../directive/providers.js';
+import { findScopeMap } from './events.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -323,8 +324,10 @@ export class ComponentRender<T> {
 		callback();
 	}
 	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
-		node.events().forEach(eventName => {
-			const context = contextStack.findScope(eventName)?.getContext();
+		const events = node.events();
+		const scopeMap = findScopeMap(events, contextStack);
+		scopeMap.forEach((scope, eventName) => {
+			const context = scope.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
@@ -333,7 +336,7 @@ export class ComponentRender<T> {
 						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
 					}
 					const pipeContext: { [key: string]: Function; } = {};
-					pipeContext[eventName] = pipe.transform.bind(pipe);
+					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe1way(context, eventName, callback, object, attrName);
@@ -348,8 +351,10 @@ export class ComponentRender<T> {
 		const callback2 = () => {
 			attr.callbackExpression.get(contextStack);
 		};
-		attr.expression.events().forEach(eventName => {
-			const context = contextStack.findScope(eventName)?.getContext();
+		const events = attr.expression.events();
+		const scopeMap = findScopeMap(events, contextStack);
+		scopeMap.forEach((scope, eventName) => {
+			const context = scope.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
