@@ -1,4 +1,4 @@
-import { ExpressionNode, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap, ExpressionNode, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
@@ -320,12 +320,13 @@ export class ComponentRender<T> {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
-		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name);
+		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name, attr.expressionEvent);
 		callback();
 	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
-		const events = node.events();
+	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
+		events ??= node.events();
 		const scopeMap = findScopeMap(events, contextStack);
+		console.log('bind1Way', node.toString(), scopeMap);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
@@ -351,8 +352,8 @@ export class ComponentRender<T> {
 		const callback2 = () => {
 			attr.callbackExpression.get(contextStack);
 		};
-		const events = attr.expression.events();
-		const scopeMap = findScopeMap(events, contextStack);
+		const scopeMap = findScopeMap(attr.expressionEvent, contextStack);
+		console.log('bind2Way', attr.expression.toString(), scopeMap);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
