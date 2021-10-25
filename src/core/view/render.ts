@@ -358,7 +358,7 @@ export class ComponentRender<T> {
 						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
 					}
 					const pipeContext: { [key: string]: Function } = {};
-					pipeContext[eventName] = pipe.transform.bind(pipe);
+					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);

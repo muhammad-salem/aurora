@@ -36,7 +36,7 @@ export class PipeProvider extends ReadOnlyScope<Map<string, Function>> {
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		if (pipeRef !== undefined && !pipeRef.asynchronous) {
 			const pipe = new pipeRef.modelClass();
-			transformFunc = pipe.transform.bind(pipe);
+			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 			this.context.set(pipeRef.name, transformFunc);
 			return transformFunc;
 		}
