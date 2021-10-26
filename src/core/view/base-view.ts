@@ -92,7 +92,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._proxyModel.doCheck();
+				this._model.doCheck.call(this._proxyModel);
 			}
 		};
 
@@ -210,7 +210,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 				this._model.emitChangeModel(inputRef.modelProperty);
 			}
 			if (isOnChanges(this._model)) {
-				this._proxyModel.onChanges();
+				this._model.onChanges.call(this._proxyModel);
 			}
 			this.doBlockCallback();
 		}
@@ -237,19 +237,19 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isOnChanges(this._model)) {
-				this._proxyModel.onChanges();
+				this._model.onChanges.call(this._proxyModel);
 			}
 			if (isOnInit(this._model)) {
-				this._proxyModel.onInit();
+				this._model.onInit.call(this._proxyModel);
 			}
 			if (isDoCheck(this._model)) {
-				this._proxyModel.doCheck();
+				this._model.doCheck.call(this._proxyModel);
 			}
 			if (isAfterContentInit(this._model)) {
-				this._proxyModel.afterContentInit();
+				this._model.afterContentInit.call(this._proxyModel);
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._proxyModel.afterContentChecked();
+				this._model.afterContentChecked.call(this._proxyModel);
 			}
 
 			// if (!this.hasParentComponent()) {
@@ -268,20 +268,20 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._proxyModel.afterViewInit();
+				this._model.afterViewInit.call(this._proxyModel);
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._proxyModel.afterViewChecked();
+				this._model.afterViewChecked.call(this._proxyModel);
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._proxyModel.doCheck();
+					this._model.doCheck.call(this._proxyModel);
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._proxyModel.afterContentChecked();
+					this._model.afterContentChecked.call(this._proxyModel);
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._proxyModel.afterViewChecked();
+					this._model.afterViewChecked.call(this._proxyModel);
 				}
 				this.emitRootChanges();
 			};
@@ -359,7 +359,7 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			// notify first, then call model.onDestroy func
 			// this._changeObservable.emit('destroy');
 			if (isOnDestroy(this._model)) {
-				this._proxyModel.onDestroy();
+				this._model.onDestroy.call(this._proxyModel);
 			}
 			this.emitChanges('destroy');
 		}

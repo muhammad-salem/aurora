@@ -110,14 +110,14 @@ export class ComponentRender<T> {
 			if ('window' === eventSource.toLowerCase()) {
 				source = window;
 				this.addNativeEventListener(source, eventName, (event: any) => {
-					this.view._proxyModel[listener.modelCallbackName](event);
+					(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 				});
 				return;
 			} else if (eventSource in this.view) {
 				source = Reflect.get(this.view, eventSource);
 				if (!Reflect.has(source, '_model')) {
 					this.addNativeEventListener(source, eventName, (event: any) => {
-						this.view._proxyModel[listener.modelCallbackName](event);
+						(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 					});
 					return;
 				}
@@ -131,12 +131,12 @@ export class ComponentRender<T> {
 		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
 		if (output) {
 			sourceModel[output.modelProperty].subscribe((value: any) => {
-				this.view._proxyModel[listener.modelCallbackName](value);
+				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, value);
 			});
 		}
 		else if (Reflect.has(source, 'on' + eventName)) {
 			this.addNativeEventListener(source, eventName, (event: any) => {
-				this.view._proxyModel[listener.modelCallbackName](event);
+				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 			});
 		}
 		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
@@ -145,7 +145,7 @@ export class ComponentRender<T> {
 		else {
 			// listen to internal changes
 			// TODO: need to resolve parameter
-			addChangeListener(sourceModel, eventName, () => this.view._proxyModel[listener.modelCallbackName]());
+			addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
 		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
