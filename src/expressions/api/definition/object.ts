@@ -95,7 +95,7 @@ export class ObjectExpression extends AbstractExpressionNode {
 		return newObject;
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		return [this];
+		return this.properties.flatMap(property => property.dependency(computed));
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.properties.flatMap(property => property.dependencyPath(computed));
@@ -150,7 +150,7 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 		return restObject;
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		return [this];
+		return this.properties.flatMap(property => property.dependency(computed));
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.properties.flatMap(property => property.dependencyPath(computed));
