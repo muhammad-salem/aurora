@@ -1,6 +1,6 @@
 import type { Scope } from './scope.js';
 
-class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
+export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
 	constructor(private thisContext: any) { }
 	apply(targetFunc: T, thisArg: any, argArray: any[]): any {
 		return targetFunc.apply(this.thisContext, argArray);
