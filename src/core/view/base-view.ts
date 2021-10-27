@@ -73,11 +73,11 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			});
 			let source: any[] | undefined;
 			this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
-				console.log('event name', modelProperty);
+				// console.log('event name', modelProperty);
 				if (oldValue == newValue) {
 					return;
 				}
-				console.log('emit model', modelProperty, oldValue, newValue);
+				// console.log('emit model', modelProperty, oldValue, newValue);
 				if (source) {
 					if (!source.includes(modelProperty)) {
 						source.push(modelProperty);

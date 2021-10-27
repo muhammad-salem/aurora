@@ -165,7 +165,12 @@ export class ComponentRender<T> {
 				structural.onInit();
 			}
 			if (isOnDestroy(structural)) {
-				this.view._model.subscribeModel('destroy', () => structural.onDestroy());
+				this.view._model.subscribeModel('destroy', () => {
+					if (isModel(structural)) {
+						structural.emitChangeModel('destroy');
+					}
+					structural.onDestroy();
+				});
 			}
 		} else {
 			// didn't find directive or it is not define yet.
@@ -326,7 +331,6 @@ export class ComponentRender<T> {
 	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
 		events ??= node.events();
 		const scopeMap = findScopeMap(events, contextStack);
-		console.log('bind1Way', node.toString(), scopeMap);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
@@ -334,7 +338,12 @@ export class ComponentRender<T> {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe1way(pipe, eventName, callback, object, attrName);
 					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+						this.view._model.subscribeModel('destroy', () => {
+							if (isModel(pipe)) {
+								pipe.emitChangeModel('destroy');
+							}
+							pipe.onDestroy();
+						});
 					}
 					const pipeContext: { [key: string]: Function; } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
@@ -353,7 +362,6 @@ export class ComponentRender<T> {
 			attr.callbackExpression.get(contextStack);
 		};
 		const scopeMap = findScopeMap(attr.expressionEvent, contextStack);
-		console.log('bind2Way', attr.expression.toString(), scopeMap);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
@@ -361,7 +369,12 @@ export class ComponentRender<T> {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
 					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+						this.view._model.subscribeModel('destroy', () => {
+							if (isModel(pipe)) {
+								pipe.emitChangeModel('destroy');
+							}
+							pipe.onDestroy();
+						});
 					}
 					const pipeContext: { [key: string]: Function } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
