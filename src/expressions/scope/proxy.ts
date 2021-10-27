@@ -1,5 +1,12 @@
 import type { Scope } from './scope.js';
 
+class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
+	constructor(private thisContext: any) { }
+	apply(targetFunc: T, thisArg: any, argArray: any[]): any {
+		return targetFunc.apply(this.thisContext, argArray);
+	}
+}
+
 /**
  * crete new proxy handler object as scoped context
  */
@@ -23,6 +30,11 @@ export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
 				this.proxyValueMap.set(proxy, value);
 				return proxy;
 			}
+		} else if (typeof value === 'function') {
+			const proxy = new Proxy(value, new FunctionProxyHandler(this.scope.getContext()));
+			this.proxyMap.set(propertyKey, proxy);
+			this.proxyValueMap.set(proxy, value);
+			return proxy;
 		}
 		return value;
 	}
