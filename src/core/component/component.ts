@@ -2,7 +2,7 @@ import type { TypeOf } from '../utils/typeof.js';
 import type { ExpressionNode } from '@ibyar/expressions';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
-	DOMNode, DOMRenderNode, canAttachShadow
+	DOMNode, DOMRenderNode, canAttachShadow, NodeFactory
 } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
@@ -170,6 +170,12 @@ export class Components {
 		}
 		bootstrap.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
+		if (opts.selector.startsWith('*')) {
+			const structuralDirectiveName = opts.selector.substring(1);
+			if (!NodeFactory.StructuralDirectives.includes(structuralDirectiveName)) {
+				NodeFactory.StructuralDirectives.push(structuralDirectiveName);
+			}
+		}
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {
