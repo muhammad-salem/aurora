@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { createProxyForContext, ReactiveScope } from '@ibyar/expressions';
+import { ReactiveScope } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -59,8 +59,9 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 			this._model = defineModel(model);
 
 			this._viewScope = new ElementReactiveScope(this);
-			this._modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
-			this._proxyModel = createProxyForContext(this._model, this._modelScope);
+			const modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
+			this._proxyModel = modelScope.getContextProxy();
+			this._modelScope = modelScope;
 
 			// if model had view decorator
 			if (this._componentRef.view) {
@@ -77,10 +78,11 @@ export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLEl
 					return;
 				}
 				console.log('emit model', modelProperty, oldValue, newValue);
-				// this.emitChanges(modelProperty as string);
 				if (source) {
-					source.push(modelProperty);
-					this._model.emitChangeModel(modelProperty as string, source);
+					if (!source.includes(modelProperty)) {
+						source.push(modelProperty);
+						this._model.emitChangeModel(modelProperty as string, source);
+					}
 				} else {
 					source = [modelProperty]
 					this._model.emitChangeModel(modelProperty as string, source);
