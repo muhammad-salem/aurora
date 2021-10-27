@@ -4,7 +4,7 @@ import { Person, PersonModel } from './person';
 @Component({
 	selector: 'person-app',
 	template: `
-		<div>
+		<div *add-note>
 			{{appVersion}}
 			{{appName}}
 		</div>

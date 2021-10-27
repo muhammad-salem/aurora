@@ -3,6 +3,7 @@ import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 import '@popperjs/core';
+export * from './directive/add-note.directive.js';
 export * from './app-root/app-root-component.js';
 
 export * from './person-app/person.js';
