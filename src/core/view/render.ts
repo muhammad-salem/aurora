@@ -404,7 +404,7 @@ export class ComponentRender<T> {
 					this.nativeElementMutation = undefined;
 				});
 			}
-			this.nativeElementMutation.subscribe(element, attr.name, () => {
+			this.nativeElementMutation.subscribeOnAttribute(element, attr.name, () => {
 				if (isModel(element)) {
 					element.emitChangeModel(attr.name);
 				}

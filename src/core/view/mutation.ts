@@ -12,7 +12,7 @@ export class ElementMutation {
 		});
 	});
 
-	subscribe(element: HTMLElement, propName: string, callback: Function) {
+	subscribeOnAttribute(element: HTMLElement, propName: string, callback: Function) {
 		let observable = this.attributeObservables.get(element);
 		observable ?? (observable = this.createObservable(element));
 		observable.subscribe(propName, callback);
