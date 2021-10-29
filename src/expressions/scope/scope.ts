@@ -37,7 +37,7 @@ export interface Scope<T> {
 	/**
 	 * get current context object of this scope
 	 */
-	getContext(): T | undefined;
+	getContext(): T;
 
 	/**
 	 * get a scope for an object named as `propertyKey` from cache map
@@ -94,7 +94,7 @@ export class Scope<T extends object> implements Scope<T> {
 	delete(propertyKey: PropertyKey): boolean {
 		return Reflect.deleteProperty(this.context, propertyKey);
 	}
-	getContext(): T | undefined {
+	getContext(): T {
 		return this.context;
 	}
 	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined {
