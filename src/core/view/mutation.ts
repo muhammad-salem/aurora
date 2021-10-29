@@ -2,33 +2,25 @@ import { Observable } from '../utils/observable.js';
 
 export class ElementMutation {
 
-	observableMap: WeakMap<Node, Observable>;
-	mutationObserver: MutationObserver;
-
-	constructor() {
-		this.observableMap = new WeakMap();
-		this.mutationObserver = new MutationObserver((mutations) => {
-			mutations.forEach((mut) => {
-				if (mut.type === 'attributes') {
-					let observable = this.getObservableOrDefine(mut.target);
-					observable.emit(mut.attributeName as string);
-				}
-			});
+	private attributeObservables: WeakMap<Node, Observable> = new WeakMap();
+	private mutationObserver: MutationObserver = new MutationObserver((mutations) => {
+		mutations.forEach((mut) => {
+			if (mut.type === 'attributes') {
+				const observable = this.attributeObservables.get(mut.target);
+				observable && observable.emit(mut.attributeName as string);
+			}
 		});
-	}
+	});
 
 	subscribe(element: HTMLElement, propName: string, callback: Function) {
-		const observable = this.getObservableOrDefine(element);
+		let observable = this.attributeObservables.get(element);
+		observable ?? (observable = this.createObservable(element));
 		observable.subscribe(propName, callback);
 	}
 
-	private getObservableOrDefine(element: Node): Observable {
-		let observable = this.observableMap.get(element);
-		if (observable) {
-			return observable;
-		}
-		observable = new Observable();
-		this.observableMap.set(element, observable);
+	private createObservable(element: Node): Observable {
+		const observable = new Observable();
+		this.attributeObservables.set(element, observable);
 		this.mutationObserver.observe(element, {
 			attributes: true,
 			childList: false,
