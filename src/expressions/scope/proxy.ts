@@ -1,8 +1,8 @@
 import type { Scope } from './scope.js';
 
 export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
-	constructor(private thisContext: any) { }
-	apply(targetFunc: T, thisArg: any, argArray: any[]): any {
+	constructor(private thisContext: object) { }
+	apply(targetFunc: T, ignoreThisArg: any, argArray: any[]): any {
 		return targetFunc.apply(this.thisContext, argArray);
 	}
 }
@@ -13,6 +13,7 @@ export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T>
 export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
 	private proxyMap = new Map<PropertyKey, T>();
 	private proxyValueMap = new WeakMap<object, object>();
+	private functionHandler: FunctionProxyHandler<Function>;
 	constructor(private scope: Scope<T>) { }
 	has(model: T, propertyKey: PropertyKey): boolean {
 		return this.scope.has(propertyKey);
@@ -31,7 +32,9 @@ export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
 				return proxy;
 			}
 		} else if (typeof value === 'function') {
-			const proxy = new Proxy(value, new FunctionProxyHandler(this.scope.getContext()));
+			const proxy = new Proxy(value, this.functionHandler
+				?? (this.functionHandler = new FunctionProxyHandler(this.scope.getContext()))
+			);
 			this.proxyMap.set(propertyKey, proxy);
 			this.proxyValueMap.set(proxy, value);
 			return proxy;
