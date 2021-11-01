@@ -160,7 +160,7 @@ export class ComponentRender<T> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack, parentNode: Node): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -169,10 +169,7 @@ export class ComponentRender<T> {
 				structural.onInit();
 			}
 			if (isOnDestroy(structural)) {
-				this.view._model.subscribeModel('destroy', () => {
-					if (isModel(structural)) {
-						structural.emitChangeModel('destroy');
-					}
+				this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
 					structural.onDestroy();
 				});
 			}
@@ -207,7 +204,7 @@ export class ComponentRender<T> {
 			parent.append(comment);
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
-			this.createDirective(child, comment, contextStack);
+			this.createDirective(child, comment, contextStack, parent);
 		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof TextContent) {

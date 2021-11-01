@@ -141,6 +141,7 @@ export class ElementMutation {
 		if (!observable) {
 			observable = new MutationObservable();
 			this.observables.set(target, observable);
+			this.mutationObserver.observe(target, ElementMutation.Mutation_OPTIONS);
 		}
 		return observable.subscribe(attributeName, callback);
 	}
@@ -150,6 +151,7 @@ export class ElementMutation {
 		if (!observable) {
 			observable = new MutationObservable();
 			this.observables.set(target, observable);
+			this.mutationObserver.observe(target, ElementMutation.Mutation_OPTIONS);
 		}
 		return observable.subscribeOnRemoveNode(node, callback);
 	}
