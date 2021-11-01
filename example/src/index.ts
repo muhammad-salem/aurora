@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 import '@popperjs/core';
 export * from './directive/add-note.directive.js';
+export * from './directive/red-note.directive.js';
 export * from './app-root/app-root-component.js';
 
 export * from './person-app/person.js';
@@ -15,6 +16,7 @@ export * from './video-player/video.js';
 
 import { AppRoot } from './app-root/app-root-component.js';
 import './pipe-app/pipe-test.js';
+import { from } from 'rxjs';
 
 const appRoot = document.getElementById('app-root') as HTMLComponent<AppRoot> & AppRoot;
 

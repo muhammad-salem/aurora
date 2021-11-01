@@ -10,6 +10,8 @@ import { Person, PersonModel } from './person';
 		</div>
 
 		<h1 [textContent]="title"></h1>
+		
+		<red-note>text child in directive</red-note>
 
 		<div class="row">
 			<div class="col-4">
