@@ -381,6 +381,12 @@ export class NodeParser {
 					return directive;
 				}
 			}
+		} else if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
+			// support structural directives without expression property
+			// <add-note >text</add-note>
+			const directive = new DOMDirectiveNode('*' + node.tagName, '');
+			directive.children = node.children;
+			return directive;
 		}
 		return node;
 	}
