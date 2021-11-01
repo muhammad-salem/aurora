@@ -1,9 +1,15 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 
+/**
+ * ```js
+ * const x = {method: function(){...}};
+ * const z = x::method;
+ * ```
+ */
 @Deserializer('BindExpression')
 export class BindExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: BindExpression, deserializer: NodeDeserializer): BindExpression {
@@ -58,15 +64,11 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	events(parent?: string): string[] {
-		if (this.computed) {
-			parent ??= '';
-			parent = `${parent}${this.object.events(parent)}`;
-			return [parent, `${parent}[${this.property.toString()}]`];
-		}
-		parent ||= '';
-		parent += this.object.toString() + '.';
-		return [...this.object.events(), ...this.property.events(parent)];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.object.dependency(computed).concat(this.property.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.object.dependencyPath(computed).concat(this.property.dependencyPath(computed));
 	}
 	toString() {
 		if (this.computed) {

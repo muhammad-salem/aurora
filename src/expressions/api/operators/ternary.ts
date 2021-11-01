@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -36,8 +36,19 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.test.get(stack) ? this.consequent.get(stack) : this.alternate.get(stack);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed)
+			.concat(
+				this.alternate.dependency(computed),
+				this.consequent.dependency(computed)
+			);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed)
+			.concat(
+				this.alternate.dependencyPath(computed),
+				this.consequent.dependencyPath(computed)
+			);
 	}
 	toString() {
 		return `${this.test.toString()} ? (${this.alternate.toString()}):(${this.consequent.toString()})`;

@@ -1,10 +1,19 @@
 import type { Scope } from './scope.js';
 
+export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
+	constructor(private thisContext: object) { }
+	apply(targetFunc: T, ignoreThisArg: any, argArray: any[]): any {
+		return targetFunc.apply(this.thisContext, argArray);
+	}
+}
+
 /**
  * crete new proxy handler object as scoped context
  */
 export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
 	private proxyMap = new Map<PropertyKey, T>();
+	private proxyValueMap = new WeakMap<object, object>();
+	private functionHandler: FunctionProxyHandler<Function>;
 	constructor(private scope: Scope<T>) { }
 	has(model: T, propertyKey: PropertyKey): boolean {
 		return this.scope.has(propertyKey);
@@ -19,12 +28,23 @@ export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
 			if (scope) {
 				const proxy = new Proxy(value, new ScopeProxyHandler(scope));
 				this.proxyMap.set(propertyKey, proxy);
+				this.proxyValueMap.set(proxy, value);
 				return proxy;
 			}
+		} else if (typeof value === 'function') {
+			const proxy = new Proxy(value, this.functionHandler
+				?? (this.functionHandler = new FunctionProxyHandler(this.scope.getContext()))
+			);
+			this.proxyMap.set(propertyKey, proxy);
+			this.proxyValueMap.set(proxy, value);
+			return proxy;
 		}
 		return value;
 	}
 	set(model: T, propertyKey: PropertyKey, value: any, receiver: any): boolean {
+		if (this.proxyValueMap.has(value)) {
+			value = this.proxyValueMap.get(value);
+		}
 		return this.scope.set(propertyKey, value);
 	}
 	deleteProperty(model: T, propertyKey: string | symbol): boolean {

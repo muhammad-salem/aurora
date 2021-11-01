@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -28,8 +28,11 @@ export class ThrowStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	events(parent?: string): string[] {
-		return this.argument.events();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
 		return `throw ${this.argument.toString()}`;
@@ -64,11 +67,13 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.dependency();
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.body.dependencyPath(computed);
 	}
 	toString(): string {
-		// return `catch ${this.catchVar ? `(${this.catchVar.toString()})`;
 		return `catch (${this.param?.toString() || ''}) ${this.body.toString()}`;
 	}
 	toJson(key?: string): { [key: string]: any; } {
@@ -153,8 +158,17 @@ export class TryCatchNode extends AbstractExpressionNode {
 		}
 		stack.clearTill(scope);
 	}
-	events(parent?: string): string[] {
-		return this.block.events().concat(this.handler?.events() || []).concat(this.finalizer?.events() || []);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.block.dependency()
+			.concat(this.handler?.dependency() || [])
+			.concat(this.finalizer?.dependency() || []);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.block.dependencyPath(computed)
+			.concat(
+				this.handler?.dependencyPath(computed) || [],
+				this.finalizer?.dependencyPath(computed) || []
+			);
 	}
 	toString(): string {
 		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;

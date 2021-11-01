@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -26,8 +26,11 @@ export class ArrayExpression extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
 	}
-	events(parent?: string): string[] {
-		return this.elements.flatMap(item => item.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();
@@ -99,8 +102,11 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 			}
 		}
 	}
-	events(parent?: string): string[] {
-		return this.elements.flatMap(item => item.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();

@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope
+	NodeDeserializer, CanFindScope, ExpressionEventPath
 } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -49,11 +49,12 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
 		return stack.declareVariable(scopeType, this.name, propertyValue);
 	}
-	events(parent?: string): string[] {
-		if (parent) {
-			return [parent + this.toString()];
-		}
-		return [this.toString()];
+	dependency(computed?: true): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		const path: ExpressionEventPath[] = [{ computed: false, path: this.toString() }];
+		return computed ? [{ computed, path: this.toString(), computedPath: [path] }] : path;
 	}
 	toString(): string {
 		return String(this.name);
@@ -91,13 +92,16 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
 	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
 		if (scope) {
-			return scope.getScope(this.value as any);
+			return scope.getScope<V>(this.value as any);
 		}
-		scope = stack.findScope(this.value as any);
-		return scope.getScope(this.value as any);
+		scope = stack.findScope<V>(this.value as any);
+		return scope.getScope<V>(this.value as any);
 	}
-	events(): string[] {
-		return [];
+	dependency(computed: true): ExpressionNode[] {
+		return computed ? [this] : [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return computed ? [{ computed: false, path: this.toString() }] : [];
 	}
 	toString(): string {
 		return String(this.value);
@@ -173,8 +177,11 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		const values = this.expressions.map(expr => expr.get(stack));
 		return tagged(templateStringsArray, ...values);
 	}
-	events(): string[] {
-		return this.expressions.flatMap(expr => expr.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.expressions.flatMap(exp => exp.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.expressions.flatMap(exp => exp.dependencyPath(computed));
 	}
 	toString(): string {
 		let str = this.tag?.toString() || '';

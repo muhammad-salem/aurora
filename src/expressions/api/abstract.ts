@@ -2,10 +2,29 @@ import type { Scope, ScopeType } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode,
-	NodeExpressionClass, NodeJsonType,
-	CanDeclareExpression
+	NodeExpressionClass, NodeJsonType, CanDeclareExpression, ExpressionEventMap, ExpressionEventPath
 } from './expression.js';
 
+function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
+	let lastMap = rootEventMap;
+	// let index = 0;
+	for (const node of path) {
+		const scopeName = node.path;
+		let eventMap = lastMap[scopeName];
+		if (eventMap) {
+			lastMap = eventMap;
+			continue;
+		}
+		// if ((index++) === path.length - 1) {
+		// 	lastMap[scopeName] = undefined;
+		// 	continue;
+		// }
+		lastMap = lastMap[scopeName] = {};
+		if (node.computed) {
+			node.computedPath.forEach(path => initPathExpressionEventMap(rootEventMap, path));
+		}
+	}
+}
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
@@ -18,10 +37,20 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		json.type = Reflect.get(this.constructor, 'type');
 		return json;
 	}
+	events(): ExpressionEventMap {
+		const dependencyNodes = this.dependency();
+		const eventMap: ExpressionEventMap = {};
+		for (const node of dependencyNodes) {
+			const dependencyPath = node.dependencyPath();
+			initPathExpressionEventMap(eventMap, dependencyPath);
+		}
+		return eventMap;
+	}
 	abstract shareVariables(scopeList: Scope<any>[]): void;
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
-	abstract events(parent?: string): string[];
+	abstract dependency(computed?: true): ExpressionNode[];
+	abstract dependencyPath(computed?: true): ExpressionEventPath[];
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
@@ -46,8 +75,11 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);
 	}
 	abstract get(stack: Stack): any;
-	events(parent?: string): string[] {
-		return [...this.left.events(), ...this.right.events()];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.left.dependency(computed).concat(this.right.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.left.dependencyPath(computed).concat(this.right.dependencyPath(computed));
 	}
 	toString() {
 		return `${this.left.toString()} ${this.operator} ${this.right.toString()}`;

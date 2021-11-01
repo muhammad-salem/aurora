@@ -985,9 +985,9 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			const value = this.parseAssignmentExpression();
-			initializer = new Param(pattern, value);
+			initializer = new Param(pattern as CanDeclareExpression, value);
 		} else {
-			initializer = new Param(pattern);
+			initializer = new Param(pattern as CanDeclareExpression);
 		}
 		return initializer;
 	}
@@ -1063,12 +1063,12 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected toParamNode(expression: ExpressionNode): Param {
 		if (expression instanceof AssignmentExpression) {
-			return new Param(expression.getLeft(), expression.getRight());
+			return new Param(expression.getLeft() as CanDeclareExpression, expression.getRight());
 		}
 		if (expression instanceof GroupingExpression) {
-			return new Param(expression.getNode());
+			return new Param(expression.getNode() as CanDeclareExpression);
 		}
-		return new Param(expression);
+		return new Param(expression as CanDeclareExpression);
 	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
@@ -1287,11 +1287,11 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
 			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions().map(expr => new Param(expr));
+				const params = expression.getExpressions().map(expr => new Param(expr as CanDeclareExpression));
 				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode())], ArrowFunctionType.NORMAL);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as CanDeclareExpression)], ArrowFunctionType.NORMAL);
 			}
 			return this.parseArrowFunctionLiteral([new Param(expression)], ArrowFunctionType.NORMAL);
 		}

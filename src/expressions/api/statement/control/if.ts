@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -53,8 +53,18 @@ export class IfStatement extends AbstractExpressionNode {
 		}
 		return void 0;
 	}
-	events(parent?: string): string[] {
-		return this.test.events().concat(this.consequent.events()).concat(this.alternate?.events() || []);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed)
+			.concat(
+				this.consequent.dependency(computed),
+				this.alternate?.dependency(computed) || []
+			);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(
+			this.consequent.dependencyPath(computed),
+			this.alternate?.dependencyPath(computed) || []
+		);
 	}
 	toString(): string {
 		return `if (${this.test.toString()}) ${this.consequent.toString()}${this.alternate ? ' else ' : ''}${this.alternate ? this.alternate.toString() : ''}`;

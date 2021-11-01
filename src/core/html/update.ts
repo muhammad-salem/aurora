@@ -1,8 +1,8 @@
 import { ExpressionNode, InfixExpressionNode, Stack } from '@ibyar/expressions';
 
-export class NodeAssignmentExpression extends InfixExpressionNode<':=:'> {
+export class NodeAssignmentExpression extends InfixExpressionNode<':='> {
 	constructor(left: ExpressionNode, right: ExpressionNode) {
-		super(':=:', left, right);
+		super(':=', left, right);
 	}
 	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);

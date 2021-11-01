@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -82,12 +82,21 @@ export class PipelineExpression extends AbstractExpressionNode {
 		}
 		return funCallBack(...parameters);
 	}
-	events(parent?: string): string[] {
-		return [
-			...this.right.events(),
-			...this.left.events(),
-			...(this.arguments.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[]).flatMap(param => param.events!())
-		];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.right.dependency(computed)
+			.concat(
+				this.left.dependency(computed),
+				(this.arguments.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[])
+					.flatMap(param => param.dependency!(computed))
+			);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.right.dependencyPath(computed)
+			.concat(
+				this.left.dependencyPath(computed),
+				(this.arguments.filter(arg => (arg !== '?' && arg !== '...?')) as ExpressionNode[])
+					.flatMap(param => param.dependencyPath!(computed))
+			);
 	}
 	toString() {
 		return `${this.left.toString()} |> ${this.right.toString()}${this.arguments.flatMap(arg => `:${arg.toString()}`).join('')}`;

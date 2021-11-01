@@ -1,5 +1,5 @@
 
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -35,8 +35,11 @@ export class SwitchCase extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return this.consequent.get(stack);
 	}
-	events(parent?: string): string[] {
-		return this.test.events();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed).concat(this.consequent.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(this.consequent.dependencyPath(computed));
 	}
 	toString(): string {
 		return `case ${this.test.toString()}: ${this.consequent.toString()};`;
@@ -58,6 +61,12 @@ export class DefaultExpression extends SwitchCase {
 	}
 	constructor(block: ExpressionNode) {
 		super(DefaultExpression.DefaultNode, block);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return this.consequent.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.consequent.dependencyPath(computed);
 	}
 	toString(): string {
 		return `default: ${this.consequent.toString()};`;
@@ -122,13 +131,11 @@ export class SwitchStatement extends AbstractExpressionNode {
 		stack.clearTo(caseBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
-		return [
-			...this.discriminant.events(),
-			...this.cases
-				.filter(c => c.getTest() !== DefaultExpression.DefaultNode)
-				.flatMap(c => c.getTest().events())
-		];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.discriminant.dependency(computed).concat(this.cases.flatMap(expCase => expCase.dependency(computed)));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.discriminant.dependencyPath(computed).concat(this.cases.flatMap(expCase => expCase.dependencyPath(computed)));
 	}
 	toString(): string {
 		return `switch (${this.discriminant.toString()}) {${this.cases.map(item => item.toString())}`;

@@ -1,6 +1,9 @@
+import type {
+	CanDeclareExpression, ExpressionEventPath,
+	ExpressionNode, NodeDeserializer
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
-import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
@@ -48,7 +51,7 @@ export class MetaProperty extends MemberExpression {
 	toString(): string {
 		return `${this.meta.toString()}.${this.property.toString()}`;
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			meta: this.meta.toJSON(),
 			property: this.property.toJSON(),
@@ -73,7 +76,7 @@ export class PrivateIdentifier extends Identifier {
 	toString(): string {
 		return `#${this.privateName}`;
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			name: this.privateName
 		};
@@ -132,13 +135,16 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			kind: this.kind,
 			key: this.key,
@@ -195,13 +201,16 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			key: this.key.toJSON(),
 			computed: this.computed,
@@ -231,13 +240,16 @@ export class ClassBody extends AbstractExpressionNode {
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			body: this.body.map(method => method.toJSON())
 		};
@@ -267,8 +279,11 @@ export class Class extends AbstractExpressionNode {
 	get(stack: Stack) {
 		throw new Error(`Class.#get() has no implementation.`);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		throw new Error('Method not implemented.');
 	}
 	toString() {
 		let classDeclaration = 'class ';

@@ -1,7 +1,10 @@
-import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { CanDeclareExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
-import { AbstractExpressionNode, AwaitPromise, ReturnValue, YieldDelegateValue, YieldValue } from '../abstract.js';
+import {
+	AbstractExpressionNode, AwaitPromise, ReturnValue,
+	YieldDelegateValue, YieldValue
+} from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
 import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
@@ -36,11 +39,11 @@ export enum ArrowFunctionType {
 export class Param extends AbstractExpressionNode {
 	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
 		return new Param(
-			deserializer(node.identifier),
+			deserializer(node.identifier) as CanDeclareExpression,
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
-	constructor(private identifier: ExpressionNode, private defaultValue?: ExpressionNode) {
+	constructor(private identifier: CanDeclareExpression, private defaultValue?: ExpressionNode) {
 		super();
 	}
 	getIdentifier() {
@@ -53,13 +56,16 @@ export class Param extends AbstractExpressionNode {
 		this.defaultValue?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: Function) {
-		this.identifier.set(stack, value || this.defaultValue?.get(stack));
+		this.identifier.declareVariable?.(stack, 'function', value);
 	}
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
 	}
-	events(): string[] {
-		return this.identifier.events().concat(this.defaultValue?.events() || []);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.defaultValue ? [this.defaultValue] : [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.defaultValue?.dependencyPath(computed) || [];
 	}
 	toString(): string {
 		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
@@ -285,10 +291,11 @@ export class FunctionExpression extends FunctionBaseExpression {
 		this.id?.declareVariable(stack, 'block', func);
 		return func;
 	}
-	events(): string[] {
-		return [
-			...this.params.flatMap(param => param.events()),
-		];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.params.flatMap(param => param.dependency());
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
 		let declare: string;
@@ -459,10 +466,11 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 		}
 		return func;
 	}
-	events(): string[] {
-		return [
-			...this.params.flatMap(param => param.events()),
-		];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.params.flatMap(param => param.dependency());
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
 		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';

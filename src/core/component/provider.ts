@@ -1,4 +1,4 @@
-import { ReactiveScope, ScopeType } from '@ibyar/expressions';
+import { createProxyForContext, FunctionProxyHandler, ReactiveScope, ScopeType } from '@ibyar/expressions';
 
 
 export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> extends ReactiveScope<T> {
@@ -20,10 +20,20 @@ export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> ex
 	static globalScopeFor<T extends object>(context: T) {
 		return new ElementModelReactiveScope(context, 'global');
 	}
+	private functionProxyMap = new Map<PropertyKey, Function>();
+	private contextProxy = createProxyForContext(this.context, this);
+	getContextProxy() {
+		return this.contextProxy;
+	}
 	get(propertyKey: PropertyKey): any {
-		let value = Reflect.get(this.context, propertyKey);
+		if (this.functionProxyMap.has(propertyKey)) {
+			return this.functionProxyMap.get(propertyKey);
+		}
+		const value = Reflect.get(this.context, propertyKey);
 		if (typeof value === 'function') {
-			value = (value as Function).bind(this.context);
+			const proxy = new Proxy<Function>(value, new FunctionProxyHandler<Function>(this.contextProxy));
+			this.functionProxyMap.set(propertyKey, proxy);
+			return proxy;
 		}
 		return value;
 	}

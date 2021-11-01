@@ -1,3 +1,4 @@
+import type { ExpressionEventPath, ExpressionNode } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -27,7 +28,10 @@ export class EmptyStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString(): string {

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -56,8 +56,11 @@ export class WhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
-		return this.test.events();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.test.dependency(computed).concat(this.body.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.test.dependencyPath(computed).concat(this.body.dependencyPath(computed));
 	}
 	toString(): string {
 		return `while (${this.test.toString()}) ${this.body.toString()}`;
@@ -114,8 +117,11 @@ export class DoWhileNode extends AbstractExpressionNode {
 		stack.clearTo(whileBlock);
 		return void 0;
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.dependency(computed).concat(this.test.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.body.dependencyPath(computed).concat(this.test.dependencyPath(computed));
 	}
 	toString(): string {
 		return `do {${this.body.toString()}} while (${this.test.toString()})`;

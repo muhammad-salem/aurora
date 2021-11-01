@@ -4,6 +4,11 @@ import type { Stack } from '../scope/stack.js';
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
+export type ExpressionEventPathDotNotation = { computed: false, path: string };
+export type ExpressionEventPathBracketNotation = { computed: true, path: string, computedPath: ExpressionEventPath[][] };
+export type ExpressionEventPath = ExpressionEventPathDotNotation | ExpressionEventPathBracketNotation;
+export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
+
 export interface ExpressionNode {
 
 	/**
@@ -44,10 +49,76 @@ export interface ExpressionNode {
 	get(stack: Stack, thisContext?: any): any;
 
 	/**
+	 * get all dependencies form an expression node
+	 *
+	 * tha return from this method, is represent an answer for what identifiers this expression depends-on.
+	 * 
+	 *
+	 * ex:
+	 * ```js
+	 * x + y;
+	 * ```
+	 *
+	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
+	 * - for `x` identifier:	the answer should be node `x`,
+	 * - for `y` identifier:	the answer should be node `y`.
+	 *
+	 * so, the return from `+` will be `[ node 'x', node 'y']`
+	 *
+	 * and:
+	 * - `x.y.z * a` ==> `[ member node `x.y.z`, identifier 'a']`
+	 * @param computed
+	 */
+	dependency(computed?: true): ExpressionNode[];
+
+	/**
+	 * ex:
+	 * ```js
+	 * x + y;
+	 * ```
+	 *
+	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
+	 * - for `x` identifier:	the answer should be node `x`,
+	 * - for `y` identifier:	the answer should be node `y`.
+	 *
+	 * so, the return from `+` will be `['x', 'y']`
+	 *
+	 * and:
+	 * - `x.y.z` ==> `['x', 'y', 'z']`
+	 * - `x[y].z` ==> ['x', ]
+	 * @param computed required for member and chaining operators
+	 */
+	dependencyPath(computed?: true): ExpressionEventPath[];
+
+	/**
 	 * get all the events form this expression
+	 * 
+	 * tha return from this method, is represent an answer for what is this expression depends-on as identifier name
+	 * 
+	 * ex: 
+	 * ```js
+	 * x + y;
+	 * ```
+	 * 
+	 * - for `+` operator :	the answer should be `lhs` and `rhs`,
+	 * - for `x` identifier: the answer should be `x`
+	 * - for `y` identifier: the answer should be `y`
+	 * the final output will be 
+	 * 
+	 * so, the return from `+` will be `{ x: undefined, y: undefined }`
+	 * 
+	 * and:
+	 * - `x.y.z * a` ==> `{ x: { y: { z: undefined }, a: undefined } }`
+	 * - `x.y.z > x.y.h.g` ==> `{ x: { y: { z: undefined, h: { g: undefined} } } }`
+	 * - `x[Symbol.toStringTag] + 'Class' + classType + array[3]` ==> `{ x: { 'Symbol.toStringTag': undefined }, classType: undefined,  array: { 3: undefined }  }`
+	 * - `'name'` ==> {}
+	 * - ```js
+	 * user[firstName + `son of ${fatherName}`]
+	 * ``` ==> `{ user: { 'firstName:fatherName': undefined }, firstName: undefined, fatherName: undefined }`
 	 * @param parent 
 	 */
-	events(parent?: string): string[];
+	events(): ExpressionEventMap;
+
 
 	/**
 	 * re-write this expression as a javascript source 
@@ -58,11 +129,12 @@ export interface ExpressionNode {
 	 * used to map this object to represent an [ESTree](https://github.com/estree/estree) json object
 	 * @param key 
 	 */
-	toJSON(key?: string): NodeJsonType;
+	toJSON(): NodeJsonType;
 
 	/**
 	 * just a helper method to force class that implement this interface to
 	 * have a static method `fromJSON` to help reconstruct this ExpressionNode
+	 * from an [ESTree](https://github.com/estree/estree) json object,
 	 * with all necessary implementation to execute the code
 	 */
 	getClass(): NodeExpressionClass<ExpressionNode>;
@@ -80,6 +152,12 @@ export type NodeDeserializer<T = ExpressionNode> = (node: T) => T;
  * in the interface add getClass method
  */
 export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
+
+	/**
+	 * build expression node from [ESTree](https://github.com/estree/estree) json object
+	 * @param node 
+	 * @param deserializer 
+	 */
 	fromJSON(node: T, deserializer: NodeDeserializer): T;
 }
 
