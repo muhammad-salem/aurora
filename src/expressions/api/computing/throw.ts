@@ -1,4 +1,5 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -18,14 +19,20 @@ export class ThrowStatement extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.argument.shareVariables(scopeList);
+	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ThrowStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		throw this.argument.get(stack);
 	}
-	events(parent?: string): string[] {
-		return this.argument.events();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
 		return `throw ${this.argument.toString()}`;
@@ -53,17 +60,20 @@ export class CatchClauseNode extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, error: any) {
 		this.param?.set(stack, error);
 	}
 	get(stack: Stack, thisContext?: any) {
 		return this.body.get(stack);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.dependency();
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.body.dependencyPath(computed);
 	}
 	toString(): string {
-		// return `catch ${this.catchVar ? `(${this.catchVar.toString()})`;
 		return `catch (${this.param?.toString() || ''}) ${this.body.toString()}`;
 	}
 	toJson(key?: string): { [key: string]: any; } {
@@ -96,6 +106,7 @@ export class TryCatchNode extends AbstractExpressionNode {
 	getFinalizer() {
 		return this.finalizer;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`TryCatchNode#set() has no implementation.`);
 	}
@@ -147,8 +158,17 @@ export class TryCatchNode extends AbstractExpressionNode {
 		}
 		stack.clearTill(scope);
 	}
-	events(parent?: string): string[] {
-		return this.block.events().concat(this.handler?.events() || []).concat(this.finalizer?.events() || []);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.block.dependency()
+			.concat(this.handler?.dependency() || [])
+			.concat(this.finalizer?.dependency() || []);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.block.dependencyPath(computed)
+			.concat(
+				this.handler?.dependencyPath(computed) || [],
+				this.finalizer?.dependencyPath(computed) || []
+			);
 	}
 	toString(): string {
 		return `try ${this.block.toString()} ${this.handler?.toString() || ''} ${this.finalizer ? `finally ${this.finalizer.toString()}` : ''}`;

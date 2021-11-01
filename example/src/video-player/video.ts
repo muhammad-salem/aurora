@@ -21,7 +21,7 @@ export class VideoPlayer implements OnInit {
 	template: `
 	<div class="row">
 		<div class="col-12" *for="let fileName of names">
-			<a href="#" (click)="playVideo(fileName)">{{fileName}}</a>
+			<a href="javascript:void(0);" (click)="allowLoad && playVideo(fileName)">{{fileName}}</a>
 		</div>
 	</div>
 	<video-player *if="file; else noMedia" controls autoplay name="media">
@@ -32,6 +32,8 @@ export class VideoPlayer implements OnInit {
 })
 export class VideoPlayList {
 
+	allowLoad = true;
+
 	names: string[] = [
 		'http://github.com/mediaelement/mediaelement-files/blob/master/big_buck_bunny.mp4?raw=true',
 	];
@@ -40,9 +42,9 @@ export class VideoPlayList {
 	playVideo(fileName: string) {
 		this.file = fileName;
 		console.log(fileName);
-		if (isModel(this)) {
-			this.emitChangeModel('file');
-		}
+		// if (isModel(this)) {
+		// 	this.emitChangeModel('file');
+		// }
 	}
 
 }

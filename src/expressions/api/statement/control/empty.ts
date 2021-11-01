@@ -1,3 +1,5 @@
+import type { ExpressionEventPath, ExpressionNode } from '../../expression.js';
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -19,13 +21,17 @@ export class EmptyStatement extends AbstractExpressionNode {
 	constructor() {
 		super();
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`EmptyStatement#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		return void 0;
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
 	toString(): string {

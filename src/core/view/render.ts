@@ -1,4 +1,4 @@
-import { ExpressionNode, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap, ExpressionNode, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
@@ -19,6 +19,7 @@ import {
 } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 import { ElementReactiveScope } from '../directive/providers.js';
+import { findScopeMap } from './events.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -43,6 +44,10 @@ export class ComponentRender<T> {
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
 		this.contextStack.pushScope(this.view._modelScope);
+		this.nativeElementMutation = new ElementMutation();
+		this.view._model.subscribeModel('destroy', () => {
+			this.nativeElementMutation.disconnect();
+		});
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -109,14 +114,14 @@ export class ComponentRender<T> {
 			if ('window' === eventSource.toLowerCase()) {
 				source = window;
 				this.addNativeEventListener(source, eventName, (event: any) => {
-					this.view._model[listener.modelCallbackName](event);
+					(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 				});
 				return;
 			} else if (eventSource in this.view) {
 				source = Reflect.get(this.view, eventSource);
 				if (!Reflect.has(source, '_model')) {
 					this.addNativeEventListener(source, eventName, (event: any) => {
-						this.view._model[listener.modelCallbackName](event);
+						(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 					});
 					return;
 				}
@@ -130,12 +135,12 @@ export class ComponentRender<T> {
 		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
 		if (output) {
 			sourceModel[output.modelProperty].subscribe((value: any) => {
-				this.view._model[listener.modelCallbackName](value);
+				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, value);
 			});
 		}
 		else if (Reflect.has(source, 'on' + eventName)) {
 			this.addNativeEventListener(source, eventName, (event: any) => {
-				this.view._model[listener.modelCallbackName](event);
+				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
 			});
 		}
 		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
@@ -144,18 +149,18 @@ export class ComponentRender<T> {
 		else {
 			// listen to internal changes
 			// TODO: need to resolve parameter
-			addChangeListener(sourceModel, eventName, () => this.view._model[listener.modelCallbackName]());
+			addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
 		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
-			funcCallback.call(this.view._model, event);
+			funcCallback.call(this.view._proxyModel, event);
 		});
 	}
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack): void {
+	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack, parentNode: Node): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
@@ -164,7 +169,9 @@ export class ComponentRender<T> {
 				structural.onInit();
 			}
 			if (isOnDestroy(structural)) {
-				this.view._model.subscribeModel('destroy', () => structural.onDestroy());
+				this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
+					structural.onDestroy();
+				});
 			}
 		} else {
 			// didn't find directive or it is not define yet.
@@ -197,7 +204,7 @@ export class ComponentRender<T> {
 			parent.append(comment);
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
-			this.createDirective(child, comment, contextStack);
+			this.createDirective(child, comment, contextStack, parent);
 		} else if (child instanceof LiveTextContent) {
 			parent.append(this.createLiveText(child, contextStack));
 		} else if (child instanceof TextContent) {
@@ -299,7 +306,7 @@ export class ComponentRender<T> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
-						event.expression.get(stack, this.view._model);
+						event.expression.get(stack, this.view._proxyModel);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -319,21 +326,28 @@ export class ComponentRender<T> {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
-		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name);
+		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name, attr.expressionEvent);
 		callback();
 	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string) {
-		node.events().forEach(eventName => {
-			const context = contextStack.findScope(eventName)?.getContext();
+	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
+		events ??= node.events();
+		const scopeMap = findScopeMap(events, contextStack);
+		scopeMap.forEach((scope, eventName) => {
+			const context = scope.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe1way(pipe, eventName, callback, object, attrName);
 					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+						this.view._model.subscribeModel('destroy', () => {
+							if (isModel(pipe)) {
+								pipe.emitChangeModel('destroy');
+							}
+							pipe.onDestroy();
+						});
 					}
 					const pipeContext: { [key: string]: Function; } = {};
-					pipeContext[eventName] = pipe.transform.bind(pipe);
+					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe1way(context, eventName, callback, object, attrName);
@@ -348,17 +362,23 @@ export class ComponentRender<T> {
 		const callback2 = () => {
 			attr.callbackExpression.get(contextStack);
 		};
-		attr.expression.events().forEach(eventName => {
-			const context = contextStack.findScope(eventName)?.getContext();
+		const scopeMap = findScopeMap(attr.expressionEvent, contextStack);
+		scopeMap.forEach((scope, eventName) => {
+			const context = scope.getContext();
 			if (context) {
 				if (AsyncPipeProvider.AsyncPipeContext === context) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
 					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => pipe.onDestroy());
+						this.view._model.subscribeModel('destroy', () => {
+							if (isModel(pipe)) {
+								pipe.emitChangeModel('destroy');
+							}
+							pipe.onDestroy();
+						});
 					}
 					const pipeContext: { [key: string]: Function } = {};
-					pipeContext[eventName] = pipe.transform.bind(pipe);
+					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
 				} else if (PipeProvider.PipeContext !== context) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
@@ -378,9 +398,6 @@ export class ComponentRender<T> {
 			// ignore, it is applied by default
 		}
 		else {
-			if (!this.nativeElementMutation) {
-				this.nativeElementMutation = new ElementMutation();
-			}
 			this.nativeElementMutation.subscribe(element, attr.name, () => {
 				if (isModel(element)) {
 					element.emitChangeModel(attr.name);

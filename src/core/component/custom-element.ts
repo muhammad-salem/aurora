@@ -12,9 +12,12 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
+export type ModelType<T> = T & Model & { [key: string]: any };
+
 export interface BaseComponent<T extends Object> extends CustomElement {
 
-	_model: T & Model & { [key: string]: any };
+	_model: ModelType<T>;
+	_proxyModel: ModelType<T>;
 	_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
 	_viewScope: ElementReactiveScope;
 

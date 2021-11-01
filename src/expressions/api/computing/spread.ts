@@ -1,4 +1,5 @@
-import type { ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -13,6 +14,9 @@ export class SpreadElement extends AbstractExpressionNode {
 	}
 	getArgument() {
 		return this.argument;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.argument.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('SpreadElement#set() Method has no implementation.');
@@ -39,8 +43,11 @@ export class SpreadElement extends AbstractExpressionNode {
 			stack.declareVariable('block', length++, iteratorResult.value);
 		}
 	}
-	events(parent?: string): string[] {
-		return this.argument.events();
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString(): string {
 		return `...${this.argument.toString()}`;

@@ -2,6 +2,10 @@
 export type ScopeType = 'block' | 'function' | 'class' | 'module' | 'global';
 
 export interface Scope<T> {
+
+	/**
+	 * scope type
+	 */
 	type: ScopeType;
 
 	/**
@@ -25,13 +29,19 @@ export interface Scope<T> {
 	has(propertyKey: PropertyKey): boolean;
 
 	/**
-	 * get current context object of this scope
+	 * delete property from context
+	 * @param propertyKey 
 	 */
-	getContext(): T | undefined;
+	delete(propertyKey: PropertyKey): boolean;
 
 	/**
-	 * get value of `propertyKey` in current context
-	 * @param propertyKey 
+	 * get current context object of this scope
+	 */
+	getContext(): T;
+
+	/**
+	 * get a scope for an object named as `propertyKey` from cache map
+	 * @param propertyKey the name of the property
 	 */
 	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined;
 }
@@ -68,7 +78,7 @@ export class Scope<T extends object> implements Scope<T> {
 		return new Scope({} as T, 'module');
 	}
 	static globalScope<T extends object>() {
-		return new this({} as T, 'global');
+		return new Scope({} as T, 'global');
 	}
 	protected scopeMap = new Map<PropertyKey, Scope<any>>();
 	constructor(protected context: T, public type: ScopeType) { }
@@ -81,17 +91,18 @@ export class Scope<T extends object> implements Scope<T> {
 	has(propertyKey: PropertyKey): boolean {
 		return propertyKey in this.context;
 	}
-	getContext(): T | undefined {
+	delete(propertyKey: PropertyKey): boolean {
+		return Reflect.deleteProperty(this.context, propertyKey);
+	}
+	getContext(): T {
 		return this.context;
 	}
 	getScope<V extends object>(propertyKey: PropertyKey): Scope<V> | undefined {
+		const scopeContext = this.get(propertyKey);
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
+			scope.context = scopeContext;
 			return scope;
-		}
-		const scopeContext = this.get(propertyKey);
-		if (typeof scopeContext === 'undefined') {
-			return;
 		}
 		scope = new Scope(scopeContext, 'block');
 		this.scopeMap.set(propertyKey, scope);
@@ -134,6 +145,10 @@ export class ReadOnlyScope<T extends object> extends Scope<T> {
 		return new ReadOnlyScope({} as T, 'global');
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+		// do nothing
+		return false;
+	}
+	delete(propertyKey: PropertyKey): boolean {
 		// do nothing
 		return false;
 	}
@@ -219,26 +234,31 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 	private observer: ValueChangeObserver<T>;
 	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<T>) {
 		super(context, type);
-		if (observer) {
-			this.observer = observer;
-		} else {
-			this.observer = new ValueChangeObserver(name as string);
-		}
+		this.observer = observer ?? new ValueChangeObserver(name as string);
 	}
 	set(propertyKey: PropertyKey, newValue: any, receiver?: any): boolean {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer?.emit(propertyKey, oldValue, newValue);
+			this.observer.emit(this.getEventName(propertyKey), oldValue, newValue);
 		}
 		return result;
 	}
-	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> | undefined {
-		let scope = this.scopeMap.get(propertyKey);
-		if (scope) {
-			return scope as ReactiveScope<V>;
+	delete(propertyKey: PropertyKey): boolean {
+		const oldValue = Reflect.get(this.context, propertyKey);
+		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
+		if (isDelete && oldValue !== undefined) {
+			this.observer.emit(this.getEventName(propertyKey), oldValue, undefined);
 		}
+		return isDelete;
+	}
+	getScope<V extends object>(propertyKey: PropertyKey): ReactiveScope<V> | undefined {
 		const scopeContext = this.get(propertyKey);
+		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<V>;
+		if (scope) {
+			scope.context = scopeContext;
+			return scope;
+		}
 		if (typeof scopeContext === 'undefined') {
 			return;
 		}

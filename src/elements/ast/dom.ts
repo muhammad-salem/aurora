@@ -6,8 +6,11 @@ export class Attribute<N, V> {
 	constructor(public name: N, public value: V) { }
 }
 
+type ExpressionEvent = { [key: string]: ExpressionEvent };
+
 export class ElementAttribute<N, V, E> extends Attribute<N, V> {
 	expression: E;
+	expressionEvent: ExpressionEvent;
 }
 
 /**
@@ -15,6 +18,7 @@ export class ElementAttribute<N, V, E> extends Attribute<N, V> {
  */
 export class LiveAttribute<E> extends ElementAttribute<string, string, E> {
 	callbackExpression: E;
+	callbackExpressionEvent: ExpressionEvent;
 }
 
 /**
@@ -32,6 +36,7 @@ export class TextContent extends Attribute<'textContent', string> {
  */
 export class LiveTextContent<E> extends TextContent {
 	expression: E;
+	expressionEvent: ExpressionEvent;
 }
 
 /**

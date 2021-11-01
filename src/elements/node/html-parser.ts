@@ -149,7 +149,9 @@ export class NodeParser {
 
 	private parseCloseTag(token: string) {
 		if (token === '>') {
-			if (!isEmptyElement(this.currentNode.tagName) && this.currentNode.tagName !== this.tempText) {
+			if (!isEmptyElement(this.currentNode.tagName)
+				&& this.currentNode.tagName.trim().toLowerCase() !== this.tempText.trim().toLowerCase()
+			) {
 				throw 'Wrong closed tag at char ' + this.index;
 			}
 			this.popElement();

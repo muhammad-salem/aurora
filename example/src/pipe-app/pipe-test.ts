@@ -182,10 +182,10 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			}
 			this.currentColor = this.colors[index++];
 			this.heightPX += 10;
-			if (isModel(this)) {
-				this.emitChangeModel('currentColor');
-				this.emitChangeModel('heightPX');
-			}
+			// if (isModel(this)) {
+			// 	this.emitChangeModel('currentColor');
+			// 	this.emitChangeModel('heightPX');
+			// }
 		});
 	}
 

@@ -35,14 +35,13 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 		);
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				return this._model[input.modelProperty] || parentProperty?.get?.call(this);
+				return this._proxyModel[input.modelProperty] || parentProperty?.get?.call(this);
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
 				this._modelScope.set(input.modelProperty, value);
 				// this._model[input.modelProperty] = value;
-				if (parentProperty?.set) {
-					parentProperty.set.call(this, value);
-				}
+				// this._proxyModel[input.modelProperty] = value;
+				parentProperty?.set?.call(this, value);
 			},
 			enumerable: true,
 		});

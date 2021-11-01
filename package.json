@@ -14,10 +14,11 @@
 		"@ibyar/esmpack": "^0.1.93",
 		"progress": "^2.0.3",
 		"typedoc": "^0.22.3",
-		"typescript": "^4.4.3"
+		"typescript": "^4.4.4"
 	},
 	"scripts": {
 		"clean": "./tasks/clean",
+		"clean:build": "tsc -b example/tsconfig.json --clean",
 		"build": "npm run clean && tsc --build -v",
 		"build:w": "npm run clean && tsc --build -v -w",
 		"build:example": "npm run clean && tsc -b -v example/",

@@ -1,6 +1,9 @@
+import type {
+	CanDeclareExpression, ExpressionEventPath,
+	ExpressionNode, NodeDeserializer
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
-import type { ScopeType } from '../../scope/scope.js';
-import type { CanDeclareExpression, ExpressionNode, NodeDeserializer } from '../expression.js';
+import type { Scope, ScopeType } from '../../scope/scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
@@ -44,10 +47,11 @@ export class MetaProperty extends MemberExpression {
 	getMeta() {
 		return this.meta;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
 		return `${this.meta.toString()}.${this.property.toString()}`;
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			meta: this.meta.toJSON(),
 			property: this.property.toJSON(),
@@ -68,10 +72,11 @@ export class PrivateIdentifier extends Identifier {
 	constructor(private privateName: string) {
 		super('ɵ_' + privateName);
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
 		return `#${this.privateName}`;
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			name: this.privateName
 		};
@@ -120,6 +125,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	isStatic() {
 		return this.static;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -129,13 +135,16 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			kind: this.kind,
 			key: this.key,
@@ -182,6 +191,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	isStatic() {
 		return this.static;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -191,13 +201,16 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			key: this.key.toJSON(),
 			computed: this.computed,
@@ -220,19 +233,23 @@ export class ClassBody extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('Method not implemented.');
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
 		throw new Error('Method not implemented.');
 	}
-	toJson(key?: string): { [key: string]: any; } {
+	toJson(): { [key: string]: any; } {
 		return {
 			body: this.body.map(method => method.toJSON())
 		};
@@ -255,15 +272,18 @@ export class Class extends AbstractExpressionNode {
 	getSuperClass() {
 		return this.superClass;
 	}
-
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
 		throw new Error(`Class.#get() has no implementation.`);
 	}
-	events(parent?: string): string[] {
-		return [];
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		throw new Error('Method not implemented.');
 	}
 	toString() {
 		let classDeclaration = 'class ';

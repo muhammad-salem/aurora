@@ -4,7 +4,7 @@ import { Person, PersonModel } from './person';
 @Component({
 	selector: 'person-app',
 	template: `
-		<div>
+		<div *add-note>
 			{{appVersion}}
 			{{appName}}
 		</div>
@@ -161,11 +161,11 @@ export class PersonApp {
 	@HostListener('person1:select')
 	onClose(data: any) {
 		console.log('AppRoot => person1:select', data);
-		setTimeout(() => {
-			if (isModel(this)) {
-				this.emitChangeModel('asyncIterable');
-			}
-		}, 3000);
+		// setTimeout(() => {
+		// 	if (isModel(this)) {
+		// 		this.emitChangeModel('asyncIterable');
+		// 	}
+		// }, 3000);
 	}
 
 	@HostListener('personEdit:input')

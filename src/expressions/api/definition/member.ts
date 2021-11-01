@@ -1,8 +1,12 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	CanFindScope, ExpressionEventPath, ExpressionEventPathBracketNotation
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
+import { Literal } from './values.js';
 
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
@@ -27,6 +31,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	getProperty() {
 		return this.property;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
 		let propertyKey: PropertyKey;
@@ -64,15 +69,23 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		}
 		return (this.property as ExpressionNode & CanFindScope).findScope(stack, objectScope);
 	}
-	events(parent?: string): string[] {
+	dependency(computed?: true): ExpressionNode[] {
+		return [this];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
 		if (this.computed) {
-			parent ??= '';
-			parent = `${parent}${this.object.events(parent)}`;
-			return [parent, `${parent}[${this.property.toString()}]`];
+			const objPath = this.object.dependencyPath(computed);
+			const propertyDependency = this.property.dependency(true);
+			const propertyDependencyPath = propertyDependency.map(exp => exp.dependencyPath(true));
+
+			const computedPath: ExpressionEventPath = {
+				computed: true,
+				path: ':' + propertyDependencyPath.flatMap(paths => paths).map(prop => prop.path).join(':'),
+				computedPath: propertyDependencyPath.flatMap(paths => paths.flatMap(prop => prop.computed ? prop.computedPath : [])),
+			};
+			return objPath.concat(computedPath);
 		}
-		parent ||= '';
-		parent += this.object.toString() + '.';
-		return [...this.object.events(), ...this.property.events(parent)];
+		return this.object.dependencyPath(computed).concat(this.property.dependencyPath(computed));
 	}
 	toString() {
 		if (this.computed) {

@@ -974,6 +974,11 @@ export class TokenStreamImpl extends TokenStream {
 					this.pos += 6;
 					return true;
 				}
+				else if (/yield\*\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.YIELD);
+					this.pos += 5;
+					return true;
+				}
 				return false;
 			default:
 				return false;

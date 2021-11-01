@@ -1,4 +1,5 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -16,14 +17,20 @@ export class ArrayExpression extends AbstractExpressionNode {
 	getElements() {
 		return this.elements;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.elements.forEach(item => item.shareVariables(scopeList));
+	}
 	set(stack: Stack) {
 		throw new Error("ArrayExpression#set() has no implementation.");
 	}
 	get(stack: Stack) {
 		return this.elements.map(item => item.get(stack));
 	}
-	events(parent?: string): string[] {
-		return this.elements.flatMap(item => item.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();
@@ -47,6 +54,7 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 	getElements() {
 		return this.elements;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, values: any) {
 		throw new Error('ArrayPattern#set() has no implementation.');
 	}
@@ -94,8 +102,11 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 			}
 		}
 	}
-	events(parent?: string): string[] {
-		return this.elements.flatMap(item => item.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.elements.flatMap(item => item.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.elements.flatMap(item => item.dependencyPath(computed));
 	}
 	toString() {
 		return this.elements.map(item => item.toString()).toString();

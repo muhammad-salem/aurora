@@ -1,4 +1,5 @@
-import type { NodeDeserializer, ExpressionNode } from '../../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
+import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -18,6 +19,9 @@ export class BlockStatement extends AbstractExpressionNode {
 	}
 	getBody() {
 		return this.body;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.body.forEach(statement => statement.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`BlockStatement#set() has no implementation.`);
@@ -43,8 +47,11 @@ export class BlockStatement extends AbstractExpressionNode {
 		}
 		stack.clearTo(blockScope);
 	}
-	events(parent?: string): string[] {
-		return this.body.flatMap(node => node.events(parent));
+	dependency(computed?: true): ExpressionNode[] {
+		return this.body.flatMap(exp => exp.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
 		return `{ ${this.body.map(node => node.toString()).join('; ')}; }`;

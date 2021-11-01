@@ -7,7 +7,10 @@ import { HTMLNodeAssignmentExpression, TextNodeAssignmentExpression } from './up
 
 const ThisTextContent = JavaScriptParser.parse('this.textContent');
 function parseLiveText(text: LiveTextContent<ExpressionNode>) {
-	text.expression = new TextNodeAssignmentExpression(ThisTextContent, JavaScriptParser.parse(text.value));
+	const textExpression = JavaScriptParser.parse(text.value);
+	text.expression = new TextNodeAssignmentExpression(ThisTextContent, textExpression);
+
+	text.expressionEvent = textExpression.events();
 }
 
 function convertToMemberAccessStyle(source: string) {
@@ -38,6 +41,9 @@ function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
 
 	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
 	attr.callbackExpression = new AssignmentExpression('=', modelExpression, elementExpression);
+
+	attr.expressionEvent = modelExpression.events();
+	attr.callbackExpressionEvent = elementExpression.events();
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
@@ -45,6 +51,8 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
 	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
+
+	attr.expressionEvent = modelExpression.events();
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string, ExpressionNode>) {

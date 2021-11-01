@@ -1,8 +1,10 @@
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { MemberExpression } from '../definition/member.js';
+import { Literal } from '../definition/values.js';
 
 export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof';
 @Deserializer('UnaryExpression')
@@ -27,6 +29,9 @@ export class UnaryExpression extends AbstractExpressionNode {
 	getArgument() {
 		return this.argument;
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.argument.shareVariables(scopeList);
+	}
 	set(stack: Stack, value: any) {
 		return this.argument.set(stack, value);
 	}
@@ -40,19 +45,27 @@ export class UnaryExpression extends AbstractExpressionNode {
 	}
 	private getDelete(stack: Stack, thisContext?: any) {
 		if (this.argument instanceof MemberExpression) {
-			thisContext = thisContext || this.argument.getObject().get(stack);
+			const scope = this.argument.findScope(stack);
+			let propertyKey: PropertyKey;
 			const right = this.argument.getProperty();
 			if (right instanceof MemberExpression) {
 				// [Symbol.asyncIterator]
-				return delete thisContext[this.argument.getProperty().get(stack)];
+				propertyKey = this.argument.getProperty().get(stack);
+			} else if (right instanceof Literal) {
+				// x[10], x['string'], x.name
+				propertyKey = right.getValue();
 			} else {
-				// [10], ['string']
-				return delete thisContext[this.argument.getProperty().toString()];
+				// x[u == 3 ? 'y': 'n']
+				propertyKey = this.argument.getProperty().get(stack);
 			}
+			return scope.delete(propertyKey);
 		}
 	}
-	events(parent?: string): string[] {
-		return this.argument.events(parent);
+	dependency(computed?: true): ExpressionNode[] {
+		return this.argument.dependency(computed);
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.argument.dependencyPath(computed);
 	}
 	toString() {
 		switch (this.operator) {

@@ -1,13 +1,21 @@
 {
 	"name": "@ibyar/elements",
-	"version": "0.3.8",
+	"version": "0.4.0",
 	"description": "Aurora element, hold info about HTMLElements class, attributes and tag name",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/elements",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/elements"
+	},
 	"main": "./index.js",
 	"module": "./index.js",
 	"types": "./index.d.ts",
 	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
 	"files": [
 		"*"
 	],
@@ -15,7 +23,7 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"typescript": "^4.4.3"
+		"typescript": "^4.4.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

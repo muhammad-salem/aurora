@@ -30,6 +30,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
+import { YieldExpression } from '../api/computing/yield.js';
 import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
@@ -910,17 +911,20 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
-	protected parseFunctionBody(): ExpressionNode[] {
+	protected parseArrowFunctionBody(): ExpressionNode | ExpressionNode[] {
 		const isExpression = this.peek().isNotType(Token.L_CURLY);
 		if (isExpression) {
 			const expression = this.parseAssignmentExpression();
-			return [expression];
+			return expression;
 		} else {
-			this.expect(Token.L_CURLY);
-			const list = this.parseStatementList(Token.R_CURLY);
-			this.expect(Token.R_CURLY);
-			return list;
+			return this.parseFunctionBody();
 		}
+	}
+	protected parseFunctionBody(): ExpressionNode[] {
+		this.expect(Token.L_CURLY);
+		const list = this.parseStatementList(Token.R_CURLY);
+		this.expect(Token.R_CURLY);
+		return list;
 	}
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
 		// StatementList ::
@@ -981,9 +985,9 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			const value = this.parseAssignmentExpression();
-			initializer = new Param(pattern, value);
+			initializer = new Param(pattern as CanDeclareExpression, value);
 		} else {
-			initializer = new Param(pattern);
+			initializer = new Param(pattern as CanDeclareExpression);
 		}
 		return initializer;
 	}
@@ -1059,12 +1063,12 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected toParamNode(expression: ExpressionNode): Param {
 		if (expression instanceof AssignmentExpression) {
-			return new Param(expression.getLeft(), expression.getRight());
+			return new Param(expression.getLeft() as CanDeclareExpression, expression.getRight());
 		}
 		if (expression instanceof GroupingExpression) {
-			return new Param(expression.getNode());
+			return new Param(expression.getNode() as CanDeclareExpression);
 		}
-		return new Param(expression);
+		return new Param(expression as CanDeclareExpression);
 	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
@@ -1283,11 +1287,11 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
 			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions().map(expr => new Param(expr));
+				const params = expression.getExpressions().map(expr => new Param(expr as CanDeclareExpression));
 				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode())], ArrowFunctionType.NORMAL);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as CanDeclareExpression)], ArrowFunctionType.NORMAL);
 			}
 			return this.parseArrowFunctionLiteral([new Param(expression)], ArrowFunctionType.NORMAL);
 		}
@@ -1337,7 +1341,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
 		this.consume(Token.ARROW);
-		const body = this.parseFunctionBody();
+		const body = this.parseArrowFunctionBody();
 		return new ArrowFunctionExpression(parameters, body, flag, rest);
 	}
 	protected parseRegExpLiteral(): ExpressionNode {
@@ -2018,7 +2022,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   'yield' ([no line terminator] '*'? AssignmentExpression)?
 		this.consume(Token.YIELD);
 		let delegating = false;  // yield*
-		let expression: ExpressionNode;
+		let expression: ExpressionNode | undefined;
 		if (this.check(Token.MUL)) {
 			delegating = true;
 		}
@@ -2043,12 +2047,7 @@ export class JavaScriptParser extends AbstractParser {
 				expression = this.parseAssignmentExpressionCoverGrammar();
 				break;
 		}
-		// }
-
-		throw new Error(this.errorMessage(`Yield expression is not supported now.`));
-		// // Hackily disambiguate o from o.next and o [Symbol.iterator]().
-		// // TODO(verwaest): Come up with a better solution.
-		// return new YieldNode(expression!);
+		return new YieldExpression(delegating, expression);
 	}
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));

@@ -1,6 +1,6 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
+import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
-import type { ScopeType } from '../../scope/scope.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
@@ -21,6 +21,9 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 	}
 	set(stack: Stack, value: any) {
 		this.key.set(stack, value);
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.value.shareVariables(scopeList);
 	}
 	get(stack: Stack, thisContext: ThisType<any>): any {
 		const name = this.key.get(stack);
@@ -49,8 +52,11 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 		const propertyValue = objectValue[propertyName];
 		(this.value as CanDeclareExpression).declareVariable(stack, scopeType, propertyValue);
 	}
-	events(): string[] {
-		return this.key.events().concat(this.value.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.key.dependency(computed).concat(this.value.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.key.dependencyPath(computed).concat(this.value.dependencyPath(computed));
 	}
 	toString(): string {
 		return `${this.key.toString()}: ${this.value.toString()}`;
@@ -78,6 +84,9 @@ export class ObjectExpression extends AbstractExpressionNode {
 	set(stack: Stack) {
 		throw new Error('ObjectExpression#set() has no implementation.');
 	}
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.properties.forEach(prop => prop.shareVariables(scopeList));
+	}
 	get(stack: Stack) {
 		const newObject = {};
 		for (const property of this.properties) {
@@ -85,8 +94,11 @@ export class ObjectExpression extends AbstractExpressionNode {
 		}
 		return newObject;
 	}
-	events(parent?: string): string[] {
-		return this.properties.flatMap(property => property.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.properties.flatMap(property => property.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath(computed));
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
@@ -109,6 +121,7 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 	getProperties() {
 		return this.properties;
 	}
+	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, objectValue: any) {
 		throw new Error('ObjectPattern#set() has no implementation.');
 	}
@@ -136,8 +149,11 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 		}
 		return restObject;
 	}
-	events(parent?: string): string[] {
-		return this.properties.flatMap(property => property.events());
+	dependency(computed?: true): ExpressionNode[] {
+		return this.properties.flatMap(property => property.dependency(computed));
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return this.properties.flatMap(property => property.dependencyPath(computed));
 	}
 	toString() {
 		return `{ ${this.properties.map(item => item.toString()).join(', ')} }`;
