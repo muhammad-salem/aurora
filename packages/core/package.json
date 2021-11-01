@@ -3,11 +3,19 @@
 	"version": "0.3.9",
 	"description": "Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/core",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/core"
+	},
 	"main": "./index.js",
 	"module": "./index.js",
 	"types": "./index.d.ts",
 	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
 	"files": [
 		"*"
 	],

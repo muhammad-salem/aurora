@@ -3,11 +3,19 @@
 	"version": "0.3.9",
 	"description": "Aurora directives had the built-in directives for aurora project",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/directives"
+	},
 	"main": "./index.js",
 	"module": "./index.js",
 	"types": "./index.d.ts",
 	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
 	"files": [
 		"*"
 	],
