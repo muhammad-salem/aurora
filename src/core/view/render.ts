@@ -35,7 +35,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' 
 export class ComponentRender<T> {
 	componentRef: ComponentRef<T>;
 	template: DOMNode<ExpressionNode>;
-	nativeElementMutation: ElementMutation | undefined;
+	nativeElementMutation: ElementMutation;
 	contextStack: Stack;
 	templateRefMap = new Map<string, DOMElementNode<ExpressionNode>>();
 	constructor(public view: HTMLComponent<T>) {
@@ -44,6 +44,10 @@ export class ComponentRender<T> {
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
 		this.contextStack.pushScope(this.view._modelScope);
+		this.nativeElementMutation = new ElementMutation();
+		this.view._model.subscribeModel('destroy', () => {
+			this.nativeElementMutation.disconnect();
+		});
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -397,14 +401,7 @@ export class ComponentRender<T> {
 			// ignore, it is applied by default
 		}
 		else {
-			if (!this.nativeElementMutation) {
-				this.nativeElementMutation = new ElementMutation();
-				this.view._model.subscribeModel('destroy', () => {
-					this.nativeElementMutation?.disconnect();
-					this.nativeElementMutation = undefined;
-				});
-			}
-			this.nativeElementMutation.subscribeOnAttribute(element, attr.name, () => {
+			this.nativeElementMutation.subscribe(element, attr.name, () => {
 				if (isModel(element)) {
 					element.emitChangeModel(attr.name);
 				}
