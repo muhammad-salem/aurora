@@ -19,7 +19,6 @@ export * from './providers/injector.js';
 export * from './providers/provider.js';
 
 export * from './utils/elements-util.js';
-export * from './utils/observable.js';
 export * from './utils/path.js';
 export * from './utils/utils.js';
 
