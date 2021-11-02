@@ -6,26 +6,18 @@ export class Attribute<N, V> {
 	constructor(public name: N, public value: V) { }
 }
 
-type ExpressionEvent = { [key: string]: ExpressionEvent };
-
-export class ElementAttribute<N, V, E> extends Attribute<N, V> {
-	expression: E;
-	expressionEvent: ExpressionEvent;
-}
+export class ElementAttribute<N, V> extends Attribute<N, V> { }
 
 /**
  * an attribute with its source value for binding
  */
-export class LiveAttribute<E> extends ElementAttribute<string, string, E> {
-	callbackExpression: E;
-	callbackExpressionEvent: ExpressionEvent;
-}
+export class LiveAttribute extends Attribute<string, string> { }
 
 /**
  * a normal text
  */
 export class TextContent extends Attribute<'textContent', string> {
-	static propName = 'textContent' as 'textContent';
+	static propName: 'textContent' = 'textContent';
 	constructor(text: string) {
 		super(TextContent.propName, text);
 	}
@@ -34,10 +26,7 @@ export class TextContent extends Attribute<'textContent', string> {
 /**
  * a text that its content is binding to variable from the component model.
  */
-export class LiveTextContent<E> extends TextContent {
-	expression: E;
-	expressionEvent: ExpressionEvent;
-}
+export class LiveTextContent extends TextContent { }
 
 /**
  * to comment in dom
@@ -46,13 +35,13 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class DOMParentNode<E> {
+export class DOMParentNode {
 	/**
 	 * element children list
 	 */
-	children: DOMChild<E>[];
+	children: DOMChild[];
 
-	addChild(child: DOMChild<E>) {
+	addChild(child: DOMChild) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -64,7 +53,7 @@ export class DOMParentNode<E> {
 		if (!this.children) {
 			this.children = [];
 		}
-		parseTextChild<E>(text).forEach(childText => this.children.push(childText));
+		parseTextChild(text).forEach(childText => this.children.push(childText));
 	}
 
 }
@@ -72,8 +61,8 @@ export class DOMParentNode<E> {
 /**
  * parent for a list of elements 
  */
-export class DOMFragmentNode<E> extends DOMParentNode<E> {
-	constructor(children?: DOMChild<E>[]) {
+export class DOMFragmentNode extends DOMParentNode {
+	constructor(children?: DOMChild[]) {
 		super();
 		if (children) {
 			this.children = children;
@@ -81,32 +70,32 @@ export class DOMFragmentNode<E> extends DOMParentNode<E> {
 	}
 }
 
-export class BaseNode<E> extends DOMParentNode<E> {
+export class BaseNode extends DOMParentNode {
 
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
 	 */
-	attributes: ElementAttribute<string, string | number | boolean | object, E>[];
+	attributes: ElementAttribute<string, string | number | boolean | object>[];
 
 	/**
 	 * hold the attrs/inputs name marked as one way binding
 	 */
-	inputs: LiveAttribute<E>[];
+	inputs: LiveAttribute[];
 
 	/**
 	 * hold the name of events that should be connected to a listener
 	 */
-	outputs: ElementAttribute<string, string, E>[];
+	outputs: ElementAttribute<string, string>[];
 
 	/**
 	 * hold the name of attributes marked for 2 way data binding
 	 */
-	twoWayBinding: LiveAttribute<E>[];
+	twoWayBinding: LiveAttribute[];
 
 	/**
 	 * directive attribute
 	 */
-	templateAttrs: LiveAttribute<E>[];
+	templateAttrs: LiveAttribute[];
 
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
@@ -118,25 +107,25 @@ export class BaseNode<E> extends DOMParentNode<E> {
 
 	addInput(attrName: string, valueSource: string) {
 		if (this.inputs) {
-			this.inputs.push(new LiveAttribute<E>(attrName, valueSource));
+			this.inputs.push(new LiveAttribute(attrName, valueSource));
 		} else {
-			this.inputs = [new LiveAttribute<E>(attrName, valueSource)];
+			this.inputs = [new LiveAttribute(attrName, valueSource)];
 		}
 	}
 
 	addOutput(eventName: string, handlerSource: string) {
 		if (this.outputs) {
-			this.outputs.push(new LiveAttribute<E>(eventName, handlerSource));
+			this.outputs.push(new LiveAttribute(eventName, handlerSource));
 		} else {
-			this.outputs = [new LiveAttribute<E>(eventName, handlerSource)];
+			this.outputs = [new LiveAttribute(eventName, handlerSource)];
 		}
 	}
 
 	addTwoWayBinding(eventName: string, handlerSource: string) {
 		if (this.twoWayBinding) {
-			this.twoWayBinding.push(new LiveAttribute<E>(eventName, handlerSource));
+			this.twoWayBinding.push(new LiveAttribute(eventName, handlerSource));
 		} else {
-			this.twoWayBinding = [new LiveAttribute<E>(eventName, handlerSource)];
+			this.twoWayBinding = [new LiveAttribute(eventName, handlerSource)];
 		}
 	}
 
@@ -153,9 +142,9 @@ export class BaseNode<E> extends DOMParentNode<E> {
 		// as string 
 		valueSource = parseStringTemplate(valueSource);
 		if (this.templateAttrs) {
-			this.templateAttrs.push(new LiveAttribute<E>(attrName, valueSource));
+			this.templateAttrs.push(new LiveAttribute(attrName, valueSource));
 		} else {
-			this.templateAttrs = [new LiveAttribute<E>(attrName, valueSource)];
+			this.templateAttrs = [new LiveAttribute(attrName, valueSource)];
 		}
 	}
 
@@ -164,7 +153,7 @@ export class BaseNode<E> extends DOMParentNode<E> {
 /**
  * structural directive 
  */
-export class DOMDirectiveNode<E> extends DOMParentNode<E>{
+export class DOMDirectiveNode extends DOMParentNode {
 
 	/**
 	 * name of the directive 
@@ -183,7 +172,7 @@ export class DOMDirectiveNode<E> extends DOMParentNode<E>{
 	}
 }
 
-export class DOMElementNode<E> extends BaseNode<E> {
+export class DOMElementNode extends BaseNode {
 
 	/**
 	 * the tag name of the element 
@@ -218,15 +207,15 @@ export class DOMElementNode<E> extends BaseNode<E> {
 
 }
 
-export type DOMChild<E> = DOMElementNode<E> | DOMDirectiveNode<E> | CommentNode | TextContent | LiveTextContent<E>;
+export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMNode<E> = DOMFragmentNode<E> | DOMElementNode<E> | DOMDirectiveNode<E> | CommentNode | TextContent | LiveTextContent<E>;
+export type DOMNode = DOMFragmentNode | DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMRenderNode<T, E> = (model: T) => DOMNode<E>;
+export type DOMRenderNode<T> = (model: T) => DOMNode;
 
-export function parseTextChild<E>(text: string): Array<TextContent | LiveTextContent<E>> {
+export function parseTextChild(text: string): Array<TextContent | LiveTextContent> {
 	// split from end with '}}', then search for the first '{{'
-	let all: (TextContent | LiveTextContent<E>)[] = [];
+	let all: (TextContent | LiveTextContent)[] = [];
 	let temp = text;
 	let last = temp.lastIndexOf('}}');
 	let first: number;
@@ -237,7 +226,7 @@ export function parseTextChild<E>(text: string): Array<TextContent | LiveTextCon
 			if (lastPart) {
 				all.push(new TextContent(lastPart));
 			}
-			let liveText = new LiveTextContent<E>(temp.substring(first + 2, last));
+			const liveText = new LiveTextContent(temp.substring(first + 2, last));
 			all.push(liveText);
 			temp = temp.substring(0, first);
 			last = temp.lastIndexOf('}}');

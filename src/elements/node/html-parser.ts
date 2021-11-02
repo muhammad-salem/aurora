@@ -8,7 +8,7 @@ import { NodeFactory } from '../ast/factory.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DOMElementNode<any> | CommentNode | string;
+type ChildNode = DOMElementNode | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -46,11 +46,11 @@ export class NodeParser {
 
 	private tagNameRegExp = /[\-\.0-9_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF]/;
 
-	private childStack: DOMChild<any>[];
+	private childStack: DOMChild[];
 	private stackTrace: ChildNode[];
 
-	private get currentNode(): DOMElementNode<any> {
-		return this.stackTrace[this.stackTrace.length - 1] as DOMElementNode<any>;
+	private get currentNode(): DOMElementNode {
+		return this.stackTrace[this.stackTrace.length - 1] as DOMElementNode;
 	}
 
 	private commentOpenCount = 0;
@@ -341,9 +341,9 @@ export class NodeParser {
 		}
 	}
 
-	checkNode(node: DOMElementNode<any>): DOMElementNode<any> | DOMDirectiveNode<any> {
+	checkNode(node: DOMElementNode): DOMElementNode | DOMDirectiveNode {
 		if (node.attributes) {
-			let temp: ElementAttribute<string, any, any> | ElementAttribute<string, any, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
+			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
@@ -397,11 +397,11 @@ export class HTMLParser {
 
 	nodeParser = new NodeParser();
 
-	parse(html: string): DOMChild<any>[] {
+	parse(html: string): DOMChild[] {
 		return this.nodeParser.parse(html);
 	}
 
-	toDomRootNode(html: string): DOMNode<any> {
+	toDomRootNode(html: string): DOMNode {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
 			return new DOMFragmentNode([new TextContent('')]);
@@ -412,7 +412,7 @@ export class HTMLParser {
 		}
 	}
 
-	stringify(stack: DOMNode<any>[]) {
+	stringify(stack: DOMNode[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextContent) {
