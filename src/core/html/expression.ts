@@ -1,12 +1,31 @@
 import {
 	BaseNode, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode,
-	DOMParentNode, ElementAttribute, LiveAttribute, LiveTextContent
+	DOMParentNode, ElementAttribute, isLiveTextContent, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { AssignmentExpression, ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
+import { AssignmentExpression, ExpressionEventMap, ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
 import { HTMLNodeAssignmentExpression, TextNodeAssignmentExpression } from './update.js';
 
+declare module '@ibyar/elements' {
+	export interface ElementAttribute<N, V> {
+		expression: ExpressionNode;
+		expressionEvent: ExpressionEventMap;
+	}
+
+	export interface LiveAttribute {
+		expression: ExpressionNode;
+		expressionEvent: ExpressionEventMap;
+		callbackExpression: ExpressionNode;
+		callbackExpressionEvent: ExpressionEventMap;
+	}
+
+	export interface LiveTextContent {
+		expression: ExpressionNode;
+		expressionEvent: ExpressionEventMap;
+	}
+}
+
 const ThisTextContent = JavaScriptParser.parse('this.textContent');
-function parseLiveText(text: LiveTextContent<ExpressionNode>) {
+function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parse(text.value);
 	text.expression = new TextNodeAssignmentExpression(ThisTextContent, textExpression);
 
@@ -34,7 +53,7 @@ function checkAndValidateObjectSyntax(source: string) {
 	}
 	return source;
 }
-function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
+function parseLiveAttribute(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
@@ -46,7 +65,7 @@ function parseLiveAttribute(attr: LiveAttribute<ExpressionNode>) {
 	attr.callbackExpressionEvent = elementExpression.events();
 }
 
-function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
+function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
@@ -55,16 +74,16 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute<ExpressionNode>) {
 	attr.expressionEvent = modelExpression.events();
 }
 
-function parseOutputExpression(attr: ElementAttribute<string, string, ExpressionNode>) {
+function parseOutputExpression(attr: ElementAttribute<string, string>) {
 	attr.expression = JavaScriptParser.parse(attr.value);
 }
 
-function parseElementAttribute(attr: ElementAttribute<string, any, ExpressionNode>) {
+function parseElementAttribute(attr: ElementAttribute<string, any>) {
 	attr.expression = JavaScriptParser.parse('this.' + convertToMemberAccessStyle(attr.name));
 }
 
 
-function parseBaseNode(base: BaseNode<ExpressionNode>) {
+function parseBaseNode(base: BaseNode) {
 	base.inputs?.forEach(parseLiveAttributeUpdateElement);
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
@@ -73,22 +92,22 @@ function parseBaseNode(base: BaseNode<ExpressionNode>) {
 	parseDomParentNode(base);
 }
 
-function parseChild(child: DOMNode<ExpressionNode>) {
+function parseChild(child: DOMNode) {
 	if (child instanceof DOMElementNode) {
 		// DomElementNode
 		parseBaseNode(child);
 	} else if (child instanceof DOMDirectiveNode) {
 		// DomDirectiveNode
 		parseDomParentNode(child);
-	} else if (child instanceof LiveTextContent) {
+	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	}
 }
-function parseDomParentNode(parent: DOMParentNode<ExpressionNode>) {
+function parseDomParentNode(parent: DOMParentNode) {
 	parent.children?.forEach(parseChild);
 }
 
-export function buildExpressionNodes(node: DOMNode<ExpressionNode>) {
+export function buildExpressionNodes(node: DOMNode) {
 	if (node instanceof DOMFragmentNode) {
 		parseDomParentNode(node);
 	} else {
