@@ -154,44 +154,32 @@ export class ReadOnlyScope<T extends object> extends Scope<T> {
 	}
 }
 
-class Subscription<T> {
-	private othersSubscription: Subscription<any>[];
+export class ScopeSubscription<T> {
 	constructor(private observer: ValueChangeObserver<T>) { }
-	add(subscription: Subscription<any>) {
-		if (!this.othersSubscription) {
-			this.othersSubscription = [];
-		}
-		this.othersSubscription.push(subscription);
-	}
 	unsubscribe(): void {
-		this.observer.remove(this);
-		if (this.othersSubscription) {
-			this.othersSubscription.forEach((subscription) => {
-				subscription.unsubscribe();
-			});
-		}
+		this.observer.unsubscribe(this);
 	}
 }
 
 export class ValueChangeObserver<T> {
-	private subscribers: Map<Subscription<T>, (propertyKey: PropertyKey, oldValue: any, newValue: any) => void> = new Map();
-	constructor(name?: string) { }
+	private subscribers: Map<ScopeSubscription<T>, (propertyKey: PropertyKey, oldValue: any, newValue: any) => void> = new Map();
+
 	emit(propertyKey: PropertyKey, oldValue: any, newValue: any): void {
 		this.subscribers.forEach((subscribe) => {
 			try {
 				subscribe(propertyKey, oldValue, newValue);
-			} catch (error) {
-				console.error('error: handling event', error);
+			} catch (e) {
+				console.error(e);
 			}
 		});
 	}
-	subscribe(callback: (propertyKey: PropertyKey, oldValue: any, newValue: any) => void): Subscription<T> {
-		const subscription: Subscription<T> = new Subscription(this);
+	subscribe(callback: (propertyKey: PropertyKey, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
+		const subscription: ScopeSubscription<T> = new ScopeSubscription(this);
 		this.subscribers.set(subscription, callback);
 		return subscription;
 	}
 
-	remove(subscription: Subscription<T>) {
+	unsubscribe(subscription: ScopeSubscription<T>) {
 		this.subscribers.delete(subscription);
 	}
 }
@@ -234,7 +222,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 	private observer: ValueChangeObserver<T>;
 	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<T>) {
 		super(context, type);
-		this.observer = observer ?? new ValueChangeObserver(name as string);
+		this.observer = observer ?? new ValueChangeObserver();
 	}
 	set(propertyKey: PropertyKey, newValue: any, receiver?: any): boolean {
 		const oldValue = Reflect.get(this.context, propertyKey);
@@ -278,11 +266,11 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		return String(child);
 	}
 
-	subscribe(callback: (propertyKey: PropertyKey, oldValue: any, newValue: any) => void): Subscription<T> {
+	subscribe(callback: (propertyKey: PropertyKey, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
 		return this.observer.subscribe(callback);
 	}
 
-	remove(subscription: Subscription<T>) {
-		this.observer.remove(subscription);
+	unsubscribe(subscription: ScopeSubscription<T>) {
+		this.observer.unsubscribe(subscription);
 	}
 }
