@@ -168,11 +168,18 @@ export class ComponentRender<T> {
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
-			if (isOnDestroy(structural)) {
-				this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-					structural.onDestroy();
-				});
-			}
+			// if (isOnDestroy(structural)) {
+			// 	const insertSubscription = this.nativeElementMutation.subscribeOnRemoveNode(this.view, parentNode, () => {
+			// 		console.log('insertSubscription', insertSubscription, comment.parentNode);
+
+			// 		insertSubscription.unsubscribe();
+			// 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(comment.parentNode!, comment.nextSibling!, () => {
+			// 			console.log('destroy structural directive', directive.directiveName, removeSubscription);
+			// 			removeSubscription.unsubscribe();
+			// 			structural.onDestroy();
+			// 		});
+			// 	});
+			// }
 		} else {
 			// didn't find directive or it is not define yet.
 			// class registry should have 'when defined' callback
