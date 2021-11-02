@@ -10,7 +10,7 @@ import { AbstractStructuralDirective } from './structural.js';
 @Directive({
 	selector: '*while',
 })
-export class WhileDirective<T> extends AbstractStructuralDirective<T> {
+export class WhileDirective extends AbstractStructuralDirective {
 
 	getStatement() {
 		const statement = this.directive.directiveValue.toString().trim();

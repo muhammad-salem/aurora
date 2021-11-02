@@ -37,7 +37,7 @@ type ForAlias = 'index' | 'count' | 'first' | 'last' | 'even' | 'odd';
 @Directive({
 	selector: '*for',
 })
-export class ForDirective<T> extends AbstractStructuralDirective<T> {
+export class ForDirective extends AbstractStructuralDirective {
 
 	private alias: { [key in ForAlias]?: string };
 	getStatement() {

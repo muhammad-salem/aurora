@@ -2,7 +2,7 @@ import { OnDestroy, OnInit, SourceFollowerCallback, StructuralDirective } from '
 import { ExpressionNode, JavaScriptParser, Stack } from '@ibyar/expressions';
 import { DOMChild } from '@ibyar/elements';
 
-export abstract class AbstractStructuralDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractStructuralDirective extends StructuralDirective implements OnInit, OnDestroy {
 	protected elements: ChildNode[] = [];
 	protected fragment: DocumentFragment;
 	abstract getStatement(): string;
@@ -56,7 +56,7 @@ export abstract class AbstractStructuralDirective<T> extends StructuralDirective
 	protected updateView(stack: Stack) {
 		this.appendChildToParent(this.directive.children, stack);
 	}
-	protected appendChildToParent(children: DOMChild<ExpressionNode>[], stack: Stack) {
+	protected appendChildToParent(children: DOMChild[], stack: Stack) {
 		for (const child of children) {
 			this.render.appendChildToParent(this.fragment, child, stack);
 		}

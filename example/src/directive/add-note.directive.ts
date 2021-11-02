@@ -1,6 +1,6 @@
 import {
-	Directive, DOMChild, DOMNode, ExpressionNode,
-	htmlParser, OnDestroy, OnInit, Stack, StructuralDirective
+	Directive, DOMChild, DOMNode, htmlParser,
+	OnDestroy, OnInit, Stack, StructuralDirective
 } from '@ibyar/aurora';
 
 import { buildExpressionNodes } from '@ibyar/core/html/expression';
@@ -8,15 +8,15 @@ import { buildExpressionNodes } from '@ibyar/core/html/expression';
 @Directive({
 	selector: '*add-note',
 })
-export class AddNoteDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
+export class AddNoteDirective extends StructuralDirective implements OnInit, OnDestroy {
 
 	private elements: ChildNode[] = [];
 	private fragment: DocumentFragment;
 	onInit(): void {
 		const html = `<div class="alert alert-success" role="alert">structural directive name: '{{directiveName}}'</div>`;
-		const node: DOMNode<ExpressionNode> = htmlParser.toDomRootNode(html);
+		const node: DOMNode = htmlParser.toDomRootNode(html);
 		buildExpressionNodes(node);
-		const children: DOMChild<ExpressionNode>[] = [node as DOMChild<ExpressionNode>, ...this.directive.children];
+		const children: DOMChild[] = [node as DOMChild, ...this.directive.children];
 
 		this.fragment = document.createDocumentFragment();
 		const stack = this.directiveStack.copyStack();
@@ -27,7 +27,7 @@ export class AddNoteDirective<T> extends StructuralDirective<T> implements OnIni
 		this.fragment.childNodes.forEach(child => this.elements.push(child));
 		this.comment.after(this.fragment);
 	}
-	private appendChildToParent(children: DOMChild<ExpressionNode>[], stack: Stack) {
+	private appendChildToParent(children: DOMChild[], stack: Stack) {
 		for (const child of children) {
 			this.render.appendChildToParent(this.fragment, child, stack);
 		}

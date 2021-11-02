@@ -17,16 +17,16 @@ export class DefaultSwitchCaseDirective {
 @Directive({
 	selector: '*switch',
 })
-export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
-	caseElements: DOMDirectiveNode<ExpressionNode>[] = [];
+export class SwitchDirective extends AbstractStructuralDirective {
+	caseElements: DOMDirectiveNode[] = [];
 	caseExpressions: ExpressionNode[] = [];
-	defaultElement: DOMDirectiveNode<ExpressionNode>;
+	defaultElement: DOMDirectiveNode;
 
 	getStatement() {
 		return `switch(${this.directive.directiveValue}) { }`;
 	}
 	getCallback(switchNode: ExpressionNode): () => void {
-		const directiveChildren = (this.directive.children as DOMDirectiveNode<ExpressionNode>[])[0].children as DOMDirectiveNode<ExpressionNode>[];
+		const directiveChildren = (this.directive.children as DOMDirectiveNode[])[0].children as DOMDirectiveNode[];
 		for (const child of directiveChildren) {
 			if (child.directiveName === '*case') {
 				this.caseElements.push(child);
@@ -45,7 +45,7 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 		if (switchNode instanceof SwitchStatement) {
 			callback = () => {
 				const expressionValue = switchNode.getDiscriminant().get(this.directiveStack);
-				let child: DOMDirectiveNode<ExpressionNode> | undefined;
+				let child: DOMDirectiveNode | undefined;
 				for (let i = 0; i < this.caseExpressions.length; i++) {
 					const value = this.caseExpressions[i].get(this.directiveStack);
 					if (value === expressionValue) {

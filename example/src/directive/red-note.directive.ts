@@ -1,6 +1,6 @@
 import {
-	Directive, DOMElementNode, ExpressionNode,
-	htmlParser, OnDestroy, OnInit, StructuralDirective
+	Directive, DOMElementNode, htmlParser,
+	OnDestroy, OnInit, StructuralDirective
 } from '@ibyar/aurora';
 
 import { buildExpressionNodes } from '@ibyar/core/html/expression';
@@ -8,13 +8,13 @@ import { buildExpressionNodes } from '@ibyar/core/html/expression';
 @Directive({
 	selector: '*red-note',
 })
-export class RedNoteDirective<T> extends StructuralDirective<T> implements OnInit, OnDestroy {
+export class RedNoteDirective extends StructuralDirective implements OnInit, OnDestroy {
 
 	private elements: ChildNode[] = [];
 	private fragment: DocumentFragment;
 	onInit(): void {
 		const html = `<div class="alert alert-danger" role="alert"></div>`;
-		const node = htmlParser.toDomRootNode(html) as DOMElementNode<ExpressionNode>;
+		const node = htmlParser.toDomRootNode(html) as DOMElementNode;
 		buildExpressionNodes(node);
 		node.children = this.directive.children;
 
