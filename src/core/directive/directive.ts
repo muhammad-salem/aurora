@@ -1,19 +1,19 @@
 import { DOMDirectiveNode, DOMElementNode } from '@ibyar/elements';
 import { ComponentRender } from '../view/render.js';
 
-import type { ExpressionNode, Stack } from '@ibyar/expressions';
+import type { Stack } from '@ibyar/expressions';
 
 /**
  * A structural directive selector as '*if'
  */
-export class StructuralDirective<T> {
+export class StructuralDirective {
 	constructor(
-		protected render: ComponentRender<T>,
+		protected render: ComponentRender<any>,
 		protected comment: Comment,
-		protected directive: DOMDirectiveNode<ExpressionNode>,
+		protected directive: DOMDirectiveNode,
 		protected directiveStack: Stack
 	) { }
-	protected findTemplate(templateRefName: string): DOMElementNode<ExpressionNode> | undefined {
+	protected findTemplate(templateRefName: string): DOMElementNode | undefined {
 		return this.render.templateRefMap.get(templateRefName);
 	}
 }
