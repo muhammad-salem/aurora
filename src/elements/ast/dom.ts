@@ -28,6 +28,10 @@ export class TextContent extends Attribute<'textContent', string> {
  */
 export class LiveTextContent extends TextContent { }
 
+export function isLiveTextContent(text: object): text is LiveTextContent {
+	return text instanceof LiveTextContent;
+}
+
 /**
  * to comment in dom
  */
