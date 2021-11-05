@@ -1,4 +1,4 @@
-import { DOMDirectiveNode, DOMElementNode } from '@ibyar/elements';
+import { DOMElementNode, DOMNode } from '@ibyar/elements';
 import { ComponentRender } from '../view/render.js';
 
 import type { Stack } from '@ibyar/expressions';
@@ -9,9 +9,13 @@ import type { Stack } from '@ibyar/expressions';
 export class StructuralDirective {
 	constructor(
 		protected render: ComponentRender<any>,
+		protected directiveStack: Stack,
 		protected comment: Comment,
-		protected directive: DOMDirectiveNode,
-		protected directiveStack: Stack
+		protected parentNode: Node,
+		protected node: DOMNode,
+		protected directiveValue: string,
+		// protected directive: DOMDirectiveNode,
+
 	) { }
 	protected findTemplate(templateRefName: string): DOMElementNode | undefined {
 		return this.render.templateRefMap.get(templateRefName);
