@@ -102,6 +102,8 @@ function parseChild(child: DOMNode) {
 		parseChild(child.node);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
+	} else if (child instanceof DOMFragmentNode) {
+		parseDomParentNode(child);
 	}
 }
 function parseDomParentNode(parent: DOMParentNode) {
