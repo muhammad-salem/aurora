@@ -4,6 +4,8 @@ import { Person, PersonModel } from './person';
 @Component({
 	selector: 'person-app',
 	template: `
+		<div *time></div>
+		<template *time>{{hh}}:{{mm}}:{{ss}}</template>
 		<div *add-note>
 			{{appVersion}}
 			{{appName}}
