@@ -1,5 +1,5 @@
 import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type { Scope, ScopeContext } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -45,7 +45,7 @@ export class UnaryExpression extends AbstractExpressionNode {
 	}
 	private getDelete(stack: Stack, thisContext?: any) {
 		if (this.argument instanceof MemberExpression) {
-			const scope = this.argument.findScope(stack);
+			const scope = this.argument.findScope<ScopeContext>(stack);
 			let propertyKey: PropertyKey;
 			const right = this.argument.getProperty();
 			if (right instanceof MemberExpression) {

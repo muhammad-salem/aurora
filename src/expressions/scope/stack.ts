@@ -1,5 +1,5 @@
 import type { CanDeclareExpression } from '../api/expression.js';
-import { ReactiveScope, Scope, ScopeType } from './scope.js';
+import { ReactiveScope, Scope, ScopeContext, ScopeType } from './scope.js';
 
 
 export interface AwaitPromiseInfo {
@@ -143,14 +143,14 @@ export class Stack implements Stack {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
 	}
 	get(propertyKey: PropertyKey) {
-		return this.findScope(propertyKey).get(propertyKey);
+		return this.findScope<ScopeContext>(propertyKey).get(propertyKey);
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-		return this.findScope(propertyKey).set(propertyKey, value, receiver);
+		return this.findScope<ScopeContext>(propertyKey).set(propertyKey, value, receiver);
 	}
 	declareVariable(scopeType: ScopeType, propertyKey: PropertyKey, propertyValue?: any) {
 		if (scopeType === 'block') {
-			return this.lastScope().set(propertyKey, propertyValue);
+			return this.lastScope<ScopeContext>().set(propertyKey, propertyValue);
 		}
 		let lastIndex = this.stack.length;
 		while (lastIndex--) {

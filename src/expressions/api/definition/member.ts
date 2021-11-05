@@ -1,12 +1,11 @@
 import type {
 	NodeDeserializer, ExpressionNode,
-	CanFindScope, ExpressionEventPath, ExpressionEventPathBracketNotation
+	CanFindScope, ExpressionEventPath
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type { Scope, ScopeContext } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
-import { Literal } from './values.js';
 
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
@@ -33,7 +32,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
-		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope(stack);
+		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope<ScopeContext>(stack);
 		let propertyKey: PropertyKey;
 		if (this.computed) {
 			propertyKey = this.property.get(stack);
