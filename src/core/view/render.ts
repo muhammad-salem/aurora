@@ -1,4 +1,4 @@
-import { ExpressionEventMap, ExpressionNode, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap, ExpressionNode, ScopeContext, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
@@ -44,7 +44,7 @@ export class ComponentRender<T> {
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
-		this.contextStack.pushScope(this.view._modelScope);
+		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
 		this.nativeElementMutation = new ElementMutation();
 		this.view._model.subscribeModel('destroy', () => {
 			this.nativeElementMutation.disconnect();
@@ -343,7 +343,7 @@ export class ComponentRender<T> {
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
-				if (AsyncPipeProvider.AsyncPipeContext === context) {
+				if (scope instanceof AsyncPipeProvider) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe1way(pipe, eventName, callback, object, attrName);
 					if (isOnDestroy(pipe)) {
@@ -357,7 +357,7 @@ export class ComponentRender<T> {
 					const pipeContext: { [key: string]: Function; } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (PipeProvider.PipeContext !== context) {
+				} else if (!(scope instanceof PipeProvider)) {
 					subscribe1way(context, eventName, callback, object, attrName);
 				}
 			}
@@ -374,7 +374,7 @@ export class ComponentRender<T> {
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
-				if (AsyncPipeProvider.AsyncPipeContext === context) {
+				if (scope instanceof AsyncPipeProvider) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
 					if (isOnDestroy(pipe)) {
@@ -388,7 +388,7 @@ export class ComponentRender<T> {
 					const pipeContext: { [key: string]: Function } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (PipeProvider.PipeContext !== context) {
+				} else if (!(scope instanceof PipeProvider)) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
 				}
 			}

@@ -1,12 +1,12 @@
-import type { ExpressionEventMap, Scope, Stack } from '@ibyar/expressions';
+import type { ExpressionEventMap, Scope, ScopeContext, Stack } from '@ibyar/expressions';
 
-function visitInnerEvents(events: ExpressionEventMap, scope: Scope<object>, rootName: string, scopeMap: Map<string, Scope<object>>) {
+function visitInnerEvents(events: ExpressionEventMap, scope: Scope<ScopeContext>, rootName: string, scopeMap: Map<string, Scope<object>>) {
 	const innerEventNames = Object.keys(events);
 	innerEventNames.forEach(eventName => {
 		if (eventName.startsWith(':')) {
 			return;
 		}
-		const innerScope = scope.getScope(eventName);
+		const innerScope = scope.getScope<ScopeContext>(eventName);
 		if (innerScope) {
 			const innerEventName = `${rootName}.${eventName}`;
 			scopeMap.set(innerEventName, innerScope);
