@@ -14,9 +14,9 @@ export class AddNoteDirective extends StructuralDirective implements OnInit, OnD
 	private fragment: DocumentFragment;
 	onInit(): void {
 		const html = `<div class="alert alert-success" role="alert">structural directive name: '{{directiveName}}'</div>`;
-		const node: DOMNode = htmlParser.toDomRootNode(html);
-		buildExpressionNodes(node);
-		const children: DOMChild[] = [node as DOMChild, ...this.directive.children];
+		const wrapperNode: DOMNode = htmlParser.toDomRootNode(html);
+		buildExpressionNodes(wrapperNode);
+		const children: DOMNode[] = [wrapperNode, this.node];
 
 		this.fragment = document.createDocumentFragment();
 		const stack = this.directiveStack.copyStack();
@@ -27,9 +27,9 @@ export class AddNoteDirective extends StructuralDirective implements OnInit, OnD
 		this.fragment.childNodes.forEach(child => this.elements.push(child));
 		this.comment.after(this.fragment);
 	}
-	private appendChildToParent(children: DOMChild[], stack: Stack) {
+	protected appendChildToParent(children: DOMNode[], stack: Stack) {
 		for (const child of children) {
-			this.render.appendChildToParent(this.fragment, child, stack);
+			this.render.appendChildToParent(this.fragment, child, stack, this.parentNode);
 		}
 	}
 	private removeOldElements() {

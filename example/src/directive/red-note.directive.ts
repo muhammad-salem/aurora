@@ -1,5 +1,5 @@
 import {
-	Directive, DOMElementNode, htmlParser,
+	Directive, DOMChild, DOMElementNode, htmlParser,
 	OnDestroy, OnInit, StructuralDirective
 } from '@ibyar/aurora';
 
@@ -14,13 +14,13 @@ export class RedNoteDirective extends StructuralDirective implements OnInit, OnD
 	private fragment: DocumentFragment;
 	onInit(): void {
 		const html = `<div class="alert alert-danger" role="alert"></div>`;
-		const node = htmlParser.toDomRootNode(html) as DOMElementNode;
-		buildExpressionNodes(node);
-		node.children = this.directive.children;
+		const wrapperNode = htmlParser.toDomRootNode(html) as DOMElementNode;
+		buildExpressionNodes(wrapperNode);
+		wrapperNode.addChild(this.node as DOMChild);
 
 		this.fragment = document.createDocumentFragment();
 		const stack = this.directiveStack.copyStack();
-		this.render.appendChildToParent(this.fragment, node, stack);
+		this.render.appendChildToParent(this.fragment, wrapperNode, stack, this.parentNode);
 		this.fragment.childNodes.forEach(child => this.elements.push(child));
 		this.comment.after(this.fragment);
 	}
