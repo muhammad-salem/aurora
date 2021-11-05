@@ -154,28 +154,6 @@ export class BaseNode extends DOMParentNode {
 
 }
 
-/**
- * structural directive 
- */
-export class DOMDirectiveNode extends DOMParentNode {
-
-	/**
-	 * name of the directive 
-	 */
-	directiveName: string;
-
-	/**
-	 * value of the directive 
-	 */
-	directiveValue: string;
-
-	constructor(directiveName: string, directiveValue: string) {
-		super();
-		this.directiveName = directiveName;
-		this.directiveValue = directiveValue;
-	}
-}
-
 export class DOMElementNode extends BaseNode {
 
 	/**
@@ -211,6 +189,33 @@ export class DOMElementNode extends BaseNode {
 
 }
 
+
+/**
+ * structural directive 
+ */
+export class DOMDirectiveNode {
+
+	/**
+	 * name of the directive 
+	 */
+	directiveName: string;
+
+	/**
+	 * value of the directive 
+	 */
+	directiveValue: string;
+
+	/**
+	 * the value of the template node, that this directive going to host-on 
+	 */
+	node: DOMNode;
+
+	constructor(directiveName: string, directiveValue: string, node: DOMNode) {
+		this.directiveName = directiveName;
+		this.directiveValue = directiveValue;
+		this.node = node;
+	}
+}
 export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
 export type DOMNode = DOMFragmentNode | DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;

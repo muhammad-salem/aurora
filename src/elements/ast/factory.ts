@@ -108,9 +108,9 @@ export class NodeFactory {
 	}
 
 	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
-		const directive = new DOMDirectiveNode(directiveName, directiveValue);
-		children?.forEach(child => (typeof child === 'string') ? directive.addTextChild(child) : directive.addChild(child));
-		return directive;
+		const fragment = new DOMFragmentNode();
+		children?.forEach(child => (typeof child === 'string') ? fragment.addTextChild(child) : fragment.addChild(child));
+		return new DOMDirectiveNode(directiveName, directiveValue, fragment);
 	}
 
 	static initElementAttrs(element: BaseNode, attrs?: NodeAttr) {

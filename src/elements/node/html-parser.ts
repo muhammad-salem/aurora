@@ -367,30 +367,23 @@ export class NodeParser {
 			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				const directive = new DOMDirectiveNode(temp.name, temp.value as string);
-				if (node.tagName === 'template') {
-					directive.children = node.children;
-				} else {
-					directive.addChild(node);
-				}
-				return directive;
+				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
+				return new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
 			}
 			if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
 				// try to find expression attribute
 				// <if expression="a === b">child text <div>...</div></if>
 				temp = node.attributes.find(attr => attr.name === 'expression');
 				if (temp) {
-					const directive = new DOMDirectiveNode('*' + node.tagName, temp.value as string);
-					directive.children = node.children;
-					return directive;
+					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
+				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
+				return new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
 			}
 		} else if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
-			const directive = new DOMDirectiveNode('*' + node.tagName, '');
-			directive.children = node.children;
-			return directive;
+			return new DOMDirectiveNode('*' + node.tagName, '', new DOMFragmentNode(node.children));
 		}
 		return node;
 	}
