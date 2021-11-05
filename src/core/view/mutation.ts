@@ -10,6 +10,7 @@ interface NodeRemoveCallback {
 export class MutationObservable {
 	private attributes = new Map<string, AttributeChangeCallback[]>();
 	private remove = new WeakMap<Node, NodeRemoveCallback[]>();
+	private insert = new WeakMap<Node, NodeRemoveCallback[]>();
 
 	emit(attributeName: string, value: any, oldValue?: any): void {
 		const calls = this.attributes.get(attributeName);
@@ -25,7 +26,15 @@ export class MutationObservable {
 	}
 
 	emitNodeRemove(node: Node): void {
-		const calls = this.remove.get(node);
+		this.emitNode(this.remove, node);
+	}
+
+	emitNodeInsert(node: Node): void {
+		this.emitNode(this.insert, node);
+	}
+
+	private emitNode(actionMap: WeakMap<Node, NodeRemoveCallback[]>, node: Node): void {
+		const calls = actionMap.get(node);
 
 		calls?.forEach(callback => {
 			try {
@@ -47,13 +56,21 @@ export class MutationObservable {
 	}
 
 	subscribeOnRemoveNode(node: Node, callback: NodeRemoveCallback): MutationSubscription {
-		let calls = this.remove.get(node);
+		return this.subscribeNodeAction(this.remove, node, callback);
+	}
+
+	subscribeOnInsertNode(node: Node, callback: NodeRemoveCallback): MutationSubscription {
+		return this.subscribeNodeAction(this.insert, node, callback);
+	}
+
+	private subscribeNodeAction(actionMap: WeakMap<Node, NodeRemoveCallback[]>, node: Node, callback: NodeRemoveCallback): MutationSubscription {
+		let calls = actionMap.get(node);
 		if (!calls) {
 			calls = [];
-			this.remove.set(node, calls);
+			actionMap.set(node, calls);
 		}
 		calls.push(callback);
-		return new MutationSubscription(this, node, callback);
+		return new MutationSubscription(this, new WeakRef(node), callback);
 	}
 
 	unsubscribe(eventName: string, callback: AttributeChangeCallback): void {
@@ -67,7 +84,15 @@ export class MutationObservable {
 	}
 
 	unsubscribeOnRemoveNode(node: Node, callback: NodeRemoveCallback): void {
-		const calls = this.remove.get(node);
+		this.unsubscribeNodeAction(this.remove, node, callback);
+	}
+
+	unsubscribeOnInsertNode(node: Node, callback: NodeRemoveCallback): void {
+		this.unsubscribeNodeAction(this.insert, node, callback);
+	}
+
+	private unsubscribeNodeAction(actionMap: WeakMap<Node, NodeRemoveCallback[]>, node: Node, callback: NodeRemoveCallback): void {
+		const calls = actionMap.get(node);
 		if (calls) {
 			const index = calls.indexOf(callback);
 			if (index !== -1) {
@@ -84,10 +109,10 @@ export class MutationObservable {
 export class MutationSubscription {
 
 	private type: 'attribute' | 'remove';
-	constructor(observable: MutationObservable, node: Node, callback: NodeRemoveCallback);
+	constructor(observable: MutationObservable, node: WeakRef<Node>, callback: NodeRemoveCallback);
 	constructor(observable: MutationObservable, attributeName: string, callback: AttributeChangeCallback);
 
-	constructor(private observable: MutationObservable, private key: string | Node, private callback: AttributeChangeCallback | NodeRemoveCallback) {
+	constructor(private observable: MutationObservable, private key: string | WeakRef<Node>, private callback: AttributeChangeCallback | NodeRemoveCallback) {
 		this.type = typeof key === 'string' ? 'attribute' : 'remove';
 	}
 
@@ -95,7 +120,10 @@ export class MutationSubscription {
 		if (this.type === 'attribute') {
 			this.observable.unsubscribe(this.key as string, this.callback as AttributeChangeCallback);
 		} else {
-			this.observable.unsubscribeOnRemoveNode(this.key as Node, this.callback as NodeRemoveCallback);
+			const ref = (this.key as WeakRef<Node>).deref();
+			if (ref) {
+				this.observable.unsubscribeOnRemoveNode(ref, this.callback as NodeRemoveCallback);
+			}
 		}
 	}
 }
@@ -154,6 +182,16 @@ export class ElementMutation {
 			this.mutationObserver.observe(target, ElementMutation.Mutation_OPTIONS);
 		}
 		return observable.subscribeOnRemoveNode(node, callback);
+	}
+
+	subscribeOnInsertNode(target: Node, node: Node, callback: NodeRemoveCallback): MutationSubscription {
+		let observable = this.observables.get(target);
+		if (!observable) {
+			observable = new MutationObservable();
+			this.observables.set(target, observable);
+			this.mutationObserver.observe(target, ElementMutation.Mutation_OPTIONS);
+		}
+		return observable.subscribeOnInsertNode(node, callback);
 	}
 
 	disconnect() {

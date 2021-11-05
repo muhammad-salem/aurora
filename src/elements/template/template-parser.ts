@@ -9,7 +9,7 @@ import { NodeFactory } from '../ast/factory.js';
 
 export class TemplateParser {
 
-	parse(template: HTMLTemplateElement): DOMNode<any> {
+	parse(template: HTMLTemplateElement): DOMNode {
 		if (template.content.childNodes.length == 0) {
 			return new DOMFragmentNode([new TextContent('')]);
 		} else if (template.content.childNodes.length === 1) {
@@ -22,7 +22,7 @@ export class TemplateParser {
 		} else /* if (template.content.childNodes.length > 1)*/ {
 			const children = Array.prototype.slice.call(template.content.childNodes)
 				.map(item => this.createComponent(item))
-				.flatMap(function (toFlat): DOMChild<any>[] {
+				.flatMap(function (toFlat): DOMChild[] {
 					if (Array.isArray(toFlat)) {
 						return toFlat;
 					} else {
@@ -63,7 +63,7 @@ export class TemplateParser {
 		}
 	}
 
-	toDomRenderRootNode<T>(template: DOMNode<any> | HTMLTemplateElement | string) {
+	toDomRenderRootNode<T>(template: DOMNode | HTMLTemplateElement | string) {
 		if (typeof template === 'string') {
 			let temp = document.createElement('template');
 			temp.innerHTML = template;

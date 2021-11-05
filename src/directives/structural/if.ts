@@ -9,11 +9,11 @@ const FIRST_STATUE = {};
 @Directive({
 	selector: '*if',
 })
-export class IfDirective<T> extends AbstractStructuralDirective<T> {
+export class IfDirective<T> extends AbstractStructuralDirective {
 	lastTest: boolean = FIRST_STATUE as boolean;
-	elseTemplateNode: DOMElementNode<ExpressionNode> | undefined;
+	elseTemplateNode: DOMElementNode | undefined;
 	getStatement(): string {
-		const [test, alternate] = this.directive.directiveValue.toString().split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
+		const [test, alternate] = this.directiveValue.toString().split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
 		if (alternate) {
 			return `if(${test}) { } else '${alternate}'`;
 		}
@@ -37,7 +37,7 @@ export class IfDirective<T> extends AbstractStructuralDirective<T> {
 				const stack = this.directiveStack.copyStack();
 				stack.pushBlockScope();
 				if (test) {
-					this.appendChildToParent(this.directive.children, stack);
+					this.updateView(stack);
 				} else if (this.elseTemplateNode) {
 					this.appendChildToParent(this.elseTemplateNode.children, stack);
 				}

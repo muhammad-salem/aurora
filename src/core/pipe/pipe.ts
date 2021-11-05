@@ -16,13 +16,12 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 	return Reflect.has(Object.getPrototypeOf(pipe), 'transform');
 }
 
-export class PipeProvider extends ReadOnlyScope<Map<string, Function>> {
-	static PipeContext = new Map<string, Function>();
+export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }> {
 	constructor() {
-		super(PipeProvider.PipeContext, 'block');
+		super({}, 'block');
 	}
 	has(pipeName: string): boolean {
-		if (this.context.has(pipeName)) {
+		if (pipeName in this.context) {
 			return true;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
@@ -30,14 +29,14 @@ export class PipeProvider extends ReadOnlyScope<Map<string, Function>> {
 	}
 	get(pipeName: string): any {
 		let transformFunc: Function | undefined;
-		if (transformFunc = this.context.get(pipeName)) {
+		if (transformFunc = this.context[pipeName]) {
 			return transformFunc;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		if (pipeRef !== undefined && !pipeRef.asynchronous) {
 			const pipe = new pipeRef.modelClass();
 			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-			this.context.set(pipeRef.name, transformFunc);
+			this.context[pipeRef.name] = transformFunc;
 			return transformFunc;
 		}
 		return void 0;

@@ -1,5 +1,4 @@
 import type { TypeOf } from '../utils/typeof.js';
-import type { ExpressionNode } from '@ibyar/expressions';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DOMNode, DOMRenderNode, canAttachShadow, NodeFactory
@@ -56,7 +55,7 @@ export interface PipeRef<T> {
 export interface DirectiveRef<T> {
 	selector: string;
 
-	modelClass: TypeOf<StructuralDirective<T>> | TypeOf<AttributeDirective>;
+	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
 
 	inputs: PropertyRef[];
 	outputs: PropertyRef[];
@@ -69,7 +68,7 @@ export interface DirectiveRef<T> {
 
 export interface ComponentRef<T> {
 	selector: string;
-	template: DOMNode<ExpressionNode> | DOMRenderNode<T, ExpressionNode>;
+	template: DOMNode | DOMRenderNode<T>;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;

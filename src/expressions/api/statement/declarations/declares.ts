@@ -94,7 +94,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 		}
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
-		this.declarations[0].declareVariable(stack, this.kind === 'var' ? 'function' : 'block', propertyValue);
+		this.declarations[0].declareVariable(stack, scopeType, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.declarations.flatMap(declareVariable => declareVariable.dependency(computed));

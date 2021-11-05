@@ -4,12 +4,16 @@ import { Person, PersonModel } from './person';
 @Component({
 	selector: 'person-app',
 	template: `
+		<div *time></div>
+		<template *time>{{hh}}:{{mm}}:{{ss}}</template>
 		<div *add-note>
 			{{appVersion}}
 			{{appName}}
 		</div>
 
 		<h1 [textContent]="title"></h1>
+		
+		<red-note>text child in directive</red-note>
 
 		<div class="row">
 			<div class="col-4">

@@ -25,7 +25,7 @@ export class NodeFactory {
 		'default'
 	];
 
-	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]): DOMNode<any> {
+	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]): DOMNode {
 
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
 			return NodeFactory.createFragmentNode(...children);
@@ -83,7 +83,7 @@ export class NodeFactory {
 		}
 	}
 
-	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]) {
+	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
 		let node = new DOMElementNode(tagName, attrs?.is);
 		NodeFactory.initElementAttrs(node, attrs);
 		children?.forEach(child => {
@@ -96,7 +96,7 @@ export class NodeFactory {
 		return node;
 	}
 
-	static createFragmentNode(...children: (string | DOMChild<any>)[]) {
+	static createFragmentNode(...children: (string | DOMChild)[]) {
 		let childStack = children.flatMap(child => {
 			if (typeof child === 'string') {
 				return parseTextChild(child);
@@ -107,13 +107,13 @@ export class NodeFactory {
 		return new DOMFragmentNode(childStack);
 	}
 
-	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild<any>)[]) {
-		const directive = new DOMDirectiveNode(directiveName, directiveValue);
-		children?.forEach(child => (typeof child === 'string') ? directive.addTextChild(child) : directive.addChild(child));
-		return directive;
+	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
+		const fragment = new DOMFragmentNode();
+		children?.forEach(child => (typeof child === 'string') ? fragment.addTextChild(child) : fragment.addChild(child));
+		return new DOMDirectiveNode(directiveName, directiveValue, fragment);
 	}
 
-	static initElementAttrs(element: BaseNode<any>, attrs?: NodeAttr) {
+	static initElementAttrs(element: BaseNode, attrs?: NodeAttr) {
 		if (attrs) {
 			Object.keys(attrs).forEach(key => {
 				NodeFactory.handelAttribute(element, key, attrs[key]);
@@ -121,7 +121,7 @@ export class NodeFactory {
 		}
 	}
 
-	static handelAttribute(element: BaseNode<any>, attrName: string, value: string | Function | object): void {
+	static handelAttribute(element: BaseNode, attrName: string, value: string | Function | object): void {
 
 		if (attrName.startsWith('#') && element instanceof DOMElementNode) {
 			// <app-tag #element-name="directiveName?" ></app-tag>

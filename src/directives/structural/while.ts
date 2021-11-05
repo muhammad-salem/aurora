@@ -10,10 +10,10 @@ import { AbstractStructuralDirective } from './structural.js';
 @Directive({
 	selector: '*while',
 })
-export class WhileDirective<T> extends AbstractStructuralDirective<T> {
+export class WhileDirective extends AbstractStructuralDirective {
 
 	getStatement() {
-		const statement = this.directive.directiveValue.toString().trim();
+		const statement = this.directiveValue.toString().trim();
 		if (statement.startsWith('let')) {
 			return statement;
 		} else {
@@ -32,14 +32,14 @@ export class WhileDirective<T> extends AbstractStructuralDirective<T> {
 		let condition: ExpressionNode;
 		if (whileNode instanceof ExpressionStatement) {
 			if (whileNode.getBody().length > 2) {
-				throw new Error(`syntax error: ${this.directive.directiveValue}`);
+				throw new Error(`syntax error: ${this.directiveValue}`);
 			}
 			initializer = whileNode.getBody()[0];
 			condition = whileNode.getBody()[1];
 		} else if (whileNode instanceof WhileNode) {
 			condition = whileNode.getTest();
 		} else {
-			throw new Error(`syntax error: ${this.directive.directiveValue}`);
+			throw new Error(`syntax error: ${this.directiveValue}`);
 		}
 		this.directiveStack.pushFunctionScope();
 		const callback = () => {

@@ -1,5 +1,5 @@
 import { Directive } from '@ibyar/core';
-import { DOMDirectiveNode } from '@ibyar/elements';
+import { DOMChild, DOMDirectiveNode, DOMParentNode } from '@ibyar/elements';
 import { ExpressionNode, JavaScriptParser, SwitchStatement } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
@@ -17,22 +17,22 @@ export class DefaultSwitchCaseDirective {
 @Directive({
 	selector: '*switch',
 })
-export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
-	caseElements: DOMDirectiveNode<ExpressionNode>[] = [];
+export class SwitchDirective extends AbstractStructuralDirective {
+	caseElements: DOMDirectiveNode[] = [];
 	caseExpressions: ExpressionNode[] = [];
-	defaultElement: DOMDirectiveNode<ExpressionNode>;
+	defaultElement: DOMDirectiveNode;
 
 	getStatement() {
-		return `switch(${this.directive.directiveValue}) { }`;
+		return `switch(${this.directiveValue}) { }`;
 	}
 	getCallback(switchNode: ExpressionNode): () => void {
-		const directiveChildren = (this.directive.children as DOMDirectiveNode<ExpressionNode>[])[0].children as DOMDirectiveNode<ExpressionNode>[];
+		const directiveChildren = (this.node as DOMParentNode).children as DOMDirectiveNode[];
 		for (const child of directiveChildren) {
 			if (child.directiveName === '*case') {
 				this.caseElements.push(child);
 			} else if (child.directiveName === '*default') {
 				if (this.defaultElement) {
-					throw new Error(`syntax error: multiple default directive in switch case ${this.directive.directiveValue}`);
+					throw new Error(`syntax error: multiple default directive in switch case ${this.directiveValue}`);
 				}
 				this.defaultElement = child;
 			}
@@ -45,7 +45,7 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 		if (switchNode instanceof SwitchStatement) {
 			callback = () => {
 				const expressionValue = switchNode.getDiscriminant().get(this.directiveStack);
-				let child: DOMDirectiveNode<ExpressionNode> | undefined;
+				let child: DOMDirectiveNode | undefined;
 				for (let i = 0; i < this.caseExpressions.length; i++) {
 					const value = this.caseExpressions[i].get(this.directiveStack);
 					if (value === expressionValue) {
@@ -60,10 +60,10 @@ export class SwitchDirective<T> extends AbstractStructuralDirective<T> {
 						return;
 					}
 				}
-				this.appendChildToParent(child.children, this.directiveStack);
+				this.appendNodeToParent(child.node, this.directiveStack);
 			};
 		} else {
-			throw new Error(`syntax error: ${this.directive.directiveValue}`);
+			throw new Error(`syntax error: ${this.directiveValue}`);
 		}
 		return callback;
 	}

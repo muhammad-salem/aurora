@@ -1,7 +1,8 @@
-import { ExpressionEventMap, ExpressionNode, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap, ExpressionNode, ScopeContext, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
 	DOMElementNode, DOMFragmentNode, DOMNode,
+	isLiveTextContent,
 	isTagNameNative, isValidCustomElementName,
 	LiveAttribute, LiveTextContent, TextContent
 } from '@ibyar/elements';
@@ -18,6 +19,7 @@ import {
 	SourceFollowerCallback, subscribe1way, subscribe2way
 } from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
+import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
 import { findScopeMap } from './events.js';
 
@@ -34,16 +36,16 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' 
 }
 export class ComponentRender<T> {
 	componentRef: ComponentRef<T>;
-	template: DOMNode<ExpressionNode>;
+	template: DOMNode;
 	nativeElementMutation: ElementMutation;
 	contextStack: Stack;
-	templateRefMap = new Map<string, DOMElementNode<ExpressionNode>>();
+	templateRefMap = new Map<string, DOMElementNode>();
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
-		this.contextStack.pushScope(this.view._modelScope);
+		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
 		this.nativeElementMutation = new ElementMutation();
 		this.view._model.subscribeModel('destroy', () => {
 			this.nativeElementMutation.disconnect();
@@ -70,11 +72,11 @@ export class ComponentRender<T> {
 			}
 			this.initTemplateRefMap(this.template);
 			const rootFragment = document.createDocumentFragment();
-			this.appendChildToParent(rootFragment, this.template, this.contextStack);
+			this.appendChildToParent(rootFragment, this.template, this.contextStack, rootRef);
 			rootRef.append(rootFragment);
 		}
 	}
-	isTemplateRefName(template: DOMNode<ExpressionNode>): template is DOMElementNode<ExpressionNode> {
+	isTemplateRefName(template: DOMNode): template is DOMElementNode {
 		if (template instanceof DOMElementNode) {
 			if (template.tagName === 'template' && template.templateRefName) {
 				return true;
@@ -82,10 +84,10 @@ export class ComponentRender<T> {
 		}
 		return false;
 	}
-	initTemplateRefMap(domNode: DOMNode<ExpressionNode>) {
-		if (domNode instanceof DOMElementNode || domNode instanceof DOMDirectiveNode || domNode instanceof DOMFragmentNode) {
+	initTemplateRefMap(domNode: DOMNode) {
+		if (domNode instanceof DOMElementNode || domNode instanceof DOMFragmentNode) {
 			if (domNode.children) {
-				const toRemove: { index: number, template: DOMElementNode<ExpressionNode> }[] = [];
+				const toRemove: { index: number, template: DOMElementNode }[] = [];
 				for (let index = 0; index < domNode.children.length; index++) {
 					const child = domNode.children[index];
 					if (this.isTemplateRefName(child)) {
@@ -160,18 +162,29 @@ export class ComponentRender<T> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createDirective(directive: DOMDirectiveNode<ExpressionNode>, comment: Comment, directiveStack: Stack, parentNode: Node): void {
+	createStructuralDirective(directive: DOMDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
 		if (directiveRef) {
 			// structural directive selector
-			const structural = new directiveRef.modelClass(this, comment, directive, directiveStack.copyStack());
-			if (isOnInit(structural)) {
-				structural.onInit();
-			}
+			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
+
+			const structural = new StructuralDirectiveClass(
+				this,
+				directiveStack.copyStack(),
+				comment,
+				parentNode,
+				directive.node,
+				directive.directiveValue
+			);
 			if (isOnDestroy(structural)) {
-				this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
+				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
+					console.log('destroy structural directive', directive.directiveName, removeSubscription);
+					removeSubscription.unsubscribe();
 					structural.onDestroy();
 				});
+			}
+			if (isOnInit(structural)) {
+				structural.onInit();
 			}
 		} else {
 			// didn't find directive or it is not define yet.
@@ -184,38 +197,38 @@ export class ComponentRender<T> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(textNode: LiveTextContent<ExpressionNode>, contextStack: Stack): Text {
+	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
 		this.bind1Way(liveText, textNode, contextStack);
 		return liveText;
 	}
-	createDocumentFragment(node: DOMFragmentNode<ExpressionNode>, contextStack: Stack): DocumentFragment {
+	createDocumentFragment(node: DOMFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
 		const fragment = document.createDocumentFragment();
-		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack));
+		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode));
 		return fragment;
 	}
-	appendChildToParent(parent: HTMLElement | DocumentFragment, child: DOMNode<ExpressionNode>, contextStack: Stack) {
+	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DOMNode, contextStack: Stack, parentNode: Node) {
 		if (child instanceof DOMElementNode) {
-			parent.append(this.createElement(child, contextStack));
+			fragmentParent.append(this.createElement(child, contextStack, parentNode));
 		} else if (child instanceof DOMDirectiveNode) {
 			const comment = document.createComment(`start ${child.directiveName}: ${child.directiveValue}`);
-			parent.append(comment);
+			fragmentParent.append(comment);
 			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
 			comment.after(lastComment);
-			this.createDirective(child, comment, contextStack, parent);
-		} else if (child instanceof LiveTextContent) {
-			parent.append(this.createLiveText(child, contextStack));
+			this.createStructuralDirective(child, comment, contextStack, parentNode);
+		} else if (isLiveTextContent(child)) {
+			fragmentParent.append(this.createLiveText(child, contextStack, parentNode));
 		} else if (child instanceof TextContent) {
-			parent.append(this.createText(child));
+			fragmentParent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {
-			parent.append(this.createComment(child));
+			fragmentParent.append(this.createComment(child));
 		} else if (child instanceof DOMFragmentNode) {
-			parent.append(this.createDocumentFragment(child, contextStack));
+			fragmentParent.append(this.createDocumentFragment(child, contextStack, parentNode));
 		}
 	}
-	createElementByTagName(node: DOMElementNode<ExpressionNode>): HTMLElement {
+	createElementByTagName(node: DOMElementNode): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			const ViewClass = customElements.get(node.tagName) as ((new () => HTMLElement) | undefined);
@@ -239,7 +252,7 @@ export class ComponentRender<T> {
 		}
 		return element;
 	}
-	createElement(node: DOMElementNode<ExpressionNode>, contextStack: Stack): HTMLElement {
+	createElement(node: DOMElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
 		const elContext = isHTMLComponent(element) ? element._viewScope : new ElementReactiveScope(element);
 		contextStack = contextStack.copyStack();
@@ -254,12 +267,12 @@ export class ComponentRender<T> {
 		}
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child, contextStack);
+				this.appendChildToParent(element, child, contextStack, element);
 			}
 		}
 		return element;
 	}
-	initAttribute(element: HTMLElement, node: DOMElementNode<ExpressionNode>, contextStack: Stack): void {
+	initAttribute(element: HTMLElement, node: DOMElementNode, contextStack: Stack): void {
 		if (node.attributes) {
 			node.attributes.forEach(attr => {
 				/**
@@ -322,7 +335,7 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute<ExpressionNode> | LiveTextContent<ExpressionNode>, contextStack: Stack) {
+	bind1Way(element: HTMLElement | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
@@ -335,7 +348,7 @@ export class ComponentRender<T> {
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
-				if (AsyncPipeProvider.AsyncPipeContext === context) {
+				if (scope instanceof AsyncPipeProvider) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe1way(pipe, eventName, callback, object, attrName);
 					if (isOnDestroy(pipe)) {
@@ -349,13 +362,13 @@ export class ComponentRender<T> {
 					const pipeContext: { [key: string]: Function; } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (PipeProvider.PipeContext !== context) {
+				} else if (!(scope instanceof PipeProvider)) {
 					subscribe1way(context, eventName, callback, object, attrName);
 				}
 			}
 		});
 	}
-	bind2Way(element: HTMLElement, attr: LiveAttribute<ExpressionNode>, contextStack: Stack) {
+	bind2Way(element: HTMLElement, attr: LiveAttribute, contextStack: Stack) {
 		const callback1 = () => {
 			attr.expression.get(contextStack);
 		};
@@ -366,7 +379,7 @@ export class ComponentRender<T> {
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
-				if (AsyncPipeProvider.AsyncPipeContext === context) {
+				if (scope instanceof AsyncPipeProvider) {
 					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
 					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
 					if (isOnDestroy(pipe)) {
@@ -380,7 +393,7 @@ export class ComponentRender<T> {
 					const pipeContext: { [key: string]: Function } = {};
 					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (PipeProvider.PipeContext !== context) {
+				} else if (!(scope instanceof PipeProvider)) {
 					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
 				}
 			}

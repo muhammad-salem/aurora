@@ -37,11 +37,11 @@ type ForAlias = 'index' | 'count' | 'first' | 'last' | 'even' | 'odd';
 @Directive({
 	selector: '*for',
 })
-export class ForDirective<T> extends AbstractStructuralDirective<T> {
+export class ForDirective extends AbstractStructuralDirective {
 
 	private alias: { [key in ForAlias]?: string };
 	getStatement() {
-		const lines = this.directive.directiveValue.split(';');
+		const lines = this.directiveValue.split(';');
 		const aliased = lines.filter(str => /\s+as\s+/g.test(str));
 		const forStatement = lines.filter(str => !(/\s+as\s+/g.test(str))).join(';');
 		if (aliased.length > 0) {
@@ -75,7 +75,7 @@ export class ForDirective<T> extends AbstractStructuralDirective<T> {
 		} else if (forNode instanceof ForAwaitOfNode) {
 			callback = this.handelForAwaitOfNode(forNode);
 		} else {
-			throw new Error(`syntax error: ${this.directive.directiveValue}`);
+			throw new Error(`syntax error: ${this.directiveValue}`);
 		}
 		return callback;
 	}

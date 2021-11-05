@@ -1,4 +1,4 @@
-import type { Scope } from './scope.js';
+import type { Scope, ScopeContext } from './scope.js';
 
 export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
 	constructor(private thisContext: object) { }
@@ -10,7 +10,7 @@ export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T>
 /**
  * crete new proxy handler object as scoped context
  */
-export class ScopeProxyHandler<T extends object> implements ProxyHandler<T> {
+export class ScopeProxyHandler<T extends ScopeContext> implements ProxyHandler<ScopeContext> {
 	private proxyMap = new Map<PropertyKey, T>();
 	private proxyValueMap = new WeakMap<object, object>();
 	private functionHandler: FunctionProxyHandler<Function>;
