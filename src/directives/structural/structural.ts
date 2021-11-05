@@ -1,6 +1,6 @@
 import { OnDestroy, OnInit, SourceFollowerCallback, StructuralDirective } from '@ibyar/core';
 import { ExpressionNode, JavaScriptParser, Stack } from '@ibyar/expressions';
-import { DOMChild } from '@ibyar/elements';
+import { DOMChild, DOMNode } from '@ibyar/elements';
 
 export abstract class AbstractStructuralDirective extends StructuralDirective implements OnInit, OnDestroy {
 	protected elements: ChildNode[] = [];
@@ -54,13 +54,21 @@ export abstract class AbstractStructuralDirective extends StructuralDirective im
 		uiCallback([]);
 	}
 	protected updateView(stack: Stack) {
-		this.appendChildToParent(this.directive.children, stack);
+		this.render.appendChildToParent(this.fragment, this.node, stack, this.parentNode);
 	}
-	protected appendChildToParent(children: DOMChild[], stack: Stack) {
+	protected appendNodeToParent(domNode: DOMNode, stack: Stack) {
+		this.render.appendChildToParent(this.fragment, domNode, stack, this.parentNode);
+	}
+	protected appendChildToParent(children: DOMNode[], stack: Stack) {
 		for (const child of children) {
-			this.render.appendChildToParent(this.fragment, child, stack);
+			this.render.appendChildToParent(this.fragment, child, stack, this.parentNode);
 		}
 	}
+	// protected appendChildToParent(children: DOMChild[], stack: Stack) {
+	// 	for (const child of children) {
+	// 		this.render.appendChildToParent(this.fragment, child, stack);
+	// 	}
+	// }
 	protected removeOldElements() {
 		if (this.elements.length > 0) {
 			for (const elm of this.elements) {

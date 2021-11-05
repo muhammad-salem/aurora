@@ -1,5 +1,5 @@
 import { Directive } from '@ibyar/core';
-import { DOMDirectiveNode } from '@ibyar/elements';
+import { DOMChild, DOMDirectiveNode, DOMParentNode } from '@ibyar/elements';
 import { ExpressionNode, JavaScriptParser, SwitchStatement } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
@@ -23,16 +23,16 @@ export class SwitchDirective extends AbstractStructuralDirective {
 	defaultElement: DOMDirectiveNode;
 
 	getStatement() {
-		return `switch(${this.directive.directiveValue}) { }`;
+		return `switch(${this.directiveValue}) { }`;
 	}
 	getCallback(switchNode: ExpressionNode): () => void {
-		const directiveChildren = (this.directive.children as DOMDirectiveNode[])[0].children as DOMDirectiveNode[];
+		const directiveChildren = (this.node as DOMParentNode).children as DOMDirectiveNode[];
 		for (const child of directiveChildren) {
 			if (child.directiveName === '*case') {
 				this.caseElements.push(child);
 			} else if (child.directiveName === '*default') {
 				if (this.defaultElement) {
-					throw new Error(`syntax error: multiple default directive in switch case ${this.directive.directiveValue}`);
+					throw new Error(`syntax error: multiple default directive in switch case ${this.directiveValue}`);
 				}
 				this.defaultElement = child;
 			}
@@ -60,10 +60,10 @@ export class SwitchDirective extends AbstractStructuralDirective {
 						return;
 					}
 				}
-				this.appendChildToParent(child.children, this.directiveStack);
+				this.appendNodeToParent(child.node, this.directiveStack);
 			};
 		} else {
-			throw new Error(`syntax error: ${this.directive.directiveValue}`);
+			throw new Error(`syntax error: ${this.directiveValue}`);
 		}
 		return callback;
 	}
