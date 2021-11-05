@@ -98,7 +98,8 @@ function parseChild(child: DOMNode) {
 		parseBaseNode(child);
 	} else if (child instanceof DOMDirectiveNode) {
 		// DomDirectiveNode
-		parseDomParentNode(child);
+		// in case if add input/output support need to handle that here.
+		parseChild(child.node);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	}
