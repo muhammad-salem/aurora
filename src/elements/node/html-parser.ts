@@ -368,7 +368,11 @@ export class NodeParser {
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
 				const directive = new DOMDirectiveNode(temp.name, temp.value as string);
-				directive.addChild(node);
+				if (node.tagName === 'template') {
+					directive.children = node.children;
+				} else {
+					directive.addChild(node);
+				}
 				return directive;
 			}
 			if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
