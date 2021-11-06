@@ -367,8 +367,19 @@ export class NodeParser {
 			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
-				return new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
+				const isTemplate = node.tagName === 'template';
+				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
+				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
+				let directiveName = temp.name.substring(1);
+				if (isTemplate) {
+					directive.inputs = node.inputs;
+					directive.outputs = node.outputs;
+					directive.attributes = node.attributes;
+					directive.templateAttrs = node.templateAttrs;
+				} else if (directiveRegistry.hasAttributes(directiveName)) {
+					this.extractDirectiveAttributesFromNode(directiveName, directive, node);
+				}
+				return directive;
 			}
 			if (directiveRegistry.has(node.tagName)) {
 				// try to find expression attribute
@@ -378,7 +389,9 @@ export class NodeParser {
 					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
 				const directiveNode = new DOMFragmentNode(node.children);
-				return new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
+				const directive = new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
+				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
+				return directive;
 			}
 		} else if (directiveRegistry.has(node.tagName)) {
 			// support structural directives without expression property
@@ -388,6 +401,21 @@ export class NodeParser {
 		return node;
 	}
 
+
+	private extractDirectiveAttributesFromNode(directiveName: string, directive: DOMDirectiveNode, node: DOMElementNode) {
+		const attributes = directiveRegistry.getAttributes(directiveName)!;
+		directive.inputs = node.inputs?.filter(attr => attributes.includes(attr.name));
+		directive.outputs = node.outputs?.filter(attr => attributes.includes(attr.name));
+		directive.twoWayBinding = node.twoWayBinding?.filter(attr => attributes.includes(attr.name));
+		directive.attributes = node.attributes?.filter(attr => attributes.includes(attr.name));
+		directive.templateAttrs = node.templateAttrs?.filter(attr => attributes.includes(attr.name));
+
+		directive.inputs?.forEach(attr => node.inputs.splice(node.inputs.indexOf(attr), 1));
+		directive.outputs?.forEach(attr => node.outputs.splice(node.outputs.indexOf(attr), 1));
+		directive.twoWayBinding?.forEach(attr => node.twoWayBinding.splice(node.twoWayBinding.indexOf(attr), 1));
+		directive.attributes?.forEach(attr => node.attributes.splice(node.attributes.indexOf(attr), 1));
+		directive.templateAttrs?.forEach(attr => node.templateAttrs.splice(node.templateAttrs.indexOf(attr), 1));
+	}
 }
 
 export class HTMLParser {
