@@ -183,6 +183,7 @@ export class ComponentRender<T> {
 					structural.onDestroy();
 				});
 			}
+			this.initDirectiveAttributes(structural, directive, directiveStack);
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
@@ -335,7 +336,38 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
+	initDirectiveAttributes(directive: StructuralDirective, node: DOMDirectiveNode, contextStack: Stack): void {
+		if (node.attributes) {
+			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
+		}
+		if (node.twoWayBinding) {
+			node.twoWayBinding.forEach(attr => {
+				this.bind2Way(directive, attr, contextStack);
+			});
+		}
+		if (node.inputs) {
+			node.inputs.forEach(attr => {
+				this.bind1Way(directive, attr, contextStack);
+			});
+		}
+		if (node.outputs) {
+			node.outputs.forEach(event => {
+				const listener = ($event: Event) => {
+					const stack = contextStack.copyStack();
+					stack.pushBlockScopeFor({ $event });
+					event.expression.get(stack, this.view._proxyModel);
+				};
+				((<any>directive)[event.name] as any).subscribe(listener);
+			});
+		}
+		if (node.templateAttrs) {
+			node.templateAttrs.forEach(attr => {
+				this.bind1Way(directive, attr, contextStack);
+			});
+		}
+	}
+
+	bind1Way(element: HTMLElement | StructuralDirective | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
@@ -368,7 +400,7 @@ export class ComponentRender<T> {
 			}
 		});
 	}
-	bind2Way(element: HTMLElement, attr: LiveAttribute, contextStack: Stack) {
+	bind2Way(element: HTMLElement | StructuralDirective, attr: LiveAttribute, contextStack: Stack) {
 		const callback1 = () => {
 			attr.expression.get(contextStack);
 		};
@@ -400,6 +432,9 @@ export class ComponentRender<T> {
 		});
 
 		callback1();
+		if (element instanceof StructuralDirective) {
+			return;
+		}
 		const changeEventName = getChangeEventName(element, attr.name);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {
