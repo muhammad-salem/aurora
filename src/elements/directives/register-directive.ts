@@ -35,22 +35,16 @@ export class DirectiveRegistry {
 	 */
 	private directives = new Map<string, DirectiveNodeOptions>();
 
-
-	/**
-	 * register a directive with a name.
-	 * @param directiveName the directive name
-	 */
-	register(directiveName: string): void;
-
 	/**
 	 * register a directive with a name,
 	 * if the directive name exists, will not replace the old directive options
 	 * @param directiveName 
 	 * @param options contain the attributes of the registered directive name
+	 * @override
 	 */
-	register(directiveName: string, options: DirectiveNodeOptions = {}): void {
+	register(directiveName: string, options?: DirectiveNodeOptions): void {
 		if (!this.directives.has(directiveName)) {
-			this.directives.set(directiveName, options);
+			this.directives.set(directiveName, options ?? {});
 		}
 	}
 
