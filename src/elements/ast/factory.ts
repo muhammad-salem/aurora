@@ -2,6 +2,7 @@ import {
 	DOMElementNode, DOMDirectiveNode, DOMChild,
 	BaseNode, DOMFragmentNode, parseTextChild, DOMNode
 } from './dom.js';
+import { directiveRegistry } from '../directives/register-directive.js';
 
 export interface NodeAttr {
 	[attr: string]: string;
@@ -15,16 +16,6 @@ export class NodeFactory {
 
 	static DirectiveTag = 'directive';
 
-	static StructuralDirectives = [
-		'if',
-		'else',
-		'for',
-		'while',
-		'switch',
-		'case',
-		'default'
-	];
-
 	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]): DOMNode {
 
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
@@ -36,7 +27,7 @@ export class NodeFactory {
 		 * <if condition="element.show"> {'{{element.name}}'} </if>
 		 * <div _if="element.show">{'{{element.name}}'} </div>
 		 */
-		if (NodeFactory.StructuralDirectives.includes(tagName)) {
+		if (directiveRegistry.has(tagName)) {
 			return NodeFactory.createDirectiveNode(tagName, '', attrs, ...children);
 		}
 		/**
@@ -110,7 +101,10 @@ export class NodeFactory {
 	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
 		const fragment = new DOMFragmentNode();
 		children?.forEach(child => (typeof child === 'string') ? fragment.addTextChild(child) : fragment.addChild(child));
-		return new DOMDirectiveNode(directiveName, directiveValue, fragment);
+		!directiveName.startsWith('*') && (directiveName = '*' + directiveName);
+		const directive = new DOMDirectiveNode(directiveName, directiveValue, fragment);
+		attrs && Object.keys(attrs).forEach(attr => directive.addAttribute(attr, attrs[attr]));
+		return directive;
 	}
 
 	static initElementAttrs(element: BaseNode, attrs?: NodeAttr) {

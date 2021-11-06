@@ -4,7 +4,7 @@ import {
 	TextContent, LiveTextContent, DOMFragmentNode,
 	DOMDirectiveNode, DOMNode, DOMChild, ElementAttribute
 } from '../ast/dom.js';
-import { NodeFactory } from '../ast/factory.js';
+import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
@@ -370,9 +370,9 @@ export class NodeParser {
 				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
 				return new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
 			}
-			if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
+			if (directiveRegistry.has(node.tagName)) {
 				// try to find expression attribute
-				// <if expression="a === b">child text <div>...</div></if>
+				// <if expression="a === b">text child<div>...</div></if>
 				temp = node.attributes.find(attr => attr.name === 'expression');
 				if (temp) {
 					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
@@ -380,7 +380,7 @@ export class NodeParser {
 				const directiveNode = new DOMFragmentNode(node.children);
 				return new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
 			}
-		} else if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
+		} else if (directiveRegistry.has(node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
 			return new DOMDirectiveNode('*' + node.tagName, '', new DOMFragmentNode(node.children));

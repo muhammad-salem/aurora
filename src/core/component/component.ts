@@ -1,7 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
-	DOMNode, DOMRenderNode, canAttachShadow, NodeFactory
+	DOMNode, DOMRenderNode, canAttachShadow, directiveRegistry
 } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
@@ -171,9 +171,7 @@ export class Components {
 		ClassRegistryProvider.registerDirective(modelClass);
 		if (opts.selector.startsWith('*')) {
 			const structuralDirectiveName = opts.selector.substring(1);
-			if (!NodeFactory.StructuralDirectives.includes(structuralDirectiveName)) {
-				NodeFactory.StructuralDirectives.push(structuralDirectiveName);
-			}
+			directiveRegistry.register(structuralDirectiveName);
 		}
 	}
 
