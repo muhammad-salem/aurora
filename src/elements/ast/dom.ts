@@ -39,42 +39,8 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class DOMParentNode {
-	/**
-	 * element children list
-	 */
-	children: DOMChild[];
 
-	addChild(child: DOMChild) {
-		if (this.children) {
-			this.children.push(child);
-		} else {
-			this.children = [child];
-		}
-	}
-
-	addTextChild(text: string) {
-		if (!this.children) {
-			this.children = [];
-		}
-		parseTextChild(text).forEach(childText => this.children.push(childText));
-	}
-
-}
-
-/**
- * parent for a list of elements 
- */
-export class DOMFragmentNode extends DOMParentNode {
-	constructor(children?: DOMChild[]) {
-		super();
-		if (children) {
-			this.children = children;
-		}
-	}
-}
-
-export class BaseNode extends DOMParentNode {
+export class BaseNode {
 
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
@@ -154,7 +120,41 @@ export class BaseNode extends DOMParentNode {
 
 }
 
-export class DOMElementNode extends BaseNode {
+export class DOMParentNode extends BaseNode {
+	/**
+	 * element children list
+	 */
+	children: DOMChild[];
+
+	addChild(child: DOMChild) {
+		if (this.children) {
+			this.children.push(child);
+		} else {
+			this.children = [child];
+		}
+	}
+
+	addTextChild(text: string) {
+		if (!this.children) {
+			this.children = [];
+		}
+		parseTextChild(text).forEach(childText => this.children.push(childText));
+	}
+
+}
+
+/**
+ * parent for a list of elements 
+ */
+export class DOMFragmentNode extends DOMParentNode {
+	constructor(children?: DOMChild[]) {
+		super();
+		if (children) {
+			this.children = children;
+		}
+	}
+}
+export class DOMElementNode extends DOMParentNode {
 
 	/**
 	 * the tag name of the element 
@@ -193,7 +193,7 @@ export class DOMElementNode extends BaseNode {
 /**
  * structural directive 
  */
-export class DOMDirectiveNode {
+export class DOMDirectiveNode extends BaseNode {
 
 	/**
 	 * name of the directive 
@@ -211,6 +211,7 @@ export class DOMDirectiveNode {
 	node: DOMNode;
 
 	constructor(directiveName: string, directiveValue: string, node: DOMNode) {
+		super();
 		this.directiveName = directiveName;
 		this.directiveValue = directiveValue;
 		this.node = node;
