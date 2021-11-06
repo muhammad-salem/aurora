@@ -1,7 +1,30 @@
 
 
 export interface DirectiveNodeOptions {
+
+	/**
+	 * list of attributes name 
+	 * consists of inputs and outputs and normal attributes
+	 */
 	attributes?: string[];
+
+	/**
+	 * the `nextSiblingDirectives` will be one of the names list or none if not followed by any.
+	 * 
+	 * consider writing html as 
+	 * 
+	 * ```html
+	 * <if condition="user.name === 'alex'" >Alex is {{user.age}} years old.</if>
+	 * <else-if condition="user.name === 'sara'" >Sara working at {{user.company.name}}.</else-if>
+	 * <else-if condition="user.name === 'jon'" >Jon used to play {{user.gameName}}.</else-if>
+	 * <else>{{user.name}} is unknown.</else>
+	 * ```
+	 * - the if directive should register nextSiblingDirectives as  ['else', 'else-if'],
+	 * 
+	 * - the else-if directive should register nextSiblingDirectives as  ['else', 'else-if'] too,
+	 * 
+	 * - the else directive should not register any nextSiblingDirectives, as  [].
+	 */
 	nextSiblingDirectives?: string[];
 }
 
