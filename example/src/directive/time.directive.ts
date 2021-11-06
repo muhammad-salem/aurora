@@ -88,7 +88,9 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 	}
 	private createScopeHandle(context: Model) {
 		return (propertyName: keyof TimeContext, oldValue: any, newValue: any) => {
-			context.emitChangeModel(propertyName, []);
+			if (newValue != oldValue) {
+				context.emitChangeModel(propertyName, []);
+			}
 		};
 	}
 
