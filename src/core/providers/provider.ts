@@ -97,11 +97,14 @@ export class ClassRegistry {
 		return false;
 	}
 
-	directiveHasInput<T>(input: string): boolean {
+	directiveHasInput<T>(input: string, directiveType: 'attributes' | 'structural' = 'attributes'): boolean {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
-			if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
-				return true;
+			if ((directiveType === 'attributes' && !directiveRef.selector.startsWith('*'))
+				|| (directiveType === 'structural' && directiveRef.selector.startsWith('*'))) {
+				if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
+					return true;
+				}
 			}
 		}
 		return false;
