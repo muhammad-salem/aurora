@@ -351,14 +351,14 @@ export class NodeParser {
 			temp = node.attributes.filter(attr => {
 				return typeof attr.value === 'string' && (/\{\{(.+)\}\}/g).test(attr.value);
 			});
-			if (temp) {
+			if (temp?.length) {
 				temp.forEach(templateAttrs => {
 					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
 					node.addTemplateAttr(templateAttrs.name, templateAttrs.value as string);
 				});
 			}
 			temp = node.attributes.filter(attr => attr.name.startsWith('on'));
-			if (temp) {
+			if (temp?.length) {
 				temp.forEach(templateAttrs => {
 					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
@@ -377,7 +377,7 @@ export class NodeParser {
 				if (temp) {
 					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
-				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
+				const directiveNode = new DOMFragmentNode(node.children);
 				return new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
 			}
 		} else if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
