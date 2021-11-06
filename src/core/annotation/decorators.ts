@@ -5,6 +5,7 @@ import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
 export interface DirectiveOptions {
 	selector: string;
+	nextSiblingDirectives?: string[];
 }
 
 export interface ServiceOptions {
