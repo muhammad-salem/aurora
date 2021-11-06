@@ -69,11 +69,11 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		const html = `<div class="alert alert-success" role="alert">
 			<ul>
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
-				<li>hh:mm:ss {{${stringLiteralFormat}}}</li>
+				<li>hh:mm:ss {{${stringLiteralFormat}}} format using regex expression ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
 				<li>Time: {{time |> toDate}}</li>
 				<li>Data: {{date}}</li>
 			</ul>
-			</div>`;
+		</div>`;
 		const defaultTemplateNode = htmlParser.toDomRootNode(html);
 		buildExpressionNodes(defaultTemplateNode);
 		return defaultTemplateNode;
