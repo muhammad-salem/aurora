@@ -182,9 +182,10 @@ export class ComponentRender<T> {
 					structural.onDestroy();
 				});
 			}
-			const directiveInput = directiveRef.inputs.find(input => input.viewAttribute === directive.name);
+			const directiveInputName = directive.name.substring(1);
+			const directiveInput = directiveRef.inputs?.find(input => input.viewAttribute === directiveInputName);
 			if (directiveInput) {
-				Reflect.set(structural, directiveInput.modelProperty, directive.value);
+				Reflect.set(structural, directiveInput.modelProperty, String(directive.value));
 			}
 			this.initDirectiveAttributes(structural, directive, directiveStack);
 			if (isOnInit(structural)) {
