@@ -13,8 +13,6 @@ export class StructuralDirective {
 		protected comment: Comment,
 		protected parentNode: Node,
 		protected node: DOMNode,
-		protected directiveValue: string,
-		// protected directive: DOMDirectiveNode,
 
 	) { }
 	protected findTemplate(templateRefName: string): DOMElementNode | undefined {

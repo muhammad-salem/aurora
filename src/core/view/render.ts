@@ -163,7 +163,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 	createStructuralDirective(directive: DOMDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
-		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
+		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (directiveRef) {
 			// structural directive selector
 			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
@@ -174,14 +174,17 @@ export class ComponentRender<T> {
 				comment,
 				parentNode,
 				directive.node,
-				directive.directiveValue
 			);
 			if (isOnDestroy(structural)) {
 				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-					console.log('destroy structural directive', directive.directiveName, removeSubscription);
+					console.log('destroy structural directive', directive.name, removeSubscription);
 					removeSubscription.unsubscribe();
 					structural.onDestroy();
 				});
+			}
+			const directiveInput = directiveRef.inputs.find(input => input.viewAttribute === directive.name);
+			if (directiveInput) {
+				Reflect.set(structural, directiveInput.modelProperty, directive.value);
 			}
 			this.initDirectiveAttributes(structural, directive, directiveStack);
 			if (isOnInit(structural)) {
@@ -214,9 +217,9 @@ export class ComponentRender<T> {
 		if (child instanceof DOMElementNode) {
 			fragmentParent.append(this.createElement(child, contextStack, parentNode));
 		} else if (child instanceof DOMDirectiveNode) {
-			const comment = document.createComment(`start ${child.directiveName}: ${child.directiveValue}`);
+			const comment = document.createComment(`start ${child.name} = ${child.value}`);
 			fragmentParent.append(comment);
-			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
+			const lastComment = document.createComment(`end ${child.name} = ${child.value}`);
 			comment.after(lastComment);
 			this.createStructuralDirective(child, comment, contextStack, parentNode);
 		} else if (isLiveTextContent(child)) {
