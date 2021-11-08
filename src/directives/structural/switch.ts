@@ -1,4 +1,4 @@
-import { Directive } from '@ibyar/core';
+import { Directive, Input } from '@ibyar/core';
 import { DOMChild, DOMDirectiveNode, DOMParentNode } from '@ibyar/elements';
 import { ExpressionNode, JavaScriptParser, SwitchStatement } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
@@ -18,27 +18,31 @@ export class DefaultSwitchCaseDirective {
 	selector: '*switch',
 })
 export class SwitchDirective extends AbstractStructuralDirective {
+
+	@Input('switch')
+	expression: string;
+
 	caseElements: DOMDirectiveNode[] = [];
 	caseExpressions: ExpressionNode[] = [];
 	defaultElement: DOMDirectiveNode;
 
 	getStatement() {
-		return `switch(${this.directiveValue}) { }`;
+		return `switch(${this.expression}) { }`;
 	}
 	getCallback(switchNode: ExpressionNode): () => void {
 		const directiveChildren = (this.node as DOMParentNode).children as DOMDirectiveNode[];
 		for (const child of directiveChildren) {
-			if (child.directiveName === '*case') {
+			if (child.name === '*case') {
 				this.caseElements.push(child);
-			} else if (child.directiveName === '*default') {
+			} else if (child.name === '*default') {
 				if (this.defaultElement) {
-					throw new Error(`syntax error: multiple default directive in switch case ${this.directiveValue}`);
+					throw new Error(`syntax error: multiple default directive in switch case ${this.expression}`);
 				}
 				this.defaultElement = child;
 			}
 		}
 		for (const directive of this.caseElements) {
-			this.caseExpressions.push(JavaScriptParser.parse(String(directive.directiveValue)));
+			this.caseExpressions.push(JavaScriptParser.parse(String(directive.value)));
 		}
 		this.directiveStack.pushFunctionScope();
 		let callback: () => void;
@@ -63,7 +67,7 @@ export class SwitchDirective extends AbstractStructuralDirective {
 				this.appendNodeToParent(child.node, this.directiveStack);
 			};
 		} else {
-			throw new Error(`syntax error: ${this.directiveValue}`);
+			throw new Error(`syntax error: ${this.expression}`);
 		}
 		return callback;
 	}

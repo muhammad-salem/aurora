@@ -1,4 +1,4 @@
-import { Directive } from '@ibyar/core';
+import { Directive, Input } from '@ibyar/core';
 import { ExpressionNode, ExpressionStatement, WhileNode } from '@ibyar/expressions';
 import { AbstractStructuralDirective } from './structural.js';
 
@@ -12,8 +12,11 @@ import { AbstractStructuralDirective } from './structural.js';
 })
 export class WhileDirective extends AbstractStructuralDirective {
 
+	@Input('while')
+	expression: string;
+
 	getStatement() {
-		const statement = this.directiveValue.toString().trim();
+		const statement = this.expression.toString().trim();
 		if (statement.startsWith('let')) {
 			return statement;
 		} else {
@@ -32,14 +35,14 @@ export class WhileDirective extends AbstractStructuralDirective {
 		let condition: ExpressionNode;
 		if (whileNode instanceof ExpressionStatement) {
 			if (whileNode.getBody().length > 2) {
-				throw new Error(`syntax error: ${this.directiveValue}`);
+				throw new Error(`syntax error: ${this.expression}`);
 			}
 			initializer = whileNode.getBody()[0];
 			condition = whileNode.getBody()[1];
 		} else if (whileNode instanceof WhileNode) {
 			condition = whileNode.getTest();
 		} else {
-			throw new Error(`syntax error: ${this.directiveValue}`);
+			throw new Error(`syntax error: ${this.expression}`);
 		}
 		this.directiveStack.pushFunctionScope();
 		const callback = () => {
