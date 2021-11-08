@@ -198,22 +198,22 @@ export class DOMDirectiveNode extends BaseNode {
 	/**
 	 * name of the directive 
 	 */
-	directiveName: string;
+	name: string;
 
 	/**
 	 * value of the directive 
 	 */
-	directiveValue: string;
+	value: string;
 
 	/**
 	 * the value of the template node, that this directive going to host-on 
 	 */
 	node: DOMNode;
 
-	constructor(directiveName: string, directiveValue: string, node: DOMNode) {
+	constructor(name: string, value: string, node: DOMNode) {
 		super();
-		this.directiveName = directiveName;
-		this.directiveValue = directiveValue;
+		this.name = name;
+		this.value = value;
 		this.node = node;
 	}
 }

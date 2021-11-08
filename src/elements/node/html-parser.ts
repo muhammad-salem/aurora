@@ -2,7 +2,8 @@ import { isEmptyElement } from '../attributes/tags.js';
 import {
 	DOMElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild, ElementAttribute
+	DOMDirectiveNode, DOMNode, DOMChild,
+	ElementAttribute, Attribute
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
@@ -364,13 +365,13 @@ export class NodeParser {
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
+			temp = node.attributes.find(attr => attr.name.startsWith('*'));
 			if (temp) {
 				node.attributes.splice(node.attributes.indexOf(temp), 1);
 				const isTemplate = node.tagName === 'template';
 				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
 				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
-				let directiveName = temp.name.substring(1);
+				const directiveName = temp.name.substring(1);
 				if (isTemplate) {
 					directive.inputs = node.inputs;
 					directive.outputs = node.outputs;
@@ -404,18 +405,27 @@ export class NodeParser {
 
 	private extractDirectiveAttributesFromNode(directiveName: string, directive: DOMDirectiveNode, node: DOMElementNode) {
 		const attributes = directiveRegistry.getAttributes(directiveName)!;
-		directive.inputs = node.inputs?.filter(attr => attributes.includes(attr.name));
-		directive.outputs = node.outputs?.filter(attr => attributes.includes(attr.name));
-		directive.twoWayBinding = node.twoWayBinding?.filter(attr => attributes.includes(attr.name));
-		directive.attributes = node.attributes?.filter(attr => attributes.includes(attr.name));
-		directive.templateAttrs = node.templateAttrs?.filter(attr => attributes.includes(attr.name));
+		const filterByAttrName = createFilterByAttrName(attributes);
+		directive.inputs = node.inputs?.filter(filterByAttrName);
+		directive.outputs = node.outputs?.filter(filterByAttrName);
+		directive.twoWayBinding = node.twoWayBinding?.filter(filterByAttrName);
+		directive.attributes = node.attributes?.filter(filterByAttrName);
+		directive.templateAttrs = node.templateAttrs?.filter(filterByAttrName);
 
-		directive.inputs?.forEach(attr => node.inputs.splice(node.inputs.indexOf(attr), 1));
-		directive.outputs?.forEach(attr => node.outputs.splice(node.outputs.indexOf(attr), 1));
-		directive.twoWayBinding?.forEach(attr => node.twoWayBinding.splice(node.twoWayBinding.indexOf(attr), 1));
-		directive.attributes?.forEach(attr => node.attributes.splice(node.attributes.indexOf(attr), 1));
-		directive.templateAttrs?.forEach(attr => node.templateAttrs.splice(node.templateAttrs.indexOf(attr), 1));
+		directive.inputs?.forEach(createArrayCleaner(node.inputs));
+		directive.outputs?.forEach(createArrayCleaner(node.outputs));
+		directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
+		directive.attributes?.forEach(createArrayCleaner(node.attributes));
+		directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
 	}
+}
+
+function createFilterByAttrName(attributes: string[]) {
+	return (attr: Attribute<string, any>) => attributes.includes(attr.name);
+}
+
+function createArrayCleaner(attributes: Attribute<string, any>[]) {
+	return (attr: Attribute<string, any>) => attributes.splice(attributes.indexOf(attr), 1);
 }
 
 export class HTMLParser {
