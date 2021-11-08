@@ -45,27 +45,27 @@ export class BaseNode {
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
 	 */
-	attributes: ElementAttribute<string, string | number | boolean | object>[];
+	attributes?: ElementAttribute<string, string | number | boolean | object>[];
 
 	/**
 	 * hold the attrs/inputs name marked as one way binding
 	 */
-	inputs: LiveAttribute[];
+	inputs?: LiveAttribute[];
 
 	/**
 	 * hold the name of events that should be connected to a listener
 	 */
-	outputs: ElementAttribute<string, string>[];
+	outputs?: ElementAttribute<string, string>[];
 
 	/**
 	 * hold the name of attributes marked for 2 way data binding
 	 */
-	twoWayBinding: LiveAttribute[];
+	twoWayBinding?: LiveAttribute[];
 
 	/**
 	 * directive attribute
 	 */
-	templateAttrs: LiveAttribute[];
+	templateAttrs?: LiveAttribute[];
 
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {

@@ -343,31 +343,32 @@ export class NodeParser {
 	}
 
 	checkNode(node: DOMElementNode): DOMElementNode | DOMDirectiveNode {
-		if (node.attributes) {
-			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
+		const attributes = node.attributes;
+		if (attributes) {
+			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = attributes.find(attr => attr.name === 'is');
 			if (temp) {
-				node.attributes.splice(node.attributes.indexOf(temp), 1);
+				attributes.splice(attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
 			}
-			temp = node.attributes.filter(attr => {
+			temp = attributes.filter(attr => {
 				return typeof attr.value === 'string' && (/\{\{(.+)\}\}/g).test(attr.value);
 			});
 			if (temp?.length) {
 				temp.forEach(templateAttrs => {
-					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+					attributes.splice(attributes.indexOf(templateAttrs), 1);
 					node.addTemplateAttr(templateAttrs.name, templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.filter(attr => attr.name.startsWith('on'));
+			temp = attributes.filter(attr => attr.name.startsWith('on'));
 			if (temp?.length) {
 				temp.forEach(templateAttrs => {
-					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+					attributes.splice(attributes.indexOf(templateAttrs), 1);
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.find(attr => attr.name.startsWith('*'));
+			temp = attributes.find(attr => attr.name.startsWith('*'));
 			if (temp) {
-				node.attributes.splice(node.attributes.indexOf(temp), 1);
+				attributes.splice(attributes.indexOf(temp), 1);
 				const isTemplate = node.tagName === 'template';
 				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
 				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
@@ -385,9 +386,9 @@ export class NodeParser {
 			if (directiveRegistry.has(node.tagName)) {
 				// try to find expression attribute
 				// <if expression="a === b">text child<div>...</div></if>
-				temp = node.attributes.find(attr => attr.name === 'expression');
+				temp = attributes.find(attr => attr.name === 'expression');
 				if (temp) {
-					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
+					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
 				const directiveNode = new DOMFragmentNode(node.children);
 				const directive = new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
@@ -412,11 +413,11 @@ export class NodeParser {
 		directive.attributes = node.attributes?.filter(filterByAttrName);
 		directive.templateAttrs = node.templateAttrs?.filter(filterByAttrName);
 
-		directive.inputs?.forEach(createArrayCleaner(node.inputs));
-		directive.outputs?.forEach(createArrayCleaner(node.outputs));
-		directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
-		directive.attributes?.forEach(createArrayCleaner(node.attributes));
-		directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
+		node.inputs && directive.inputs?.forEach(createArrayCleaner(node.inputs));
+		node.outputs && directive.outputs?.forEach(createArrayCleaner(node.outputs));
+		node.twoWayBinding && directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
+		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
+		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
 	}
 }
 
