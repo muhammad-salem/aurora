@@ -14,7 +14,7 @@ export interface CustomElement {
 
 export type ModelType<T> = T & Model & { [key: string]: any };
 
-export interface BaseComponent<T extends Object> extends CustomElement {
+export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
 	_proxyModel: ModelType<T>;
@@ -47,14 +47,14 @@ export interface BaseComponent<T extends Object> extends CustomElement {
 
 }
 
-export interface HTMLComponent<T extends Object> extends BaseComponent<T>, HTMLElement { }
+export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
 
 export function isHTMLComponent(object: any): object is HTMLComponent<any> {
 	return Reflect.has(object, '_model')
 		&& object instanceof HTMLElement;
 }
 
-export function isHTMLComponentOfType(object: any, typeClass: TypeOf<Object>): object is HTMLComponent<any> {
+export function isHTMLComponentOfType<T>(object: any, typeClass: TypeOf<T>): object is HTMLComponent<T> {
 	return isHTMLComponent(object)
 		&& Reflect.get(object, '_model') instanceof typeClass;
 }

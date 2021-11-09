@@ -1,7 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
-	DOMNode, DOMRenderNode, canAttachShadow, NodeFactory
+	DOMNode, DOMRenderNode, canAttachShadow, directiveRegistry
 } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
@@ -170,10 +170,14 @@ export class Components {
 		bootstrap.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
 		if (opts.selector.startsWith('*')) {
+			const attributes: string[] = [];
+			(bootstrap.inputs as PropertyRef[])?.forEach(input => attributes.push(input.viewAttribute));
+			(bootstrap.outputs as PropertyRef[])?.forEach(output => attributes.push(output.viewAttribute));
 			const structuralDirectiveName = opts.selector.substring(1);
-			if (!NodeFactory.StructuralDirectives.includes(structuralDirectiveName)) {
-				NodeFactory.StructuralDirectives.push(structuralDirectiveName);
-			}
+			directiveRegistry.register(structuralDirectiveName, {
+				attributes,
+				nextSiblingDirectives: opts.nextSiblingDirectives,
+			});
 		}
 	}
 

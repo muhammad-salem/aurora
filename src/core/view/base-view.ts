@@ -28,12 +28,12 @@ function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T
 		.forEach(key => Reflect.set(instance, key, undefined));
 }
 
-export function baseFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 
 	if (FACTORY_CACHE.has(htmlElementType)) {
 		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
 	}
-	class CustomView<T> extends htmlElementType implements BaseComponent<T>, CustomElement {
+	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_proxyModel: ModelType<T>;
 		_parentComponent: HTMLComponent<object>;

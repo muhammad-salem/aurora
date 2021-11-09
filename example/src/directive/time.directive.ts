@@ -1,8 +1,22 @@
-import { Directive, DOMParentNode, htmlParser, OnDestroy, OnInit, Scope, StructuralDirective } from '@ibyar/aurora';
+import {
+	Directive, DOMParentNode, htmlParser,
+	isModel, OnDestroy, OnInit, ReactiveScope,
+	ScopeSubscription, StructuralDirective, Model, PipeTransform, Pipe
+} from '@ibyar/aurora';
 import { buildExpressionNodes } from '@ibyar/core/html/expression';
 import { map, Subscription, timer, timestamp } from 'rxjs';
 
-type TimeContext = { time: string, date: string, hh: string, mm: string, ss: string };
+
+@Pipe({
+	name: 'toDate'
+})
+export class ToDate implements PipeTransform<number, Date> {
+	transform(timestamp: number): Date {
+		return new Date(timestamp);
+	}
+}
+
+type TimeContext = { time: number, date: number, hh: number, mm: number, ss: number };
 
 @Directive({
 	selector: '*time',
@@ -11,20 +25,26 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 
 	private elements: ChildNode[] = [];
 	private fragment: DocumentFragment;
-	private scope: Scope<TimeContext>;
+	private scope: ReactiveScope<TimeContext>;
 	private dateSubscription: Subscription;
+	private scopeSubscription: ScopeSubscription<TimeContext>;
 	onInit(): void {
 		const wrapperNode = ((this.node as DOMParentNode)?.children?.length > 0) ? this.node : this.getDefaultNode();
 		this.fragment = document.createDocumentFragment();
 		const stack = this.directiveStack.copyStack();
 		this.scope = stack.pushBlockReactiveScopeFor({
-			time: 'time',
-			date: 'date',
-			hh: 'hh',
-			mm: 'mm',
-			ss: 'ss',
+			time: 0,
+			date: 0,
+			hh: 0,
+			mm: 0,
+			ss: 0,
 		});
+
 		this.render.appendChildToParent(this.fragment, wrapperNode, stack, this.parentNode);
+		const context = this.scope.getContext();
+		if (isModel(context)) {
+			this.scopeSubscription = this.scope.subscribe(this.createScopeHandle(context));
+		}
 		this.fragment.childNodes.forEach(child => this.elements.push(child));
 		this.comment.after(this.fragment);
 		this.updateTime();
@@ -49,11 +69,11 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		const html = `<div class="alert alert-success" role="alert">
 			<ul>
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
-				<li>hh:mm:ss{{${stringLiteralFormat}}}</li>
-				<li>Time: {{tme}}</li>
+				<li>hh:mm:ss {{${stringLiteralFormat}}} format using regex expression ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
+				<li>Time: {{time |> toDate}}</li>
 				<li>Data: {{date}}</li>
 			</ul>
-			</div>`;
+		</div>`;
 		const defaultTemplateNode = htmlParser.toDomRootNode(html);
 		buildExpressionNodes(defaultTemplateNode);
 		return defaultTemplateNode;
@@ -66,8 +86,17 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 			this.elements.splice(0);
 		}
 	}
+	private createScopeHandle(context: Model) {
+		return (propertyName: keyof TimeContext, oldValue: any, newValue: any) => {
+			if (newValue != oldValue) {
+				context.emitChangeModel(propertyName, []);
+			}
+		};
+	}
+
 	onDestroy() {
 		this.dateSubscription.unsubscribe();
+		this.scopeSubscription.unsubscribe();
 		this.removeOldElements();
 	}
 }

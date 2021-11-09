@@ -7,6 +7,7 @@ import '@popperjs/core';
 // import structural directives first
 // so it can register itself with the html parser as a node
 export * from './directive/add-note.directive.js';
+export * from './directive/notify-user.directive.js';
 export * from './directive/red-note.directive.js';
 export * from './directive/time.directive.js';
 

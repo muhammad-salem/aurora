@@ -39,67 +39,33 @@ export class CommentNode {
 	constructor(public comment: string) { }
 }
 
-export class DOMParentNode {
-	/**
-	 * element children list
-	 */
-	children: DOMChild[];
 
-	addChild(child: DOMChild) {
-		if (this.children) {
-			this.children.push(child);
-		} else {
-			this.children = [child];
-		}
-	}
-
-	addTextChild(text: string) {
-		if (!this.children) {
-			this.children = [];
-		}
-		parseTextChild(text).forEach(childText => this.children.push(childText));
-	}
-
-}
-
-/**
- * parent for a list of elements 
- */
-export class DOMFragmentNode extends DOMParentNode {
-	constructor(children?: DOMChild[]) {
-		super();
-		if (children) {
-			this.children = children;
-		}
-	}
-}
-
-export class BaseNode extends DOMParentNode {
+export class BaseNode {
 
 	/**
 	 * hold static attr and event that will resolve normally from the global window.
 	 */
-	attributes: ElementAttribute<string, string | number | boolean | object>[];
+	attributes?: ElementAttribute<string, string | number | boolean | object>[];
 
 	/**
 	 * hold the attrs/inputs name marked as one way binding
 	 */
-	inputs: LiveAttribute[];
+	inputs?: LiveAttribute[];
 
 	/**
 	 * hold the name of events that should be connected to a listener
 	 */
-	outputs: ElementAttribute<string, string>[];
+	outputs?: ElementAttribute<string, string>[];
 
 	/**
 	 * hold the name of attributes marked for 2 way data binding
 	 */
-	twoWayBinding: LiveAttribute[];
+	twoWayBinding?: LiveAttribute[];
 
 	/**
 	 * directive attribute
 	 */
-	templateAttrs: LiveAttribute[];
+	templateAttrs?: LiveAttribute[];
 
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
@@ -154,7 +120,41 @@ export class BaseNode extends DOMParentNode {
 
 }
 
-export class DOMElementNode extends BaseNode {
+export class DOMParentNode extends BaseNode {
+	/**
+	 * element children list
+	 */
+	children: DOMChild[];
+
+	addChild(child: DOMChild) {
+		if (this.children) {
+			this.children.push(child);
+		} else {
+			this.children = [child];
+		}
+	}
+
+	addTextChild(text: string) {
+		if (!this.children) {
+			this.children = [];
+		}
+		parseTextChild(text).forEach(childText => this.children.push(childText));
+	}
+
+}
+
+/**
+ * parent for a list of elements 
+ */
+export class DOMFragmentNode extends DOMParentNode {
+	constructor(children?: DOMChild[]) {
+		super();
+		if (children) {
+			this.children = children;
+		}
+	}
+}
+export class DOMElementNode extends DOMParentNode {
 
 	/**
 	 * the tag name of the element 
@@ -193,26 +193,27 @@ export class DOMElementNode extends BaseNode {
 /**
  * structural directive 
  */
-export class DOMDirectiveNode {
+export class DOMDirectiveNode extends BaseNode {
 
 	/**
 	 * name of the directive 
 	 */
-	directiveName: string;
+	name: string;
 
 	/**
 	 * value of the directive 
 	 */
-	directiveValue: string;
+	value: string;
 
 	/**
 	 * the value of the template node, that this directive going to host-on 
 	 */
 	node: DOMNode;
 
-	constructor(directiveName: string, directiveValue: string, node: DOMNode) {
-		this.directiveName = directiveName;
-		this.directiveValue = directiveValue;
+	constructor(name: string, value: string, node: DOMNode) {
+		super();
+		this.name = name;
+		this.value = value;
 		this.node = node;
 	}
 }

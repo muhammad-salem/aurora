@@ -10,6 +10,7 @@ import { Person, PersonModel } from './person';
 			{{appVersion}}
 			{{appName}}
 		</div>
+		<notify-user notifyType="primary" notifyMessage="A simple primary alert—check it out!"></notify-user>
 
 		<h1 [textContent]="title"></h1>
 		

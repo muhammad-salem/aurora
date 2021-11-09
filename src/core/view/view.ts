@@ -109,7 +109,7 @@ export function isComponentModelClass(target: Constructable): target is Componen
 	return Reflect.has(target, 'component');
 }
 
-export function addViewToModelClass<T>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
+export function addViewToModelClass<T extends object>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
 
 	if (!isComponentModelClass(modelClass)) {

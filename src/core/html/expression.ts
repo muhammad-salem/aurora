@@ -89,16 +89,17 @@ function parseBaseNode(base: BaseNode) {
 	base.twoWayBinding?.forEach(parseLiveAttribute);
 	base.templateAttrs?.forEach(parseLiveAttribute);
 	base.attributes?.forEach(parseElementAttribute);
-	parseDomParentNode(base);
 }
 
 function parseChild(child: DOMNode) {
 	if (child instanceof DOMElementNode) {
 		// DomElementNode
 		parseBaseNode(child);
+		parseDomParentNode(child);
 	} else if (child instanceof DOMDirectiveNode) {
 		// DomDirectiveNode
 		// in case if add input/output support need to handle that here.
+		parseBaseNode(child);
 		parseChild(child.node);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);

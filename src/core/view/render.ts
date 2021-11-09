@@ -163,7 +163,7 @@ export class ComponentRender<T> {
 		return Reflect.get(this.view, name);
 	}
 	createStructuralDirective(directive: DOMDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
-		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.directiveName);
+		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (directiveRef) {
 			// structural directive selector
 			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
@@ -174,15 +174,20 @@ export class ComponentRender<T> {
 				comment,
 				parentNode,
 				directive.node,
-				directive.directiveValue
 			);
 			if (isOnDestroy(structural)) {
 				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-					console.log('destroy structural directive', directive.directiveName, removeSubscription);
+					console.log('destroy structural directive', directive.name, removeSubscription);
 					removeSubscription.unsubscribe();
 					structural.onDestroy();
 				});
 			}
+			const directiveInputName = directive.name.substring(1);
+			const directiveInput = directiveRef.inputs?.find(input => input.viewAttribute === directiveInputName);
+			if (directiveInput) {
+				Reflect.set(structural, directiveInput.modelProperty, String(directive.value));
+			}
+			this.initDirectiveAttributes(structural, directive, directiveStack);
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
@@ -213,9 +218,9 @@ export class ComponentRender<T> {
 		if (child instanceof DOMElementNode) {
 			fragmentParent.append(this.createElement(child, contextStack, parentNode));
 		} else if (child instanceof DOMDirectiveNode) {
-			const comment = document.createComment(`start ${child.directiveName}: ${child.directiveValue}`);
+			const comment = document.createComment(`start ${child.name} = ${child.value}`);
 			fragmentParent.append(comment);
-			const lastComment = document.createComment(`end ${child.directiveName}: ${child.directiveValue}`);
+			const lastComment = document.createComment(`end ${child.name} = ${child.value}`);
 			comment.after(lastComment);
 			this.createStructuralDirective(child, comment, contextStack, parentNode);
 		} else if (isLiveTextContent(child)) {
@@ -335,7 +340,38 @@ export class ComponentRender<T> {
 		}
 	}
 
-	bind1Way(element: HTMLElement | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
+	initDirectiveAttributes(directive: StructuralDirective, node: DOMDirectiveNode, contextStack: Stack): void {
+		if (node.attributes) {
+			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
+		}
+		if (node.twoWayBinding) {
+			node.twoWayBinding.forEach(attr => {
+				this.bind2Way(directive, attr, contextStack);
+			});
+		}
+		if (node.inputs) {
+			node.inputs.forEach(attr => {
+				this.bind1Way(directive, attr, contextStack);
+			});
+		}
+		if (node.outputs) {
+			node.outputs.forEach(event => {
+				const listener = ($event: Event) => {
+					const stack = contextStack.copyStack();
+					stack.pushBlockScopeFor({ $event });
+					event.expression.get(stack, this.view._proxyModel);
+				};
+				((<any>directive)[event.name] as any).subscribe(listener);
+			});
+		}
+		if (node.templateAttrs) {
+			node.templateAttrs.forEach(attr => {
+				this.bind1Way(directive, attr, contextStack);
+			});
+		}
+	}
+
+	bind1Way(element: HTMLElement | StructuralDirective | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
 		const callback = () => {
 			attr.expression.get(contextStack);
 		};
@@ -368,7 +404,7 @@ export class ComponentRender<T> {
 			}
 		});
 	}
-	bind2Way(element: HTMLElement, attr: LiveAttribute, contextStack: Stack) {
+	bind2Way(element: HTMLElement | StructuralDirective, attr: LiveAttribute, contextStack: Stack) {
 		const callback1 = () => {
 			attr.expression.get(contextStack);
 		};
@@ -400,6 +436,9 @@ export class ComponentRender<T> {
 		});
 
 		callback1();
+		if (element instanceof StructuralDirective) {
+			return;
+		}
 		const changeEventName = getChangeEventName(element, attr.name);
 		if ((changeEventName === 'input' || changeEventName === 'change')
 			&& isModel(element)) {

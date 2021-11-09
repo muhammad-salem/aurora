@@ -1,4 +1,4 @@
-import { Directive } from '@ibyar/core';
+import { Directive, Input } from '@ibyar/core';
 import {
 	ExpressionNode, ForAwaitOfNode,
 	ForInNode, ForNode, ForOfNode, Scope
@@ -39,9 +39,12 @@ type ForAlias = 'index' | 'count' | 'first' | 'last' | 'even' | 'odd';
 })
 export class ForDirective extends AbstractStructuralDirective {
 
+	@Input('for')
+	expression: string;
+
 	private alias: { [key in ForAlias]?: string };
 	getStatement() {
-		const lines = this.directiveValue.split(';');
+		const lines = this.expression.split(';');
 		const aliased = lines.filter(str => /\s+as\s+/g.test(str));
 		const forStatement = lines.filter(str => !(/\s+as\s+/g.test(str))).join(';');
 		if (aliased.length > 0) {
@@ -75,7 +78,7 @@ export class ForDirective extends AbstractStructuralDirective {
 		} else if (forNode instanceof ForAwaitOfNode) {
 			callback = this.handelForAwaitOfNode(forNode);
 		} else {
-			throw new Error(`syntax error: ${this.directiveValue}`);
+			throw new Error(`syntax error: ${this.expression}`);
 		}
 		return callback;
 	}

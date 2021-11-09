@@ -2,9 +2,10 @@ import { isEmptyElement } from '../attributes/tags.js';
 import {
 	DOMElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild, ElementAttribute
+	DOMDirectiveNode, DOMNode, DOMChild,
+	ElementAttribute, Attribute
 } from '../ast/dom.js';
-import { NodeFactory } from '../ast/factory.js';
+import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
@@ -342,45 +343,59 @@ export class NodeParser {
 	}
 
 	checkNode(node: DOMElementNode): DOMElementNode | DOMDirectiveNode {
-		if (node.attributes) {
-			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = node.attributes.find(attr => attr.name === 'is');
+		const attributes = node.attributes;
+		if (attributes) {
+			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = attributes.find(attr => attr.name === 'is');
 			if (temp) {
-				node.attributes.splice(node.attributes.indexOf(temp), 1);
+				attributes.splice(attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
 			}
-			temp = node.attributes.filter(attr => {
+			temp = attributes.filter(attr => {
 				return typeof attr.value === 'string' && (/\{\{(.+)\}\}/g).test(attr.value);
 			});
-			if (temp) {
+			if (temp?.length) {
 				temp.forEach(templateAttrs => {
-					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+					attributes.splice(attributes.indexOf(templateAttrs), 1);
 					node.addTemplateAttr(templateAttrs.name, templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.filter(attr => attr.name.startsWith('on'));
-			if (temp) {
+			temp = attributes.filter(attr => attr.name.startsWith('on'));
+			if (temp?.length) {
 				temp.forEach(templateAttrs => {
-					node.attributes.splice(node.attributes.indexOf(templateAttrs), 1);
+					attributes.splice(attributes.indexOf(templateAttrs), 1);
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
-			temp = node.attributes.find(attr => attr.name?.startsWith('*'));
+			temp = attributes.find(attr => attr.name.startsWith('*'));
 			if (temp) {
-				node.attributes.splice(node.attributes.indexOf(temp), 1);
-				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
-				return new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
-			}
-			if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
-				// try to find expression attribute
-				// <if expression="a === b">child text <div>...</div></if>
-				temp = node.attributes.find(attr => attr.name === 'expression');
-				if (temp) {
-					node.attributes.splice(node.attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
+				attributes.splice(attributes.indexOf(temp), 1);
+				const isTemplate = node.tagName === 'template';
+				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
+				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
+				const directiveName = temp.name.substring(1);
+				if (isTemplate) {
+					directive.inputs = node.inputs;
+					directive.outputs = node.outputs;
+					directive.attributes = node.attributes;
+					directive.templateAttrs = node.templateAttrs;
+				} else if (directiveRegistry.hasAttributes(directiveName)) {
+					this.extractDirectiveAttributesFromNode(directiveName, directive, node);
 				}
-				const directiveNode = (node.tagName === 'template') ? new DOMFragmentNode(node.children) : node;
-				return new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
+				return directive;
 			}
-		} else if (NodeFactory.StructuralDirectives.includes(node.tagName)) {
+			if (directiveRegistry.has(node.tagName)) {
+				// try to find expression attribute
+				// <if expression="a === b">text child<div>...</div></if>
+				temp = attributes.find(attr => attr.name === 'expression');
+				if (temp) {
+					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
+				}
+				const directiveNode = new DOMFragmentNode(node.children);
+				const directive = new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
+				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
+				return directive;
+			}
+		} else if (directiveRegistry.has(node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
 			return new DOMDirectiveNode('*' + node.tagName, '', new DOMFragmentNode(node.children));
@@ -388,6 +403,30 @@ export class NodeParser {
 		return node;
 	}
 
+
+	private extractDirectiveAttributesFromNode(directiveName: string, directive: DOMDirectiveNode, node: DOMElementNode) {
+		const attributes = directiveRegistry.getAttributes(directiveName)!;
+		const filterByAttrName = createFilterByAttrName(attributes);
+		directive.inputs = node.inputs?.filter(filterByAttrName);
+		directive.outputs = node.outputs?.filter(filterByAttrName);
+		directive.twoWayBinding = node.twoWayBinding?.filter(filterByAttrName);
+		directive.attributes = node.attributes?.filter(filterByAttrName);
+		directive.templateAttrs = node.templateAttrs?.filter(filterByAttrName);
+
+		node.inputs && directive.inputs?.forEach(createArrayCleaner(node.inputs));
+		node.outputs && directive.outputs?.forEach(createArrayCleaner(node.outputs));
+		node.twoWayBinding && directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
+		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
+		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
+	}
+}
+
+function createFilterByAttrName(attributes: string[]) {
+	return (attr: Attribute<string, any>) => attributes.includes(attr.name);
+}
+
+function createArrayCleaner(attributes: Attribute<string, any>[]) {
+	return (attr: Attribute<string, any>) => attributes.splice(attributes.indexOf(attr), 1);
 }
 
 export class HTMLParser {

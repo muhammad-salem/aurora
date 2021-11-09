@@ -1,4 +1,4 @@
-import { Directive, SourceFollowerCallback } from '@ibyar/core';
+import { Directive, Input, SourceFollowerCallback } from '@ibyar/core';
 import { ExpressionNode, IfStatement, JavaScriptParser } from '@ibyar/expressions';
 import { DOMElementNode } from '@ibyar/elements';
 import { AbstractStructuralDirective } from './structural.js';
@@ -10,10 +10,14 @@ const FIRST_STATUE = {};
 	selector: '*if',
 })
 export class IfDirective<T> extends AbstractStructuralDirective {
+
+	@Input('if')
+	expression: string;
+
 	lastTest: boolean = FIRST_STATUE as boolean;
 	elseTemplateNode: DOMElementNode | undefined;
 	getStatement(): string {
-		const [test, alternate] = this.directiveValue.toString().split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
+		const [test, alternate] = this.expression.split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
 		if (alternate) {
 			return `if(${test}) { } else '${alternate}'`;
 		}

@@ -358,6 +358,7 @@ see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/de
 
 ## Dependencies
  
+ - [@ibyar/aurora](https://npmjs.org/package/@ibyar/aurora)				a central package to manage dependance only
  - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
  - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
  - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
