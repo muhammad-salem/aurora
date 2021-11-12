@@ -232,7 +232,7 @@ export class ComponentRender<T> {
 			fragmentParent.append(this.createDocumentFragment(child, contextStack, parentNode));
 		}
 	}
-	createElementByTagName(node: DOMElementNode): HTMLElement {
+	createElementByTagName(node: { tagName: string, is?: string }): HTMLElement {
 		let element: HTMLElement;
 		if (isValidCustomElementName(node.tagName)) {
 			const ViewClass = customElements.get(node.tagName) as ((new () => HTMLElement) | undefined);
