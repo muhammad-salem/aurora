@@ -448,7 +448,7 @@ export class HTMLParser {
 		}
 	}
 
-	stringify(stack: DOMNode[]) {
+	stringify(stack?: DOMNode[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextContent) {

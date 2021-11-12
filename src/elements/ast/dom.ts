@@ -124,7 +124,7 @@ export class DOMParentNode extends BaseNode {
 	/**
 	 * element children list
 	 */
-	children: DOMChild[];
+	children?: DOMChild[];
 
 	addChild(child: DOMChild) {
 		if (this.children) {
@@ -135,10 +135,8 @@ export class DOMParentNode extends BaseNode {
 	}
 
 	addTextChild(text: string) {
-		if (!this.children) {
-			this.children = [];
-		}
-		parseTextChild(text).forEach(childText => this.children.push(childText));
+		const children = (this.children ??= []);
+		parseTextChild(text).forEach(childText => children.push(childText));
 	}
 
 }
@@ -169,7 +167,7 @@ export class DOMElementNode extends DOMParentNode {
 	/**
 	 * a given name for element
 	 */
-	templateRefName: Attribute<string, string | undefined>;
+	templateRefName?: Attribute<string, string | undefined>;
 
 	constructor(tagName: string, is?: string) {
 		super();
