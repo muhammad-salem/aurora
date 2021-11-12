@@ -4,6 +4,7 @@ export type SourceFollowerCallback = (stack: any[]) => void;
 export interface Model {
 	__observable: { [key: string]: Function[] };
 	subscribeModel(eventName: string, callback: SourceFollowerCallback): void;
+	unsubscribeModel(eventName: string, callback: SourceFollowerCallback): void;
 	emitChangeModel(eventName: string, source?: any[]): void;
 }
 
@@ -27,8 +28,22 @@ export function defineModel<T>(object: T): Model & T {
 			if (typeof callback !== 'function') {
 				return;
 			}
-			observable[eventName] = observable[eventName] || [];
+			observable[eventName] ??= [];
 			observable[eventName].push(callback);
+		}
+	});
+	Object.defineProperty(object, 'unsubscribeModel', {
+		value: (eventName: string, callback: Function) => {
+			if (typeof callback !== 'function') {
+				return;
+			}
+			const callbacks = observable[eventName];
+			if (callbacks) {
+				const index = callbacks.indexOf(callback);
+				if (index > -1) {
+					callbacks.splice(index, 1);
+				}
+			}
 		}
 	});
 	Object.defineProperty(object, 'emitChangeModel', {
