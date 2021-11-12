@@ -43,7 +43,7 @@ export class IfDirective<T> extends AbstractStructuralDirective {
 				if (test) {
 					this.updateView(stack);
 				} else if (this.elseTemplateNode) {
-					this.appendChildToParent(this.elseTemplateNode.children, stack);
+					this.appendChildToParent(this.elseTemplateNode.children ?? [], stack);
 				}
 				this.fragment.childNodes.forEach(child => this.elements.push(child));
 				this.comment.after(this.fragment);

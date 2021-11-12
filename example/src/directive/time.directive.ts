@@ -29,7 +29,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 	private dateSubscription: Subscription;
 	private scopeSubscription: ScopeSubscription<TimeContext>;
 	onInit(): void {
-		const wrapperNode = ((this.node as DOMParentNode)?.children?.length > 0) ? this.node : this.getDefaultNode();
+		const wrapperNode = ((this.node as DOMParentNode)?.children?.length) ? this.node : this.getDefaultNode();
 		this.fragment = document.createDocumentFragment();
 		const stack = this.directiveStack.copyStack();
 		this.scope = stack.pushBlockReactiveScopeFor({

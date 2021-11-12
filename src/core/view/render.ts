@@ -97,8 +97,9 @@ export class ComponentRender<T> {
 					}
 				}
 				toRemove.forEach(info => {
-					this.templateRefMap.set(info.template.templateRefName.name, info.template);
-					domNode.children.splice(info.index, 1);
+					const templateRefName = info.template.templateRefName!;
+					this.templateRefMap.set(templateRefName.name, info.template);
+					domNode.children?.splice(info.index, 1);
 				});
 			}
 		}
@@ -211,7 +212,7 @@ export class ComponentRender<T> {
 	}
 	createDocumentFragment(node: DOMFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
 		const fragment = document.createDocumentFragment();
-		node.children.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode));
+		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode));
 		return fragment;
 	}
 	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DOMNode, contextStack: Stack, parentNode: Node) {
@@ -263,9 +264,10 @@ export class ComponentRender<T> {
 		contextStack = contextStack.copyStack();
 		contextStack.pushScope(elContext);
 		this.initAttribute(element, node, contextStack);
-		if (node.templateRefName) {
-			Reflect.set(this.view, node.templateRefName.name, element);
-			const view = this.componentRef.viewChild.find(child => child.selector === node.templateRefName.name);
+		const templateRefName = node.templateRefName;
+		if (templateRefName) {
+			Reflect.set(this.view, templateRefName.name, element);
+			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
 			}
