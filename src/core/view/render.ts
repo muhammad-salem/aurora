@@ -87,20 +87,15 @@ export class ComponentRender<T> {
 	initTemplateRefMap(domNode: DOMNode) {
 		if (domNode instanceof DOMElementNode || domNode instanceof DOMFragmentNode) {
 			if (domNode.children) {
-				const toRemove: { index: number, template: DOMElementNode }[] = [];
 				for (let index = 0; index < domNode.children.length; index++) {
 					const child = domNode.children[index];
 					if (this.isTemplateRefName(child)) {
-						toRemove.unshift({ index, template: child });
+						const templateRefName = child.templateRefName!;
+						this.templateRefMap.set(templateRefName.name, child);
 					} else {
 						this.initTemplateRefMap(child);
 					}
 				}
-				toRemove.forEach(info => {
-					const templateRefName = info.template.templateRefName!;
-					this.templateRefMap.set(templateRefName.name, info.template);
-					domNode.children?.splice(info.index, 1);
-				});
 			}
 		}
 	}
@@ -217,6 +212,9 @@ export class ComponentRender<T> {
 	}
 	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DOMNode, contextStack: Stack, parentNode: Node) {
 		if (child instanceof DOMElementNode) {
+			// if (this.isTemplateRefName(child)) {
+			// 	return;
+			// }
 			fragmentParent.append(this.createElement(child, contextStack, parentNode));
 		} else if (child instanceof DOMDirectiveNode) {
 			const comment = document.createComment(`start ${child.name} = ${child.value}`);
