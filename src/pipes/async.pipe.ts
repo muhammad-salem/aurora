@@ -176,6 +176,18 @@ export class AsyncPipe<T> implements Model, OnDestroy, PipeTransform<Observable<
 		}
 		this.__observable[eventName].push(callback);
 	}
+	unsubscribeModel(eventName: string, callback: Function): void {
+		if (typeof callback !== 'function') {
+			return;
+		}
+		const callbacks = this.__observable[eventName];
+		if (callbacks) {
+			const index = callbacks.indexOf(callback);
+			if (index > -1) {
+				callbacks.splice(index, 1);
+			}
+		}
+	}
 	emitChangeModel(eventName: string): void {
 		if ('async' !== eventName) {
 			return;
