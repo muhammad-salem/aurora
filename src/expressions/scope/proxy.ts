@@ -68,6 +68,6 @@ export function createRevocableProxyForContext<T extends object>(context: T, sco
 	return Proxy.revocable<T>(context, new ScopeProxyHandler(scope));
 }
 
-export function createProxyForContext<T extends object>(context: T, scope: Scope<T>): T {
-	return new Proxy<T>(context, new ScopeProxyHandler(scope));
+export function createProxyForContext<T extends object>(scope: Scope<T>): T {
+	return new Proxy<T>(scope.getContext(), new ScopeProxyHandler(scope));
 }

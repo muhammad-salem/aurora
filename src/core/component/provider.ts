@@ -21,7 +21,7 @@ export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> ex
 		return new ElementModelReactiveScope(context, 'global');
 	}
 	private functionProxyMap = new Map<PropertyKey, Function>();
-	private contextProxy = createProxyForContext(this.context, this);
+	private contextProxy = createProxyForContext(this);
 	getContextProxy() {
 		return this.contextProxy;
 	}
