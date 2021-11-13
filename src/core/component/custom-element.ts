@@ -14,13 +14,13 @@ export interface CustomElement {
 
 type IndexedObject = { [key: string]: any };
 export type ProxyModelType<T> = T & IndexedObject;
-export type ModelType<T extends object> = T & Model & IndexedObject;
+export type ModelType<T> = T & Model & IndexedObject;
 
-export interface BaseComponent<T extends object> extends CustomElement {
+export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
 	_proxyModel: ProxyModelType<T>;
-	_modelScope: ReactiveScope<T>;
+	_modelScope: ReactiveScope<T & object>;
 	_viewScope: ElementReactiveScope;
 
 	getComponentRef(): ComponentRef<T>;
@@ -49,7 +49,7 @@ export interface BaseComponent<T extends object> extends CustomElement {
 
 }
 
-export interface HTMLComponent<T extends object> extends BaseComponent<T>, HTMLElement { }
+export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
 
 export function isHTMLComponent(object: any): object is HTMLComponent<any> {
 	return Reflect.has(object, '_model')
