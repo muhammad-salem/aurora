@@ -22,6 +22,8 @@ import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js'
 import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
 import { findScopeMap } from './events.js';
+import { TemplateRefImpl } from '../linker/template-ref.js';
+import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
 	if (elementAttr === 'value') {
@@ -34,7 +36,7 @@ function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' 
 	}
 	return elementAttr;
 }
-export class ComponentRender<T> {
+export class ComponentRender<T extends object> {
 	componentRef: ComponentRef<T>;
 	template: DOMNode;
 	nativeElementMutation: ElementMutation;
@@ -164,12 +166,12 @@ export class ComponentRender<T> {
 			// structural directive selector
 			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
 
+			const templateRef = new TemplateRefImpl(this, directive.node, directiveStack.copyStack());
+			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
+
 			const structural = new StructuralDirectiveClass(
-				this,
-				directiveStack.copyStack(),
-				comment,
-				parentNode,
-				directive.node,
+				templateRef,
+				viewContainerRef,
 			);
 			if (isOnDestroy(structural)) {
 				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
