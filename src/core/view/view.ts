@@ -128,7 +128,7 @@ export function buildViewClassNameFromSelector(selector: string) {
 		.join('');
 }
 
-export function ComponentView<T>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
+export function getComponentView<T extends object>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
 	if (isComponentModelClass(modelClass)) {
 		let viewClassName: string;
 		if (selector) {

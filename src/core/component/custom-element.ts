@@ -12,19 +12,21 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
-export type ModelType<T> = T & Model & { [key: string]: any };
+type IndexedObject = { [key: string]: any };
+export type ProxyModelType<T> = T & IndexedObject;
+export type ModelType<T extends object> = T & Model & IndexedObject;
 
-export interface BaseComponent<T> extends CustomElement {
+export interface BaseComponent<T extends object> extends CustomElement {
 
 	_model: ModelType<T>;
-	_proxyModel: ModelType<T>;
-	_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
+	_proxyModel: ProxyModelType<T>;
+	_modelScope: ReactiveScope<T>;
 	_viewScope: ElementReactiveScope;
 
 	getComponentRef(): ComponentRef<T>;
 
-	setParentComponent<V>(parent: HTMLComponent<V>): void;
-	getParentComponent<V>(): HTMLComponent<V>;
+	setParentComponent<V extends object>(parent: HTMLComponent<V>): void;
+	getParentComponent<V extends object>(): HTMLComponent<V>;
 	hasParentComponent(): boolean;
 
 	hasInputStartWith(viewProp: string): boolean;
@@ -47,14 +49,14 @@ export interface BaseComponent<T> extends CustomElement {
 
 }
 
-export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
+export interface HTMLComponent<T extends object> extends BaseComponent<T>, HTMLElement { }
 
 export function isHTMLComponent(object: any): object is HTMLComponent<any> {
 	return Reflect.has(object, '_model')
 		&& object instanceof HTMLElement;
 }
 
-export function isHTMLComponentOfType<T>(object: any, typeClass: TypeOf<T>): object is HTMLComponent<T> {
+export function isHTMLComponentOfType<T extends object>(object: any, typeClass: TypeOf<T>): object is HTMLComponent<T> {
 	return isHTMLComponent(object)
 		&& Reflect.get(object, '_model') instanceof typeClass;
 }

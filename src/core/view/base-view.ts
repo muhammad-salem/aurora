@@ -7,7 +7,7 @@ import {
 import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
-import { defineModel, Model } from '../model/change-detection.js';
+import { defineModel } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
 import { ElementReactiveScope } from '../directive/providers.js';
@@ -28,21 +28,21 @@ function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T
 		.forEach(key => Reflect.set(instance, key, undefined));
 }
 
-export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 
 	if (FACTORY_CACHE.has(htmlElementType)) {
 		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
 	}
 	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
-		_proxyModel: ModelType<T>;
+		_proxyModel: T;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
+		_modelScope: ReactiveScope<T>;
 		_viewScope: ElementReactiveScope;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
@@ -59,7 +59,7 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 			this._model = defineModel(model);
 
 			this._viewScope = new ElementReactiveScope(this);
-			const modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
+			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
 
@@ -155,7 +155,7 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 				// console.log('about to change input', inputRef.modelProperty, value);
 				// Reflect.set(this._model, inputRef.modelProperty, value);
 				// this._model.emitChangeModel(inputRef.modelProperty);
-				this._modelScope.set(inputRef.modelProperty, value);
+				this._modelScope.set(inputRef.modelProperty as never, value);
 			}
 		}
 
