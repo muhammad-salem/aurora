@@ -1,5 +1,3 @@
-import type { ReactiveScope } from '@ibyar/expressions';
-import { ElementModelReactiveScope } from '../component/provider.js';
 
 export abstract class ViewRef {
 	/**
@@ -67,19 +65,19 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 
 export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 
-	#scope: ElementModelReactiveScope<C>;
+	#context: C;
 	#rootNodes: Node[];
 	#destroyed: boolean = false;
 	#subscribes: (() => void)[] = [];
 
-	constructor(scope: ElementModelReactiveScope<C>, rootNodes: Node[]) {
+	constructor(context: C, rootNodes: Node[]) {
 		super();
-		this.#scope = scope;
+		this.#context = context;
 		this.#rootNodes = rootNodes;
 	}
 
 	get context(): C {
-		return this.#scope.getContextProxy();
+		return this.#context;
 	}
 
 	get rootNodes(): Node[] {

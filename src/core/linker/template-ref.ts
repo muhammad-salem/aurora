@@ -1,6 +1,5 @@
 import type { DOMNode } from '@ibyar/elements';
-import type { Stack } from '@ibyar/expressions';
-import { ElementModelReactiveScope } from '../component/provider.js';
+import { createProxyForContext, Stack } from '@ibyar/expressions';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
 
@@ -40,12 +39,12 @@ export class TemplateRefImpl extends TemplateRef {
 	}
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
 		const stack = this.#stack.copyStack();
-		const scope = ElementModelReactiveScope.blockScopeFor(context ?? {});
-		stack.pushScope(scope);
+		const scope = stack.pushBlockReactiveScopeFor(context ?? {});
 		const fragment = document.createDocumentFragment();
 		this.#render.appendChildToParent(fragment, this.#node, stack, parentNode);
 		const elements: Node[] = [];
 		fragment.childNodes.forEach(item => elements.push(item));
-		return new EmbeddedViewRefImpl(scope, elements);
+		const contextProxy = createProxyForContext(scope);
+		return new EmbeddedViewRefImpl(contextProxy, elements);
 	}
 }

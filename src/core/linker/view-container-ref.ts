@@ -185,7 +185,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 			throw new Error(`Can't find View component for class ${componentType.name}`);
 		}
 		const component = new ViewClass();
-		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
+		const viewRef = new EmbeddedViewRefImpl<C>(component._proxyModel, [component]);
 		this.insert(viewRef, options?.index);
 		return component._proxyModel;
 	}
