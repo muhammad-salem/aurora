@@ -201,18 +201,18 @@ export class DOMDirectiveNode extends BaseNode {
 	/**
 	 * value of the directive 
 	 */
-	value: string;
+	value?: string;
 
 	/**
 	 * the value of the template node, that this directive going to host-on 
 	 */
 	node: DOMNode;
 
-	constructor(name: string, value: string, node: DOMNode) {
+	constructor(name: string, node: DOMNode, value?: string) {
 		super();
 		this.name = name;
-		this.value = value;
 		this.node = node;
+		this.value = value;
 	}
 }
 export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;

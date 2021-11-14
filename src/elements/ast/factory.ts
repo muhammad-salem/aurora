@@ -102,7 +102,7 @@ export class NodeFactory {
 		const fragment = new DOMFragmentNode();
 		children?.forEach(child => (typeof child === 'string') ? fragment.addTextChild(child) : fragment.addChild(child));
 		!directiveName.startsWith('*') && (directiveName = '*' + directiveName);
-		const directive = new DOMDirectiveNode(directiveName, directiveValue ?? '', fragment);
+		const directive = new DOMDirectiveNode(directiveName, fragment, directiveValue);
 		attrs && Object.keys(attrs).forEach(attr => directive.addAttribute(attr, attrs[attr]));
 		return directive;
 	}

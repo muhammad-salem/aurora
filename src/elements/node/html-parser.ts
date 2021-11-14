@@ -371,7 +371,9 @@ export class NodeParser {
 				attributes.splice(attributes.indexOf(temp), 1);
 				const isTemplate = node.tagName === 'template';
 				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
-				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
+				const directive = (typeof temp?.value === 'boolean')
+					? new DOMDirectiveNode(temp.name, directiveNode)
+					: new DOMDirectiveNode(temp.name, directiveNode, String(temp.value));
 				const directiveName = temp.name.substring(1);
 				if (isTemplate) {
 					directive.inputs = node.inputs;
@@ -391,14 +393,17 @@ export class NodeParser {
 					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
 				const directiveNode = new DOMFragmentNode(node.children);
-				const directive = new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
+				const directive = (typeof temp?.value === 'boolean')
+					? new DOMDirectiveNode('*' + node.tagName, directiveNode)
+					: new DOMDirectiveNode('*' + node.tagName, directiveNode, String(temp?.value));
+				// const directive = new DOMDirectiveNode('*' + node.tagName, directiveNode, temp?.value && String(temp.value));
 				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
 				return directive;
 			}
 		} else if (directiveRegistry.has(node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
-			return new DOMDirectiveNode('*' + node.tagName, '', new DOMFragmentNode(node.children));
+			return new DOMDirectiveNode('*' + node.tagName, new DOMFragmentNode(node.children));
 		}
 		return node;
 	}
