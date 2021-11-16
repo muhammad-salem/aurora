@@ -13,21 +13,14 @@ class TokenConstant {
 export class DirectiveExpressionParser {
 
 
-	public static parse(expression: string) {
-		if (expression === 'let user of people') {
-			debugger;
-		}
+	public static parse(directiveName: string, expression: string) {
 		const stream = TokenStream.getTokenStream(expression);
-		const parser = new DirectiveExpressionParser(stream);
+		const parser = new DirectiveExpressionParser(directiveName, stream);
 		try {
-			console.log(expression);
-			const inputs = parser.scan();
-			console.log(inputs);
-
-			// stream.reset();
-			// const ast = JavaScriptParser.parse(stream);
-			// console.log(ast);
-
+			console.log(directiveName, expression);
+			const expressions = parser.scan();
+			console.log(expressions);
+			return expressions;
 		} catch (error) {
 			console.error(expression, error);
 		}
@@ -36,16 +29,33 @@ export class DirectiveExpressionParser {
 	protected templateExpressions = new Array<ExpressionNode>();
 	protected directiveInputs = new Map<string, ExpressionNode>();
 
-	constructor(protected stream: TokenStream) { }
+	constructor(protected directiveName: string, protected stream: TokenStream) { }
 
 	scan() {
-		while (this.stream.peek().isNotType(Token.EOS)) {
-			this.parseTemplateInput() || this.parseDirectiveAndTemplateInputs();
-		}
+		this.doParse();
 		return {
 			templateExpressions: this.templateExpressions,
 			directiveInputs: this.directiveInputs
 		};
+	}
+	private doParse() {
+		// parse 'let' if found, or switch to expression mode.
+		if (this.isLet()) {
+			this.parseTemplateInput();
+		} else {
+			// parse expression, possible ends is semicolon, comma, let and 'EOS'
+			this.parseExpression(this.directiveName);
+		}
+		if (this.stream.peek().isType(Token.EOS)) {
+			return;
+		}
+		this.consumeSemicolonOrComma();
+
+		// parse let and parseDirectiveAndTemplateInputs
+		while (this.stream.peek().isNotType(Token.EOS)) {
+			this.parseTemplateInput() || this.parseDirectiveAndTemplateInputs();
+			this.consumeSemicolonOrComma();
+		}
 	}
 	protected consume(token: Token) {
 		if (this.stream.next().isNotType(token)) {
@@ -68,6 +78,15 @@ export class DirectiveExpressionParser {
 		list.push(next);
 	}
 
+	protected consumeIfToken(token: Token, list: TokenExpression[]): boolean {
+		const next = this.stream.next();
+		if (next.isNotType(token)) {
+			return false;
+		}
+		list.push(next);
+		return true;
+	}
+
 	protected isLet(): boolean {
 		return this.stream.peek().isType(Token.LET);
 	}
@@ -81,24 +100,39 @@ export class DirectiveExpressionParser {
 		return peek.isType(Token.IDENTIFIER) && (peek.getValue<Identifier>().getName() == 'as');
 	}
 
+	protected consumeAsKeyword() {
+		this.consume(Token.IDENTIFIER);
+	}
 	protected isSemicolon() {
 		return this.stream.peek().isType(Token.SEMICOLON);
 	}
+	protected isComma() {
+		return this.stream.peek().isType(Token.COMMA);
+	}
+	protected consumeSemicolonOrComma() {
+		let peek = this.stream.peek();
+		if (peek.isType(Token.SEMICOLON) || peek.isType(Token.COMMA)) {
+			this.stream.next();
+			return;
+		}
+	}
 	protected parseTemplateInput() {
+		// let = "let" :local "=" :export ";"?
 		if (this.isLet()) {
 			const list: TokenExpression[] = [];
 			this.consumeToList(Token.LET, list);
 			const peek = this.stream.peek();
 			if (Token.isOpenPair(peek.token) && peek.isNotType(Token.L_PARENTHESES)) {
+				// object and array pattern, destructing
 				this.stream.readTill(Token.closeOf(peek.token), list);
 			} else if (peek.isType(Token.IDENTIFIER)) {
 				this.consumeToList(Token.IDENTIFIER, list);
 			} else {
 				throw new Error(this.stream.createError(`Can't parse let {IDENTIFIER/ObjectPattern}`));
 			}
-			if (this.check(Token.ASSIGN)) {
-				this.consumeToList(Token.ASSIGN, list);
-				this.parseRSideExpression(list, true);
+			if (this.consumeIfToken(Token.ASSIGN, list)) {
+				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+				// this.parseRSideExpression(list, true);
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
@@ -110,99 +144,69 @@ export class DirectiveExpressionParser {
 		return false;
 	}
 
-
-	private parseRSideExpression(list: TokenExpression[], pipelineEnabled = false) {
-		debugger;
-		let peek = this.stream.peek();
-		if (Token.isOpenPair(peek.token)) {
-			const patternStream = this.stream.getStreamer(Token.closeOf(peek.token));
-			list.push(...patternStream.toTokens());
-		} else if (peek.isType(Token.IDENTIFIER)) {
-			this.consumeToList(Token.IDENTIFIER, list);
-			peek = this.stream.peek();
-			while (Token.isPropertyOrCall(peek.token)) {
-				if (peek.isType(Token.L_BRACKETS)) {
-					// computed members
-					this.stream.readTill(Token.R_BRACKETS, list);
-				} else if (peek.isType(Token.L_PARENTHESES)) {
-					// call
-					this.stream.readTill(Token.R_PARENTHESES, list);
-				} else if (peek.isType(Token.PERIOD)) {
-					// dot notation
-					this.consumeToList(Token.PERIOD, list);
-					this.consumeToList(Token.IDENTIFIER, list);
-				} else if (peek.isType(Token.QUESTION_PERIOD)) {
-					// optional 
-					this.consumeToList(Token.PERIOD, list);
-					peek = this.stream.peek();
-					if (Token.isPropertyOrCall(peek.token) && peek.isNotType(Token.PERIOD)) continue;
-					this.consumeToList(Token.IDENTIFIER, list);
-				}
-				peek = this.stream.peek();
-			}
-			// support pipeline
-			if (peek.isType(Token.PIPELINE)) {
-				if (!pipelineEnabled) {
-					throw new Error(this.stream.createError(`Pipeline not supported at this location`));
-				}
-				// stop at semicolon or comma or end of stream
-				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.EOS);
-			}
-		} else {
-			throw new Error(this.stream.createError(`Can't parse {identifier/member/Object} expression`));
-		}
-		return peek;
+	protected parseExpression(inputName: string) {
+		const list: TokenExpression[] = [];
+		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+		const node = JavaScriptParser.parse(list) as AssignmentExpression;
+		this.directiveInputs.set(inputName, node);
 	}
 
-	protected parseExpression() {
-
-	}
 	/**
 	 * check if the first is
 	 * @returns `boolean`
 	 */
 	protected parseDirectiveAndTemplateInputs() {
-		if (this.isIdentifier()) {
-			const list: TokenExpression[] = [];
-			const inputToken = this.stream.next();
-			// only template input
-			// mapping from directive scope(context) to template scope
-			if (this.isAsKeyword()) {
-				this.consume(Token.IDENTIFIER);
-				// rewrite `input as alias`
-				// ==> in template -> let alias = input
-
-				const aliasToken = this.stream.next();
-				const aliasList: TokenExpression[] = [];
-				aliasList.push(TokenConstant.LET, aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-				const node = JavaScriptParser.parse(aliasList);
-				this.templateExpressions.push(node);
-
-				return true;
-			}
-
-			list.push(inputToken, TokenConstant.ASSIGN);
-			this.parseRSideExpression(list);
-			list.push(TokenConstant.EOS);
-
-			// mix for directive input and template input
-			if (this.isAsKeyword()) {
-				this.consume(Token.IDENTIFIER);
-				// rewrite `input {x: 7, y: 9} as alias` 
-				// ==> in directive ->`input = {x: 7, y: 9}`
-				// ==> or in template -> let alias = input
-				const aliasToken = this.stream.next();
-				const aliasList: TokenExpression[] = [];
-				aliasList.push(TokenConstant.LET, aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-				const node = JavaScriptParser.parse(aliasList);
-				this.templateExpressions.push(node);
-			}
-			const node = JavaScriptParser.parse(list) as AssignmentExpression;
-			const inputName = inputToken.getValue<Identifier>().getName() as string;
-			this.directiveInputs.set(inputName, node.getRight());
-			return true;
+		if (this.stream.peek().isType(Token.EOS)) {
+			return;
 		}
-		return false;
+		let inputToken: TokenExpression;
+		if (this.isIdentifier()) {
+			inputToken = this.stream.next();
+		} else {
+			inputToken = this.stream.next();
+			const identifierName = inputToken.token.getName();
+			inputToken = new TokenExpression(Token.IDENTIFIER, new Identifier(identifierName));
+		}
+
+		// only template input
+		// mapping from directive scope(context) to template scope
+		if (this.isAsKeyword()) {
+			// as = :export "as" :local ";"?
+			this.consumeAsKeyword();
+			// rewrite `input as alias`
+			// ==> in template -> alias = input
+
+			const aliasToken = this.stream.next();
+			const aliasList: TokenExpression[] = [];
+			aliasList.push(aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
+			const node = JavaScriptParser.parse(aliasList);
+			this.templateExpressions.push(node);
+			return;
+		}
+
+		const list: TokenExpression[] = [];
+		// keyExp = :key ":"? :expression ("as" :local)? ";"?
+		list.push(inputToken, TokenConstant.ASSIGN);
+		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+		// this.parseRSideExpression(list);
+		list.push(TokenConstant.EOS);
+
+		// mix for directive input and template input
+		if (this.isAsKeyword()) {
+			this.consumeAsKeyword();
+			// rewrite `input {x: 7, y: 9} as alias` 
+			// ==> in directive ->`input = {x: 7, y: 9}`
+			// ==> or in template -> let alias = input
+			const aliasToken = this.stream.next();
+			const aliasList: TokenExpression[] = [];
+			aliasList.push(TokenConstant.LET, aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
+			const node = JavaScriptParser.parse(aliasList);
+			this.templateExpressions.push(node);
+		}
+		const node = JavaScriptParser.parse(list) as AssignmentExpression;
+		const inputName = inputToken.getValue<Identifier>().getName() as string;
+		this.directiveInputs.set(inputName, node.getRight());
+
 	}
 
 }
