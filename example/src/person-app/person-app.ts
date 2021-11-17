@@ -50,56 +50,29 @@ import { Person, PersonModel } from './person';
 
 		<hr>
 
-		<h1>For Loop Directive</h1>
-		<h5>*for="let index = 0; index &lt; people.length; index++"</h5>
+		<h1>*For Of Directive</h1>
+		<h5>*forOf="let user of people"</h5>
 		<div class="row">
-			<div class="col-3" *for="let index = 0; index < people.length; index++">
-				<p>Name: <span>{{people[index].name}}</span></p>
-				<p>Age: <span>{{people[index].age}}</span></p>
-			</div>
-		</div>
-
-		<h1>For Of Directive</h1>
-		<h5>*for="let user of people"</h5>
-		<div class="row">
-			<div class="col-3" *for="let user of people">
+			<div class="col-3" *forOf="let user of people">
 				<p>Name: <span>{{user.name}}</span></p>
 				<p>Age: <span>{{user.age}}</span></p>
 			</div>
 		</div>
 
-		<h1>For In Directive</h1>
-		<h5>*for="let key in person1"</h5>
+		<h1>*For In Directive</h1>
+		<h5>*forIn="let key in person1"</h5>
 		<div class="row">
-			<div class="col-3" *for="let key in person1">
+			<div class="col-3" *forIn="let key in person1">
 				<p>Key: <span>{{key}}</span></p>
 				<p>Value: <span>{{person1[key]}}</span></p>
 			</div>
 		</div>
 
-		<h1>For Await OF Directive</h1>
-		<h5>*for="await (let num of asyncIterable)"</h5>
+		<h1>*For Await OF Directive</h1>
+		<h5>*forAwait="let num of asyncIterable"</h5>
 		<div class="row">
-			<div class="col-3" *for="await (let num of asyncIterable)">
+			<div class="col-3" *forAwait="let num of asyncIterable">
 				<p>num = <span>{{num}}</span></p>
-			</div>
-		</div>
-
-		<hr>
-		<h1>While Directive</h1>
-		<h5>*while="i &lt; people.length"</h5>
-		<div class="row">
-			<div class="col-3" *while="i < people.length">
-				<p>Name: <span>{{people[i].name}}</span></p>
-				<p>Age: <span>{{people[i++].age}}</span></p>
-			</div>
-		</div>
-		<h1>While Directive</h1>
-		<h5>*while="let index = 0; index &lt; people.length"</h5>
-		<div class="row">
-			<div class="col-3" *while="let index = 0; index < people.length">
-				<p>Name: <span>{{people[index].name}}</span></p>
-				<p>Age: <span>{{people[index++].age}}</span></p>
 			</div>
 		</div>
 

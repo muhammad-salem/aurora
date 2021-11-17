@@ -9,7 +9,7 @@ import { interval, Subscription } from 'rxjs';
 	<div [styles]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
 	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
-	<div *for="let color of colors">
+	<div *forOf="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> => Current Color ='{{currentColor}}'</span>
 	</div>
 	<for expression="let d of colors">
@@ -109,14 +109,18 @@ import { interval, Subscription } from 'rxjs';
 			</tr>
 		</thead>
 		<tbody>
-			<for expression="let row of table; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
+			<div *test="text |> lowercase; let x = 888; track getIdentity; let {y, z} = {y: 9, z: 'text', m: 0};"></div>
+			<div *if="user.age > 18 as isAdult">
+				isAdult: {{isAdult |> json}}
+			</div>
+			<template *forOf="let row of table; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
 				<tr [class]="{'table-info': isEven, 'table-danger': isOdd}">
 					<th scope="row">{{ ({idx, tableLength, isEven, isOdd, isFirst, isLast }) |> json }}</th>
 					<td>{{row.firstName}}</td>
 					<td>{{row.lastName}}</td>
 					<td>{{row.age}}</td>
 				</tr>
-			</for>
+			</template>
 		</tbody>
 	</table>
     `
