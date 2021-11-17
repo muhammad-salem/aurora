@@ -10,6 +10,7 @@ import {
 	ExpressionNode, JavaScriptParser
 } from '@ibyar/expressions';
 import { DirectiveExpressionParser } from '../directive/parser.js';
+import { ClassRegistryProvider } from '../providers/provider.js';
 import {
 	HTMLNodeAssignmentExpression,
 	TextNodeAssignmentExpression
@@ -115,24 +116,25 @@ function parseChild(child: DOMNode) {
 		parseBaseNode(child);
 		parseDomParentNode(child);
 	} else if (child instanceof DOMDirectiveNode) {
-		// DomDirectiveNode
-		// in case if add input/output support need to handle that here.
-		parseBaseNode(child);
-		parseChild(child.node);
 		if (child.value) {
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
 			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions;
 			if (info.directiveInputs.size > 0) {
 				child.inputs ??= [];
+				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
 				info.directiveInputs.forEach((expression, input) => {
-					const attr: LiveAttribute = createLiveAttribute(input, expression.toString());
-					attr.expression = expression;
-					attr.expressionEvent = expression.events();
+					const modelName = ref?.inputs.find(i => i.viewAttribute === input)?.modelProperty ?? input;
+					const attr: LiveAttribute = createLiveAttribute(modelName, expression.toString());
+					// attr.expression = expression;
+					// attr.expressionEvent = expression.events();
 					child.inputs?.push(attr);
-					console.log('attr', attr);
 				});
 			}
 		}
+		// DomDirectiveNode
+		// in case if add input/output support need to handle that here.
+		parseChild(child.node);
+		parseBaseNode(child);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	} else if (child instanceof DOMFragmentNode) {

@@ -24,10 +24,9 @@ export class DirectiveExpressionParser {
 		const stream = TokenStream.getTokenStream(expression);
 		const parser = new DirectiveExpressionParser(directiveName, stream);
 		try {
-			console.log(directiveName, expression);
 			parser.scan();
 		} catch (error) {
-			console.error(expression, parser, error);
+			console.error('error parsing template expression', expression, parser, error);
 		}
 		return parser.getDirectiveExpressionType();
 	}
