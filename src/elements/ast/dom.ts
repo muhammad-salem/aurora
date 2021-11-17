@@ -14,6 +14,16 @@ export class ElementAttribute<N, V> extends Attribute<N, V> { }
 export class LiveAttribute extends Attribute<string, string> { }
 
 /**
+ * 
+ * @param name 
+ * @param value 
+ * @returns LiveAttribute
+ */
+export function createLiveAttribute(name: string, value: string) {
+	return new LiveAttribute(name, value);
+}
+
+/**
  * a normal text
  */
 export class TextContent extends Attribute<'textContent', string> {
@@ -214,6 +224,9 @@ export class DOMDirectiveNode extends BaseNode {
 		this.node = node;
 		this.value = value;
 	}
+}
+export function isDOMDirectiveNode(node: object): node is DOMDirectiveNode {
+	return node instanceof DOMDirectiveNode;
 }
 export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
 

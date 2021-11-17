@@ -70,15 +70,19 @@ export abstract class TokenStream {
 	getSavedPos(): number {
 		return this.savedPosition;
 	}
-	getStreamer(expect?: Token): TokenStream {
-		expect ??= Token.EOS;
-		if (Token.isClosePair(expect)) {
-			return this.getPairStreamer(Token.openOf(expect), expect);
-		}
-		return this.getStreamerTo(expect);
-	}
-	private getStreamerTo(expect: Token): TokenStream {
+	getStreamer(expect: Token = Token.EOS): TokenStream {
 		const tokens: TokenExpression[] = [];
+		this.readTill(expect, tokens);
+		return new TokenStreamer(tokens);
+	}
+	readTill(expect: Token = Token.EOS, tokens: TokenExpression[]): void {
+		if (Token.isClosePair(expect)) {
+			this.readTokensPair(Token.openOf(expect), expect, tokens);
+		} else {
+			this.readTokens(expect, tokens);
+		}
+	}
+	readTokens(expect: Token, tokens: TokenExpression[]): void {
 		let token: TokenExpression;
 		while (true) {
 			token = this.next();
@@ -87,12 +91,24 @@ export abstract class TokenStream {
 			}
 			tokens.push(token);
 		}
-		return new TokenStreamer(tokens);
 	}
-	private getPairStreamer(open: Token, close: Token): TokenStream {
+	readTokensConsiderPair(tokens: TokenExpression[], ...expect: Token[]): void {
+		let token: TokenExpression, open: Token;
+		while (true) {
+			if (Token.isOpenPair(open = this.peek().token)) {
+				this.readTokensPair(open, Token.closeOf(open), tokens);
+				continue;
+			}
+			token = this.next();
+			if (expect.includes(token.token) || token.token === Token.EOS) {
+				break;
+			}
+			tokens.push(token);
+		}
+	}
+	readTokensPair(open: Token, close: Token, tokens: TokenExpression[]): void {
 		// check pair
 		let count = 0;
-		const tokens: TokenExpression[] = [];
 		let token: TokenExpression;
 		while (true) {
 			token = this.next();
@@ -100,11 +116,12 @@ export abstract class TokenStream {
 				count++;
 			}
 			else if (token.token === close) {
-				if (count === 0) {
-					break;
-				}
-				else if (count > 0) {
+				if (count > 0) {
 					count--;
+				}
+				if (count === 0) {
+					tokens.push(token);
+					break;
 				}
 			}
 			else if (token.token === Token.EOS) {
@@ -112,7 +129,6 @@ export abstract class TokenStream {
 			}
 			tokens.push(token);
 		}
-		return new TokenStreamer(tokens);
 	}
 	public toTokens(): TokenExpression[] {
 		const tokens: TokenExpression[] = [];
