@@ -120,8 +120,11 @@ function parseChild(child: DOMNode) {
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
 			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions;
 			if (info.directiveInputs.size > 0) {
-				child.inputs ??= [];
 				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
+				if (!ref?.inputs?.length) {
+					return;
+				}
+				child.inputs ??= [];
 				info.directiveInputs.forEach((expression, input) => {
 					const modelName = ref?.inputs.find(i => i.viewAttribute === input)?.modelProperty ?? input;
 					const attr: LiveAttribute = createLiveAttribute(modelName, expression.toString());
