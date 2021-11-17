@@ -23,7 +23,7 @@ import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js'
 import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
 import { buildReactiveScopeEvents, findScopeMap } from './events.js';
-import { TemplateRefImpl } from '../linker/template-ref.js';
+import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
 function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
@@ -42,7 +42,7 @@ export class ComponentRender<T extends object> {
 	template: DOMNode;
 	nativeElementMutation: ElementMutation;
 	contextStack: Stack;
-	templateNameScope: Scope<{ [templateName: string]: DOMElementNode }>;
+	templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
 
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
@@ -50,7 +50,7 @@ export class ComponentRender<T extends object> {
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
-		this.templateNameScope = this.contextStack.pushBlockScope();
+		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
 		this.nativeElementMutation = new ElementMutation();
 		this.view._model.subscribeModel('destroy', () => {
 			this.nativeElementMutation.disconnect();
@@ -95,8 +95,7 @@ export class ComponentRender<T extends object> {
 				for (let index = 0; index < domNode.children.length; index++) {
 					const child = domNode.children[index];
 					if (this.isTemplateRefName(child)) {
-						const templateRefName = child.templateRefName!;
-						this.templateNameScope.set(templateRefName.name, child);
+						this.templateNameScope.set(child.templateRefName!.name, undefined);
 					} else {
 						this.initTemplateRefMap(child);
 					}
@@ -168,11 +167,11 @@ export class ComponentRender<T extends object> {
 		if (directiveRef) {
 			// structural directive selector
 			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
-
+			const stack = directiveStack.copyStack();
 			const templateRef = new TemplateRefImpl(
 				this,
 				directive.node,
-				directiveStack.copyStack(),
+				stack,
 				(directive as DOMDirectiveNodeUpgrade).templateExpressions
 			);
 			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
@@ -181,19 +180,14 @@ export class ComponentRender<T extends object> {
 				templateRef,
 				viewContainerRef,
 			);
+			stack.pushBlockReactiveScopeFor({ 'this': structural });
 			if (isOnDestroy(structural)) {
 				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-					console.log('destroy structural directive', directive.name, removeSubscription);
 					removeSubscription.unsubscribe();
 					structural.onDestroy();
 				});
 			}
-			const directiveInputName = directive.name.substring(1);
-			const directiveInput = directiveRef.inputs?.find(input => input.viewAttribute === directiveInputName);
-			if (directiveInput) {
-				Reflect.set(structural, directiveInput.modelProperty, String(directive.value));
-			}
-			this.initDirectiveAttributes(structural, directive, directiveStack);
+			this.initDirectiveAttributes(structural, directive, stack);
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
@@ -222,9 +216,22 @@ export class ComponentRender<T extends object> {
 	}
 	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DOMNode, contextStack: Stack, parentNode: Node) {
 		if (child instanceof DOMElementNode) {
-			// if (this.isTemplateRefName(child)) {
-			// 	return;
-			// }
+			if (this.isTemplateRefName(child)) {
+				const templateRefName = child.templateRefName!;
+				// const oldRef = this.templateNameScope.get(templateRefName.name);
+				// if (oldRef) {
+				// 	return;
+				// }
+				// TODO: extract template expression
+				const templateRef = new TemplateRefImpl(
+					this,
+					new DOMFragmentNode(child.children),
+					contextStack.copyStack(),
+					[]
+				);
+				this.templateNameScope.set(templateRefName.name, templateRef);
+				return;
+			}
 			fragmentParent.append(this.createElement(child, contextStack, parentNode));
 		} else if (child instanceof DOMDirectiveNode) {
 			const comment = document.createComment(`start ${child.name} = ${child.value}`);
@@ -288,7 +295,7 @@ export class ComponentRender<T extends object> {
 		return element;
 	}
 	initAttribute(element: HTMLElement, node: DOMElementNode, contextStack: Stack): void {
-		if (node.attributes) {
+		if (node.attributes?.length) {
 			node.attributes.forEach(attr => {
 				/**
 				 * <input id="23" name="person-name" />
@@ -308,17 +315,17 @@ export class ComponentRender<T extends object> {
 				// (attr.node as ExpressionNode).set(contextStack, attr.value);
 			});
 		}
-		if (node.twoWayBinding) {
+		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
 				this.bind2Way(element, attr, contextStack);
 			});
 		}
-		if (node.inputs) {
+		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
 				this.bind1Way(element, attr, contextStack);
 			});
 		}
-		if (node.outputs) {
+		if (node.outputs?.length) {
 			node.outputs.forEach(event => {
 				let listener: Function;
 				/**
@@ -343,7 +350,7 @@ export class ComponentRender<T extends object> {
 				element.addEventListener(event.name as any, listener as any);
 			});
 		}
-		if (node.templateAttrs) {
+		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
 				this.bind1Way(element, attr, contextStack);
 			});
@@ -351,20 +358,20 @@ export class ComponentRender<T extends object> {
 	}
 
 	initDirectiveAttributes(directive: StructuralDirective, node: DOMDirectiveNode, contextStack: Stack): void {
-		if (node.attributes) {
+		if (node.attributes?.length) {
 			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
 		}
-		if (node.twoWayBinding) {
+		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
 				this.bind2Way(directive, attr, contextStack);
 			});
 		}
-		if (node.inputs) {
+		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
 				this.bind1Way(directive, attr, contextStack);
 			});
 		}
-		if (node.outputs) {
+		if (node.outputs?.length) {
 			node.outputs.forEach(event => {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
@@ -374,7 +381,7 @@ export class ComponentRender<T extends object> {
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});
 		}
-		if (node.templateAttrs) {
+		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
 				this.bind1Way(directive, attr, contextStack);
 			});
