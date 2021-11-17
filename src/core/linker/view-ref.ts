@@ -65,54 +65,52 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 
 export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 
-	#context: C;
-	#rootNodes: Node[];
-	#destroyed: boolean = false;
-	#subscribes: (() => void)[] = [];
+	private _destroyed: boolean = false;
+	private subscribes: (() => void)[] = [];
 
-	constructor(context: C, rootNodes: Node[]) {
+	constructor(
+		private _context: C,
+		private _rootNodes: Node[]) {
 		super();
-		this.#context = context;
-		this.#rootNodes = rootNodes;
 	}
 
 	get context(): C {
-		return this.#context;
+		return this._context;
 	}
 
 	get rootNodes(): Node[] {
-		return this.#rootNodes;
+		return this._rootNodes;
 	}
 	get first(): Element {
-		return this.#rootNodes[0] as Element;
+		return this._rootNodes[0] as Element;
 	}
 	get last(): Element {
-		return this.#rootNodes[this.#rootNodes.length - 1] as Element;
+		return this._rootNodes[this._rootNodes.length - 1] as Element;
 	}
 	get destroyed(): boolean {
-		return this.#destroyed;
+		return this._destroyed;
 	}
 	destroy(): void {
-		if (!this.#destroyed) {
-			for (const node of this.#rootNodes) {
+		if (!this._destroyed) {
+			for (const node of this._rootNodes) {
 				(<Element>node).remove();
 			}
-			this.#subscribes.forEach(callback => {
+			this.subscribes.forEach(callback => {
 				try {
 					callback();
 				} catch (error) {
 					console.error(error);
 				}
 			});
-			this.#destroyed = true;
+			this._destroyed = true;
 		}
 	}
 	private getAsANode() {
-		if (this.#rootNodes.length == 1) {
-			return this.#rootNodes[0];
+		if (this._rootNodes.length == 1) {
+			return this._rootNodes[0];
 		}
 		const fragment = document.createDocumentFragment();
-		this.#rootNodes.forEach(node => fragment.append(node));
+		this._rootNodes.forEach(node => fragment.append(node));
 		return fragment;
 	}
 	after(node: ChildNode): void {
@@ -122,17 +120,17 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		node.before(this.getAsANode());
 	}
 	detach(): void {
-		for (const node of this.#rootNodes) {
+		for (const node of this._rootNodes) {
 			(<Element>node).remove();
 		}
 	}
 	onDestroy(callback: () => {}): { unsubscribe(): void; } {
-		this.#subscribes.push(callback);
+		this.subscribes.push(callback);
 		return {
 			unsubscribe: () => {
-				const index = this.#subscribes.indexOf(callback);
+				const index = this.subscribes.indexOf(callback);
 				if (index > -1) {
-					this.#subscribes.splice(index, 1);
+					this.subscribes.splice(index, 1);
 				}
 			}
 		};

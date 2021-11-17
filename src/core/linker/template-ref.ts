@@ -25,44 +25,42 @@ export abstract class TemplateRef {
 
 
 export class TemplateRefImpl extends TemplateRef {
-	#render: ComponentRender<any>;
-	#stack: Stack;
-	#node: DOMNode;
-	#templateExpressions: ExpressionNode[];
 
-	constructor(render: ComponentRender<any>, node: DOMNode, stack: Stack, templateExpressions: ExpressionNode[]) {
+
+	constructor(
+		private render: ComponentRender<any>,
+		private node: DOMNode,
+		private stack: Stack,
+		private templateExpressions: ExpressionNode[]
+	) {
 		super();
-		this.#render = render;
-		this.#node = node;
-		this.#stack = stack;
-		this.#templateExpressions = templateExpressions;
 	}
 	get astNode(): DOMNode {
-		return this.#node;
+		return this.node;
 	}
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
-		const directiveStack = this.#stack.copyStack();
+		const directiveStack = this.stack.copyStack();
 		const scope = directiveStack.pushBlockReactiveScopeFor(context ?? {});
 		this.bindTemplateExpressions(directiveStack);
 		const fragment = document.createDocumentFragment();
-		this.#render.appendChildToParent(fragment, this.#node, directiveStack, parentNode);
+		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode);
 		const elements: Node[] = [];
 		fragment.childNodes.forEach(item => elements.push(item));
 		const contextProxy = createProxyForContext(scope);
 		return new EmbeddedViewRefImpl(contextProxy, elements);
 	}
 	private bindTemplateExpressions(directiveStack: Stack) {
-		if (!this.#templateExpressions?.length) {
+		if (!this.templateExpressions?.length) {
 			return;
 		}
 		directiveStack.pushBlockReactiveScope();
 		const templateStack = directiveStack.copyStack();
 		// init value
-		this.#templateExpressions.forEach(expression => {
+		this.templateExpressions.forEach(expression => {
 			expression.get(templateStack);
 		});
 		// subscribe to changes
-		this.#templateExpressions.forEach(expression => {
+		this.templateExpressions.forEach(expression => {
 			const events = expression.events();
 			const scopeMap = buildReactiveScopeEvents(events, directiveStack);
 			scopeMap.forEach((scope, eventName) => {

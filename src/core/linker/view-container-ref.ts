@@ -112,54 +112,54 @@ export abstract class ViewContainerRef {
 
 
 export class ViewContainerRefImpl extends ViewContainerRef {
-	#parent: Element;
-	#views: EmbeddedViewRef<any>[] = [];
-	#firstComment: Comment;
 
-	constructor(rootElement: Element, firstComment: Comment) {
+	private views: EmbeddedViewRef<any>[] = [];
+
+	constructor(
+		private parent: Element,
+		private firstComment: Comment
+	) {
 		super();
-		this.#parent = rootElement;
-		this.#firstComment = firstComment;
 	}
 	override get anchorElement(): Element {
-		return this.#parent;
+		return this.parent;
 	}
 	override get length(): number {
-		return this.#views.length;
+		return this.views.length;
 	}
 	override clear(): void {
-		if (this.#views.length > 0) {
-			for (const elm of this.#views) {
+		if (this.views.length > 0) {
+			for (const elm of this.views) {
 				elm.destroy();
 			}
-			this.#views.splice(0);
+			this.views.splice(0);
 		}
 	}
 	override get(index: number): ViewRef | undefined {
-		if (index >= this.#views.length) {
+		if (index >= this.views.length) {
 			return undefined;
 		}
-		return this.#views[index];
+		return this.views[index];
 	}
 	override detach(index?: number): ViewRef | undefined {
-		index ??= this.#views.length - 1;
-		const viewRef = this.#views[index];
+		index ??= this.views.length - 1;
+		const viewRef = this.views[index];
 		viewRef.detach();
-		this.#views.splice(index, 1);
+		this.views.splice(index, 1);
 		return viewRef;
 	}
 	override indexOf(viewRef: EmbeddedViewRef<any>): number {
-		return this.#views.indexOf(viewRef);
+		return this.views.indexOf(viewRef);
 	}
 	override remove(index?: number): void {
-		index ??= this.#views.length - 1;
-		this.#views[index].destroy();
-		this.#views.splice(index, 1);
+		index ??= this.views.length - 1;
+		this.views[index].destroy();
+		this.views.splice(index, 1);
 	}
 	override insert(viewRef: EmbeddedViewRef<any>, index?: number): ViewRef {
-		index = ((index ??= this.#views.length) > this.#views.length) ? this.#views.length : index;
-		const lastNode = index == 0 ? this.#firstComment : this.#views[index - 1].last;
-		this.#views.splice(index, 0, viewRef);
+		index = ((index ??= this.views.length) > this.views.length) ? this.views.length : index;
+		const lastNode = index == 0 ? this.firstComment : this.views[index - 1].last;
+		this.views.splice(index, 0, viewRef);
 		viewRef.after(lastNode);
 		return viewRef;
 	}
@@ -174,7 +174,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		return this.insert(viewRef, newIndex);
 	}
 	override createEmbeddedView<C extends object>(templateRef: TemplateRef, context?: C, index?: number): EmbeddedViewRef<C> {
-		const viewRef = templateRef.createEmbeddedView<C>(context || <C>{}, this.#parent);
+		const viewRef = templateRef.createEmbeddedView<C>(context || <C>{}, this.parent);
 		this.insert(viewRef, index);
 		return viewRef;
 	}
