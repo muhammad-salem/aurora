@@ -1,6 +1,13 @@
-import { AssignmentExpression, ExpressionNode, Identifier, JavaScriptParser, Token, TokenExpression, TokenStream } from '@ibyar/expressions';
+import {
+	AssignmentExpression, ExpressionNode, Identifier,
+	JavaScriptParser, Token, TokenExpression, TokenStream
+} from '@ibyar/expressions';
 
 
+export type DirectiveExpressionType = {
+	templateExpressions: Array<ExpressionNode>;
+	directiveInputs: Map<string, ExpressionNode>;
+};
 
 class TokenConstant {
 	static LET = new TokenExpression(Token.LET);
@@ -13,17 +20,16 @@ class TokenConstant {
 export class DirectiveExpressionParser {
 
 
-	public static parse(directiveName: string, expression: string) {
+	public static parse(directiveName: string, expression: string): DirectiveExpressionType {
 		const stream = TokenStream.getTokenStream(expression);
 		const parser = new DirectiveExpressionParser(directiveName, stream);
 		try {
 			console.log(directiveName, expression);
-			const expressions = parser.scan();
-			console.log(expressions);
-			return expressions;
+			parser.scan();
 		} catch (error) {
-			console.error(expression, error);
+			console.error(expression, parser, error);
 		}
+		return parser.getDirectiveExpressionType();
 	}
 
 	protected templateExpressions = new Array<ExpressionNode>();
@@ -31,14 +37,13 @@ export class DirectiveExpressionParser {
 
 	constructor(protected directiveName: string, protected stream: TokenStream) { }
 
-	scan() {
-		this.doParse();
+	getDirectiveExpressionType(): DirectiveExpressionType {
 		return {
 			templateExpressions: this.templateExpressions,
 			directiveInputs: this.directiveInputs
 		};
 	}
-	private doParse() {
+	scan(): void {
 		// parse 'let' if found, or switch to expression mode.
 		if (this.isLet()) {
 			this.parseTemplateInput();
@@ -186,7 +191,7 @@ export class DirectiveExpressionParser {
 
 		const list: TokenExpression[] = [];
 		// keyExp = :key ":"? :expression ("as" :local)? ";"?
-		list.push(inputToken, TokenConstant.ASSIGN);
+		// list.push(inputToken, TokenConstant.ASSIGN);
 		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
 		// this.parseRSideExpression(list);
 		list.push(TokenConstant.EOS);
@@ -203,9 +208,9 @@ export class DirectiveExpressionParser {
 			const node = JavaScriptParser.parse(aliasList);
 			this.templateExpressions.push(node);
 		}
-		const node = JavaScriptParser.parse(list) as AssignmentExpression;
+		const node = JavaScriptParser.parse(list);
 		const inputName = inputToken.getValue<Identifier>().getName() as string;
-		this.directiveInputs.set(inputName, node.getRight());
+		this.directiveInputs.set(inputName, node);
 
 	}
 

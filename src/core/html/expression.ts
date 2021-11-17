@@ -1,9 +1,19 @@
 import {
-	BaseNode, DOMDirectiveNode, DOMElementNode, DOMFragmentNode, DOMNode,
-	DOMParentNode, ElementAttribute, isLiveTextContent, LiveAttribute, LiveTextContent
+	BaseNode, createLiveAttribute, DOMDirectiveNode,
+	DOMDirectiveNodeUpgrade, DOMElementNode,
+	DOMFragmentNode, DOMNode, DOMParentNode,
+	ElementAttribute, isLiveTextContent,
+	LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { AssignmentExpression, ExpressionEventMap, ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
-import { HTMLNodeAssignmentExpression, TextNodeAssignmentExpression } from './update.js';
+import {
+	AssignmentExpression, ExpressionEventMap,
+	ExpressionNode, JavaScriptParser
+} from '@ibyar/expressions';
+import { DirectiveExpressionParser } from '../directive/parser.js';
+import {
+	HTMLNodeAssignmentExpression,
+	TextNodeAssignmentExpression
+} from './update.js';
 
 declare module '@ibyar/elements' {
 	export interface ElementAttribute<N, V> {
@@ -21,6 +31,14 @@ declare module '@ibyar/elements' {
 	export interface LiveTextContent {
 		expression: ExpressionNode;
 		expressionEvent: ExpressionEventMap;
+	}
+	export interface DOMDirectiveNodeUpgrade extends DOMDirectiveNode {
+		/**
+		 * create a new scope for a template and bind the new variables to the directive scope.
+		 * 
+		 * execution for let-i="index".
+		 */
+		templateExpressions: ExpressionNode[];
 	}
 }
 
@@ -101,6 +119,20 @@ function parseChild(child: DOMNode) {
 		// in case if add input/output support need to handle that here.
 		parseBaseNode(child);
 		parseChild(child.node);
+		if (child.value) {
+			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
+			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions;
+			if (info.directiveInputs.size > 0) {
+				child.inputs ??= [];
+				info.directiveInputs.forEach((expression, input) => {
+					const attr: LiveAttribute = createLiveAttribute(input, expression.toString());
+					attr.expression = expression;
+					attr.expressionEvent = expression.events();
+					child.inputs?.push(attr);
+					console.log('attr', attr);
+				});
+			}
+		}
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	} else if (child instanceof DOMFragmentNode) {
