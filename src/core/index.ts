@@ -9,6 +9,10 @@ export * from './component/lifecycle.js';
 
 export * from './context/stack.js';
 
+export * from './linker/view-ref.js';
+export * from './linker/template-ref.js';
+export * from './linker/view-container-ref.js';
+
 export * from './directive/directive.js';
 
 export * from './model/change-detection.js';
