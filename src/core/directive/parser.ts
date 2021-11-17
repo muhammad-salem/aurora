@@ -83,11 +83,12 @@ export class DirectiveExpressionParser {
 	}
 
 	protected consumeIfToken(token: Token, list: TokenExpression[]): boolean {
-		const next = this.stream.next();
+		const next = this.stream.peek();
 		if (next.isNotType(token)) {
 			return false;
 		}
 		list.push(next);
+		this.stream.next();
 		return true;
 	}
 
