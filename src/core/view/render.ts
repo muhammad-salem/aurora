@@ -1,6 +1,7 @@
-import { ExpressionEventMap, ExpressionNode, ScopeContext, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap, ExpressionNode, ReactiveScope, Scope, ScopeContext, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode,
+	DOMDirectiveNodeUpgrade,
 	DOMElementNode, DOMFragmentNode, DOMNode,
 	isLiveTextContent,
 	isTagNameNative, isValidCustomElementName,
@@ -21,7 +22,7 @@ import {
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
-import { findScopeMap } from './events.js';
+import { buildReactiveScopeEvents, findScopeMap } from './events.js';
 import { TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
@@ -41,13 +42,15 @@ export class ComponentRender<T extends object> {
 	template: DOMNode;
 	nativeElementMutation: ElementMutation;
 	contextStack: Stack;
-	templateRefMap = new Map<string, DOMElementNode>();
+	templateNameScope: Scope<{ [templateName: string]: DOMElementNode }>;
+
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushFunctionScope(); // to protect documentStack
 		this.contextStack.pushScope(this.view._viewScope);
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
+		this.templateNameScope = this.contextStack.pushBlockScope();
 		this.nativeElementMutation = new ElementMutation();
 		this.view._model.subscribeModel('destroy', () => {
 			this.nativeElementMutation.disconnect();
@@ -93,7 +96,7 @@ export class ComponentRender<T extends object> {
 					const child = domNode.children[index];
 					if (this.isTemplateRefName(child)) {
 						const templateRefName = child.templateRefName!;
-						this.templateRefMap.set(templateRefName.name, child);
+						this.templateNameScope.set(templateRefName.name, child);
 					} else {
 						this.initTemplateRefMap(child);
 					}
@@ -166,7 +169,12 @@ export class ComponentRender<T extends object> {
 			// structural directive selector
 			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
 
-			const templateRef = new TemplateRefImpl(this, directive.node, directiveStack.copyStack());
+			const templateRef = new TemplateRefImpl(
+				this,
+				directive.node,
+				directiveStack.copyStack(),
+				(directive as DOMDirectiveNodeUpgrade).templateExpressions
+			);
 			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
 			const structural = new StructuralDirectiveClass(
@@ -382,7 +390,7 @@ export class ComponentRender<T extends object> {
 	}
 	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
 		events ??= node.events();
-		const scopeMap = findScopeMap(events, contextStack);
+		const scopeMap = buildReactiveScopeEvents(events, contextStack);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
