@@ -1,7 +1,7 @@
 import { Directive, Input, StructuralDirective } from '@ibyar/core';
 
 export class ForContext<T> {
-	constructor(public $implicit: T, public forOf: T[], public index: number, public count: number) { }
+	constructor(public $implicit: T, public index: number, public count: number) { }
 
 	get first(): boolean {
 		return this.index === 0;
@@ -17,6 +17,22 @@ export class ForContext<T> {
 
 	get odd(): boolean {
 		return !this.even;
+	}
+}
+
+export class ForOfContext<T> extends ForContext<T> {
+	['of']: T[];
+	constructor($implicit: T, forOf: T[], index: number, count: number) {
+		super($implicit, index, count);
+		this.of = forOf;
+	}
+}
+
+export class ForInContext<T> extends ForContext<T> {
+	['in']: T[];
+	constructor($implicit: T, forIn: T[], index: number, count: number) {
+		super($implicit, index, count);
+		this.in = forIn;
 	}
 }
 
@@ -39,7 +55,7 @@ export class ForOfDirective<T> extends StructuralDirective {
 			return;
 		}
 		this._forOf.forEach((value, index, array) => {
-			const context = new ForContext<T>(value, array, index, array.length);
+			const context = new ForOfContext<T>(value, array, index, array.length);
 			this.viewContainerRef.createEmbeddedView(this.templateRef, context);
 		});
 	}
@@ -69,7 +85,7 @@ export class ForAwaitDirective<T> extends StructuralDirective {
 		let index = 0;
 		for await (const iterator of this._forAwait) {
 			asList.push(iterator);
-			const context = new ForContext<T>(iterator, asList, index, asList.length);
+			const context = new ForOfContext<T>(iterator, asList, index, asList.length);
 			const view = this.viewContainerRef.createEmbeddedView(this.templateRef, context);
 			previousContext.forEach(c => c.count = asList.length);
 			previousContext.push(view.context);
@@ -99,7 +115,7 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 		}
 		const keys = Object.keys(this._forIn) as PropertyKey[];
 		keys.forEach((key, index, array) => {
-			const context = new ForContext<PropertyKey>(key, array, index, array.length);
+			const context = new ForInContext<PropertyKey>(key, array, index, array.length);
 			this.viewContainerRef.createEmbeddedView(this.templateRef, context);
 		});
 	}
