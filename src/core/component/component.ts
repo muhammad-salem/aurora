@@ -176,7 +176,6 @@ export class Components {
 			const structuralDirectiveName = opts.selector.substring(1);
 			directiveRegistry.register(structuralDirectiveName, {
 				attributes,
-				nextSiblingDirectives: opts.nextSiblingDirectives,
 			});
 		}
 	}
