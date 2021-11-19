@@ -17,7 +17,7 @@ function visitInnerEvents(events: ExpressionEventMap, scope: Scope<ScopeContext>
 	});
 }
 
-export function findScopeMap(events: ExpressionEventMap, stack: Stack): Map<string, Scope<object>> {
+export function findScopeByEventMap(events: ExpressionEventMap, stack: Stack): Map<string, Scope<object>> {
 	const scopeMap = new Map<string, Scope<object>>();
 	const rootEventNames = Object.keys(events);
 	rootEventNames.forEach(eventName => {
@@ -28,7 +28,7 @@ export function findScopeMap(events: ExpressionEventMap, stack: Stack): Map<stri
 	return scopeMap;
 }
 
-export function buildReactiveScopeEvents(events: ExpressionEventMap, stack: Stack): Map<string, ReactiveScope<object>> {
+export function findReactiveScopeByEventMap(events: ExpressionEventMap, stack: Stack): Map<string, ReactiveScope<object>> {
 	const scopeMap = new Map<string, ReactiveScope<object>>();
 	const rootEventNames = Object.keys(events);
 	rootEventNames.forEach(eventName => {

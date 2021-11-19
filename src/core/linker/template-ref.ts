@@ -1,6 +1,6 @@
 import type { DOMNode } from '@ibyar/elements';
 import { createProxyForContext, ExpressionNode, ScopeSubscription, Stack } from '@ibyar/expressions';
-import { buildReactiveScopeEvents } from '../view/events.js';
+import { findReactiveScopeByEventMap } from '@ibyar/expressions';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
 
@@ -77,7 +77,7 @@ export class TemplateRefImpl extends TemplateRef {
 		const scopeSubscriptions: ScopeSubscription<object>[] = [];
 		this.templateExpressions.forEach(expression => {
 			const events = expression.events();
-			const scopeMap = buildReactiveScopeEvents(events, sandBox);
+			const scopeMap = findReactiveScopeByEventMap(events, sandBox);
 			scopeMap.forEach((scope, eventName) => {
 				const subscription = scope.subscribe((propertyName) => {
 					if (propertyName == eventName) {
