@@ -1,37 +1,29 @@
 import {
 	BaseNode, createLiveAttribute, DOMDirectiveNode,
-	DOMDirectiveNodeUpgrade, DOMElementNode,
-	DOMFragmentNode, DOMNode, DOMParentNode,
-	ElementAttribute, isLiveTextContent,
-	LiveAttribute, LiveTextContent
+	DOMDirectiveNodeUpgrade, DOMElementNode, DOMNode,
+	DOMFragmentNode, DOMParentNode, ElementAttribute,
+	isLiveTextContent, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
+import { ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
 import {
-	AssignmentExpression, ExpressionEventMap,
-	ExpressionNode, JavaScriptParser
-} from '@ibyar/expressions';
+	BindingAssignment,
+	OneWayAssignmentExpression,
+	TwoWayAssignmentExpression
+} from '../binding/binding.expressions.js';
 import { DirectiveExpressionParser } from '../directive/parser.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
-import {
-	HTMLNodeAssignmentExpression,
-	TextNodeAssignmentExpression
-} from './update.js';
 
 declare module '@ibyar/elements' {
 	export interface ElementAttribute<N, V> {
 		expression: ExpressionNode;
-		expressionEvent: ExpressionEventMap;
 	}
 
 	export interface LiveAttribute {
-		expression: ExpressionNode;
-		expressionEvent: ExpressionEventMap;
-		callbackExpression: ExpressionNode;
-		callbackExpressionEvent: ExpressionEventMap;
+		expression: BindingAssignment;
 	}
 
 	export interface LiveTextContent {
-		expression: ExpressionNode;
-		expressionEvent: ExpressionEventMap;
+		expression: OneWayAssignmentExpression;
 	}
 	export interface DOMDirectiveNodeUpgrade extends DOMDirectiveNode {
 		/**
@@ -46,9 +38,7 @@ declare module '@ibyar/elements' {
 const ThisTextContent = JavaScriptParser.parse('this.textContent');
 function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parse(text.value);
-	text.expression = new TextNodeAssignmentExpression(ThisTextContent, textExpression);
-
-	text.expressionEvent = textExpression.events();
+	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
 }
 
 function convertToMemberAccessStyle(source: string) {
@@ -77,29 +67,23 @@ function parseLiveAttribute(attr: LiveAttribute) {
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
 
-	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
-	attr.callbackExpression = new AssignmentExpression('=', modelExpression, elementExpression);
-
-	attr.expressionEvent = modelExpression.events();
-	attr.callbackExpressionEvent = elementExpression.events();
+	attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
-	attr.expression = new HTMLNodeAssignmentExpression(elementExpression, modelExpression);
-
-	attr.expressionEvent = modelExpression.events();
+	attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string>) {
 	attr.expression = JavaScriptParser.parse(attr.value);
 }
 
-function parseElementAttribute(attr: ElementAttribute<string, any>) {
-	attr.expression = JavaScriptParser.parse('this.' + convertToMemberAccessStyle(attr.name));
-}
+// function parseElementAttribute(attr: ElementAttribute<string, any>) {
+// 	attr.expression = JavaScriptParser.parse('this.' + convertToMemberAccessStyle(attr.name));
+// }
 
 
 function parseBaseNode(base: BaseNode) {
@@ -107,7 +91,7 @@ function parseBaseNode(base: BaseNode) {
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
 	base.templateAttrs?.forEach(parseLiveAttribute);
-	base.attributes?.forEach(parseElementAttribute);
+	// base.attributes?.forEach(parseElementAttribute);
 }
 
 function parseChild(child: DOMNode) {
