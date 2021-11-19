@@ -22,7 +22,7 @@ import {
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
-import { buildReactiveScopeEvents, findScopeMap } from './events.js';
+import { findScopeMap } from './events.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
@@ -172,7 +172,7 @@ export class ComponentRender<T extends object> {
 				this,
 				directive.node,
 				stack,
-				(directive as DOMDirectiveNodeUpgrade).templateExpressions
+				(directive as DOMDirectiveNodeUpgrade).templateExpressions ?? []
 			);
 			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
@@ -397,7 +397,7 @@ export class ComponentRender<T extends object> {
 	}
 	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
 		events ??= node.events();
-		const scopeMap = buildReactiveScopeEvents(events, contextStack);
+		const scopeMap = findScopeMap(events, contextStack);
 		scopeMap.forEach((scope, eventName) => {
 			const context = scope.getContext();
 			if (context) {
