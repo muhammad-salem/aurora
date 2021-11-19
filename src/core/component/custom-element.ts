@@ -3,7 +3,6 @@ import type { TypeOf } from '../utils/typeof.js';
 import type { ElementReactiveScope } from '../directive/providers.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
-import { Model } from '../model/change-detection.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -13,13 +12,12 @@ export interface CustomElement {
 }
 
 type IndexedObject = { [key: string]: any };
-export type ProxyModelType<T> = T & IndexedObject;
-export type ModelType<T> = T & Model & IndexedObject;
+export type ModelType<T> = T & IndexedObject;
 
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
-	_proxyModel: ProxyModelType<T>;
+	_proxyModel: ModelType<T>;
 	_modelScope: ReactiveScope<T & object>;
 	_viewScope: ElementReactiveScope;
 
