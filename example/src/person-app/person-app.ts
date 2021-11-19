@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener, isModel } from '@ibyar/aurora';
+import { Component, Input, View, HostListener } from '@ibyar/aurora';
 import { Person, PersonModel } from './person';
 
 @Component({

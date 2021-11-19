@@ -1,11 +1,13 @@
-import { ExpressionEventMap, ExpressionNode, ReactiveScope, Scope, ScopeContext, Stack } from '@ibyar/expressions';
 import {
-	CommentNode, DOMDirectiveNode,
-	DOMDirectiveNodeUpgrade,
+	ExpressionEventMap, ExpressionNode,
+	ReactiveScope, ScopeContext, Stack
+} from '@ibyar/expressions';
+import {
+	CommentNode, DOMDirectiveNode, DOMDirectiveNodeUpgrade,
 	DOMElementNode, DOMFragmentNode, DOMNode,
-	isLiveTextContent,
-	isTagNameNative, isValidCustomElementName,
-	LiveAttribute, LiveTextContent, TextContent
+	isLiveTextContent, isTagNameNative,
+	isValidCustomElementName, LiveAttribute,
+	LiveTextContent, TextContent
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
 import { ElementMutation } from './mutation.js';
@@ -15,14 +17,9 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import {
-	addChangeListener, isModel, Model,
-	SourceFollowerCallback, subscribe1way, subscribe2way
-} from '../model/change-detection.js';
 import { AsyncPipeProvider, PipeProvider, PipeTransform } from '../pipe/pipe.js';
 import { StructuralDirective } from '../directive/directive.js';
 import { ElementReactiveScope } from '../directive/providers.js';
-import { findScopeMap } from './events.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
@@ -52,9 +49,9 @@ export class ComponentRender<T extends object> {
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
 		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
 		this.nativeElementMutation = new ElementMutation();
-		this.view._model.subscribeModel('destroy', () => {
-			this.nativeElementMutation.disconnect();
-		});
+		// this.view._model.subscribeModel('destroy', () => {
+		// 	this.nativeElementMutation.disconnect();
+		// });
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -133,7 +130,7 @@ export class ComponentRender<T extends object> {
 		} else {
 			source = this.view;
 		}
-		const sourceModel = Reflect.get(source, '_model') as Model & { [key: string]: EventEmitter<any> };
+		const sourceModel = Reflect.get(source, '_model') as { [key: string]: EventEmitter<any> };
 		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
 		if (output) {
 			sourceModel[output.modelProperty].subscribe((value: any) => {
@@ -151,7 +148,7 @@ export class ComponentRender<T extends object> {
 		else {
 			// listen to internal changes
 			// TODO: need to resolve parameter
-			addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
+			// addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
 		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
@@ -206,7 +203,9 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		this.bind1Way(liveText, textNode, contextStack);
+		textNode.expression.get(contextStack);
+		textNode.expression.initChangeSubscription(contextStack);
+		// this.bind1Way(liveText, textNode, contextStack);
 		return liveText;
 	}
 	createDocumentFragment(node: DOMFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
@@ -317,12 +316,16 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				this.bind2Way(element, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind2Way(element, attr, contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				this.bind1Way(element, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind1Way(element, attr, contextStack);
 			});
 		}
 		if (node.outputs?.length) {
@@ -352,7 +355,9 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				this.bind1Way(element, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind1Way(element, attr, contextStack);
 			});
 		}
 	}
@@ -363,12 +368,16 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				this.bind2Way(directive, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind2Way(directive, attr, contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				this.bind1Way(directive, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind1Way(directive, attr, contextStack);
 			});
 		}
 		if (node.outputs?.length) {
@@ -383,96 +392,98 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				this.bind1Way(directive, attr, contextStack);
+				attr.expression.get(contextStack);
+				attr.expression.initChangeSubscription(contextStack);
+				// this.bind1Way(directive, attr, contextStack);
 			});
 		}
 	}
 
-	bind1Way(element: HTMLElement | StructuralDirective | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
-		const callback = () => {
-			attr.expression.get(contextStack);
-		};
-		this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name, attr.expressionEvent);
-		callback();
-	}
-	subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
-		events ??= node.events();
-		const scopeMap = findScopeMap(events, contextStack);
-		scopeMap.forEach((scope, eventName) => {
-			const context = scope.getContext();
-			if (context) {
-				if (scope instanceof AsyncPipeProvider) {
-					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-					subscribe1way(pipe, eventName, callback, object, attrName);
-					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => {
-							if (isModel(pipe)) {
-								pipe.emitChangeModel('destroy');
-							}
-							pipe.onDestroy();
-						});
-					}
-					const pipeContext: { [key: string]: Function; } = {};
-					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (!(scope instanceof PipeProvider)) {
-					subscribe1way(context, eventName, callback, object, attrName);
-				}
-			}
-		});
-	}
-	bind2Way(element: HTMLElement | StructuralDirective, attr: LiveAttribute, contextStack: Stack) {
-		const callback1 = () => {
-			attr.expression.get(contextStack);
-		};
-		const callback2 = () => {
-			attr.callbackExpression.get(contextStack);
-		};
-		const scopeMap = findScopeMap(attr.expressionEvent, contextStack);
-		scopeMap.forEach((scope, eventName) => {
-			const context = scope.getContext();
-			if (context) {
-				if (scope instanceof AsyncPipeProvider) {
-					const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-					subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
-					if (isOnDestroy(pipe)) {
-						this.view._model.subscribeModel('destroy', () => {
-							if (isModel(pipe)) {
-								pipe.emitChangeModel('destroy');
-							}
-							pipe.onDestroy();
-						});
-					}
-					const pipeContext: { [key: string]: Function } = {};
-					pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-					contextStack.pushBlockScopeFor(pipeContext);
-				} else if (!(scope instanceof PipeProvider)) {
-					subscribe2way(context, eventName, callback1, element, attr.name, callback2);
-				}
-			}
-		});
+	// bind1Way(element: HTMLElement | StructuralDirective | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
+	// 	const callback = () => {
+	// 		attr.expression.get(contextStack);
+	// 	};
+	// 	this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name, attr.expressionEvent);
+	// 	callback();
+	// }
+	// subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
+	// 	events ??= node.events();
+	// 	const scopeMap = findScopeByEventMap(events, contextStack);
+	// 	scopeMap.forEach((scope, eventName) => {
+	// 		const context = scope.getContext();
+	// 		if (context) {
+	// 			if (scope instanceof AsyncPipeProvider) {
+	// 				const pipe: PipeTransform<any, any> = contextStack.get(eventName);
+	// 				subscribe1way(pipe, eventName, callback, object, attrName);
+	// 				if (isOnDestroy(pipe)) {
+	// 					this.view._model.subscribeModel('destroy', () => {
+	// 						if (isModel(pipe)) {
+	// 							pipe.emitChangeModel('destroy');
+	// 						}
+	// 						pipe.onDestroy();
+	// 					});
+	// 				}
+	// 				const pipeContext: { [key: string]: Function; } = {};
+	// 				pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
+	// 				contextStack.pushBlockScopeFor(pipeContext);
+	// 			} else if (!(scope instanceof PipeProvider)) {
+	// 				subscribe1way(context, eventName, callback, object, attrName);
+	// 			}
+	// 		}
+	// 	});
+	// }
+	// bind2Way(element: HTMLElement | StructuralDirective, attr: LiveAttribute, contextStack: Stack) {
+	// 	const callback1 = () => {
+	// 		attr.expression.get(contextStack);
+	// 	};
+	// 	const callback2 = () => {
+	// 		attr.callbackExpression.get(contextStack);
+	// 	};
+	// 	const scopeMap = findScopeByEventMap(attr.expressionEvent, contextStack);
+	// 	scopeMap.forEach((scope, eventName) => {
+	// 		const context = scope.getContext();
+	// 		if (context) {
+	// 			if (scope instanceof AsyncPipeProvider) {
+	// 				const pipe: PipeTransform<any, any> = contextStack.get(eventName);
+	// 				subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
+	// 				if (isOnDestroy(pipe)) {
+	// 					this.view._model.subscribeModel('destroy', () => {
+	// 						if (isModel(pipe)) {
+	// 							pipe.emitChangeModel('destroy');
+	// 						}
+	// 						pipe.onDestroy();
+	// 					});
+	// 				}
+	// 				const pipeContext: { [key: string]: Function } = {};
+	// 				pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
+	// 				contextStack.pushBlockScopeFor(pipeContext);
+	// 			} else if (!(scope instanceof PipeProvider)) {
+	// 				subscribe2way(context, eventName, callback1, element, attr.name, callback2);
+	// 			}
+	// 		}
+	// 	});
 
-		callback1();
-		if (element instanceof StructuralDirective) {
-			return;
-		}
-		const changeEventName = getChangeEventName(element, attr.name);
-		if ((changeEventName === 'input' || changeEventName === 'change')
-			&& isModel(element)) {
-			element.addEventListener(changeEventName, () => {
-				element.emitChangeModel(attr.name);
-			});
-		}
-		else if (isHTMLComponent(element)) {
-			// ignore, it is applied by default
-		}
-		else {
-			this.nativeElementMutation.subscribe(element, attr.name, () => {
-				if (isModel(element)) {
-					element.emitChangeModel(attr.name);
-				}
-			});
-		}
-	}
+	// 	callback1();
+	// 	if (element instanceof StructuralDirective) {
+	// 		return;
+	// 	}
+	// 	const changeEventName = getChangeEventName(element, attr.name);
+	// 	if ((changeEventName === 'input' || changeEventName === 'change')
+	// 		&& isModel(element)) {
+	// 		element.addEventListener(changeEventName, () => {
+	// 			element.emitChangeModel(attr.name);
+	// 		});
+	// 	}
+	// 	else if (isHTMLComponent(element)) {
+	// 		// ignore, it is applied by default
+	// 	}
+	// 	else {
+	// 		this.nativeElementMutation.subscribe(element, attr.name, () => {
+	// 			if (isModel(element)) {
+	// 				element.emitChangeModel(attr.name);
+	// 			}
+	// 		});
+	// 	}
+	// }
 
 }

@@ -1,4 +1,4 @@
-import { Component, isModel, OnInit, View } from '@ibyar/aurora';
+import { Component, OnInit, View } from '@ibyar/aurora';
 
 @Component({
 	selector: 'video-player',
@@ -42,9 +42,6 @@ export class VideoPlayList {
 	playVideo(fileName: string) {
 		this.file = fileName;
 		console.log(fileName);
-		// if (isModel(this)) {
-		// 	this.emitChangeModel('file');
-		// }
 	}
 
 }

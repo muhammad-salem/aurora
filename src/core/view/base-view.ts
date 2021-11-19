@@ -7,7 +7,6 @@ import {
 import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
-import { defineModel } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
 import { ElementReactiveScope } from '../directive/providers.js';
@@ -56,7 +55,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 			const model = new modelClass(/* resolve dependency injection*/);
 			defineInstancePropertyMap(model);
-			this._model = defineModel(model);
+			this._model = model;
 
 			this._viewScope = new ElementReactiveScope(this);
 			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
@@ -81,11 +80,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				if (source) {
 					if (!source.includes(modelProperty)) {
 						source.push(modelProperty);
-						this._model.emitChangeModel(modelProperty as string, source);
+						// this._model.emitChangeModel(modelProperty as string, source);
 					}
 				} else {
 					source = [modelProperty]
-					this._model.emitChangeModel(modelProperty as string, source);
+					// this._model.emitChangeModel(modelProperty as string, source);
 					source = undefined;
 				}
 			});
@@ -209,7 +208,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			// this._changeObservable.emit(name);
 			const inputRef = this.getInput(name);
 			if (inputRef) {
-				this._model.emitChangeModel(inputRef.modelProperty);
+				// this._model.emitChangeModel(inputRef.modelProperty);
 			}
 			if (isOnChanges(this._model)) {
 				this._model.onChanges.call(this._proxyModel);
@@ -285,21 +284,21 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				if (isAfterViewChecked(this._model)) {
 					this._model.afterViewChecked.call(this._proxyModel);
 				}
-				this.emitRootChanges();
+				// this.emitRootChanges();
 			};
-			this.emitRootChanges();
+			// this.emitRootChanges();
 		}
 
-		emitRootChanges(): void {
-			this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
-		}
+		// emitRootChanges(): void {
+		// 	this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
+		// }
 
-		emitChanges(...events: string[]): void {
-			const sources: any[] = [];
-			events.forEach(key => {
-				this._model.emitChangeModel(key, sources);
-			});
-		}
+		// emitChanges(...events: string[]): void {
+		// 	const sources: any[] = [];
+		// 	events.forEach(key => {
+		// 		this._model.emitChangeModel(key, sources);
+		// 	});
+		// }
 
 		initOuterAttribute(attr: Attr) {
 			// [window, this] scop
@@ -363,7 +362,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (isOnDestroy(this._model)) {
 				this._model.onDestroy.call(this._proxyModel);
 			}
-			this.emitChanges('destroy');
+			// this.emitChanges('destroy');
 		}
 
 		// events api
@@ -396,7 +395,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		triggerModelChange(eventName: string, value?: any): void {
 			// this._changeObservable.emit(eventName, value);
-			this._model.emitChangeModel(eventName);
+			// this._model.emitChangeModel(eventName);
 		}
 	};
 	FACTORY_CACHE.set(htmlElementType, CustomView);

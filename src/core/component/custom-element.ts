@@ -42,8 +42,8 @@ export interface BaseComponent<T> extends CustomElement {
 
 	triggerOutput(eventName: string, value?: any): void;
 	triggerModelChange(eventName: string, value?: any, source?: HTMLElement): void;
-	emitRootChanges(): void;
-	emitChanges(...events: string[]): void;
+	// emitRootChanges(): void;
+	// emitChanges(...events: string[]): void;
 
 }
 

@@ -1,4 +1,4 @@
-import { Component, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
+import { Component, OnDestroy, OnInit } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -186,10 +186,6 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			}
 			this.currentColor = this.colors[index++];
 			this.heightPX += 10;
-			// if (isModel(this)) {
-			// 	this.emitChangeModel('currentColor');
-			// 	this.emitChangeModel('heightPX');
-			// }
 		});
 	}
 
