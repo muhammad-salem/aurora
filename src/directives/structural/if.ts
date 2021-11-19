@@ -1,10 +1,10 @@
-import { Directive, Input, StructuralDirective, TemplateRef } from '@ibyar/core';
+import { Directive, Input, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
 
 
 @Directive({
 	selector: '*if',
 })
-export class IfThenElseDirective extends StructuralDirective {
+export class IfThenElseDirective extends StructuralDirective implements OnDestroy {
 
 	_condition: boolean;
 	private _thenTemplateRef: TemplateRef = this.templateRef;
@@ -49,6 +49,10 @@ export class IfThenElseDirective extends StructuralDirective {
 				this.viewContainerRef.createEmbeddedView(this._elseTemplateRef);
 			}
 		}
+	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
 	}
 
 }

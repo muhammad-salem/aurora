@@ -1,4 +1,4 @@
-import { Directive, Input, StructuralDirective } from '@ibyar/core';
+import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
 
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }
@@ -39,7 +39,7 @@ export class ForInContext<T> extends ForContext<T> {
 @Directive({
 	selector: '*forOf',
 })
-export class ForOfDirective<T> extends StructuralDirective {
+export class ForOfDirective<T> extends StructuralDirective implements OnDestroy {
 
 	private _forOf: T[] | null | undefined;
 
@@ -60,12 +60,16 @@ export class ForOfDirective<T> extends StructuralDirective {
 		});
 	}
 
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
 }
 
 @Directive({
 	selector: '*forAwait',
 })
-export class ForAwaitDirective<T> extends StructuralDirective {
+export class ForAwaitDirective<T> extends StructuralDirective implements OnDestroy {
 
 	private _forAwait: AsyncIterable<T> | null | undefined;
 
@@ -93,12 +97,16 @@ export class ForAwaitDirective<T> extends StructuralDirective {
 		}
 	}
 
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
 }
 
 @Directive({
 	selector: '*forIn',
 })
-export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralDirective {
+export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralDirective implements OnDestroy {
 
 	private _forIn: T | null | undefined;
 
@@ -118,6 +126,10 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 			const context = new ForInContext<PropertyKey>(key, array, index, array.length);
 			this.viewContainerRef.createEmbeddedView(this.templateRef, context);
 		});
+	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
 	}
 
 }

@@ -1,4 +1,4 @@
-import { Directive, Input, OnInit, StructuralDirective } from '@ibyar/core';
+import { Directive, Input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/core';
 
 interface CaseDirectiveValue {
 	value: any;
@@ -7,7 +7,7 @@ interface CaseDirectiveValue {
 @Directive({
 	selector: '*case',
 })
-export class CaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue {
+export class CaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
 
 	public value: any;
 
@@ -20,12 +20,17 @@ export class CaseOfSwitchDirective extends StructuralDirective implements CaseDi
 		this.viewContainerRef.clear();
 		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
 	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
 }
 
 @Directive({
 	selector: '*default',
 })
-export class DefaultCaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue {
+export class DefaultCaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
 
 	public value: any;
 
@@ -38,12 +43,17 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 		this.viewContainerRef.clear();
 		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
 	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
 }
 
 @Directive({
 	selector: '*switch',
 })
-export class SwitchDirective extends StructuralDirective implements OnInit {
+export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
 	onInit() {
 		this.templateRef.astNode;
@@ -61,6 +71,10 @@ export class SwitchDirective extends StructuralDirective implements OnInit {
 	private _updateUI() {
 		this.viewContainerRef.clear();
 		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'switch': this._expression });
+	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
 	}
 
 }
