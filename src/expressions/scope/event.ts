@@ -1,4 +1,6 @@
-import { ExpressionEventMap, ReactiveScope, Scope, ScopeContext, Stack } from '@ibyar/expressions';
+import { ExpressionEventMap } from '../api/expression.js';
+import { ReactiveScope, Scope, ScopeContext } from './scope.js';
+import { Stack } from './stack.js';
 
 function visitInnerEvents(events: ExpressionEventMap, scope: Scope<ScopeContext>, rootName: string, scopeMap: Map<string, Scope<object>>) {
 	const innerEventNames = Object.keys(events);
