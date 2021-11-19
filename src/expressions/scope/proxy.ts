@@ -42,7 +42,7 @@ export class ScopeProxyHandler<T extends ScopeContext> implements ProxyHandler<S
 		return value;
 	}
 	set(model: T, propertyKey: PropertyKey, value: any, receiver: any): boolean {
-		if (this.proxyValueMap.has(value)) {
+		if ((typeof value === 'object' || typeof value === 'function') && this.proxyValueMap.has(value)) {
 			value = this.proxyValueMap.get(value);
 		}
 		return this.scope.set(propertyKey, value);
