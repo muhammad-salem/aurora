@@ -1,5 +1,5 @@
 import type { DOMNode } from '@ibyar/elements';
-import { createProxyForContext, ExpressionNode, Stack } from '@ibyar/expressions';
+import { createProxyForContext, ExpressionNode, ScopeSubscription, Stack } from '@ibyar/expressions';
 import { buildReactiveScopeEvents } from '../view/events.js';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
@@ -40,36 +40,53 @@ export class TemplateRefImpl extends TemplateRef {
 	}
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
 		const directiveStack = this.stack.copyStack();
-		const scope = directiveStack.pushBlockReactiveScopeFor(context ?? {});
-		this.bindTemplateExpressions(directiveStack);
+
+		const templateScope = directiveStack.pushBlockReactiveScope();
+
+		const sandBox = new Stack();
+		const contextScope = sandBox.pushBlockReactiveScopeFor(context ?? {});
+		sandBox.pushScope(templateScope);
+
+		const elements: Node[] = [];
+		const contextProxy = createProxyForContext(contextScope);
+		const embeddedViewRef = new EmbeddedViewRefImpl(contextProxy, elements);
+		const scopeSubscriptions = this.executeTemplateExpressions(sandBox);
+		if (scopeSubscriptions) {
+			const subscription = embeddedViewRef.onDestroy(() => {
+				subscription.unsubscribe();
+				scopeSubscriptions.forEach(sub => sub.unsubscribe());
+			});
+		}
+
 		const fragment = document.createDocumentFragment();
 		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode);
-		const elements: Node[] = [];
+
 		fragment.childNodes.forEach(item => elements.push(item));
-		const contextProxy = createProxyForContext(scope);
-		return new EmbeddedViewRefImpl(contextProxy, elements);
+		return embeddedViewRef;
 	}
-	private bindTemplateExpressions(directiveStack: Stack) {
+	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<object>[] | undefined {
 		if (!this.templateExpressions?.length) {
 			return;
 		}
-		directiveStack.pushBlockReactiveScope();
-		const templateStack = directiveStack.copyStack();
 		// init value
 		this.templateExpressions.forEach(expression => {
-			expression.get(templateStack);
+			expression.get(sandBox);
 		});
+
 		// subscribe to changes
+		const scopeSubscriptions: ScopeSubscription<object>[] = [];
 		this.templateExpressions.forEach(expression => {
 			const events = expression.events();
-			const scopeMap = buildReactiveScopeEvents(events, directiveStack);
+			const scopeMap = buildReactiveScopeEvents(events, sandBox);
 			scopeMap.forEach((scope, eventName) => {
-				scope.subscribe((propertyName) => {
+				const subscription = scope.subscribe((propertyName) => {
 					if (propertyName == eventName) {
-						expression.get(templateStack);
+						expression.get(sandBox);
 					}
 				});
+				scopeSubscriptions.push(subscription);
 			});
 		});
+		return scopeSubscriptions;
 	}
 }

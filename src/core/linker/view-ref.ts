@@ -124,7 +124,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 			(<Element>node).remove();
 		}
 	}
-	onDestroy(callback: () => {}): { unsubscribe(): void; } {
+	onDestroy(callback: () => void): { unsubscribe(): void; } {
 		this.subscribes.push(callback);
 		return {
 			unsubscribe: () => {
