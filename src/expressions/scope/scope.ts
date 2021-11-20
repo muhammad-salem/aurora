@@ -244,7 +244,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	static globalScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'global');
 	}
-	private observer: ValueChangeObserver<T>;
+	protected observer: ValueChangeObserver<T>;
 	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<any>) {
 		super(context, type);
 		this.observer = observer ?? new ValueChangeObserver<any>();
