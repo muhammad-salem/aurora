@@ -1,6 +1,5 @@
-import type { ReactiveScope } from '@ibyar/expressions';
+import type { ReactiveScope, ScopeContext } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
-import type { ElementReactiveScope } from '../directive/providers.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
 
@@ -11,15 +10,14 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
-type IndexedObject = { [key: string]: any };
-export type ModelType<T> = T & IndexedObject;
+export type ModelType<T> = T & ScopeContext;
 
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
 	_proxyModel: ModelType<T>;
-	_modelScope: ReactiveScope<T & object>;
-	_viewScope: ElementReactiveScope;
+	_modelScope: ReactiveScope<T & ScopeContext>;
+	_viewScope: ReactiveScope<BaseComponent<T>>;
 
 	getComponentRef(): ComponentRef<T>;
 
@@ -41,9 +39,6 @@ export interface BaseComponent<T> extends CustomElement {
 	getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined;
 
 	triggerOutput(eventName: string, value?: any): void;
-	triggerModelChange(eventName: string, value?: any, source?: HTMLElement): void;
-	// emitRootChanges(): void;
-	// emitChanges(...events: string[]): void;
 
 }
 
