@@ -203,8 +203,8 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		textNode.expression.get(contextStack);
 		const subscriptions = textNode.expression.subscribe(contextStack);
+		textNode.expression.get(contextStack);
 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, liveText, () => {
 			removeSubscription.unsubscribe();
 			subscriptions.forEach(subscription => subscription.unsubscribe());
@@ -315,7 +315,6 @@ export class ComponentRender<T extends object> {
 	}
 	initAttribute(element: HTMLElement, node: DOMElementNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-
 		if (node.attributes?.length) {
 			node.attributes.forEach(attr => {
 				/**
@@ -333,21 +332,20 @@ export class ComponentRender<T extends object> {
 				} else {
 					Reflect.set(element, attr.name, attr.value);
 				}
-				// (attr.node as ExpressionNode).set(contextStack, attr.value);
 			});
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		if (node.outputs?.length) {
@@ -377,9 +375,9 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		return subscriptions;
@@ -393,16 +391,16 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		if (node.outputs?.length) {
@@ -417,9 +415,9 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				attr.expression.get(contextStack);
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				attr.expression.get(contextStack);
 			});
 		}
 		return subscriptions;

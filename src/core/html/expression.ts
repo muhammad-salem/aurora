@@ -81,17 +81,11 @@ function parseOutputExpression(attr: ElementAttribute<string, string>) {
 	attr.expression = JavaScriptParser.parse(attr.value);
 }
 
-// function parseElementAttribute(attr: ElementAttribute<string, any>) {
-// 	attr.expression = JavaScriptParser.parse('this.' + convertToMemberAccessStyle(attr.name));
-// }
-
-
 function parseBaseNode(base: BaseNode) {
 	base.inputs?.forEach(parseLiveAttributeUpdateElement);
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
-	base.templateAttrs?.forEach(parseLiveAttribute);
-	// base.attributes?.forEach(parseElementAttribute);
+	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
 }
 
 function parseChild(child: DOMNode) {
