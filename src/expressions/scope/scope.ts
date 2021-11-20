@@ -222,8 +222,12 @@ export class ValueChangeObserver<T> {
 		return subscription;
 	}
 
-	unsubscribe(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
-		this.subscribers.get(propertyKey)?.delete(subscription);
+	unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
+		if (subscription) {
+			this.subscribers.get(propertyKey)?.delete(subscription);
+		} else {
+			this.subscribers.delete(propertyKey);
+		}
 	}
 
 	/**
@@ -268,11 +272,8 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	static globalScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'global');
 	}
-	protected observer: ValueChangeObserver<T>;
-	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<any>) {
-		super(context, type);
-		this.observer = observer ?? new ValueChangeObserver<any>();
-	}
+	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<any>();
+
 	set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
@@ -299,7 +300,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		if (typeof scopeContext !== 'object') {
 			return;
 		}
-		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey, this.observer);
+		scope = new ReactiveScope<V>(scopeContext, 'block');
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
@@ -310,18 +311,25 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 			scope.context = scopeContext;
 			return scope;
 		}
-		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey, this.observer);
+		scope = new ReactiveScope<V>(scopeContext, 'block');
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
+	}
+
+	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		this.observer.emit(propertyKey, newValue, oldValue);
 	}
 
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		return this.observer.subscribe(propertyKey, callback);
 	}
 
-	unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
-		if (subscription) {
+	unsubscribe(propertyKey?: keyof T, subscription?: ScopeSubscription<T>) {
+		if (propertyKey && subscription) {
 			this.observer.unsubscribe(propertyKey, subscription);
+		} else if (propertyKey) {
+
+			this.observer.unsubscribe(propertyKey);
 		} else {
 			this.observer.destroy();
 		}
