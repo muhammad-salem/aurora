@@ -190,22 +190,26 @@ export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
 export class ValueChangeObserver<T> {
 	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
-	private propertyLock: Map<keyof T, boolean> = new Map();
+	private propertiesLock: (keyof T)[] = [];
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
-		const lock = this.propertyLock.get(propertyKey);
-		if (lock || lock == undefined) {
+		if (this.propertiesLock.includes(propertyKey)) {
 			return;
 		}
-		this.propertyLock.set(propertyKey, true);
 		const subscribers = this.subscribers.get(propertyKey);
+		if (!subscribers) {
+			return;
+		}
+		this.propertiesLock.push(propertyKey);
 		subscribers?.forEach((subscribe) => {
 			try {
-				subscribe(oldValue, newValue);
+				subscribe(newValue, oldValue);
 			} catch (e) {
 				console.error(e);
 			}
 		});
-		this.propertyLock.set(propertyKey, false);
+		if (this.propertiesLock.pop() !== propertyKey) {
+			console.error('lock error');
+		};
 	}
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		const subscription: ScopeSubscription<T> = new ScopeSubscription(propertyKey, this);
@@ -213,7 +217,6 @@ export class ValueChangeObserver<T> {
 		if (!propertySubscribers) {
 			propertySubscribers = new Map();
 			this.subscribers.set(propertyKey, propertySubscribers);
-			this.propertyLock.set(propertyKey, false);
 		}
 		propertySubscribers.set(subscription, callback);
 		return subscription;
@@ -274,7 +277,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer.emit(propertyKey, oldValue, newValue);
+			this.observer.emit(propertyKey, newValue, oldValue);
 		}
 		return result;
 	}
@@ -282,7 +285,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
 		if (isDelete && oldValue !== undefined) {
-			this.observer.emit(propertyKey, oldValue, undefined);
+			this.observer.emit(propertyKey, undefined, oldValue);
 		}
 		return isDelete;
 	}
