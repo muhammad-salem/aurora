@@ -229,7 +229,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer.emit(this.getEventName(propertyKey), oldValue, newValue);
+			this.observer.emit(propertyKey, oldValue, newValue);
 		}
 		return result;
 	}
@@ -237,7 +237,7 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
 		if (isDelete && oldValue !== undefined) {
-			this.observer.emit(this.getEventName(propertyKey), oldValue, undefined);
+			this.observer.emit(propertyKey, oldValue, undefined);
 		}
 		return isDelete;
 	}
@@ -248,23 +248,12 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 			scope.context = scopeContext;
 			return scope;
 		}
-		if (typeof scopeContext === 'undefined') {
+		if (typeof scopeContext !== 'object') {
 			return;
 		}
-		const childName = this.getEventName(propertyKey);
-		scope = new ReactiveScope<V>(scopeContext, 'block', childName, this.observer);
+		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey, this.observer);
 		this.scopeMap.set(propertyKey, scope);
 		return scope as ReactiveScope<V>;
-	}
-
-	private getEventName(child: keyof T): keyof T {
-		if (this.name) {
-			if (typeof child === 'number' || typeof child === 'symbol') {
-				return `${String(this.name)}['${String(child)}']` as keyof T;
-			}
-			return `${String(this.name)}.${String(child)}` as keyof T;
-		}
-		return String(child) as keyof T;
 	}
 
 	subscribe(callback: (propertyKey: keyof T, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
