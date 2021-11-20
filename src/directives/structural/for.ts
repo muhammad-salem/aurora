@@ -76,7 +76,7 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 	@Input('of')
 	set forAwait(forAwait: AsyncIterable<T> | null | undefined) {
 		this._forAwait = forAwait;
-		this._updateUI();
+		this._updateUI().then();
 	}
 
 	private async _updateUI() {
