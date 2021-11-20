@@ -180,35 +180,49 @@ export class ReadOnlyScope<T extends ScopeContext> extends Scope<T> {
 }
 
 export class ScopeSubscription<T> {
-	constructor(private observer: ValueChangeObserver<T>) { }
+	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>,) { }
 	unsubscribe(): void {
-		this.observer.unsubscribe(this);
+		this.observer.unsubscribe(this.propertyKey, this);
 	}
 }
 
-export class ValueChangeObserver<T> {
-	private subscribers: Map<ScopeSubscription<T>, (propertyKey: keyof T, oldValue: any, newValue: any) => void> = new Map();
+export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
-	emit(propertyKey: keyof T, oldValue: any, newValue: any): void {
-		this.subscribers.forEach((subscribe) => {
+export class ValueChangeObserver<T> {
+	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
+
+	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		const subscribers = this.subscribers.get(propertyKey);
+		subscribers?.forEach((subscribe) => {
 			try {
-				subscribe(propertyKey, oldValue, newValue);
+				subscribe(oldValue, newValue);
 			} catch (e) {
 				console.error(e);
 			}
 		});
 	}
-	subscribe(callback: (propertyKey: keyof T, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
-		const subscription: ScopeSubscription<T> = new ScopeSubscription(this);
-		this.subscribers.set(subscription, callback);
+	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
+		const subscription: ScopeSubscription<T> = new ScopeSubscription(propertyKey, this);
+		let propertySubscribers = this.subscribers.get(propertyKey);
+		if (!propertySubscribers) {
+			propertySubscribers = new Map();
+			this.subscribers.set(propertyKey, propertySubscribers);
+		}
+		propertySubscribers.set(subscription, callback);
 		return subscription;
 	}
 
-	unsubscribe(subscription: ScopeSubscription<T>) {
-		this.subscribers.delete(subscription);
+	unsubscribe(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
+		this.subscribers.get(propertyKey)?.delete(subscription);
+	}
+
+	/**
+	 * clear subscription map
+	 */
+	destroy() {
+		this.subscribers.clear();
 	}
 }
-
 
 export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	static for<T extends ScopeContext>(context: T, type: ScopeType) {
@@ -291,11 +305,15 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		return scope;
 	}
 
-	subscribe(callback: (propertyKey: keyof T, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
-		return this.observer.subscribe(callback);
+	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
+		return this.observer.subscribe(propertyKey, callback);
 	}
 
-	unsubscribe(subscription: ScopeSubscription<T>) {
-		this.observer.unsubscribe(subscription);
+	unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
+		if (subscription) {
+			this.observer.unsubscribe(propertyKey, subscription);
+		} else {
+			this.observer.destroy();
+		}
 	}
 }
