@@ -277,8 +277,9 @@ export class ComponentRender<T extends object> {
 	}
 	createElement(node: DOMElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
-		// const elementScope = isHTMLComponent(element) ? element._viewScope : new ElementReactiveScope(element);
-		const elementScope: Scope<ScopeContext> = isHTMLComponent(element) ? element._viewScope : ReactiveScope.blockScopeFor(element);
+		const elementScope: Scope<ScopeContext> = isHTMLComponent(element)
+			? element._viewScope
+			: ReactiveScope.blockScopeFor({ 'this': element });
 		contextStack = contextStack.copyStack();
 		contextStack.pushScope(elementScope);
 
@@ -286,17 +287,15 @@ export class ComponentRender<T extends object> {
 		const eventName = getInputEventName(element);
 		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
 		if (eventName) {
-			listener = (event) => elementScope.set('value', (element as HTMLInputElement).value);
+			const inputScope = elementScope.getScopeOrCreat('this');
+			listener = (event) => inputScope.set('value', (element as HTMLInputElement).value);
 			element.addEventListener(eventName, listener);
 		}
 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, element, () => {
 			removeSubscription.unsubscribe();
 			listener && element.removeEventListener(eventName!, listener);
-
 			subscriptions.forEach(subscription => subscription.unsubscribe());
 		});
-
-
 
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {
