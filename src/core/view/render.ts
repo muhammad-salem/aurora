@@ -41,14 +41,9 @@ export class ComponentRender<T extends object> {
 	constructor(public view: HTMLComponent<T>) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
-		this.contextStack.pushFunctionScope(); // to protect documentStack
-		this.contextStack.pushScope(this.view._viewScope);
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
 		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
 		this.nativeElementMutation = new ElementMutation();
-		// this.view._model.subscribeModel('destroy', () => {
-		// 	this.nativeElementMutation.disconnect();
-		// });
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -277,18 +272,14 @@ export class ComponentRender<T extends object> {
 	}
 	createElement(node: DOMElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
-		const elementScope: Scope<ScopeContext> = isHTMLComponent(element)
-			? element._viewScope
-			: ReactiveScope.blockScopeFor({ 'this': element });
 		contextStack = contextStack.copyStack();
-		contextStack.pushScope(elementScope);
-
+		const elementScope = contextStack.pushBlockReactiveScopeFor({ 'this': element });
 		const subscriptions = this.initAttribute(element, node, contextStack);
 		const eventName = getInputEventName(element);
 		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
 		if (eventName) {
 			const inputScope = elementScope.getScopeOrCreat('this');
-			listener = (event) => inputScope.set('value', (element as HTMLInputElement).value);
+			listener = (event) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(eventName, listener);
 		}
 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, element, () => {
@@ -421,92 +412,5 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
-
-	// bind1Way(element: HTMLElement | StructuralDirective | Text, attr: LiveAttribute | LiveTextContent, contextStack: Stack) {
-	// 	const callback = () => {
-	// 		attr.expression.get(contextStack);
-	// 	};
-	// 	this.subscribeExpressionNode(attr.expression, contextStack, callback, element, attr.name, attr.expressionEvent);
-	// 	callback();
-	// }
-	// subscribeExpressionNode(node: ExpressionNode, contextStack: Stack, callback: SourceFollowerCallback, object?: object, attrName?: string, events?: ExpressionEventMap) {
-	// 	events ??= node.events();
-	// 	const scopeMap = findScopeByEventMap(events, contextStack);
-	// 	scopeMap.forEach((scope, eventName) => {
-	// 		const context = scope.getContext();
-	// 		if (context) {
-	// 			if (scope instanceof AsyncPipeProvider) {
-	// 				const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-	// 				subscribe1way(pipe, eventName, callback, object, attrName);
-	// 				if (isOnDestroy(pipe)) {
-	// 					this.view._model.subscribeModel('destroy', () => {
-	// 						if (isModel(pipe)) {
-	// 							pipe.emitChangeModel('destroy');
-	// 						}
-	// 						pipe.onDestroy();
-	// 					});
-	// 				}
-	// 				const pipeContext: { [key: string]: Function; } = {};
-	// 				pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-	// 				contextStack.pushBlockScopeFor(pipeContext);
-	// 			} else if (!(scope instanceof PipeProvider)) {
-	// 				subscribe1way(context, eventName, callback, object, attrName);
-	// 			}
-	// 		}
-	// 	});
-	// }
-	// bind2Way(element: HTMLElement | StructuralDirective, attr: LiveAttribute, contextStack: Stack) {
-	// 	const callback1 = () => {
-	// 		attr.expression.get(contextStack);
-	// 	};
-	// 	const callback2 = () => {
-	// 		attr.callbackExpression.get(contextStack);
-	// 	};
-	// 	const scopeMap = findScopeByEventMap(attr.expressionEvent, contextStack);
-	// 	scopeMap.forEach((scope, eventName) => {
-	// 		const context = scope.getContext();
-	// 		if (context) {
-	// 			if (scope instanceof AsyncPipeProvider) {
-	// 				const pipe: PipeTransform<any, any> = contextStack.get(eventName);
-	// 				subscribe2way(pipe, eventName, callback1, element, attr.name, callback2);
-	// 				if (isOnDestroy(pipe)) {
-	// 					this.view._model.subscribeModel('destroy', () => {
-	// 						if (isModel(pipe)) {
-	// 							pipe.emitChangeModel('destroy');
-	// 						}
-	// 						pipe.onDestroy();
-	// 					});
-	// 				}
-	// 				const pipeContext: { [key: string]: Function } = {};
-	// 				pipeContext[eventName] = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-	// 				contextStack.pushBlockScopeFor(pipeContext);
-	// 			} else if (!(scope instanceof PipeProvider)) {
-	// 				subscribe2way(context, eventName, callback1, element, attr.name, callback2);
-	// 			}
-	// 		}
-	// 	});
-
-	// 	callback1();
-	// 	if (element instanceof StructuralDirective) {
-	// 		return;
-	// 	}
-	// 	const changeEventName = getChangeEventName(element, attr.name);
-	// 	if ((changeEventName === 'input' || changeEventName === 'change')
-	// 		&& isModel(element)) {
-	// 		element.addEventListener(changeEventName, () => {
-	// 			element.emitChangeModel(attr.name);
-	// 		});
-	// 	}
-	// 	else if (isHTMLComponent(element)) {
-	// 		// ignore, it is applied by default
-	// 	}
-	// 	else {
-	// 		this.nativeElementMutation.subscribe(element, attr.name, () => {
-	// 			if (isModel(element)) {
-	// 				element.emitChangeModel(attr.name);
-	// 			}
-	// 		});
-	// 	}
-	// }
 
 }

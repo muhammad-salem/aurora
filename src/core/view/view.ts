@@ -29,19 +29,12 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {
-		const parentProperty = Object.getOwnPropertyDescriptor(
-			htmlParent.prototype,
-			input.viewAttribute
-		);
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				return this._proxyModel[input.modelProperty] || parentProperty?.get?.call(this);
+				return this._modelScope.get(input.modelProperty);
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
 				this._modelScope.set(input.modelProperty, value);
-				// this._model[input.modelProperty] = value;
-				// this._proxyModel[input.modelProperty] = value;
-				parentProperty?.set?.call(this, value);
 			},
 			enumerable: true,
 		});
@@ -57,11 +50,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 		let eventListener: Function | undefined;
 		let subscription: Subscription<any>;
 		Object.defineProperty(viewClass.prototype, 'on' + ToCamelCase(output.viewAttribute), {
-			// get(): EventEmitter<any> {
-			// 	// return this._model[output.modelProperty];
-			// },
 			get(): Function | undefined {
-				// return this._model[output.modelProperty];
 				return eventListener;
 			},
 			set(this: HTMLComponent<T>, event: string | Function): void {

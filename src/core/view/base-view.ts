@@ -42,7 +42,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T>;
-		_viewScope: ReactiveScope<NodeContextType<T>>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -57,7 +56,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			defineInstancePropertyMap(model);
 			this._model = model;
 
-			this._viewScope = ReactiveScope.blockScopeFor<NodeContextType<T>>({ 'this': this });
 			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
@@ -66,27 +64,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-			// this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
-			// 	this.setInputValue(viewProperty, newValue);
-			// });
-			// let source: any[] | undefined;
-			// this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
-			// 	// console.log('event name', modelProperty);
-			// 	if (oldValue == newValue) {
-			// 		return;
-			// 	}
-			// 	// console.log('emit model', modelProperty, oldValue, newValue);
-			// 	if (source) {
-			// 		if (!source.includes(modelProperty)) {
-			// 			source.push(modelProperty);
-			// 			// this._model.emitChangeModel(modelProperty as string, source);
-			// 		}
-			// 	} else {
-			// 		source = [modelProperty]
-			// 		// this._model.emitChangeModel(modelProperty as string, source);
-			// 		source = undefined;
-			// 	}
-			// });
 			this._render = new ComponentRender(this);
 		}
 
