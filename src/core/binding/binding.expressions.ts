@@ -16,6 +16,7 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 
+	private rightEvents = this.right.events();
 	constructor(left: ExpressionNode, right: ExpressionNode) {
 		super(':=', left, right);
 	}
@@ -31,13 +32,14 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		return rv;
 	}
 	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
-		const events = this.right.events();
-		const map = findScopeByEventMap(events, stack);
+		const map = findScopeByEventMap(this.rightEvents, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
 			if (scope instanceof ReactiveScope) {
-				const subscription = scope.subscribe(eventName, () => {
-					this.get(stack);
+				const subscription = scope.subscribe(eventName, (newValue: any, oldValue?: any) => {
+					if (newValue != oldValue) {
+						this.get(stack);
+					}
 				});
 				subscriptions.push(subscription);
 			} else if (scope instanceof AsyncPipeProvider) {
@@ -60,6 +62,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  * 
  */
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
+	private rightEvents = this.right.events();
+	private leftEvents = this.left.events();
 	constructor(left: ExpressionNode, right: ExpressionNode) {
 		super(':=:', left, right);
 	}
@@ -83,8 +87,10 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return rv;
 	}
 	private actionRTL(stack: Stack): ValueChangedCallback {
-		return () => {
-			this.getRTL(stack);
+		return (newValue: any, oldValue?: any) => {
+			if (newValue != oldValue) {
+				this.getRTL(stack);
+			}
 		};
 	}
 
@@ -100,8 +106,10 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return lv;
 	}
 	private actionLTR(stack: Stack): ValueChangedCallback {
-		return () => {
-			this.getLTR(stack);
+		return (newValue: any, oldValue?: any) => {
+			if (newValue != oldValue) {
+				this.getLTR(stack);
+			}
 		};
 	}
 
@@ -126,14 +134,12 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 
 		// right to left
-		const rightEvents = this.right.events();
-		const rightMap = findScopeByEventMap(rightEvents, stack);
+		const rightMap = findScopeByEventMap(this.rightEvents, stack);
 		const rtlAction = this.actionRTL(stack);
 		const rtlSubscriptions = this.subscribeToEvents(stack, rightMap, rtlAction);
 
 		// left to right 
-		const leftEvents = this.left.events();
-		const leftMap = findScopeByEventMap(leftEvents, stack);
+		const leftMap = findScopeByEventMap(this.leftEvents, stack);
 		const ltrAction = this.actionLTR(stack);
 		const ltrSubscriptions = this.subscribeToEvents(stack, leftMap, ltrAction);
 
