@@ -96,7 +96,7 @@ function parseChild(child: DOMNode) {
 	} else if (child instanceof DOMDirectiveNode) {
 		if (child.value) {
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
-			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions;
+			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions.map(JavaScriptParser.parse);
 			if (info.directiveInputs.size > 0) {
 				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
 				if (!ref?.inputs?.length) {
@@ -105,9 +105,7 @@ function parseChild(child: DOMNode) {
 				child.inputs ??= [];
 				info.directiveInputs.forEach((expression, input) => {
 					const modelName = ref?.inputs.find(i => i.viewAttribute === input)?.modelProperty ?? input;
-					const attr: LiveAttribute = createLiveAttribute(modelName, expression.toString());
-					// attr.expression = expression;
-					// attr.expressionEvent = expression.events();
+					const attr: LiveAttribute = createLiveAttribute(modelName, expression);
 					child.inputs?.push(attr);
 				});
 			}
