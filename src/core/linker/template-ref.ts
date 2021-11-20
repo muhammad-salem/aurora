@@ -79,10 +79,8 @@ export class TemplateRefImpl extends TemplateRef {
 			const events = expression.events();
 			const scopeMap = findReactiveScopeByEventMap(events, sandBox);
 			scopeMap.forEach((scope, eventName) => {
-				const subscription = scope.subscribe((propertyName) => {
-					if (propertyName == eventName) {
-						expression.get(sandBox);
-					}
+				const subscription = scope.subscribe(eventName, () => {
+					expression.get(sandBox);
 				});
 				scopeSubscriptions.push(subscription);
 			});

@@ -1,6 +1,7 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findReactiveScopeByEventMap, ReactiveScope, ScopeContext
+	Stack, findReactiveScopeByEventMap, ReactiveScope,
+	ScopeContext, ValueChangedCallback
 } from '@ibyar/expressions';
 
 type OneWayOperator = ':=';
@@ -33,10 +34,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		const map = findReactiveScopeByEventMap(events, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
-			const subscription = scope.subscribe((propertyName) => {
-				if (propertyName == eventName) {
-					this.get(stack);
-				}
+			const subscription = scope.subscribe(eventName, () => {
+				this.get(stack);
 			});
 			subscriptions.push(subscription);
 		});
@@ -73,14 +72,11 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		}
 		return rv;
 	}
-	private actionRTL(stack: Stack) {
-		return (eventName: string) => {
-			return (propertyName: never, oldValue: any, newValue: any) => {
-				if (propertyName == eventName) {
-					this.getRTL(stack);
-				}
-			}
-		}
+	private actionRTL(stack: Stack): ValueChangedCallback {
+		return () => {
+			this.getRTL(stack);
+
+		};
 	}
 
 	private setLTR(stack: Stack, value: any) {
@@ -94,22 +90,17 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		}
 		return lv;
 	}
-	private actionLTR(stack: Stack) {
-		return (eventName: string) => {
-			return (propertyName: never, oldValue: any, newValue: any) => {
-				if (propertyName == eventName) {
-					this.getLTR(stack);
-				}
-			}
-		}
+	private actionLTR(stack: Stack): ValueChangedCallback {
+		return () => {
+			this.getLTR(stack);
+
+		};
 	}
 
-	private subscribeToEvents(
-		map: Map<string, ReactiveScope<object>>,
-		action: (eventName: string) => (propertyName: never, oldValue: any, newValue: any) => void) {
-		const subscriptions: ScopeSubscription<object>[] = [];
+	private subscribeToEvents(map: Map<string, ReactiveScope<ScopeContext>>, actionCallback: ValueChangedCallback) {
+		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
-			const subscription = scope.subscribe(action(eventName));
+			const subscription = scope.subscribe(eventName, actionCallback);
 			subscriptions.push(subscription);
 		});
 		return subscriptions;
