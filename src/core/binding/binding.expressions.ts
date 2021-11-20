@@ -1,8 +1,9 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findReactiveScopeByEventMap, ReactiveScope,
-	ScopeContext, ValueChangedCallback
+	Stack, findScopeByEventMap, ReactiveScope,
+	ScopeContext, ValueChangedCallback, Scope
 } from '@ibyar/expressions';
+import { AsyncPipeProvider } from '../pipe/pipe.js';
 
 type OneWayOperator = ':=';
 type TwoWayOperator = ':=:';
@@ -31,13 +32,22 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 	}
 	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 		const events = this.right.events();
-		const map = findReactiveScopeByEventMap(events, stack);
+		const map = findScopeByEventMap(events, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
-			const subscription = scope.subscribe(eventName, () => {
-				this.get(stack);
-			});
-			subscriptions.push(subscription);
+			if (scope instanceof ReactiveScope) {
+				const subscription = scope.subscribe(eventName, () => {
+					this.get(stack);
+				});
+				subscriptions.push(subscription);
+			} else if (scope instanceof AsyncPipeProvider) {
+				const pipe = scope.get(eventName)!;
+				const pipeScope = stack.pushBlockReactiveScopeFor({
+					[eventName](value: any, ...args: any[]) {
+						pipe.transform(value, ...args)
+					}
+				});
+			}
 		});
 		return subscriptions;
 	}
@@ -95,11 +105,20 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		};
 	}
 
-	private subscribeToEvents(map: Map<string, ReactiveScope<ScopeContext>>, actionCallback: ValueChangedCallback) {
+	private subscribeToEvents(stack: Stack, map: Map<string, Scope<ScopeContext>>, actionCallback: ValueChangedCallback) {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
-			const subscription = scope.subscribe(eventName, actionCallback);
-			subscriptions.push(subscription);
+			if (scope instanceof ReactiveScope) {
+				const subscription = scope.subscribe(eventName, actionCallback);
+				subscriptions.push(subscription);
+			} else if (scope instanceof AsyncPipeProvider) {
+				const pipe = scope.get(eventName)!;
+				const pipeScope = stack.pushBlockReactiveScopeFor({
+					[eventName](value: any, ...args: any[]) {
+						pipe.transform(value, ...args)
+					}
+				});
+			}
 		});
 		return subscriptions;
 	}
@@ -108,15 +127,15 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 
 		// right to left
 		const rightEvents = this.right.events();
-		const rightMap = findReactiveScopeByEventMap(rightEvents, stack);
+		const rightMap = findScopeByEventMap(rightEvents, stack);
 		const rtlAction = this.actionRTL(stack);
-		const rtlSubscriptions = this.subscribeToEvents(rightMap, rtlAction);
+		const rtlSubscriptions = this.subscribeToEvents(stack, rightMap, rtlAction);
 
 		// left to right 
 		const leftEvents = this.left.events();
-		const leftMap = findReactiveScopeByEventMap(leftEvents, stack);
+		const leftMap = findScopeByEventMap(leftEvents, stack);
 		const ltrAction = this.actionLTR(stack);
-		const ltrSubscriptions = this.subscribeToEvents(leftMap, ltrAction);
+		const ltrSubscriptions = this.subscribeToEvents(stack, leftMap, ltrAction);
 
 		return rtlSubscriptions.concat(ltrSubscriptions);
 	}
