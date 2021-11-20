@@ -1,6 +1,6 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findReactiveScopeByEventMap, ReactiveScope
+	Stack, findReactiveScopeByEventMap, ReactiveScope, ScopeContext
 } from '@ibyar/expressions';
 
 type OneWayOperator = ':=';
@@ -8,14 +8,12 @@ type TwoWayOperator = ':=:';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
-	initChangeSubscription(stack: Stack): void;
-
-	destroy(): void;
+	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[];
 }
 
 
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
-	private subscriptions?: ScopeSubscription<object>[];
+
 	constructor(left: ExpressionNode, right: ExpressionNode) {
 		super(':=', left, right);
 	}
@@ -30,11 +28,10 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		}
 		return rv;
 	}
-
-	initChangeSubscription(stack: Stack): void {
+	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 		const events = this.right.events();
 		const map = findReactiveScopeByEventMap(events, stack);
-		const subscriptions: ScopeSubscription<object>[] = [];
+		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
 			const subscription = scope.subscribe((propertyName) => {
 				if (propertyName == eventName) {
@@ -43,12 +40,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 			});
 			subscriptions.push(subscription);
 		});
-		this.subscriptions = subscriptions;
-	}
-
-	destroy() {
-		this.subscriptions?.forEach(sub => sub.unsubscribe());
-		this.subscriptions = undefined;
+		return subscriptions;
 	}
 }
 
@@ -59,8 +51,6 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  * 
  */
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
-	private subscriptions?: ScopeSubscription<object>[];
-	private updateLock = false;
 	constructor(left: ExpressionNode, right: ExpressionNode) {
 		super(':=:', left, right);
 	}
@@ -86,13 +76,8 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	private actionRTL(stack: Stack) {
 		return (eventName: string) => {
 			return (propertyName: never, oldValue: any, newValue: any) => {
-				if (this.updateLock) {
-					return
-				}
 				if (propertyName == eventName) {
-					this.updateLock = true;
 					this.getRTL(stack);
-					this.updateLock = false;
 				}
 			}
 		}
@@ -112,13 +97,8 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	private actionLTR(stack: Stack) {
 		return (eventName: string) => {
 			return (propertyName: never, oldValue: any, newValue: any) => {
-				if (this.updateLock) {
-					return
-				}
 				if (propertyName == eventName) {
-					this.updateLock = true;
 					this.getLTR(stack);
-					this.updateLock = false;
 				}
 			}
 		}
@@ -135,7 +115,7 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return subscriptions;
 	}
 
-	initChangeSubscription(stack: Stack): void {
+	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 
 		// right to left
 		const rightEvents = this.right.events();
@@ -149,11 +129,7 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		const ltrAction = this.actionLTR(stack);
 		const ltrSubscriptions = this.subscribeToEvents(leftMap, ltrAction);
 
-		this.subscriptions = rtlSubscriptions.concat(ltrSubscriptions);
+		return rtlSubscriptions.concat(ltrSubscriptions);
 	}
 
-	destroy() {
-		this.subscriptions?.forEach(sub => sub.unsubscribe());
-		this.subscriptions = undefined;
-	}
 }
