@@ -190,8 +190,13 @@ export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
 export class ValueChangeObserver<T> {
 	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
-
+	private propertyLock: Map<keyof T, boolean> = new Map();
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		const lock = this.propertyLock.get(propertyKey);
+		if (lock || lock == undefined) {
+			return;
+		}
+		this.propertyLock.set(propertyKey, true);
 		const subscribers = this.subscribers.get(propertyKey);
 		subscribers?.forEach((subscribe) => {
 			try {
@@ -200,6 +205,7 @@ export class ValueChangeObserver<T> {
 				console.error(e);
 			}
 		});
+		this.propertyLock.set(propertyKey, false);
 	}
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		const subscription: ScopeSubscription<T> = new ScopeSubscription(propertyKey, this);
@@ -207,6 +213,7 @@ export class ValueChangeObserver<T> {
 		if (!propertySubscribers) {
 			propertySubscribers = new Map();
 			this.subscribers.set(propertyKey, propertySubscribers);
+			this.propertyLock.set(propertyKey, false);
 		}
 		propertySubscribers.set(subscription, callback);
 		return subscription;
