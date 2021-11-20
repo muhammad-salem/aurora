@@ -5,7 +5,7 @@ import {
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
 } from '../component/lifecycle.js';
 import { ComponentRef, PropertyRef } from '../component/component.js';
-import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
+import { BaseComponent, CustomElement, HTMLComponent, ModelType, NodeContextType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
@@ -42,7 +42,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T>;
-		_viewScope: ElementReactiveScope;
+		_viewScope: ReactiveScope<NodeContextType<T>>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -57,37 +57,36 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			defineInstancePropertyMap(model);
 			this._model = model;
 
-			this._viewScope = new ElementReactiveScope(this);
+			this._viewScope = ReactiveScope.blockScopeFor<NodeContextType<T>>({ 'this': this });
 			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
 
-			// if model had view decorator
+			// if property of the model has view decorator
 			if (this._componentRef.view) {
-				// this._model[componentRef.view] = this;
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-			this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
-				this.setInputValue(viewProperty, newValue);
-			});
-			let source: any[] | undefined;
-			this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
-				// console.log('event name', modelProperty);
-				if (oldValue == newValue) {
-					return;
-				}
-				// console.log('emit model', modelProperty, oldValue, newValue);
-				if (source) {
-					if (!source.includes(modelProperty)) {
-						source.push(modelProperty);
-						// this._model.emitChangeModel(modelProperty as string, source);
-					}
-				} else {
-					source = [modelProperty]
-					// this._model.emitChangeModel(modelProperty as string, source);
-					source = undefined;
-				}
-			});
+			// this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
+			// 	this.setInputValue(viewProperty, newValue);
+			// });
+			// let source: any[] | undefined;
+			// this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
+			// 	// console.log('event name', modelProperty);
+			// 	if (oldValue == newValue) {
+			// 		return;
+			// 	}
+			// 	// console.log('emit model', modelProperty, oldValue, newValue);
+			// 	if (source) {
+			// 		if (!source.includes(modelProperty)) {
+			// 			source.push(modelProperty);
+			// 			// this._model.emitChangeModel(modelProperty as string, source);
+			// 		}
+			// 	} else {
+			// 		source = [modelProperty]
+			// 		// this._model.emitChangeModel(modelProperty as string, source);
+			// 		source = undefined;
+			// 	}
+			// });
 			this._render = new ComponentRender(this);
 		}
 
@@ -391,11 +390,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				modelEvent.emit(value);
 				return;
 			}
-		}
-
-		triggerModelChange(eventName: string, value?: any): void {
-			// this._changeObservable.emit(eventName, value);
-			// this._model.emitChangeModel(eventName);
 		}
 	};
 	FACTORY_CACHE.set(htmlElementType, CustomView);

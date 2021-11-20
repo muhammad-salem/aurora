@@ -1,13 +1,14 @@
 import {
-	ReactiveScope, ScopeContext, ScopeSubscription, Stack
+	ReactiveScope, Scope, ScopeContext, ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import {
 	CommentNode, DOMDirectiveNode, DOMDirectiveNodeUpgrade,
-	DOMElementNode, DOMFragmentNode, DOMNode, isLiveTextContent,
+	DOMElementNode, DOMFragmentNode, DOMNode, findByTagName, isLiveTextContent,
+	isResettableElement,
 	isTagNameNative, isValidCustomElementName, LiveTextContent, TextContent
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
-import { ElementMutation } from './mutation.js';
+import { ElementMutation, MutationSubscription } from './mutation.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
@@ -19,16 +20,16 @@ import { ElementReactiveScope } from '../directive/providers.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
-function getChangeEventName(element: HTMLElement, elementAttr: string): 'input' | 'change' | string {
-	if (elementAttr === 'value') {
-		if (element instanceof HTMLInputElement) {
+function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined {
+	switch (true) {
+		case element instanceof HTMLInputElement:
 			return 'input';
-		} else if (element instanceof HTMLSelectElement
-			|| element instanceof HTMLTextAreaElement) {
+		case element instanceof HTMLTextAreaElement:
+		case element instanceof HTMLSelectElement:
 			return 'change';
-		}
+		default:
+			return undefined;
 	}
-	return elementAttr;
 }
 export class ComponentRender<T extends object> {
 	componentRef: ComponentRef<T>;
@@ -276,15 +277,26 @@ export class ComponentRender<T extends object> {
 	}
 	createElement(node: DOMElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
-		const elContext = isHTMLComponent(element) ? element._viewScope : new ElementReactiveScope(element);
+		// const elementScope = isHTMLComponent(element) ? element._viewScope : new ElementReactiveScope(element);
+		const elementScope: Scope<ScopeContext> = isHTMLComponent(element) ? element._viewScope : ReactiveScope.blockScopeFor(element);
 		contextStack = contextStack.copyStack();
-		contextStack.pushScope(elContext);
+		contextStack.pushScope(elementScope);
 
 		const subscriptions = this.initAttribute(element, node, contextStack);
+		const eventName = getInputEventName(element);
+		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
+		if (eventName) {
+			listener = (event) => elementScope.set('value', (element as HTMLInputElement).value);
+			element.addEventListener(eventName, listener);
+		}
 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, element, () => {
 			removeSubscription.unsubscribe();
+			listener && element.removeEventListener(eventName!, listener);
+
 			subscriptions.forEach(subscription => subscription.unsubscribe());
 		});
+
+
 
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {

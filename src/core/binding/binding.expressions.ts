@@ -75,7 +75,6 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	private actionRTL(stack: Stack): ValueChangedCallback {
 		return () => {
 			this.getRTL(stack);
-
 		};
 	}
 
@@ -93,7 +92,6 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	private actionLTR(stack: Stack): ValueChangedCallback {
 		return () => {
 			this.getLTR(stack);
-
 		};
 	}
 
