@@ -1,7 +1,8 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
 	Stack, findScopeByEventMap, ReactiveScope,
-	ScopeContext, ValueChangedCallback, Scope
+	ScopeContext, ValueChangedCallback, Scope,
+	MemberExpression, Identifier
 } from '@ibyar/expressions';
 import { AsyncPipeProvider } from '../pipe/pipe.js';
 
@@ -17,7 +18,7 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 
 	private rightEvents = this.right.events();
-	constructor(left: ExpressionNode, right: ExpressionNode) {
+	constructor(left: MemberExpression, right: ExpressionNode) {
 		super(':=', left, right);
 	}
 	set(stack: Stack, value: any) {
@@ -62,9 +63,13 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  * 
  */
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
+
+	protected left: MemberExpression;
+	protected right: MemberExpression | Identifier;
+
 	private rightEvents = this.right.events();
 	private leftEvents = this.left.events();
-	constructor(left: ExpressionNode, right: ExpressionNode) {
+	constructor(left: MemberExpression, right: MemberExpression | Identifier) {
 		super(':=:', left, right);
 	}
 

@@ -4,7 +4,10 @@ import {
 	DOMFragmentNode, DOMParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent
 } from '@ibyar/elements';
-import { ExpressionNode, JavaScriptParser } from '@ibyar/expressions';
+import {
+	ExpressionNode, Identifier,
+	JavaScriptParser, MemberExpression
+} from '@ibyar/expressions';
 import {
 	BindingAssignment,
 	OneWayAssignmentExpression,
@@ -35,7 +38,7 @@ declare module '@ibyar/elements' {
 	}
 }
 
-const ThisTextContent = JavaScriptParser.parse('this.textContent');
+const ThisTextContent = JavaScriptParser.parse('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parse(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
@@ -66,15 +69,24 @@ function parseLiveAttribute(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
+	if (elementExpression instanceof MemberExpression
+		&& (modelExpression instanceof MemberExpression || modelExpression instanceof Identifier)) {
+		attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
+	} else {
+		console.error(`${attr.name}="${attr.value}"" is not a valid MemberExpression or Identifier 'x.y.z'`);
+	}
 
-	attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
 	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
-	attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
+	if (elementExpression instanceof MemberExpression) {
+		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
+	} else {
+		console.error(`${attr.name} is not a valid MemberExpression 'x.y.z'`);
+	}
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string>) {
@@ -106,7 +118,7 @@ function parseChild(child: DOMNode) {
 				info.directiveInputs.forEach((expression, input) => {
 					const modelName = ref?.inputs.find(i => i.viewAttribute === input)?.modelProperty ?? input;
 					const attr: LiveAttribute = createLiveAttribute(modelName, expression);
-					child.inputs?.push(attr);
+					(child.inputs ??= []).push(attr);
 				});
 			}
 		}
