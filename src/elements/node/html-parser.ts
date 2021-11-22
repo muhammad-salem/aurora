@@ -1,15 +1,15 @@
 import { isEmptyElement } from '../attributes/tags.js';
 import {
-	DOMElementNode, CommentNode, parseTextChild,
-	TextContent, LiveTextContent, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild,
-	ElementAttribute, Attribute
+	DomElementNode, CommentNode, parseTextChild,
+	TextContent, LiveTextContent, DomFragmentNode,
+	DomStructuralDirectiveNode, DomNode, DomChild,
+	ElementAttribute, Attribute, DomAttributeDirectiveNode, BaseNode
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DOMElementNode | CommentNode | string;
+type ChildNode = DomElementNode | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -47,11 +47,11 @@ export class NodeParser {
 
 	private tagNameRegExp = /[\-\.0-9_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF]/;
 
-	private childStack: DOMChild[];
+	private childStack: DomChild[];
 	private stackTrace: ChildNode[];
 
-	private get currentNode(): DOMElementNode {
-		return this.stackTrace[this.stackTrace.length - 1] as DOMElementNode;
+	private get currentNode(): DomElementNode {
+		return this.stackTrace[this.stackTrace.length - 1] as DomElementNode;
 	}
 
 	private commentOpenCount = 0;
@@ -165,7 +165,7 @@ export class NodeParser {
 
 	private parseOpenTag(token: string) {
 		if (token === '>') {
-			this.stackTrace.push(new DOMElementNode(this.tempText));
+			this.stackTrace.push(new DomElementNode(this.tempText));
 			if (isEmptyElement(this.tempText)) {
 				this.popElement();
 			}
@@ -177,7 +177,7 @@ export class NodeParser {
 			return this.parseOpenTag;
 		}
 		else if (/\s/.test(token)) {
-			this.stackTrace.push(new DOMElementNode(this.tempText));
+			this.stackTrace.push(new DomElementNode(this.tempText));
 			this.tempText = '';
 			this.propType = 'attr';
 			return this.parsePropertyName;
@@ -320,10 +320,10 @@ export class NodeParser {
 		const element = this.stackTrace.pop();
 		if (element) {
 			const parent = this.stackTrace.pop();
-			if (parent && parent instanceof DOMElementNode) {
+			if (parent && parent instanceof DomElementNode) {
 				if (typeof element === 'string') {
 					parent.addTextChild(element);
-				} else if (element instanceof DOMElementNode) {
+				} else if (element instanceof DomElementNode) {
 					parent.addChild(this.checkNode(element));
 				} else {
 					parent.addChild(element);
@@ -333,7 +333,7 @@ export class NodeParser {
 			else {
 				if (typeof element === 'string') {
 					parseTextChild(element).forEach(text => this.childStack.push(text));
-				} else if (element instanceof DOMElementNode) {
+				} else if (element instanceof DomElementNode) {
 					this.childStack.push(this.checkNode(element));
 				} else {
 					this.childStack.push(element);
@@ -342,10 +342,12 @@ export class NodeParser {
 		}
 	}
 
-	checkNode(node: DOMElementNode): DOMElementNode | DOMDirectiveNode {
+	checkNode(node: DomElementNode): DomElementNode | DomStructuralDirectiveNode {
 		const attributes = node.attributes;
 		if (attributes) {
-			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = attributes.find(attr => attr.name === 'is');
+			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined;
+
+			temp = attributes.find(attr => attr.name === 'is');
 			if (temp) {
 				attributes.splice(attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
@@ -366,14 +368,29 @@ export class NodeParser {
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
+			const directiveNames = this.extractAttributeDirectives(node);
+			if (directiveNames.length) {
+				const directives: DomAttributeDirectiveNode[] = [];
+				directiveNames.forEach(namedAttribute => {
+					const directive = new DomAttributeDirectiveNode(namedAttribute.name, namedAttribute.value);
+					if (directiveRegistry.get(namedAttribute.name)!.hasAttributes()) {
+						this.extractDirectiveAttributesFromNode(namedAttribute.name, directive, node);
+					}
+					directives.push(directive);
+				});
+				if (directives.length) {
+					(node.children ??= []).unshift(...directives);
+				}
+			}
+
 			temp = attributes.find(attr => attr.name.startsWith('*'));
 			if (temp) {
 				attributes.splice(attributes.indexOf(temp), 1);
 				const isTemplate = node.tagName === 'template';
-				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
+				const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
 				const directive = (typeof temp?.value === 'boolean')
-					? new DOMDirectiveNode(temp.name, directiveNode)
-					: new DOMDirectiveNode(temp.name, directiveNode, String(temp.value));
+					? new DomStructuralDirectiveNode(temp.name, directiveNode)
+					: new DomStructuralDirectiveNode(temp.name, directiveNode, String(temp.value));
 				const directiveName = temp.name.substring(1);
 				if (isTemplate) {
 					directive.inputs = node.inputs;
@@ -392,10 +409,10 @@ export class NodeParser {
 				if (temp) {
 					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
 				}
-				const directiveNode = new DOMFragmentNode(node.children);
+				const directiveNode = new DomFragmentNode(node.children);
 				const directive = (typeof temp?.value === 'boolean')
-					? new DOMDirectiveNode('*' + node.tagName, directiveNode)
-					: new DOMDirectiveNode('*' + node.tagName, directiveNode, String(temp?.value));
+					? new DomStructuralDirectiveNode('*' + node.tagName, directiveNode)
+					: new DomStructuralDirectiveNode('*' + node.tagName, directiveNode, String(temp?.value));
 				// const directive = new DOMDirectiveNode('*' + node.tagName, directiveNode, temp?.value && String(temp.value));
 				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
 				return directive;
@@ -403,13 +420,13 @@ export class NodeParser {
 		} else if (directiveRegistry.has(node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
-			return new DOMDirectiveNode('*' + node.tagName, new DOMFragmentNode(node.children));
+			return new DomStructuralDirectiveNode('*' + node.tagName, new DomFragmentNode(node.children));
 		}
 		return node;
 	}
 
 
-	private extractDirectiveAttributesFromNode(directiveName: string, directive: DOMDirectiveNode, node: DOMElementNode) {
+	private extractDirectiveAttributesFromNode(directiveName: string, directive: BaseNode, node: DomElementNode) {
 		const attributes = directiveRegistry.getAttributes(directiveName)!;
 		const filterByAttrName = createFilterByAttrName(attributes);
 		directive.inputs = node.inputs?.filter(filterByAttrName);
@@ -423,6 +440,32 @@ export class NodeParser {
 		node.twoWayBinding && directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
 		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
 		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
+	}
+
+	private extractAttributeDirectives(node: BaseNode): Attribute<any, any>[] {
+		const names: Attribute<any, any>[] = [];
+		if (node.attributes) {
+			names.push(...this.getAttributeDirectives(node.attributes));
+		}
+		if (node.inputs) {
+			names.push(...this.getAttributeDirectives(node.inputs));
+		}
+		if (node.twoWayBinding) {
+			names.push(...this.getAttributeDirectives(node.twoWayBinding));
+		}
+		if (node.templateAttrs) {
+			names.push(...this.getAttributeDirectives(node.templateAttrs));
+		}
+		if (node.outputs) {
+			names.push(...this.getAttributeDirectives(node.outputs));
+		}
+		return names;
+	}
+	private getAttributeDirectives(attributes: Attribute<any, any>[]): Attribute<any, any>[] {
+		const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
+		const directives = attributes.filter(attr => filtered.includes(attr.name));
+		attributes.forEach(createArrayCleaner(attributes));
+		return directives;
 	}
 }
 
@@ -438,22 +481,22 @@ export class HTMLParser {
 
 	nodeParser = new NodeParser();
 
-	parse(html: string): DOMChild[] {
+	parse(html: string): DomChild[] {
 		return this.nodeParser.parse(html);
 	}
 
-	toDomRootNode(html: string): DOMNode {
+	toDomRootNode(html: string): DomNode {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
-			return new DOMFragmentNode([new TextContent('')]);
+			return new DomFragmentNode([new TextContent('')]);
 		} else if (stack?.length === 1) {
 			return stack[0];
 		} else {
-			return new DOMFragmentNode(stack);
+			return new DomFragmentNode(stack);
 		}
 	}
 
-	stringify(stack?: DOMNode[]) {
+	stringify(stack?: DomNode[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextContent) {
@@ -462,7 +505,7 @@ export class HTMLParser {
 				html += `{{${node.value}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
-			} else if (node instanceof DOMElementNode) {
+			} else if (node instanceof DomElementNode) {
 				let attrs = '';
 				if (node.attributes) {
 					attrs += node.attributes.map(attr => `${attr.name}="${attr.value}"`).join(' ') + ' ';
