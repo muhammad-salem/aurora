@@ -134,9 +134,9 @@ export class DOMParentNode extends BaseNode {
 	/**
 	 * element children list
 	 */
-	children?: DOMChild[];
+	children?: DomChild[];
 
-	addChild(child: DOMChild) {
+	addChild(child: DomChild) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -154,15 +154,15 @@ export class DOMParentNode extends BaseNode {
 /**
  * parent for a list of elements 
  */
-export class DOMFragmentNode extends DOMParentNode {
-	constructor(children?: DOMChild[]) {
+export class DomFragmentNode extends DOMParentNode {
+	constructor(children?: DomChild[]) {
 		super();
 		if (children) {
 			this.children = children;
 		}
 	}
 }
-export class DOMElementNode extends DOMParentNode {
+export class DomElementNode extends DOMParentNode {
 
 	/**
 	 * the tag name of the element 
@@ -201,7 +201,7 @@ export class DOMElementNode extends DOMParentNode {
 /**
  * structural directive 
  */
-export class DOMDirectiveNode extends BaseNode {
+export class DomStructuralDirectiveNode extends BaseNode {
 
 	/**
 	 * name of the directive 
@@ -216,23 +216,41 @@ export class DOMDirectiveNode extends BaseNode {
 	/**
 	 * the value of the template node, that this directive going to host-on 
 	 */
-	node: DOMNode;
+	node: DomNode;
 
-	constructor(name: string, node: DOMNode, value?: string) {
+	constructor(name: string, node: DomNode, value?: string) {
 		super();
 		this.name = name;
 		this.node = node;
 		this.value = value;
 	}
 }
-export function isDOMDirectiveNode(node: object): node is DOMDirectiveNode {
-	return node instanceof DOMDirectiveNode;
+export class DomAttributeDirectiveNode extends BaseNode {
+
+	/**
+	 * name of the directive 
+	 */
+	name: string;
+
+	/**
+	 * value of the directive 
+	 */
+	value?: string | number | boolean | object;
+
+	constructor(name: string, value?: string | number | boolean | object) {
+		super();
+		this.name = name;
+		this.value = value;
+	}
 }
-export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export function isDOMDirectiveNode(node: object): node is DomStructuralDirectiveNode {
+	return node instanceof DomStructuralDirectiveNode;
+}
+export type DomChild = DomElementNode | DomAttributeDirectiveNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMNode = DOMFragmentNode | DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export type DomNode = DomFragmentNode | DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMRenderNode<T> = (model: T) => DOMNode;
+export type DomRenderNode<T> = (model: T) => DomNode;
 
 export function parseTextChild(text: string): Array<TextContent | LiveTextContent> {
 	// split from end with '}}', then search for the first '{{'
