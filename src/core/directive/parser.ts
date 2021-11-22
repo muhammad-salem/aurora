@@ -1,7 +1,7 @@
 import { Identifier, Token, TokenExpression, TokenStream } from '@ibyar/expressions';
 
 export type DirectiveExpressionType = {
-	templateExpressions: string[];
+	templateExpressions: Array<TokenExpression[]>;
 	directiveInputs: Map<string, string>;
 };
 
@@ -27,7 +27,7 @@ export class DirectiveExpressionParser {
 		return parser.getDirectiveExpressionType();
 	}
 
-	protected templateExpressions = new Array<string>();
+	protected templateExpressions = new Array<TokenExpression[]>();
 	protected directiveInputs = new Map<string, string>();
 
 	constructor(protected directiveName: string, protected stream: TokenStream) { }
@@ -136,7 +136,8 @@ export class DirectiveExpressionParser {
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
-			this.templateExpressions.push(list.map(this.mapTokenToString).join(' '));
+			list.push(TokenConstant.EOS);
+			this.templateExpressions.push(list);
 			return true;
 		}
 		return false;
@@ -176,7 +177,7 @@ export class DirectiveExpressionParser {
 			const aliasToken = this.stream.next();
 			const aliasList: TokenExpression[] = [];
 			aliasList.push(aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-			this.templateExpressions.push(aliasList.map(this.mapTokenToString).join(' '));
+			this.templateExpressions.push(aliasList);
 			return;
 		}
 
@@ -194,7 +195,7 @@ export class DirectiveExpressionParser {
 			const aliasToken = this.stream.next();
 			const aliasList: TokenExpression[] = [];
 			aliasList.push(TokenConstant.LET, aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-			this.templateExpressions.push(aliasList.map(this.mapTokenToString).join(' '));
+			this.templateExpressions.push(aliasList);
 		}
 		const inputName = inputToken.getValue<Identifier>().getName() as string;
 		this.directiveInputs.set(inputName, list.map(this.mapTokenToString).join(' '));
