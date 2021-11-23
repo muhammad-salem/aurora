@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, VisitNodeListType
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -12,6 +15,11 @@ export class ConditionalExpression extends AbstractExpressionNode {
 			deserializer(node.alternate),
 			deserializer(node.consequent)
 		);
+	}
+	static visit(node: ConditionalExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.test);
+		visitNode(node.alternate);
+		visitNode(node.consequent);
 	}
 	constructor(private test: ExpressionNode, private alternate: ExpressionNode, private consequent: ExpressionNode) {
 		super();

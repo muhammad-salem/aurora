@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, VisitNodeListType
+} from '../expression.js';
 import type { Scope, ScopeContext } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -11,6 +14,9 @@ export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof'
 export class UnaryExpression extends AbstractExpressionNode {
 	static fromJSON(node: UnaryExpression, deserializer: NodeDeserializer): UnaryExpression {
 		return new UnaryExpression(node.operator, deserializer(node.argument));
+	}
+	static visit(node: UnaryExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.argument);
 	}
 	static Evaluations: { [key: string]: (value: any) => any } = {
 		'+': (value: string) => { return +value; },

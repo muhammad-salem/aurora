@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, CanDeclareExpression,
+	ExpressionEventPath, VisitNodeType, VisitNodeListType
+} from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -9,6 +12,10 @@ import { RestElement } from '../computing/rest.js';
 export class Property extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
 		return new Property(deserializer(node.key), deserializer(node.value) as CanDeclareExpression, node.kind);
+	}
+	static visit(node: Property, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.key);
+		visitNode(node.value);
 	}
 	constructor(protected key: ExpressionNode, protected value: CanDeclareExpression | ExpressionNode, protected kind: 'init' | 'get' | 'set') {
 		super();
@@ -75,6 +82,9 @@ export class ObjectExpression extends AbstractExpressionNode {
 	static fromJSON(node: ObjectExpression, deserializer: NodeDeserializer): ObjectExpression {
 		return new ObjectExpression(node.properties.map(deserializer) as Property[]);
 	}
+	static visit(node: ObjectExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.properties);
+	}
 	constructor(private properties: Property[]) {
 		super();
 	}
@@ -114,6 +124,9 @@ export class ObjectExpression extends AbstractExpressionNode {
 export class ObjectPattern extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
 		return new ObjectPattern(node.properties.map(deserializer) as (Property | RestElement)[]);
+	}
+	static visit(node: ObjectPattern, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.properties);
 	}
 	constructor(private properties: (Property | RestElement)[]) {
 		super();
