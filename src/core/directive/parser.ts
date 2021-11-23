@@ -136,7 +136,6 @@ export class DirectiveExpressionParser {
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
-			list.push(TokenConstant.EOS);
 			this.templateExpressions.push(list);
 			return true;
 		}
@@ -184,7 +183,6 @@ export class DirectiveExpressionParser {
 		const list: TokenExpression[] = [];
 		// keyExp = :key ":"? :expression ("as" :local)? ";"?
 		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
-		list.push(TokenConstant.EOS);
 
 		// mix for directive input and template input
 		if (this.isAsKeyword()) {
