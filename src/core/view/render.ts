@@ -277,6 +277,7 @@ export class ComponentRender<T extends object> {
 		const element = this.createElementByTagName(node);
 		contextStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element) ? element._viewScope : contextStack.pushBlockReactiveScopeFor({ 'this': element });
+		contextStack.pushScope<ScopeContext>(elementScope);
 		const subscriptions = this.initAttribute(element, node, contextStack);
 		const eventName = getInputEventName(element);
 		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
