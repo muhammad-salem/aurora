@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { isFormElement } from '@ibyar/elements';
+import { getAllAttributes, isFormElement } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';
@@ -72,11 +72,11 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 			enumerable: true
 		});
 	});
-	Object.defineProperty(viewClass, 'observedAttributes', {
-		get() {
-			return componentRef.inputs.map(input => input.viewAttribute);
-		}
-	});
+
+	const defaultAttributes = getAllAttributes(componentRef.extend.name);
+	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
+	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
+	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
 	// https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
 	if (false) {
 		Object.defineProperty(viewClass, 'formAssociated', {
