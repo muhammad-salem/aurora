@@ -427,8 +427,11 @@ export class NodeParser {
 	}
 
 
-	private extractDirectiveAttributesFromNode(directiveName: string, directive: BaseNode, node: DomElementNode) {
-		const attributes = directiveRegistry.getAttributes(directiveName)!;
+	private extractDirectiveAttributesFromNode(directiveName: string, directive: BaseNode, node: DomElementNode): void {
+		const attributes = directiveRegistry.getAttributes(directiveName);
+		if (!attributes) {
+			return;
+		}
 		const filterByAttrName = createFilterByAttrName(attributes);
 		directive.inputs = node.inputs?.filter(filterByAttrName);
 		directive.outputs = node.outputs?.filter(filterByAttrName);
@@ -465,7 +468,7 @@ export class NodeParser {
 	private getAttributeDirectives(attributes: Attribute<any, any>[]): Attribute<any, any>[] {
 		const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
 		const directives = attributes.filter(attr => filtered.includes(attr.name));
-		attributes.forEach(createArrayCleaner(attributes));
+		directives.forEach(createArrayCleaner(attributes));
 		return directives;
 	}
 }
