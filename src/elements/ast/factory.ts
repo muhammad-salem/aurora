@@ -108,8 +108,8 @@ export class NodeFactory {
 		return directive;
 	}
 
-	static createAttributeDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr) {
-		const directive = new DomAttributeDirectiveNode(directiveName, directiveValue);
+	static createAttributeDirectiveNode(directiveName: string, attrs?: NodeAttr) {
+		const directive = new DomAttributeDirectiveNode(directiveName);
 		attrs && Object.keys(attrs).forEach(attr => directive.addAttribute(attr, attrs[attr]));
 		return directive;
 	}
@@ -123,9 +123,8 @@ export class NodeFactory {
 			const directives: DomAttributeDirectiveNode[] = [];
 			Object.keys(attrs).forEach(attributeName => {
 				if (directiveRegistry.has(attributeName)) {
-					const value = attrs[attributeName];
 					Reflect.deleteProperty(attrs, attributeName);
-					const directive = new DomAttributeDirectiveNode(attributeName, value);
+					const directive = new DomAttributeDirectiveNode(attributeName);
 					const directiveInfo = directiveRegistry.get(attributeName)!;
 					Object.keys(attrs).forEach(attr => {
 						if (directiveInfo.hasAttribute(attr)) {

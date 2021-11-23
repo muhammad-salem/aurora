@@ -371,10 +371,10 @@ export class NodeParser {
 			const directiveNames = this.extractAttributeDirectives(node);
 			if (directiveNames.length) {
 				const directives: DomAttributeDirectiveNode[] = [];
-				directiveNames.forEach(namedAttribute => {
-					const directive = new DomAttributeDirectiveNode(namedAttribute.name, namedAttribute.value);
-					if (directiveRegistry.get(namedAttribute.name)!.hasAttributes()) {
-						this.extractDirectiveAttributesFromNode(namedAttribute.name, directive, node);
+				directiveNames.forEach(attributeName => {
+					const directive = new DomAttributeDirectiveNode(attributeName);
+					if (directiveRegistry.get(attributeName)!.hasAttributes()) {
+						this.extractDirectiveAttributesFromNode(attributeName, directive, node);
 					}
 					directives.push(directive);
 				});
@@ -446,8 +446,33 @@ export class NodeParser {
 		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
 	}
 
-	private extractAttributeDirectives(node: BaseNode): Attribute<any, any>[] {
-		const names: Attribute<any, any>[] = [];
+	// private extractAttributeDirectives(node: BaseNode): Attribute<any, any>[] {
+	// 	const names: Attribute<any, any>[] = [];
+	// 	if (node.attributes) {
+	// 		names.push(...this.getAttributeDirectives(node.attributes));
+	// 	}
+	// 	if (node.inputs) {
+	// 		names.push(...this.getAttributeDirectives(node.inputs));
+	// 	}
+	// 	if (node.twoWayBinding) {
+	// 		names.push(...this.getAttributeDirectives(node.twoWayBinding));
+	// 	}
+	// 	if (node.templateAttrs) {
+	// 		names.push(...this.getAttributeDirectives(node.templateAttrs));
+	// 	}
+	// 	if (node.outputs) {
+	// 		names.push(...this.getAttributeDirectives(node.outputs));
+	// 	}
+	// 	return names;
+	// }
+	// private getAttributeDirectives(attributes: Attribute<string, any>[]): Attribute<any, any>[] {
+	// 	const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
+	// 	const directives = attributes.filter(attr => filtered.includes(attr.name));
+	// 	// directives.forEach(createArrayCleaner(attributes));
+	// 	return directives;
+	// }
+	private extractAttributeDirectives(node: BaseNode): string[] {
+		const names: string[] = [];
 		if (node.attributes) {
 			names.push(...this.getAttributeDirectives(node.attributes));
 		}
@@ -465,11 +490,8 @@ export class NodeParser {
 		}
 		return names;
 	}
-	private getAttributeDirectives(attributes: Attribute<string, any>[]): Attribute<any, any>[] {
-		const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
-		const directives = attributes.filter(attr => filtered.includes(attr.name));
-		directives.forEach(createArrayCleaner(attributes));
-		return directives;
+	private getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
+		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
 	}
 }
 

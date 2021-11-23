@@ -141,21 +141,15 @@ export class DomAttributeDirectiveNode extends BaseNode {
 	 */
 	name: string;
 
-	/**
-	 * value of the directive 
-	 */
-	value?: string | number | boolean | object;
-
 
 	/**
 	 * set to `undefined` stop, loop
 	 */
 	attributeDirectives: undefined;
 
-	constructor(name: string, value?: string | number | boolean | object) {
+	constructor(name: string) {
 		super();
 		this.name = name;
-		this.value = value;
 	}
 }
 
