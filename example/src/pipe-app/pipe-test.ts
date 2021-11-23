@@ -110,9 +110,7 @@ import { interval, Subscription } from 'rxjs';
 		</thead>
 		<tbody>
 			<div *test="text |> lowercase; let x = 888; track getIdentity; let {y, z} = {y: 9, z: 'text', m: 0};"></div>
-			<div *if="user.age > 18 as isAdult">
-				isAdult: {{isAdult |> json}}
-			</div>
+			<div *if="user.age > 18">🕺</div>
 			<template *forOf="let row of table; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
 				<tr [class]="{'table-info': isEven, 'table-danger': isOdd}">
 					<th scope="row">{{ ({idx, tableLength, isEven, isOdd, isFirst, isLast }) |> json }}</th>

@@ -1,14 +1,13 @@
 import {
-	ReactiveScope, Scope, ScopeContext, ScopeSubscription, Stack
+	ReactiveScope, ScopeContext, ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import {
-	CommentNode, DOMDirectiveNode, DOMDirectiveNodeUpgrade,
-	DOMElementNode, DOMFragmentNode, DOMNode, findByTagName, isLiveTextContent,
-	isResettableElement,
+	CommentNode, DomStructuralDirectiveNode, DomStructuralDirectiveNodeUpgrade,
+	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent, TextContent
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
-import { ElementMutation, MutationSubscription } from './mutation.js';
+import { ElementMutation } from './mutation.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
@@ -16,7 +15,6 @@ import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { StructuralDirective } from '../directive/directive.js';
-import { ElementReactiveScope } from '../directive/providers.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
@@ -33,7 +31,7 @@ function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined
 }
 export class ComponentRender<T extends object> {
 	componentRef: ComponentRef<T>;
-	template: DOMNode;
+	template: DomNode;
 	nativeElementMutation: ElementMutation;
 	contextStack: Stack;
 	templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
@@ -70,16 +68,16 @@ export class ComponentRender<T extends object> {
 			rootRef.append(rootFragment);
 		}
 	}
-	isTemplateRefName(template: DOMNode): template is DOMElementNode {
-		if (template instanceof DOMElementNode) {
+	isTemplateRefName(template: DomNode): template is DomElementNode {
+		if (template instanceof DomElementNode) {
 			if (template.tagName === 'template' && template.templateRefName) {
 				return true;
 			}
 		}
 		return false;
 	}
-	initTemplateRefMap(domNode: DOMNode) {
-		if (domNode instanceof DOMElementNode || domNode instanceof DOMFragmentNode) {
+	initTemplateRefMap(domNode: DomNode) {
+		if (domNode instanceof DomElementNode || domNode instanceof DomFragmentNode) {
 			if (domNode.children) {
 				for (let index = 0; index < domNode.children.length; index++) {
 					const child = domNode.children[index];
@@ -151,7 +149,7 @@ export class ComponentRender<T extends object> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createStructuralDirective(directive: DOMDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
+	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (directiveRef) {
 			// structural directive selector
@@ -161,7 +159,7 @@ export class ComponentRender<T extends object> {
 				this,
 				directive.node,
 				stack,
-				(directive as DOMDirectiveNodeUpgrade).templateExpressions ?? []
+				(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? []
 			);
 			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
@@ -206,13 +204,13 @@ export class ComponentRender<T extends object> {
 		});
 		return liveText;
 	}
-	createDocumentFragment(node: DOMFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
+	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
 		const fragment = document.createDocumentFragment();
 		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode));
 		return fragment;
 	}
-	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DOMNode, contextStack: Stack, parentNode: Node) {
-		if (child instanceof DOMElementNode) {
+	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DomNode, contextStack: Stack, parentNode: Node) {
+		if (child instanceof DomElementNode) {
 			if (this.isTemplateRefName(child)) {
 				const templateRefName = child.templateRefName!;
 				// const oldRef = this.templateNameScope.get(templateRefName.name);
@@ -222,7 +220,7 @@ export class ComponentRender<T extends object> {
 				// TODO: extract template expression
 				const templateRef = new TemplateRefImpl(
 					this,
-					new DOMFragmentNode(child.children),
+					new DomFragmentNode(child.children),
 					contextStack.copyStack(),
 					[]
 				);
@@ -230,7 +228,7 @@ export class ComponentRender<T extends object> {
 				return;
 			}
 			fragmentParent.append(this.createElement(child, contextStack, parentNode));
-		} else if (child instanceof DOMDirectiveNode) {
+		} else if (child instanceof DomStructuralDirectiveNode) {
 			const comment = document.createComment(`start ${child.name} = ${child.value}`);
 			fragmentParent.append(comment);
 			const lastComment = document.createComment(`end ${child.name} = ${child.value}`);
@@ -242,7 +240,7 @@ export class ComponentRender<T extends object> {
 			fragmentParent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {
 			fragmentParent.append(this.createComment(child));
-		} else if (child instanceof DOMFragmentNode) {
+		} else if (child instanceof DomFragmentNode) {
 			fragmentParent.append(this.createDocumentFragment(child, contextStack, parentNode));
 		}
 	}
@@ -270,7 +268,7 @@ export class ComponentRender<T extends object> {
 		}
 		return element;
 	}
-	createElement(node: DOMElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
+	createElement(node: DomElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
 		contextStack = contextStack.copyStack();
 		const elementScope = contextStack.pushBlockReactiveScopeFor({ 'this': element });
@@ -303,7 +301,7 @@ export class ComponentRender<T extends object> {
 		}
 		return element;
 	}
-	initAttribute(element: HTMLElement, node: DOMElementNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
+	initAttribute(element: HTMLElement, node: DomElementNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		if (node.attributes?.length) {
 			node.attributes.forEach(attr => {
@@ -373,7 +371,7 @@ export class ComponentRender<T extends object> {
 		return subscriptions;
 	}
 
-	initDirectiveAttributes(directive: StructuralDirective, node: DOMDirectiveNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
+	initDirectiveAttributes(directive: StructuralDirective, node: DomStructuralDirectiveNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
 		if (node.attributes?.length) {

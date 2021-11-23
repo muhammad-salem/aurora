@@ -159,7 +159,7 @@ export class DomAttributeDirectiveNode extends BaseNode {
 	}
 }
 
-export class DOMParentNode extends BaseNode {
+export class DomParentNode extends BaseNode {
 	/**
 	 * element children list
 	 */
@@ -183,7 +183,7 @@ export class DOMParentNode extends BaseNode {
 /**
  * parent for a list of elements 
  */
-export class DomFragmentNode extends DOMParentNode {
+export class DomFragmentNode extends DomParentNode {
 	constructor(children?: DomChild[]) {
 		super();
 		if (children) {
@@ -191,7 +191,7 @@ export class DomFragmentNode extends DOMParentNode {
 		}
 	}
 }
-export class DomElementNode extends DOMParentNode {
+export class DomElementNode extends DomParentNode {
 
 	/**
 	 * the tag name of the element 

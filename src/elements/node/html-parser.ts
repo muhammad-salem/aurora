@@ -385,6 +385,7 @@ export class NodeParser {
 
 			temp = attributes.find(attr => attr.name.startsWith('*'));
 			if (temp) {
+				// shorthand syntax
 				attributes.splice(attributes.indexOf(temp), 1);
 				const isTemplate = node.tagName === 'template';
 				const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
@@ -402,7 +403,7 @@ export class NodeParser {
 				}
 				return directive;
 			}
-			if (directiveRegistry.has(node.tagName)) {
+			if (directiveRegistry.has('*' + node.tagName)) {
 				// try to find expression attribute
 				// <if expression="a === b">text child<div>...</div></if>
 				temp = attributes.find(attr => attr.name === 'expression');
@@ -417,7 +418,7 @@ export class NodeParser {
 				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
 				return directive;
 			}
-		} else if (directiveRegistry.has(node.tagName)) {
+		} else if (directiveRegistry.has('*' + node.tagName)) {
 			// support structural directives without expression property
 			// <add-note >text</add-note>
 			return new DomStructuralDirectiveNode('*' + node.tagName, new DomFragmentNode(node.children));

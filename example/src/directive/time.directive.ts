@@ -1,5 +1,5 @@
 import {
-	Directive, DOMParentNode, OnDestroy, OnInit,
+	Directive, DomParentNode, OnDestroy, OnInit,
 	StructuralDirective, PipeTransform, Pipe, Component
 } from '@ibyar/aurora';
 import { map, Subscription, timer, timestamp } from 'rxjs';
@@ -44,7 +44,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 	private dateSubscription: Subscription;
 	private context: TimeContext;
 	onInit(): void {
-		if ((this.templateRef.astNode as DOMParentNode)?.children?.length) {
+		if ((this.templateRef.astNode as DomParentNode)?.children?.length) {
 			this.initUserView();
 		} else {
 			this.initDefaultView();

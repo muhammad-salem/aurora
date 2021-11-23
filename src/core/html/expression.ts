@@ -1,8 +1,9 @@
 import {
-	BaseNode, createLiveAttribute, DOMDirectiveNode,
-	DOMDirectiveNodeUpgrade, DOMElementNode, DOMNode,
-	DOMFragmentNode, DOMParentNode, ElementAttribute,
-	isLiveTextContent, LiveAttribute, LiveTextContent
+	BaseNode, createLiveAttribute,
+	DomStructuralDirectiveNode, DomElementNode, DomNode,
+	DomFragmentNode, DomParentNode, ElementAttribute,
+	isLiveTextContent, LiveAttribute, LiveTextContent,
+	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
 } from '@ibyar/elements';
 import {
 	ExpressionNode, Identifier,
@@ -28,13 +29,17 @@ declare module '@ibyar/elements' {
 	export interface LiveTextContent {
 		expression: OneWayAssignmentExpression;
 	}
-	export interface DOMDirectiveNodeUpgrade extends DOMDirectiveNode {
+	export interface DomStructuralDirectiveNodeUpgrade extends DomStructuralDirectiveNode {
 		/**
 		 * create a new scope for a template and bind the new variables to the directive scope.
 		 * 
 		 * execution for let-i="index".
 		 */
 		templateExpressions: ExpressionNode[];
+	}
+
+	export interface DomAttributeDirectiveNodeUpgrade extends DomAttributeDirectiveNode {
+
 	}
 }
 
@@ -93,22 +98,31 @@ function parseOutputExpression(attr: ElementAttribute<string, string>) {
 	attr.expression = JavaScriptParser.parse(attr.value);
 }
 
+function parseAttributeDirectives(base: DomAttributeDirectiveNode) {
+	base.inputs?.forEach(parseLiveAttributeUpdateElement);
+	base.outputs?.forEach(parseOutputExpression);
+	base.twoWayBinding?.forEach(parseLiveAttribute);
+	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+
+}
+
 function parseBaseNode(base: BaseNode) {
 	base.inputs?.forEach(parseLiveAttributeUpdateElement);
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
 	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+	base.attributeDirectives?.forEach(parseAttributeDirectives);
 }
 
-function parseChild(child: DOMNode) {
-	if (child instanceof DOMElementNode) {
+function parseChild(child: DomNode) {
+	if (child instanceof DomElementNode) {
 		// DomElementNode
 		parseBaseNode(child);
 		parseDomParentNode(child);
-	} else if (child instanceof DOMDirectiveNode) {
+	} else if (child instanceof DomStructuralDirectiveNode) {
 		if (child.value) {
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
-			(child as DOMDirectiveNodeUpgrade).templateExpressions = info.templateExpressions.map(JavaScriptParser.parse);
+			(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = info.templateExpressions.map(JavaScriptParser.parse);
 			if (info.directiveInputs.size > 0) {
 				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
 				if (!ref?.inputs?.length) {
@@ -128,16 +142,16 @@ function parseChild(child: DOMNode) {
 		parseBaseNode(child);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
-	} else if (child instanceof DOMFragmentNode) {
+	} else if (child instanceof DomFragmentNode) {
 		parseDomParentNode(child);
 	}
 }
-function parseDomParentNode(parent: DOMParentNode) {
+function parseDomParentNode(parent: DomParentNode) {
 	parent.children?.forEach(parseChild);
 }
 
-export function buildExpressionNodes(node: DOMNode) {
-	if (node instanceof DOMFragmentNode) {
+export function buildExpressionNodes(node: DomNode) {
+	if (node instanceof DomFragmentNode) {
 		parseDomParentNode(node);
 	} else {
 		parseChild(node);
