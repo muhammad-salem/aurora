@@ -465,8 +465,8 @@ export class NodeParser {
 		}
 		return names;
 	}
-	private getAttributeDirectives(attributes: Attribute<any, any>[]): Attribute<any, any>[] {
-		const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
+	private getAttributeDirectives(attributes: Attribute<string, any>[]): Attribute<any, any>[] {
+		const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
 		const directives = attributes.filter(attr => filtered.includes(attr.name));
 		directives.forEach(createArrayCleaner(attributes));
 		return directives;
