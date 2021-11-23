@@ -98,12 +98,11 @@ function parseOutputExpression(attr: ElementAttribute<string, string>) {
 	attr.expression = JavaScriptParser.parse(attr.value);
 }
 
-function parseAttributeDirectives(base: DomAttributeDirectiveNode) {
-	base.inputs?.forEach(parseLiveAttributeUpdateElement);
-	base.outputs?.forEach(parseOutputExpression);
-	base.twoWayBinding?.forEach(parseLiveAttribute);
-	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
-
+function parseAttributeDirectives(directive: DomAttributeDirectiveNode) {
+	directive.inputs?.forEach(parseLiveAttributeUpdateElement);
+	directive.outputs?.forEach(parseOutputExpression);
+	directive.twoWayBinding?.forEach(parseLiveAttribute);
+	directive.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
 }
 
 function parseBaseNode(base: BaseNode) {

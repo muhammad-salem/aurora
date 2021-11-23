@@ -4,7 +4,8 @@ import {
 import {
 	CommentNode, DomStructuralDirectiveNode, DomStructuralDirectiveNodeUpgrade,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
-	isTagNameNative, isValidCustomElementName, LiveTextContent, TextContent
+	isTagNameNative, isValidCustomElementName, LiveTextContent,
+	TextContent, DomAttributeDirectiveNode
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
 import { ElementMutation } from './mutation.js';
@@ -14,7 +15,7 @@ import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { StructuralDirective } from '../directive/directive.js';
+import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 
@@ -275,10 +276,27 @@ export class ComponentRender<T extends object> {
 	}
 	createElement(node: DomElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
 		const element = this.createElementByTagName(node);
-		contextStack = contextStack.copyStack();
-		const elementScope = isHTMLComponent(element) ? element._viewScope : contextStack.pushBlockReactiveScopeFor({ 'this': element });
-		contextStack.pushScope<ScopeContext>(elementScope);
-		const subscriptions = this.initAttribute(element, node, contextStack);
+		const elementStack = contextStack.copyStack();
+		const elementScope = isHTMLComponent(element) ? element._viewScope : elementStack.pushBlockReactiveScopeFor({ 'this': element });
+		elementStack.pushScope<ScopeContext>(elementScope);
+		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		if (node.attributeDirectives?.length) {
+			node.attributeDirectives.forEach(directiveNode => {
+				const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(directiveNode.name);
+				if (directiveRef && directiveRef.modelClass.prototype instanceof AttributeDirective) {
+					const directive = new directiveRef.modelClass(element) as AttributeDirective;
+					const stack = contextStack.copyStack();
+					stack.pushBlockReactiveScopeFor({ 'this': directive });
+					const directiveSubscriptions = this.initDirectiveAttributes(directive, directiveNode, stack);
+					subscriptions.push(...directiveSubscriptions);
+					if (isOnInit(directive)) {
+						directive.onInit();
+					}
+				}
+			});
+		}
+		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
+		subscriptions.push(...attributesSubscriptions);
 		const eventName = getInputEventName(element);
 		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
 		if (eventName) {
@@ -302,7 +320,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child, contextStack, element);
+				this.appendChildToParent(element, child, elementStack, element);
 			}
 		}
 		return element;
@@ -377,7 +395,8 @@ export class ComponentRender<T extends object> {
 		return subscriptions;
 	}
 
-	initDirectiveAttributes(directive: StructuralDirective, node: DomStructuralDirectiveNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
+	initDirectiveAttributes(directive: StructuralDirective | AttributeDirective,
+		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
 		if (node.attributes?.length) {
