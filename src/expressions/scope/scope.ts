@@ -272,13 +272,20 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	static globalScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'global');
 	}
-	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<any>();
+
+	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
+
+	constructor(context: T, type: ScopeType);
+	constructor(context: T, type: ScopeType, name: string, parent: ReactiveScope<any>);
+	constructor(context: T, type: ScopeType, protected name?: string, protected parent?: ReactiveScope<any>) {
+		super(context, type);
+	}
 
 	set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer.emit(propertyKey, newValue, oldValue);
+			this.emit(propertyKey, newValue, oldValue);
 		}
 		return result;
 	}
@@ -286,12 +293,12 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
 		if (isDelete && oldValue !== undefined) {
-			this.observer.emit(propertyKey, undefined, oldValue);
+			this.emit(propertyKey, undefined, oldValue);
 		}
 		return isDelete;
 	}
 	getScope<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> | undefined {
-		const scopeContext = this.get(propertyKey);
+		const scopeContext = this.get(propertyKey) as V;
 		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<any> | undefined;
 		if (scope) {
 			scope.context = scopeContext;
@@ -300,24 +307,25 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		if (typeof scopeContext !== 'object') {
 			return;
 		}
-		scope = new ReactiveScope<V>(scopeContext, 'block');
+		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey as string, this);
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
 	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> {
-		const scopeContext = this.get(propertyKey);
+		const scopeContext = this.get(propertyKey) as V;
 		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<any> | undefined;
 		if (scope) {
 			scope.context = scopeContext;
 			return scope;
 		}
-		scope = new ReactiveScope<V>(scopeContext, 'block');
+		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey as string, this);
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
 
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		this.observer.emit(propertyKey, newValue, oldValue);
+		this.parent?.emit(this.name!, this.context);
 	}
 
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
