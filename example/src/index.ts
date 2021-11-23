@@ -14,17 +14,21 @@ export * from './person-app/person.js';
 export * from './person-app/person-app.js';
 
 export * from './two-way/binding-2-way.js';
+export * from './two-way/shared-model.js';
 
 export * from './video-player/video.js';
 
 import './pipe-app/pipe-test.js';
 
-const root = document.getElementById('root');
+const root = document.getElementById('root')!;
 
+root.innerHTML = `
+<app-edit></app-edit>
+`;
 
-root && (root.innerHTML = `
-	<person-app></person-app>
-	<div is="bind-2way"></div>
-	<pipe-app></pipe-app>
-	<video-play-list></video-play-list>
-`);
+// root.innerHTML = `
+// 	<person-app></person-app>
+// 	<div is="bind-2way"></div>
+// 	<pipe-app></pipe-app>
+// 	<video-play-list></video-play-list>
+// `;
