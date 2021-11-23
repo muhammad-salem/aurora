@@ -20,7 +20,7 @@ export interface BaseComponent<T> extends CustomElement {
 	_proxyModel: ModelType<T>;
 	_modelScope: ReactiveScope<T & ScopeContext>;
 
-	_viewScope: ReactiveScope<BaseComponent<T> & ScopeContext>;
+	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 
 	getComponentRef(): ComponentRef<T>;
 

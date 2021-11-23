@@ -41,7 +41,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T>;
-		_viewScope: ReactiveScope<BaseComponent<T>>;
+		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -60,19 +60,20 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
 
-			this._viewScope = ReactiveScope.blockScopeFor<BaseComponent<T>>(this);
+			this._viewScope = ReactiveScope.blockScopeFor<{ 'this': BaseComponent<T> }>({ 'this': this });
+			const elementScope = this._viewScope.getScopeOrCreat('this');
 			componentRef.inputs.forEach(input => {
-				this._viewScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
+				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
 						return;
 					}
 					this._modelScope.set(input.modelProperty as any, newValue);
-				})
+				});
 				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
 						return;
 					}
-					this._viewScope.emit(input.viewAttribute as any, newValue, oldValue);
+					elementScope.emit(input.viewAttribute as any, newValue, oldValue);
 				});
 			});
 
