@@ -77,6 +77,11 @@ export class BaseNode {
 	 */
 	templateAttrs?: LiveAttribute[];
 
+	/**
+	 * attributes directive
+	 */
+	attributeDirectives?: DomAttributeDirectiveNode[];
+
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
 			this.attributes.push(new ElementAttribute(attrName, value ?? true));
@@ -128,6 +133,30 @@ export class BaseNode {
 		}
 	}
 
+}
+export class DomAttributeDirectiveNode extends BaseNode {
+
+	/**
+	 * name of the directive 
+	 */
+	name: string;
+
+	/**
+	 * value of the directive 
+	 */
+	value?: string | number | boolean | object;
+
+
+	/**
+	 * set to `undefined` stop, loop
+	 */
+	attributeDirectives: undefined;
+
+	constructor(name: string, value?: string | number | boolean | object) {
+		super();
+		this.name = name;
+		this.value = value;
+	}
 }
 
 export class DOMParentNode extends BaseNode {
@@ -197,7 +226,6 @@ export class DomElementNode extends DOMParentNode {
 
 }
 
-
 /**
  * structural directive 
  */
@@ -225,28 +253,11 @@ export class DomStructuralDirectiveNode extends BaseNode {
 		this.value = value;
 	}
 }
-export class DomAttributeDirectiveNode extends BaseNode {
 
-	/**
-	 * name of the directive 
-	 */
-	name: string;
-
-	/**
-	 * value of the directive 
-	 */
-	value?: string | number | boolean | object;
-
-	constructor(name: string, value?: string | number | boolean | object) {
-		super();
-		this.name = name;
-		this.value = value;
-	}
-}
 export function isDOMDirectiveNode(node: object): node is DomStructuralDirectiveNode {
 	return node instanceof DomStructuralDirectiveNode;
 }
-export type DomChild = DomElementNode | DomAttributeDirectiveNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export type DomChild = DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
 export type DomNode = DomFragmentNode | DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
