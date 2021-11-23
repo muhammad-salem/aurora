@@ -63,8 +63,13 @@ export class ComponentRender<T extends object> {
 				rootRef = this.view;
 			}
 			this.initTemplateRefMap(this.template);
-			const rootFragment = document.createDocumentFragment();
-			this.appendChildToParent(rootFragment, this.template, this.contextStack, rootRef);
+			let rootFragment: DocumentFragment;
+			if (this.template instanceof DomFragmentNode) {
+				rootFragment = this.createDocumentFragment(this.template, this.contextStack, rootRef);
+			} else {
+				rootFragment = document.createDocumentFragment();
+				this.appendChildToParent(rootFragment, this.template, this.contextStack, rootRef);
+			}
 			rootRef.append(rootFragment);
 		}
 	}
