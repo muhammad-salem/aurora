@@ -19,28 +19,6 @@ export class NodeFactory {
 
 	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DomChild)[]): DomNode {
 
-		if (attrs) {
-			const directives: DomAttributeDirectiveNode[] = [];
-			Object.keys(attrs).forEach(attributeName => {
-				if (directiveRegistry.has(attributeName)) {
-					const value = attrs[attributeName];
-					Reflect.deleteProperty(attrs, attributeName);
-					const directive = new DomAttributeDirectiveNode(attributeName, value);
-					const directiveInfo = directiveRegistry.get(attributeName)!;
-					Object.keys(attrs).forEach(attr => {
-						if (directiveInfo.hasAttribute(attr)) {
-							directive.addAttribute(attr, attrs[attr]);
-							Reflect.deleteProperty(attrs, attr);
-						}
-					});
-					directives.push(directive);
-				}
-			});
-			if (directives.length) {
-				children.unshift(...directives);
-			}
-		}
-
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
 			return NodeFactory.createFragmentNode(...children);
 		}
@@ -141,6 +119,26 @@ export class NodeFactory {
 			Object.keys(attrs).forEach(key => {
 				NodeFactory.handelAttribute(element, key, attrs[key]);
 			});
+
+			const directives: DomAttributeDirectiveNode[] = [];
+			Object.keys(attrs).forEach(attributeName => {
+				if (directiveRegistry.has(attributeName)) {
+					const value = attrs[attributeName];
+					Reflect.deleteProperty(attrs, attributeName);
+					const directive = new DomAttributeDirectiveNode(attributeName, value);
+					const directiveInfo = directiveRegistry.get(attributeName)!;
+					Object.keys(attrs).forEach(attr => {
+						if (directiveInfo.hasAttribute(attr)) {
+							directive.addAttribute(attr, attrs[attr]);
+							Reflect.deleteProperty(attrs, attr);
+						}
+					});
+					directives.push(directive);
+				}
+			});
+			if (directives.length) {
+				element.attributeDirectives = directives;
+			}
 		}
 	}
 

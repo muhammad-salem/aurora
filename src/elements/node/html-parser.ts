@@ -379,7 +379,7 @@ export class NodeParser {
 					directives.push(directive);
 				});
 				if (directives.length) {
-					(node.children ??= []).unshift(...directives);
+					node.attributeDirectives = directives;
 				}
 			}
 
