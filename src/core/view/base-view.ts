@@ -5,11 +5,10 @@ import {
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
 } from '../component/lifecycle.js';
 import { ComponentRef, PropertyRef } from '../component/component.js';
-import { BaseComponent, CustomElement, HTMLComponent, ModelType, NodeContextType } from '../component/custom-element.js';
+import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
-import { ElementReactiveScope } from '../directive/providers.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -42,6 +41,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_componentRef: ComponentRef<T>;
 
 		_modelScope: ReactiveScope<T>;
+		_viewScope: ReactiveScope<BaseComponent<T>>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -59,6 +59,23 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
+
+			this._viewScope = ReactiveScope.blockScopeFor<BaseComponent<T>>(this);
+			componentRef.inputs.forEach(input => {
+				this._viewScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
+					if (newValue === oldValue) {
+						return;
+					}
+					this._modelScope.set(input.modelProperty as any, newValue);
+				})
+				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
+					if (newValue === oldValue) {
+						return;
+					}
+					this._viewScope.emit(input.viewAttribute as any, newValue, oldValue);
+				});
+			});
+
 
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
