@@ -6,8 +6,8 @@ import {
 	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
 } from '@ibyar/elements';
 import {
-	ExpressionNode, Identifier,
-	JavaScriptParser, MemberExpression
+	ExpressionNode, expressionVisitor, Identifier,
+	JavaScriptParser, MemberExpression, PipelineExpression
 } from '@ibyar/expressions';
 import {
 	BindingAssignment,
@@ -24,10 +24,12 @@ declare module '@ibyar/elements' {
 
 	export interface LiveAttribute {
 		expression: BindingAssignment;
+		pipelineNames?: string[];
 	}
 
 	export interface LiveTextContent {
 		expression: OneWayAssignmentExpression;
+		pipelineNames?: string[];
 	}
 	export interface DomStructuralDirectiveNodeUpgrade extends DomStructuralDirectiveNode {
 		/**
@@ -47,6 +49,7 @@ const ThisTextContent = JavaScriptParser.parse('this.textContent') as MemberExpr
 function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parse(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
+	text.pipelineNames = getPipelineNames(textExpression);
 }
 
 function convertToMemberAccessStyle(source: string) {
@@ -83,6 +86,19 @@ function parseLiveAttribute(attr: LiveAttribute) {
 
 }
 
+function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
+	const pipelineNames: string[] = [];
+	expressionVisitor.visit(modelExpression, (expression, type, control) => {
+		if (type === 'PipelineExpression') {
+			const pipelineName = (expression as PipelineExpression).getRight();
+			if (pipelineName instanceof Identifier) {
+				pipelineNames.push(pipelineName.getName() as string);
+			}
+		}
+	});
+	return pipelineNames.length ? pipelineNames : undefined;
+}
+
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
 	const elementExpression = JavaScriptParser.parse(elementSource);
@@ -92,6 +108,7 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	} else {
 		console.error(`${attr.name} is not a valid MemberExpression 'x.y.z'`);
 	}
+	attr.pipelineNames = getPipelineNames(modelExpression);
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string>) {

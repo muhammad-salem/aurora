@@ -202,7 +202,7 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		const subscriptions = textNode.expression.subscribe(contextStack);
+		const subscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
 		textNode.expression.get(contextStack);
 		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, liveText, () => {
 			removeSubscription.unsubscribe();
@@ -355,7 +355,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
@@ -411,7 +411,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
