@@ -1,6 +1,6 @@
-import type { DOMNode } from '@ibyar/elements';
+import type { DomNode } from '@ibyar/elements';
 import { createProxyForContext, ExpressionNode, ScopeSubscription, Stack } from '@ibyar/expressions';
-import { buildReactiveScopeEvents } from '../view/events.js';
+import { findReactiveScopeByEventMap } from '@ibyar/expressions';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
 
@@ -9,7 +9,7 @@ export abstract class TemplateRef {
 	/**
 	 * get the current ref of this template
 	 */
-	abstract get astNode(): DOMNode;
+	abstract get astNode(): DomNode;
 
 	/**
 	 * Instantiates an embedded view based on this template,
@@ -29,13 +29,13 @@ export class TemplateRefImpl extends TemplateRef {
 
 	constructor(
 		private render: ComponentRender<any>,
-		private node: DOMNode,
+		private node: DomNode,
 		private stack: Stack,
 		private templateExpressions: ExpressionNode[]
 	) {
 		super();
 	}
-	get astNode(): DOMNode {
+	get astNode(): DomNode {
 		return this.node;
 	}
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
@@ -77,12 +77,10 @@ export class TemplateRefImpl extends TemplateRef {
 		const scopeSubscriptions: ScopeSubscription<object>[] = [];
 		this.templateExpressions.forEach(expression => {
 			const events = expression.events();
-			const scopeMap = buildReactiveScopeEvents(events, sandBox);
+			const scopeMap = findReactiveScopeByEventMap(events, sandBox);
 			scopeMap.forEach((scope, eventName) => {
-				const subscription = scope.subscribe((propertyName) => {
-					if (propertyName == eventName) {
-						expression.get(sandBox);
-					}
+				const subscription = scope.subscribe(eventName, () => {
+					expression.get(sandBox);
 				});
 				scopeSubscriptions.push(subscription);
 			});

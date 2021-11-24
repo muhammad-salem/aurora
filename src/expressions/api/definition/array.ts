@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, CanDeclareExpression,
+	ExpressionEventPath, VisitNodeType, VisitNodeListType
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -10,6 +13,9 @@ import { ScopeType } from '../../scope/scope.js';
 export class ArrayExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
 		return new ArrayExpression(node.elements.map(expression => deserializer(expression)));
+	}
+	static visit(node: ArrayExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.elements);
 	}
 	constructor(private elements: ExpressionNode[]) {
 		super();
@@ -47,6 +53,9 @@ export class ArrayExpression extends AbstractExpressionNode {
 export class ArrayPattern extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
 		return new ArrayPattern(node.elements.map(expression => deserializer(expression)) as CanDeclareExpression[]);
+	}
+	static visit(node: ArrayPattern, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.elements);
 	}
 	constructor(private elements: CanDeclareExpression[]) {
 		super();

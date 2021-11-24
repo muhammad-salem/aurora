@@ -1,7 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
-	DOMNode, DOMRenderNode, canAttachShadow, directiveRegistry
+	DomNode, DomRenderNode, canAttachShadow, directiveRegistry
 } from '@ibyar/elements';
 
 import { HTMLComponent } from './custom-element.js';
@@ -68,7 +68,7 @@ export interface DirectiveRef<T> {
 
 export interface ComponentRef<T> {
 	selector: string;
-	template: DOMNode | DOMRenderNode<T>;
+	template: DomNode | DomRenderNode<T>;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
@@ -169,15 +169,10 @@ export class Components {
 		}
 		bootstrap.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
-		if (opts.selector.startsWith('*')) {
-			const attributes: string[] = [];
-			(bootstrap.inputs as PropertyRef[])?.forEach(input => attributes.push(input.viewAttribute));
-			(bootstrap.outputs as PropertyRef[])?.forEach(output => attributes.push(output.viewAttribute));
-			const structuralDirectiveName = opts.selector.substring(1);
-			directiveRegistry.register(structuralDirectiveName, {
-				attributes,
-			});
-		}
+		directiveRegistry.register(opts.selector, {
+			inputs: (bootstrap.inputs as PropertyRef[])?.map(input => input.viewAttribute),
+			outputs: (bootstrap.outputs as PropertyRef[])?.map(output => output.viewAttribute),
+		});
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {

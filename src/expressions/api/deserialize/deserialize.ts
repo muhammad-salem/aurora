@@ -1,14 +1,12 @@
-import type { NodeDeserializer, ExpressionNode, NodeExpressionClass } from '../expression.js';
+import type { ExpressionNode, NodeExpressionWithType } from '../expression.js';
+import { expressionTypes } from './type-store.js';
 
-type FromJSON = (node: ExpressionNode, deserializer: NodeDeserializer) => ExpressionNode;
-
-const DeserializerMap: Map<string, FromJSON> = new Map();
 
 
 export function Deserializer(type: string): Function {
-	return (target: NodeExpressionClass<ExpressionNode>) => {
-		DeserializerMap.set(type, target.fromJSON);
+	return (target: NodeExpressionWithType<ExpressionNode>) => {
 		Reflect.set(target, 'type', type)
+		expressionTypes.set(type, target);
 		return target;
 	};
 }
@@ -24,7 +22,7 @@ export function serializeNode(node: ExpressionNode) {
  * @returns ExpressionNode
  */
 export function deserialize(node: ExpressionNode) {
-	const fromJSON = DeserializerMap.get((<any>node).type);
+	const fromJSON = expressionTypes.get((<any>node).type)?.fromJSON;
 	if (fromJSON) {
 		return fromJSON(node, deserialize);
 	} else {

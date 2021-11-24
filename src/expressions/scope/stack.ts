@@ -71,49 +71,49 @@ export interface Stack {
 	 * if not found will return the stack local scop as a default value
 	 * @param propertyKey the property key
 	 */
-	findScope<T extends object>(propertyKey: PropertyKey): Scope<T>;
+	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T>;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
 
 	/**
 	 * get a reference to the last scope in this stack
 	 */
-	lastScope<T extends object>(): Scope<T>;
+	lastScope<T extends ScopeContext>(): Scope<T>;
 
 	/**
 	 * clear every thing after this scope, and even this scope
 	 * @param scope 
 	 */
-	clearTo<T extends object>(scope: Scope<T>): boolean;
+	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean;
 
 	/**
 	 * clear every thing after this scope, but not this scope
 	 * @param scope 
 	 */
-	clearTill<T extends object>(scope: Scope<T>): boolean;
+	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean;
 
-	popScope<T extends object>(): Scope<T>;
+	popScope<T extends ScopeContext>(): Scope<T>;
 
-	removeScope<T extends object>(scope: Scope<T>): void;
+	removeScope<T extends ScopeContext>(scope: Scope<T>): void;
 
-	pushScope<T extends object>(scope: Scope<T>): void;
+	pushScope<T extends ScopeContext>(scope: Scope<T>): void;
 
-	pushBlockScope<T extends object>(): Scope<T>;
+	pushBlockScope<T extends ScopeContext>(): Scope<T>;
 
-	pushFunctionScope<T extends object>(): Scope<T>;
+	pushFunctionScope<T extends ScopeContext>(): Scope<T>;
 
-	pushBlockScopeFor<T extends object>(context: T): Scope<T>;
+	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T>;
 
-	pushFunctionScopeFor<T extends object>(context: T): Scope<T>;
+	pushFunctionScopeFor<T extends ScopeContext>(context: T): Scope<T>;
 
 
-	pushBlockReactiveScope<T extends object>(): ReactiveScope<T>;
+	pushBlockReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
 
-	pushFunctionReactiveScope<T extends object>(): ReactiveScope<T>;
+	pushFunctionReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
 
-	pushBlockReactiveScopeFor<T extends object>(context: T): ReactiveScope<T>;
+	pushBlockReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
 
-	pushFunctionReactiveScopeFor<T extends object>(context: T): ReactiveScope<T>;
+	pushFunctionReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
 
 	copyStack(): Stack;
 }
@@ -161,7 +161,7 @@ export class Stack implements Stack {
 			}
 		}
 	}
-	findScope<T extends object>(propertyKey: PropertyKey): Scope<T> {
+	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T> {
 		let lastIndex = this.stack.length;
 		while (lastIndex--) {
 			const scope = this.stack[lastIndex];
@@ -174,120 +174,120 @@ export class Stack implements Stack {
 	resolveAwait(value: AwaitPromiseInfo): void {
 		this.awaitPromise.push(value);
 	}
-	popScope<T extends object>(): Scope<T> {
+	popScope<T extends ScopeContext>(): Scope<T> {
 		return this.stack.pop()!;
 	}
-	removeScope<T extends object>(scope: Scope<T>): void {
+	removeScope<T extends ScopeContext>(scope: Scope<T>): void {
 		const index = this.stack.lastIndexOf(scope);
 		this.stack.splice(index, 1);
 	}
-	pushScope<T extends object>(scope: Scope<T>): void {
+	pushScope<T extends ScopeContext>(scope: Scope<T>): void {
 		this.stack.push(scope);
 	}
-	pushBlockScope<T extends object>(): Scope<T> {
+	pushBlockScope<T extends ScopeContext>(): Scope<T> {
 		const scope = Scope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionScope<T extends object>(): Scope<T> {
+	pushFunctionScope<T extends ScopeContext>(): Scope<T> {
 		const scope = Scope.functionScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassScope<T extends object>(): Scope<T> {
+	pushClassScope<T extends ScopeContext>(): Scope<T> {
 		const scope = Scope.classScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushModuleScope<T extends object>(): Scope<T> {
+	pushModuleScope<T extends ScopeContext>(): Scope<T> {
 		const scope = Scope.moduleScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushGlobalScope<T extends object>(): Scope<T> {
+	pushGlobalScope<T extends ScopeContext>(): Scope<T> {
 		const scope = Scope.globalScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushBlockScopeFor<T extends object>(context: T): Scope<T> {
+	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = Scope.blockScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionScopeFor<T extends object>(context: T): Scope<T> {
+	pushFunctionScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = Scope.functionScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassScopeFor<T extends object>(context: T): Scope<T> {
+	pushClassScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = Scope.classScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushModuleScopeFor<T extends object>(context: T): Scope<T> {
+	pushModuleScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = Scope.moduleScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushGlobalScopeFor<T extends object>(context: T): Scope<T> {
+	pushGlobalScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = Scope.globalScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushBlockReactiveScope<T extends object>(): ReactiveScope<T> {
+	pushBlockReactiveScope<T extends ScopeContext>(): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionReactiveScope<T extends object>(): ReactiveScope<T> {
+	pushFunctionReactiveScope<T extends ScopeContext>(): ReactiveScope<T> {
 		const scope = ReactiveScope.functionScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassReactiveScope<T extends object>(): Scope<T> {
+	pushClassReactiveScope<T extends ScopeContext>(): Scope<T> {
 		const scope = ReactiveScope.classScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushModuleReactiveScope<T extends object>(): Scope<T> {
+	pushModuleReactiveScope<T extends ScopeContext>(): Scope<T> {
 		const scope = ReactiveScope.moduleScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushGlobalReactiveScope<T extends object>(): Scope<T> {
+	pushGlobalReactiveScope<T extends ScopeContext>(): Scope<T> {
 		const scope = ReactiveScope.globalScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushBlockReactiveScopeFor<T extends object>(context: T): ReactiveScope<T> {
+	pushBlockReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionReactiveScopeFor<T extends object>(context: T): ReactiveScope<T> {
+	pushFunctionReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T> {
 		const scope = ReactiveScope.functionScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassReactiveScopeFor<T extends object>(context: T): Scope<T> {
+	pushClassReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = ReactiveScope.classScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushModuleReactiveScopeFor<T extends object>(context: T): Scope<T> {
+	pushModuleReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = ReactiveScope.moduleScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushGlobalReactiveScopeFor<T extends object>(context: T): Scope<T> {
+	pushGlobalReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
 		const scope = ReactiveScope.globalScopeFor(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	lastScope<T extends object>(): Scope<T> {
+	lastScope<T extends ScopeContext>(): Scope<T> {
 		return this.stack[this.stack.length - 1];
 	}
-	clearTo<T extends object>(scope: Scope<T>): boolean {
+	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;
@@ -295,7 +295,7 @@ export class Stack implements Stack {
 		this.stack.splice(index);
 		return true;
 	}
-	clearTill<T extends object>(scope: Scope<T>): boolean {
+	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;

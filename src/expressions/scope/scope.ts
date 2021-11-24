@@ -41,44 +41,54 @@ export interface Scope<T = ScopeContext> {
 	getContext(): T;
 
 	/**
-	 * get a scope for an object named as `propertyKey` from cache map
+	 * get a scope for an object named as `propertyKey` from cache map,
+	 * 
+	 * if the current value is not type od `object`, will return `undefined`.
 	 * @param propertyKey the name of the property
 	 */
-	getScope<V extends object>(propertyKey: keyof T): Scope<V> | undefined;
+	getScope<V extends ScopeContext>(propertyKey: keyof T): Scope<V> | undefined;
+
+	/**
+	 * get a scope for an object named as `propertyKey` from cache map,
+	 * 
+	 * if no scope found in the cache, will create a new one, add this one to the map, return a reference.
+	 * @param propertyKey
+	 */
+	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): Scope<V>;
 }
 
-export class Scope<T extends object> implements Scope<T> {
-	static for<T extends object>(context: T, type: ScopeType) {
+export class Scope<T extends ScopeContext> implements Scope<T> {
+	static for<T extends ScopeContext>(context: T, type: ScopeType) {
 		return new Scope(context, type);
 	}
-	static blockScopeFor<T extends object>(context: T) {
+	static blockScopeFor<T extends ScopeContext>(context: T) {
 		return new Scope(context, 'block');
 	}
-	static functionScopeFor<T extends object>(context: T) {
+	static functionScopeFor<T extends ScopeContext>(context: T) {
 		return new Scope(context, 'function');
 	}
-	static classScopeFor<T extends object>(context: T) {
+	static classScopeFor<T extends ScopeContext>(context: T) {
 		return new Scope(context, 'class');
 	}
-	static moduleScopeFor<T extends object>(context: T) {
+	static moduleScopeFor<T extends ScopeContext>(context: T) {
 		return new Scope(context, 'module');
 	}
-	static globalScopeFor<T extends object>(context: T) {
+	static globalScopeFor<T extends ScopeContext>(context: T) {
 		return new Scope(context, 'global');
 	}
-	static blockScope<T extends object>() {
+	static blockScope<T extends ScopeContext>() {
 		return new Scope({} as T, 'block');
 	}
-	static functionScope<T extends object>() {
+	static functionScope<T extends ScopeContext>() {
 		return new Scope({} as T, 'function');
 	}
-	static classScope<T extends object>() {
+	static classScope<T extends ScopeContext>() {
 		return new Scope({} as T, 'class');
 	}
-	static moduleScope<T extends object>() {
+	static moduleScope<T extends ScopeContext>() {
 		return new Scope({} as T, 'module');
 	}
-	static globalScope<T extends object>() {
+	static globalScope<T extends ScopeContext>() {
 		return new Scope({} as T, 'global');
 	}
 	protected scopeMap = new Map<keyof T, Scope<any>>();
@@ -98,7 +108,21 @@ export class Scope<T extends object> implements Scope<T> {
 	getContext(): T {
 		return this.context;
 	}
-	getScope<V extends object>(propertyKey: keyof T): Scope<V> | undefined {
+	getScope<V extends ScopeContext>(propertyKey: keyof T): Scope<V> | undefined {
+		const scopeContext = this.get(propertyKey);
+		let scope = this.scopeMap.get(propertyKey);
+		if (scope) {
+			scope.context = scopeContext;
+			return scope;
+		}
+		if (typeof scopeContext !== 'object') {
+			return;
+		}
+		scope = new Scope(scopeContext, 'block');
+		this.scopeMap.set(propertyKey, scope);
+		return scope;
+	}
+	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): Scope<V> {
 		const scopeContext = this.get(propertyKey);
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
@@ -111,38 +135,38 @@ export class Scope<T extends object> implements Scope<T> {
 	}
 }
 
-export class ReadOnlyScope<T extends object> extends Scope<T> {
-	static for<T extends object>(context: T, type: ScopeType) {
+export class ReadOnlyScope<T extends ScopeContext> extends Scope<T> {
+	static for<T extends ScopeContext>(context: T, type: ScopeType) {
 		return new ReadOnlyScope(context, type);
 	}
-	static blockScopeFor<T extends object>(context: T) {
+	static blockScopeFor<T extends ScopeContext>(context: T) {
 		return new ReadOnlyScope(context, 'block');
 	}
-	static functionScopeFor<T extends object>(context: T) {
+	static functionScopeFor<T extends ScopeContext>(context: T) {
 		return new ReadOnlyScope(context, 'function');
 	}
-	static classScopeFor<T extends object>(context: T) {
+	static classScopeFor<T extends ScopeContext>(context: T) {
 		return new ReadOnlyScope(context, 'class');
 	}
-	static moduleScopeFor<T extends object>(context: T) {
+	static moduleScopeFor<T extends ScopeContext>(context: T) {
 		return new ReadOnlyScope(context, 'module');
 	}
-	static globalScopeFor<T extends object>(context: T) {
+	static globalScopeFor<T extends ScopeContext>(context: T) {
 		return new ReadOnlyScope(context, 'global');
 	}
-	static blockScope<T extends object>() {
+	static blockScope<T extends ScopeContext>() {
 		return new ReadOnlyScope({} as T, 'block');
 	}
-	static functionScope<T extends object>() {
+	static functionScope<T extends ScopeContext>() {
 		return new ReadOnlyScope({} as T, 'function');
 	}
-	static classScope<T extends object>() {
+	static classScope<T extends ScopeContext>() {
 		return new ReadOnlyScope({} as T, 'class');
 	}
-	static moduleScope<T extends object>() {
+	static moduleScope<T extends ScopeContext>() {
 		return new ReadOnlyScope({} as T, 'module');
 	}
-	static globalScope<T extends object>() {
+	static globalScope<T extends ScopeContext>() {
 		return new ReadOnlyScope({} as T, 'global');
 	}
 	set(propertyKey: keyof T, value: any, receiver?: any): boolean {
@@ -156,80 +180,112 @@ export class ReadOnlyScope<T extends object> extends Scope<T> {
 }
 
 export class ScopeSubscription<T> {
-	constructor(private observer: ValueChangeObserver<T>) { }
+	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>,) { }
 	unsubscribe(): void {
-		this.observer.unsubscribe(this);
+		this.observer.unsubscribe(this.propertyKey, this);
 	}
 }
 
-export class ValueChangeObserver<T> {
-	private subscribers: Map<ScopeSubscription<T>, (propertyKey: keyof T, oldValue: any, newValue: any) => void> = new Map();
+export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
-	emit(propertyKey: keyof T, oldValue: any, newValue: any): void {
-		this.subscribers.forEach((subscribe) => {
+export class ValueChangeObserver<T> {
+	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
+	private propertiesLock: (keyof T)[] = [];
+	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		if (this.propertiesLock.includes(propertyKey)) {
+			return;
+		}
+		const subscribers = this.subscribers.get(propertyKey);
+		if (!subscribers) {
+			return;
+		}
+		this.propertiesLock.push(propertyKey);
+		subscribers?.forEach((subscribe) => {
 			try {
-				subscribe(propertyKey, oldValue, newValue);
+				subscribe(newValue, oldValue);
 			} catch (e) {
 				console.error(e);
 			}
 		});
+		if (this.propertiesLock.pop() !== propertyKey) {
+			console.error('lock error');
+		};
 	}
-	subscribe(callback: (propertyKey: keyof T, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
-		const subscription: ScopeSubscription<T> = new ScopeSubscription(this);
-		this.subscribers.set(subscription, callback);
+	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
+		const subscription: ScopeSubscription<T> = new ScopeSubscription(propertyKey, this);
+		let propertySubscribers = this.subscribers.get(propertyKey);
+		if (!propertySubscribers) {
+			propertySubscribers = new Map();
+			this.subscribers.set(propertyKey, propertySubscribers);
+		}
+		propertySubscribers.set(subscription, callback);
 		return subscription;
 	}
 
-	unsubscribe(subscription: ScopeSubscription<T>) {
-		this.subscribers.delete(subscription);
+	unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
+		if (subscription) {
+			this.subscribers.get(propertyKey)?.delete(subscription);
+		} else {
+			this.subscribers.delete(propertyKey);
+		}
+	}
+
+	/**
+	 * clear subscription map
+	 */
+	destroy() {
+		this.subscribers.clear();
 	}
 }
 
-
-export class ReactiveScope<T extends object> extends Scope<T> {
-	static for<T extends object>(context: T, type: ScopeType) {
+export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
+	static for<T extends ScopeContext>(context: T, type: ScopeType) {
 		return new ReactiveScope(context, type);
 	}
-	static blockScopeFor<T extends object>(context: T) {
+	static blockScopeFor<T extends ScopeContext>(context: T) {
 		return new ReactiveScope(context, 'block');
 	}
-	static functionScopeFor<T extends object>(context: T) {
+	static functionScopeFor<T extends ScopeContext>(context: T) {
 		return new ReactiveScope(context, 'function');
 	}
-	static classScopeFor<T extends object>(context: T) {
+	static classScopeFor<T extends ScopeContext>(context: T) {
 		return new ReactiveScope(context, 'class');
 	}
-	static moduleScopeFor<T extends object>(context: T) {
+	static moduleScopeFor<T extends ScopeContext>(context: T) {
 		return new ReactiveScope(context, 'module');
 	}
-	static globalScopeFor<T extends object>(context: T) {
+	static globalScopeFor<T extends ScopeContext>(context: T) {
 		return new ReactiveScope(context, 'global');
 	}
-	static blockScope<T extends object>() {
+	static blockScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'block');
 	}
-	static functionScope<T extends object>() {
+	static functionScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'function');
 	}
-	static classScope<T extends object>() {
+	static classScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'class');
 	}
-	static moduleScope<T extends object>() {
+	static moduleScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'module');
 	}
-	static globalScope<T extends object>() {
+	static globalScope<T extends ScopeContext>() {
 		return new ReactiveScope({} as T, 'global');
 	}
-	private observer: ValueChangeObserver<T>;
-	constructor(context: T, type: ScopeType, protected name?: PropertyKey, observer?: ValueChangeObserver<any>) {
+
+	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
+
+	constructor(context: T, type: ScopeType);
+	constructor(context: T, type: ScopeType, name: string, parent: ReactiveScope<any>);
+	constructor(context: T, type: ScopeType, protected name?: string, protected parent?: ReactiveScope<any>) {
 		super(context, type);
-		this.observer = observer ?? new ValueChangeObserver<any>();
 	}
+
 	set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const result = Reflect.set(this.context, propertyKey, newValue);
 		if (result) {
-			this.observer.emit(this.getEventName(propertyKey), oldValue, newValue);
+			this.emit(propertyKey, newValue, oldValue);
 		}
 		return result;
 	}
@@ -237,41 +293,53 @@ export class ReactiveScope<T extends object> extends Scope<T> {
 		const oldValue = Reflect.get(this.context, propertyKey);
 		const isDelete = Reflect.deleteProperty(this.context, propertyKey);
 		if (isDelete && oldValue !== undefined) {
-			this.observer.emit(this.getEventName(propertyKey), oldValue, undefined);
+			this.emit(propertyKey, undefined, oldValue);
 		}
 		return isDelete;
 	}
-	getScope<V extends object>(propertyKey: keyof T): ReactiveScope<V> | undefined {
-		const scopeContext = this.get(propertyKey);
-		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<V>;
+	getScope<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> | undefined {
+		const scopeContext = this.get(propertyKey) as V;
+		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<any> | undefined;
 		if (scope) {
 			scope.context = scopeContext;
 			return scope;
 		}
-		if (typeof scopeContext === 'undefined') {
+		if (typeof scopeContext !== 'object') {
 			return;
 		}
-		const childName = this.getEventName(propertyKey);
-		scope = new ReactiveScope<V>(scopeContext, 'block', childName, this.observer);
+		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey as string, this);
 		this.scopeMap.set(propertyKey, scope);
-		return scope as ReactiveScope<V>;
+		return scope;
 	}
-
-	private getEventName(child: keyof T): keyof T {
-		if (this.name) {
-			if (typeof child === 'number' || typeof child === 'symbol') {
-				return `${String(this.name)}['${String(child)}']` as keyof T;
-			}
-			return `${String(this.name)}.${String(child)}` as keyof T;
+	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> {
+		const scopeContext = this.get(propertyKey) as V;
+		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<any> | undefined;
+		if (scope) {
+			scope.context = scopeContext;
+			return scope;
 		}
-		return String(child) as keyof T;
+		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey as string, this);
+		this.scopeMap.set(propertyKey, scope);
+		return scope;
 	}
 
-	subscribe(callback: (propertyKey: keyof T, oldValue: any, newValue: any) => void): ScopeSubscription<T> {
-		return this.observer.subscribe(callback);
+	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		this.observer.emit(propertyKey, newValue, oldValue);
+		this.parent?.emit(this.name!, this.context);
 	}
 
-	unsubscribe(subscription: ScopeSubscription<T>) {
-		this.observer.unsubscribe(subscription);
+	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
+		return this.observer.subscribe(propertyKey, callback);
+	}
+
+	unsubscribe(propertyKey?: keyof T, subscription?: ScopeSubscription<T>) {
+		if (propertyKey && subscription) {
+			this.observer.unsubscribe(propertyKey, subscription);
+		} else if (propertyKey) {
+
+			this.observer.unsubscribe(propertyKey);
+		} else {
+			this.observer.destroy();
+		}
 	}
 }

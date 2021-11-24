@@ -1,10 +1,17 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, VisitNodeListType,
+} from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 export class ImportAliasName {
+	static visit(node: ImportAliasName, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.importName);
+		node.aliasName && visitNode(node.aliasName);
+	}
 	constructor(public importName: ExpressionNode, protected _aliasName?: ExpressionNode) { }
 
 	public get aliasName(): ExpressionNode {
@@ -53,6 +60,12 @@ export class ImportNode extends AbstractExpressionNode {
 			node.namespace ? deserializer(node.namespace) : void 0,
 			node.importAliasNames?.map(expo => new ImportAliasName(deserializer(expo.importName), deserializer(expo.aliasName))),
 		);
+	}
+	static visit(node: ImportNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.moduleName);
+		node.defaultExport && visitNode(node.defaultExport);
+		node.namespace && visitNode(node.namespace);
+		node.importAliasNames?.map(expo => ImportAliasName.visit(expo, visitNode, visitNodeList));
 	}
 	constructor(
 		private moduleName: ExpressionNode,

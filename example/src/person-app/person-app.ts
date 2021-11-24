@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener, isModel } from '@ibyar/aurora';
+import { Component, Input, View, HostListener } from '@ibyar/aurora';
 import { Person, PersonModel } from './person';
 
 @Component({
@@ -20,9 +20,9 @@ import { Person, PersonModel } from './person';
 			<div class="col-4">
 				{{personUtils.getDetails(person1)}}
 			</div>
-			<for expression="let {key, value} of person1 |> keyvalue">
+			<template *forOf="let {key, value} of person1 |> keyvalue">
 				<div class="col-4">{{key}}: {{value}}</div>
-			</for>
+			</template>
 		</div>
 
 		<person-edit #personEdit [(person)]="person1" (save)="printPerson($event)"></person-edit>

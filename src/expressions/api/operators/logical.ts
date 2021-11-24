@@ -1,4 +1,4 @@
-import type { NodeDeserializer } from '../expression.js';
+import type { NodeDeserializer, VisitNodeListType, VisitNodeType } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -12,6 +12,10 @@ export class LogicalExpression extends InfixExpressionNode<LogicalOperator> {
 			deserializer(node.left),
 			deserializer(node.right)
 		);
+	}
+	static visit(node: LogicalExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.left);
+		visitNode(node.right);
 	}
 	static Evaluations: { [key: string]: (exp: LogicalExpression, context: any) => any } = {
 

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, CanFindScope, ExpressionEventPath } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -19,6 +19,10 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 			node.computed,
 			node.optional
 		);
+	}
+	static visit(node: BindExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.object);
+		visitNode(node.property);
 	}
 	constructor(
 		protected object: ExpressionNode,

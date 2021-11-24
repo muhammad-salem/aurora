@@ -1,3 +1,4 @@
+import { DefaultTag } from './tags.js';
 
 export interface AttrRef {
 	readonly [attr: string]: string[];
@@ -163,4 +164,11 @@ export function hasNativeAttr(element: string | HTMLElement, attr: string): bool
 
 export function getTagsForAttr(attr: string): string[] {
 	return Object.keys(Attrs).filter(tag => Attrs[tag].includes(attr));
+}
+
+export function getAllAttributes(tag?: string): string[] {
+	if (tag) {
+		return Attrs[tag];
+	}
+	return GlobalAttributes.slice();
 }

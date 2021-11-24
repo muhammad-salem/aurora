@@ -1,12 +1,8 @@
-import {
-	AssignmentExpression, ExpressionNode, Identifier,
-	JavaScriptParser, Token, TokenExpression, TokenStream
-} from '@ibyar/expressions';
-
+import { Identifier, Token, TokenExpression, TokenStream } from '@ibyar/expressions';
 
 export type DirectiveExpressionType = {
-	templateExpressions: Array<ExpressionNode>;
-	directiveInputs: Map<string, ExpressionNode>;
+	templateExpressions: Array<TokenExpression[]>;
+	directiveInputs: Map<string, string>;
 };
 
 class TokenConstant {
@@ -31,8 +27,8 @@ export class DirectiveExpressionParser {
 		return parser.getDirectiveExpressionType();
 	}
 
-	protected templateExpressions = new Array<ExpressionNode>();
-	protected directiveInputs = new Map<string, ExpressionNode>();
+	protected templateExpressions = new Array<TokenExpression[]>();
+	protected directiveInputs = new Map<string, string>();
 
 	constructor(protected directiveName: string, protected stream: TokenStream) { }
 
@@ -137,13 +133,10 @@ export class DirectiveExpressionParser {
 			}
 			if (this.consumeIfToken(Token.ASSIGN, list)) {
 				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
-				// this.parseRSideExpression(list, true);
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
-			list.push(TokenConstant.EOS);
-			const node = JavaScriptParser.parse(list);
-			this.templateExpressions.push(node);
+			this.templateExpressions.push(list);
 			return true;
 		}
 		return false;
@@ -152,8 +145,7 @@ export class DirectiveExpressionParser {
 	protected parseExpression(inputName: string) {
 		const list: TokenExpression[] = [];
 		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
-		const node = JavaScriptParser.parse(list) as AssignmentExpression;
-		this.directiveInputs.set(inputName, node);
+		this.directiveInputs.set(inputName, list.map(this.mapTokenToString).join(' '));
 	}
 
 	/**
@@ -184,17 +176,13 @@ export class DirectiveExpressionParser {
 			const aliasToken = this.stream.next();
 			const aliasList: TokenExpression[] = [];
 			aliasList.push(aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-			const node = JavaScriptParser.parse(aliasList);
-			this.templateExpressions.push(node);
+			this.templateExpressions.push(aliasList);
 			return;
 		}
 
 		const list: TokenExpression[] = [];
 		// keyExp = :key ":"? :expression ("as" :local)? ";"?
-		// list.push(inputToken, TokenConstant.ASSIGN);
 		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
-		// this.parseRSideExpression(list);
-		list.push(TokenConstant.EOS);
 
 		// mix for directive input and template input
 		if (this.isAsKeyword()) {
@@ -205,13 +193,18 @@ export class DirectiveExpressionParser {
 			const aliasToken = this.stream.next();
 			const aliasList: TokenExpression[] = [];
 			aliasList.push(TokenConstant.LET, aliasToken, TokenConstant.ASSIGN, inputToken, TokenConstant.EOS);
-			const node = JavaScriptParser.parse(aliasList);
-			this.templateExpressions.push(node);
+			this.templateExpressions.push(aliasList);
 		}
-		const node = JavaScriptParser.parse(list);
 		const inputName = inputToken.getValue<Identifier>().getName() as string;
-		this.directiveInputs.set(inputName, node);
+		this.directiveInputs.set(inputName, list.map(this.mapTokenToString).join(' '));
 
+	}
+
+	private mapTokenToString(token: TokenExpression): String {
+		if (token.value) {
+			return token.value.toString();
+		}
+		return token.token.getName();
 	}
 
 }

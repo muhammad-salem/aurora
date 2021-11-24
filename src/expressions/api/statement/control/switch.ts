@@ -1,5 +1,8 @@
 
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, VisitNodeListType
+} from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -15,6 +18,10 @@ export class SwitchCase extends AbstractExpressionNode {
 			deserializer(node.test),
 			deserializer(node.consequent)
 		);
+	}
+	static visit(node: SwitchCase, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.test);
+		visitNode(node.consequent);
 	}
 	constructor(protected test: ExpressionNode, protected consequent: ExpressionNode) {
 		super();
@@ -59,6 +66,9 @@ export class DefaultExpression extends SwitchCase {
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
 		return new DefaultExpression(deserializer(node.consequent));
 	}
+	static visit(node: DefaultExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.consequent);
+	}
 	constructor(block: ExpressionNode) {
 		super(DefaultExpression.DefaultNode, block);
 	}
@@ -91,6 +101,10 @@ export class SwitchStatement extends AbstractExpressionNode {
 			deserializer(node.discriminant),
 			node.cases.map(deserializer) as SwitchCase[]
 		);
+	}
+	static visit(node: SwitchStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.discriminant);
+		visitNodeList(node.cases);
 	}
 	constructor(private discriminant: ExpressionNode, private cases: SwitchCase[]) {
 		super();

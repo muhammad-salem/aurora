@@ -1,5 +1,5 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { NodeDeserializer, ExpressionNode } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, VisitNodeType, VisitNodeListType } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -19,6 +19,10 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 			deserializer(node.left),
 			deserializer(node.right)
 		);
+	}
+	static visit(node: AssignmentExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.left);
+		visitNode(node.right);
 	}
 	static Evaluations: EvaluateType = {
 

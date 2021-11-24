@@ -144,21 +144,39 @@ interface TypeOf<T> {
 	new(...params: any[]): T;
 }
 
-export type NodeDeserializer<T = ExpressionNode> = (node: T) => T;
+export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
+
+export type VisitNodeType = (expression: ExpressionNode) => void;
+export type VisitNodeListType = (expressions: ExpressionNode[]) => void;
 
 /**
  * this is how to:
  * describe a class with it's static functions and properties
  * in the interface add getClass method
  */
-export interface NodeExpressionClass<T extends ExpressionNode> extends TypeOf<T> {
+export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N> {
 
 	/**
 	 * build expression node from [ESTree](https://github.com/estree/estree) json object
 	 * @param node 
 	 * @param deserializer 
 	 */
-	fromJSON(node: T, deserializer: NodeDeserializer): T;
+	fromJSON(node: N, deserializer: NodeDeserializer): N;
+
+	/**
+	 * visit nodes inside expression
+	 * @param expression 
+	 * @param callback 
+	 */
+	visit?(node: N, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void;
+}
+
+export interface NodeExpressionWithType<N extends ExpressionNode> extends NodeExpressionClass<N> {
+
+	/**
+	 * the type of an expression
+	 */
+	type: string;
 }
 
 export interface CanDeclareExpression extends ExpressionNode {

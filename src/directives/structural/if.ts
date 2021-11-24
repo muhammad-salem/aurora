@@ -31,7 +31,7 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 
 	@Input('else')
 	set elseTemplateRef(template: TemplateRef) {
-		this.elseTemplateRef = template;
+		this._elseTemplateRef = template;
 		if (!this._condition) {
 			// need to force rendering the new template in case of false condition
 			this._lastCondition = null;
