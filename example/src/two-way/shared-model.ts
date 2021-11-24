@@ -1,10 +1,8 @@
 import { Component, Input } from '@ibyar/aurora';
 
-
-
 @Component({
 	selector: 'text-editor',
-	template: `<input type="text" [(value)]="text" />`
+	template: `<input type="number" [(value)]="text" />`
 })
 export class Editor {
 
@@ -16,12 +14,17 @@ export class Editor {
 @Component({
 	selector: 'app-edit',
 	template: `
-	<text-editor id="editor_0" [(text)]="model.text" ></text-editor>
-	<text-editor id="editor_1" [(text)]="model.text" ></text-editor>
+	<div>{{ model |> json }}</div>
+	<text-editor id="editor_0" [class]="row" [(text)]="model.text" ></text-editor>
+	<text-editor id="editor_1" [(text)]="model.text" *if="+model.text > 30"></text-editor>
 	`
 })
 export class EditorApp {
 
 	model = { text: 'init 0' };
+
+	row = 'row';
+
+
 }
 

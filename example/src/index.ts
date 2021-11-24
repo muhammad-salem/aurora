@@ -1,5 +1,4 @@
 
-import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 import '@popperjs/core';
@@ -18,17 +17,19 @@ export * from './two-way/shared-model.js';
 
 export * from './video-player/video.js';
 
-import './pipe-app/pipe-test.js';
+export * from './pipe-app/pipe-test.js';
 
 const root = document.getElementById('root')!;
 
+// root.innerHTML = `
+// <pipe-app></pipe-app>
+// `;
+
 root.innerHTML = `
-<app-edit></app-edit>
+	<person-app></person-app>
+	<div is="bind-2way"></div>
+	<app-edit></app-edit>
+	<pipe-app></pipe-app>
+	<video-play-list></video-play-list>
 `;
 
-// root.innerHTML = `
-// 	<person-app></person-app>
-// 	<div is="bind-2way"></div>
-// 	<pipe-app></pipe-app>
-// 	<video-play-list></video-play-list>
-// `;
