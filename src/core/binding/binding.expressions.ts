@@ -11,7 +11,7 @@ type TwoWayOperator = ':=:';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
-	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[];
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[];
 }
 
 
@@ -32,7 +32,21 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		}
 		return rv;
 	}
-	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
+		if (pipelineNames?.length) {
+			const asyncPipeScope = ReactiveScope.blockScope();
+			pipelineNames.forEach(pipeline => {
+				const scope = stack.findScope(pipeline);
+				if (scope instanceof AsyncPipeProvider) {
+					const pipe = scope.get(pipeline)!;
+					const pipeAsFunction = (value: any, ...args: any[]) => {
+						pipe.transform(value, ...args)
+					};
+					asyncPipeScope.set(pipeline, pipeAsFunction);
+				}
+			});
+			stack.pushScope(asyncPipeScope);
+		}
 		const map = findScopeByEventMap(this.rightEvents, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		map.forEach((scope, eventName) => {
@@ -43,13 +57,6 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 					}
 				});
 				subscriptions.push(subscription);
-			} else if (scope instanceof AsyncPipeProvider) {
-				const pipe = scope.get(eventName)!;
-				const pipeScope = stack.pushBlockReactiveScopeFor({
-					[eventName](value: any, ...args: any[]) {
-						pipe.transform(value, ...args)
-					}
-				});
 			}
 		});
 		return subscriptions;
@@ -124,13 +131,6 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 			if (scope instanceof ReactiveScope) {
 				const subscription = scope.subscribe(eventName, actionCallback);
 				subscriptions.push(subscription);
-			} else if (scope instanceof AsyncPipeProvider) {
-				const pipe = scope.get(eventName)!;
-				const pipeScope = stack.pushBlockReactiveScopeFor({
-					[eventName](value: any, ...args: any[]) {
-						pipe.transform(value, ...args)
-					}
-				});
 			}
 		});
 		return subscriptions;
