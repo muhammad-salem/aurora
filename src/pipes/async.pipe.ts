@@ -8,7 +8,7 @@
  */
 
 
-import { OnDestroy, Pipe, PipeTransform } from '@ibyar/core';
+import { AsyncPipeTransform, OnDestroy, Pipe, PipeTransform } from '@ibyar/core';
 
 interface Observer<T> {
 	complete: () => void;
@@ -156,12 +156,14 @@ const _subscribableStrategy = new SubscribableStrategy();
 
 
 @Pipe({ name: 'async', asynchronous: true })
-export class AsyncPipe<T> implements OnDestroy, PipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> {
+export class AsyncPipe<T> implements OnDestroy, AsyncPipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> {
 	private _latestValue: any = null;
 
 	private _subscription: Unsubscribable | Promise<any> | null = null;
 	private _obj: Subscribable<any> | Observable<T> | EventEmitter<T> | Promise<any> | null = null;
 	private _strategy: SubscriptionStrategy = null!;
+
+	private callbacks: ((value: T | null) => void)[] = [];
 
 	onDestroy(): void {
 		if (this._subscription) {
@@ -216,6 +218,12 @@ export class AsyncPipe<T> implements OnDestroy, PipeTransform<Observable<T> | Su
 	private _updateLatestValue(async: any, value: Object): void {
 		if (async === this._obj) {
 			this._latestValue = value;
+			this.callbacks.forEach(callback => {
+				callback(value as T);
+			});
 		}
+	}
+	subscribe(callback: (value: T | null) => void): void {
+		this.callbacks.push(callback);
 	}
 }

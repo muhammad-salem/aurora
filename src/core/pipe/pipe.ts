@@ -1,4 +1,5 @@
-import { ReadOnlyScope } from '@ibyar/expressions';
+import { ReactiveScope, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
+import { isOnDestroy, OnDestroy } from '../index.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 
 /**
@@ -10,6 +11,10 @@ import { ClassRegistryProvider } from '../providers/provider.js';
  */
 export interface PipeTransform<T, U> {
 	transform(value: T, ...args: any[]): U;
+}
+
+export interface AsyncPipeTransform<T, U> extends PipeTransform<T, U>, OnDestroy {
+	subscribe(callback: (value: U) => void): void;
 }
 
 export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe is PipeTransform<T, U> {
@@ -59,5 +64,33 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 			return new pipeRef.modelClass();
 		}
 		return void 0;
+	}
+}
+
+export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveScope<T> {
+	private wrapper: { [key: string]: Function } = {};
+	constructor() {
+		super({} as T, 'block');
+	}
+	override set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
+		const result = super.set(propertyKey, newValue, receiver);
+		if (result) {
+			const pipe = this.context[propertyKey];
+			pipe.subscribe(value => {
+				this.emit(propertyKey, value);
+			});
+			this.wrapper[propertyKey as string] = (value: any, ...args: any[]) => {
+				return pipe.transform(value, ...args)
+			};
+		}
+		return result;
+	}
+	override get(propertyKey: keyof T): any {
+		return Reflect.get(this.wrapper, propertyKey);
+	}
+	override unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
+		this.unsubscribe(propertyKey, subscription);
+		const pipe = this.context[propertyKey];
+		pipe.onDestroy();
 	}
 }

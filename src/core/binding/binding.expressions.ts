@@ -4,7 +4,7 @@ import {
 	ScopeContext, ValueChangedCallback, Scope,
 	MemberExpression, Identifier
 } from '@ibyar/expressions';
-import { AsyncPipeProvider } from '../pipe/pipe.js';
+import { AsyncPipeProvider, AsyncPipeScope } from '../pipe/pipe.js';
 
 type OneWayOperator = ':=';
 type TwoWayOperator = ':=:';
@@ -34,15 +34,12 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 	}
 	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
 		if (pipelineNames?.length) {
-			const asyncPipeScope = ReactiveScope.blockScope();
+			const asyncPipeScope = new AsyncPipeScope();
 			pipelineNames.forEach(pipeline => {
 				const scope = stack.findScope(pipeline);
 				if (scope instanceof AsyncPipeProvider) {
 					const pipe = scope.get(pipeline)!;
-					const pipeAsFunction = (value: any, ...args: any[]) => {
-						pipe.transform(value, ...args)
-					};
-					asyncPipeScope.set(pipeline, pipeAsFunction);
+					asyncPipeScope.set(pipeline, pipe);
 				}
 			});
 			stack.pushScope(asyncPipeScope);
@@ -65,7 +62,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 
 
 /**
- * the default behaviour is assign the right hand side to the left hand side.
+ * the default behavior is assign the right hand side to the left hand side.
  * 
  * 
  */
