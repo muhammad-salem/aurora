@@ -25,11 +25,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		return this.left.set(stack, value);
 	}
 	get(stack: Stack): any {
-		const lv = this.left.get(stack);
 		const rv = this.right.get(stack);
-		if (lv !== rv) {
-			this.set(stack, rv);
-		}
+		this.set(stack, rv);
 		return rv;
 	}
 	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
@@ -49,9 +46,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		map.forEach((scope, eventName) => {
 			if (scope instanceof ReactiveScope) {
 				const subscription = scope.subscribe(eventName, (newValue: any, oldValue?: any) => {
-					if (newValue != oldValue) {
-						this.get(stack);
-					}
+					this.get(stack);
 				});
 				subscriptions.push(subscription);
 			}
@@ -88,18 +83,13 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return this.left.set(stack, value);
 	}
 	private getRTL(stack: Stack): any {
-		const lv = this.left.get(stack);
 		const rv = this.right.get(stack);
-		if (lv !== rv) {
-			this.setRTL(stack, rv);
-		}
+		this.setRTL(stack, rv);
 		return rv;
 	}
 	private actionRTL(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
-			if (newValue != oldValue) {
-				this.getRTL(stack);
-			}
+			this.getRTL(stack);
 		};
 	}
 
@@ -108,17 +98,12 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 	private getLTR(stack: Stack): any {
 		const lv = this.left.get(stack);
-		const rv = this.right.get(stack);
-		if (lv !== rv) {
-			this.setLTR(stack, lv);
-		}
+		this.setLTR(stack, lv);
 		return lv;
 	}
 	private actionLTR(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
-			if (newValue != oldValue) {
-				this.getLTR(stack);
-			}
+			this.getLTR(stack);
 		};
 	}
 
