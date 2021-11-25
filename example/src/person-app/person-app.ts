@@ -5,7 +5,7 @@ import { Person, PersonModel } from './person';
 	selector: 'person-app',
 	template: `
 		<div *time></div>
-		<template *time>{{hh}}:{{mm}}:{{ss}}</template>
+		<template *time let-HH="hh" let-MM="mm" let-SS="ss">{{HH}}:{{MM}}:{{SS}}</template>
 		<div *add-note>
 			{{appVersion}}
 			{{appName}}
