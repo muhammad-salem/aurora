@@ -175,15 +175,13 @@ export class ComponentRender<T extends object> {
 			);
 			stack.pushBlockReactiveScopeFor({ 'this': structural });
 			const subscriptions = this.initDirectiveAttributes(structural, directive, stack);
-			if (isOnDestroy(structural)) {
-				const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-					removeSubscription.unsubscribe();
-					subscriptions.forEach(subscription => subscription.unsubscribe());
-					if (isOnDestroy(structural)) {
-						structural.onDestroy();
-					}
-				});
-			}
+			const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
+				removeSubscription.unsubscribe();
+				subscriptions.forEach(subscription => subscription.unsubscribe());
+				if (isOnDestroy(structural)) {
+					structural.onDestroy();
+				}
+			});
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
