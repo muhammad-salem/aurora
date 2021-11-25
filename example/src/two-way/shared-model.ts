@@ -2,7 +2,7 @@ import { Component, Input } from '@ibyar/aurora';
 
 @Component({
 	selector: 'text-editor',
-	template: `<input type="number" [(value)]="text" />`
+	template: `<input type="text" [(value)]="text" />`
 })
 export class Editor {
 
