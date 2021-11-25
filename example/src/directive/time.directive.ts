@@ -1,6 +1,6 @@
 import {
 	Directive, DomParentNode, OnDestroy, OnInit,
-	StructuralDirective, PipeTransform, Pipe, Component
+	StructuralDirective, PipeTransform, Pipe, Component, Input
 } from '@ibyar/aurora';
 import { map, Subscription, timer, timestamp } from 'rxjs';
 
@@ -29,11 +29,11 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 		</div>`
 })
 class ShowTimeComponent implements TimeContext {
-	time: number;
-	date: number;
-	hh: number;
-	mm: number;
-	ss: number;
+	@Input() time: number = 0;
+	@Input() date: number = 0;
+	@Input() hh: number = 0;
+	@Input() mm: number = 0;
+	@Input() ss: number = 0;
 }
 
 

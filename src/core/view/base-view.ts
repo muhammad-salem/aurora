@@ -12,16 +12,11 @@ import { ElementModelReactiveScope } from '../component/provider.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
-function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T) {
+function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T, names: string[]) {
 	if (typeof instance !== 'object') {
 		return;
 	}
-	const prototype = Object.getPrototypeOf(instance);
-	if (!prototype) {
-		return;
-	}
-	const keys = Reflect.getMetadataKeys(prototype);
-	keys
+	names
 		.filter(key => !Reflect.has(instance, key))
 		.forEach(key => Reflect.set(instance, key, undefined));
 }
@@ -53,7 +48,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			}
 			const model = new modelClass(/* resolve dependency injection*/);
-			defineInstancePropertyMap(model);
+			const modelNames = componentRef.inputs.map(input => input.modelProperty)
+				.concat(componentRef.outputs.map(output => output.modelProperty))
+				.concat(componentRef.hostBindings.map(host => host.hostPropertyName))
+				.concat(componentRef.viewChild.map(child => child.modelName));
+			defineInstancePropertyMap(model, modelNames);
 			this._model = model;
 
 			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
