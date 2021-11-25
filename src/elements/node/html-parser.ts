@@ -368,61 +368,55 @@ export class NodeParser {
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
-			const directiveNames = this.extractAttributeDirectives(node);
-			if (directiveNames.length) {
-				const directives: DomAttributeDirectiveNode[] = [];
-				directiveNames.forEach(attributeName => {
-					const directive = new DomAttributeDirectiveNode(attributeName);
-					if (directiveRegistry.get(attributeName)!.hasAttributes()) {
-						this.extractDirectiveAttributesFromNode(attributeName, directive, node);
-					}
-					directives.push(directive);
-				});
-				if (directives.length) {
-					node.attributeDirectives = directives;
-				}
-			}
-
-			temp = attributes.find(attr => attr.name.startsWith('*'));
-			if (temp) {
-				// shorthand syntax
-				attributes.splice(attributes.indexOf(temp), 1);
-				const isTemplate = node.tagName === 'template';
-				const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
-				const directive = (typeof temp?.value === 'boolean')
-					? new DomStructuralDirectiveNode(temp.name, directiveNode)
-					: new DomStructuralDirectiveNode(temp.name, directiveNode, String(temp.value));
-				const directiveName = temp.name.substring(1);
-				if (isTemplate) {
-					directive.inputs = node.inputs;
-					directive.outputs = node.outputs;
-					directive.attributes = node.attributes;
-					directive.templateAttrs = node.templateAttrs;
-				} else if (directiveRegistry.hasAttributes(directiveName)) {
-					this.extractDirectiveAttributesFromNode(directiveName, directive, node);
-				}
-				return directive;
-			}
-			if (directiveRegistry.has('*' + node.tagName)) {
-				// try to find expression attribute
-				// <if expression="a === b">text child<div>...</div></if>
-				temp = attributes.find(attr => attr.name === 'expression');
-				if (temp) {
-					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
-				}
-				const directiveNode = new DomFragmentNode(node.children);
-				const directive = (typeof temp?.value === 'boolean')
-					? new DomStructuralDirectiveNode('*' + node.tagName, directiveNode)
-					: new DomStructuralDirectiveNode('*' + node.tagName, directiveNode, String(temp?.value));
-				// const directive = new DOMDirectiveNode('*' + node.tagName, directiveNode, temp?.value && String(temp.value));
-				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
-				return directive;
-			}
-		} else if (directiveRegistry.has('*' + node.tagName)) {
-			// support structural directives without expression property
-			// <add-note >text</add-note>
-			return new DomStructuralDirectiveNode('*' + node.tagName, new DomFragmentNode(node.children));
 		}
+
+		const directiveNames = this.extractDirectiveNames(node);
+		let sdName: string | undefined;
+		if (directiveNames.length) {
+			const directives: DomAttributeDirectiveNode[] = [];
+			directiveNames.forEach(attributeName => {
+				if (attributeName.startsWith('*')) {
+					if (sdName) {
+						console.error(`Only one Structural Directive is allowed on an element [${sdName}, ${attributeName}]`);
+						return;
+					}
+					sdName = attributeName;
+					return
+				}
+				const directive = new DomAttributeDirectiveNode(attributeName);
+				if (directiveRegistry.get(attributeName)!.hasAttributes()) {
+					this.extractDirectiveAttributesFromNode(attributeName, directive, node);
+				}
+				directives.push(directive);
+			});
+			if (directives.length) {
+				node.attributeDirectives = directives;
+			}
+		}
+		if (sdName) {
+			// <div *for [forOf]="array" let-item [trackBy]="method" let-i="index" > {{item}} </div>
+			// <div *for="let item of array; let i = index; trackBy=method;" > {{item}} </div>
+
+			const temp = node.attributes!.filter(attr => attr.name == sdName)[0];
+			node.attributes!.splice(node.attributes!.indexOf(temp), 1);
+			const isTemplate = node.tagName === 'template';
+
+			const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
+			const directive = (typeof temp?.value === 'boolean')
+				? new DomStructuralDirectiveNode(temp.name, directiveNode)
+				: new DomStructuralDirectiveNode(temp.name, directiveNode, String(temp.value));
+			const directiveName = temp.name.substring(1);
+			if (isTemplate) {
+				directive.inputs = node.inputs;
+				directive.outputs = node.outputs;
+				directive.attributes = node.attributes;
+				directive.templateAttrs = node.templateAttrs;
+			} else if (directiveRegistry.hasAttributes(directiveName)) {
+				this.extractDirectiveAttributesFromNode(directiveName, directive, node);
+			}
+			return directive;
+		}
+
 		return node;
 	}
 
@@ -433,10 +427,10 @@ export class NodeParser {
 			return;
 		}
 		const filterByAttrName = createFilterByAttrName(attributes);
+		directive.attributes = node.attributes?.filter(filterByAttrName);
 		directive.inputs = node.inputs?.filter(filterByAttrName);
 		directive.outputs = node.outputs?.filter(filterByAttrName);
 		directive.twoWayBinding = node.twoWayBinding?.filter(filterByAttrName);
-		directive.attributes = node.attributes?.filter(filterByAttrName);
 		directive.templateAttrs = node.templateAttrs?.filter(filterByAttrName);
 
 		node.inputs && directive.inputs?.forEach(createArrayCleaner(node.inputs));
@@ -445,53 +439,27 @@ export class NodeParser {
 		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
 		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
 	}
-
-	// private extractAttributeDirectives(node: BaseNode): Attribute<any, any>[] {
-	// 	const names: Attribute<any, any>[] = [];
-	// 	if (node.attributes) {
-	// 		names.push(...this.getAttributeDirectives(node.attributes));
-	// 	}
-	// 	if (node.inputs) {
-	// 		names.push(...this.getAttributeDirectives(node.inputs));
-	// 	}
-	// 	if (node.twoWayBinding) {
-	// 		names.push(...this.getAttributeDirectives(node.twoWayBinding));
-	// 	}
-	// 	if (node.templateAttrs) {
-	// 		names.push(...this.getAttributeDirectives(node.templateAttrs));
-	// 	}
-	// 	if (node.outputs) {
-	// 		names.push(...this.getAttributeDirectives(node.outputs));
-	// 	}
-	// 	return names;
-	// }
-	// private getAttributeDirectives(attributes: Attribute<string, any>[]): Attribute<any, any>[] {
-	// 	const filtered = directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
-	// 	const directives = attributes.filter(attr => filtered.includes(attr.name));
-	// 	// directives.forEach(createArrayCleaner(attributes));
-	// 	return directives;
-	// }
-	private extractAttributeDirectives(node: BaseNode): string[] {
+	private extractDirectiveNames(node: BaseNode): string[] {
 		const names: string[] = [];
-		if (node.attributes) {
+		if (node.attributes?.length) {
 			names.push(...this.getAttributeDirectives(node.attributes));
 		}
-		if (node.inputs) {
+		if (node.inputs?.length) {
 			names.push(...this.getAttributeDirectives(node.inputs));
 		}
-		if (node.twoWayBinding) {
+		if (node.twoWayBinding?.length) {
 			names.push(...this.getAttributeDirectives(node.twoWayBinding));
 		}
-		if (node.templateAttrs) {
+		if (node.templateAttrs?.length) {
 			names.push(...this.getAttributeDirectives(node.templateAttrs));
 		}
-		if (node.outputs) {
+		if (node.outputs?.length) {
 			names.push(...this.getAttributeDirectives(node.outputs));
 		}
 		return names;
 	}
 	private getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
-		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name).filter(attr => !attr.startsWith('*')));
+		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
 	}
 }
 
