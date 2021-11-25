@@ -46,7 +46,7 @@ yarn add @ibyar/directives
 
 #### Attributes Directives
 - [x] *class
-- [x] *styles
+- [x] *style
 
 
 # How to use:

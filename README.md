@@ -90,7 +90,7 @@ yarn add @ibyar/aurora
 
 #### Attributes Directives
 - [x] class
-- [x] styles
+- [x] style
 
 ## Built-in Pipes ( Pipeline operator '|>' )
 
