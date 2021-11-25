@@ -1,7 +1,7 @@
 /**
  * attribute directives
  */
-export * from './attribute/styles.js';
+export * from './attribute/style.js';
 export * from './attribute/class.js';
 
 /**

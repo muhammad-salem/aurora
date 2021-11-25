@@ -139,6 +139,14 @@ function parseChild(child: DomNode) {
 		if (child.value) {
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
 			(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = info.templateExpressions.map(JavaScriptParser.parse);
+			// <div let-i="index">{{item}}</div>
+			const templateExpressionsFromInput = child.inputs?.filter(attr => attr.name.startsWith('let-'));
+			templateExpressionsFromInput?.forEach(attr => {
+				child.inputs!.splice(child.inputs!.indexOf(attr), 1);
+				const expression = `let ${attr.name.replace('let-', '')} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
+				(child as DomStructuralDirectiveNodeUpgrade).templateExpressions.push(JavaScriptParser.parse(expression));
+			});
+
 			if (info.directiveInputs.size > 0) {
 				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
 				if (!ref?.inputs?.length) {

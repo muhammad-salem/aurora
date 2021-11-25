@@ -3,7 +3,7 @@ import { AttributeDirective, Directive, Input } from '@ibyar/core';
 type StyleType = string | Array<string> | { [propertyName: string]: string };
 
 @Directive({
-	selector: 'styles'
+	selector: 'style'
 })
 export class StyleDirective extends AttributeDirective {
 
