@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope, ExpressionEventPath
+	NodeDeserializer, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType
 } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -161,8 +161,18 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	constructor(private quasis: string[], private expressions: ExpressionNode[], private tag?: ExpressionNode,) {
+	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		node.tag && visitNode(node.tag);
+		visitNodeList(node.expressions);
+	}
+	constructor(protected quasis: string[], protected expressions: ExpressionNode[], protected tag?: ExpressionNode,) {
 		super();
+	}
+	getTag() {
+		return this.tag;
+	}
+	getExpressions() {
+		return this.expressions;
 	}
 	shareVariables(scopeList: Scope<any>[]): void {
 		this.expressions.forEach(value => value.shareVariables(scopeList));
@@ -208,15 +218,23 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('TemplateLiteral')
 export class TemplateLiteral extends TemplateLiteralExpressionNode {
+	protected tag: undefined;
 	constructor(quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions);
+	}
+	override getTag(): undefined {
+		return undefined;
 	}
 }
 
 @Deserializer('TaggedTemplateExpression')
 export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
+	protected tag: ExpressionNode;
 	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions, tag);
+	}
+	override getTag(): ExpressionNode {
+		return super.getTag()!;
 	}
 }
 

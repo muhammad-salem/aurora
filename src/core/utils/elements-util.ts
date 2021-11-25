@@ -11,7 +11,10 @@ export function hasComponentAttr(element: HTMLElement, attr: string): boolean {
 }
 
 export function hasAttrCustomElement(element: HTMLElement, attr: string): boolean {
-	if (Reflect.has(element.constructor, 'observedAttributes')) {
+	if (Reflect.has(element.constructor, 'allAttributes')) {
+		return Reflect.get(element.constructor, 'allAttributes').some((prop: string) => prop === attr);
+	}
+	else if (Reflect.has(element.constructor, 'observedAttributes')) {
 		return Reflect.get(element.constructor, 'observedAttributes').some((prop: string) => prop === attr);
 	}
 	return false;

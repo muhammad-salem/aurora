@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { isFormElement } from '@ibyar/elements';
+import { getAllAttributes, isFormElement } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';
@@ -29,19 +29,12 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {
-		const parentProperty = Object.getOwnPropertyDescriptor(
-			htmlParent.prototype,
-			input.viewAttribute
-		);
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				return this._proxyModel[input.modelProperty] || parentProperty?.get?.call(this);
+				return this._modelScope.get(input.modelProperty);
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
 				this._modelScope.set(input.modelProperty, value);
-				// this._model[input.modelProperty] = value;
-				// this._proxyModel[input.modelProperty] = value;
-				parentProperty?.set?.call(this, value);
 			},
 			enumerable: true,
 		});
@@ -57,11 +50,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 		let eventListener: Function | undefined;
 		let subscription: Subscription<any>;
 		Object.defineProperty(viewClass.prototype, 'on' + ToCamelCase(output.viewAttribute), {
-			// get(): EventEmitter<any> {
-			// 	// return this._model[output.modelProperty];
-			// },
 			get(): Function | undefined {
-				// return this._model[output.modelProperty];
 				return eventListener;
 			},
 			set(this: HTMLComponent<T>, event: string | Function): void {
@@ -83,11 +72,11 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 			enumerable: true
 		});
 	});
-	Object.defineProperty(viewClass, 'observedAttributes', {
-		get() {
-			return componentRef.inputs.map(input => input.viewAttribute);
-		}
-	});
+
+	const defaultAttributes = getAllAttributes(componentRef.extend.name);
+	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
+	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
+	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
 	// https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
 	if (false) {
 		Object.defineProperty(viewClass, 'formAssociated', {
@@ -128,7 +117,7 @@ export function buildViewClassNameFromSelector(selector: string) {
 		.join('');
 }
 
-export function ComponentView<T>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
+export function getComponentView<T extends object>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
 	if (isComponentModelClass(modelClass)) {
 		let viewClassName: string;
 		if (selector) {

@@ -75,16 +75,22 @@ yarn add @ibyar/aurora
 
 #### Structure Directives
 - [x] *if
-- [x] *for
-- [x] *for in
-- [x] *for of
-- [x] *for await
-- [x] *while
+- [x] *forIn
+- [x] *forOf
+- [x] *forAwait		
 - [x] *switch
+- [x] *case
+- [x] *default
+
+## Removed
+- [x] *for
+- [x] *while
+
+ -- see `directive syntax` [structural-directive-syntax-reference](https://github.com/ibyar/aurora/blob/dev/packages/directives/README.md#structural-directive-syntax-reference)
 
 #### Attributes Directives
 - [x] class
-- [x] styles
+- [x] style
 
 ## Built-in Pipes ( Pipeline operator '|>' )
 

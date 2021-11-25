@@ -14,6 +14,16 @@ export class ElementAttribute<N, V> extends Attribute<N, V> { }
 export class LiveAttribute extends Attribute<string, string> { }
 
 /**
+ * 
+ * @param name 
+ * @param value 
+ * @returns LiveAttribute
+ */
+export function createLiveAttribute(name: string, value: string) {
+	return new LiveAttribute(name, value);
+}
+
+/**
  * a normal text
  */
 export class TextContent extends Attribute<'textContent', string> {
@@ -67,6 +77,11 @@ export class BaseNode {
 	 */
 	templateAttrs?: LiveAttribute[];
 
+	/**
+	 * attributes directive
+	 */
+	attributeDirectives?: DomAttributeDirectiveNode[];
+
 	addAttribute(attrName: string, value?: string | number | boolean | object) {
 		if (this.attributes) {
 			this.attributes.push(new ElementAttribute(attrName, value ?? true));
@@ -119,14 +134,32 @@ export class BaseNode {
 	}
 
 }
+export class DomAttributeDirectiveNode extends BaseNode {
 
-export class DOMParentNode extends BaseNode {
+	/**
+	 * name of the directive 
+	 */
+	name: string;
+
+
+	/**
+	 * set to `undefined` stop, loop
+	 */
+	attributeDirectives: undefined;
+
+	constructor(name: string) {
+		super();
+		this.name = name;
+	}
+}
+
+export class DomParentNode extends BaseNode {
 	/**
 	 * element children list
 	 */
-	children: DOMChild[];
+	children?: DomChild[];
 
-	addChild(child: DOMChild) {
+	addChild(child: DomChild) {
 		if (this.children) {
 			this.children.push(child);
 		} else {
@@ -135,10 +168,8 @@ export class DOMParentNode extends BaseNode {
 	}
 
 	addTextChild(text: string) {
-		if (!this.children) {
-			this.children = [];
-		}
-		parseTextChild(text).forEach(childText => this.children.push(childText));
+		const children = (this.children ??= []);
+		parseTextChild(text).forEach(childText => children.push(childText));
 	}
 
 }
@@ -146,15 +177,15 @@ export class DOMParentNode extends BaseNode {
 /**
  * parent for a list of elements 
  */
-export class DOMFragmentNode extends DOMParentNode {
-	constructor(children?: DOMChild[]) {
+export class DomFragmentNode extends DomParentNode {
+	constructor(children?: DomChild[]) {
 		super();
 		if (children) {
 			this.children = children;
 		}
 	}
 }
-export class DOMElementNode extends DOMParentNode {
+export class DomElementNode extends DomParentNode {
 
 	/**
 	 * the tag name of the element 
@@ -169,7 +200,7 @@ export class DOMElementNode extends DOMParentNode {
 	/**
 	 * a given name for element
 	 */
-	templateRefName: Attribute<string, string | undefined>;
+	templateRefName?: Attribute<string, string | undefined>;
 
 	constructor(tagName: string, is?: string) {
 		super();
@@ -189,11 +220,10 @@ export class DOMElementNode extends DOMParentNode {
 
 }
 
-
 /**
  * structural directive 
  */
-export class DOMDirectiveNode extends BaseNode {
+export class DomStructuralDirectiveNode extends BaseNode {
 
 	/**
 	 * name of the directive 
@@ -203,25 +233,29 @@ export class DOMDirectiveNode extends BaseNode {
 	/**
 	 * value of the directive 
 	 */
-	value: string;
+	value?: string;
 
 	/**
 	 * the value of the template node, that this directive going to host-on 
 	 */
-	node: DOMNode;
+	node: DomNode;
 
-	constructor(name: string, value: string, node: DOMNode) {
+	constructor(name: string, node: DomNode, value?: string) {
 		super();
 		this.name = name;
-		this.value = value;
 		this.node = node;
+		this.value = value;
 	}
 }
-export type DOMChild = DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMNode = DOMFragmentNode | DOMElementNode | DOMDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export function isDOMDirectiveNode(node: object): node is DomStructuralDirectiveNode {
+	return node instanceof DomStructuralDirectiveNode;
+}
+export type DomChild = DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
 
-export type DOMRenderNode<T> = (model: T) => DOMNode;
+export type DomNode = DomFragmentNode | DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
+
+export type DomRenderNode<T> = (model: T) => DomNode;
 
 export function parseTextChild(text: string): Array<TextContent | LiveTextContent> {
 	// split from end with '}}', then search for the first '{{'

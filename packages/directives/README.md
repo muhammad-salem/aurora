@@ -33,16 +33,20 @@ yarn add @ibyar/directives
 
 #### Structure Directives
 - [x] *if
+- [x] *forIn
+- [x] *forOf
+- [x] *forAwait		
+- [ ] *switch
+- [ ] *case
+- [ ] *default
+
+## Removed
 - [x] *for
-- [x] *for in
-- [x] *for of
-- [x] *for await
 - [x] *while
-- [x] *switch
 
 #### Attributes Directives
 - [x] *class
-- [x] *styles
+- [x] *style
 
 
 # How to use:
@@ -56,28 +60,18 @@ yarn add @ibyar/directives
 </div>
 
 
-<div class="col-3" *for="let user of people">
+<div class="col-3" *forOf="let user of people">
 	<p>Name: <span>{{user.name}}</span></p>
 	<p>Age: <span>{{user.age}}</span></p>
 </div>
 
-<div class="col-3" *for="let key in person1">
+<div class="col-3" *forIn="let key in person1">
 	<p>Key: <span>{{key}}</span></p>
 	<p>Value: <span>{{person1[key]}}</span></p>
 </div>
 
-<div class="col-3" *for="await (let num of asyncIterable)">
+<div class="col-3" *forAwait="let num of asyncIterable">
 	<p>num = <span>{{num}}</span></p>
-</div>
-
-<div class="col-3" *while="i < people.length">
-	<p>Name: <span>{{people[i].name}}</span></p>
-	<p>Age: <span>{{people[i++].age}}</span></p>
-</div>
-
-<div class="col-3" *while="let index = 0; index < people.length">
-	<p>Name: <span>{{people[index].name}}</span></p>
-	<p>Age: <span>{{people[index++].age}}</span></p>
 </div>
 
 <div class="col-3" *switch="1">
@@ -88,3 +82,114 @@ yarn add @ibyar/directives
 </div>
 
 ```
+ -- `Directives now support input binding (one way)`
+
+
+## Structural directive syntax reference
+
+When you write your own structural directives, use the following syntax:
+
+```
+*:prefix="( :let | :expression ) (';' | ',')? ( :let | :as | :keyExp )*"
+```
+
+The following tables describe each portion of the structural directive grammar:
+
+<table>
+
+  <tr>
+    <td><code>prefix</code></td>
+    <td>HTML attribute key</td>
+  </tr>
+  <tr>
+    <td><code>key</code></td>
+    <td>HTML attribute key</td>
+  </tr>
+  <tr>
+    <td><code>local</code></td>
+    <td>local variable name used in the template</td>
+  </tr>
+  <tr>
+    <td><code>export</code></td>
+    <td>value exported by the directive under a given name</td>
+  </tr>
+  <tr>
+    <td><code>expression</code></td>
+    <td>standard Aurora expression</td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th></th>
+  </tr>
+  <tr>
+    <td colspan="3"><code>keyExp = :key ":"? :expression ("as" :local)? ";"? </code></td>
+  </tr>
+  <tr>
+    <td colspan="3"><code>let = "let" :local "=" :export ";"?</code></td>
+  </tr>
+  <tr>
+    <td colspan="3"><code>as = :export "as" :local ";"?</code></td>
+  </tr>
+</table>
+
+### How Aurora translates shorthand
+
+Lke Angular translates structural directive shorthand into the normal binding syntax as follows:
+
+<table>
+  <tr>
+    <th>Shorthand</th>
+    <th>Translation</th>
+  </tr>
+  <tr>
+    <td><code>key</code> and naked <code>expression</code></td>
+    <td><code>[key]="expression"</code>
+    <br />
+    Notice that the <code>prefix</code>
+    is <code>not</code> added to the <code>key</code>
+    </td>
+  </tr>
+  <tr>
+    <td><code>let</code></td>
+    <td><code>[export]="local"</code></td>
+  </tr>
+</table>
+
+### Shorthand examples
+
+The following table provides shorthand examples:
+
+<table>
+  <tr>
+    <th>Shorthand</th>
+    <th>How Aurora interprets the syntax</th>
+  </tr>
+  <tr>
+    <td><code>*for="let item of [1,2,3]"</code></td>
+    <td><code>&lt;template *for [item]="$implicit [of]="[1,2,3]"&gt;</code></td>
+  </tr>
+  <tr>
+    <td><code>*for="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
+    <td><code>&lt;ng-template *for [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
+    </td>
+  </tr>
+  <tr>
+    <td><code>*if="exp"</code></td>
+    <td><code>&lt;ng-template [if]="exp"&gt;</code></td>
+  </tr>
+  <tr>
+    <td><code>*if="exp as value"</code></td>
+    <td><code>&lt;ng-template [if]="exp" [value]="if"&gt;</code></td>
+  </tr>
+</table>
+
+-- in *for `trackBy` not supported yet.
+
+
+<hr>
+
+### change log:
+
+- *switch directive is broken.

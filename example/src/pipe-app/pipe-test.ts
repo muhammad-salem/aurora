@@ -1,25 +1,18 @@
-import { Component, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
+import { Component, OnDestroy, OnInit } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div styles="color: var({{currentColor}});"> set style color by style="color: var({{currentColor}});"</div>
-	<div [styles]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
+	<div style="color: var({{currentColor}});"> set style color by style="color: var({{currentColor}});"</div>
+	<div [style]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
+	<div [style]="{color: 'var(' + currentColor + ')'}"> set style color by [style]="{color: 'var(' + currentColor + ')'}" </div>
 	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
-	<div *for="let color of colors">
+	<div *forOf="let color of colors">
 		color: {{color}} <span *if="color === currentColor"> => Current Color ='{{currentColor}}'</span>
 	</div>
-	<for expression="let d of colors">
-		{{d}} => <if expression="d !== currentColor"><div>{{currentColor}}</div></if>
-	</for>
-	<if expression="true">
-		<for expression="let d of colors">
-			{{d}}
-		</for>
-	</if>
     <table class="table">
         <thead>
             <tr>
@@ -109,14 +102,14 @@ import { interval, Subscription } from 'rxjs';
 			</tr>
 		</thead>
 		<tbody>
-			<for expression="let row of table; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
+			<template *forOf="let user of users; index as idx; even as isEven; odd as isOdd; count as tableLength; first as isFirst; last as isLast">
 				<tr [class]="{'table-info': isEven, 'table-danger': isOdd}">
 					<th scope="row">{{ ({idx, tableLength, isEven, isOdd, isFirst, isLast }) |> json }}</th>
-					<td>{{row.firstName}}</td>
-					<td>{{row.lastName}}</td>
-					<td>{{row.age}}</td>
+					<td>{{user.firstName}}</td>
+					<td>{{user.lastName}}</td>
+					<td>{{user.age}}<div *if="user.age > 18">🕺</div></td>
 				</tr>
-			</for>
+			</template>
 		</tbody>
 	</table>
     `
@@ -145,7 +138,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	array = ['a', 'b', 'c', 'd'];
 
-	table = [
+	users = [
 		{ firstName: 'Tinu', lastName: 'Elejogun', age: 14 },
 		{ firstName: 'Mark', lastName: 'Kostrzewski', age: 25 },
 		{ firstName: 'Lily', lastName: 'McGarrett', age: 18 },
@@ -182,10 +175,6 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			}
 			this.currentColor = this.colors[index++];
 			this.heightPX += 10;
-			// if (isModel(this)) {
-			// 	this.emitChangeModel('currentColor');
-			// 	this.emitChangeModel('heightPX');
-			// }
 		});
 	}
 

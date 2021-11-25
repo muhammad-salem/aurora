@@ -1,9 +1,7 @@
-import type { ReactiveScope } from '@ibyar/expressions';
+import type { ReactiveScope, ScopeContext } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
-import type { ElementReactiveScope } from '../directive/providers.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
-import { Model } from '../model/change-detection.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -12,19 +10,22 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
-export type ModelType<T> = T & Model & { [key: string]: any };
+export type ModelType<T> = T & ScopeContext;
+
+export type NodeContextType<T> = { 'this': BaseComponent<T> };
 
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
 	_proxyModel: ModelType<T>;
-	_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
-	_viewScope: ElementReactiveScope;
+	_modelScope: ReactiveScope<T & ScopeContext>;
+
+	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 
 	getComponentRef(): ComponentRef<T>;
 
-	setParentComponent<V>(parent: HTMLComponent<V>): void;
-	getParentComponent<V>(): HTMLComponent<V>;
+	setParentComponent<V extends object>(parent: HTMLComponent<V>): void;
+	getParentComponent<V extends object>(): HTMLComponent<V>;
 	hasParentComponent(): boolean;
 
 	hasInputStartWith(viewProp: string): boolean;
@@ -41,9 +42,6 @@ export interface BaseComponent<T> extends CustomElement {
 	getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined;
 
 	triggerOutput(eventName: string, value?: any): void;
-	triggerModelChange(eventName: string, value?: any, source?: HTMLElement): void;
-	emitRootChanges(): void;
-	emitChanges(...events: string[]): void;
 
 }
 
@@ -54,7 +52,7 @@ export function isHTMLComponent(object: any): object is HTMLComponent<any> {
 		&& object instanceof HTMLElement;
 }
 
-export function isHTMLComponentOfType<T>(object: any, typeClass: TypeOf<T>): object is HTMLComponent<T> {
+export function isHTMLComponentOfType<T extends object>(object: any, typeClass: TypeOf<T>): object is HTMLComponent<T> {
 	return isHTMLComponent(object)
 		&& Reflect.get(object, '_model') instanceof typeClass;
 }

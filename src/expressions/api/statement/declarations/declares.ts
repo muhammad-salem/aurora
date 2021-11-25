@@ -1,5 +1,8 @@
 
-import type { NodeDeserializer, ExpressionNode, CanDeclareExpression, ExpressionEventPath } from '../../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, CanDeclareExpression,
+	ExpressionEventPath, VisitNodeType, VisitNodeListType
+} from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import type { ScopeType } from '../../../scope/scope.js';
@@ -11,8 +14,12 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 	static fromJSON(node: VariableNode, deserializer: NodeDeserializer): VariableNode {
 		return new VariableNode(
 			deserializer(node.id) as CanDeclareExpression,
-			node.init ? deserializer(node.id) : void 0
+			node.init ? deserializer(node.init) : void 0
 		);
+	}
+	static visit(node: VariableNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.id);
+		node.init && visitNode(node.init);
 	}
 	constructor(public id: CanDeclareExpression, public init?: ExpressionNode) {
 		super();
@@ -72,6 +79,9 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 			node.declarations.map(deserializer) as VariableNode[],
 			node.kind
 		);
+	}
+	static visit(node: VariableDeclarationNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.declarations);
 	}
 	constructor(protected declarations: VariableNode[], protected kind: 'var' | 'let' | 'const') {
 		super();

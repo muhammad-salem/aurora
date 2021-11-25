@@ -3,27 +3,27 @@ import { AttributeDirective, Directive, Input } from '@ibyar/core';
 type StyleType = string | Array<string> | { [propertyName: string]: string };
 
 @Directive({
-	selector: 'styles'
+	selector: 'style'
 })
 export class StyleDirective extends AttributeDirective {
 
 	@Input()
-	set styles(styles: StyleType) {
-		if (typeof styles === 'string') {
-			for (const line of styles.split(';')) {
+	set style(style: StyleType) {
+		if (typeof style === 'string') {
+			for (const line of style.split(';')) {
 				this._setStyleFromLine(line);
 			}
-		} else if (Array.isArray(styles)) {
-			for (const line of styles) {
+		} else if (Array.isArray(style)) {
+			for (const line of style) {
 				this._setStyleFromLine(line);
 			}
-		} else if (typeof styles === 'object') {
-			for (var property in styles) {
-				this._setStyle(property, styles[property]);
+		} else if (typeof style === 'object') {
+			for (var property in style) {
+				this._setStyle(property, style[property]);
 			}
 		}
 	}
-	get styles(): StyleType {
+	get style(): StyleType {
 		return this.el.getAttribute('style') as StyleType;
 	}
 

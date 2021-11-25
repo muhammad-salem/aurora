@@ -1,11 +1,10 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { DOMNode, DOMRenderNode } from '@ibyar/elements';
+import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 
 export interface DirectiveOptions {
 	selector: string;
-	nextSiblingDirectives?: string[];
 }
 
 export interface ServiceOptions {
@@ -55,7 +54,7 @@ export interface ComponentOptions<T = Function> {
 	 * or us aurora jsx factory 
 	 * 				
 	 */
-	template?: string | DOMNode | DOMRenderNode<T> | Promise<string>;
+	template?: string | DomNode | DomRenderNode<T> | Promise<string>;
 	/**
 	 * style for this element
 	 */

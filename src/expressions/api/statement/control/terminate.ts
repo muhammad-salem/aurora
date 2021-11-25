@@ -1,4 +1,4 @@
-import type { ExpressionEventPath, ExpressionNode } from '../../expression.js';
+import type { ExpressionEventPath, ExpressionNode, VisitNodeListType, VisitNodeType } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -14,7 +14,7 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  */
 class TerminateStatement extends AbstractExpressionNode {
 
-	constructor(private symbol: Symbol, private label?: ExpressionNode) {
+	constructor(protected symbol: Symbol, protected label?: ExpressionNode) {
 		super();
 	}
 	getSymbol() {
@@ -51,6 +51,9 @@ export class BreakStatement extends TerminateStatement {
 	static fromJSON(node: BreakStatement): BreakStatement {
 		return BreakStatement.BREAK_INSTANCE;
 	}
+	static visit(node: BreakStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		node.label && visitNode(node.label);
+	}
 }
 
 @Deserializer('ContinueStatement')
@@ -59,5 +62,8 @@ export class ContinueStatement extends TerminateStatement {
 	static readonly CONTINUE_INSTANCE = Object.freeze(new ContinueStatement(ContinueStatement.ContinueSymbol)) as ContinueStatement;
 	static fromJSON(node: ContinueStatement): ContinueStatement {
 		return ContinueStatement.CONTINUE_INSTANCE;
+	}
+	static visit(node: ContinueStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		node.label && visitNode(node.label);
 	}
 }

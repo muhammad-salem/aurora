@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, VisitNodeListType
+} from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -23,6 +26,12 @@ export class ForNode extends AbstractExpressionNode {
 			node.test && deserializer(node.test),
 			node.update && deserializer(node.update)
 		);
+	}
+	static visit(node: ForNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.body);
+		node.init && visitNode(node.init);
+		node.test && visitNode(node.test);
+		node.update && visitNode(node.update);
 	}
 	constructor(
 		private body: ExpressionNode,
@@ -110,6 +119,11 @@ export class ForOfNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
+	static visit(node: ForOfNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.left);
+		visitNode(node.right);
+		visitNode(node.body);
+	}
 	constructor(
 		private left: ForDeclaration,
 		private right: ExpressionNode,
@@ -180,6 +194,11 @@ export class ForInNode extends AbstractExpressionNode {
 			deserializer(node.right),
 			deserializer(node.body)
 		);
+	}
+	static visit(node: ForInNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.left);
+		visitNode(node.right);
+		visitNode(node.body);
 	}
 	// variable of iterable
 	constructor(
@@ -252,6 +271,11 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			deserializer(node.right),
 			deserializer(node.body)
 		);
+	}
+	static visit(node: ForAwaitOfNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.left);
+		visitNode(node.right);
+		visitNode(node.body);
 	}
 	// variable of iterable
 	constructor(

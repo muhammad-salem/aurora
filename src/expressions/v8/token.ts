@@ -764,8 +764,8 @@ export class Token {
 
 export class TokenExpression {
 	constructor(public token: Token, public value?: ExpressionNode) { }
-	getValue(): ExpressionNode {
-		return this.value!;
+	getValue<T extends ExpressionNode>(): T {
+		return this.value! as T;
 	}
 	isType(type: Token) {
 		return this.token === type;

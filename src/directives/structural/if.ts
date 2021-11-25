@@ -1,58 +1,58 @@
-import { Directive, Input, SourceFollowerCallback } from '@ibyar/core';
-import { ExpressionNode, IfStatement, JavaScriptParser } from '@ibyar/expressions';
-import { DOMElementNode } from '@ibyar/elements';
-import { AbstractStructuralDirective } from './structural.js';
+import { Directive, Input, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
 
-
-const FIRST_STATUE = {};
 
 @Directive({
 	selector: '*if',
 })
-export class IfDirective<T> extends AbstractStructuralDirective {
+export class IfThenElseDirective extends StructuralDirective implements OnDestroy {
+
+	_condition: boolean;
+	private _thenTemplateRef: TemplateRef = this.templateRef;
+	private _elseTemplateRef?: TemplateRef;
+
+	private _lastCondition: boolean | null = null;
+
 
 	@Input('if')
-	expression: string;
+	set ifCondition(condition: boolean) {
+		this._condition = condition;
+		this._updateUI();
+	}
 
-	lastTest: boolean = FIRST_STATUE as boolean;
-	elseTemplateNode: DOMElementNode | undefined;
-	getStatement(): string {
-		const [test, alternate] = this.expression.split(/[ \t]{0,};{0,}[ \t]{0,}else[ \t]{1,}/g);
-		if (alternate) {
-			return `if(${test}) { } else '${alternate}'`;
+	@Input('then')
+	set thenTemplateRef(template: TemplateRef) {
+		this._thenTemplateRef = template;
+		if (this._condition) {
+			// need to force rendering the new template in case of false condition
+			this._lastCondition = null;
 		}
-		return `if(${test}) { }`;
+		this._updateUI();
 	}
-	onInit() {
-		const statement = this.getStatement();
-		const ifNode = JavaScriptParser.parse(statement) as IfStatement;
-		const alternate = ifNode.getAlternate();
-		if (alternate) {
-			const elseTemplateName: string = alternate.get(this.directiveStack);
-			this.elseTemplateNode = this.findTemplate(elseTemplateName);
+
+	@Input('else')
+	set elseTemplateRef(template: TemplateRef) {
+		this._elseTemplateRef = template;
+		if (!this._condition) {
+			// need to force rendering the new template in case of false condition
+			this._lastCondition = null;
 		}
-		const uiCallback: SourceFollowerCallback = (stackTrace: any[]) => {
-			stackTrace.push(this);
-			const test = ifNode.getTest().get(this.directiveStack);
-			if (this.lastTest !== test) {
-				this.lastTest = test;
-				this.removeOldElements();
-				this.fragment = document.createDocumentFragment();
-				const stack = this.directiveStack.copyStack();
-				stack.pushBlockScope();
-				if (test) {
-					this.updateView(stack);
-				} else if (this.elseTemplateNode) {
-					this.appendChildToParent(this.elseTemplateNode.children, stack);
-				}
-				this.fragment.childNodes.forEach(child => this.elements.push(child));
-				this.comment.after(this.fragment);
+		this._updateUI();
+	}
+
+	private _updateUI() {
+		if (this._condition !== this._lastCondition) {
+			this._lastCondition = this._condition;
+			this.viewContainerRef.clear();
+			if (this._condition) {
+				this.viewContainerRef.createEmbeddedView(this._thenTemplateRef);
+			} else if (this._elseTemplateRef) {
+				this.viewContainerRef.createEmbeddedView(this._elseTemplateRef);
 			}
-		};
-		this.render.subscribeExpressionNode(ifNode, this.directiveStack, uiCallback, this);
-		uiCallback([]);
+		}
 	}
-	getCallback(node: ExpressionNode): () => void {
-		throw new Error('Method not implemented.');
+
+	onDestroy() {
+		this.viewContainerRef.clear();
 	}
+
 }

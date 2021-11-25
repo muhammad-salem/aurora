@@ -1,6 +1,7 @@
 import {
-	DOMElementNode, DOMDirectiveNode, DOMChild,
-	BaseNode, DOMFragmentNode, parseTextChild, DOMNode
+	DomElementNode, DomStructuralDirectiveNode, DomChild,
+	BaseNode, DomFragmentNode, parseTextChild, DomNode,
+	DomAttributeDirectiveNode
 } from './dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
@@ -16,7 +17,7 @@ export class NodeFactory {
 
 	static DirectiveTag = 'directive';
 
-	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]): DOMNode {
+	static createElement(tagName: string, attrs?: NodeAttr, ...children: (string | DomChild)[]): DomNode {
 
 		if (NodeFactory.Fragment === tagName.toLowerCase()) {
 			return NodeFactory.createFragmentNode(...children);
@@ -28,7 +29,7 @@ export class NodeFactory {
 		 * <div _if="element.show">{'{{element.name}}'} </div>
 		 */
 		if (directiveRegistry.has(tagName)) {
-			return NodeFactory.createDirectiveNode(tagName, '', attrs, ...children);
+			return NodeFactory.createStructuralDirectiveNode(tagName, '', attrs, ...children);
 		}
 		/**
 		 * <directive *if="element.show" >{'{{element.name}}'}</directive>
@@ -42,9 +43,9 @@ export class NodeFactory {
 					// is directive
 					directiveValue = attrs[directiveName];
 					delete attrs.directiveName;
-					return NodeFactory.createDirectiveNode(directiveName, directiveValue, attrs, ...children);
+					return NodeFactory.createStructuralDirectiveNode(directiveName, directiveValue, attrs, ...children);
 				}
-				let node = new DOMElementNode(tagName, attrs?.is);
+				let node = new DomElementNode(tagName, attrs?.is);
 				NodeFactory.initElementAttrs(node, attrs);
 				children?.forEach(child => {
 					if (typeof child === 'string') {
@@ -66,7 +67,7 @@ export class NodeFactory {
 			let directiveName = attrKeys.find(attrName => attrName.startsWith('*'));
 			if (directiveName) {
 				let directiveValue = attrs[directiveName];
-				return NodeFactory.createDirectiveNode(directiveName, directiveValue, attrs, node);
+				return NodeFactory.createStructuralDirectiveNode(directiveName, directiveValue, attrs, node);
 			}
 			return node;
 		} else {
@@ -74,8 +75,8 @@ export class NodeFactory {
 		}
 	}
 
-	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
-		let node = new DOMElementNode(tagName, attrs?.is);
+	static createElementNode(tagName: string, attrs?: NodeAttr, ...children: (string | DomChild)[]) {
+		let node = new DomElementNode(tagName, attrs?.is);
 		NodeFactory.initElementAttrs(node, attrs);
 		children?.forEach(child => {
 			if (typeof child === 'string') {
@@ -87,7 +88,7 @@ export class NodeFactory {
 		return node;
 	}
 
-	static createFragmentNode(...children: (string | DOMChild)[]) {
+	static createFragmentNode(...children: (string | DomChild)[]) {
 		let childStack = children.flatMap(child => {
 			if (typeof child === 'string') {
 				return parseTextChild(child);
@@ -95,14 +96,20 @@ export class NodeFactory {
 				return [child];
 			}
 		});
-		return new DOMFragmentNode(childStack);
+		return new DomFragmentNode(childStack);
 	}
 
-	static createDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DOMChild)[]) {
-		const fragment = new DOMFragmentNode();
+	static createStructuralDirectiveNode(directiveName: string, directiveValue: string, attrs?: NodeAttr, ...children: (string | DomChild)[]) {
+		const fragment = new DomFragmentNode();
 		children?.forEach(child => (typeof child === 'string') ? fragment.addTextChild(child) : fragment.addChild(child));
 		!directiveName.startsWith('*') && (directiveName = '*' + directiveName);
-		const directive = new DOMDirectiveNode(directiveName, directiveValue ?? '', fragment);
+		const directive = new DomStructuralDirectiveNode(directiveName, fragment, directiveValue);
+		attrs && Object.keys(attrs).forEach(attr => directive.addAttribute(attr, attrs[attr]));
+		return directive;
+	}
+
+	static createAttributeDirectiveNode(directiveName: string, attrs?: NodeAttr) {
+		const directive = new DomAttributeDirectiveNode(directiveName);
 		attrs && Object.keys(attrs).forEach(attr => directive.addAttribute(attr, attrs[attr]));
 		return directive;
 	}
@@ -112,17 +119,36 @@ export class NodeFactory {
 			Object.keys(attrs).forEach(key => {
 				NodeFactory.handelAttribute(element, key, attrs[key]);
 			});
+
+			const directives: DomAttributeDirectiveNode[] = [];
+			Object.keys(attrs).forEach(attributeName => {
+				if (directiveRegistry.has(attributeName)) {
+					Reflect.deleteProperty(attrs, attributeName);
+					const directive = new DomAttributeDirectiveNode(attributeName);
+					const directiveInfo = directiveRegistry.get(attributeName)!;
+					Object.keys(attrs).forEach(attr => {
+						if (directiveInfo.hasAttribute(attr)) {
+							directive.addAttribute(attr, attrs[attr]);
+							Reflect.deleteProperty(attrs, attr);
+						}
+					});
+					directives.push(directive);
+				}
+			});
+			if (directives.length) {
+				element.attributeDirectives = directives;
+			}
 		}
 	}
 
 	static handelAttribute(element: BaseNode, attrName: string, value: string | Function | object): void {
 
-		if (attrName.startsWith('#') && element instanceof DOMElementNode) {
+		if (attrName.startsWith('#') && element instanceof DomElementNode) {
 			// <app-tag #element-name="directiveName?" ></app-tag>
 			attrName = attrName.substring(1);
 			element.setTemplateRefName(attrName, value as string);
 		}
-		else if (attrName === 'is' && element instanceof DOMElementNode) {
+		else if (attrName === 'is' && element instanceof DomElementNode) {
 			element.is = value as string;
 			return;
 		}

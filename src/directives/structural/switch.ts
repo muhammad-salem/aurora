@@ -1,74 +1,80 @@
-import { Directive, Input } from '@ibyar/core';
-import { DOMChild, DOMDirectiveNode, DOMParentNode } from '@ibyar/elements';
-import { ExpressionNode, JavaScriptParser, SwitchStatement } from '@ibyar/expressions';
-import { AbstractStructuralDirective } from './structural.js';
+import { Directive, Input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/core';
 
+interface CaseDirectiveValue {
+	value: any;
+}
 
 @Directive({
 	selector: '*case',
 })
+export class CaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
+
+	public value: any;
+
+	@Input('case')
+	set caseValue(value: any) {
+		this.value = value;
+		this._updateUI();
+	}
+	private _updateUI() {
+		this.viewContainerRef.clear();
+		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
+	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
+}
+
 @Directive({
 	selector: '*default',
 })
-export class DefaultSwitchCaseDirective {
+export class DefaultCaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
+
+	public value: any;
+
+	@Input('default')
+	set defaultCaseValue(value: any) {
+		this.value = value;
+		this._updateUI();
+	}
+	private _updateUI() {
+		this.viewContainerRef.clear();
+		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
+	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
 
 }
 
 @Directive({
 	selector: '*switch',
 })
-export class SwitchDirective extends AbstractStructuralDirective {
+export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
+
+	onInit() {
+		this.templateRef.astNode;
+	}
+
+	private _expression: object | null | undefined;
 
 	@Input('switch')
-	expression: string;
-
-	caseElements: DOMDirectiveNode[] = [];
-	caseExpressions: ExpressionNode[] = [];
-	defaultElement: DOMDirectiveNode;
-
-	getStatement() {
-		return `switch(${this.expression}) { }`;
+	set switchValue(expression: object | null | undefined) {
+		this._expression = expression;
+		console.log('switch', this);
+		this._updateUI();
 	}
-	getCallback(switchNode: ExpressionNode): () => void {
-		const directiveChildren = (this.node as DOMParentNode).children as DOMDirectiveNode[];
-		for (const child of directiveChildren) {
-			if (child.name === '*case') {
-				this.caseElements.push(child);
-			} else if (child.name === '*default') {
-				if (this.defaultElement) {
-					throw new Error(`syntax error: multiple default directive in switch case ${this.expression}`);
-				}
-				this.defaultElement = child;
-			}
-		}
-		for (const directive of this.caseElements) {
-			this.caseExpressions.push(JavaScriptParser.parse(String(directive.value)));
-		}
-		this.directiveStack.pushFunctionScope();
-		let callback: () => void;
-		if (switchNode instanceof SwitchStatement) {
-			callback = () => {
-				const expressionValue = switchNode.getDiscriminant().get(this.directiveStack);
-				let child: DOMDirectiveNode | undefined;
-				for (let i = 0; i < this.caseExpressions.length; i++) {
-					const value = this.caseExpressions[i].get(this.directiveStack);
-					if (value === expressionValue) {
-						child = this.caseElements[i];
-						break;
-					}
-				}
-				if (!child) {
-					if (this.defaultElement) {
-						child = this.defaultElement;
-					} else {
-						return;
-					}
-				}
-				this.appendNodeToParent(child.node, this.directiveStack);
-			};
-		} else {
-			throw new Error(`syntax error: ${this.expression}`);
-		}
-		return callback;
+
+	private _updateUI() {
+		this.viewContainerRef.clear();
+		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'switch': this._expression });
 	}
+
+	onDestroy() {
+		this.viewContainerRef.clear();
+	}
+
 }

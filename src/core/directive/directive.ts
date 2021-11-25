@@ -1,23 +1,15 @@
-import { DOMElementNode, DOMNode } from '@ibyar/elements';
-import { ComponentRender } from '../view/render.js';
 
-import type { Stack } from '@ibyar/expressions';
+import { TemplateRef } from '../linker/template-ref.js';
+import { ViewContainerRef } from '../linker/view-container-ref.js';
 
 /**
- * A structural directive selector as '*if'
+ * A structural directive selector as '*if' '*for'
  */
 export class StructuralDirective {
 	constructor(
-		protected render: ComponentRender<any>,
-		protected directiveStack: Stack,
-		protected comment: Comment,
-		protected parentNode: Node,
-		protected node: DOMNode,
-
+		protected templateRef: TemplateRef,
+		protected viewContainerRef: ViewContainerRef,
 	) { }
-	protected findTemplate(templateRefName: string): DOMElementNode | undefined {
-		return this.render.templateRefMap.get(templateRefName);
-	}
 }
 
 /**

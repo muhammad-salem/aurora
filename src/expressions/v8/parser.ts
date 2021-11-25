@@ -257,8 +257,10 @@ export abstract class AbstractParser {
 }
 
 export class JavaScriptParser extends AbstractParser {
-	static parse(app: string) {
-		const stream = TokenStream.getTokenStream(app);
+	static parse(source: string | TokenExpression[] | TokenStream) {
+		const stream = (typeof source === 'string' || Array.isArray(source))
+			? TokenStream.getTokenStream(source)
+			: source;
 		const parser = new JavaScriptParser(stream);
 		return parser.scan();
 	}

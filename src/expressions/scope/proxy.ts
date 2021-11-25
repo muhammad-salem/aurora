@@ -42,7 +42,7 @@ export class ScopeProxyHandler<T extends ScopeContext> implements ProxyHandler<S
 		return value;
 	}
 	set(model: T, propertyKey: PropertyKey, value: any, receiver: any): boolean {
-		if (this.proxyValueMap.has(value)) {
+		if ((typeof value === 'object' || typeof value === 'function') && this.proxyValueMap.has(value)) {
 			value = this.proxyValueMap.get(value);
 		}
 		return this.scope.set(propertyKey, value);
@@ -68,6 +68,6 @@ export function createRevocableProxyForContext<T extends object>(context: T, sco
 	return Proxy.revocable<T>(context, new ScopeProxyHandler(scope));
 }
 
-export function createProxyForContext<T extends object>(context: T, scope: Scope<T>): T {
-	return new Proxy<T>(context, new ScopeProxyHandler(scope));
+export function createProxyForContext<T extends object>(scope: Scope<T>): T {
+	return new Proxy<T>(scope.getContext(), new ScopeProxyHandler(scope));
 }

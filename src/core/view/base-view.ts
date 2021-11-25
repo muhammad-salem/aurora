@@ -7,43 +7,36 @@ import {
 import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
-import { defineModel, Model } from '../model/change-detection.js';
 import { ComponentRender } from './render.js';
 import { ElementModelReactiveScope } from '../component/provider.js';
-import { ElementReactiveScope } from '../directive/providers.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
-function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T) {
+function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T, names: string[]) {
 	if (typeof instance !== 'object') {
 		return;
 	}
-	const prototype = Object.getPrototypeOf(instance);
-	if (!prototype) {
-		return;
-	}
-	const keys = Reflect.getMetadataKeys(prototype);
-	keys
+	names
 		.filter(key => !Reflect.has(instance, key))
 		.forEach(key => Reflect.set(instance, key, undefined));
 }
 
-export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 
 	if (FACTORY_CACHE.has(htmlElementType)) {
 		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
 	}
 	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
-		_proxyModel: ModelType<T>;
+		_proxyModel: T;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScope<T & Model & { [key: string]: any; }>;
-		_viewScope: ElementReactiveScope;
+		_modelScope: ReactiveScope<T>;
+		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -55,40 +48,39 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 				});
 			}
 			const model = new modelClass(/* resolve dependency injection*/);
-			defineInstancePropertyMap(model);
-			this._model = defineModel(model);
+			const modelNames = componentRef.inputs.map(input => input.modelProperty)
+				.concat(componentRef.outputs.map(output => output.modelProperty))
+				.concat(componentRef.hostBindings.map(host => host.hostPropertyName))
+				.concat(componentRef.viewChild.map(child => child.modelName));
+			defineInstancePropertyMap(model, modelNames);
+			this._model = model;
 
-			this._viewScope = new ElementReactiveScope(this);
-			const modelScope = ElementModelReactiveScope.blockScopeFor(this._model);
+			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
 
-			// if model had view decorator
+			this._viewScope = ReactiveScope.blockScopeFor<{ 'this': BaseComponent<T> }>({ 'this': this });
+			const elementScope = this._viewScope.getScopeOrCreat('this');
+			componentRef.inputs.forEach(input => {
+				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
+					if (newValue === oldValue) {
+						return;
+					}
+					this._modelScope.set(input.modelProperty as any, newValue);
+				});
+				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
+					if (newValue === oldValue) {
+						return;
+					}
+					elementScope.emit(input.viewAttribute as any, newValue, oldValue);
+				});
+			});
+
+
+			// if property of the model has view decorator
 			if (this._componentRef.view) {
-				// this._model[componentRef.view] = this;
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-			this._viewScope.subscribe((viewProperty, oldValue, newValue) => {
-				this.setInputValue(viewProperty, newValue);
-			});
-			let source: any[] | undefined;
-			this._modelScope.subscribe((modelProperty, oldValue, newValue) => {
-				// console.log('event name', modelProperty);
-				if (oldValue == newValue) {
-					return;
-				}
-				// console.log('emit model', modelProperty, oldValue, newValue);
-				if (source) {
-					if (!source.includes(modelProperty)) {
-						source.push(modelProperty);
-						this._model.emitChangeModel(modelProperty as string, source);
-					}
-				} else {
-					source = [modelProperty]
-					this._model.emitChangeModel(modelProperty as string, source);
-					source = undefined;
-				}
-			});
 			this._render = new ComponentRender(this);
 		}
 
@@ -155,7 +147,7 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 				// console.log('about to change input', inputRef.modelProperty, value);
 				// Reflect.set(this._model, inputRef.modelProperty, value);
 				// this._model.emitChangeModel(inputRef.modelProperty);
-				this._modelScope.set(inputRef.modelProperty, value);
+				this._modelScope.set(inputRef.modelProperty as never, value);
 			}
 		}
 
@@ -209,7 +201,7 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 			// this._changeObservable.emit(name);
 			const inputRef = this.getInput(name);
 			if (inputRef) {
-				this._model.emitChangeModel(inputRef.modelProperty);
+				// this._model.emitChangeModel(inputRef.modelProperty);
 			}
 			if (isOnChanges(this._model)) {
 				this._model.onChanges.call(this._proxyModel);
@@ -285,21 +277,21 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 				if (isAfterViewChecked(this._model)) {
 					this._model.afterViewChecked.call(this._proxyModel);
 				}
-				this.emitRootChanges();
+				// this.emitRootChanges();
 			};
-			this.emitRootChanges();
+			// this.emitRootChanges();
 		}
 
-		emitRootChanges(): void {
-			this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
-		}
+		// emitRootChanges(): void {
+		// 	this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
+		// }
 
-		emitChanges(...events: string[]): void {
-			const sources: any[] = [];
-			events.forEach(key => {
-				this._model.emitChangeModel(key, sources);
-			});
-		}
+		// emitChanges(...events: string[]): void {
+		// 	const sources: any[] = [];
+		// 	events.forEach(key => {
+		// 		this._model.emitChangeModel(key, sources);
+		// 	});
+		// }
 
 		initOuterAttribute(attr: Attr) {
 			// [window, this] scop
@@ -363,7 +355,7 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 			if (isOnDestroy(this._model)) {
 				this._model.onDestroy.call(this._proxyModel);
 			}
-			this.emitChanges('destroy');
+			// this.emitChanges('destroy');
 		}
 
 		// events api
@@ -392,11 +384,6 @@ export function baseFactoryView<T>(htmlElementType: TypeOf<HTMLElement>): TypeOf
 				modelEvent.emit(value);
 				return;
 			}
-		}
-
-		triggerModelChange(eventName: string, value?: any): void {
-			// this._changeObservable.emit(eventName, value);
-			this._model.emitChangeModel(eventName);
 		}
 	};
 	FACTORY_CACHE.set(htmlElementType, CustomView);

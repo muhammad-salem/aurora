@@ -1,5 +1,4 @@
 
-import { HTMLComponent } from '@ibyar/aurora';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 import '@popperjs/core';
@@ -8,29 +7,29 @@ import '@popperjs/core';
 // so it can register itself with the html parser as a node
 export * from './directive/add-note.directive.js';
 export * from './directive/notify-user.directive.js';
-export * from './directive/red-note.directive.js';
 export * from './directive/time.directive.js';
-
-export * from './app-root/app-root-component.js';
 
 export * from './person-app/person.js';
 export * from './person-app/person-app.js';
 
 export * from './two-way/binding-2-way.js';
+export * from './two-way/shared-model.js';
 
 export * from './video-player/video.js';
 
-import { AppRoot } from './app-root/app-root-component.js';
-import './pipe-app/pipe-test.js';
-import { from } from 'rxjs';
+export * from './pipe-app/pipe-test.js';
 
-const appRoot = document.getElementById('app-root') as HTMLComponent<AppRoot> & AppRoot;
+const root = document.getElementById('root')!;
 
-appRoot.selectors = [
-	'person-app',
-	{ tag: 'div', is: 'bind-2way' },
-	'pipe-app',
-	'video-play-list'
-];
+// root.innerHTML = `
+// <pipe-app></pipe-app>
+// `;
 
-appRoot._model.emitChangeModel('apps');
+root.innerHTML = `
+	<person-app></person-app>
+	<div is="bind-2way"></div>
+	<app-edit></app-edit>
+	<pipe-app></pipe-app>
+	<video-play-list></video-play-list>
+`;
+

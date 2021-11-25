@@ -1,15 +1,15 @@
 import { isEmptyElement } from '../attributes/tags.js';
 import {
-	DOMElementNode, CommentNode, parseTextChild,
-	TextContent, LiveTextContent, DOMFragmentNode,
-	DOMDirectiveNode, DOMNode, DOMChild,
-	ElementAttribute, Attribute
+	DomElementNode, CommentNode, parseTextChild,
+	TextContent, LiveTextContent, DomFragmentNode,
+	DomStructuralDirectiveNode, DomNode, DomChild,
+	ElementAttribute, Attribute, DomAttributeDirectiveNode, BaseNode
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DOMElementNode | CommentNode | string;
+type ChildNode = DomElementNode | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -47,11 +47,11 @@ export class NodeParser {
 
 	private tagNameRegExp = /[\-\.0-9_a-z\xB7\xC0-\xD6\xD8-\xF6\xF8-\u037D\u037F-\u1FFF\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDB7F][\uDC00-\uDFFF]/;
 
-	private childStack: DOMChild[];
+	private childStack: DomChild[];
 	private stackTrace: ChildNode[];
 
-	private get currentNode(): DOMElementNode {
-		return this.stackTrace[this.stackTrace.length - 1] as DOMElementNode;
+	private get currentNode(): DomElementNode {
+		return this.stackTrace[this.stackTrace.length - 1] as DomElementNode;
 	}
 
 	private commentOpenCount = 0;
@@ -165,7 +165,7 @@ export class NodeParser {
 
 	private parseOpenTag(token: string) {
 		if (token === '>') {
-			this.stackTrace.push(new DOMElementNode(this.tempText));
+			this.stackTrace.push(new DomElementNode(this.tempText));
 			if (isEmptyElement(this.tempText)) {
 				this.popElement();
 			}
@@ -177,7 +177,7 @@ export class NodeParser {
 			return this.parseOpenTag;
 		}
 		else if (/\s/.test(token)) {
-			this.stackTrace.push(new DOMElementNode(this.tempText));
+			this.stackTrace.push(new DomElementNode(this.tempText));
 			this.tempText = '';
 			this.propType = 'attr';
 			return this.parsePropertyName;
@@ -320,10 +320,10 @@ export class NodeParser {
 		const element = this.stackTrace.pop();
 		if (element) {
 			const parent = this.stackTrace.pop();
-			if (parent && parent instanceof DOMElementNode) {
+			if (parent && parent instanceof DomElementNode) {
 				if (typeof element === 'string') {
 					parent.addTextChild(element);
-				} else if (element instanceof DOMElementNode) {
+				} else if (element instanceof DomElementNode) {
 					parent.addChild(this.checkNode(element));
 				} else {
 					parent.addChild(element);
@@ -333,7 +333,7 @@ export class NodeParser {
 			else {
 				if (typeof element === 'string') {
 					parseTextChild(element).forEach(text => this.childStack.push(text));
-				} else if (element instanceof DOMElementNode) {
+				} else if (element instanceof DomElementNode) {
 					this.childStack.push(this.checkNode(element));
 				} else {
 					this.childStack.push(element);
@@ -342,10 +342,12 @@ export class NodeParser {
 		}
 	}
 
-	checkNode(node: DOMElementNode): DOMElementNode | DOMDirectiveNode {
+	checkNode(node: DomElementNode): DomElementNode | DomStructuralDirectiveNode {
 		const attributes = node.attributes;
 		if (attributes) {
-			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined = attributes.find(attr => attr.name === 'is');
+			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined;
+
+			temp = attributes.find(attr => attr.name === 'is');
 			if (temp) {
 				attributes.splice(attributes.indexOf(temp), 1);
 				node.is = temp.value as string;
@@ -366,51 +368,69 @@ export class NodeParser {
 					node.addOutput(templateAttrs.name.substring(2), templateAttrs.value as string);
 				});
 			}
-			temp = attributes.find(attr => attr.name.startsWith('*'));
-			if (temp) {
-				attributes.splice(attributes.indexOf(temp), 1);
-				const isTemplate = node.tagName === 'template';
-				const directiveNode = isTemplate ? new DOMFragmentNode(node.children) : node;
-				const directive = new DOMDirectiveNode(temp.name, temp.value as string ?? '', directiveNode);
-				const directiveName = temp.name.substring(1);
-				if (isTemplate) {
-					directive.inputs = node.inputs;
-					directive.outputs = node.outputs;
-					directive.attributes = node.attributes;
-					directive.templateAttrs = node.templateAttrs;
-				} else if (directiveRegistry.hasAttributes(directiveName)) {
-					this.extractDirectiveAttributesFromNode(directiveName, directive, node);
-				}
-				return directive;
-			}
-			if (directiveRegistry.has(node.tagName)) {
-				// try to find expression attribute
-				// <if expression="a === b">text child<div>...</div></if>
-				temp = attributes.find(attr => attr.name === 'expression');
-				if (temp) {
-					attributes.splice(attributes.indexOf(temp as ElementAttribute<string, string | number | boolean | object>), 1);
-				}
-				const directiveNode = new DOMFragmentNode(node.children);
-				const directive = new DOMDirectiveNode('*' + node.tagName, temp?.value as string ?? '', directiveNode);
-				this.extractDirectiveAttributesFromNode(node.tagName, directive, node);
-				return directive;
-			}
-		} else if (directiveRegistry.has(node.tagName)) {
-			// support structural directives without expression property
-			// <add-note >text</add-note>
-			return new DOMDirectiveNode('*' + node.tagName, '', new DOMFragmentNode(node.children));
 		}
+
+		const directiveNames = this.extractDirectiveNames(node);
+		let sdName: string | undefined;
+		if (directiveNames.length) {
+			const directives: DomAttributeDirectiveNode[] = [];
+			directiveNames.forEach(attributeName => {
+				if (attributeName.startsWith('*')) {
+					if (sdName) {
+						console.error(`Only one Structural Directive is allowed on an element [${sdName}, ${attributeName}]`);
+						return;
+					}
+					sdName = attributeName;
+					return
+				}
+				const directive = new DomAttributeDirectiveNode(attributeName);
+				if (directiveRegistry.get(attributeName)!.hasAttributes()) {
+					this.extractDirectiveAttributesFromNode(attributeName, directive, node);
+				}
+				directives.push(directive);
+			});
+			if (directives.length) {
+				node.attributeDirectives = directives;
+			}
+		}
+		if (sdName) {
+			// <div *for [forOf]="array" let-item [trackBy]="method" let-i="index" > {{item}} </div>
+			// <div *for="let item of array; let i = index; trackBy=method;" > {{item}} </div>
+
+			const temp = node.attributes!.filter(attr => attr.name == sdName)[0];
+			node.attributes!.splice(node.attributes!.indexOf(temp), 1);
+			const isTemplate = node.tagName === 'template';
+
+			const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
+			const directive = (typeof temp?.value === 'boolean')
+				? new DomStructuralDirectiveNode(temp.name, directiveNode)
+				: new DomStructuralDirectiveNode(temp.name, directiveNode, String(temp.value));
+			const directiveName = temp.name.substring(1);
+			if (isTemplate) {
+				directive.inputs = node.inputs;
+				directive.outputs = node.outputs;
+				directive.attributes = node.attributes;
+				directive.templateAttrs = node.templateAttrs;
+			} else if (directiveRegistry.hasAttributes(directiveName)) {
+				this.extractDirectiveAttributesFromNode(directiveName, directive, node);
+			}
+			return directive;
+		}
+
 		return node;
 	}
 
 
-	private extractDirectiveAttributesFromNode(directiveName: string, directive: DOMDirectiveNode, node: DOMElementNode) {
-		const attributes = directiveRegistry.getAttributes(directiveName)!;
+	private extractDirectiveAttributesFromNode(directiveName: string, directive: BaseNode, node: DomElementNode): void {
+		const attributes = directiveRegistry.getAttributes(directiveName);
+		if (!attributes) {
+			return;
+		}
 		const filterByAttrName = createFilterByAttrName(attributes);
+		directive.attributes = node.attributes?.filter(filterByAttrName);
 		directive.inputs = node.inputs?.filter(filterByAttrName);
 		directive.outputs = node.outputs?.filter(filterByAttrName);
 		directive.twoWayBinding = node.twoWayBinding?.filter(filterByAttrName);
-		directive.attributes = node.attributes?.filter(filterByAttrName);
 		directive.templateAttrs = node.templateAttrs?.filter(filterByAttrName);
 
 		node.inputs && directive.inputs?.forEach(createArrayCleaner(node.inputs));
@@ -418,6 +438,28 @@ export class NodeParser {
 		node.twoWayBinding && directive.twoWayBinding?.forEach(createArrayCleaner(node.twoWayBinding));
 		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
 		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
+	}
+	private extractDirectiveNames(node: BaseNode): string[] {
+		const names: string[] = [];
+		if (node.attributes?.length) {
+			names.push(...this.getAttributeDirectives(node.attributes));
+		}
+		if (node.inputs?.length) {
+			names.push(...this.getAttributeDirectives(node.inputs));
+		}
+		if (node.twoWayBinding?.length) {
+			names.push(...this.getAttributeDirectives(node.twoWayBinding));
+		}
+		if (node.templateAttrs?.length) {
+			names.push(...this.getAttributeDirectives(node.templateAttrs));
+		}
+		if (node.outputs?.length) {
+			names.push(...this.getAttributeDirectives(node.outputs));
+		}
+		return names;
+	}
+	private getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
+		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
 	}
 }
 
@@ -433,22 +475,22 @@ export class HTMLParser {
 
 	nodeParser = new NodeParser();
 
-	parse(html: string): DOMChild[] {
+	parse(html: string): DomChild[] {
 		return this.nodeParser.parse(html);
 	}
 
-	toDomRootNode(html: string): DOMNode {
+	toDomRootNode(html: string): DomNode {
 		let stack = this.nodeParser.parse(html);
 		if (!stack || stack.length === 0) {
-			return new DOMFragmentNode([new TextContent('')]);
+			return new DomFragmentNode([new TextContent('')]);
 		} else if (stack?.length === 1) {
 			return stack[0];
 		} else {
-			return new DOMFragmentNode(stack);
+			return new DomFragmentNode(stack);
 		}
 	}
 
-	stringify(stack: DOMNode[]) {
+	stringify(stack?: DomNode[]) {
 		let html = '';
 		stack?.forEach(node => {
 			if (node instanceof TextContent) {
@@ -457,7 +499,7 @@ export class HTMLParser {
 				html += `{{${node.value}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
-			} else if (node instanceof DOMElementNode) {
+			} else if (node instanceof DomElementNode) {
 				let attrs = '';
 				if (node.attributes) {
 					attrs += node.attributes.map(attr => `${attr.name}="${attr.value}"`).join(' ') + ' ';
