@@ -136,16 +136,15 @@ function parseChild(child: DomNode) {
 		parseBaseNode(child);
 		parseDomParentNode(child);
 	} else if (child instanceof DomStructuralDirectiveNode) {
+		let expressions: ExpressionNode[] = [];
+		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = expressions;
 		if (child.value) {
+			// use shorthand syntax, possible mixed with input and outputs
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
-			(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = info.templateExpressions.map(JavaScriptParser.parse);
+			expressions.push(...info.templateExpressions.map(JavaScriptParser.parse));
 			// <div let-i="index">{{item}}</div>
-			const templateExpressionsFromInput = child.inputs?.filter(attr => attr.name.startsWith('let-'));
-			templateExpressionsFromInput?.forEach(attr => {
-				child.inputs!.splice(child.inputs!.indexOf(attr), 1);
-				const expression = `let ${attr.name.replace('let-', '')} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
-				(child as DomStructuralDirectiveNodeUpgrade).templateExpressions.push(JavaScriptParser.parse(expression));
-			});
+
+			searchForLetAttributes(child, expressions);
 
 			if (info.directiveInputs.size > 0) {
 				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
@@ -159,6 +158,8 @@ function parseChild(child: DomNode) {
 					(child.inputs ??= []).push(attr);
 				});
 			}
+		} else {
+			searchForLetAttributes(child, expressions);
 		}
 		// DomDirectiveNode
 		// in case if add input/output support need to handle that here.
@@ -170,6 +171,16 @@ function parseChild(child: DomNode) {
 		parseDomParentNode(child);
 	}
 }
+
+function searchForLetAttributes(child: DomStructuralDirectiveNode, expressions: ExpressionNode[]) {
+	const templateExpressionsFromInput = child.attributes?.filter(attr => attr.name.startsWith('let-'));
+	templateExpressionsFromInput?.forEach(attr => {
+		child.attributes!.splice(child.attributes!.indexOf(attr), 1);
+		const expression = `let ${attr.name.replace('let-', '')} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
+		expressions.push(JavaScriptParser.parse(expression));
+	});
+}
+
 function parseDomParentNode(parent: DomParentNode) {
 	parent.children?.forEach(parseChild);
 }
