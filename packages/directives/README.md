@@ -36,9 +36,9 @@ yarn add @ibyar/directives
 - [x] *forIn
 - [x] *forOf
 - [x] *forAwait		
-- [x] *switch
-- [x] *case
-- [x] *default
+- [ ] *switch
+- [ ] *case
+- [ ] *default
 
 ## Removed
 - [x] *for
@@ -80,7 +80,7 @@ yarn add @ibyar/directives
 	<div *case="3">Three</div>
 	<div *default>default: Zero</div>
 </div>
-s
+
 ```
  -- `Directives now support input binding (one way)`
 
@@ -187,3 +187,9 @@ The following table provides shorthand examples:
 
 -- in *for `trackBy` not supported yet.
 
+
+<hr>
+
+### change log:
+
+- *switch directive is broken.
