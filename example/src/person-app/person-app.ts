@@ -30,7 +30,7 @@ import { Person, PersonModel } from './person';
 		<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
 
 		<progress-bar *if="person1.age > 35; else showTest" [(value)]="person1.age" min="0" max="100"></progress-bar>
-		<template #showTest>age is less than 35</template>
+		<template #showTest>age is less than 36</template>
 
 		<div class="row">
 			<div class="col-3">
