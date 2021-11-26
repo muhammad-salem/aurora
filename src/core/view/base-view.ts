@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope } from '@ibyar/expressions';
+import { ReactiveScope, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -37,6 +37,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		_modelScope: ReactiveScope<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
+
+		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -81,7 +83,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
-			this._render = new ComponentRender(this);
+			this._render = new ComponentRender(this, this.subscriptions);
 		}
 
 		doBlockCallback = (): void => {
@@ -210,7 +212,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		}
 
 		connectedCallback() {
-
+			if (this.subscriptions.length) {
+				this.subscriptions.forEach(sub => sub.unsubscribe());
+			}
+			this.subscriptions.splice(0, this.subscriptions.length);
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];
 				if (inputDefaultValue !== null && inputDefaultValue !== undefined) {
@@ -351,11 +356,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		}
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
-			// this._changeObservable.emit('destroy');
 			if (isOnDestroy(this._model)) {
 				this._model.onDestroy.call(this._proxyModel);
 			}
-			// this.emitChanges('destroy');
+			this.subscriptions.forEach(sub => sub.unsubscribe());
+			this.subscriptions.splice(0, this.subscriptions.length);
 		}
 
 		// events api

@@ -1,6 +1,9 @@
 import type { DomNode } from '@ibyar/elements';
-import { createProxyForContext, ExpressionNode, ScopeSubscription, Stack } from '@ibyar/expressions';
-import { findReactiveScopeByEventMap } from '@ibyar/expressions';
+import {
+	createProxyForContext, ExpressionNode,
+	findReactiveScopeByEventMap, ScopeContext,
+	ScopeSubscription, Stack
+} from '@ibyar/expressions';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
 
@@ -49,22 +52,18 @@ export class TemplateRefImpl extends TemplateRef {
 
 		const elements: Node[] = [];
 		const contextProxy = createProxyForContext(contextScope);
-		const embeddedViewRef = new EmbeddedViewRefImpl(contextProxy, elements);
+		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		const embeddedViewRef = new EmbeddedViewRefImpl(contextProxy, elements, subscriptions);
 		const scopeSubscriptions = this.executeTemplateExpressions(sandBox);
-		if (scopeSubscriptions) {
-			const subscription = embeddedViewRef.onDestroy(() => {
-				subscription.unsubscribe();
-				scopeSubscriptions.forEach(sub => sub.unsubscribe());
-			});
-		}
+		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
 
 		const fragment = document.createDocumentFragment();
-		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode);
+		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions);
 
 		fragment.childNodes.forEach(item => elements.push(item));
 		return embeddedViewRef;
 	}
-	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<object>[] | undefined {
+	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<ScopeContext>[] | undefined {
 		if (!this.templateExpressions?.length) {
 			return;
 		}
