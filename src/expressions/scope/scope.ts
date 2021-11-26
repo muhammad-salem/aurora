@@ -180,7 +180,13 @@ export class ReadOnlyScope<T extends ScopeContext> extends Scope<T> {
 }
 
 export class ScopeSubscription<T> {
-	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>,) { }
+	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>) { }
+	pause() {
+		this.observer.pause(this.propertyKey, this);
+	}
+	resume() {
+		this.observer.resume(this.propertyKey, this);
+	}
 	unsubscribe(): void {
 		this.observer.unsubscribe(this.propertyKey, this);
 	}
@@ -188,8 +194,10 @@ export class ScopeSubscription<T> {
 
 export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
+type SubscriptionInfo = { callback: ValueChangedCallback, enable: boolean };
+
 export class ValueChangeObserver<T> {
-	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
+	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, SubscriptionInfo>> = new Map();
 	private propertiesLock: (keyof T)[] = [];
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		if (this.propertiesLock.includes(propertyKey)) {
@@ -200,9 +208,12 @@ export class ValueChangeObserver<T> {
 			return;
 		}
 		this.propertiesLock.push(propertyKey);
-		subscribers?.forEach((subscribe) => {
+		subscribers?.forEach(subscriptionInfo => {
+			if (!subscriptionInfo.enable) {
+				return;
+			}
 			try {
-				subscribe(newValue, oldValue);
+				subscriptionInfo.callback(newValue, oldValue);
 			} catch (e) {
 				console.error(e);
 			}
@@ -218,7 +229,7 @@ export class ValueChangeObserver<T> {
 			propertySubscribers = new Map();
 			this.subscribers.set(propertyKey, propertySubscribers);
 		}
-		propertySubscribers.set(subscription, callback);
+		propertySubscribers.set(subscription, { callback, enable: true });
 		return subscription;
 	}
 
@@ -230,8 +241,18 @@ export class ValueChangeObserver<T> {
 		}
 	}
 
+	pause(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
+		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		subscriptionInfo && (subscriptionInfo.enable = false);
+	}
+
+	resume(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
+		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		subscriptionInfo && (subscriptionInfo.enable = true);
+	}
+
 	/**
-	 * clear subscription map
+	 * clear subscription maps
 	 */
 	destroy() {
 		this.subscribers.clear();
