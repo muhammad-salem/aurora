@@ -29,8 +29,11 @@ import { Person, PersonModel } from './person';
 
 		<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
 
-		<progress-bar *if="person1.age > 35; else showTest" [(value)]="person1.age" min="0" max="100"></progress-bar>
-		<template #showTest>age is less than 36</template>
+		<template					*if="person1.age < 20; else between_20_39"						>age is less than 20</template>
+		<template #between_20_39	*if="person1.age > 19 && person1.age < 40; else between_40_79"	>age is between 20 and 39</template>
+		<template #between_40_79	*if="person1.age > 39 && person1.age < 60; else between_80_100" >age is between 40 and 59</template>
+		<template #between_80_100	*if="person1.age > 59 && person1.age < 80; else showTest" 		>age is between 60 and 79</template>
+		<template #showTest																			>age is more than 80</template>
 
 		<div class="row">
 			<div class="col-3">
