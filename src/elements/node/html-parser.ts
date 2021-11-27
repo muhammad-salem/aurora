@@ -396,6 +396,8 @@ export class NodeParser {
 		if (sdName) {
 			// <div *for [forOf]="array" let-item [trackBy]="method" let-i="index" > {{item}} </div>
 			// <div *for="let item of array; let i = index; trackBy=method;" > {{item}} </div>
+			// <template #refName *if="isActive; else disabled" > ... </template>
+			// <template #disabled > ... </template>
 
 			const temp = node.attributes!.filter(attr => attr.name == sdName)[0];
 			node.attributes!.splice(node.attributes!.indexOf(temp), 1);
@@ -413,6 +415,10 @@ export class NodeParser {
 				directive.templateAttrs = node.templateAttrs;
 			} else if (directiveRegistry.hasAttributes(directiveName)) {
 				this.extractDirectiveAttributesFromNode(directiveName, directive, node);
+			}
+			if (isTemplate && node.templateRefName) {
+				node.children = [directive];
+				return node;
 			}
 			return directive;
 		}
