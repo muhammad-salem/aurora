@@ -36,9 +36,9 @@ yarn add @ibyar/directives
 - [x] *forIn
 - [x] *forOf
 - [x] *forAwait		
-- [ ] *switch
-- [ ] *case
-- [ ] *default
+- [x] *switch
+- [x] *case
+- [x] *default
 
 ## Removed
 - [x] *for
@@ -189,7 +189,3 @@ The following table provides shorthand examples:
 
 
 <hr>
-
-### change log:
-
-- *switch directive is broken.
