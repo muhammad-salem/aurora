@@ -1,7 +1,7 @@
-import { createProxyForContext, FunctionProxyHandler, ReactiveScope, ScopeType } from '@ibyar/expressions';
+import { createProxyForContext, FunctionProxyHandler, ReactiveScopeControl, ScopeType } from '@ibyar/expressions';
 
 
-export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> extends ReactiveScope<T> {
+export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> extends ReactiveScopeControl<T> {
 	static for<T extends object>(context: T, type: ScopeType) {
 		return new ElementModelReactiveScope(context, type);
 	}

@@ -1,6 +1,8 @@
-import { ReactiveScope, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
-import { isOnDestroy, OnDestroy } from '../index.js';
+import { ReactiveScopeControl, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
+import { OnDestroy } from '../component/lifecycle.js';
+import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
+import { TypeOf } from '../utils/typeof.js';
 
 /**
  * Pipes are used as singleton
@@ -13,8 +15,10 @@ export interface PipeTransform<T, U> {
 	transform(value: T, ...args: any[]): U;
 }
 
-export interface AsyncPipeTransform<T, U> extends PipeTransform<T, U>, OnDestroy {
-	subscribe(callback: (value: U) => void): void;
+export abstract class AsyncPipeTransform<T, U> implements PipeTransform<T, U>, OnDestroy {
+	constructor(protected changeDetectorRef: ChangeDetectorRef) { }
+	abstract transform(value: T, ...args: any[]): U;
+	abstract onDestroy(): void;
 }
 
 export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe is PipeTransform<T, U> {
@@ -49,36 +53,34 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 }
 
 export class AsyncPipeProvider extends ReadOnlyScope<object> {
-
-	static AsyncPipeContext = Object.create(null);
 	constructor() {
-		super(AsyncPipeProvider.AsyncPipeContext, 'block');
+		super({}, 'block');
 	}
 	has(pipeName: string): boolean {
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		const pipeRef = ClassRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		return pipeRef?.asynchronous ? true : false;
 	}
-	get(pipeName: string): PipeTransform<any, any> | undefined {
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+	get(pipeName: string): TypeOf<AsyncPipeTransform<any, any>> | undefined {
+		const pipeRef = ClassRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		if (pipeRef?.asynchronous) {
-			return new pipeRef.modelClass();
+			return pipeRef.modelClass;
 		}
-		return void 0;
 	}
 }
 
-export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveScope<T> {
+export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveScopeControl<T> {
+	static blockScope<P extends { [key: string]: AsyncPipeTransform<any, any> }>(): AsyncPipeScope<P> {
+		return new AsyncPipeScope();
+	}
 	private wrapper: { [key: string]: Function } = {};
 	constructor() {
 		super({} as T, 'block');
 	}
-	override set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
-		const result = super.set(propertyKey, newValue, receiver);
+	override set(propertyKey: keyof T, pipeClass: TypeOf<AsyncPipeTransform<any, any>>, receiver?: any): boolean {
+		const detector = createChangeDetectorRef(this, propertyKey);
+		const pipe = new pipeClass(detector);
+		const result = super.set(propertyKey, pipe, receiver);
 		if (result) {
-			const pipe = this.context[propertyKey];
-			pipe.subscribe(value => {
-				this.emit(propertyKey, value);
-			});
 			this.wrapper[propertyKey as string] = (value: any, ...args: any[]) => {
 				return pipe.transform(value, ...args)
 			};
