@@ -422,7 +422,7 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		return new ReactiveScopeControl({} as T, 'global');
 	}
 
-	protected attached: boolean;
+	protected attached: boolean = true;
 	protected marked: ScopeContext = {};
 	override emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		if (this.attached) {
