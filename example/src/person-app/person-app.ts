@@ -82,13 +82,18 @@ import { Person, PersonModel } from './person';
 		<hr>
 
 		<h1>Switch Case Directive</h1>
-		<h5>*switch="1"</h5>
+		<h5>*switch="{{selectFruit}}"</h5>
+		<select class="form-select" (change)="selectFruit = this.value">
+			<option *forOf="let fruit of fruits"
+				[value]="fruit"
+				>{{fruit |> titlecase}}</option>
+		</select>
 		<div class="row">
-			<div class="col-3" *switch="1">
-				<div *case="1">One</div>
-				<div *case="2">Two</div>
-				<div *case="3">Three</div>
-				<div *default>default: Zero</div>
+			<div class="col-3" *switch="selectFruit">
+				<div *case="'oranges'">Oranges</div>
+				<div *case="'apples'">Apples</div>
+				<div *case="'bananas'">Bananas</div>
+				<div *default>Not Found</div>
 			</div>
 		</div>
 		<hr>
@@ -117,6 +122,14 @@ export class PersonApp {
 	people = [this.person1, this.person2, this.person3, this.person4];
 	i = 0;
 
+	fruits = [
+		'mangoes',
+		'oranges',
+		'apples',
+		'bananas',
+		'cherries',
+	];
+	selectFruit = 'bananas';
 	asyncIterable = {
 		[Symbol.asyncIterator]() {
 			return {
