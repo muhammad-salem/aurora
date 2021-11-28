@@ -343,24 +343,114 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
-
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		this.observer.emit(propertyKey, newValue, oldValue);
 		this.parent?.emit(this.name!, this.context);
 	}
-
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		return this.observer.subscribe(propertyKey, callback);
 	}
-
 	unsubscribe(propertyKey?: keyof T, subscription?: ScopeSubscription<T>) {
 		if (propertyKey && subscription) {
 			this.observer.unsubscribe(propertyKey, subscription);
 		} else if (propertyKey) {
-
 			this.observer.unsubscribe(propertyKey);
 		} else {
 			this.observer.destroy();
 		}
+	}
+}
+
+/**
+ * used control/notify/pause scope about changes in current context
+ */
+export interface ScopeControl<T extends ScopeContext> {
+
+	/**
+	 * used when want to update ui-view like, you want to replace an array with another 
+	 * without reflect changes on view until reattached again.
+	 */
+	detach(): void;
+
+	/**
+	 * apply all the not emitted changes, and continue emit in time.
+	 */
+	reattach(): void;
+
+	/**
+	 * apply changes now,
+	 * will not effect the state of the detector wither if attached ot not.
+	 * 
+	 * if a propertyKey is provided, will emit this property only 
+	 * @param propertyKey 
+	 */
+	emitChanges(propertyKey?: keyof T): void;
+}
+
+export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<T> implements ScopeControl<T> {
+	static for<T extends ScopeContext>(context: T, type: ScopeType) {
+		return new ReactiveScopeControl(context, type);
+	}
+	static blockScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'block');
+	}
+	static functionScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'function');
+	}
+	static classScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'class');
+	}
+	static moduleScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'module');
+	}
+	static globalScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'global');
+	}
+	static blockScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'block');
+	}
+	static functionScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'function');
+	}
+	static classScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'class');
+	}
+	static moduleScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'module');
+	}
+	static globalScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'global');
+	}
+
+	protected attached: boolean;
+	protected marked: ScopeContext = {};
+	override emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		if (this.attached) {
+			super.emit(propertyKey, newValue, oldValue);
+		} else {
+			this.marked[propertyKey] = newValue;
+		}
+	}
+	detach(): void {
+		this.attached = false;
+	}
+	reattach(): void {
+		this.attached = true;
+		this.emitChanges();
+	}
+	emitChanges(propertyKey?: keyof T): void {
+		if (propertyKey) {
+			if (propertyKey in this.marked) {
+				const lastValue = this.marked[propertyKey];
+				Reflect.deleteProperty(this.marked, propertyKey);
+				super.emit(propertyKey, lastValue);
+			}
+			return;
+		}
+		const oldChanges = this.marked;
+		this.marked = {};
+		Object.keys(oldChanges).forEach(propertyKey => {
+			super.emit(propertyKey, oldChanges[propertyKey]);
+		});
 	}
 }
