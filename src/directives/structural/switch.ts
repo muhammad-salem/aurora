@@ -31,17 +31,31 @@ export class SwitchView {
 @Directive({
 	selector: '*case',
 })
-export class CaseOfSwitchDirective extends StructuralDirective implements OnDestroy {
+export class CaseOfSwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
 	private _view: SwitchView = new SwitchView(this.viewContainerRef, this.templateRef);
 
 	host: SwitchDirective;
 
+	private _caseValue: any;
+
 	@Input('case')
 	set caseValue(value: any) {
-		this._view.enforceState(this.host._matchCase(value));
+		this._caseValue = value;
+		this.host._updateView();
 	}
-
+	onInit() {
+		this.host._addCase(this);
+	}
+	getCaseValue() {
+		return this._caseValue;
+	}
+	getView() {
+		return this._view;
+	}
+	create(): void {
+		this._view.create();
+	}
 	onDestroy() {
 		this._view.destroy();
 	}
@@ -53,7 +67,6 @@ export class CaseOfSwitchDirective extends StructuralDirective implements OnDest
 })
 export class DefaultCaseOfSwitchDirective extends StructuralDirective implements OnInit {
 
-
 	@Input('default')
 	defaultCaseValue: any;
 
@@ -61,7 +74,7 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 
 	onInit() {
 		const defaultView = new SwitchView(this.viewContainerRef, this.templateRef);
-		this.host._addDefault(defaultView);
+		this.host._setDefault(defaultView);
 	}
 
 }
@@ -71,12 +84,11 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 })
 export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
-	private _defaultViews!: SwitchView[];
-	private _defaultUsed = false;
-	private _caseCount = 0;
-	private _lastCaseCheckIndex = 0;
-	private _lastCasesMatched = false;
+	private _defaultView: SwitchView;
+	private _casesRef: CaseOfSwitchDirective[] = [];
 	private _switchValue: any;
+	private _lastValue: any;
+	private _lastView: SwitchView;
 
 	onInit() {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);
@@ -85,46 +97,43 @@ export class SwitchDirective extends StructuralDirective implements OnInit, OnDe
 	@Input('switch')
 	set switchValue(value: any) {
 		this._switchValue = value;
-		if (this._caseCount === 0) {
-			this._updateDefaultCases(true);
-		}
+		this._updateView();
 	}
 
 	onDestroy() {
 		this.viewContainerRef.clear();
 	}
 
-	/** @internal */
-	_addCase(): number {
-		return this._caseCount++;
+	_addCase(_casesRef: CaseOfSwitchDirective) {
+		this._casesRef.push(_casesRef);
+		this._updateView();
 	}
 
-	/** @internal */
-	_addDefault(view: SwitchView) {
-		if (!this._defaultViews) {
-			this._defaultViews = [];
-		}
-		this._defaultViews.push(view);
+	_setDefault(view: SwitchView) {
+		this._defaultView = view;
+		this._updateView();
 	}
-	/** @internal */
-	_matchCase(value: any): boolean {
-		const matched = value == this._switchValue;
-		this._lastCasesMatched ||= matched;
-		this._lastCaseCheckIndex++;
-		if (this._lastCaseCheckIndex === this._caseCount) {
-			this._updateDefaultCases(!this._lastCasesMatched);
-			this._lastCaseCheckIndex = 0;
-			this._lastCasesMatched = false;
-		}
-		return matched;
-	}
+	_updateView() {
+		if (this._lastValue !== this._switchValue) {
+			this._lastValue = this._switchValue;
 
-	private _updateDefaultCases(useDefault: boolean) {
-		if (this._defaultViews && useDefault !== this._defaultUsed) {
-			this._defaultUsed = useDefault;
-			for (let i = 0; i < this._defaultViews.length; i++) {
-				const defaultView = this._defaultViews[i];
-				defaultView.enforceState(useDefault);
+			let view: SwitchView | undefined;
+			for (const caseRef of this._casesRef) {
+				if (this._switchValue == caseRef.getCaseValue()) {
+					view = caseRef.getView();
+					break;
+				}
+			}
+			if (!view) {
+				view = this._defaultView;
+			}
+
+			if (view) {
+				if (this._lastView != view) {
+					this._lastView?.destroy();
+				}
+				view.create();
+				this._lastView = view;
 			}
 		}
 	}
