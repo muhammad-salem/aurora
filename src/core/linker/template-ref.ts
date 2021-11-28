@@ -4,6 +4,8 @@ import {
 	findReactiveScopeByEventMap, ScopeContext,
 	ScopeSubscription, Stack
 } from '@ibyar/expressions';
+import { HTMLComponent } from '../component/custom-element.js';
+import { StructuralDirective } from '../directive/directive.js';
 import { ComponentRender } from '../view/render.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl } from './view-ref.js';
 
@@ -28,18 +30,21 @@ export abstract class TemplateRef {
 
 
 export class TemplateRefImpl extends TemplateRef {
-
+	private _host: HTMLComponent<any> | StructuralDirective;
 
 	constructor(
 		private render: ComponentRender<any>,
 		private node: DomNode,
 		private stack: Stack,
-		private templateExpressions: ExpressionNode[]
+		private templateExpressions: ExpressionNode[],
 	) {
 		super();
 	}
 	get astNode(): DomNode {
 		return this.node;
+	}
+	set host(host: HTMLComponent<any> | StructuralDirective) {
+		this._host = host;
 	}
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
 		const directiveStack = this.stack.copyStack();
@@ -58,7 +63,7 @@ export class TemplateRefImpl extends TemplateRef {
 		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
 
 		const fragment = document.createDocumentFragment();
-		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions);
+		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions, this._host);
 
 		fragment.childNodes.forEach(item => elements.push(item));
 		return embeddedViewRef;
