@@ -74,7 +74,7 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 
 	onInit() {
 		const defaultView = new SwitchView(this.viewContainerRef, this.templateRef);
-		this.host._setDefault(defaultView);
+		this.host._addDefault(defaultView);
 	}
 
 }
@@ -84,11 +84,11 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 })
 export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
-	private _defaultView: SwitchView;
+	private _defaultViews: SwitchView[] = [];
 	private _casesRef: CaseOfSwitchDirective[] = [];
 	private _switchValue: any;
 	private _lastValue: any;
-	private _lastView: SwitchView;
+	private _lastViews: SwitchView[];
 
 	onInit() {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);
@@ -101,6 +101,7 @@ export class SwitchDirective extends StructuralDirective implements OnInit, OnDe
 	}
 
 	onDestroy() {
+		this._lastViews?.forEach(view => view.destroy());
 		this.viewContainerRef.clear();
 	}
 
@@ -109,31 +110,26 @@ export class SwitchDirective extends StructuralDirective implements OnInit, OnDe
 		this._updateView();
 	}
 
-	_setDefault(view: SwitchView) {
-		this._defaultView = view;
+	_addDefault(view: SwitchView) {
+		this._defaultViews.push(view);
 		this._updateView();
 	}
 	_updateView() {
 		if (this._lastValue !== this._switchValue) {
 			this._lastValue = this._switchValue;
+			let views = this._casesRef.filter(caseItem => this._switchValue == caseItem.getCaseValue())
+				.map(caseItem => caseItem.getView());
 
-			let view: SwitchView | undefined;
-			for (const caseRef of this._casesRef) {
-				if (this._switchValue == caseRef.getCaseValue()) {
-					view = caseRef.getView();
-					break;
-				}
-			}
-			if (!view) {
-				view = this._defaultView;
+			if (!views.length) {
+				views = this._defaultViews;
 			}
 
-			if (view) {
-				if (this._lastView != view) {
-					this._lastView?.destroy();
+			if (views.length) {
+				if (this._lastViews != views) {
+					this._lastViews?.forEach(view => view.destroy());
+					views.forEach(view => view.create());
 				}
-				view.create();
-				this._lastView = view;
+				this._lastViews = views;
 			}
 		}
 	}
