@@ -89,6 +89,9 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	getDeclarations() {
 		return this.declarations;
 	}
+	getKind() {
+		return this.kind;
+	}
 	shareVariables(scopeList: Scope<any>[]): void {
 		this.declarations.forEach(declaration => declaration.shareVariables(scopeList));
 	}
