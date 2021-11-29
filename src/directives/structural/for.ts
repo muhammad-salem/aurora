@@ -37,6 +37,9 @@ export class ForInContext<T> extends ForContext<T> {
 }
 
 @Directive({
+	selector: '*for',
+})
+@Directive({
 	selector: '*forOf',
 })
 export class ForOfDirective<T> extends StructuralDirective implements OnDestroy {
