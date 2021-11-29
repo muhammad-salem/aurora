@@ -83,19 +83,23 @@ import { Person, PersonModel } from './person';
 
 		<h1>Switch Case Directive</h1>
 		<h5>*switch="{{selectFruit}}"</h5>
-		<select class="form-select" (change)="selectFruit = this.value">
-			<option *forOf="let fruit of fruits"
-				[value]="fruit"
-				>{{fruit |> titlecase}}</option>
-		</select>
-		<div class="row">
-			<div class="col-3" *switch="selectFruit">
-				<div *case="'oranges'">Oranges</div>
-				<div *case="'apples'">Apples</div>
-				<div *case="'bananas'">Bananas</div>
-				<div *default>Not Found</div>
-			</div>
-		</div>
+		<ul class="list-group">
+			<li class="list-group-item row">
+				<div class="col-3" *switch="selectFruit">
+					<div *case="'oranges'">Oranges</div>
+					<div *case="'apples'">Apples</div>
+					<div *case="'bananas'">Bananas</div>
+					<div *default>Not Found</div>
+				</div>
+			</li>
+			<li class="list-group-item row">
+				<select class="form-select col-3" (change)="selectFruit = this.value">
+					<option *forOf="let fruit of fruits"
+						[value]="fruit"
+						>{{fruit |> titlecase}}</option>
+				</select>
+			</li>
+		</ul>
 		<hr>
 		`
 })
