@@ -4,7 +4,7 @@ import {
 	ScopeContext, ValueChangedCallback, Scope,
 	MemberExpression, Identifier
 } from '@ibyar/expressions';
-import { AsyncPipeProvider, AsyncPipeScope } from '../pipe/pipe.js';
+import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
 type OneWayOperator = ':=';
 type TwoWayOperator = ':=:';
@@ -31,14 +31,18 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 	}
 	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
 		if (pipelineNames?.length) {
-			const asyncPipeScope = new AsyncPipeScope();
-			pipelineNames.forEach(pipeline => {
-				const scope = stack.findScope(pipeline);
+			const pipeScope = Scope.blockScope();
+			const asyncPipeScope = AsyncPipeScope.blockScope();
+			pipelineNames.forEach(pipelineName => {
+				const scope = stack.findScope(pipelineName);
+				const pipe = scope.get(pipelineName)!;
 				if (scope instanceof AsyncPipeProvider) {
-					const pipe = scope.get(pipeline)!;
-					asyncPipeScope.set(pipeline, pipe);
+					asyncPipeScope.set(pipelineName, pipe);
+				} else if (scope instanceof PipeProvider) {
+					pipeScope.set(pipelineName, pipe);
 				}
 			});
+			stack.pushScope(pipeScope);
 			stack.pushScope(asyncPipeScope);
 		}
 		const map = findScopeByEventMap(this.rightEvents, stack);

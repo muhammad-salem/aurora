@@ -1,3 +1,4 @@
+import { ScopeContext, ScopeSubscription } from '@ibyar/expressions';
 
 export abstract class ViewRef {
 	/**
@@ -66,11 +67,12 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 
 	private _destroyed: boolean = false;
-	private subscribes: (() => void)[] = [];
+	private onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
 		private _context: C,
-		private _rootNodes: Node[]) {
+		private _rootNodes: Node[],
+		private _subscriptions?: ScopeSubscription<ScopeContext>[]) {
 		super();
 	}
 
@@ -92,10 +94,12 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	destroy(): void {
 		if (!this._destroyed) {
+			this._subscriptions?.forEach(sub => sub.unsubscribe());
+			this._subscriptions?.splice(0, this._subscriptions.length);
 			for (const node of this._rootNodes) {
 				(<Element>node).remove();
 			}
-			this.subscribes.forEach(callback => {
+			this.onDestroySubscribes.forEach(callback => {
 				try {
 					callback();
 				} catch (error) {
@@ -125,12 +129,12 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		}
 	}
 	onDestroy(callback: () => void): { unsubscribe(): void; } {
-		this.subscribes.push(callback);
+		this.onDestroySubscribes.push(callback);
 		return {
 			unsubscribe: () => {
-				const index = this.subscribes.indexOf(callback);
+				const index = this.onDestroySubscribes.indexOf(callback);
 				if (index > -1) {
-					this.subscribes.splice(index, 1);
+					this.onDestroySubscribes.splice(index, 1);
 				}
 			}
 		};

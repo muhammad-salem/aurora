@@ -180,7 +180,13 @@ export class ReadOnlyScope<T extends ScopeContext> extends Scope<T> {
 }
 
 export class ScopeSubscription<T> {
-	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>,) { }
+	constructor(private propertyKey: keyof T, private observer: ValueChangeObserver<T>) { }
+	pause() {
+		this.observer.pause(this.propertyKey, this);
+	}
+	resume() {
+		this.observer.resume(this.propertyKey, this);
+	}
 	unsubscribe(): void {
 		this.observer.unsubscribe(this.propertyKey, this);
 	}
@@ -188,8 +194,10 @@ export class ScopeSubscription<T> {
 
 export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 
+type SubscriptionInfo = { callback: ValueChangedCallback, enable: boolean };
+
 export class ValueChangeObserver<T> {
-	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, ValueChangedCallback>> = new Map();
+	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, SubscriptionInfo>> = new Map();
 	private propertiesLock: (keyof T)[] = [];
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		if (this.propertiesLock.includes(propertyKey)) {
@@ -200,9 +208,12 @@ export class ValueChangeObserver<T> {
 			return;
 		}
 		this.propertiesLock.push(propertyKey);
-		subscribers?.forEach((subscribe) => {
+		subscribers?.forEach(subscriptionInfo => {
+			if (!subscriptionInfo.enable) {
+				return;
+			}
 			try {
-				subscribe(newValue, oldValue);
+				subscriptionInfo.callback(newValue, oldValue);
 			} catch (e) {
 				console.error(e);
 			}
@@ -218,7 +229,7 @@ export class ValueChangeObserver<T> {
 			propertySubscribers = new Map();
 			this.subscribers.set(propertyKey, propertySubscribers);
 		}
-		propertySubscribers.set(subscription, callback);
+		propertySubscribers.set(subscription, { callback, enable: true });
 		return subscription;
 	}
 
@@ -230,8 +241,18 @@ export class ValueChangeObserver<T> {
 		}
 	}
 
+	pause(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
+		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		subscriptionInfo && (subscriptionInfo.enable = false);
+	}
+
+	resume(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
+		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		subscriptionInfo && (subscriptionInfo.enable = true);
+	}
+
 	/**
-	 * clear subscription map
+	 * clear subscription maps
 	 */
 	destroy() {
 		this.subscribers.clear();
@@ -322,24 +343,114 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
-
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		this.observer.emit(propertyKey, newValue, oldValue);
 		this.parent?.emit(this.name!, this.context);
 	}
-
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		return this.observer.subscribe(propertyKey, callback);
 	}
-
 	unsubscribe(propertyKey?: keyof T, subscription?: ScopeSubscription<T>) {
 		if (propertyKey && subscription) {
 			this.observer.unsubscribe(propertyKey, subscription);
 		} else if (propertyKey) {
-
 			this.observer.unsubscribe(propertyKey);
 		} else {
 			this.observer.destroy();
 		}
+	}
+}
+
+/**
+ * used control/notify/pause scope about changes in current context
+ */
+export interface ScopeControl<T extends ScopeContext> {
+
+	/**
+	 * used when want to update ui-view like, you want to replace an array with another 
+	 * without reflect changes on view until reattached again.
+	 */
+	detach(): void;
+
+	/**
+	 * apply all the not emitted changes, and continue emit in time.
+	 */
+	reattach(): void;
+
+	/**
+	 * apply changes now,
+	 * will not effect the state of the detector wither if attached ot not.
+	 * 
+	 * if a propertyKey is provided, will emit this property only 
+	 * @param propertyKey 
+	 */
+	emitChanges(propertyKey?: keyof T): void;
+}
+
+export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<T> implements ScopeControl<T> {
+	static for<T extends ScopeContext>(context: T, type: ScopeType) {
+		return new ReactiveScopeControl(context, type);
+	}
+	static blockScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'block');
+	}
+	static functionScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'function');
+	}
+	static classScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'class');
+	}
+	static moduleScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'module');
+	}
+	static globalScopeFor<T extends ScopeContext>(context: T) {
+		return new ReactiveScopeControl(context, 'global');
+	}
+	static blockScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'block');
+	}
+	static functionScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'function');
+	}
+	static classScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'class');
+	}
+	static moduleScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'module');
+	}
+	static globalScope<T extends ScopeContext>() {
+		return new ReactiveScopeControl({} as T, 'global');
+	}
+
+	protected attached: boolean = true;
+	protected marked: ScopeContext = {};
+	override emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
+		if (this.attached) {
+			super.emit(propertyKey, newValue, oldValue);
+		} else {
+			this.marked[propertyKey] = newValue;
+		}
+	}
+	detach(): void {
+		this.attached = false;
+	}
+	reattach(): void {
+		this.attached = true;
+		this.emitChanges();
+	}
+	emitChanges(propertyKey?: keyof T): void {
+		if (propertyKey) {
+			if (propertyKey in this.marked) {
+				const lastValue = this.marked[propertyKey];
+				Reflect.deleteProperty(this.marked, propertyKey);
+				super.emit(propertyKey, lastValue);
+			}
+			return;
+		}
+		const oldChanges = this.marked;
+		this.marked = {};
+		Object.keys(oldChanges).forEach(propertyKey => {
+			super.emit(propertyKey, oldChanges[propertyKey]);
+		});
 	}
 }

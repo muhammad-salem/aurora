@@ -37,6 +37,9 @@ export class ForInContext<T> extends ForContext<T> {
 }
 
 @Directive({
+	selector: '*for',
+})
+@Directive({
 	selector: '*forOf',
 })
 export class ForOfDirective<T> extends StructuralDirective implements OnDestroy {
@@ -56,7 +59,7 @@ export class ForOfDirective<T> extends StructuralDirective implements OnDestroy 
 		}
 		this._forOf.forEach((value, index, array) => {
 			const context = new ForOfContext<T>(value, array, index, array.length);
-			this.viewContainerRef.createEmbeddedView(this.templateRef, context);
+			this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 		});
 	}
 
@@ -90,7 +93,7 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 		for await (const iterator of this._forAwait) {
 			asList.push(iterator);
 			const context = new ForOfContext<T>(iterator, asList, index, asList.length);
-			const view = this.viewContainerRef.createEmbeddedView(this.templateRef, context);
+			const view = this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 			previousContext.forEach(c => c.count = asList.length);
 			previousContext.push(view.context);
 			index++;
@@ -124,7 +127,7 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 		const keys = Object.keys(this._forIn) as PropertyKey[];
 		keys.forEach((key, index, array) => {
 			const context = new ForInContext<PropertyKey>(key, array, index, array.length);
-			this.viewContainerRef.createEmbeddedView(this.templateRef, context);
+			this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 		});
 	}
 

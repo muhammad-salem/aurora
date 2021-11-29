@@ -1,51 +1,80 @@
-import { Directive, Input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/core';
+import {
+	Directive, Input, OnDestroy,
+	OnInit, StructuralDirective,
+	TemplateRef, ViewContainerRef
+} from '@ibyar/core';
 
-interface CaseDirectiveValue {
-	value: any;
+export class SwitchView {
+	private _created = false;
+
+	constructor(private _viewContainerRef: ViewContainerRef, private _templateRef: TemplateRef) { }
+
+	create(): void {
+		this._created = true;
+		this._viewContainerRef.createEmbeddedView(this._templateRef);
+	}
+
+	destroy(): void {
+		this._created = false;
+		this._viewContainerRef.clear();
+	}
+
+	enforceState(created: boolean) {
+		if (created && !this._created) {
+			this.create();
+		} else if (!created && this._created) {
+			this.destroy();
+		}
+	}
 }
 
 @Directive({
 	selector: '*case',
 })
-export class CaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
+export class CaseOfSwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
-	public value: any;
+	private _view: SwitchView = new SwitchView(this.viewContainerRef, this.templateRef);
+
+	host: SwitchDirective;
+
+	private _caseValue: any;
 
 	@Input('case')
 	set caseValue(value: any) {
-		this.value = value;
-		this._updateUI();
+		this._caseValue = value;
+		this.host._updateView();
 	}
-	private _updateUI() {
-		this.viewContainerRef.clear();
-		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
+	onInit() {
+		this.host._addCase(this);
 	}
-
+	getCaseValue() {
+		return this._caseValue;
+	}
+	getView() {
+		return this._view;
+	}
+	create(): void {
+		this._view.create();
+	}
 	onDestroy() {
-		this.viewContainerRef.clear();
+		this._view.destroy();
 	}
 
 }
 
 @Directive({
-	selector: '*default',
+	selector: '*default'
 })
-export class DefaultCaseOfSwitchDirective extends StructuralDirective implements CaseDirectiveValue, OnDestroy {
-
-	public value: any;
+export class DefaultCaseOfSwitchDirective extends StructuralDirective implements OnInit {
 
 	@Input('default')
-	set defaultCaseValue(value: any) {
-		this.value = value;
-		this._updateUI();
-	}
-	private _updateUI() {
-		this.viewContainerRef.clear();
-		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'case': this.value });
-	}
+	defaultCaseValue: any;
 
-	onDestroy() {
-		this.viewContainerRef.clear();
+	host: SwitchDirective;
+
+	onInit() {
+		const defaultView = new SwitchView(this.viewContainerRef, this.templateRef);
+		this.host._addDefault(defaultView);
 	}
 
 }
@@ -55,26 +84,54 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 })
 export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
 
-	onInit() {
-		this.templateRef.astNode;
-	}
+	private _defaultViews: SwitchView[] = [];
+	private _casesRef: CaseOfSwitchDirective[] = [];
+	private _switchValue: any;
+	private _lastValue: any;
+	private _lastViews: SwitchView[];
 
-	private _expression: object | null | undefined;
+	onInit() {
+		this.viewContainerRef.createEmbeddedView(this.templateRef);
+	}
 
 	@Input('switch')
-	set switchValue(expression: object | null | undefined) {
-		this._expression = expression;
-		console.log('switch', this);
-		this._updateUI();
-	}
-
-	private _updateUI() {
-		this.viewContainerRef.clear();
-		this.viewContainerRef.createEmbeddedView(this.templateRef, { 'switch': this._expression });
+	set switchValue(value: any) {
+		this._switchValue = value;
+		this._updateView();
 	}
 
 	onDestroy() {
+		this._lastViews?.forEach(view => view.destroy());
 		this.viewContainerRef.clear();
+	}
+
+	_addCase(_casesRef: CaseOfSwitchDirective) {
+		this._casesRef.push(_casesRef);
+		this._updateView();
+	}
+
+	_addDefault(view: SwitchView) {
+		this._defaultViews.push(view);
+		this._updateView();
+	}
+	_updateView() {
+		if (this._lastValue !== this._switchValue) {
+			this._lastValue = this._switchValue;
+			let views = this._casesRef.filter(caseItem => this._switchValue == caseItem.getCaseValue())
+				.map(caseItem => caseItem.getView());
+
+			if (!views.length) {
+				views = this._defaultViews;
+			}
+
+			if (views.length) {
+				if (this._lastViews != views) {
+					this._lastViews?.forEach(view => view.destroy());
+					views.forEach(view => view.create());
+				}
+				this._lastViews = views;
+			}
+		}
 	}
 
 }

@@ -8,12 +8,11 @@ import {
 	TextContent, DomAttributeDirectiveNode
 } from '@ibyar/elements';
 import { ComponentRef, ListenerRef } from '../component/component.js';
-import { ElementMutation } from './mutation.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
-import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
+import { isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
@@ -31,18 +30,16 @@ function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined
 	}
 }
 export class ComponentRender<T extends object> {
-	componentRef: ComponentRef<T>;
-	template: DomNode;
-	nativeElementMutation: ElementMutation;
-	contextStack: Stack;
-	templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
+	private componentRef: ComponentRef<T>;
+	private template: DomNode;
+	private contextStack: Stack;
+	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
 
-	constructor(public view: HTMLComponent<T>) {
+	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<ScopeContext>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
 		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
-		this.nativeElementMutation = new ElementMutation();
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -66,10 +63,10 @@ export class ComponentRender<T extends object> {
 			this.initTemplateRefMap(this.template);
 			let rootFragment: DocumentFragment;
 			if (this.template instanceof DomFragmentNode) {
-				rootFragment = this.createDocumentFragment(this.template, this.contextStack, rootRef);
+				rootFragment = this.createDocumentFragment(this.template, this.contextStack, rootRef, this.subscriptions, this.view);
 			} else {
 				rootFragment = document.createDocumentFragment();
-				this.appendChildToParent(rootFragment, this.template, this.contextStack, rootRef);
+				this.appendChildToParent(rootFragment, this.template, this.contextStack, rootRef, this.subscriptions, this.view);
 			}
 			rootRef.append(rootFragment);
 		}
@@ -155,33 +152,35 @@ export class ComponentRender<T extends object> {
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node): void {
+	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, parentNode: Node, host: HTMLComponent<any> | StructuralDirective): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (directiveRef) {
-			// structural directive selector
-			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
 			const stack = directiveStack.copyStack();
 			const templateRef = new TemplateRefImpl(
 				this,
 				directive.node,
 				stack,
-				(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? []
+				(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? [],
 			);
 			const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
+			// structural directive selector
+			const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
 			const structural = new StructuralDirectiveClass(
 				templateRef,
 				viewContainerRef,
+				host
 			);
+			templateRef.host = structural;
 			stack.pushBlockReactiveScopeFor({ 'this': structural });
 			const subscriptions = this.initDirectiveAttributes(structural, directive, stack);
-			const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
-				removeSubscription.unsubscribe();
-				subscriptions.forEach(subscription => subscription.unsubscribe());
-				if (isOnDestroy(structural)) {
-					structural.onDestroy();
-				}
-			});
+			// const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, comment, () => {
+			// 	removeSubscription.unsubscribe();
+			// 	subscriptions.forEach(subscription => subscription.unsubscribe());
+			// 	if (isOnDestroy(structural)) {
+			// 		structural.onDestroy();
+			// 	}
+			// });
 			if (isOnInit(structural)) {
 				structural.onInit();
 			}
@@ -196,24 +195,21 @@ export class ComponentRender<T extends object> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node): Text {
+	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[]): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		const subscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
+		const textSubscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
+		subscriptions.push(...textSubscriptions);
 		textNode.expression.get(contextStack);
-		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, liveText, () => {
-			removeSubscription.unsubscribe();
-			subscriptions.forEach(subscription => subscription.unsubscribe());
-		});
 		return liveText;
 	}
-	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node): DocumentFragment {
+	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
 		const fragment = document.createDocumentFragment();
-		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode));
+		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode, subscriptions, host));
 		return fragment;
 	}
-	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DomNode, contextStack: Stack, parentNode: Node) {
+	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DomNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective) {
 		if (child instanceof DomElementNode) {
 			if (this.isTemplateRefName(child)) {
 				const templateRefName = child.templateRefName!;
@@ -231,22 +227,22 @@ export class ComponentRender<T extends object> {
 				this.templateNameScope.set(templateRefName.name, templateRef);
 				return;
 			}
-			fragmentParent.append(this.createElement(child, contextStack, parentNode));
+			fragmentParent.append(this.createElement(child, contextStack, parentNode, subscriptions, host));
 		} else if (child instanceof DomStructuralDirectiveNode) {
 			const commentText = child.name + (typeof child.value == 'string' ? (' = ' + child.value) : '');
 			const comment = document.createComment(`start ${commentText}`);
 			fragmentParent.append(comment);
 			const lastComment = document.createComment(`end ${commentText}`);
 			comment.after(lastComment);
-			this.createStructuralDirective(child, comment, contextStack, parentNode);
+			this.createStructuralDirective(child, comment, contextStack, parentNode, host);
 		} else if (isLiveTextContent(child)) {
-			fragmentParent.append(this.createLiveText(child, contextStack, parentNode));
+			fragmentParent.append(this.createLiveText(child, contextStack, parentNode, subscriptions));
 		} else if (child instanceof TextContent) {
 			fragmentParent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {
 			fragmentParent.append(this.createComment(child));
 		} else if (child instanceof DomFragmentNode) {
-			fragmentParent.append(this.createDocumentFragment(child, contextStack, parentNode));
+			fragmentParent.append(this.createDocumentFragment(child, contextStack, parentNode, subscriptions, host));
 		}
 	}
 	createElementByTagName(node: { tagName: string, is?: string }): HTMLElement {
@@ -273,12 +269,11 @@ export class ComponentRender<T extends object> {
 		}
 		return element;
 	}
-	createElement(node: DomElementNode, contextStack: Stack, parentNode: Node): HTMLElement {
+	createElement(node: DomElementNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): HTMLElement {
 		const element = this.createElementByTagName(node);
 		const elementStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element) ? element._viewScope : elementStack.pushBlockReactiveScopeFor({ 'this': element });
 		elementStack.pushScope<ScopeContext>(elementScope);
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		if (node.attributeDirectives?.length) {
 			node.attributeDirectives.forEach(directiveNode => {
 				const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(directiveNode.name);
@@ -303,11 +298,6 @@ export class ComponentRender<T extends object> {
 			listener = (event) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(eventName, listener);
 		}
-		const removeSubscription = this.nativeElementMutation.subscribeOnRemoveNode(parentNode, element, () => {
-			removeSubscription.unsubscribe();
-			listener && element.removeEventListener(eventName!, listener);
-			subscriptions.forEach(subscription => subscription.unsubscribe());
-		});
 
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {
@@ -319,7 +309,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child, elementStack, element);
+				this.appendChildToParent(element, child, elementStack, element, subscriptions, host);
 			}
 		}
 		return element;

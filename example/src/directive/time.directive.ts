@@ -60,7 +60,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 			mm: 0,
 			ss: 0,
 		};
-		const viewRef = this.viewContainerRef.createEmbeddedView(this.templateRef, initValue);
+		const viewRef = this.viewContainerRef.createEmbeddedView(this.templateRef, { context: initValue });
 		this.context = viewRef.context;
 	}
 

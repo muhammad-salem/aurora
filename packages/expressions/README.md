@@ -179,3 +179,98 @@ b 	|> function(x) { console.log(x); return x; }
 	|> add : ? : 77
 	|> map
 ```
+
+
+### How to use stack and scope:
+
+ 1- create stack:
+
+ ```ts
+ import { Scope, Stack } from '@ibyar/expressions';
+
+const stack1 = new Stack();
+
+// OR
+
+const scope1 = new Scope<{x: number, y: number}>( {x: 8, y: 6}, 'block');
+const scope2 = Scope.blockScopeFor({z: 9});
+
+const stack2 = new Stack([scope1, scope2]);
+
+ ```
+
+  2- any of the previous stacks, does not provide and public api like `Math`, `String`, ....
+  you need to provide these values to the stack, the stack work as a sandbox, isolated from the js-VM.
+
+```ts
+import { ReadOnlyScope } from '@ibyar/expressions';
+
+stack1.pushScope(ReadOnlyScope.blockScopeFor({
+	Math: {
+		E: Math.E,
+		LN10: Math.LN10,
+		LN2: Math.LN2,
+		LOG10E: Math.LOG10E,
+		LOG2E: Math.LOG2E,
+		PI: Math.PI,
+		SQRT1_2: Math.SQRT1_2,
+		SQRT2: Math.SQRT2,
+
+		abs: Math.abs,
+		acos: Math.acos,
+		asin: Math.asin,
+		atan: Math.atan,
+		atan2: Math.atan2,
+		ceil: Math.ceil,
+		....
+	},
+	// or 
+	Math,
+	// another object
+	Array: {
+		// in js a statement like `let x = new Array()` will throw exception.
+		isArray: Array.isArray,
+	},
+
+	Array, // `let x = new Array()` no Error.
+
+
+	parseFloat,
+	parseInt,
+	String,
+	console,
+}));
+```
+	so now you can write js code the use these as identifier
+
+
+
+ 3- the stack is ready to use with expression
+ 4- try to parse an expression like `let x = 'data'; console.log(x);`.
+ 
+```ts
+import { JavaScriptParser } from '@ibyar/expressions';
+
+const ast = JavaScriptParser.parse(`let x = 'data'; console.log(x);`);
+
+// use get method to execute an expression and return a value if available.
+
+ast.get(stack1);
+// it should print 'data' on the console
+```
+
+
+ 5- you can visit the ast 
+
+```ts
+import { expressionVisitor, VariableDeclaration } from '@ibyar/expressions';
+
+expressionVisitor.visit(ast, (expression, type, control) => {
+	if (type === 'VariableDeclaration') {
+		const kind = (expression as VariableDeclaration).getKind();
+		
+		....
+	}
+});
+
+```

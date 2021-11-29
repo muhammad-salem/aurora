@@ -1,4 +1,5 @@
 
+import { HTMLComponent } from '../component/custom-element.js';
 import { TemplateRef } from '../linker/template-ref.js';
 import { ViewContainerRef } from '../linker/view-container-ref.js';
 
@@ -9,6 +10,7 @@ export class StructuralDirective {
 	constructor(
 		protected templateRef: TemplateRef,
 		protected viewContainerRef: ViewContainerRef,
+		protected host: HTMLComponent<any> | StructuralDirective,
 	) { }
 }
 

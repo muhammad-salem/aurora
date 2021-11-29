@@ -29,8 +29,11 @@ import { Person, PersonModel } from './person';
 
 		<progress-bar [(value)]="person1.age" min="0" max="100"></progress-bar>
 
-		<progress-bar *if="person1.age > 35; else showTest" [(value)]="person1.age" min="0" max="100"></progress-bar>
-		<template #showTest>age is less than 35</template>
+		<template					*if="person1.age < 20; else between_20_39"						>age is less than 20</template>
+		<template #between_20_39	*if="person1.age > 19 && person1.age < 40; else between_40_79"	>age is between 20 and 39</template>
+		<template #between_40_79	*if="person1.age > 39 && person1.age < 60; else between_80_100" >age is between 40 and 59</template>
+		<template #between_80_100	*if="person1.age > 59 && person1.age < 80; else showTest" 		>age is between 60 and 79</template>
+		<template #showTest																			>age is more than 80</template>
 
 		<div class="row">
 			<div class="col-3">
@@ -79,15 +82,24 @@ import { Person, PersonModel } from './person';
 		<hr>
 
 		<h1>Switch Case Directive</h1>
-		<h5>*switch="1"</h5>
-		<div class="row">
-			<div class="col-3" *switch="1">
-				<div *case="1">One</div>
-				<div *case="2">Two</div>
-				<div *case="3">Three</div>
-				<div *default>default: Zero</div>
-			</div>
-		</div>
+		<h5>*switch="{{selectFruit}}"</h5>
+		<ul class="list-group">
+			<li class="list-group-item row">
+				<div class="col-3" *switch="selectFruit">
+					<div *case="'oranges'">Oranges</div>
+					<div *case="'apples'">Apples</div>
+					<div *case="'bananas'">Bananas</div>
+					<div *default>Not Found</div>
+				</div>
+			</li>
+			<li class="list-group-item row">
+				<select class="form-select col-3" (change)="selectFruit = this.value">
+					<option *forOf="let fruit of fruits"
+						[value]="fruit"
+						>{{fruit |> titlecase}}</option>
+				</select>
+			</li>
+		</ul>
 		<hr>
 		`
 })
@@ -114,6 +126,14 @@ export class PersonApp {
 	people = [this.person1, this.person2, this.person3, this.person4];
 	i = 0;
 
+	fruits = [
+		'mangoes',
+		'oranges',
+		'apples',
+		'bananas',
+		'cherries',
+	];
+	selectFruit = 'bananas';
 	asyncIterable = {
 		[Symbol.asyncIterator]() {
 			return {

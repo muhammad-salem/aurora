@@ -52,8 +52,8 @@ function parseLiveText(text: LiveTextContent) {
 	text.pipelineNames = getPipelineNames(textExpression);
 }
 
-function convertToMemberAccessStyle(source: string) {
-	const dashSplits = source.split('-');
+function convertToMemberAccessStyle(source: string | string[]) {
+	const dashSplits = Array.isArray(source) ? source : source.split('-');
 	if (dashSplits.length === 1) {
 		return source;
 	}
@@ -176,7 +176,8 @@ function searchForLetAttributes(child: DomStructuralDirectiveNode, expressions: 
 	const templateExpressionsFromInput = child.attributes?.filter(attr => attr.name.startsWith('let-'));
 	templateExpressionsFromInput?.forEach(attr => {
 		child.attributes!.splice(child.attributes!.indexOf(attr), 1);
-		const expression = `let ${attr.name.replace('let-', '')} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
+		const attrName = convertToMemberAccessStyle(attr.name.split('-').slice(1));
+		const expression = `let ${attrName} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
 		expressions.push(JavaScriptParser.parse(expression));
 	});
 }

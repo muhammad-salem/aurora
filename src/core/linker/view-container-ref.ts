@@ -2,8 +2,17 @@ import type { TypeOf } from '../utils/typeof.js';
 import { Components } from '../component/component.js';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
-import { getComponentView } from '../index.js';
+import { getComponentView } from '../view/view.js';
 
+export type ViewContainerOptions<C> = {
+	index?: number;
+	context?: C;
+};
+
+export type ViewContainerComponentOptions = {
+	index?: number | undefined;
+	selector?: string;
+};
 export abstract class ViewContainerRef {
 
 	/**
@@ -49,7 +58,7 @@ export abstract class ViewContainerRef {
 	 *
 	 * @returns The `ViewRef` instance for the newly created view.
 	 */
-	abstract createEmbeddedView<C extends object>(templateRef: TemplateRef, context?: C, index?: number): EmbeddedViewRef<C>;
+	abstract createEmbeddedView<C extends object>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C>;
 
 	/**
    * Instantiates a single component and inserts its host view into this container.
@@ -63,10 +72,7 @@ export abstract class ViewContainerRef {
    *
    * @returns The new `HTMLComponent` which contains the component instance and the host view.
    */
-	abstract createComponent<C extends object>(componentType: TypeOf<C>, options?: {
-		index?: number,
-		selector?: string
-	}): C;
+	abstract createComponent<C extends object>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
 
 	/**
 	 * Inserts a view into this container.
@@ -173,12 +179,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		return this.insert(viewRef, newIndex);
 	}
-	override createEmbeddedView<C extends object>(templateRef: TemplateRef, context?: C, index?: number): EmbeddedViewRef<C> {
-		const viewRef = templateRef.createEmbeddedView<C>(context || <C>{}, this.parent);
-		this.insert(viewRef, index);
+	override createEmbeddedView<C extends object>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
+		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this.parent);
+		this.insert(viewRef, options?.index);
 		return viewRef;
 	}
-	override createComponent<C extends object>(componentType: TypeOf<C>, options?: { index?: number | undefined; selector?: string; }): C {
+	override createComponent<C extends object>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C {
 		const defaultTagName = Components.getComponentRef<C>(componentType).selector;
 		const ViewClass = getComponentView(componentType, options?.selector ?? defaultTagName);
 		if (!ViewClass) {
