@@ -75,16 +75,11 @@ yarn add @ibyar/aurora
 
 #### Structure Directives
 - [x] *if
+- [x] *for is same as ( *forOf )
 - [x] *forIn
-- [x] *forOf
 - [x] *forAwait		
-- [x] *switch
-- [x] *case
-- [x] *default
+- [x] *switch and (*case, *default)
 
-## Removed
-- [x] *for
-- [x] *while
 
  -- see `directive syntax` [structural-directive-syntax-reference](https://github.com/ibyar/aurora/blob/dev/packages/directives/README.md#structural-directive-syntax-reference)
 

@@ -33,34 +33,36 @@ yarn add @ibyar/directives
 
 #### Structure Directives
 - [x] *if
+- [x] *for is same as ( *forOf )
 - [x] *forIn
-- [x] *forOf
 - [x] *forAwait		
-- [x] *switch
-- [x] *case
-- [x] *default
+- [x] *switch and (*case, *default)
 
-## Removed
-- [x] *for
-- [x] *while
 
 #### Attributes Directives
 - [x] *class
 - [x] *style
 
 
-# How to use:
+## How to use Structure Directives:
 
 ```html
 <div *if="x > 50"> x: is {{x}} </div>
 
-<div class="col-3" *for="const i = 0; i < people.length; i++">
-	<p>Name: <span>{{people[i].name}}</span></p>
-	<p>Age: <span>{{people[i].age}}</span></p>
-</div>
+<div *if="x > 50; else otherTemplate"> x: is {{x}} </div>
+<template #otherTemplate> X is more than 50</template>
+
+<div *if="x > 50; then thenTemplate; else elseTemplate"> will be ignored </div>
+<template #thenTemplate> x: is {{x}}</template>
+<template #elseTemplate> X is more than 50</template>
 
 
 <div class="col-3" *forOf="let user of people">
+	<p>Name: <span>{{user.name}}</span></p>
+	<p>Age: <span>{{user.age}}</span></p>
+</div>
+
+<div class="col-3" *forOf let-user  [of]="people">
 	<p>Name: <span>{{user.name}}</span></p>
 	<p>Age: <span>{{user.age}}</span></p>
 </div>
@@ -70,7 +72,16 @@ yarn add @ibyar/directives
 	<p>Value: <span>{{person1[key]}}</span></p>
 </div>
 
+<div class="col-3" *forIn let-key [in]="person1">
+	<p>Key: <span>{{key}}</span></p>
+	<p>Value: <span>{{person1[key]}}</span></p>
+</div>
+
 <div class="col-3" *forAwait="let num of asyncIterable">
+	<p>num = <span>{{num}}</span></p>
+</div>
+
+<div class="col-3" *forAwait let-num [of]="asyncIterable">
 	<p>num = <span>{{num}}</span></p>
 </div>
 
@@ -82,7 +93,31 @@ yarn add @ibyar/directives
 </div>
 
 ```
- -- `Directives now support input binding (one way)`
+
+## How to use Attributes Directives:
+
+```html
+<div class="row">
+	<div [class]="$propertyFromModel"></div>
+	<div class="col-{{width}}"></div>
+	<div [class]="'col-6'"></div>
+	<div [class]="['col-4', $textColor_fromModel, 'text-center']"></div>
+</div>
+...
+<tr [class]="{'table-info': isEven, 'table-danger': isOdd}">
+	...
+</tr>
+
+
+<div [style]="'color: var(' + currentColor + ');'">...</div>
+<div [style]="`color: var(${currentColor});`">...</div>
+<div [style]="{color: 'var(' + currentColor + ')'}">...</div>
+<div [style.color]="'var(' + currentColor + ')'"><div>
+
+```
+
+
+ -- `Directives now support input binding (one way/two way/ output=event)`
 
 
 ## Structural directive syntax reference
@@ -171,7 +206,7 @@ The following table provides shorthand examples:
     <td><code>&lt;template *for [item]="$implicit [of]="[1,2,3]"&gt;</code></td>
   </tr>
   <tr>
-    <td><code>*for="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
+    <td><code>*forOf="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
     <td><code>&lt;ng-template *for [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
     </td>
   </tr>
