@@ -413,13 +413,27 @@ export class NodeParser {
 				directive.outputs = node.outputs;
 				directive.attributes = node.attributes;
 				directive.templateAttrs = node.templateAttrs;
+				directive.attributeDirectives = node.attributeDirectives;
 			} else if (directiveRegistry.hasAttributes(directiveName)) {
 				this.extractDirectiveAttributesFromNode(directiveName, directive, node);
+				directive.attributeDirectives = node.attributeDirectives;
 			}
 			if (isTemplate && node.templateRefName) {
 				node.children = [directive];
 				return node;
 			}
+			return directive;
+		}
+
+		// <for let-user [of]="users"></for>
+		if (directiveRegistry.has('*' + node.tagName)) {
+			const children = new DomFragmentNode(node.children);
+			const directive = new DomStructuralDirectiveNode('*' + node.tagName, children);
+			directive.inputs = node.inputs;
+			directive.outputs = node.outputs;
+			directive.attributes = node.attributes;
+			directive.templateAttrs = node.templateAttrs;
+			directive.attributeDirectives = node.attributeDirectives;
 			return directive;
 		}
 
