@@ -54,10 +54,14 @@ yarn add @ibyar/directives
 
 <div *if="x > 50; then thenTemplate; else elseTemplate"> will be ignored </div>
 <template #thenTemplate> x: is {{x}}</template>
-<template #elseTemplate> X is more than 50</template>
+<template #elseTemplate> X is less than 50</template>
 
 
 <div class="col-3" *forOf="let user of people">
+	<p>Name: <span>{{user.name}}</span></p>
+	<p>Age: <span>{{user.age}}</span></p>
+</div>
+<div class="col-3" *for="let user of people">
 	<p>Name: <span>{{user.name}}</span></p>
 	<p>Age: <span>{{user.age}}</span></p>
 </div>
@@ -207,7 +211,7 @@ The following table provides shorthand examples:
   </tr>
   <tr>
     <td><code>*forOf="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
-    <td><code>&lt;ng-template *for [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
+    <td><code>&lt;ng-template *forOf [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
     </td>
   </tr>
   <tr>
