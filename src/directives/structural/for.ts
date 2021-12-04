@@ -36,23 +36,11 @@ export class ForInContext<T> extends ForContext<T> {
 	}
 }
 
-@Directive({
-	selector: '*for',
-})
-@Directive({
-	selector: '*forOf',
-})
-export class ForOfDirective<T> extends StructuralDirective implements OnDestroy {
+export abstract class AbstractForDirective<T> extends StructuralDirective implements OnDestroy {
 
-	private _forOf: T[] | null | undefined;
+	protected _forOf: T[] | null | undefined;
 
-	@Input('of')
-	set forOf(forOf: T[] | null | undefined) {
-		this._forOf = forOf;
-		this._updateUI();
-	}
-
-	private _updateUI() {
+	protected _updateUI() {
 		this.viewContainerRef.clear();
 		if (!this._forOf) {
 			return;
@@ -67,6 +55,30 @@ export class ForOfDirective<T> extends StructuralDirective implements OnDestroy 
 		this.viewContainerRef.clear();
 	}
 
+}
+
+@Directive({
+	selector: '*for',
+})
+export class ForDirective<T> extends AbstractForDirective<T>  {
+
+	@Input('of')
+	set forOf(forOf: T[] | null | undefined) {
+		this._forOf = forOf;
+		this._updateUI();
+	}
+}
+@Directive({
+	selector: '*forOf',
+})
+
+export class ForOfDirective<T> extends AbstractForDirective<T>  {
+
+	@Input('of')
+	set forOf(forOf: T[] | null | undefined) {
+		this._forOf = forOf;
+		this._updateUI();
+	}
 }
 
 @Directive({
