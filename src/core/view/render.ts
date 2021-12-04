@@ -12,11 +12,12 @@ import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { EventEmitter } from '../component/events.js';
-import { isOnInit } from '../component/lifecycle.js';
+import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
+import { createSubscriptionDestroyer } from '../context/subscription.js';
 
 function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined {
 	switch (true) {
@@ -181,6 +182,9 @@ export class ComponentRender<T extends object> {
 			if (directive.attributeDirectives?.length) {
 				this.initAttributeDirectives(directive.attributeDirectives, structural, stack, subscriptions);
 			}
+			if (isOnDestroy(structural)) {
+				subscriptions.push(createSubscriptionDestroyer(() => structural.onDestroy()));
+			}
 		} else {
 			// didn't find directive or it is not define yet.
 			// class registry should have 'when defined' callback
@@ -316,6 +320,9 @@ export class ComponentRender<T extends object> {
 				subscriptions.push(...directiveSubscriptions);
 				if (isOnInit(directive)) {
 					directive.onInit();
+				}
+				if (isOnDestroy(directive)) {
+					subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
 				}
 			}
 		});
