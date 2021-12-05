@@ -54,7 +54,7 @@ export interface ComponentOptions<T = Function> {
 	 * or us aurora jsx factory 
 	 * 				
 	 */
-	template?: string | DomNode | DomRenderNode<T> | Promise<string>;
+	template?: string | DomNode;
 	/**
 	 * style for this element
 	 */
