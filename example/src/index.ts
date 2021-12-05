@@ -19,6 +19,8 @@ export * from './video-player/video.js';
 
 export * from './pipe-app/pipe-test.js';
 
+export * from './jsx/test.js';
+
 const root = document.getElementById('root')!;
 
 // root.innerHTML = `

@@ -10,6 +10,9 @@
 		"outDir": "dist",
 		"rootDir": "src",
 		"composite": true,
+		"jsx": "react",
+		"jsxFactory": "jsxParser.createElement",
+		"jsxFragmentFactory": "Fragment",
 		"tsBuildInfoFile": "./tsBuild.info"
 	},
 	"include": [
