@@ -1,0 +1,14 @@
+{
+	"extends": "@ibyar/aurora/tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../element/tsconfig.json"
+		},
+		{
+			"path": "../expression/tsconfig.json"
+		},
+		{
+			"path": "../core/tsconfig.json"
+		}
+	]
+}

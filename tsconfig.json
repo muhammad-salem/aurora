@@ -5,7 +5,8 @@
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
-		{ "path": "src/aurora" }
+		{ "path": "src/aurora" },
+		{ "path": "src/jsx" }
 	],
 	"compilerOptions": {
 		"composite": true
