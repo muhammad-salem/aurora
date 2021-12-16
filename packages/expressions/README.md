@@ -136,7 +136,7 @@ console.log(
 | logical-and            | `&&`                                                    |
 | logical-or             | `\|\|`                                                  |
 | conditional            | `?:`                                                    |
-| pipeline               | `|>`                                                    |
+| pipeline               | `\|>`                                                  |
 | assignment             | `= += -= *= **= /= %= <<= >>= >>>= &= ^= \|= &&= \|\|= ??= >?= <?= %%=` |
 | comma                  | `,`                                                     |
 
