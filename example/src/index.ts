@@ -19,17 +19,6 @@ export * from './video-player/video.js';
 
 export * from './pipe-app/pipe-test.js';
 
-const root = document.getElementById('root')!;
+export * from './route/router-outlet.js';
 
-// root.innerHTML = `
-// <pipe-app></pipe-app>
-// `;
-
-root.innerHTML = `
-	<person-app></person-app>
-	<div is="bind-2way"></div>
-	<app-edit></app-edit>
-	<pipe-app></pipe-app>
-	<video-play-list></video-play-list>
-`;
-
+export * from './app-root.js';
