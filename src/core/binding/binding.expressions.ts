@@ -1,6 +1,6 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findScopeByEventMap, ReactiveScope,
+	Stack, findReactiveScopeByEventMap, ReactiveScope,
 	ScopeContext, ValueChangedCallback, Scope,
 	MemberExpression, Identifier
 } from '@ibyar/expressions';
@@ -45,15 +45,13 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 			stack.pushScope(pipeScope);
 			stack.pushScope(asyncPipeScope);
 		}
-		const map = findScopeByEventMap(this.rightEvents, stack);
+		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		map.forEach((scope, eventName) => {
-			if (scope instanceof ReactiveScope) {
-				const subscription = scope.subscribe(eventName, (newValue: any, oldValue?: any) => {
-					this.get(stack);
-				});
-				subscriptions.push(subscription);
-			}
+		tuples.forEach(tuple => {
+			const subscription = tuple[1].subscribe(tuple[0], (newValue: any, oldValue?: any) => {
+				this.get(stack);
+			});
+			subscriptions.push(subscription);
 		});
 		return subscriptions;
 	}
@@ -111,13 +109,11 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		};
 	}
 
-	private subscribeToEvents(stack: Stack, map: Map<string, Scope<ScopeContext>>, actionCallback: ValueChangedCallback) {
+	private subscribeToEvents(stack: Stack, tuples: [string, ReactiveScope<ScopeContext>][], actionCallback: ValueChangedCallback) {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		map.forEach((scope, eventName) => {
-			if (scope instanceof ReactiveScope) {
-				const subscription = scope.subscribe(eventName, actionCallback);
-				subscriptions.push(subscription);
-			}
+		tuples.forEach(tuple => {
+			const subscription = tuple[1].subscribe(tuple[0], actionCallback);
+			subscriptions.push(subscription);
 		});
 		return subscriptions;
 	}
@@ -125,14 +121,14 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 
 		// right to left
-		const rightMap = findScopeByEventMap(this.rightEvents, stack);
+		const rightTuples = findReactiveScopeByEventMap(this.rightEvents, stack);
 		const rtlAction = this.actionRTL(stack);
-		const rtlSubscriptions = this.subscribeToEvents(stack, rightMap, rtlAction);
+		const rtlSubscriptions = this.subscribeToEvents(stack, rightTuples, rtlAction);
 
 		// left to right 
-		const leftMap = findScopeByEventMap(this.leftEvents, stack);
+		const leftTuples = findReactiveScopeByEventMap(this.leftEvents, stack);
 		const ltrAction = this.actionLTR(stack);
-		const ltrSubscriptions = this.subscribeToEvents(stack, leftMap, ltrAction);
+		const ltrSubscriptions = this.subscribeToEvents(stack, leftTuples, ltrAction);
 
 		return rtlSubscriptions.concat(ltrSubscriptions);
 	}

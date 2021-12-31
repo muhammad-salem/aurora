@@ -1,4 +1,4 @@
-import type { DomNode } from '@ibyar/elements';
+import { DomNode, htmlParser } from '@ibyar/elements';
 import {
 	createProxyForContext, ExpressionNode,
 	findReactiveScopeByEventMap, ScopeContext,
@@ -81,9 +81,9 @@ export class TemplateRefImpl extends TemplateRef {
 		const scopeSubscriptions: ScopeSubscription<object>[] = [];
 		this.templateExpressions.forEach(expression => {
 			const events = expression.events();
-			const scopeMap = findReactiveScopeByEventMap(events, sandBox);
-			scopeMap.forEach((scope, eventName) => {
-				const subscription = scope.subscribe(eventName, () => {
+			const scopeTuples = findReactiveScopeByEventMap(events, sandBox);
+			scopeTuples.forEach(tuple => {
+				const subscription = tuple[1].subscribe(tuple[0], () => {
 					expression.get(sandBox);
 				});
 				scopeSubscriptions.push(subscription);

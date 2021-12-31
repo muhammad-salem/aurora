@@ -9,7 +9,6 @@ export function createSubscriptionDestroyer(unsubscribe: () => void, pause?: () 
 			resume?.();
 		},
 		unsubscribe(): void {
-			console.log('unsubscribe');
 			unsubscribe();
 		},
 	} as ScopeSubscription<void>;
