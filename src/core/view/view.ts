@@ -73,6 +73,12 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 		});
 	});
 
+	componentRef.inputs.map(input => input.modelProperty)
+		.concat(componentRef.outputs.map(output => output.modelProperty))
+		.concat(componentRef.hostBindings.map(host => host.hostPropertyName))
+		.concat(componentRef.viewChild.map(child => child.modelName))
+		.forEach(modelName => modelClass.prototype[modelName] = undefined);
+
 	const defaultAttributes = getAllAttributes(componentRef.extend.name);
 	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
 	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
