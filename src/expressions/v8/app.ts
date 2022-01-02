@@ -1,11 +1,11 @@
-// import type { ExpressionNode } from '../api/expression.js';
-// import {
-// 	AssignmentNode, ConstNode, FunctionType,
-// 	LetNode, NullNode, StringNode, Variable
-// } from '../api/index.js';
-// import { JavaScriptParser, PropertyKind } from './parser.js';
+// import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
+// import { JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
 // import { Token } from './token.js';
 // import { MetaProperty } from '../api/app/class.js';
+// import { FunctionKind } from '../api/definition/function.js';
+// import { Identifier, Literal } from '../api/definition/values.js';
+// import { AssignmentExpression } from '../api/operators/assignment.js';
+// import { VariableDeclarationNode, VariableNode } from '../api/statement/declarations/declares.js';
 
 
 // export type ClassInfo = {
@@ -41,38 +41,38 @@
 // 	ClassLiteral = 'ClassLiteral'
 // }
 
-// const FUNCTIONS_TYPES: FunctionType[][][] = [
+// const FUNCTIONS_TYPES: FunctionKind[][][] = [
 // 	[
 // 		// SubFunctionKind::kNormalFunction
 // 		[// is_generator=false
-// 			FunctionType.NORMAL,
-// 			FunctionType.ASYNC
+// 			FunctionKind.NORMAL,
+// 			FunctionKind.ASYNC
 // 		],
 // 		[// is_generator=true
-// 			FunctionType.GENERATOR,
-// 			FunctionType.ASYNC_GENERATOR
+// 			FunctionKind.GENERATOR,
+// 			FunctionKind.ASYNC_GENERATOR
 // 		],
 // 	],
 // 	[
 // 		// SubFunctionKind::kNonStaticMethod
 // 		[// is_generator=false
-// 			FunctionType.CONCISE,
-// 			FunctionType.ASYNC_CONCISE
+// 			FunctionKind.CONCISE,
+// 			FunctionKind.ASYNC_CONCISE
 // 		],
 // 		[// is_generator=true
-// 			FunctionType.CONCISE_GENERATOR,
-// 			FunctionType.ASYNC_CONCISE_GENERATOR
+// 			FunctionKind.CONCISE_GENERATOR,
+// 			FunctionKind.ASYNC_CONCISE_GENERATOR
 // 		],
 // 	],
 // 	[
 // 		// SubFunctionKind::kStaticMethod
 // 		[// is_generator=false
-// 			FunctionType.STATIC_CONCISE,
-// 			FunctionType.STATIC_ASYNC_CONCISE
+// 			FunctionKind.STATIC_CONCISE,
+// 			FunctionKind.STATIC_ASYNC_CONCISE
 // 		],
 // 		[// is_generator=true
-// 			FunctionType.STATIC_CONCISE_GENERATOR,
-// 			FunctionType.STATIC_ASYNC_CONCISE_GENERATOR
+// 			FunctionKind.STATIC_CONCISE_GENERATOR,
+// 			FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR
 // 		],
 // 	]
 // ];
@@ -83,14 +83,14 @@
 // 	StaticMethod,
 // }
 
-// export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionType {
+// export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
 // 	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
 // }
 
-// export class ParsePropertyInfo {
-// 	name: ExpressionNode;
+// export class ParsePropertyInfo implements PropertyKindInfo {
+// 	name: string;
 // 	position = PropertyPosition.ClassLiteral;
-// 	functionFlags = FunctionType.NORMAL;
+// 	funcFlag = FunctionKind.NORMAL;
 // 	kind = PropertyKind.NotSet;
 // 	isComputedName = false;
 // 	isPrivate = false;
@@ -193,11 +193,11 @@
 // export class JavaScriptAppParser extends JavaScriptParser {
 // 	protected parseNewTargetExpression(): ExpressionNode {
 // 		this.consume(Token.PERIOD);
-//		 const target: ExpressionNode = this.parsePropertyName();
-//		 if (target.toString() !== 'target') {
-//		 	throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
-//		 }
-//		 return MetaProperty.NewTarget;
+// 		const target: ExpressionNode = this.parsePropertyName();
+// 		if (target.toString() !== 'target') {
+// 			throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
+// 		}
+// 		return MetaProperty.NewTarget;
 // 	}
 // 	protected parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
 // 		// ClassDeclaration ::
@@ -223,8 +223,8 @@
 // 		let name: ExpressionNode | undefined;
 // 		let variableName: ExpressionNode | undefined;
 // 		if (defaultExport && (nextToken == Token.EXTENDS || nextToken == Token.L_CURLY)) {
-// 			name = new StringNode('default');
-// 			variableName = new StringNode('.default');
+// 			name = new Literal('default');
+// 			variableName = new Literal('.default');
 // 		} else {
 // 			name = this.parseIdentifier();
 // 			variableName = name;
@@ -233,7 +233,6 @@
 // 		return this.declareClass(variableName, value, names);
 // 	}
 // 	protected parseClassLiteral(name: ExpressionNode | undefined, nameIsStrictReserved: boolean): ExpressionNode {
-// 		// throw new Error(this.errorMessage(`Expression (class) not supported.`));
 // 		const isAnonymous = !!!name;
 
 // 		// All parts of a ClassDeclaration and ClassExpression are strict code.
@@ -370,7 +369,7 @@
 // 	protected inferFunctionName() {
 // 		throw new Error('Method not implemented.');
 // 	}
-// 	protected declarePrivateClassMember(name: ExpressionNode, property: ExpressionNode, propertyKind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo): ExpressionNode {
+// 	protected declarePrivateClassMember(name: string, property: ExpressionNode, propertyKind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo): ExpressionNode {
 // 		throw new Error('Method not implemented.');
 // 	}
 // 	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: ParsePropertyInfo, hasExtends: boolean): ExpressionNode {
@@ -387,13 +386,13 @@
 // 			this.consume(Token.STATIC);
 // 			if (this.peek().isType(Token.L_PARENTHESES)) {
 // 				propInfo.kind = PropertyKind.Method;
-// 				propInfo.name = this.parseIdentifier()!;
-// 				nameExpression = new StringNode(propInfo.name.toString());
+// 				nameExpression = this.parseIdentifier();
+// 				propInfo.name = (nameExpression as Identifier).getName() as string;
 // 			} else if (this.peek().isType(Token.ASSIGN)
 // 				|| this.peek().isType(Token.SEMICOLON)
 // 				|| this.peek().isType(Token.R_BRACKETS)) {
-// 				propInfo.name = this.parseIdentifier()!;
-// 				nameExpression = new StringNode(propInfo.name.toString());
+// 				nameExpression = this.parseIdentifier();
+// 				propInfo.name = (nameExpression as Identifier).getName() as string;
 // 			} else {
 // 				propInfo.isStatic = true;
 // 				nameExpression = this.parseProperty(propInfo);
@@ -449,11 +448,11 @@
 // 				// 	this.checkClassMethodName(propInfo.name, PropertyKind.Method,propInfo.functionFlags, propInfo.isStatic,classInfo . hasSeenConstructor);
 // 				// }
 
-// 				let kind: FunctionType = this.methodKindFor(propInfo.isStatic, propInfo.functionFlags);
+// 				let kind: FunctionKind = this.methodKindFor(propInfo.isStatic, propInfo.funcFlag);
 
 // 				if (!propInfo.isStatic && propInfo.name.toString() === 'constructor') {
 // 					classInfo.hasSeenConstructor = true;
-// 					kind = hasExtends ? FunctionType.DERIVED_CONSTRUCTOR : FunctionType.BASE_CONSTRUCTOR;
+// 					kind = hasExtends ? FunctionKind.DERIVED_CONSTRUCTOR : FunctionKind.BASE_CONSTRUCTOR;
 // 				}
 
 // 				const value = this.parseFunctionLiteral(
@@ -466,7 +465,7 @@
 // 					name_expression, value, ClassLiteralProperty.METHOD,
 // 					propInfo.is_static, propInfo.is_computed_name,
 // 					propInfo.is_private);
-// 				impl() -> SetFunctionNameFromPropertyName(result, propInfo.name);
+// 				this.setFunctionNameFromPropertyName(result, propInfo.name);
 // 				return result;
 // 			}
 
@@ -486,13 +485,13 @@
 // 						propInfo.name, name_expression -> position());
 // 				}
 
-// 				FunctionKind kind;
+// 				let kind: FunctionKind;
 // 				if (propInfo.is_static) {
-// 					kind = is_get ? FunctionKind.kStaticGetterFunction
-// 						: FunctionKind.kStaticSetterFunction;
+// 					kind = is_get ? FunctionKind.StaticGetterFunction
+// 						: FunctionKind.StaticSetterFunction;
 // 				} else {
-// 					kind = is_get ? FunctionKind.kGetterFunction
-// 						: FunctionKind.kSetterFunction;
+// 					kind = is_get ? FunctionKind.GetterFunction
+// 						: FunctionKind.SetterFunction;
 // 				}
 
 // 				FunctionLiteralT value = impl() -> ParseFunctionLiteral(
@@ -503,12 +502,12 @@
 // 				ClassLiteralPropertyKind property_kind =
 // 					is_get ? ClassLiteralProperty.GETTER : ClassLiteralProperty.SETTER;
 // 				ClassLiteralPropertyT result = factory() -> NewClassLiteralProperty(
-// 					name_expression, value, property_kind, propInfo.is_static,
-// 					propInfo.is_computed_name, propInfo.is_private);
+// 						name_expression, value, property_kind, propInfo.is_static,
+// 						propInfo.is_computed_name, propInfo.is_private);
 // 				const AstRawString* prefix =
 // 				is_get ? ast_value_factory() -> get_space_string()
 // 					: ast_value_factory() -> set_space_string();
-// 				impl() -> SetFunctionNameFromPropertyName(result, propInfo.name, prefix);
+// 				this.setFunctionNameFromPropertyName(result, propInfo.name, prefix);
 // 				return result;
 // 			}
 // 			case PropertyKind.Value:
@@ -519,7 +518,24 @@
 // 		}
 // 		throw new Error(this.errorMessage('UNREACHABLE'));
 // 	}
-// 	protected methodKindFor(isStatic: boolean, functionFlags: FunctionType): FunctionType {
+// 	setFunctionNameFromPropertyName(property: LiteralProperty, name: string, prefix?: string): void {
+// 		// Ignore "__proto__" as a name when it's being used to set the [[Prototype]]
+// 		// of an object literal.
+// 		// See ES #sec-__proto__-property-names-in-object-initializers.
+
+// 		if (property instanceof Identifier && property.getName() === '__proto__') {
+// 			return;
+// 		}
+
+// 		// if (property -> IsPrototype() || has_error()) return;
+
+// 		// DCHECK(!property -> value() -> IsAnonymousFunctionDefinition() ||
+// 		// 	property -> kind() == ObjectLiteralProperty:: COMPUTED);
+
+// 		// SetFunctionNameFromPropertyName(static_cast < LiteralProperty *> (property), name,
+// 		// 	prefix);
+// 	}
+// 	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
 // 		const isGenerator = functionFlags.includes('GENERATOR');
 // 		const isAsync = functionFlags.includes('ASYNC');
 // 		return functionKindForImpl(
@@ -548,7 +564,7 @@
 // 		if (names && variableName) {
 // 			const proxy = this.declareVariable(variableName, 'let');
 // 			names.push(variableName);
-// 			return new AssignmentNode('=', proxy, value);
+// 			return new AssignmentExpression('=', proxy, value);
 // 		}
 // 		return value;
 // 	}
@@ -564,11 +580,12 @@
 // 		}
 // 		switch (mode) {
 // 			case 'const':
-// 				return new ConstNode([new Variable(name)]);
+// 				return new VariableDeclarationNode([new VariableNode(name as CanDeclareExpression)], 'const');
 // 			default:
 // 			case 'var':
+// 				return new VariableDeclarationNode([new VariableNode(name as CanDeclareExpression)], 'var');
 // 			case 'let':
-// 				return new LetNode([new Variable(name)]);
+// 				return new VariableDeclarationNode([new VariableNode(name as CanDeclareExpression)], 'let');
 // 		}
 // 	}
 // }

@@ -862,7 +862,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.parseFunctionLiteral(flag, name);
 	}
-	protected parseIdentifier(): ExpressionNode | undefined {
+	protected parseIdentifier(): ExpressionNode {
 		const next = this.next();
 		if (!Token.isValidIdentifier(next.token)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
