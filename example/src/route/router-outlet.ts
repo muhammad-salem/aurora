@@ -1,18 +1,20 @@
 import { Directive, EmbeddedViewRefImpl, Input, OnDestroy, StructuralDirective } from '@ibyar/aurora';
 
 
+export interface RouteData { selector: string, is?: string };
+
 @Directive({
 	selector: '*router-outlet',
 })
 export class RouterOutlet extends StructuralDirective implements OnDestroy {
 
 	@Input()
-	set selector(selector: string) {
+	set routeData(routeData: RouteData | undefined) {
 		this.viewContainerRef.clear();
-		if (!selector) {
+		if (!routeData) {
 			return;
 		}
-		const el = document.createElement(selector);
+		const el = document.createElement(routeData.selector, { is: routeData.is });
 		this.viewContainerRef.insert(new EmbeddedViewRefImpl<{}>({}, [el]));
 	}
 

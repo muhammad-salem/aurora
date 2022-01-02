@@ -1,4 +1,5 @@
 import { Component } from '@ibyar/aurora';
+import { RouteData } from './index.js';
 
 @Component({
 	selector: 'app-root',
@@ -8,30 +9,30 @@ import { Component } from '@ibyar/aurora';
 			<template *forOf="let app of appList">
 				<li class="nav-item">
 					<a  class="nav-link" href="javascript:void(0)" 
-						[class]="{active: selector == app.selector}"
-						@click="selector = app.selector"
+						[class]="{active: currentApp.selector == app.selector}"
+						@click="currentApp = app"
 						>{{app.title}}</a>
 				</li>
 			</template>
 		</nav>
 		<div class="row">
 			<div class="col-12">
-				<router-outlet [selector]="selector"></router-outlet>
+				<router-outlet [routeData]="currentApp"></router-outlet>
 			</div>
 		</div>
 	</div>`
 })
 export class AppRoot {
-	selector: string = 'pipe-app';
 
-	appList: { selector: string, title: string }[] = [
+	appList: { selector: string, title: string, is?: string }[] = [
 		{
 			selector: 'pipe-app',
 			title: 'Pipes app'
 		},
 		{
-			selector: 'bind-2way',
-			title: 'Binding 2 way Example'
+			selector: 'div',
+			title: 'Binding 2 way Example',
+			is: 'bind-2way'
 		},
 		{
 			selector: 'app-edit',
@@ -50,4 +51,5 @@ export class AppRoot {
 			title: 'HTTP fetch'
 		},
 	];
+	currentApp: RouteData = this.appList.filter(app => app.selector === 'pipe-app')[0];
 }
