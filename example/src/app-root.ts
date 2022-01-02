@@ -44,6 +44,10 @@ export class AppRoot {
 		{
 			selector: 'person-app',
 			title: 'Person App'
-		}
+		},
+		{
+			selector: 'user-list',
+			title: 'HTTP fetch'
+		},
 	];
 }

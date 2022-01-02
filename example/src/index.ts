@@ -21,4 +21,6 @@ export * from './pipe-app/pipe-test.js';
 
 export * from './route/router-outlet.js';
 
+export * from './github/user.js';
+
 export * from './app-root.js';

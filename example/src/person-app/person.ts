@@ -32,12 +32,6 @@ export interface Person {
 				<p>Data</p>
 			</div>`
 })
-
-@Component({
-	selector: 'person-view222',
-	extend: 'div'
-})
-@Service({ provideIn: 'root' })
 export class PersonModel implements OnInit {
 
 	@Input()
@@ -110,7 +104,6 @@ export class PersonModel implements OnInit {
 	@Input()
 	set resize(msg: string) {
 		console.log(this, msg);
-		console.log(Reflect.metadata('component', 'dd'));
 	}
 
 	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {
