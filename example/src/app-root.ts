@@ -21,7 +21,7 @@ import { VideoPlayList } from './video-player/video.js';
 				</li>
 			</template>
 		</nav>
-		<div class="row">
+		<div class="row my-2">
 			<div class="col-12">
 				<component-outlet [component]="selectedComponent"></component-outlet>
 			</div>
