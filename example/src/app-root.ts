@@ -1,5 +1,11 @@
 import { Component } from '@ibyar/aurora';
-import { RouteData } from './index.js';
+import { FetchApp } from './index.js';
+import { PersonApp } from './person-app/person-app.js';
+import { PipeAppComponent } from './pipe-app/pipe-test.js';
+import { Binding2Way } from './two-way/binding-2-way.js';
+import { EditorApp } from './two-way/shared-model.js';
+import { VideoPlayList } from './video-player/video.js';
+
 
 @Component({
 	selector: 'app-root',
@@ -9,47 +15,48 @@ import { RouteData } from './index.js';
 			<template *forOf="let app of appList">
 				<li class="nav-item">
 					<a  class="nav-link" href="javascript:void(0)" 
-						[class]="{active: currentApp.selector == app.selector}"
-						@click="currentApp = app"
-						>{{app.title}}</a>
+						[class]="{active: selectedComponent == app.component}"
+						@click="selectedComponent = app.component"
+					>{{app.title}}</a>
 				</li>
 			</template>
 		</nav>
 		<div class="row">
 			<div class="col-12">
-				<router-outlet [routeData]="currentApp"></router-outlet>
+				<component-outlet [component]="selectedComponent"></component-outlet>
 			</div>
 		</div>
 	</div>`
 })
 export class AppRoot {
 
-	appList: { selector: string, title: string, is?: string }[] = [
+	selectedComponent = PersonApp;
+
+	appList: { title: string, component: {} }[] = [
 		{
-			selector: 'pipe-app',
-			title: 'Pipes app'
+			title: 'Directives',
+			component: PersonApp,
 		},
 		{
-			selector: 'div',
-			title: 'Binding 2 way Example',
-			is: 'bind-2way'
+			title: 'Pipes',
+			component: PipeAppComponent,
 		},
 		{
-			selector: 'app-edit',
-			title: 'Edit'
+			title: 'Two way Binding',
+			component: Binding2Way,
 		},
 		{
-			selector: 'video-play-list',
-			title: 'Play List'
+			title: 'Edit',
+			component: EditorApp,
 		},
 		{
-			selector: 'person-app',
-			title: 'Person App'
+			title: 'Play List',
+			component: VideoPlayList,
 		},
 		{
-			selector: 'user-list',
-			title: 'HTTP fetch'
+			title: 'HTTP Fetch',
+			component: FetchApp,
 		},
 	];
-	currentApp: RouteData = this.appList.filter(app => app.selector === 'pipe-app')[0];
+
 }
