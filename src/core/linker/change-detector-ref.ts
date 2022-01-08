@@ -33,8 +33,11 @@ class ChangeDetectorRefImpl extends ChangeDetectorRef {
 	}
 }
 
-export function createChangeDetectorRef(scope: ReactiveScopeControl<ScopeContext>, propertyKey?: keyof ScopeContext): ChangeDetectorRef {
-	return new ChangeDetectorRefImpl({
+/**
+ * create a change Detector Reference by property key.
+ */
+export function createChangeDetectorRef(scope: ReactiveScopeControl<ScopeContext>, propertyKey: keyof ScopeContext): ChangeDetectorRef {
+	const changeDetectorRef: ChangeDetectorRef = {
 		detach() {
 			scope.detach();
 		},
@@ -42,7 +45,8 @@ export function createChangeDetectorRef(scope: ReactiveScopeControl<ScopeContext
 			scope.reattach();
 		},
 		markForCheck() {
-			scope.emitChanges(propertyKey);
+			scope.emitChanges(propertyKey, scope.get(propertyKey));
 		}
-	} as ChangeDetectorRef);
+	};
+	return new ChangeDetectorRefImpl(changeDetectorRef);
 }

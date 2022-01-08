@@ -50,3 +50,64 @@ console.log(htmlNode);
 
 ```
 
+`By default the parser has no registered info about structural/attributes directive.`
+
+You need to register them with inputs and outputs.
+
+```ts
+import { directiveRegistry } from '@ibyar/elements';
+
+
+/**
+ * register a structural directive, with name '*notifier' , the name must start with '*'.
+ * with inputs `message` and `color`,
+ * and output `action`.
+ */ 
+directiveRegistry.register('*notifier', {
+	inputs: ['message', 'color'],
+	outputs: ['action'],
+});
+
+/**
+ *  register an attributes directive with name 'appConfirm'
+ */
+directiveRegistry.register('appConfirm', {
+	inputs: [],
+	outputs: [],
+});
+
+```
+
+### note:
+
+the attributes directive has higher priority than regular element attributes,
+so if you registered an attributes directive with a name like 'style', 'class', 'id', 'name', etc... 
+it will interpreted as an attributes directive and will be remove from the element attributes list.
+
+```ts
+import { directiveRegistry } from '@ibyar/elements';
+
+
+/**
+ * register an attributes directive with no input and no output.
+ */
+directiveRegistry.register('style');
+
+```
+
+## supported syntax for directives
+
+```html
+<!-- short hand -->
+<div *for="let user of users"></div>
+<div *if="user.name == 'ali'"></div>
+
+<!-- full description -->
+<div *for let-user [of]="users"></div>
+<div *if [if]="user.name == 'ali'"></div>
+
+<!-- tag name as directive -->
+<for let-user [of]="user">....</for>
+<if [if]="user.name == 'ali'">....</if>
+
+```

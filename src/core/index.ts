@@ -22,6 +22,7 @@ export * from './providers/provider.js';
 
 export * from './utils/elements-util.js';
 export * from './utils/path.js';
+export * from './utils/typeof.js';
 export * from './utils/utils.js';
 
 export * from './view/mutation.js';

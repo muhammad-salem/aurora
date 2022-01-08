@@ -19,17 +19,10 @@ export * from './video-player/video.js';
 
 export * from './pipe-app/pipe-test.js';
 
-const root = document.getElementById('root')!;
+export * from './fetch/fetch-app.js';
 
-// root.innerHTML = `
-// <pipe-app></pipe-app>
-// `;
+export * from './route/component-outlet.js';
+export * from './route/router-outlet.js';
 
-root.innerHTML = `
-	<person-app></person-app>
-	<div is="bind-2way"></div>
-	<app-edit></app-edit>
-	<pipe-app></pipe-app>
-	<video-play-list></video-play-list>
-`;
+export * from './app-root.js';
 

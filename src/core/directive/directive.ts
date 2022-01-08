@@ -20,3 +20,10 @@ export class StructuralDirective {
 export class AttributeDirective {
 	constructor(protected el: HTMLElement) { }
 }
+
+/**
+ * An attributes directive on structural directive
+ */
+export class AttributeOnStructuralDirective {
+	constructor(protected directive: StructuralDirective) { }
+}

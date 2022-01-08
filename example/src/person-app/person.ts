@@ -28,16 +28,10 @@ export interface Person {
 			</p>
 			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
 			<div *if="person.age >= 18">
-				Can have licence
+				Can have license
 				<p>Data</p>
 			</div>`
 })
-
-@Component({
-	selector: 'person-view222',
-	extend: 'div'
-})
-@Service({ provideIn: 'root' })
 export class PersonModel implements OnInit {
 
 	@Input()
@@ -110,7 +104,6 @@ export class PersonModel implements OnInit {
 	@Input()
 	set resize(msg: string) {
 		console.log(this, msg);
-		console.log(Reflect.metadata('component', 'dd'));
 	}
 
 	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {

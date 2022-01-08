@@ -2,45 +2,38 @@ import { ExpressionEventMap } from '../api/expression.js';
 import { ReactiveScope, Scope, ScopeContext } from './scope.js';
 import { Stack } from './stack.js';
 
-function visitInnerScope(eventNames: string[], events: ExpressionEventMap, scope: Scope<ScopeContext>, scopeMap: Map<string, Scope<object>>) {
+function visitInnerScope(eventNames: string[], events: ExpressionEventMap, scope: Scope<ScopeContext>, scopeTuples: [string, Scope<ScopeContext>][]) {
 	eventNames.forEach(eventName => {
 		if (eventName.startsWith(':')) {
 			return;
 		}
-		scopeMap.set(eventName, scope);
+		scopeTuples.push([eventName, scope]);
 		const nextEvents = Object.keys(events[eventName]);
 		if (!nextEvents.length) {
 			return;
 		}
 		const innerScope = scope.getScopeOrCreat(eventName);
-		visitInnerScope(nextEvents, events[eventName], innerScope, scopeMap);
+		visitInnerScope(nextEvents, events[eventName], innerScope, scopeTuples);
 	});
 }
 
-export function findScopeByEventMap(events: ExpressionEventMap, stack: Stack): Map<string, Scope<ScopeContext>> {
-	const scopeMap = new Map<string, Scope<object>>();
+export function findScopeByEventMap(events: ExpressionEventMap, stack: Stack): [string, Scope<ScopeContext>][] {
+	const scopeTuples: [string, Scope<ScopeContext>][] = [];
 	const rootEventNames = Object.keys(events);
 	rootEventNames.forEach(eventName => {
 		const scope = stack.findScope<ScopeContext>(eventName);
-		scopeMap.set(eventName, scope);
+		scopeTuples.push([eventName, scope]);
 		const nextEvents = Object.keys(events[eventName]);
 		if (!nextEvents.length) {
 			return;
 		}
 		const eventScope = scope.getScopeOrCreat<ScopeContext>(eventName);
-		visitInnerScope(nextEvents, events[eventName], eventScope, scopeMap);
+		visitInnerScope(nextEvents, events[eventName], eventScope, scopeTuples);
 	});
-	return scopeMap;
+	return scopeTuples;
 }
 
-export function findReactiveScopeByEventMap(events: ExpressionEventMap, stack: Stack): Map<string, ReactiveScope<ScopeContext>> {
+export function findReactiveScopeByEventMap(events: ExpressionEventMap, stack: Stack): [string, ReactiveScope<ScopeContext>][] {
 	const allScopes = findScopeByEventMap(events, stack);
-
-	const scopeMap = new Map<string, ReactiveScope<ScopeContext>>();
-	allScopes.forEach((scope, eventName) => {
-		if (scope instanceof ReactiveScope) {
-			scopeMap.set(eventName, scope);
-		}
-	});
-	return scopeMap;
+	return allScopes.filter(tuple => tuple[1] instanceof ReactiveScope) as [string, ReactiveScope<ScopeContext>][];
 }

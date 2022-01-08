@@ -8,12 +8,6 @@
 			"path": "../expression/tsconfig.json"
 		},
 		{
-			"path": "../jsx/tsconfig.json"
-		},
-		{
-			"path": "../html-parser/tsconfig.json"
-		},
-		{
 			"path": "../core/tsconfig.json"
 		}
 	]
