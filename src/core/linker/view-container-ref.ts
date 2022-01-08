@@ -58,7 +58,7 @@ export abstract class ViewContainerRef {
 	 *
 	 * @returns The `ViewRef` instance for the newly created view.
 	 */
-	abstract createEmbeddedView<C extends object>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C>;
+	abstract createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C>;
 
 	/**
    * Instantiates a single component and inserts its host view into this container.
@@ -72,7 +72,7 @@ export abstract class ViewContainerRef {
    *
    * @returns The new `HTMLComponent` which contains the component instance and the host view.
    */
-	abstract createComponent<C extends object>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
+	abstract createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
 
 	/**
 	 * Inserts a view into this container.
@@ -179,12 +179,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		return this.insert(viewRef, newIndex);
 	}
-	override createEmbeddedView<C extends object>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
+	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
 		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this.parent);
 		this.insert(viewRef, options?.index);
 		return viewRef;
 	}
-	override createComponent<C extends object>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C {
+	override createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C {
 		const defaultTagName = Components.getComponentRef<C>(componentType).selector;
 		const ViewClass = getComponentView(componentType, options?.selector ?? defaultTagName);
 		if (!ViewClass) {

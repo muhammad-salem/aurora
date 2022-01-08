@@ -384,7 +384,7 @@ export interface ScopeControl<T extends ScopeContext> {
 	 * if a propertyKey is provided, will emit this property only 
 	 * @param propertyKey 
 	 */
-	emitChanges(propertyKey?: keyof T): void;
+	emitChanges(propertyKey?: keyof T, propertyValue?: any): void;
 }
 
 export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<T> implements ScopeControl<T> {
@@ -438,19 +438,16 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		this.attached = true;
 		this.emitChanges();
 	}
-	emitChanges(propertyKey?: keyof T): void {
+	emitChanges(propertyKey?: keyof T, propertyValue?: any): void {
 		if (propertyKey) {
-			if (propertyKey in this.marked) {
-				const lastValue = this.marked[propertyKey];
-				Reflect.deleteProperty(this.marked, propertyKey);
-				super.emit(propertyKey, lastValue);
-			}
+			super.emit(propertyKey, propertyValue);
+			Reflect.deleteProperty(this.marked, propertyKey);
 			return;
 		}
-		const oldChanges = this.marked;
+		const latestChanges = this.marked;
 		this.marked = {};
-		Object.keys(oldChanges).forEach(propertyKey => {
-			super.emit(propertyKey, oldChanges[propertyKey]);
+		Object.keys(latestChanges).forEach(propertyKey => {
+			super.emit(propertyKey, latestChanges[propertyKey]);
 		});
 	}
 }
