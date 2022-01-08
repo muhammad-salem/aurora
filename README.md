@@ -168,8 +168,8 @@ import { interval, Subscription } from 'rxjs';
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div *for="let color of colors">
-		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+	<div *for="const color of colors">
+		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>
     <table class="table">
         <thead>
