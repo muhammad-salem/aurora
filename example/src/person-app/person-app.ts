@@ -105,7 +105,7 @@ import { Person, PersonModel } from './person';
 })
 export class PersonApp {
 	@Input()
-	appVersion: string = '21.11.25';
+	appVersion: string = '22.01.08';
 
 	title = 'Testing Components';
 

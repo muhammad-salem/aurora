@@ -19,8 +19,10 @@ export * from './video-player/video.js';
 
 export * from './pipe-app/pipe-test.js';
 
+export * from './fetch/fetch-app.js';
+
+export * from './route/component-outlet.js';
 export * from './route/router-outlet.js';
 
-export * from './github/user.js';
-
 export * from './app-root.js';
+

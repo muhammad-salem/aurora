@@ -28,7 +28,7 @@ export interface Person {
 			</p>
 			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
 			<div *if="person.age >= 18">
-				Can have licence
+				Can have license
 				<p>Data</p>
 			</div>`
 })
