@@ -653,6 +653,7 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.VAR:
 				this.consume(token);
 				mode = 'var';
+				break;
 			case Token.LET:
 			default:
 				this.consume(token);

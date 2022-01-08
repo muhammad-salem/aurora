@@ -103,7 +103,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	}
 	get(stack: Stack) {
 		for (const item of this.declarations) {
-			item.declareVariable(stack, this.kind === 'var' ? 'function' : 'block');
+			item.declareVariable(stack, 'block');
 		}
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
