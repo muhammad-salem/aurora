@@ -166,7 +166,7 @@ The following tables describe each portion of the structural directive grammar:
     <td colspan="3"><code>keyExp = :key ":"? :expression ("as" :local)? ";"? </code></td>
   </tr>
   <tr>
-    <td colspan="3"><code>let = "let" :local "=" :export ";"?</code></td>
+    <td colspan="3"><code>let = "let" | "const" | "var" :local "=" :export ";"?</code></td>
   </tr>
   <tr>
     <td colspan="3"><code>as = :export "as" :local ";"?</code></td>
