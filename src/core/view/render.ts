@@ -379,7 +379,7 @@ export class ComponentRender<T extends object> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
-						event.expression.get(stack, this.view._proxyModel);
+						event.expression.get(stack);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -426,7 +426,7 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
-					event.expression.get(stack, this.view._proxyModel);
+					event.expression.get(stack);
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});
