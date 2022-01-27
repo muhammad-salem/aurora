@@ -17,6 +17,7 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 
+	declare protected left: MemberExpression;
 	private rightEvents = this.right.events();
 	constructor(left: MemberExpression, right: ExpressionNode) {
 		super('.=', left, right);
@@ -47,10 +48,11 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		}
 		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		const callback: ValueChangedCallback = (newValue: any, oldValue?: any) => {
+			this.get(stack);
+		};
 		tuples.forEach(tuple => {
-			const subscription = tuple[1].subscribe(tuple[0], (newValue: any, oldValue?: any) => {
-				this.get(stack);
-			});
+			const subscription = tuple[1].subscribe(tuple[0], callback);
 			subscriptions.push(subscription);
 		});
 		return subscriptions;
@@ -65,8 +67,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  */
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
 
-	protected left: MemberExpression;
-	protected right: MemberExpression | Identifier;
+	declare protected left: MemberExpression;
+	declare protected right: MemberExpression | Identifier;
 
 	private rightEvents = this.right.events();
 	private leftEvents = this.left.events();
