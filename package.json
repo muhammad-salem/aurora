@@ -13,8 +13,8 @@
 	"devDependencies": {
 		"@ibyar/esmpack": "^0.1.93",
 		"progress": "^2.0.3",
-		"typedoc": "^0.22.10",
-		"typescript": "^4.5.4"
+		"typedoc": "^0.22.11",
+		"typescript": "^4.5.5"
 	},
 	"scripts": {
 		"clean": "./tasks/clean",
