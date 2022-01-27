@@ -2,8 +2,22 @@ import type { Scope, ScopeContext } from './scope.js';
 
 export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
 	constructor(private thisContext: object) { }
-	apply(targetFunc: T, ignoreThisArg: any, argArray: any[]): any {
-		return targetFunc.apply(this.thisContext, argArray);
+	apply(targetFunc: T, targetThisArg: any, argArray: any[]): any {
+		return targetFunc.apply(this.computeThisArg(targetThisArg), argArray);
+	}
+
+	private computeThisArg(targetThisArg: any): any {
+		switch (true) {
+			case this.thisContext instanceof Map:
+			case this.thisContext instanceof Set:
+			case this.thisContext instanceof Date:
+			case this.thisContext instanceof WeakMap:
+			case this.thisContext instanceof WeakSet:
+			case this.thisContext instanceof Promise:
+				return this.thisContext;
+			default:
+				return targetThisArg;
+		}
 	}
 }
 
@@ -23,6 +37,9 @@ export class ScopeProxyHandler<T extends ScopeContext> implements ProxyHandler<S
 			return this.proxyMap.get(propertyKey);
 		}
 		const value = this.scope.get(propertyKey);
+		if (value == null) {
+			return value;
+		}
 		if (typeof value === 'object') {
 			const scope = this.scope.getScope(propertyKey);
 			if (scope) {

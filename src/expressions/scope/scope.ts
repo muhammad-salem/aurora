@@ -329,6 +329,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 			return;
 		}
 		scope = new ReactiveScope<V>(scopeContext, 'block', propertyKey as string, this);
+		// scope = new (this.constructor as (new (context: V, type: ScopeType, name: string, parent: ReactiveScope<T>) => ReactiveScope<V>))(scopeContext, 'block', propertyKey as string, this);
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
