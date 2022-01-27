@@ -1,4 +1,7 @@
 import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
+import { diff } from '@ibyar/platform';
+
+Reflect.set(window, 'diff', diff);
 
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }

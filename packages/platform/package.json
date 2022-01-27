@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/directives",
+	"name": "@ibyar/platform",
 	"version": "0.5.3",
-	"description": "Aurora directives had the built-in directives for aurora project",
+	"description": "Aurora Platform, A utility package for Aurora",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/directives"
+		"directory": "packages/platform"
 	},
 	"main": "./index.js",
 	"module": "./index.js",
@@ -23,9 +23,6 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.5.3",
-		"@ibyar/elements": "^0.5.3",
-		"@ibyar/platform": "^0.5.3",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.3.1"
 	},
@@ -38,7 +35,6 @@
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"directives",
-		"typescript"
+		"platform"
 	]
 }
