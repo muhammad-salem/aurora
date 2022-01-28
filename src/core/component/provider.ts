@@ -20,7 +20,7 @@ export class ElementModelReactiveScope<T extends { [key: PropertyKey]: any }> ex
 		return new ElementModelReactiveScope(context, 'global');
 	}
 	private contextProxy = createProxyForContext(this);
-	getContextProxy() {
+	getContextProxy(): T {
 		return this.contextProxy;
 	}
 }
