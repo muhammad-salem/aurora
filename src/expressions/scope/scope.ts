@@ -41,6 +41,11 @@ export interface Scope<T = ScopeContext> {
 	getContext(): T;
 
 	/**
+	 * get a proxy of the current context object if exists. 
+	 */
+	getContextProxy?(): T;
+
+	/**
 	 * get a scope for an object named as `propertyKey` from cache map,
 	 * 
 	 * if the current value is not type od `object`, will return `undefined`.

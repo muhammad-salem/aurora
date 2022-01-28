@@ -5,6 +5,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadElement } from './spread.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { MemberExpression } from '../definition/member.js';
+import { Identifier } from '../definition/values.js';
 
 @Deserializer('CallExpression')
 export class CallExpression extends AbstractExpressionNode {
@@ -50,6 +51,8 @@ export class CallExpression extends AbstractExpressionNode {
 		}
 		if (!thisContext && this.callee instanceof MemberExpression) {
 			thisContext = this.callee.getObject().get(stack);
+		} else if (!thisContext && this.callee instanceof Identifier) {
+			thisContext = stack.findScope(this.callee.getName()).getContextProxy?.();
 		}
 		return funCallBack.apply(thisContext, parameters);
 	}
