@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@ibyar/aurora';
+import { Component, OnInit } from '@ibyar/aurora';
 
 
 @Component({
@@ -46,5 +46,6 @@ export class FetchApp implements OnInit {
 	}
 	appendItem() {
 		this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
+		this.selected = this.list.length - 1;
 	}
 }
