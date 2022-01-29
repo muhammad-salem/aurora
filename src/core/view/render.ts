@@ -202,7 +202,9 @@ export class ComponentRender<T extends object> {
 		contextStack.pushBlockScopeFor({ this: liveText });
 		const textSubscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
 		subscriptions.push(...textSubscriptions);
+		contextStack.detach();
 		textNode.expression.get(contextStack);
+		contextStack.reattach();
 		return liveText;
 	}
 	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
@@ -353,14 +355,18 @@ export class ComponentRender<T extends object> {
 			node.twoWayBinding.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		if (node.outputs?.length) {
@@ -379,7 +385,9 @@ export class ComponentRender<T extends object> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
+						stack.detach();
 						event.expression.get(stack);
+						stack.reattach();
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -392,7 +400,9 @@ export class ComponentRender<T extends object> {
 			node.templateAttrs.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		return subscriptions;
@@ -411,14 +421,18 @@ export class ComponentRender<T extends object> {
 			node.twoWayBinding.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		if (node.outputs?.length) {
@@ -426,7 +440,9 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
+					stack.detach();
 					event.expression.get(stack);
+					stack.reattach();
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});
@@ -435,7 +451,9 @@ export class ComponentRender<T extends object> {
 			node.templateAttrs.forEach(attr => {
 				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
+				contextStack.detach();
 				attr.expression.get(contextStack);
+				contextStack.reattach();
 			});
 		}
 		// TODO: 

@@ -91,7 +91,7 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 		return Reflect.get(this.wrapper, propertyKey);
 	}
 	override unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
-		this.unsubscribe(propertyKey, subscription);
+		super.unsubscribe(propertyKey, subscription);
 		const pipe = this.context[propertyKey];
 		pipe.onDestroy();
 	}

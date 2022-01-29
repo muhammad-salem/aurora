@@ -4,6 +4,8 @@ import {
 	ScopeContext, ValueChangedCallback, Scope,
 	MemberExpression, Identifier
 } from '@ibyar/expressions';
+import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { isOnDestroy } from '../component/lifecycle.js';
 import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
 type OneWayOperator = '.=';
@@ -31,25 +33,33 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		return rv;
 	}
 	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
+		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		if (pipelineNames?.length) {
-			const pipeScope = Scope.blockScope();
+			const syncPipeScope = Scope.blockScope();
 			const asyncPipeScope = AsyncPipeScope.blockScope();
+			let hasAsync = false, hasSync = false;
 			pipelineNames.forEach(pipelineName => {
 				const scope = stack.findScope(pipelineName);
 				const pipe = scope.get(pipelineName)!;
 				if (scope instanceof AsyncPipeProvider) {
+					hasAsync = true;
 					asyncPipeScope.set(pipelineName, pipe);
+					if (isOnDestroy(pipe.prototype)) {
+						subscriptions.push(createSubscriptionDestroyer(() => asyncPipeScope.unsubscribe(pipelineName)));
+					}
 				} else if (scope instanceof PipeProvider) {
-					pipeScope.set(pipelineName, pipe);
+					hasSync = true;
+					syncPipeScope.set(pipelineName, pipe);
 				}
 			});
-			stack.pushScope(pipeScope);
-			stack.pushScope(asyncPipeScope);
+			hasSync && stack.pushScope(syncPipeScope);
+			hasAsync && stack.pushScope(asyncPipeScope);
 		}
 		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		const callback: ValueChangedCallback = (newValue: any, oldValue?: any) => {
+			stack.detach();
 			this.get(stack);
+			stack.reattach();
 		};
 		tuples.forEach(tuple => {
 			const subscription = tuple[1].subscribe(tuple[0], callback);
@@ -93,7 +103,9 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 	private actionRTL(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
+			stack.detach();
 			this.getRTL(stack);
+			stack.reattach();
 		};
 	}
 
@@ -107,7 +119,9 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 	private actionLTR(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
+			stack.detach();
 			this.getLTR(stack);
+			stack.reattach();
 		};
 	}
 
