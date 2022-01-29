@@ -209,7 +209,7 @@ export class ValueChangeObserver<T> {
 			return;
 		}
 		const subscribers = this.subscribers.get(propertyKey);
-		if (!subscribers) {
+		if (!subscribers || subscribers.size == 0) {
 			return;
 		}
 		this.propertiesLock.push(propertyKey);
