@@ -34,11 +34,11 @@ export class FetchApp implements OnInit {
 		if (!this.list) {
 			return;
 		}
-		const item = this.list.splice(index, 1)[0];
-		if (!item) {
-			return;
+		if (direction == -1 && index > 0) {
+			this.list.splice(index + direction, 2, this.list[index], this.list[index + direction]);
+		} else if (direction == 1 && index < this.list.length - 1) {
+			this.list.splice(index, 2, this.list[index + direction], this.list[index]);
 		}
-		this.list.splice(index + direction, 0, item);
 	}
 	delete(index: number) {
 		this.selected = this.list.at(index - 1) ?? 0;
