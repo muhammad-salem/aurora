@@ -1,5 +1,5 @@
-import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
-import { diff } from '@ibyar/platform';
+import { Directive, EmbeddedViewRef, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
+import { diff, PatchArray, PatchOperation, PatchRoot, TrackBy } from '@ibyar/platform';
 
 Reflect.set(window, 'diff', diff);
 
@@ -41,17 +41,65 @@ export class ForInContext<T> extends ForContext<T> {
 
 export abstract class AbstractForDirective<T> extends StructuralDirective implements OnDestroy {
 
+	protected _trackBy: TrackBy<T, any>;
+
 	protected _forOf: T[] | null | undefined;
+	private _forOfPrevious: T[] | null | undefined;
 
 	protected _updateUI() {
-		this.viewContainerRef.clear();
 		if (!this._forOf) {
+			this.viewContainerRef.clear();
+			this.updatePreviousList();
 			return;
 		}
-		this._forOf.forEach((value, index, array) => {
-			const context = new ForOfContext<T>(value, array, index, array.length);
-			this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
+		if (!this._forOfPrevious) {
+			this.insertAll();
+			this.updatePreviousList();
+			return;
+		}
+		const patchActions = diff(this._forOfPrevious!, this._forOf, { trackBy: this._trackBy });
+		if (patchActions.length === 0) {
+			return;
+		} else if (PatchRoot === patchActions[0]) {
+			this.insertAll();
+		} else {
+			(patchActions as PatchArray[]).forEach(action => {
+				switch (action.op) {
+					case PatchOperation.REMOVE:
+						this.viewContainerRef.remove(action.currentIndex);
+						break;
+					case PatchOperation.ADD:
+						this.createViewItem(this._forOf![action.nextIndex], action.nextIndex, this._forOf!);
+						break;
+					case PatchOperation.MOVE:
+						this.viewContainerRef.move(this.viewContainerRef.get(action.currentIndex)!, action.nextIndex);
+						break;
+					default:
+					case PatchOperation.REPLACE:
+						const context = (this.viewContainerRef.get(action.currentIndex) as EmbeddedViewRef<ForOfContext<T>>).context;
+						PatchOperation.REPLACE == action.op && (context.$implicit = this._forOf![action.nextIndex]);
+						context.index = action.nextIndex;
+						context.count = this._forOf!.length;
+						break;
+				}
+			});
+		}
+		this.updatePreviousList();
+	}
+
+	private insertAll() {
+		this._forOf?.map((value, index, array) => {
+			return this.createViewItem(value, index, array);
 		});
+	}
+
+	private createViewItem(value: T, index: number, array: T[]) {
+		const context = new ForOfContext<T>(value, array, index, array.length);
+		return this.viewContainerRef.createEmbeddedView(this.templateRef, { context, index });
+	}
+
+	private updatePreviousList() {
+		this._forOfPrevious = this._forOf?.slice();
 	}
 
 	onDestroy() {
@@ -71,10 +119,10 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 		this._updateUI();
 	}
 }
+
 @Directive({
 	selector: '*forOf',
 })
-
 export class ForOfDirective<T> extends AbstractForDirective<T>  {
 
 	@Input('of')
