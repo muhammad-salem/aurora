@@ -373,6 +373,11 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 export interface ScopeControl<T extends ScopeContext> {
 
 	/**
+	 * get current stacte of applying change detection.
+	 */
+	isAttached(): boolean;
+
+	/**
 	 * used when want to update ui-view like, you want to replace an array with another 
 	 * without reflect changes on view until reattached again.
 	 */
@@ -436,6 +441,9 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		} else {
 			this.marked[propertyKey] = newValue;
 		}
+	}
+	isAttached(): boolean {
+		return this.attached;
 	}
 	detach(): void {
 		this.attached = false;

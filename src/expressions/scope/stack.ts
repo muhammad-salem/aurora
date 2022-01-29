@@ -1,5 +1,5 @@
 import type { CanDeclareExpression } from '../api/expression.js';
-import { ReactiveScope, Scope, ScopeContext, ScopeType } from './scope.js';
+import { ReactiveScope, ReactiveScopeControl, Scope, ScopeContext, ScopeType } from './scope.js';
 
 
 export interface AwaitPromiseInfo {
@@ -106,7 +106,6 @@ export interface Stack {
 
 	pushFunctionScopeFor<T extends ScopeContext>(context: T): Scope<T>;
 
-
 	pushBlockReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
 
 	pushFunctionReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
@@ -116,6 +115,17 @@ export interface Stack {
 	pushFunctionReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
 
 	copyStack(): Stack;
+
+	/**
+	 * used when want to update ui-view like, you want to replace an array with another 
+	 * without reflect changes on view until reattached again.
+	 */
+	detach(): void;
+
+	/**
+	 * apply all the not emitted changes, and continue emit in time.
+	 */
+	reattach(): void;
 }
 
 export class Stack implements Stack {
@@ -305,5 +315,15 @@ export class Stack implements Stack {
 	}
 	copyStack(): Stack {
 		return new Stack(this.stack.slice());
+	}
+
+	detach(): void {
+		this.getReactiveScopeControls().forEach(scope => scope.detach());
+	}
+	reattach(): void {
+		this.getReactiveScopeControls().forEach(scope => scope.reattach());
+	}
+	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
 	}
 }
