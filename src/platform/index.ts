@@ -1,1 +1,1 @@
-export * from './diff/index.js';
+export * from './patch/index.js';
