@@ -14,7 +14,8 @@ import { Component, OnInit } from '@ibyar/aurora';
 		<div class="col">
 			<button type="button" class="btn btn-link" @click="move(list.indexOf(selected), -1)">UP</button>
 			<button type="button" class="btn btn-link" @click="move(list.indexOf(selected), +1)">Down</button>
-			<button type="button" class="btn btn-link" @click="list.sort()">SORT</button>
+			<button type="button" class="btn btn-link" @click="sortItems(+1)">SORT</button>
+			<button type="button" class="btn btn-link" @click="sortItems(-1)">Reverse SORT</button>
 			<button type="button" class="btn btn-link" @click="delete(list.indexOf(selected))">DELETE</button>
 			<button type="button" class="btn btn-link" @click="appendItem()">APPEND</button>
 		</div>
@@ -47,5 +48,8 @@ export class FetchApp implements OnInit {
 	appendItem() {
 		this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
 		this.selected = this.list.length - 1;
+	}
+	sortItems(direction: number) {
+		this.list.sort((a, b) => (a - b) * direction);
 	}
 }
