@@ -21,6 +21,21 @@ export class ForContext<T> {
 	get odd(): boolean {
 		return !this.even;
 	}
+
+	public update(forContext: ForContext<T>): void;
+	public update(count: number, index?: number, $implicit?: T): void;
+	public update(count: number | ForContext<T>, index?: number, $implicit?: T): void {
+		if (typeof count == 'object') {
+			const forContext = count;
+			this.count = forContext.count;
+			this.index = forContext.index;
+			this.$implicit = forContext.$implicit;
+		} else {
+			this.count = count;
+			index != undefined && (this.index = index);
+			$implicit != undefined && (this.$implicit = $implicit);
+		}
+	}
 }
 
 export class ForOfContext<T> extends ForContext<T> {
@@ -39,67 +54,58 @@ export class ForInContext<T> extends ForContext<T> {
 	}
 }
 
+const TRACK_BY_IDENTITY: TrackBy<any, any> = (index: number, item: any) => item;
+
 export abstract class AbstractForDirective<T> extends StructuralDirective implements OnDestroy {
 
-	protected _trackBy: TrackBy<T, any>;
-
 	protected _forOf: T[] | null | undefined;
-	private _forOfPrevious: T[] | null | undefined;
+	protected _forTrackBy: TrackBy<T, any> = TRACK_BY_IDENTITY;
+	private _$implicitTrackBy: TrackBy<ForOfContext<T>, any> = (index: number, item: ForOfContext<T>) => this._forTrackBy(index, item.$implicit);
 
 	protected _updateUI() {
-		if (!this._forOf) {
+		if (!this._forOf || this._forOf.length == 0) {
 			this.viewContainerRef.clear();
-			this.updatePreviousList();
 			return;
 		}
-		if (!this._forOfPrevious) {
-			this.insertAll();
-			this.updatePreviousList();
+		const lastContext: ForOfContext<T>[] = new Array(this.viewContainerRef.length);
+		for (let i = 0; i < lastContext.length; i++) {
+			lastContext[i] = (this.viewContainerRef.get(i) as EmbeddedViewRef<ForOfContext<T>>).context;
+		}
+		const currentContext = this._forOf.map((item, index, array) => new ForOfContext<T>(item, array, index, array.length));
+
+		if (lastContext.length === 0) {
+			currentContext.forEach(context => {
+				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
+			});
 			return;
 		}
-		const patchActions = diff(this._forOfPrevious!, this._forOf, { trackBy: this._trackBy });
+		const patchActions = diff(lastContext, currentContext, { trackBy: this._$implicitTrackBy });
 		if (patchActions.length === 0) {
 			return;
 		} else if (PatchRoot === patchActions[0]) {
-			this.insertAll();
+			currentContext.forEach(context => {
+				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
+			});
 		} else {
-			(patchActions as PatchArray[]).forEach(action => {
+			(patchActions as PatchArray<ForOfContext<T>>[]).forEach(action => {
 				switch (action.op) {
 					case PatchOperation.REMOVE:
 						this.viewContainerRef.remove(action.currentIndex);
 						break;
 					case PatchOperation.ADD:
-						this.createViewItem(this._forOf![action.nextIndex], action.nextIndex, this._forOf!);
+						this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
 						break;
-					case PatchOperation.MOVE:
-						this.viewContainerRef.move(this.viewContainerRef.get(action.currentIndex)!, action.nextIndex);
+					case PatchOperation.KEEP:
+						lastContext[action.nextIndex].update(action.item.count);
 						break;
 					default:
 					case PatchOperation.REPLACE:
-						const context = (this.viewContainerRef.get(action.currentIndex) as EmbeddedViewRef<ForOfContext<T>>).context;
-						PatchOperation.REPLACE == action.op && (context.$implicit = this._forOf![action.nextIndex]);
-						context.index = action.nextIndex;
-						context.count = this._forOf!.length;
+					case PatchOperation.MOVE:
+						lastContext[action.nextIndex].update(action.item);
 						break;
 				}
 			});
 		}
-		this.updatePreviousList();
-	}
-
-	private insertAll() {
-		this._forOf?.map((value, index, array) => {
-			return this.createViewItem(value, index, array);
-		});
-	}
-
-	private createViewItem(value: T, index: number, array: T[]) {
-		const context = new ForOfContext<T>(value, array, index, array.length);
-		return this.viewContainerRef.createEmbeddedView(this.templateRef, { context, index });
-	}
-
-	private updatePreviousList() {
-		this._forOfPrevious = this._forOf?.slice();
 	}
 
 	onDestroy() {
@@ -118,6 +124,12 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 		this._forOf = forOf;
 		this._updateUI();
 	}
+
+	@Input('trackBy')
+	set forTrackBy(trackBy: TrackBy<T, any> | null | undefined) {
+		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
+		this._updateUI();
+	}
 }
 
 @Directive({
@@ -128,6 +140,12 @@ export class ForOfDirective<T> extends AbstractForDirective<T>  {
 	@Input('of')
 	set forOf(forOf: T[] | null | undefined) {
 		this._forOf = forOf;
+		this._updateUI();
+	}
+
+	@Input('trackBy')
+	set forTrackBy(trackBy: TrackBy<T, any> | null | undefined) {
+		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
 		this._updateUI();
 	}
 }
