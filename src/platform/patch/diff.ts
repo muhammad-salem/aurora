@@ -9,15 +9,15 @@ export enum PatchOperation {
 	KEEP = 'keep'
 };
 
-export type PatchArray = { currentIndex: number, nextIndex: number, op: PatchOperation };
+export type PatchArray<T> = { currentIndex: number, nextIndex: number, op: PatchOperation, item: T };
 export type PatchObject = { key: string, op: PatchOperation };
 export const PatchRoot = { op: PatchOperation.REPLACE, root: true };
-export type DiffPatch = PatchArray | PatchObject;
+export type DiffPatch<T> = PatchArray<T> | PatchObject;
 
 export class JSONPatch {
 
-	protected diffArray<T, R = T>(input: T[], output: T[], options?: DiffOptions<T, R>): PatchArray[] | [typeof PatchRoot] {
-		type DiffArray = Omit<PatchArray, 'op'> & { ignore?: boolean, op: PatchOperation };
+	protected diffArray<T, R = T>(input: T[], output: T[], options?: DiffOptions<T, R>): PatchArray<T>[] | [typeof PatchRoot] {
+		type DiffArray = PatchArray<T> & { ignore?: boolean };
 		const trackBy = options?.trackBy;
 		const identityInput = (trackBy && input.map((item, index) => trackBy(index, item))) ?? input;
 		const identityOutput = (trackBy && output.map((item, index) => trackBy(index, item))) ?? output;
@@ -33,6 +33,7 @@ export class JSONPatch {
 				currentIndex: index,
 				nextIndex: nextIndex,
 				op: op,
+				item: output[nextIndex]
 			});
 		});
 		identityOutput.forEach((item, index) => {
@@ -42,6 +43,7 @@ export class JSONPatch {
 					currentIndex: -1,
 					nextIndex: index,
 					op: PatchOperation.ADD,
+					item: output[index]
 				});
 			}
 		});
@@ -64,6 +66,7 @@ export class JSONPatch {
 							currentIndex: item.currentIndex,
 							nextIndex: replacedItem.nextIndex,
 							op: PatchOperation.REPLACE,
+							item: replacedItem.item
 						};
 					}
 				}
@@ -76,8 +79,7 @@ export class JSONPatch {
 		const apply = patchArray
 			.filter(item => !item.ignore && PatchOperation.REMOVE != item.op)
 			.sort((a, b) => a.nextIndex - b.nextIndex);
-		console.log([...removed, ...apply]);
-		return removed.concat(apply) as PatchArray[];
+		return removed.concat(apply) as PatchArray<T>[];
 	}
 
 	protected diffObject<T = any>(input: T, output: T): PatchObject[] | [typeof PatchRoot] {
@@ -85,9 +87,9 @@ export class JSONPatch {
 	}
 
 	diff<T = any>(input: T, output: T): PatchObject[] | [typeof PatchRoot];
-	diff<T>(input: T[], output: T[]): PatchArray[] | [typeof PatchRoot];
-	diff<T, R>(input: T[], output: T[], options?: DiffOptions<T, R>): PatchArray[] | [typeof PatchRoot];
-	diff(input: any, output: any, options?: DiffOptions<any, any>): DiffPatch[] | [typeof PatchRoot] {
+	diff<T>(input: T[], output: T[]): PatchArray<T>[] | [typeof PatchRoot];
+	diff<T, R>(input: T[], output: T[], options?: DiffOptions<T, R>): PatchArray<T>[] | [typeof PatchRoot];
+	diff(input: any, output: any, options?: DiffOptions<any, any>): DiffPatch<any>[] | [typeof PatchRoot] {
 		if (Array.isArray(input) && Array.isArray(output)) {
 			return this.diffArray(input, output, options);
 		} else if (typeof input == 'object' && typeof output == 'object') {
