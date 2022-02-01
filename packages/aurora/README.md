@@ -31,6 +31,19 @@ npm i --save @ibyar/aurora
 yarn add @ibyar/aurora
 ```
 
+## Dependencies
+ 
+ - [@ibyar/aurora](https://npmjs.org/package/@ibyar/aurora)				a central package to manage dependance only
+ - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
+ - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
+ - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
+ - [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions)	a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8) follow, [ESTree](https://github.com/estree/estree/) for generate ast object.
+ - [@ibyar/elements](https://npmjs.org/package/@ibyar/elements)			parse html and extract bind expression and structural directive
+ - [@ibyar/platform](https://npmjs.org/package/@ibyar/platform)			utility package for i18n and plural stuff, json patch 
+ - [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
+ - [tslib](https://www.npmjs.com/package/tslib)
+
+
 ## 'HTML Template' Features
 
 | Support | HTML Template|
@@ -168,8 +181,8 @@ import { interval, Subscription } from 'rxjs';
 	selector: 'pipe-app',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div *for="let color of colors">
-		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+	<div *for="const color of colors">
+		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>
     <table class="table">
         <thead>
@@ -356,14 +369,3 @@ see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/examp
 see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
 
 see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
-
-## Dependencies
- 
- - [@ibyar/aurora](https://npmjs.org/package/@ibyar/aurora)				a central package to manage dependance only
- - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
- - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
- - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
- - [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions)	a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8) follow, [ESTree](https://github.com/estree/estree/) for generate ast object.
- - [@ibyar/elements](https://npmjs.org/package/@ibyar/elements)			parse html and extract bind expression and structural directive
- - [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
- - [tslib](https://www.npmjs.com/package/tslib)
