@@ -101,4 +101,9 @@ export class JSONPatch {
 
 const jsonPatch = new JSONPatch();
 
-export const diff = jsonPatch.diff.bind(jsonPatch);
+export function diff<T = any>(input: T, output: T): PatchObject[] | [typeof PatchRoot];
+export function diff<T>(input: T[], output: T[]): PatchArray<T>[] | [typeof PatchRoot];
+export function diff<T, R>(input: T[], output: T[], options?: DiffOptions<T, R>): PatchArray<T>[] | [typeof PatchRoot];
+export function diff(input: any, output: any, options?: DiffOptions<any, any>): DiffPatch<any>[] | [typeof PatchRoot] {
+	return jsonPatch.diff(input, output, options);
+}

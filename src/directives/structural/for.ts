@@ -126,10 +126,15 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 	}
 
 	@Input('trackBy')
-	set forTrackBy(trackBy: TrackBy<T, any> | null | undefined) {
+	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
 		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
 		this._updateUI();
 	}
+
+	get trackBy() {
+		return this._forTrackBy;
+	}
+
 }
 
 @Directive({
@@ -144,10 +149,15 @@ export class ForOfDirective<T> extends AbstractForDirective<T>  {
 	}
 
 	@Input('trackBy')
-	set forTrackBy(trackBy: TrackBy<T, any> | null | undefined) {
+	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
 		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
 		this._updateUI();
 	}
+
+	get trackBy() {
+		return this._forTrackBy;
+	}
+
 }
 
 @Directive({
