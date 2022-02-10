@@ -224,7 +224,4 @@ The following table provides shorthand examples:
   </tr>
 </table>
 
--- in *for `trackBy` not supported yet.
-
-
 <hr>
