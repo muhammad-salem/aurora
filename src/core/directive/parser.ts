@@ -134,7 +134,7 @@ export class DirectiveExpressionParser {
 				throw new Error(this.stream.createError(`Can't parse let/const/var {IDENTIFIER/ObjectPattern}`));
 			}
 			if (this.consumeIfToken(Token.ASSIGN, list)) {
-				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
@@ -182,9 +182,11 @@ export class DirectiveExpressionParser {
 			return;
 		}
 
+		this.check(Token.ASSIGN) || this.check(Token.COLON);
+
 		const list: TokenExpression[] = [];
 		// keyExp = :key ":"? :expression ("as" :local)? ";"?
-		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
 
 		// mix for directive input and template input
 		if (this.isAsKeyword()) {
