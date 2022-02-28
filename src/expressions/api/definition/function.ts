@@ -144,7 +144,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 	set(stack: Stack, value: Function) {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	private setParameter(stack: Stack, args: any[]) {
+	setParameter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);

@@ -7,17 +7,17 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
-@Deserializer('module')
-export class ModuleNode extends AbstractExpressionNode {
-	static fromJSON(node: ModuleNode, deserializer: NodeDeserializer): ModuleNode {
-		return new ModuleNode(
+@Deserializer('ModuleExpression')
+export class ModuleExpression extends AbstractExpressionNode {
+	static fromJSON(node: ModuleExpression, deserializer: NodeDeserializer): ModuleExpression {
+		return new ModuleExpression(
 			node.exportList.map(deserializer),
 			node.importList.map(deserializer),
 			node.body.map(deserializer),
 			node.meta
 		);
 	}
-	static visit(node: ModuleNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ModuleExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
 		visitNodeList(node.exportList);
 		visitNodeList(node.importList);
 		visitNodeList(node.body);

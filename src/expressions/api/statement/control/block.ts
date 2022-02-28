@@ -20,7 +20,7 @@ export class BlockStatement extends AbstractExpressionNode {
 	static visit(node: BlockStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
 		visitNodeList(node.body);
 	}
-	constructor(private body: ExpressionNode[], public isStatement: boolean) {
+	constructor(protected body: ExpressionNode[], public isStatement: boolean) {
 		super();
 	}
 	getBody() {

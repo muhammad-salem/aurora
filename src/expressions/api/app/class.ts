@@ -2,14 +2,51 @@ import type {
 	CanDeclareExpression, ExpressionEventPath,
 	ExpressionNode, NodeDeserializer
 } from '../expression.js';
-import type { Stack } from '../../scope/stack.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
-import { AbstractExpressionNode } from '../abstract.js';
+import { Stack } from '../../scope/stack.js';
+import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
 import { MemberExpression } from '../definition/member.js';
 import { FunctionExpression } from '../definition/function.js';
+import { BlockStatement } from '../statement/control/block.js';
+import { TypeOf } from '../utils.js';
+import { CallExpression } from '../index.js';
 
+
+/**
+ * A `super` pseudo-expression.
+ */
+@Deserializer('Super')
+export class Super extends AbstractExpressionNode {
+	static INSTANCE = new Super();
+	static fromJSON(node: Super): Super {
+		return Super.INSTANCE;
+	}
+	constructor() {
+		super();
+	}
+	shareVariables(scopeList: Scope<any>[]): void { }
+	set(stack: Stack, value: any) {
+		throw new Error('Super.#set() Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Super.#get()Method not implemented.');
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		throw new Error('Super.#dependency()Method not implemented.');
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		throw new Error('Super.#dependencyPath()Method not implemented.');
+	}
+
+	toString(): string {
+		return `super`;
+	}
+	toJson(): { [key: string]: any; } {
+		return {};
+	}
+}
 
 /**
  * MetaProperty node represents
@@ -60,7 +97,7 @@ export class MetaProperty extends MemberExpression {
 }
 
 /**
- * A private identifier refers to private class elements. For a private name #a, its name is a.
+ * A private identifier refers to private class elements. For a private name `#a`, its name is `a`.
  */
 @Deserializer('PrivateIdentifier')
 export class PrivateIdentifier extends Identifier {
@@ -80,6 +117,19 @@ export class PrivateIdentifier extends Identifier {
 		return {
 			name: this.privateName
 		};
+	}
+}
+
+/**
+ * A static block static { } is a block statement serving as an additional static initializer.
+ */
+@Deserializer('StaticBlock')
+export class StaticBlock extends BlockStatement {
+	static fromJSON(node: StaticBlock, deserializer: NodeDeserializer<any>): StaticBlock {
+		return new StaticBlock(deserializer(node.body), node.isStatement);
+	}
+	constructor(body: ExpressionNode[], isStatement: boolean) {
+		super(body, isStatement);
 	}
 }
 
@@ -227,7 +277,7 @@ export class ClassBody extends AbstractExpressionNode {
 			node.body.map(deserializer)
 		);
 	}
-	constructor(private body: (MethodDefinition | PropertyDefinition)[]) {
+	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock)[]) {
 		super();
 	}
 	getBody() {
@@ -257,6 +307,7 @@ export class ClassBody extends AbstractExpressionNode {
 }
 
 export class Class extends AbstractExpressionNode {
+	private sharedVariables?: Scope<any>[];
 	constructor(
 		protected body: ClassBody,
 		protected id?: Identifier,
@@ -272,13 +323,122 @@ export class Class extends AbstractExpressionNode {
 	getSuperClass() {
 		return this.superClass;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
+	shareVariables(scopeList: Scope<any>[]): void {
+		this.sharedVariables = scopeList;
+	}
 	set(stack: Stack) {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		throw new Error(`Class.#get() has no implementation.`);
+		let classExpression: TypeOf<any>;
+
+		const className = this.id?.get(stack) as string | undefined;
+		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined;
+
+		if (parentClass) {
+			classExpression = this.createSubClass(parentClass)
+		} else {
+			classExpression = this.createClass();
+		}
+
+		// init properties and methods
+
+		if (className) {
+			const TEMP = { [className]: class extends classExpression { } };
+			classExpression = TEMP[className];
+		}
+		// run initialize static code 
+
+		return classExpression;
 	}
+
+	private getConstructorExpression(): MethodDefinition | undefined {
+		return this.body.getBody()
+			.filter(field => field instanceof MethodDefinition && field.getKind() == 'constructor')[0] as MethodDefinition | undefined;
+	}
+
+	private getSuperCall(constructorExpression: MethodDefinition): CallExpression {
+		const firstCall = constructorExpression.getValue().getBody()[0];
+		if (!(firstCall instanceof CallExpression && Super.INSTANCE === firstCall.getCallee())) {
+			throw new ReferenceError(`Must call super constructor in derived class before accessing 'this' or returning from derived constructor`);
+		}
+		return firstCall;
+	}
+	private getConstructorBodyAfterSuper(constructorExpression: MethodDefinition): ExpressionNode[] {
+		const body = constructorExpression.getValue().getBody();
+		if (!body || body.length == 0) {
+			return [];
+		}
+		const firstCall = constructorExpression.getValue().getBody()[0];
+		if (!(firstCall instanceof CallExpression && Super.INSTANCE === firstCall.getCallee())) {
+			return body ?? [];
+		}
+		return body.slice(1);
+	}
+	private initClassScope(stack: Stack) {
+		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
+		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
+		stack.pushClassScope();
+		return innerScopes;
+	}
+
+	private createSubClass(parentClass: TypeOf<any>) {
+		const constructorExpression = this.getConstructorExpression();
+		if (!constructorExpression) {
+			return class extends parentClass { };
+		}
+		const superCallExpression = this.getSuperCall(constructorExpression);
+		const constructorBody = this.getConstructorBodyAfterSuper(constructorExpression);
+		let classStack: Stack;
+		let classScopes: Scope<any>[];
+		const handleSuperCall = (params: any[]): any[] => {
+			classStack = new Stack();
+			classScopes = this.initClassScope(classStack);
+			constructorExpression.getValue().setParameter(classStack, params);
+			return superCallExpression.getCallParameters(classStack);
+		};
+		return class extends parentClass {
+			constructor(...params: any[]) {
+				super(...handleSuperCall(params));
+				classStack.declareVariable('class', 'this', this);
+				for (const statement of constructorBody) {
+					statement.shareVariables(classScopes);
+					const returnValue = statement.get(classStack);
+					if (returnValue instanceof ReturnValue) {
+						classStack.clearTo(classScopes[0]);
+						return;
+					}
+				}
+				classStack.clearTo(classScopes[0]);
+			}
+		};
+	}
+
+	private createClass() {
+		const constructorExpression = this.getConstructorExpression();
+		if (!constructorExpression) {
+			return class { };
+		}
+		const self = this;
+		return class {
+			constructor(...params: any[]) {
+				const classStack = new Stack();
+				const classScopes = self.initClassScope(classStack);
+				constructorExpression!.getValue().setParameter(classStack, params);
+				classStack.declareVariable('class', 'this', this);
+				for (const statement of constructorExpression!.getValue().getBody()) {
+					statement.shareVariables(classScopes);
+					const returnValue = statement.get(classStack);
+					if (returnValue instanceof ReturnValue) {
+						classStack.clearTo(classScopes[0]);
+						return;
+					}
+				}
+				classStack.clearTo(classScopes[0]);
+			}
+		};
+	}
+
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}

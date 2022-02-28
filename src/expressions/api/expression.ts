@@ -1,5 +1,6 @@
 import type { Scope, ScopeType } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
+import { TypeOf } from './utils.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
@@ -138,10 +139,6 @@ export interface ExpressionNode {
 	 * with all necessary implementation to execute the code
 	 */
 	getClass(): NodeExpressionClass<ExpressionNode>;
-}
-
-interface TypeOf<T> {
-	new(...params: any[]): T;
 }
 
 export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
