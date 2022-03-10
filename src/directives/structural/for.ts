@@ -1,8 +1,6 @@
 import { Directive, EmbeddedViewRef, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
 import { diff, PatchArray, PatchOperation, PatchRoot, TrackBy } from '@ibyar/platform';
 
-Reflect.set(window, 'diff', diff);
-
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }
 
@@ -22,19 +20,8 @@ export class ForContext<T> {
 		return !this.even;
 	}
 
-	public update(forContext: ForContext<T>): void;
-	public update(count: number, index?: number, $implicit?: T): void;
-	public update(count: number | ForContext<T>, index?: number, $implicit?: T): void {
-		if (typeof count == 'object') {
-			const forContext = count;
-			this.count = forContext.count;
-			this.index = forContext.index;
-			this.$implicit = forContext.$implicit;
-		} else {
-			this.count = count;
-			index != undefined && (this.index = index);
-			$implicit != undefined && (this.$implicit = $implicit);
-		}
+	public update(forContext: ForContext<T>): void {
+		Object.assign(this, forContext);
 	}
 }
 
@@ -95,13 +82,16 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 					case PatchOperation.ADD:
 						this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
 						break;
-					case PatchOperation.KEEP:
-						lastContext[action.nextIndex].update(action.item.count);
-						break;
 					default:
+					case PatchOperation.KEEP:
 					case PatchOperation.REPLACE:
 					case PatchOperation.MOVE:
-						lastContext[action.nextIndex].update(action.item);
+						const last = lastContext[action.nextIndex];
+						if (last) {
+							last.update(action.item);
+						} else {
+							this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
+						}
 						break;
 				}
 			});
