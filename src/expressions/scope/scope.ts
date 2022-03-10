@@ -63,41 +63,49 @@ export interface Scope<T = ScopeContext> {
 }
 
 export class Scope<T extends ScopeContext> implements Scope<T> {
-	static for<T extends ScopeContext>(context: T, type: ScopeType) {
-		return new Scope(context, type);
+	static for<T extends ScopeContext>(context: T, type: ScopeType, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, type, propertyKeys);
 	}
-	static blockScopeFor<T extends ScopeContext>(context: T) {
-		return new Scope(context, 'block');
+	static blockScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, 'block', propertyKeys);
 	}
-	static functionScopeFor<T extends ScopeContext>(context: T) {
-		return new Scope(context, 'function');
+	static functionScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, 'function', propertyKeys);
 	}
-	static classScopeFor<T extends ScopeContext>(context: T) {
-		return new Scope(context, 'class');
+	static classScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, 'class', propertyKeys);
 	}
-	static moduleScopeFor<T extends ScopeContext>(context: T) {
-		return new Scope(context, 'module');
+	static moduleScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, 'module', propertyKeys);
 	}
-	static globalScopeFor<T extends ScopeContext>(context: T) {
-		return new Scope(context, 'global');
+	static globalScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new Scope(context, 'global', propertyKeys);
 	}
-	static blockScope<T extends ScopeContext>() {
-		return new Scope({} as T, 'block');
+	static blockScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new Scope({} as T, 'block', propertyKeys);
 	}
-	static functionScope<T extends ScopeContext>() {
-		return new Scope({} as T, 'function');
+	static functionScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new Scope({} as T, 'function', propertyKeys);
 	}
-	static classScope<T extends ScopeContext>() {
-		return new Scope({} as T, 'class');
+	static classScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new Scope({} as T, 'class', propertyKeys);
 	}
-	static moduleScope<T extends ScopeContext>() {
-		return new Scope({} as T, 'module');
+	static moduleScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new Scope({} as T, 'module', propertyKeys);
 	}
-	static globalScope<T extends ScopeContext>() {
-		return new Scope({} as T, 'global');
+	static globalScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new Scope({} as T, 'global', propertyKeys);
 	}
 	protected scopeMap = new Map<keyof T, Scope<any>>();
-	constructor(protected context: T, public type: ScopeType) { }
+	protected propertyKeys?: (keyof T)[];
+	constructor(protected context: T, public type: ScopeType, propertyKeys?: (keyof T)[]) {
+		this.propertyKeys = propertyKeys;
+		if (Array.isArray(this.propertyKeys)) {
+			this.has = (propertyKey: keyof T): boolean => {
+				return this.propertyKeys!.includes(propertyKey);
+			};
+		}
+	}
 	get(propertyKey: keyof T): any {
 		return Reflect.get(this.context, propertyKey);
 	}
@@ -141,38 +149,38 @@ export class Scope<T extends ScopeContext> implements Scope<T> {
 }
 
 export class ReadOnlyScope<T extends ScopeContext> extends Scope<T> {
-	static for<T extends ScopeContext>(context: T, type: ScopeType) {
-		return new ReadOnlyScope(context, type);
+	static for<T extends ScopeContext>(context: T, type: ScopeType, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, type, propertyKeys);
 	}
-	static blockScopeFor<T extends ScopeContext>(context: T) {
-		return new ReadOnlyScope(context, 'block');
+	static blockScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, 'block', propertyKeys);
 	}
-	static functionScopeFor<T extends ScopeContext>(context: T) {
-		return new ReadOnlyScope(context, 'function');
+	static functionScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, 'function', propertyKeys);
 	}
-	static classScopeFor<T extends ScopeContext>(context: T) {
-		return new ReadOnlyScope(context, 'class');
+	static classScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, 'class', propertyKeys);
 	}
-	static moduleScopeFor<T extends ScopeContext>(context: T) {
-		return new ReadOnlyScope(context, 'module');
+	static moduleScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, 'module', propertyKeys);
 	}
-	static globalScopeFor<T extends ScopeContext>(context: T) {
-		return new ReadOnlyScope(context, 'global');
+	static globalScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope(context, 'global', propertyKeys);
 	}
-	static blockScope<T extends ScopeContext>() {
-		return new ReadOnlyScope({} as T, 'block');
+	static blockScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope({} as T, 'block', propertyKeys);
 	}
-	static functionScope<T extends ScopeContext>() {
-		return new ReadOnlyScope({} as T, 'function');
+	static functionScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope({} as T, 'function', propertyKeys);
 	}
-	static classScope<T extends ScopeContext>() {
-		return new ReadOnlyScope({} as T, 'class');
+	static classScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope({} as T, 'class', propertyKeys);
 	}
-	static moduleScope<T extends ScopeContext>() {
-		return new ReadOnlyScope({} as T, 'module');
+	static moduleScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope({} as T, 'module', propertyKeys);
 	}
-	static globalScope<T extends ScopeContext>() {
-		return new ReadOnlyScope({} as T, 'global');
+	static globalScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReadOnlyScope({} as T, 'global', propertyKeys);
 	}
 	set(propertyKey: keyof T, value: any, receiver?: any): boolean {
 		// do nothing
@@ -265,46 +273,53 @@ export class ValueChangeObserver<T> {
 }
 
 export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
-	static for<T extends ScopeContext>(context: T, type: ScopeType) {
-		return new ReactiveScope(context, type);
+	static for<T extends ScopeContext>(context: T, type: ScopeType, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, type, propertyKeys);
 	}
-	static blockScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScope(context, 'block');
+	static blockScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, 'block', propertyKeys);
 	}
-	static functionScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScope(context, 'function');
+	static functionScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, 'function', propertyKeys);
 	}
-	static classScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScope(context, 'class');
+	static classScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, 'class', propertyKeys);
 	}
-	static moduleScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScope(context, 'module');
+	static moduleScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, 'module', propertyKeys);
 	}
-	static globalScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScope(context, 'global');
+	static globalScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope(context, 'global', propertyKeys);
 	}
-	static blockScope<T extends ScopeContext>() {
-		return new ReactiveScope({} as T, 'block');
+	static blockScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope({} as T, 'block', propertyKeys);
 	}
-	static functionScope<T extends ScopeContext>() {
-		return new ReactiveScope({} as T, 'function');
+	static functionScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope({} as T, 'function', propertyKeys);
 	}
-	static classScope<T extends ScopeContext>() {
-		return new ReactiveScope({} as T, 'class');
+	static classScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope({} as T, 'class', propertyKeys);
 	}
-	static moduleScope<T extends ScopeContext>() {
-		return new ReactiveScope({} as T, 'module');
+	static moduleScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope({} as T, 'module', propertyKeys);
 	}
-	static globalScope<T extends ScopeContext>() {
-		return new ReactiveScope({} as T, 'global');
+	static globalScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScope({} as T, 'global', propertyKeys);
 	}
 
 	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
+	protected name?: string;
 
-	constructor(context: T, type: ScopeType);
-	constructor(context: T, type: ScopeType, name: string, parent: ReactiveScope<any>);
-	constructor(context: T, type: ScopeType, protected name?: string, protected parent?: ReactiveScope<any>) {
-		super(context, type);
+	constructor(context: T, type: ScopeType, propertyKeys?: (keyof T)[]);
+	constructor(context: T, type: ScopeType, name: string, parent: ReactiveScope<any>, propertyKeys?: (keyof T)[]);
+	constructor(context: T, type: ScopeType, name?: string | (keyof T)[], protected parent?: ReactiveScope<any>, propertyKeys?: (keyof T)[]) {
+		super(context, type, Array.isArray(name) ? name : propertyKeys);
+		if (typeof name == 'string') {
+			this.name = name;
+		}
+		if (Array.isArray(name)) {
+			this.propertyKeys = name;
+		}
 	}
 
 	set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
@@ -399,38 +414,38 @@ export interface ScopeControl<T extends ScopeContext> {
 }
 
 export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<T> implements ScopeControl<T> {
-	static for<T extends ScopeContext>(context: T, type: ScopeType) {
-		return new ReactiveScopeControl(context, type);
+	static for<T extends ScopeContext>(context: T, type: ScopeType, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, type, propertyKeys);
 	}
-	static blockScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScopeControl(context, 'block');
+	static blockScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, 'block', propertyKeys);
 	}
-	static functionScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScopeControl(context, 'function');
+	static functionScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, 'function', propertyKeys);
 	}
-	static classScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScopeControl(context, 'class');
+	static classScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, 'class', propertyKeys);
 	}
-	static moduleScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScopeControl(context, 'module');
+	static moduleScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, 'module', propertyKeys);
 	}
-	static globalScopeFor<T extends ScopeContext>(context: T) {
-		return new ReactiveScopeControl(context, 'global');
+	static globalScopeFor<T extends ScopeContext>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl(context, 'global', propertyKeys);
 	}
-	static blockScope<T extends ScopeContext>() {
-		return new ReactiveScopeControl({} as T, 'block');
+	static blockScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl({} as T, 'block', propertyKeys);
 	}
-	static functionScope<T extends ScopeContext>() {
-		return new ReactiveScopeControl({} as T, 'function');
+	static functionScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl({} as T, 'function', propertyKeys);
 	}
-	static classScope<T extends ScopeContext>() {
-		return new ReactiveScopeControl({} as T, 'class');
+	static classScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl({} as T, 'class', propertyKeys);
 	}
-	static moduleScope<T extends ScopeContext>() {
-		return new ReactiveScopeControl({} as T, 'module');
+	static moduleScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl({} as T, 'module', propertyKeys);
 	}
-	static globalScope<T extends ScopeContext>() {
-		return new ReactiveScopeControl({} as T, 'global');
+	static globalScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveScopeControl({} as T, 'global', propertyKeys);
 	}
 
 	protected attached: boolean = true;
