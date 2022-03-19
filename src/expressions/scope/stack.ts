@@ -129,13 +129,13 @@ export interface Stack {
 }
 
 export class Stack implements Stack {
-	static for(...contexts: Scope<any>[]): Stack {
+	static for(...contexts: Scope<ScopeContext>[]): Stack {
 		if (contexts.length === 0) {
 			return new Stack();
 		}
-		return new Stack(contexts.map(context => new Scope(context, 'global')));
+		return new Stack(contexts.map(context => new Scope<ScopeContext>(context, 'global')));
 	}
-	static forScopes(...scopes: Scope<any>[]): Stack {
+	static forScopes(...scopes: Scope<ScopeContext>[]): Stack {
 		if (scopes.length === 0) {
 			scopes.push(Scope.functionScope());
 		}
@@ -145,9 +145,18 @@ export class Stack implements Stack {
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
 	protected readonly stack: Array<Scope<any>>;
-
-	constructor(stack?: Array<Scope<any>>) {
-		this.stack = stack ?? [Scope.functionScope()];
+	protected readonly moduleScope: ReactiveScope<ScopeContext>;
+	constructor(globalScope: Scope<ScopeContext>, moduleScope?: ReactiveScope<ScopeContext>);
+	constructor(stack: Array<Scope<ScopeContext>>, moduleScope?: ReactiveScope<ScopeContext>);
+	constructor(arg0?: Array<Scope<ScopeContext>> | Scope<ScopeContext>, arg1?: ReactiveScope<ScopeContext>) {
+		if (Array.isArray(arg0)) {
+			this.stack = arg0;
+		} else if (typeof arg0 == 'object') {
+			this.stack = [arg0];
+		} else {
+			this.stack = [Scope.functionScope()];
+		}
+		this.moduleScope = arg1 ?? ReactiveScope.globalScope();
 	}
 	has(propertyKey: PropertyKey): boolean {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
