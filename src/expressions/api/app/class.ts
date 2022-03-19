@@ -31,13 +31,13 @@ export class Super extends AbstractExpressionNode {
 		throw new Error('Super.#set() Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
-		throw new Error('Super.#get()Method not implemented.');
+		throw new Error('Super.#get() Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		throw new Error('Super.#dependency()Method not implemented.');
+		throw new Error('Super.#dependency() Method not implemented.');
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		throw new Error('Super.#dependencyPath()Method not implemented.');
+		throw new Error('Super.#dependencyPath() Method not implemented.');
 	}
 
 	toString(): string {
@@ -131,6 +131,9 @@ export class StaticBlock extends BlockStatement {
 	constructor(body: ExpressionNode[], isStatement: boolean) {
 		super(body, isStatement);
 	}
+	toString(): string {
+		return `static ${super.toString()}`;
+	}
 }
 
 export type MethodDefinitionKind = 'constructor' | 'method' | 'set' | 'get';
@@ -154,7 +157,6 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 		private kind: MethodDefinitionKind,
 		private key: ExpressionNode | PrivateIdentifier,
 		private value: FunctionExpression,
-
 		private computed: boolean,
 		isStatic: boolean) {
 		super();
@@ -177,22 +179,39 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('MethodDefinition.#set() Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('MethodDefinition.#get() Method not implemented.');
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('MethodDefinition.#declareVariable() Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		throw new Error('Method not implemented.');
+		throw new Error('MethodDefinition.#dependency() Method not implemented.');
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		throw new Error('Method not implemented.');
+		throw new Error('MethodDefinition.#get() Method not implemented.');
 	}
 	toString(): string {
-		throw new Error('Method not implemented.');
+		let str = '';
+		let name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
+		switch (this.kind) {
+			case 'constructor':
+				str += 'constructor ';
+				break;
+			case 'get':
+				str += `get ${name} `;
+				break;
+			case 'set':
+				str += `set ${name} `;
+				break
+			default:
+				str = `${name} `;
+				break;
+		}
+		str += this.value.toString();
+		return str;
 	}
 	toJson(): { [key: string]: any; } {
 		return {
@@ -243,22 +262,26 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('PropertyDefinition.#set() Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('PropertyDefinition.#get() Method not implemented.');
 	}
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
-		throw new Error('Method not implemented.');
+		throw new Error('PropertyDefinition.#declareVariable() Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		throw new Error('Method not implemented.');
+		throw new Error('PropertyDefinition.#dependency() Method not implemented.');
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		throw new Error('Method not implemented.');
+		throw new Error('PropertyDefinition.#dependencyPath() Method not implemented.');
 	}
 	toString(): string {
-		throw new Error('Method not implemented.');
+		const name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
+		if (this.value) {
+			return `${name} = ${this.value.toString()};`
+		}
+		return `${name};`
 	}
 	toJson(): { [key: string]: any; } {
 		return {
@@ -297,7 +320,7 @@ export class ClassBody extends AbstractExpressionNode {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
-		throw new Error('Method not implemented.');
+		return this.body.map(definition => definition.toString()).join('\n');
 	}
 	toJson(): { [key: string]: any; } {
 		return {
@@ -330,33 +353,72 @@ export class Class extends AbstractExpressionNode {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		let classExpression: TypeOf<any>;
+		let classEval: TypeOf<any> & { [keyL: string]: any };
 
 		const className = this.id?.get(stack) as string | undefined;
 		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined;
 
 		if (parentClass) {
-			classExpression = this.createSubClass(parentClass)
+			classEval = this.createSubClass(parentClass, className)
 		} else {
-			classExpression = this.createClass();
+			classEval = this.createClass(className);
 		}
 
-		// init properties and methods
+		// init static class properties and methods
+		this.getStaticPropertyDefinitionExpressions().forEach(property => {
+			const propertyName = property.getKey().get(stack);
+			const propertyValue = property.getValue()?.get(stack);
+			classEval[propertyName] = propertyValue;
+		});
+		this.getStaticMethodDefinitionExpressions().forEach(method => {
+			const propertyName = method.getKey().get(stack);
+			const propertyValue = method.getValue()?.get(stack);
+			classEval[propertyName] = propertyValue;
+		});
 
-		if (className) {
-			const TEMP = { [className]: class extends classExpression { } };
-			classExpression = TEMP[className];
+		// init class body properties and methods
+		this.getClassPropertyDefinitionExpressions().forEach(property => {
+			const propertyName = property.getKey().get(stack);
+			const propertyValue = property.getValue()?.get(stack);
+			classEval.prototype[propertyName] = propertyValue;
+		});
+		this.getClassMethodDefinitionExpressions().forEach(method => {
+			const propertyName = method.getKey().get(stack);
+			const propertyValue = method.getValue()?.get(stack);
+			classEval.prototype[propertyName] = propertyValue;
+		});
+
+		// run initialize static code
+		const initializeBlock = this.getStaticBlockExpression();
+		if (initializeBlock) {
+			initializeBlock.get(stack);
 		}
-		// run initialize static code 
-
-		return classExpression;
+		return classEval;
 	}
-
 	private getConstructorExpression(): MethodDefinition | undefined {
 		return this.body.getBody()
 			.filter(field => field instanceof MethodDefinition && field.getKind() == 'constructor')[0] as MethodDefinition | undefined;
 	}
-
+	private getStaticBlockExpression(): StaticBlock | undefined {
+		return this.body.getBody()
+			.filter(field => field instanceof StaticBlock)[0] as StaticBlock | undefined;
+	}
+	private getStaticMethodDefinitionExpressions(): MethodDefinition[] {
+		return this.body.getBody()
+			.filter(field => field instanceof MethodDefinition && field.isStatic()) as MethodDefinition[];
+	}
+	private getClassMethodDefinitionExpressions(): MethodDefinition[] {
+		return this.body.getBody()
+			.filter(field => field instanceof MethodDefinition && !field.isStatic() && 'constructor' !== field.getKind()) as MethodDefinition[];
+	}
+	private getStaticPropertyDefinitionExpressions(): PropertyDefinition[] {
+		return this.body.getBody()
+			.filter(field => field instanceof PropertyDefinition && field.isStatic()) as PropertyDefinition[];
+	}
+	private getClassPropertyDefinitionExpressions(): PropertyDefinition[] {
+		return this.body.getBody()
+			.filter(field => field instanceof PropertyDefinition && !field.isStatic()) as PropertyDefinition[];
+	}
 	private getSuperCall(constructorExpression: MethodDefinition): CallExpression {
 		const firstCall = constructorExpression.getValue().getBody()[0];
 		if (!(firstCall instanceof CallExpression && Super.INSTANCE === firstCall.getCallee())) {
@@ -381,8 +443,7 @@ export class Class extends AbstractExpressionNode {
 		stack.pushClassScope();
 		return innerScopes;
 	}
-
-	private createSubClass(parentClass: TypeOf<any>) {
+	private createSubClass(parentClass: TypeOf<any>, className?: string) {
 		const constructorExpression = this.getConstructorExpression();
 		if (!constructorExpression) {
 			return class extends parentClass { };
@@ -397,46 +458,55 @@ export class Class extends AbstractExpressionNode {
 			constructorExpression.getValue().setParameter(classStack, params);
 			return superCallExpression.getCallParameters(classStack);
 		};
-		return class extends parentClass {
-			constructor(...params: any[]) {
-				super(...handleSuperCall(params));
-				classStack.declareVariable('class', 'this', this);
-				for (const statement of constructorBody) {
-					statement.shareVariables(classScopes);
-					const returnValue = statement.get(classStack);
-					if (returnValue instanceof ReturnValue) {
-						classStack.clearTo(classScopes[0]);
-						return;
+		className ??= '__temp_class_name__'
+		const TEMP = {
+			[className]: class extends parentClass {
+				constructor(...params: any[]) {
+					super(...handleSuperCall(params));
+					classStack.declareVariable('class', 'this', this);
+					for (const statement of constructorBody) {
+						statement.shareVariables(classScopes);
+						const returnValue = statement.get(classStack);
+						if (returnValue instanceof ReturnValue) {
+							classStack.clearTo(classScopes[0]);
+							return;
+						}
 					}
+					classStack.clearTo(classScopes[0]);
 				}
-				classStack.clearTo(classScopes[0]);
 			}
 		};
+		return TEMP[className];
 	}
-
-	private createClass() {
+	private createClass(className?: string) {
 		const constructorExpression = this.getConstructorExpression();
 		if (!constructorExpression) {
 			return class { };
 		}
 		const self = this;
-		return class {
-			constructor(...params: any[]) {
-				const classStack = new Stack();
-				const classScopes = self.initClassScope(classStack);
-				constructorExpression!.getValue().setParameter(classStack, params);
-				classStack.declareVariable('class', 'this', this);
-				for (const statement of constructorExpression!.getValue().getBody()) {
-					statement.shareVariables(classScopes);
-					const returnValue = statement.get(classStack);
-					if (returnValue instanceof ReturnValue) {
-						classStack.clearTo(classScopes[0]);
-						return;
+
+		// define class name
+		className ??= '__temp_class_name__'
+		const TEMP = {
+			[className]: class {
+				constructor(...params: any[]) {
+					const classStack = new Stack();
+					const classScopes = self.initClassScope(classStack);
+					constructorExpression!.getValue().setParameter(classStack, params);
+					classStack.declareVariable('class', 'this', this);
+					for (const statement of constructorExpression!.getValue().getBody()) {
+						statement.shareVariables(classScopes);
+						const returnValue = statement.get(classStack);
+						if (returnValue instanceof ReturnValue) {
+							classStack.clearTo(classScopes[0]);
+							return;
+						}
 					}
+					classStack.clearTo(classScopes[0]);
 				}
-				classStack.clearTo(classScopes[0]);
 			}
 		};
+		return TEMP[className];
 	}
 
 	dependency(computed?: true): ExpressionNode[] {
