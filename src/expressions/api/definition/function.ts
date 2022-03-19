@@ -63,7 +63,7 @@ export class Param extends AbstractExpressionNode {
 		this.defaultValue?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: Function) {
-		this.identifier.declareVariable?.(stack, 'function', value);
+		this.identifier.declareVariable?.(stack, value);
 	}
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
@@ -92,7 +92,7 @@ export abstract class FunctionBaseExpression extends AbstractExpressionNode {
 		this.sharedVariables = scopeList;
 	}
 	initFunctionScope(stack: Stack) {
-		const scope = Scope.functionScope<object>();
+		const scope = Scope.blockScope<object>();
 		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
 		innerScopes.push(scope);
 		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
@@ -160,7 +160,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.ASYNC:
 				func = async function (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -170,7 +170,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}
@@ -208,7 +208,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.GENERATOR:
 				func = function* (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -229,7 +229,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -239,7 +239,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}
@@ -285,7 +285,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.NORMAL:
 				func = function (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -300,7 +300,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 				};
 				break;
 		}
-		this.id?.declareVariable(stack, 'block', func);
+		this.id?.declareVariable(stack, func);
 		return func;
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -429,7 +429,7 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}

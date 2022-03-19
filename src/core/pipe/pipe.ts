@@ -27,7 +27,7 @@ export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe i
 
 export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }> {
 	constructor() {
-		super({}, 'block');
+		super({});
 	}
 	has(pipeName: string): boolean {
 		if (pipeName in this.context) {
@@ -50,11 +50,14 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		}
 		return void 0;
 	}
+	getClass(): TypeOf<PipeProvider> {
+		return PipeProvider;
+	}
 }
 
 export class AsyncPipeProvider extends ReadOnlyScope<object> {
 	constructor() {
-		super({}, 'block');
+		super({});
 	}
 	has(pipeName: string): boolean {
 		const pipeRef = ClassRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
@@ -66,6 +69,9 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 			return pipeRef.modelClass;
 		}
 	}
+	getClass(): TypeOf<AsyncPipeProvider> {
+		return AsyncPipeProvider;
+	}
 }
 
 export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveScopeControl<T> {
@@ -74,7 +80,7 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 	}
 	private wrapper: { [key: string]: Function } = {};
 	constructor() {
-		super({} as T, 'block');
+		super({} as T);
 	}
 	override set(propertyKey: keyof T, pipeClass: TypeOf<AsyncPipeTransform<any, any>>, receiver?: any): boolean {
 		const detector = createChangeDetectorRef(this, propertyKey);
@@ -94,5 +100,8 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 		super.unsubscribe(propertyKey, subscription);
 		const pipe = this.context[propertyKey];
 		pipe.onDestroy();
+	}
+	getClass(): TypeOf<AsyncPipeScope<T>> {
+		return AsyncPipeScope;
 	}
 }

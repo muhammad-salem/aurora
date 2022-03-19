@@ -3,7 +3,6 @@ import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ScopeType } from '../../index.js';
 
 @Deserializer('RestElement')
 export class RestElement extends AbstractExpressionNode implements CanDeclareExpression {
@@ -25,8 +24,8 @@ export class RestElement extends AbstractExpressionNode implements CanDeclareExp
 	get(stack: Stack): void {
 		throw new Error('RestElement#get() Method has no implementation.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any {
-		this.argument.declareVariable(stack, scopeType, propertyValue);
+	declareVariable(stack: Stack, propertyValue?: any): any {
+		this.argument.declareVariable(stack, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.argument.dependency(computed);

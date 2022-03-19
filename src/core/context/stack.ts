@@ -67,7 +67,7 @@ const Constant: { [k: string]: any } = {
 	Number,
 };
 
-const CONSTANT_SCOPE = new ReadOnlyScope(Constant, 'block');
+const CONSTANT_SCOPE = new ReadOnlyScope(Constant);
 export const documentStack = new Stack(
 	[
 		CONSTANT_SCOPE,

@@ -2,7 +2,7 @@ import type {
 	CanDeclareExpression, ExpressionNode,
 	NodeDeserializer, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType
 } from '../expression.js';
-import type { Scope, ScopeType } from '../../scope/scope.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -46,8 +46,8 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 		scope = stack.findScope(this.name);
 		return scope.getScope(this.name);
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
-		return stack.declareVariable(scopeType, this.name, propertyValue);
+	declareVariable(stack: Stack, propertyValue: any): any {
+		return stack.declareVariable(this.name, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [this];

@@ -192,8 +192,8 @@ const stack1 = new Stack();
 
 // OR
 
-const scope1 = new Scope<{x: number, y: number}>( {x: 8, y: 6}, 'block');
-const scope2 = Scope.blockScopeFor({z: 9});
+const scope1 = new Scope<{x: number, y: number}>( {x: 8, y: 6});
+const scope2 = Scope.for({z: 9});
 
 const stack2 = new Stack([scope1, scope2]);
 
@@ -205,7 +205,7 @@ const stack2 = new Stack([scope1, scope2]);
 ```ts
 import { ReadOnlyScope } from '@ibyar/expressions';
 
-stack1.pushScope(ReadOnlyScope.blockScopeFor({
+stack1.pushScope(ReadOnlyScope.for({
 	Math: {
 		E: Math.E,
 		LN10: Math.LN10,

@@ -40,7 +40,7 @@ export class ComponentRender<T extends object> {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
-		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
+		this.templateNameScope = this.contextStack.pushReactiveScope();
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -173,7 +173,7 @@ export class ComponentRender<T extends object> {
 				host
 			);
 			templateRef.host = structural;
-			stack.pushBlockReactiveScopeFor({ 'this': structural });
+			stack.pushReactiveScopeFor({ 'this': structural });
 			const dSubs = this.initStructuralDirective(structural, directive, stack);
 			subscriptions.push(...dSubs);
 			if (isOnInit(structural)) {
@@ -275,7 +275,7 @@ export class ComponentRender<T extends object> {
 	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<ScopeContext>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): HTMLElement {
 		const element = this.createElementByTagName(node);
 		const elementStack = contextStack.copyStack();
-		const elementScope = isHTMLComponent(element) ? element._viewScope : elementStack.pushBlockReactiveScopeFor({ 'this': element });
+		const elementScope = isHTMLComponent(element) ? element._viewScope : elementStack.pushReactiveScopeFor({ 'this': element });
 		elementStack.pushScope<ScopeContext>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
@@ -317,7 +317,7 @@ export class ComponentRender<T extends object> {
 				)) {
 				const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
 				const stack = contextStack.copyStack();
-				stack.pushBlockReactiveScopeFor({ 'this': directive });
+				stack.pushReactiveScopeFor({ 'this': directive });
 				const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 				subscriptions.push(...directiveSubscriptions);
 				if (isOnInit(directive)) {

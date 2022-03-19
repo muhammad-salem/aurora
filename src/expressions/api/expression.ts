@@ -1,4 +1,4 @@
-import type { Scope, ScopeType } from '../scope/scope.js';
+import type { Scope } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
 import { TypeOf } from './utils.js';
 
@@ -185,7 +185,7 @@ export interface CanDeclareExpression extends ExpressionNode {
 	 * @param propertyValue the initial value of identifier
 	 * @param scope which scop to declare this identifier
 	 */
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
+	declareVariable(stack: Stack, propertyValue?: any): any;
 }
 
 

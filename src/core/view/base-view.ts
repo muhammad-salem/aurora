@@ -43,11 +43,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const model = new modelClass(/* resolve dependency injection*/);
 			this._model = model;
 
-			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
+			const modelScope = ElementModelReactiveScope.for(model);
 			this._proxyModel = modelScope.getContextProxy();
 			this._modelScope = modelScope;
 
-			this._viewScope = ReactiveScope.blockScopeFor<{ 'this': BaseComponent<T> }>({ 'this': this });
+			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getScopeOrCreat('this');
 			componentRef.inputs.forEach(input => {
 				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {

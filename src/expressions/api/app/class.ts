@@ -3,7 +3,7 @@ import type {
 	ExpressionNode, NodeDeserializer,
 	VisitNodeListType, VisitNodeType
 } from '../expression.js';
-import type { Scope, ScopeType } from '../../scope/scope.js';
+import type { Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -193,7 +193,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('MethodDefinition.#get() Method not implemented.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
+	declareVariable(stack: Stack, propertyValue?: any) {
 		throw new Error('MethodDefinition.#declareVariable() Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -280,7 +280,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	get(stack: Stack, thisContext?: any) {
 		throw new Error('PropertyDefinition.#get() Method not implemented.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
+	declareVariable(stack: Stack, propertyValue?: any) {
 		throw new Error('PropertyDefinition.#declareVariable() Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -456,7 +456,7 @@ export class Class extends AbstractExpressionNode {
 	private initClassScope(stack: Stack) {
 		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
 		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
-		stack.pushClassScope();
+		stack.pushBlockScope();
 		return innerScopes;
 	}
 	private createSubClass(parentClass: TypeOf<any>, className?: string) {
@@ -479,7 +479,7 @@ export class Class extends AbstractExpressionNode {
 			[className]: class extends parentClass {
 				constructor(...params: any[]) {
 					super(...handleSuperCall(params));
-					classStack.declareVariable('class', 'this', this);
+					classStack.declareVariable('this', this);
 					for (const statement of constructorBody) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
@@ -509,7 +509,7 @@ export class Class extends AbstractExpressionNode {
 					const classStack = new Stack();
 					const classScopes = self.initClassScope(classStack);
 					constructorExpression!.getValue().setParameter(classStack, params);
-					classStack.declareVariable('class', 'this', this);
+					classStack.declareVariable('this', this);
 					for (const statement of constructorExpression!.getValue().getBody()) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
@@ -565,8 +565,8 @@ export class ClassDeclaration extends Class implements CanDeclareExpression {
 		node.superClass && visitNode(node.superClass);
 	}
 	protected id: Identifier;
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
-		stack.declareVariable(scopeType, this.id.getName(), propertyValue);
+	declareVariable(stack: Stack, propertyValue?: any) {
+		stack.declareVariable(this.id.getName(), propertyValue);
 	}
 }
 

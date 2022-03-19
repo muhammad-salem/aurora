@@ -49,10 +49,10 @@ export class TemplateRefImpl extends TemplateRef {
 	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
 		const directiveStack = this.stack.copyStack();
 
-		const templateScope = directiveStack.pushBlockReactiveScope();
+		const templateScope = directiveStack.pushReactiveScope();
 
 		const sandBox = new Stack();
-		const contextScope = sandBox.pushBlockReactiveScopeFor(context ?? {});
+		const contextScope = sandBox.pushReactiveScopeFor(context ?? {});
 		sandBox.pushScope(templateScope);
 
 		const elements: Node[] = [];

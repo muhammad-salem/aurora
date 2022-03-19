@@ -1,4 +1,4 @@
-import type { Scope, ScopeType } from '../scope/scope.js';
+import type { Scope } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode, NodeExpressionClass,
@@ -122,6 +122,5 @@ export class YieldDelegateValue {
 export class AwaitPromise implements AwaitPromiseInfo {
 	node: CanDeclareExpression;
 	declareVariable: boolean;
-	scopeType: ScopeType;
 	constructor(public promise: Promise<any>) { }
 }

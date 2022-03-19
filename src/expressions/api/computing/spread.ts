@@ -31,7 +31,7 @@ export class SpreadElement extends AbstractExpressionNode {
 	}
 	private spreadFromArray(stack: Stack, array: Array<any>): void {
 		let length: number = stack.get('length');
-		array.forEach(value => stack.declareVariable('block', length++, value));
+		array.forEach(value => stack.declareVariable(length++, value));
 	}
 	private spreadFromIterator(stack: Stack, iterator: Iterator<any>): void {
 		let length: number = stack.get('length');
@@ -40,7 +40,7 @@ export class SpreadElement extends AbstractExpressionNode {
 			if (iteratorResult.done) {
 				break;
 			}
-			stack.declareVariable('block', length++, iteratorResult.value);
+			stack.declareVariable(length++, iteratorResult.value);
 		}
 	}
 	dependency(computed?: true): ExpressionNode[] {

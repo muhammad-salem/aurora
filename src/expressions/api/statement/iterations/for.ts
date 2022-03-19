@@ -150,7 +150,7 @@ export class ForOfNode extends AbstractExpressionNode {
 		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
@@ -227,7 +227,7 @@ export class ForInNode extends AbstractExpressionNode {
 		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
@@ -304,7 +304,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			stack.clearTo(forBlock);
 			return result;

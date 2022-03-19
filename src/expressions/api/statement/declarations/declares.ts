@@ -5,7 +5,6 @@ import type {
 } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
-import type { ScopeType } from '../../../scope/scope.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
@@ -37,22 +36,21 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 		throw new Error(`VariableNode#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		this.declareVariable(stack, 'block');
+		this.declareVariable(stack);
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
+	declareVariable(stack: Stack, propertyValue?: any) {
 		if (propertyValue !== undefined) {
-			this.id.declareVariable(stack, scopeType, propertyValue);
+			this.id.declareVariable(stack, propertyValue);
 			return;
 		}
 		const value = this.init?.get(stack);
 		if (value instanceof AwaitPromise) {
 			value.node = this.id;
 			value.declareVariable = true;
-			value.scopeType = scopeType;
-			value.node.declareVariable(stack, scopeType);
+			value.node.declareVariable(stack);
 			stack.resolveAwait(value);
 		} else {
-			this.id.declareVariable(stack, scopeType, value);
+			this.id.declareVariable(stack, value);
 		}
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -103,11 +101,11 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 	}
 	get(stack: Stack) {
 		for (const item of this.declarations) {
-			item.declareVariable(stack, 'block');
+			item.declareVariable(stack);
 		}
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
-		this.declarations[0].declareVariable(stack, scopeType, propertyValue);
+	declareVariable(stack: Stack, propertyValue: any): any {
+		this.declarations[0].declareVariable(stack, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.declarations.flatMap(declareVariable => declareVariable.dependency(computed));
