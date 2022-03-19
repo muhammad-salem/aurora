@@ -1,6 +1,7 @@
 import type {
 	CanDeclareExpression, ExpressionEventPath,
-	ExpressionNode, NodeDeserializer
+	ExpressionNode, NodeDeserializer,
+	VisitNodeListType, VisitNodeType
 } from '../expression.js';
 import type { Scope, ScopeType } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
@@ -11,7 +12,7 @@ import { MemberExpression } from '../definition/member.js';
 import { FunctionExpression } from '../definition/function.js';
 import { BlockStatement } from '../statement/control/block.js';
 import { TypeOf } from '../utils.js';
-import { CallExpression } from '../index.js';
+import { CallExpression } from '../computing/call.js';
 
 
 /**
@@ -77,6 +78,10 @@ export class MetaProperty extends MemberExpression {
 			deserializer(node.meta),
 			deserializer(node.property)
 		);
+	}
+	static visit(node: MetaProperty, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.meta);
+		visitNode(node.property);
 	}
 	constructor(private meta: Identifier, property: Identifier) {
 		super(meta, property, false);
@@ -151,6 +156,10 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 			node.computed,
 			node.static
 		);
+	}
+	static visit(node: MethodDefinition, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.key);
+		visitNode(node.value);
 	}
 	private 'static': boolean;
 	constructor(
@@ -239,6 +248,10 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 			node.value && deserializer(node.value)
 		);
 	}
+	static visit(node: PropertyDefinition, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.key);
+		node.value && visitNode(node.value);
+	}
 	private 'static': boolean;
 	constructor(
 		private key: ExpressionNode | PrivateIdentifier,
@@ -299,6 +312,9 @@ export class ClassBody extends AbstractExpressionNode {
 		return new ClassBody(
 			node.body.map(deserializer)
 		);
+	}
+	static visit(node: ClassBody, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNodeList(node.body);
 	}
 	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock)[]) {
 		super();
@@ -543,6 +559,11 @@ export class ClassDeclaration extends Class implements CanDeclareExpression {
 			node.superClass && deserializer(node.superClass)
 		);
 	}
+	static visit(node: ClassDeclaration, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.body);
+		visitNode(node.id);
+		node.superClass && visitNode(node.superClass);
+	}
 	protected id: Identifier;
 	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any) {
 		stack.declareVariable(scopeType, this.id.getName(), propertyValue);
@@ -557,5 +578,10 @@ export class ClassExpression extends Class {
 			node.id && deserializer(node.id),
 			node.superClass && deserializer(node.superClass)
 		);
+	}
+	static visit(node: ClassExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+		visitNode(node.body);
+		node.id && visitNode(node.id);
+		node.superClass && visitNode(node.superClass);
 	}
 }
