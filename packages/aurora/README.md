@@ -15,6 +15,23 @@
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
+[npm-image-pipes]: https://img.shields.io/npm/v/@ibyar/pipes.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-pipes]: https://npmjs.org/package/@ibyar/pipes
+[npm-image-directives]: https://img.shields.io/npm/v/@ibyar/directives.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-directives]: https://npmjs.org/package/@ibyar/directives
+[npm-image-core]: https://img.shields.io/npm/v/@ibyar/core.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-core]: https://npmjs.org/package/@ibyar/core
+[npm-image-expressions]: https://img.shields.io/npm/v/@ibyar/expressions.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-expressions]: https://npmjs.org/package/@ibyar/expressions
+[npm-image-elements]: https://img.shields.io/npm/v/@ibyar/elements.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-elements]: https://npmjs.org/package/@ibyar/elements
+[npm-image-platform]: https://img.shields.io/npm/v/@ibyar/platform.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-platform]: https://npmjs.org/package/@ibyar/platform
+[npm-image-reflect-metadata]: https://img.shields.io/npm/v/reflect-metadata.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-reflect-metadata]: https://npmjs.org/package/reflect-metadata
+[npm-image-tslib]: https://img.shields.io/npm/v/tslib.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-tslib]: https://npmjs.org/package/tslib
+
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
@@ -32,16 +49,18 @@ yarn add @ibyar/aurora
 ```
 
 ## Dependencies
- 
- - [@ibyar/aurora](https://npmjs.org/package/@ibyar/aurora)				a central package to manage dependance only
- - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
- - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
- - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
- - [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions)	a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8) follow, [ESTree](https://github.com/estree/estree/) for generate ast object.
- - [@ibyar/elements](https://npmjs.org/package/@ibyar/elements)			parse html and extract bind expression and structural directive
- - [@ibyar/platform](https://npmjs.org/package/@ibyar/platform)			utility package for i18n and plural stuff, json patch 
- - [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
- - [tslib](https://www.npmjs.com/package/tslib)
+
+| name | Description | NPM |
+| ---- | ----------- | --- |
+| [@ibyar/aurora](packages/aurora) | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] |
+| [@ibyar/pipes](packages/pipes) | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] |
+| [@ibyar/directives](packages/directives) | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] |
+| [@ibyar/core](packages/core) | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] |
+| [@ibyar/expressions](packages/expressions) | a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8), and follow [ESTree](https://github.com/estree/estree/) for generate ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
+| [@ibyar/elements](packages/elements) | parse html and extract bind expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] |
+| [@ibyar/platform](packages/platform) | utility package for i18n and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] |
+| [reflect-metadata](https://github.com/rbuckton/reflect-metadata) | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] |
+| [tslib](https://github.com/Microsoft/tslib) | This is a runtime library for TypeScript that contains all of the TypeScript helper functions. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
 
 
 ## 'HTML Template' Features
