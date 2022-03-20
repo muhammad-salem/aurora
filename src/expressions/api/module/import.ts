@@ -6,80 +6,65 @@ import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { Identifier, Literal } from '../definition/values.js';
 
-export class ImportAliasName {
-	static visit(node: ImportAliasName, visitNode: VisitNodeType): void {
-		visitNode(node.importName);
-		node.aliasName && visitNode(node.aliasName);
+export abstract class ModuleSpecifier extends AbstractExpressionNode {
+	constructor(protected local: Identifier) {
+		super();
 	}
-	constructor(public importName: ExpressionNode, protected _aliasName?: ExpressionNode) { }
-
-	public get aliasName(): ExpressionNode {
-		return this._aliasName || this.importName;
+	getLocal() {
+		return this.local;
 	}
-
-	public set aliasName(_aliasName: ExpressionNode) {
-		this._aliasName = _aliasName;
-	}
-
-	toString() {
-		if (this._aliasName) {
-			return `${this.importName.toString()} as ${this._aliasName.toString()}`;
-		}
-		return this.importName.toString();
-	}
-
-	toJSON() {
+	toJson(): object {
 		return {
-			exportName: this.importName.toJSON(),
-			aliasName: this._aliasName?.toJSON()
+			local: this.local.toJSON()
 		};
 	}
 }
 
-
-
-@Deserializer('import')
-export class ImportNode extends AbstractExpressionNode {
-	static fromJSON(node: ImportNode, deserializer: NodeDeserializer): ImportNode {
-		return new ImportNode(
-			deserializer(node.moduleName),
-			node.defaultExport ? deserializer(node.defaultExport) : void 0,
-			node.namespace ? deserializer(node.namespace) : void 0,
-			node.importAliasNames?.map(expo => new ImportAliasName(deserializer(expo.importName), deserializer(expo.aliasName))),
+/**
+ * An imported variable binding,
+ * 
+ * e.g., {foo} in import {foo} from "mod"
+ * or {foo as bar} in import {foo as bar} from "mod".
+ * 
+ * The imported field refers to the name of the export imported from the module.
+ * 
+ * The local field refers to the binding imported into the local module scope.
+ * 
+ * If it is a basic named import, such as in import {foo} from "mod",
+ * both imported and local are equivalent Identifier nodes; in this case an Identifier node representing foo.
+ * 
+ * If it is an aliased import, such as in import {foo as bar} from "mod",
+ * the imported field is an Identifier node representing foo,
+ * and the local field is an Identifier node representing bar.
+ */
+@Deserializer('ImportSpecifier')
+export class ImportSpecifier extends ModuleSpecifier {
+	static fromJSON(node: ImportSpecifier, deserializer: NodeDeserializer): ImportSpecifier {
+		return new ImportSpecifier(
+			deserializer(node.local) as Identifier,
+			deserializer(node.imported) as Identifier
 		);
 	}
-	static visit(node: ImportNode, visitNode: VisitNodeType): void {
-		visitNode(node.moduleName);
-		node.defaultExport && visitNode(node.defaultExport);
-		node.namespace && visitNode(node.namespace);
-		node.importAliasNames?.map(expo => ImportAliasName.visit(expo, visitNode));
+	static visit(node: ImportSpecifier, visitNode: VisitNodeType): void {
+		visitNode(node.local);
+		visitNode(node.imported);
 	}
-	constructor(
-		private moduleName: ExpressionNode,
-		private defaultExport?: ExpressionNode,
-		private namespace?: ExpressionNode,
-		private importAliasNames?: ImportAliasName[]) {
-		super();
+	constructor(local: Identifier, private imported: Identifier) {
+		super(local);
 	}
-	getModuleName() {
-		return this.moduleName;
+	getImported() {
+		return this.imported;
 	}
-	getDefaultExport() {
-		return this.defaultExport;
+	shareVariables(scopeList: Scope<any>[]): void {
+
 	}
-	getNamespace() {
-		return this.namespace;
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
 	}
-	getImportAliasNames() {
-		return this.importAliasNames;
-	}
-	shareVariables(scopeList: Scope<any>[]): void { }
-	set(stack: Stack) {
-		throw new Error(`ImportNode.#set() has no implementation.`);
-	}
-	get(stack: Stack) {
-		throw new Error(`ImportNode.#get() has no implementation.`);
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [];
@@ -87,52 +72,154 @@ export class ImportNode extends AbstractExpressionNode {
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
-	toString() {
-		if (this.defaultExport && this.namespace && this.importAliasNames) {
-			// import defaultExport, * as name, { export1 , export2 as alias2 , [...] } from "module-name;
-			return `import ${this.defaultExport.toString()}, * as ${this.namespace.toString()}, { ${this.importAliasNames.map(expo => expo.toString()).join(', ')} } from '${this.moduleName.toString()}';`;
+	toString(): string {
+		const local = this.local.toString();
+		const imported = this.imported.toString();
+		if (local == imported) {
+			return local;
 		}
-
-		if (this.defaultExport && this.importAliasNames) {
-			// import defaultExport, { export1 , export2 as alias2 , [...] } from "module-name;
-			return `import ${this.defaultExport.toString()}, { ${this.importAliasNames.map(expo => expo.toString()).join(', ')} } from '${this.moduleName.toString()}';`;
-
-		}
-		if (this.namespace && this.importAliasNames) {
-
-			// import * as name, { export1 , export2 as alias2 , [...] } from "module-name;
-			return `import * as ${this.namespace.toString()}, { ${this.importAliasNames.map(expo => expo.toString()).join(', ')} } from '${this.moduleName.toString()}';`;
-		}
-		if (this.namespace && this.defaultExport) {
-
-			// import defaultExport, * as name from "module-name;
-			return `import ${this.defaultExport.toString()}, * as ${this.namespace.toString()} from '${this.moduleName.toString()}';`;
-		}
-
-		if (this.importAliasNames) {
-
-			// import { export1 , export2 as alias2 , [...] } from "module-name;
-			return `import { ${this.importAliasNames.map(expo => expo.toString()).join(', ')} } from '${this.moduleName.toString()}';`;
-		}
-		if (this.defaultExport) {
-
-			// import defaultExport from "module-name;
-			return `import ${this.defaultExport.toString()} from '${this.moduleName.toString()}';`;
-		}
-		if (this.namespace) {
-
-			// import * as name from "module-name;
-			return `import  * as ${this.namespace.toString()} from '${this.moduleName.toString()}';`;
-		}
-
-		return `import '${this.moduleName.toString()}'`;
+		return `${imported} as ${local}`;
 	}
 	toJson(): object {
 		return {
-			moduleName: this.moduleName.toJSON(),
-			defaultExport: this.defaultExport?.toJSON(),
-			namespace: this.namespace?.toJSON(),
-			exportAliasNames: this.importAliasNames?.map(expression => expression.toJSON()),
+			local: this.local.toJSON(),
+			imported: this.imported.toJSON()
+		};
+	}
+}
+
+/**
+ * A default import specifier, e.g., foo in import foo from "mod.js".
+ */
+@Deserializer('ImportDefaultSpecifier')
+export class ImportDefaultSpecifier extends ModuleSpecifier {
+	static fromJSON(node: ImportDefaultSpecifier, deserializer: NodeDeserializer): ImportDefaultSpecifier {
+		return new ImportDefaultSpecifier(
+			deserializer(node.local) as Identifier
+		);
+	}
+	static visit(node: ImportDefaultSpecifier, visitNode: VisitNodeType): void {
+		visitNode(node.local);
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString(): string {
+		return this.local.toString();
+	}
+}
+
+/**
+ * A namespace import specifier, e.g., * as foo in import * as foo from "mod.js".
+ */
+@Deserializer('ImportNamespaceSpecifier')
+export class ImportNamespaceSpecifier extends ModuleSpecifier {
+	static fromJSON(node: ImportNamespaceSpecifier, deserializer: NodeDeserializer): ImportNamespaceSpecifier {
+		return new ImportNamespaceSpecifier(
+			deserializer(node.local) as Identifier
+		);
+	}
+	static visit(node: ImportNamespaceSpecifier, visitNode: VisitNodeType): void {
+		visitNode(node.local);
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString(): string {
+		return `* as ${this.local.toString()}`;
+	}
+}
+
+/**
+ * An import declaration, e.g., import foo from "mod";.
+ * 
+ * import defaultExport from "module-name";
+ * 
+ * import * as name from "module-name";
+ * 
+ * import { export1 } from "module-name";
+ * 
+ * import { export1 as alias1 } from "module-name";
+ * 
+ * import { export1 , export2 } from "module-name";
+ * 
+ * import { foo , bar } from "module-name/path/to/specific/un-exported/file";
+ * 
+ * import { export1 , export2 as alias2 , [...] } from "module-name";
+ * 
+ * import defaultExport, { export1 [ , [...] ] } from "module-name";
+ * 
+ * import defaultExport, * as name from "module-name";
+ * 
+ * import "module-name";
+ * 
+ * var promise = import("module-name");
+ */
+@Deserializer('ImportDeclaration')
+export class ImportDeclaration extends AbstractExpressionNode {
+	static fromJSON(node: ImportDeclaration, deserializer: NodeDeserializer): ImportDeclaration {
+		return new ImportDeclaration(
+			deserializer(node.source) as Literal<string>,
+			node.specifiers?.map(deserializer) as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
+		);
+	}
+	static visit(node: ImportDeclaration, visitNode: VisitNodeType): void {
+		visitNode(node.source);
+		node.specifiers?.forEach(visitNode);
+	}
+	constructor(private source: Literal<string>, private specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[]) {
+		super();
+	}
+	getSource() {
+		return this.source;
+	}
+	getSpecifiers() {
+		return this.specifiers;
+	}
+	shareVariables(scopeList: Scope<any>[]): void { }
+	set(stack: Stack) {
+		throw new Error(`ImportDeclaration.#set() has no implementation.`);
+	}
+	get(stack: Stack) {
+		throw new Error(`ImportDeclaration.#get() has no implementation.`);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString(): string {
+		throw new Error(`ImportDeclaration.#toString() has no implementation.`);
+	}
+	toJson(): object {
+		return {
+			source: this.source.toJSON(),
+			specifiers: this.specifiers?.map(specifier => specifier.toJSON()),
 		};
 	}
 }
