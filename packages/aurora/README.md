@@ -50,7 +50,7 @@ yarn add @ibyar/aurora
 
 ## Dependencies
 
-| name | Description | NPM |
+| README | Description | NPM |
 | ---- | ----------- | --- |
 | [@ibyar/aurora](packages/aurora) | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] |
 | [@ibyar/pipes](packages/pipes) | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] |
