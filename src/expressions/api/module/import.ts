@@ -214,7 +214,24 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		throw new Error(`ImportDeclaration.#toString() has no implementation.`);
+		if (!this.specifiers) {
+			return `import '${this.source.toString()}'`;
+		}
+		const parts: string[] = [];
+		const importDefaultSpecifiers = this.specifiers.filter(specifier => specifier instanceof ImportDefaultSpecifier) as ImportDefaultSpecifier[];
+		if (importDefaultSpecifiers?.length) {
+			parts.push(importDefaultSpecifiers[0].toString());
+		}
+		const importNamespaceSpecifiers = this.specifiers.filter(specifier => specifier instanceof ImportNamespaceSpecifier) as ImportNamespaceSpecifier[];
+		if (importNamespaceSpecifiers?.length) {
+			parts.push(importNamespaceSpecifiers[0].toString());
+		}
+		const importSpecifiers = this.specifiers.filter(specifier => specifier instanceof ImportSpecifier) as ImportSpecifier[];
+		if (importSpecifiers?.length) {
+			const importSpecifiersString = importSpecifiers.map(importSpecifier => importSpecifier.toString()).join(',');
+			parts.push(`{ ${importSpecifiersString} }`);
+		}
+		return `import ${parts.join(', ')} '${this.source.toString()}'`;
 	}
 	toJson(): object {
 		return {
