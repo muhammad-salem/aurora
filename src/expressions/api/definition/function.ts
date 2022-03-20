@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionEventPath, ExpressionNode,
-	NodeDeserializer, VisitNodeListType, VisitNodeType
+	NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
@@ -46,7 +46,7 @@ export class Param extends AbstractExpressionNode {
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
-	static visit(node: Param, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: Param, visitNode: VisitNodeType): void {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
@@ -115,10 +115,10 @@ export class FunctionExpression extends FunctionBaseExpression {
 			node.generator
 		);
 	}
-	static visit(node: FunctionExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: FunctionExpression, visitNode: VisitNodeType): void {
 		node.id && visitNode(node.id);
-		visitNodeList(node.params);
-		visitNodeList(node.body);
+		node.params.forEach(visitNode);
+		node.body.forEach(visitNode);
 	}
 	constructor(
 		protected params: ExpressionNode[], protected body: ExpressionNode[],
@@ -354,10 +354,10 @@ export class FunctionDeclaration extends FunctionExpression {
 			node.generator
 		);
 	}
-	static visit(node: FunctionDeclaration, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.id);
-		visitNodeList(node.params);
-		visitNodeList(node.body);
+		node.params.forEach(visitNode);
+		node.body.forEach(visitNode);
 	}
 	protected id: CanDeclareExpression;
 	constructor(
@@ -382,10 +382,10 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 			node.generator
 		);
 	}
-	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.params);
+	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType): void {
+		node.params.forEach(visitNode);
 		Array.isArray(node.body)
-			? visitNodeList(node.body)
+			? node.body.forEach(visitNode)
 			: visitNode(node.body);
 	}
 	constructor(private params: ExpressionNode[], private body: ExpressionNode | ExpressionNode[],

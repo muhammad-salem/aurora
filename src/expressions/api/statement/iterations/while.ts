@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
@@ -22,7 +22,7 @@ export class WhileNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
-	static visit(node: WhileNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: WhileNode, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		visitNode(node.test);
 	}
@@ -88,7 +88,7 @@ export class DoWhileNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
-	static visit(node: DoWhileNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: DoWhileNode, visitNode: VisitNodeType): void {
 		visitNode(node.test);
 		visitNode(node.body);
 	}

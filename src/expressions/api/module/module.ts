@@ -1,6 +1,6 @@
 import type {
-	ExpressionEventPath, ExpressionNode, NodeDeserializer,
-	VisitNodeListType, VisitNodeType
+	ExpressionEventPath, ExpressionNode,
+	NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -17,10 +17,10 @@ export class ModuleExpression extends AbstractExpressionNode {
 			node.meta
 		);
 	}
-	static visit(node: ModuleExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.exportList);
-		visitNodeList(node.importList);
-		visitNodeList(node.body);
+	static visit(node: ModuleExpression, visitNode: VisitNodeType): void {
+		node.exportList.forEach(visitNode);
+		node.importList.forEach(visitNode);
+		node.body.forEach(visitNode);
 	}
 	constructor(
 		private exportList: ExpressionNode[],

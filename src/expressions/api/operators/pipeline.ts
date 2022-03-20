@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -30,7 +30,7 @@ export class PipelineExpression extends AbstractExpressionNode {
 			node.arguments.map(arg => typeof arg === 'string' ? arg : deserializer(arg))
 		);
 	}
-	static visit(node: PipelineExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: PipelineExpression, visitNode: VisitNodeType): void {
 		visitNode(node.left);
 		visitNode(node.right);
 		node.arguments.forEach(arg => typeof arg == 'object' && visitNode(arg));

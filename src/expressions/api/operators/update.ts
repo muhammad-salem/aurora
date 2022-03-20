@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -14,7 +14,7 @@ export class UpdateExpression extends AbstractExpressionNode {
 	static fromJSON(node: UpdateExpression, deserializer: NodeDeserializer): UpdateExpression {
 		return new UpdateExpression(node.operator, deserializer(node.argument), node.prefix);
 	}
-	static visit(node: UpdateExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: UpdateExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
 

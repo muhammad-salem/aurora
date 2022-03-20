@@ -144,7 +144,6 @@ export interface ExpressionNode {
 export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
 
 export type VisitNodeType = (expression: ExpressionNode) => void;
-export type VisitNodeListType = (expressions: ExpressionNode[]) => void;
 
 /**
  * this is how to:
@@ -165,7 +164,7 @@ export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N>
 	 * @param expression 
 	 * @param callback 
 	 */
-	visit?(node: N, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void;
+	visit?(node: N, visitNode: VisitNodeType): void;
 }
 
 export interface NodeExpressionWithType<N extends ExpressionNode> extends NodeExpressionClass<N> {

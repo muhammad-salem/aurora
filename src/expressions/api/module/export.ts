@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -8,7 +8,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 export class ExportAliasName {
-	static visit(node: ExportAliasName, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ExportAliasName, visitNode: VisitNodeType): void {
 		visitNode(node.exportName);
 		node.aliasName && visitNode(node.aliasName);
 	}
@@ -80,10 +80,10 @@ export class ExportNode extends AbstractExpressionNode {
 			node.moduleName ? deserializer(node.moduleName) : void 0
 		);
 	}
-	static visit(node: ExportNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		node.exportList?.map(expo => ExportAliasName.visit(expo, visitNode, visitNodeList));
-		node.starExport && ExportAliasName.visit(node.starExport, visitNode, visitNodeList);
-		node.exportExpression && ExportAliasName.visit(node.exportExpression, visitNode, visitNodeList);
+	static visit(node: ExportNode, visitNode: VisitNodeType): void {
+		node.exportList?.map(expo => ExportAliasName.visit(expo, visitNode));
+		node.starExport && ExportAliasName.visit(node.starExport, visitNode);
+		node.exportExpression && ExportAliasName.visit(node.exportExpression, visitNode);
 		node.moduleName && visitNode(node.moduleName);
 	}
 	constructor(

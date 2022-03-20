@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType,
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType,
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -8,7 +8,7 @@ import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 export class ImportAliasName {
-	static visit(node: ImportAliasName, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ImportAliasName, visitNode: VisitNodeType): void {
 		visitNode(node.importName);
 		node.aliasName && visitNode(node.aliasName);
 	}
@@ -38,19 +38,7 @@ export class ImportAliasName {
 }
 
 
-/**
- * import defaultExport from "module-name";\n
- * import * as name from "module-name";\n
- * import { export1 } from "module-name";
- * import { export1 as alias1 } from "module-name";
- * import { export1 , export2 } from "module-name";
- * import { foo , bar } from "module-name/path/to/specific/un-exported/file";
- * import { export1 , export2 as alias2 , [...] } from "module-name";
- * import defaultExport, { export1 [ , [...] ] } from "module-name";
- * import defaultExport, * as name from "module-name";
- * import "module-name";
- * var promise = import("module-name");
- */
+
 @Deserializer('import')
 export class ImportNode extends AbstractExpressionNode {
 	static fromJSON(node: ImportNode, deserializer: NodeDeserializer): ImportNode {
@@ -61,11 +49,11 @@ export class ImportNode extends AbstractExpressionNode {
 			node.importAliasNames?.map(expo => new ImportAliasName(deserializer(expo.importName), deserializer(expo.aliasName))),
 		);
 	}
-	static visit(node: ImportNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ImportNode, visitNode: VisitNodeType): void {
 		visitNode(node.moduleName);
 		node.defaultExport && visitNode(node.defaultExport);
 		node.namespace && visitNode(node.namespace);
-		node.importAliasNames?.map(expo => ImportAliasName.visit(expo, visitNode, visitNodeList));
+		node.importAliasNames?.map(expo => ImportAliasName.visit(expo, visitNode));
 	}
 	constructor(
 		private moduleName: ExpressionNode,

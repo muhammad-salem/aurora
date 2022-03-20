@@ -1,6 +1,6 @@
 import type {
-	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType
+	CanDeclareExpression, ExpressionNode, NodeDeserializer,
+	CanFindScope, ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -161,9 +161,9 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType): void {
 		node.tag && visitNode(node.tag);
-		visitNodeList(node.expressions);
+		node.expressions.forEach(visitNode);
 	}
 	constructor(protected quasis: string[], protected expressions: ExpressionNode[], protected tag?: ExpressionNode,) {
 		super();

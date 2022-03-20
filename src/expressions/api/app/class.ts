@@ -1,7 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionEventPath,
-	ExpressionNode, NodeDeserializer,
-	VisitNodeListType, VisitNodeType
+	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
@@ -79,7 +78,7 @@ export class MetaProperty extends MemberExpression {
 			deserializer(node.property)
 		);
 	}
-	static visit(node: MetaProperty, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: MetaProperty, visitNode: VisitNodeType): void {
 		visitNode(node.meta);
 		visitNode(node.property);
 	}
@@ -157,7 +156,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 			node.static
 		);
 	}
-	static visit(node: MethodDefinition, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: MethodDefinition, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		visitNode(node.value);
 	}
@@ -248,7 +247,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 			node.value && deserializer(node.value)
 		);
 	}
-	static visit(node: PropertyDefinition, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: PropertyDefinition, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		node.value && visitNode(node.value);
 	}
@@ -313,8 +312,8 @@ export class ClassBody extends AbstractExpressionNode {
 			node.body.map(deserializer)
 		);
 	}
-	static visit(node: ClassBody, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.body);
+	static visit(node: ClassBody, visitNode: VisitNodeType): void {
+		node.body.forEach(visitNode);
 	}
 	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock)[]) {
 		super();
@@ -559,7 +558,7 @@ export class ClassDeclaration extends Class implements CanDeclareExpression {
 			node.superClass && deserializer(node.superClass)
 		);
 	}
-	static visit(node: ClassDeclaration, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ClassDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
@@ -579,7 +578,7 @@ export class ClassExpression extends Class {
 			node.superClass && deserializer(node.superClass)
 		);
 	}
-	static visit(node: ClassExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ClassExpression, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		node.id && visitNode(node.id);
 		node.superClass && visitNode(node.superClass);

@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanDeclareExpression,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -13,8 +13,8 @@ export class ArrayExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
 		return new ArrayExpression(node.elements.map(expression => deserializer(expression)));
 	}
-	static visit(node: ArrayExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.elements);
+	static visit(node: ArrayExpression, visitNode: VisitNodeType): void {
+		node.elements.forEach(visitNode);
 	}
 	constructor(private elements: ExpressionNode[]) {
 		super();
@@ -53,8 +53,8 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
 		return new ArrayPattern(node.elements.map(expression => deserializer(expression)) as CanDeclareExpression[]);
 	}
-	static visit(node: ArrayPattern, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.elements);
+	static visit(node: ArrayPattern, visitNode: VisitNodeType): void {
+		node.elements.forEach(visitNode);
 	}
 	constructor(private elements: CanDeclareExpression[]) {
 		super();

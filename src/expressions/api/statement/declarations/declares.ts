@@ -1,7 +1,7 @@
 
 import type {
 	NodeDeserializer, ExpressionNode, CanDeclareExpression,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
@@ -16,7 +16,7 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 			node.init ? deserializer(node.init) : void 0
 		);
 	}
-	static visit(node: VariableNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: VariableNode, visitNode: VisitNodeType): void {
 		visitNode(node.id);
 		node.init && visitNode(node.init);
 	}
@@ -78,8 +78,8 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 			node.kind
 		);
 	}
-	static visit(node: VariableDeclarationNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.declarations);
+	static visit(node: VariableDeclarationNode, visitNode: VisitNodeType): void {
+		node.declarations.forEach(visitNode);
 	}
 	constructor(protected declarations: VariableNode[], protected kind: 'var' | 'let' | 'const') {
 		super();

@@ -3,7 +3,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode, NodeExpressionClass,
 	NodeJsonType, CanDeclareExpression, ExpressionEventMap,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from './expression.js';
 
 function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
@@ -56,7 +56,7 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	abstract toJson(key?: string): { [key: string]: any };
 }
 export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
-	static visit(node: InfixExpressionNode<any>, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: InfixExpressionNode<any>, visitNode: VisitNodeType): void {
 		visitNode(node.getLeft());
 		visitNode(node.getRight())
 	}

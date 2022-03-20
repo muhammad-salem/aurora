@@ -1,5 +1,5 @@
 import { expressionTypes } from '../api/deserialize/type-store.js';
-import { ExpressionNode, NodeExpressionWithType, VisitNodeListType, VisitNodeType } from '../api/expression.js';
+import { ExpressionNode, NodeExpressionWithType, VisitNodeType } from '../api/expression.js';
 
 export interface VisitorControl {
 
@@ -34,16 +34,11 @@ export class ExpressionVisitor {
 		};
 		const visitNode: VisitNodeType = (expression) => {
 			visitorCallback(expression, this.getType(expression), control);
-
-			this.visitExpressionNode(expression, visitNode, visitNodeList);
-
-		};
-		const visitNodeList: VisitNodeListType = (expressions) => {
-			expressions.forEach(visitNode);
+			this.visitExpressionNode(expression, visitNode);
 		};
 		try {
 			visitorCallback(node, this.getType(node), control);
-			this.visitExpressionNode(node, visitNode, visitNodeList);
+			this.visitExpressionNode(node, visitNode);
 		} catch (abort) {
 			if (!(abort instanceof AbortException)) {
 				throw abort;
@@ -51,13 +46,13 @@ export class ExpressionVisitor {
 		}
 	}
 
-	private visitExpressionNode(node: ExpressionNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	private visitExpressionNode(node: ExpressionNode, visitNode: VisitNodeType): void {
 		const classType = expressionTypes.get(this.getType(node))!;
 		const visit = classType.visit;
 		if (!visit) {
 			return;
 		}
-		visit(node, visitNode, visitNodeList);
+		visit(node, visitNode);
 	}
 
 }
