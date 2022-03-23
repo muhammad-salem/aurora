@@ -1,5 +1,8 @@
-import type { ExpressionEventPath, ExpressionNode, NodeDeserializer } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type {
+	ExpressionEventPath, ExpressionNode,
+	NodeDeserializer, VisitNodeType
+} from '../expression.js';
+import type { Scope, ScopeContext } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -12,28 +15,34 @@ export class Program extends AbstractExpressionNode {
 	static fromJSON(node: Program, deserializer: NodeDeserializer): Program {
 		return new Program(node.sourceType, node.body.map(deserializer));
 	}
+	static visit(node: Program, visitNode: VisitNodeType): void {
+		node.body.forEach(visitNode);
+	}
 	constructor(private sourceType: ProgramSourceType, private body: ExpressionNode[]) {
 		super();
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
+	shareVariables(scopeList: Scope<ScopeContext>[]): void { }
 	set(stack: Stack, value: any): any {
-		throw new Error(`${this.constructor.name}#set() has no implementation.`);
+		throw new Error(`Program#set() has no implementation.`);
 	}
-	get(stack: Stack, thisContext?: any): any {
-		throw new Error(`${this.constructor.name}#set() has no implementation.`);
+	get(stack: Stack): any {
+		return this.body.forEach(statement => statement.get(stack));
 	}
 
 	dependency(computed?: true): ExpressionNode[] {
-		throw new Error('Method not implemented.');
+		return this.body.flatMap(statement => statement.dependency());
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		throw new Error('Method not implemented.');
+		return this.body.flatMap(statement => statement.dependencyPath());
 	}
 	toString(): string {
-		throw new Error(`${this.constructor.name}#set() has no implementation.`);
+		return this.body.map(statement => statement.toString()).join('\n');
 	}
-	toJson(): { [key: string]: any } {
-		throw new Error(`${this.constructor.name}#set() has no implementation.`);
+	toJson(): object {
+		return {
+			sourceType: this.sourceType,
+			body: this.body.map(statement => statement.toJSON())
+		};
 	}
 
 }
