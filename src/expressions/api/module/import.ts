@@ -204,8 +204,30 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}
-	get(stack: Stack) {
-		throw new Error(`ImportDeclaration.#get() has no implementation.`);
+	get(stack: Stack): void {
+		const module = stack.importModule(this.source.get());
+		if (!this.specifiers) {
+			return;
+		}
+		this.specifiers.forEach(specifier => {
+			const local = specifier.getLocal().get(stack);
+			if (specifier instanceof ImportSpecifier) {
+				const imported = specifier.getImported().get(stack);
+				const importedValue = module.get(imported);
+				stack.getModule()?.set(local, importedValue);
+				module.subscribe(local, (newValue, oldValue) => {
+					stack.getModule()?.set(local, newValue);
+				});
+			} else if (specifier instanceof ImportDefaultSpecifier) {
+				const defaultValue = module.get('default');
+				stack.getModule()?.set(local, defaultValue);
+				module.subscribe(local, (newValue, oldValue) => {
+					stack.getModule()?.set(local, newValue);
+				});
+			} else if (specifier instanceof ImportNamespaceSpecifier) {
+				stack.getModule()?.importModule(local, module);
+			}
+		});
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [];

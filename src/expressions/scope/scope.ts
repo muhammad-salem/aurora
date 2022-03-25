@@ -406,6 +406,9 @@ export class ModuleScope extends ReactiveScope<ModuleContext> {
 	constructor(context: ModuleContext, propertyKeys?: (keyof ModuleContext)[]) {
 		super(context, propertyKeys);
 	}
+	importModule(propertyKey: keyof ModuleContext, scope: ModuleScope): void {
+		this.scopeMap.set(propertyKey, scope);
+	}
 }
 export class WebModuleScope extends ModuleScope {
 	constructor() {
