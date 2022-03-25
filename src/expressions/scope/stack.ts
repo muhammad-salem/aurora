@@ -1,5 +1,8 @@
 import type { CanDeclareExpression } from '../api/expression.js';
-import { ReactiveScope, ReactiveScopeControl, Scope, ScopeContext } from './scope.js';
+import {
+	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
+	ReactiveScopeControl, Scope, ScopeContext, WebModuleScope
+} from './scope.js';
 
 
 export interface AwaitPromiseInfo {
@@ -115,6 +118,30 @@ export interface Stack {
 	 * apply all the not emitted changes, and continue emit in time.
 	 */
 	reattach(): void;
+
+	/**
+	 * import module scope from another stack, by the help of ModuleScopeResolver.
+	 * 
+	 * used with import statement
+	 */
+	importModule(source: string): ModuleScope;
+
+	/**
+	 * get the current module for this stack.
+	 * 
+	 * used with export statement
+	 */
+	getModule(): ModuleScope | undefined;
+}
+
+export interface ModuleScopeResolver {
+	resolve(source: string, moduleScope: ModuleScope): ModuleScope;
+	resolveURL(specified: string, parent: string | URL): string;
+}
+
+const ROOT_URL = 'https://root';
+export function createRootURL(source: string): URL {
+	return new URL(source, ROOT_URL);
 }
 
 export class Stack implements Stack {
@@ -134,18 +161,46 @@ export class Stack implements Stack {
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
 	protected readonly stack: Array<Scope<any>>;
-	protected readonly moduleScope: ReactiveScope<ScopeContext>;
-	constructor(globalScope?: Scope<ScopeContext>, moduleScope?: ReactiveScope<ScopeContext>);
-	constructor(stack?: Array<Scope<ScopeContext>>, moduleScope?: ReactiveScope<ScopeContext>);
-	constructor(arg0?: Array<Scope<ScopeContext>> | Scope<ScopeContext>, arg1?: ReactiveScope<ScopeContext>) {
-		if (Array.isArray(arg0)) {
-			this.stack = arg0;
-		} else if (typeof arg0 == 'object') {
-			this.stack = [arg0];
+	protected readonly moduleScope?: ModuleScope;
+	protected readonly moduleSource?: string;
+	protected readonly resolver?: ModuleScopeResolver;
+
+	constructor();
+	constructor(globalScope: Scope<ScopeContext>);
+	constructor(globalScope: Scope<ScopeContext>, resolver: ModuleScopeResolver, moduleSource: string);
+
+	constructor(stack: Array<Scope<ScopeContext>>);
+	constructor(stack: Array<Scope<ScopeContext>>, resolver: ModuleScopeResolver, moduleSource: string);
+
+	constructor(globals?: Array<Scope<ScopeContext>> | Scope<ScopeContext>, resolver?: ModuleScopeResolver, moduleSource?: string) {
+		if (Array.isArray(globals)) {
+			this.stack = globals;
+		} else if (typeof globals == 'object') {
+			this.stack = [globals];
 		} else {
 			this.stack = [Scope.blockScope()];
 		}
-		this.moduleScope = arg1 ?? ReactiveScope.blockScope();
+		if (resolver && moduleSource) {
+			this.resolver = resolver;
+			this.moduleSource = moduleSource;
+			// init module scope
+			this.moduleScope = new ModuleScope(this.initModuleContext());
+			this.pushScope(this.moduleScope);
+			this.pushBlockScope();
+		}
+	}
+	private initModuleContext(): ModuleContext {
+		const importFunc = (path: string) => {
+			return this.importModule(path);
+		};
+		importFunc.meta = {
+			url: createRootURL(this.moduleSource!),
+			resolve: (specified: string, parent?: string | URL): Promise<string> => {
+				return Promise.resolve(this.resolver!.resolveURL(specified, parent ?? importFunc.meta.url));
+			}
+		};
+		const im: ModuleImport & ((path: string) => Promise<any>) = importFunc as any;
+		return { import: im };
 	}
 	has(propertyKey: PropertyKey): boolean {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
@@ -222,7 +277,7 @@ export class Stack implements Stack {
 		return true;
 	}
 	copyStack(): Stack {
-		return new Stack(this.stack.slice(), this.moduleScope);
+		return new Stack(this.stack.slice());
 	}
 	detach(): void {
 		this.getReactiveScopeControls().forEach(scope => scope.detach());
@@ -232,5 +287,86 @@ export class Stack implements Stack {
 	}
 	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
 		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
+	}
+	importModule(source: string): ModuleScope {
+		if (!this.resolver || !this.moduleScope) {
+			// should o the parse and import the module
+			throw new Error('Module Resolver is undefined');
+		}
+		return this.resolver.resolve(source, this.moduleScope);
+	}
+	getModule(): ModuleScope | undefined {
+		return this.moduleScope;
+	}
+}
+
+export interface ResolverConfig {
+	/**
+	 * 
+	 */
+	allowImportExternal?: boolean;
+
+};
+export class ModuleScopeResolver implements ModuleScopeResolver {
+	protected modules: [string, ModuleScope][] = [];
+	constructor(protected config?: ResolverConfig) { }
+	register(source: string, moduleScope: ModuleScope) {
+		const stackInfo = this.modules.find(tuple => tuple[0] == source && tuple[1] == moduleScope);
+		if (stackInfo) {
+			stackInfo[1] = moduleScope;
+		} else {
+			this.modules.push([source, moduleScope]);
+		}
+	}
+	resolve(source: string, moduleScope: ModuleScope): ModuleScope {
+		if (this.isValidHTTPUrl(source)) {
+			return this.resolveExternalModule(source);
+		}
+		if (source.startsWith('/')) {
+			return this.findScopeBySource(source);
+		}
+		const currentSource = this.findSourceByScope(moduleScope);
+		const absoluteUrl = this.resolveURL(source, currentSource);
+		return this.findScopeBySource(absoluteUrl);
+	}
+	resolveURL(specified: string, parent: string | URL): string {
+		const currentUrl = parent instanceof URL ? parent.href : createRootURL(parent).href;
+		const importedUrl = new URL(specified, currentUrl).href;
+		const absoluteUrl = importedUrl.replace(ROOT_URL, '');
+		return absoluteUrl;
+	}
+	protected findScopeBySource(source: string): ModuleScope {
+		const importedScope = this.modules.find(tuple => tuple[0] == source)?.[1];
+		if (!importedScope) {
+			throw new Error(`Can't find module scope`);
+		}
+		return importedScope;
+	}
+	protected findSourceByScope(moduleScope: ModuleScope): string {
+		const importedSource = this.modules.find(tuple => tuple[1] == moduleScope)?.[0];
+		if (!importedSource) {
+			throw new Error(`Can't resolve scope source`);
+		}
+		return importedSource;
+	}
+	protected resolveExternalModule(source: string): WebModuleScope {
+		if (!this.config?.allowImportExternal) {
+			throw new Error(`Error: Import External Module is not allowed.`);
+		}
+		const webScope = new WebModuleScope()
+		this.modules.push([source, webScope]);
+		import(source).then(module => {
+			webScope.updateContext(module);
+		});
+		return webScope;
+	}
+	protected readonly isValidHTTPUrl = (string: string) => {
+		let url: URL;
+		try {
+			url = new URL(string);
+		} catch (e) {
+			return false;
+		}
+		return url.protocol === 'http:' || url.protocol === 'https:';
 	}
 }

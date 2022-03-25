@@ -378,3 +378,40 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		return ReactiveScopeControl;
 	}
 }
+
+
+interface ImportMeta {
+	url: URL;
+	/**
+	 *
+	 * Provides a module-relative resolution function scoped to each module, returning
+	 * the URL string.
+	 *
+	 * @param specified The module specifier to resolve relative to `parent`.
+	 * @param parent The absolute parent module URL to resolve from. If none
+	 * is specified, the value of `import.meta.url` is used as the default.
+	 */
+	resolve?(specified: string, parent?: string | URL): Promise<string>;
+}
+
+export interface ModuleImport {
+	meta: ImportMeta
+}
+
+export interface ModuleContext extends ScopeContext {
+	import: ModuleImport & ((path: string) => Promise<any>);
+}
+
+export class ModuleScope extends ReactiveScope<ModuleContext> {
+	constructor(context: ModuleContext, propertyKeys?: (keyof ModuleContext)[]) {
+		super(context, propertyKeys);
+	}
+}
+export class WebModuleScope extends ModuleScope {
+	constructor() {
+		super({} as ModuleContext);
+	}
+	updateContext(context: any) {
+		this.context = context;
+	}
+}
