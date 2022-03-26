@@ -2,7 +2,7 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType,
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type { ModuleScope, Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -259,6 +259,50 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		return {
 			source: this.source.toJSON(),
 			specifiers: this.specifiers?.map(specifier => specifier.toJSON()),
+		};
+	}
+}
+
+
+/**
+ * `ImportExpression` node represents Dynamic Imports such as `import(source)`.
+ * The `source` property is the importing source as similar to ImportDeclaration node,
+ * but it can be an arbitrary expression node.
+ */
+@Deserializer('ImportExpression')
+export class ImportExpression extends AbstractExpressionNode {
+	static fromJSON(node: ImportExpression, deserializer: NodeDeserializer): ImportExpression {
+		return new ImportExpression(deserializer(node.source) as Literal<string>);
+	}
+	static visit(node: ImportExpression, visitNode: VisitNodeType): void {
+		visitNode(node.source);
+	}
+	constructor(private source: Literal<string>) {
+		super();
+	}
+	getSource() {
+		return this.source;
+	}
+	shareVariables(scopeList: Scope<any>[]): void { }
+	set(stack: Stack) {
+		throw new Error(`ImportDeclaration.#set() has no implementation.`);
+	}
+	get(stack: Stack): Promise<ModuleScope> {
+		const module = stack.importModule(this.source.get());
+		return Promise.resolve(module);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString(): string {
+		return `import(${this.source.toString()})`;
+	}
+	toJson(): object {
+		return {
+			source: this.source.toJSON(),
 		};
 	}
 }
