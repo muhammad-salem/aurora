@@ -157,6 +157,9 @@ export class Stack implements Stack {
 		}
 		return new Stack(scopes);
 	}
+	static moduleScope(resolver: ModuleScopeResolver, moduleSource: string, ...globalScopes: Scope<ScopeContext>[]) {
+		return new Stack(globalScopes, resolver, moduleSource);
+	}
 	awaitPromise: AwaitPromiseInfo[];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
@@ -277,7 +280,7 @@ export class Stack implements Stack {
 		return true;
 	}
 	copyStack(): Stack {
-		return new Stack(this.stack.slice());
+		return new Stack(this.stack.slice(), this.resolver!, this.moduleSource!);
 	}
 	detach(): void {
 		this.getReactiveScopeControls().forEach(scope => scope.detach());
