@@ -178,7 +178,7 @@ export class Stack implements Stack {
 		} else if (typeof globals == 'object') {
 			this.stack = [globals];
 		} else {
-			this.stack = [Scope.blockScope()];
+			this.stack = [];
 		}
 		if (resolver && moduleSource) {
 			this.resolver = resolver;
@@ -186,8 +186,8 @@ export class Stack implements Stack {
 			// init module scope
 			this.moduleScope = new ModuleScope(this.initModuleContext());
 			this.pushScope(this.moduleScope);
-			this.pushBlockScope();
 		}
+		this.pushBlockScope();
 	}
 	private initModuleContext(): ModuleContext {
 		const importFunc = (path: string) => {
