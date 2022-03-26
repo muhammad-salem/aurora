@@ -70,7 +70,7 @@ export class MetaProperty extends MemberExpression {
 		if (MetaProperty.getJsonName(node.meta) === 'new' && MetaProperty.getJsonName(node.property) === 'target') {
 			return MetaProperty.NewTarget;
 		}
-		else if (MetaProperty.getJsonName(node.meta) === 'new' && MetaProperty.getJsonName(node.property) === 'meta') {
+		else if (MetaProperty.getJsonName(node.meta) === 'import' && MetaProperty.getJsonName(node.property) === 'meta') {
 			return MetaProperty.ImportMeta;
 		}
 		return new MetaProperty(
@@ -89,6 +89,16 @@ export class MetaProperty extends MemberExpression {
 		return this.meta;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
+	get(stack: Stack, thisContext?: any) {
+		if (MetaProperty.getJsonName(this.meta) === 'new' && MetaProperty.getJsonName(this.property) === 'target') {
+			return stack.get('new.target');
+		}
+		else if (MetaProperty.getJsonName(this.meta) === 'import' && MetaProperty.getJsonName(this.property) === 'meta') {
+			const importObject = stack.getModule()?.get('import');
+			return importObject['meta'];
+		}
+		return super.get(stack, thisContext);
+	}
 	toString(): string {
 		return `${this.meta.toString()}.${this.property.toString()}`;
 	}
@@ -479,6 +489,7 @@ export class Class extends AbstractExpressionNode {
 				constructor(...params: any[]) {
 					super(...handleSuperCall(params));
 					classStack.declareVariable('this', this);
+					classStack.declareVariable('new.target', new.target);
 					for (const statement of constructorBody) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
@@ -509,6 +520,7 @@ export class Class extends AbstractExpressionNode {
 					const classScopes = self.initClassScope(classStack);
 					constructorExpression!.getValue().setParameter(classStack, params);
 					classStack.declareVariable('this', this);
+					classStack.declareVariable('new.target', new.target);
 					for (const statement of constructorExpression!.getValue().getBody()) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
