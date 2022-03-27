@@ -124,7 +124,7 @@ export interface Stack {
 	 * 
 	 * used with import statement
 	 */
-	importModule(source: string): ModuleScope;
+	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope;
 
 	/**
 	 * get the current module for this stack.
@@ -135,7 +135,7 @@ export interface Stack {
 }
 
 export interface ModuleScopeResolver {
-	resolve(source: string, moduleScope: ModuleScope): ModuleScope;
+	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope;
 	resolveURL(specified: string, parent: string | URL): string;
 }
 
@@ -291,12 +291,12 @@ export class Stack implements Stack {
 	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
 		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
 	}
-	importModule(source: string): ModuleScope {
+	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
 		if (!this.resolver || !this.moduleScope) {
 			// should o the parse and import the module
 			throw new Error('Module Resolver is undefined');
 		}
-		return this.resolver.resolve(source, this.moduleScope);
+		return this.resolver.resolve(source, this.moduleScope, importCallOptions);
 	}
 	getModule(): ModuleScope | undefined {
 		return this.moduleScope;
@@ -321,16 +321,16 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 			this.modules.push([source, moduleScope]);
 		}
 	}
-	resolve(source: string, moduleScope: ModuleScope): ModuleScope {
+	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope {
 		if (this.isValidHTTPUrl(source)) {
-			return this.resolveExternalModule(source);
+			return this.resolveExternalModule(source, importCallOptions);
 		}
 		if (source.startsWith('/')) {
-			return this.findScopeBySource(source);
+			return this.findScopeBySource(source, importCallOptions);
 		}
 		const currentSource = this.findSourceByScope(moduleScope);
 		const absoluteUrl = this.resolveURL(source, currentSource);
-		return this.findScopeBySource(absoluteUrl);
+		return this.findScopeBySource(absoluteUrl, importCallOptions);
 	}
 	resolveURL(specified: string, parent: string | URL): string {
 		const currentUrl = parent instanceof URL ? parent.href : createRootURL(parent).href;
@@ -338,7 +338,13 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		const absoluteUrl = importedUrl.replace(ROOT_URL, '');
 		return absoluteUrl;
 	}
-	protected findScopeBySource(source: string): ModuleScope {
+	protected findScopeBySource(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
+		if (importCallOptions?.assert?.type) {
+			const type = importCallOptions.assert.type;
+			if (!source.endsWith(`.${type}`)) {
+				throw new Error(`Can't find module scope`);
+			}
+		}
 		const importedScope = this.modules.find(tuple => tuple[0] == source)?.[1];
 		if (!importedScope) {
 			throw new Error(`Can't find module scope`);
@@ -352,12 +358,14 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		}
 		return importedSource;
 	}
-	protected resolveExternalModule(source: string): WebModuleScope {
+	protected resolveExternalModule(source: string, importCallOptions?: ImportCallOptions): WebModuleScope {
 		if (!this.config?.allowImportExternal) {
 			throw new Error(`Error: Import External Module is not allowed.`);
 		}
 		const webScope = new WebModuleScope()
 		this.modules.push([source, webScope]);
+		// active later
+		// import(source, importCallOptions)
 		import(source).then(module => {
 			webScope.updateContext(module);
 		});
