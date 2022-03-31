@@ -349,20 +349,20 @@ export class FunctionDeclaration extends FunctionExpression {
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
-			deserializer(node.id!) as CanDeclareExpression,
+			node.id ? deserializer(node.id) as CanDeclareExpression : void 0,
 			node.rest,
 			node.generator
 		);
 	}
 	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
-		visitNode(node.id);
+		node.id && visitNode(node.id);
 		node.params.forEach(visitNode);
 		node.body.forEach(visitNode);
 	}
-	protected id: CanDeclareExpression;
+	protected id?: CanDeclareExpression;
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id: CanDeclareExpression,
+		kind: FunctionKind, id?: CanDeclareExpression,
 		rest?: boolean, generator?: boolean) {
 		super(params, body, kind, id, rest, generator);
 	}

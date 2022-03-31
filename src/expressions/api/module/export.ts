@@ -1,44 +1,6 @@
-import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
-} from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
-import type { Stack } from '../../scope/stack.js';
-import { AbstractExpressionNode } from '../abstract.js';
-import { Deserializer } from '../deserialize/deserialize.js';
-
-export class ExportAliasName {
-	static visit(node: ExportAliasName, visitNode: VisitNodeType): void {
-		visitNode(node.exportName);
-		node.aliasName && visitNode(node.aliasName);
-	}
-	constructor(public exportName: ExpressionNode, protected _aliasName?: ExpressionNode) { }
-
-	public get aliasName(): ExpressionNode {
-		return this._aliasName || this.exportName;
-	}
-
-	public set aliasName(_aliasName: ExpressionNode) {
-		this._aliasName = _aliasName;
-	}
-
-	toString() {
-		if (this._aliasName) {
-			return `${this.exportName.toString()} as ${this._aliasName.toString()}`;
-		}
-		return this.exportName.toString();
-	}
-
-	toJSON() {
-		return {
-			exportName: this.exportName.toJSON(),
-			aliasName: this._aliasName?.toJSON()
-		};
-	}
-}
 
 /**
- * There are two types of exports:
+ *  There are two types of exports:
  * 1- Named Exports (Zero or more exports per module)
  * 2- Default Exports (One per module)
  * 
@@ -70,44 +32,128 @@ export class ExportAliasName {
  * export { import1 as name1, import2 as name2, …, nameN } from …;
  * export { default, … } from …;
  */
-@Deserializer('export')
-export class ExportNode extends AbstractExpressionNode {
-	static fromJSON(node: ExportNode, deserializer: NodeDeserializer): ExportNode {
-		return new ExportNode(
-			node.exportList?.map(expo => new ExportAliasName(deserializer(expo.exportName), deserializer(expo.aliasName))),
-			node.starExport ? new ExportAliasName(deserializer(node.starExport.exportName), deserializer(node.starExport.aliasName)) : void 0,
-			node.exportExpression ? new ExportAliasName(deserializer(node.exportExpression.exportName), deserializer(node.exportExpression.aliasName)) : void 0,
-			node.moduleName ? deserializer(node.moduleName) : void 0
+
+import type {
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
+} from '../expression.js';
+import type { Scope } from '../../scope/scope.js';
+import type { Stack } from '../../scope/stack.js';
+import { AbstractExpressionNode } from '../abstract.js';
+import { Deserializer } from '../deserialize/deserialize.js';
+import { Identifier, StringLiteral } from '../definition/values.js';
+import { ModuleSpecifier } from './import.js';
+import { FunctionDeclaration } from '../definition/function.js';
+import { ClassDeclaration } from '../app/class.js';
+
+
+/**
+ * An exported variable binding, e.g., `{foo}` in `export {foo}` or `{bar as foo}` in `export {bar as foo}`.
+ * 
+ * The `exported` field refers to the name exported in the module.
+ * 
+ * The `local` field refers to the binding into the local module scope.
+ * 
+ * If it is a basic named export, such as in `export {foo}`, both `exported` and `local` are equivalent `Identifier` nodes;
+ * in this case an Identifier node representing `foo`.
+ * 
+ * If it is an aliased export,
+ * such as in `export {bar as foo}`, the `exported` field is an `Identifier` node representing `foo`,
+ * and the `local` field is an `Identifier` node representing `bar`.
+ */
+@Deserializer('ExportSpecifier')
+export class ExportSpecifier extends ModuleSpecifier {
+	static fromJSON(node: ExportSpecifier, deserializer: NodeDeserializer): ExportSpecifier {
+		return new ExportSpecifier(
+			deserializer(node.local) as Identifier,
+			deserializer(node.exported) as Identifier
 		);
 	}
-	static visit(node: ExportNode, visitNode: VisitNodeType): void {
-		node.exportList?.map(expo => ExportAliasName.visit(expo, visitNode));
-		node.starExport && ExportAliasName.visit(node.starExport, visitNode);
-		node.exportExpression && ExportAliasName.visit(node.exportExpression, visitNode);
-		node.moduleName && visitNode(node.moduleName);
+	static visit(node: ExportSpecifier, visitNode: VisitNodeType): void {
+		visitNode(node.local);
+		visitNode(node.exported);
+	}
+	constructor(local: Identifier, private exported: Identifier) {
+		super(local);
+	}
+	getExported() {
+		return this.exported;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('Method not implemented.');
+	}
+	get(stack: Stack, thisContext?: any) {
+		throw new Error('Method not implemented.');
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString(): string {
+		const local = this.local.toString();
+		const exported = this.exported.toString();
+		if (local == exported) {
+			return local;
+		}
+		return `${local} as ${exported}`;
+	}
+	toJson(): object {
+		return {
+			local: this.local.toJSON(),
+			exported: this.exported.toJSON()
+		};
+	}
+}
+
+
+/**
+ * An export named declaration, e.g.,
+ * `export {foo, bar};`,
+ * `export {foo} from "mod";`
+ * or `export var foo = 1;`.
+ * 
+ * Note: Having `declaration` populated with non-empty `specifiers` or non-null `source` results in an invalid state.
+ */
+@Deserializer('ExportNamedDeclaration')
+export class ExportNamedDeclaration extends AbstractExpressionNode {
+	static fromJSON(node: ExportNamedDeclaration, deserializer: NodeDeserializer): ExportNamedDeclaration {
+		return new ExportNamedDeclaration(
+			node.specifiers.map(deserializer) as ExportSpecifier[],
+			node.source ? deserializer(node.source) as StringLiteral : void 0,
+			node.declaration ? deserializer(node.declaration) : void 0,
+		);
+	}
+	static visit(node: ExportNamedDeclaration, visitNode: VisitNodeType): void {
+		node.specifiers.map(visitNode);
+		node.source && visitNode(node.source);
+		node.declaration && visitNode(node.declaration);
 	}
 	constructor(
-		private exportList?: ExportAliasName[],
-		private starExport?: ExportAliasName,
-		private exportExpression?: ExportAliasName,
-		private moduleName?: ExpressionNode) {
+		private specifiers: ExportSpecifier[],
+		private source?: StringLiteral,
+		private declaration?: ExpressionNode) {
 		super();
 	}
-	getModuleName() {
-		return this.moduleName;
+	getSource() {
+		return this.source;
 	}
-	getExportExpression() {
-		return this.exportExpression;
+	getSpecifiers() {
+		return this.specifiers;
 	}
-	getExportList() {
-		return this.exportList;
+	getDeclaration() {
+		return this.declaration;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
-		throw new Error(`ExportNode.#set() has no implementation.`);
+		throw new Error(`ExportNamedDeclaration.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		throw new Error(`ExportNode.#get() has no implementation.`);
+		throw new Error(`ExportNamedDeclaration.#get() has no implementation.`);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [];
@@ -116,28 +162,109 @@ export class ExportNode extends AbstractExpressionNode {
 		return [];
 	}
 	toString() {
-		// Aggregating modules
-		if (this.exportList && this.moduleName) {
-			return `export { ${this.exportList.map(expo => expo.toString()).join(', ')} } from '${this.moduleName.toString()}';`;
+		if (this.declaration) {
+			const declaration = this.declaration.toString();
+			return `export ${declaration}`;
 		}
-		if (this.starExport && this.moduleName) {
-			return `export ${this.starExport.toString()} from '${this.moduleName.toString()}';`;
+		const specifiers = this.specifiers.map(specifier => specifier.toString()).join(',');
+		let exportStr = `export {${specifiers}}`;
+		if (!this.source) {
+			return `${exportStr};`;
 		}
-
-		if (this.exportList) {
-			return `export { ${this.exportList.map(expo => expo.toString()).join(', ')} };`;
-		}
-		if (this.exportExpression) {
-			return `export ${this.exportExpression.toString()};`;
-		}
-		throw new Error(`not enough params found,at least 'exportExpression' should be initialized.`);
+		const source = this.source.toString();
+		return `${exportStr} from ${source};`;
 	}
 	toJson(): object {
 		return {
-			exportList: this.exportList?.map(expression => expression.toJSON()),
-			starExport: this.starExport?.toJSON(),
-			exportExpression: this.exportExpression?.toJSON(),
-			moduleName: this.moduleName?.toJSON(),
+			specifiers: this.specifiers.map(specifier => specifier.toJSON()),
+			source: this.source?.toJSON(),
+			declaration: this.declaration?.toJSON(),
+		};
+	}
+}
+
+
+/**
+ * An export default declaration, e.g., 
+ * `export default function () {};`
+ * or `export default 1;`.
+ */
+@Deserializer('ExportDefaultDeclaration')
+export class ExportDefaultDeclaration extends AbstractExpressionNode {
+	static fromJSON(node: ExportDefaultDeclaration, deserializer: NodeDeserializer): ExportDefaultDeclaration {
+		return new ExportDefaultDeclaration(deserializer(node.declaration));
+	}
+	static visit(node: ExportDefaultDeclaration, visitNode: VisitNodeType): void {
+		visitNode(node.declaration);
+	}
+	constructor(
+		private declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode) {
+		super();
+	}
+	getDeclaration() {
+		return this.declaration;
+	}
+	shareVariables(scopeList: Scope<any>[]): void { }
+	set(stack: Stack) {
+		throw new Error(`ExportDefaultDeclaration.#set() has no implementation.`);
+	}
+	get(stack: Stack) {
+		throw new Error(`ExportDefaultDeclaration.#get() has no implementation.`);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString() {
+		const declaration = this.declaration.toString();
+		return `export default ${declaration}`;
+	}
+	toJson(): object {
+		return {
+			declaration: this.declaration.toJSON(),
+		};
+	}
+}
+
+/**
+ * An export batch declaration, e.g., `export * from "mod";`.
+ */
+@Deserializer('ExportAllDeclaration')
+export class ExportAllDeclaration extends AbstractExpressionNode {
+	static fromJSON(node: ExportAllDeclaration, deserializer: NodeDeserializer): ExportAllDeclaration {
+		return new ExportAllDeclaration(deserializer(node.source) as StringLiteral);
+	}
+	static visit(node: ExportAllDeclaration, visitNode: VisitNodeType): void {
+		visitNode(node.source);
+	}
+	constructor(
+		private source: StringLiteral) {
+		super();
+	}
+	getSource() {
+		return this.source;
+	}
+	shareVariables(scopeList: Scope<any>[]): void { }
+	set(stack: Stack) {
+		throw new Error(`ExportDefaultDeclaration.#set() has no implementation.`);
+	}
+	get(stack: Stack) {
+		throw new Error(`ExportDefaultDeclaration.#get() has no implementation.`);
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	toString() {
+		return `export * from ${this.source.toString()}`;
+	}
+	toJson(): object {
+		return {
+			source: this.source.toJSON(),
 		};
 	}
 }
