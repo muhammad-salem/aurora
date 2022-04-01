@@ -185,6 +185,11 @@ export interface CanDeclareExpression extends ExpressionNode {
 	 * @param scope which scop to declare this identifier
 	 */
 	declareVariable(stack: Stack, propertyValue?: any): any;
+
+	/**
+	 * get the variable declaration name
+	 */
+	getDeclarationName?(): string;
 }
 
 

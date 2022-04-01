@@ -9,14 +9,14 @@ import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 
 @Deserializer('VariableDeclarator')
-export class VariableNode extends AbstractExpressionNode implements CanDeclareExpression {
-	static fromJSON(node: VariableNode, deserializer: NodeDeserializer): VariableNode {
-		return new VariableNode(
+export class VariableDeclarator extends AbstractExpressionNode implements CanDeclareExpression {
+	static fromJSON(node: VariableDeclarator, deserializer: NodeDeserializer): VariableDeclarator {
+		return new VariableDeclarator(
 			deserializer(node.id) as CanDeclareExpression,
 			node.init ? deserializer(node.init) : void 0
 		);
 	}
-	static visit(node: VariableNode, visitNode: VisitNodeType): void {
+	static visit(node: VariableDeclarator, visitNode: VisitNodeType): void {
 		visitNode(node.id);
 		node.init && visitNode(node.init);
 	}
@@ -53,6 +53,9 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 			this.id.declareVariable(stack, value);
 		}
 	}
+	getDeclarationName(): string {
+		return this.id.getDeclarationName!();
+	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.init?.dependency() || [];
 	}
@@ -74,14 +77,14 @@ export class VariableNode extends AbstractExpressionNode implements CanDeclareEx
 export class VariableDeclarationNode extends AbstractExpressionNode implements CanDeclareExpression {
 	static fromJSON(node: VariableDeclarationNode, deserializer: NodeDeserializer): VariableDeclarationNode {
 		return new VariableDeclarationNode(
-			node.declarations.map(deserializer) as VariableNode[],
+			node.declarations.map(deserializer) as VariableDeclarator[],
 			node.kind
 		);
 	}
 	static visit(node: VariableDeclarationNode, visitNode: VisitNodeType): void {
 		node.declarations.forEach(visitNode);
 	}
-	constructor(protected declarations: VariableNode[], protected kind: 'var' | 'let' | 'const') {
+	constructor(protected declarations: VariableDeclarator[], protected kind: 'var' | 'let' | 'const') {
 		super();
 	}
 	getDeclarations() {
@@ -103,6 +106,9 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 		for (const item of this.declarations) {
 			item.declareVariable(stack);
 		}
+	}
+	getDeclarationName(): string {
+		return this.declarations[0].getDeclarationName!();
 	}
 	declareVariable(stack: Stack, propertyValue: any): any {
 		this.declarations[0].declareVariable(stack, propertyValue);

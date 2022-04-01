@@ -205,6 +205,9 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	declareVariable(stack: Stack, propertyValue?: any) {
 		throw new Error('MethodDefinition.#declareVariable() Method not implemented.');
 	}
+	getDeclarationName(): string {
+		return this.toString();
+	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('MethodDefinition.#dependency() Method not implemented.');
 	}
@@ -291,6 +294,9 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	}
 	declareVariable(stack: Stack, propertyValue?: any) {
 		throw new Error('PropertyDefinition.#declareVariable() Method not implemented.');
+	}
+	getDeclarationName(): string {
+		return this.key.toString();
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('PropertyDefinition.#dependency() Method not implemented.');
@@ -578,6 +584,9 @@ export class ClassDeclaration extends Class implements CanDeclareExpression {
 	protected id?: Identifier;
 	declareVariable(stack: Stack, propertyValue?: any) {
 		this.id && stack.declareVariable(this.id.getName(), propertyValue);
+	}
+	getDeclarationName(): string {
+		return this.id?.getDeclarationName()!;
 	}
 }
 
