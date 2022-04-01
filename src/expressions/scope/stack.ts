@@ -1,4 +1,5 @@
 import type { CanDeclareExpression } from '../api/expression.js';
+import { finalizerRegister } from './finalizer.js';
 import {
 	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
 	ReactiveScopeControl, Scope, ScopeContext, WebModuleScope
@@ -132,17 +133,14 @@ export interface Stack {
 	 * used with export statement
 	 */
 	getModule(): ModuleScope | undefined;
+
+	/**
+	 * register action to do on destroy this stack
+	 */
+	onDestroy(action: () => void): void;
 }
 
-export interface ModuleScopeResolver {
-	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope;
-	resolveURL(specified: string, parent: string | URL): string;
-}
-
-const ROOT_URL = 'https://root';
-export function createRootURL(source: string): URL {
-	return new URL(source, ROOT_URL);
-}
+FinalizationRegistry
 
 export class Stack implements Stack {
 	static for(...contexts: Scope<ScopeContext>[]): Stack {
@@ -168,6 +166,8 @@ export class Stack implements Stack {
 	protected readonly moduleSource?: string;
 	protected readonly resolver?: ModuleScopeResolver;
 
+	protected readonly onDestroyActions: (() => void)[] = [];
+
 	constructor();
 	constructor(globalScope: Scope<ScopeContext>);
 	constructor(globalScope: Scope<ScopeContext>, resolver: ModuleScopeResolver, moduleSource: string);
@@ -186,11 +186,16 @@ export class Stack implements Stack {
 		if (resolver && moduleSource) {
 			this.resolver = resolver;
 			this.moduleSource = moduleSource;
-			// init module scope
+			// init module scope for import and export
 			this.moduleScope = new ModuleScope(this.initModuleContext());
 			this.pushScope(this.moduleScope);
+			// for the rest of module body
+			this.pushReactiveScope();
+		} else {
+			// not a module scope
+			this.pushBlockScope();
 		}
-		this.pushBlockScope();
+		finalizerRegister(this, this.onDestroyActions, this);
 	}
 	private initModuleContext(): ModuleContext {
 		const importFunc = (path: string) => {
@@ -301,7 +306,23 @@ export class Stack implements Stack {
 	getModule(): ModuleScope | undefined {
 		return this.moduleScope;
 	}
+
+	onDestroy(action: () => void): void {
+		this.onDestroyActions.push(action);
+	}
 }
+
+
+export interface ModuleScopeResolver {
+	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope;
+	resolveURL(specified: string, parent: string | URL): string;
+}
+
+const ROOT_URL = 'https://root';
+export function createRootURL(source: string): URL {
+	return new URL(source, ROOT_URL);
+}
+
 
 export interface ResolverConfig {
 	/**

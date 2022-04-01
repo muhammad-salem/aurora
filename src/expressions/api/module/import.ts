@@ -230,15 +230,21 @@ export class ImportDeclaration extends AbstractExpressionNode {
 				const imported = specifier.getImported().get(stack);
 				const importedValue = module.get(imported);
 				stack.getModule()?.set(local, importedValue);
-				module.subscribe(local, (newValue, oldValue) => {
-					stack.getModule()?.set(local, newValue);
+				const scopeSubscription = module.subscribe(local, (newValue, oldValue) => {
+					if (newValue !== oldValue) {
+						stack.getModule()?.set(local, newValue);
+					}
 				});
+				stack.onDestroy(() => scopeSubscription.unsubscribe());
 			} else if (specifier instanceof ImportDefaultSpecifier) {
 				const defaultValue = module.get('default');
 				stack.getModule()?.set(local, defaultValue);
-				module.subscribe(local, (newValue, oldValue) => {
-					stack.getModule()?.set(local, newValue);
+				const scopeSubscription = module.subscribe('default', (newValue, oldValue) => {
+					if (newValue !== oldValue) {
+						stack.getModule()?.set(local, newValue);
+					}
 				});
+				stack.onDestroy(() => scopeSubscription.unsubscribe());
 			} else if (specifier instanceof ImportNamespaceSpecifier) {
 				stack.getModule()?.importModule(local, module);
 			}
