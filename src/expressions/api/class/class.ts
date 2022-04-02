@@ -337,6 +337,70 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	}
 }
 
+
+
+@Deserializer('AccessorProperty')
+export class AccessorProperty extends AbstractExpressionNode implements CanDeclareExpression {
+	static fromJSON(node: AccessorProperty, deserializer: NodeDeserializer): AccessorProperty {
+		return new AccessorProperty(
+			deserializer(node.key),
+			node.decorators.map(deserializer) as Decorator[],
+			node.computed,
+			node.static,
+			node.value ? deserializer(node.value) : void 0
+		);
+	}
+	static visit(node: AccessorProperty, visitNode: VisitNodeType): void {
+		visitNode(node.key);
+		node.value && visitNode(node.value);
+		node.decorators.forEach(visitNode);
+	}
+	private 'static': boolean;
+	constructor(
+		private key: ExpressionNode | PrivateIdentifier,
+		private decorators: Decorator[],
+		private computed: boolean,
+		isStatic: boolean,
+		private value?: ExpressionNode) {
+		super();
+		this.static = isStatic;
+	}
+	shareVariables(scopeList: Scope<any>[]): void {
+
+	}
+	set(stack: Stack, value: any) {
+		throw new Error('AccessorProperty#set() Method not implemented.');
+	}
+	get(stack: Stack) {
+		throw new Error('AccessorProperty#set() Method not implemented.');
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
+	}
+	declareVariable(stack: Stack, propertyValue?: any) {
+		throw new Error('AccessorProperty.#declareVariable() Method not implemented.');
+	}
+	getDeclarationName(): string {
+		return this.key.toString();
+	}
+	toString(): string {
+		return '';
+	}
+	toJson(): { [key: string]: any; } {
+		return {
+			key: this.key.toJSON(),
+			decorators: this.decorators.map(decorator => decorator.toJSON()),
+			computed: this.computed,
+			static: this.static,
+			value: this.value?.toJSON(),
+		};
+	}
+}
+
+
 @Deserializer('ClassBody')
 export class ClassBody extends AbstractExpressionNode {
 	static fromJSON(node: ClassBody, deserializer: NodeDeserializer<any>): ClassBody {
@@ -347,7 +411,7 @@ export class ClassBody extends AbstractExpressionNode {
 	static visit(node: ClassBody, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock)[]) {
+	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock | AccessorProperty)[]) {
 		super();
 	}
 	getBody() {
