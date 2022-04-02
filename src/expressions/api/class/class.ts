@@ -479,23 +479,8 @@ export class Class extends AbstractExpressionNode {
 			classEval = this.createClass(className);
 		}
 
-		const bodyDecorators: { name: string, decorators: any[], desc: any }[] = [];
-
-		// init static class properties and methods
-		this.getStaticPropertyDefinitionExpressions().forEach(property => {
-			const propertyName = property.getKey().get(stack);
-			const propertyValue = property.getValue()?.get(stack);
-			classEval[propertyName] = propertyValue;
-			this.initBodyDecorators(stack, bodyDecorators, propertyName, property.getDecorators(), void 0);
-		});
-		this.getStaticMethodDefinitionExpressions().forEach(method => {
-			const methodName = method.getKey().get(stack);
-			const methodValue = method.getValue()?.get(stack);
-			classEval[methodName] = methodValue;
-			this.initBodyDecorators(stack, bodyDecorators, methodName, method.getDecorators(), null);
-		});
-
 		// init class body properties and methods
+		const bodyDecorators: { name: string, decorators: any[], desc: any }[] = [];
 		this.getClassPropertyDefinitionExpressions().forEach(property => {
 			const propertyName = property.getKey().get(stack);
 			const propertyValue = property.getValue()?.get(stack);
@@ -509,14 +494,32 @@ export class Class extends AbstractExpressionNode {
 			this.initBodyDecorators(stack, bodyDecorators, methodName, method.getDecorators(), null);
 		});
 
+		// init static class properties and methods
+		const bodyStaticDecorators: { name: string, decorators: any[], desc: any }[] = [];
+		this.getStaticPropertyDefinitionExpressions().forEach(property => {
+			const propertyName = property.getKey().get(stack);
+			const propertyValue = property.getValue()?.get(stack);
+			classEval[propertyName] = propertyValue;
+			this.initBodyDecorators(stack, bodyStaticDecorators, propertyName, property.getDecorators(), void 0);
+		});
+		this.getStaticMethodDefinitionExpressions().forEach(method => {
+			const methodName = method.getKey().get(stack);
+			const methodValue = method.getValue()?.get(stack);
+			classEval[methodName] = methodValue;
+			this.initBodyDecorators(stack, bodyStaticDecorators, methodName, method.getDecorators(), null);
+		});
+
 		// run initialize static code
 		const initializeBlock = this.getStaticBlockExpression();
 		if (initializeBlock) {
 			initializeBlock.get(stack);
 		}
-		// run decorators
 
+		// run decorators
 		bodyDecorators.forEach(item => {
+			__decorate(item.decorators, classEval.prototype, item.name, item.desc);
+		});
+		bodyStaticDecorators.forEach(item => {
 			__decorate(item.decorators, classEval.prototype, item.name, item.desc);
 		});
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
