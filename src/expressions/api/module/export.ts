@@ -44,7 +44,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier, StringLiteral } from '../definition/values.js';
 import { ModuleSpecifier } from './import.js';
 import { FunctionDeclaration } from '../definition/function.js';
-import { ClassDeclaration } from '../app/class.js';
+import { ClassDeclaration } from '../class/class.js';
 
 
 /**
