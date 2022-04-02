@@ -116,22 +116,39 @@ export class MetaProperty extends MemberExpression {
  * A private identifier refers to private class elements. For a private name `#a`, its name is `a`.
  */
 @Deserializer('PrivateIdentifier')
-export class PrivateIdentifier extends Identifier {
+export class PrivateIdentifier extends AbstractExpressionNode {
 	static fromJSON(node: PrivateIdentifier): PrivateIdentifier {
 		return new PrivateIdentifier(
 			node.name as string
 		);
 	}
-	constructor(private privateName: string) {
-		super('ɵ_' + privateName);
+	constructor(private name: string) {
+		super();
+	}
+	getName() {
+		return this.name;
+	}
+	set(stack: Stack, value: any) {
+		const privateScope = stack.findScope('#__private');
+		privateScope.getScope('#__private')?.set(this.name, value);
+	}
+	get(stack: Stack, thisContext?: any) {
+		const privateObj = stack.get('#__private');
+		return privateObj[this.name];
+	}
+	dependency(computed?: true): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true): ExpressionEventPath[] {
+		return [];
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
-		return `#${this.privateName}`;
+		return `#${this.name}`;
 	}
 	toJson(): { [key: string]: any; } {
 		return {
-			name: this.privateName
+			name: this.name
 		};
 	}
 }
@@ -211,16 +228,16 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 		throw new Error('MethodDefinition.#get() Method not implemented.');
 	}
 	declareVariable(stack: Stack, propertyValue?: any) {
-		throw new Error('MethodDefinition.#declareVariable() Method not implemented.');
+
 	}
 	getDeclarationName(): string {
 		return this.toString();
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		throw new Error('MethodDefinition.#dependency() Method not implemented.');
+		return [];
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		throw new Error('MethodDefinition.#get() Method not implemented.');
+		return [];
 	}
 	toString(): string {
 		let str = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -490,7 +507,27 @@ export class Class extends AbstractExpressionNode {
 		this.getClassMethodDefinitionExpressions().forEach(method => {
 			const methodName = method.getKey().get(stack);
 			const methodValue = method.getValue()?.get(stack);
-			classEval.prototype[methodName] = methodValue;
+			switch (method.getKind()) {
+				case 'method':
+					classEval.prototype[methodName] = methodValue;
+					break;
+				case 'set':
+					Object.defineProperty(classEval.prototype, methodName, {
+						configurable: true,
+						enumerable: false,
+						set: methodValue as (v: any) => void,
+					});
+					break;
+				case 'get':
+					Object.defineProperty(classEval.prototype, methodName, {
+						configurable: true,
+						enumerable: false,
+						get: methodValue as () => any,
+					});
+					break;
+				default:
+					break;
+			}
 			this.initBodyDecorators(stack, bodyDecorators, methodName, method.getDecorators(), null);
 		});
 
@@ -505,7 +542,27 @@ export class Class extends AbstractExpressionNode {
 		this.getStaticMethodDefinitionExpressions().forEach(method => {
 			const methodName = method.getKey().get(stack);
 			const methodValue = method.getValue()?.get(stack);
-			classEval[methodName] = methodValue;
+			switch (method.getKind()) {
+				case 'method':
+					classEval[methodName] = methodValue;
+					break;
+				case 'set':
+					Object.defineProperty(classEval, methodName, {
+						configurable: true,
+						enumerable: false,
+						set: methodValue as (v: any) => void,
+					});
+					break;
+				case 'get':
+					Object.defineProperty(classEval, methodName, {
+						configurable: true,
+						enumerable: false,
+						get: methodValue as () => any,
+					});
+					break;
+				default:
+					break;
+			}
 			this.initBodyDecorators(stack, bodyStaticDecorators, methodName, method.getDecorators(), null);
 		});
 
@@ -598,10 +655,14 @@ export class Class extends AbstractExpressionNode {
 		className ??= '__temp_class_name__'
 		const TEMP = {
 			[className]: class extends parentClass {
+				#__private: { [key: string | number | symbol]: any } = {};
 				constructor(...params: any[]) {
 					super(...handleSuperCall(params));
 					classStack.declareVariable('this', this);
 					classStack.declareVariable('new.target', new.target);
+					classStack.declareVariable('#__private', this.#__private);
+					classStack.declareVariable('__callSuperMethod', this.__callSuperMethod);
+					classStack.declareVariable('__getSuperProperty', this.__getSuperProperty);
 					for (const statement of constructorBody) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
@@ -611,6 +672,12 @@ export class Class extends AbstractExpressionNode {
 						}
 					}
 					classStack.clearTo(classScopes[0]);
+				}
+				__getSuperProperty(name: string) {
+					return super[name];
+				}
+				__callSuperMethod(name: string) {
+					return super[name]();
 				}
 			}
 		};
@@ -627,12 +694,14 @@ export class Class extends AbstractExpressionNode {
 		className ??= '__temp_class_name__'
 		const TEMP = {
 			[className]: class {
+				#__private: { [key: string | number | symbol]: any } = {};
 				constructor(...params: any[]) {
 					const classStack = new Stack();
 					const classScopes = self.initClassScope(classStack);
 					constructorExpression!.getValue().setParameter(classStack, params);
 					classStack.declareVariable('this', this);
 					classStack.declareVariable('new.target', new.target);
+					classStack.declareVariable('#__private', this.#__private);
 					for (const statement of constructorExpression!.getValue().getBody()) {
 						statement.shareVariables(classScopes);
 						const returnValue = statement.get(classStack);
