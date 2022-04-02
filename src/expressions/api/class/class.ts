@@ -3,6 +3,7 @@ import type {
 	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
+import { __decorate } from 'tslib';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -12,6 +13,7 @@ import { FunctionExpression } from '../definition/function.js';
 import { BlockStatement } from '../statement/control/block.js';
 import { TypeOf } from '../utils.js';
 import { CallExpression } from '../computing/call.js';
+import { Decorator } from './decorator.js';
 
 
 /**
@@ -162,6 +164,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 			node.kind,
 			deserializer(node.key),
 			deserializer(node.value),
+			node.decorators.map(deserializer),
 			node.computed,
 			node.static
 		);
@@ -169,12 +172,14 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	static visit(node: MethodDefinition, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		visitNode(node.value);
+		node.decorators.forEach(visitNode);
 	}
 	private 'static': boolean;
 	constructor(
 		private kind: MethodDefinitionKind,
 		private key: ExpressionNode | PrivateIdentifier,
 		private value: FunctionExpression,
+		private decorators: Decorator[],
 		private computed: boolean,
 		isStatic: boolean) {
 		super();
@@ -194,6 +199,9 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	}
 	isStatic() {
 		return this.static;
+	}
+	getDecorators() {
+		return this.decorators;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
@@ -215,7 +223,7 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 		throw new Error('MethodDefinition.#get() Method not implemented.');
 	}
 	toString(): string {
-		let str = '';
+		let str = this.decorators.map(decorator => decorator.toString()).join('\n');
 		let name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
 		switch (this.kind) {
 			case 'constructor':
@@ -237,8 +245,9 @@ export class MethodDefinition extends AbstractExpressionNode implements CanDecla
 	toJson(): { [key: string]: any; } {
 		return {
 			kind: this.kind,
-			key: this.key,
-			value: this.value,
+			key: this.key.toJSON(),
+			value: this.value.toJSON(),
+			decorators: this.decorators.map(decorator => decorator.toJSON()),
 			computed: this.computed,
 			static: this.static,
 		};
@@ -255,6 +264,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	static fromJSON(node: PropertyDefinition, deserializer: NodeDeserializer<any>): PropertyDefinition {
 		return new PropertyDefinition(
 			deserializer(node.key),
+			node.decorators.map(deserializer),
 			node.computed,
 			node.static,
 			node.value && deserializer(node.value)
@@ -267,6 +277,7 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	private 'static': boolean;
 	constructor(
 		private key: ExpressionNode | PrivateIdentifier,
+		private decorators: Decorator[],
 		private computed: boolean,
 		isStatic: boolean,
 		private value?: ExpressionNode) {
@@ -278,6 +289,9 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 	}
 	getValue() {
 		return this.value;
+	}
+	getDecorators() {
+		return this.decorators;
 	}
 	isComputed() {
 		return this.computed;
@@ -305,18 +319,20 @@ export class PropertyDefinition extends AbstractExpressionNode implements CanDec
 		throw new Error('PropertyDefinition.#dependencyPath() Method not implemented.');
 	}
 	toString(): string {
+		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
 		const name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
 		if (this.value) {
 			return `${name} = ${this.value.toString()};`
 		}
-		return `${name};`
+		return `${decorators.length ? decorators + '\n' : ''}${name};`
 	}
 	toJson(): { [key: string]: any; } {
 		return {
 			key: this.key.toJSON(),
+			value: this.value?.toJSON(),
+			decorators: this.decorators.map(decorator => decorator.toJSON()),
 			computed: this.computed,
 			static: this.static,
-			value: this.value?.toJSON()
 		};
 	}
 }
@@ -364,12 +380,16 @@ export class Class extends AbstractExpressionNode {
 	private sharedVariables?: Scope<any>[];
 	constructor(
 		protected body: ClassBody,
+		protected decorators: Decorator[],
 		protected id?: Identifier,
 		protected superClass?: ExpressionNode) {
 		super();
 	}
 	getBody() {
 		return this.body;
+	}
+	getDecorators() {
+		return this.decorators;
 	}
 	getId() {
 		return this.id;
@@ -395,16 +415,20 @@ export class Class extends AbstractExpressionNode {
 			classEval = this.createClass(className);
 		}
 
+		const bodyDecorators: { name: string, decorators: any[], desc: any }[] = [];
+
 		// init static class properties and methods
 		this.getStaticPropertyDefinitionExpressions().forEach(property => {
 			const propertyName = property.getKey().get(stack);
 			const propertyValue = property.getValue()?.get(stack);
 			classEval[propertyName] = propertyValue;
+			this.initBodyDecorators(stack, bodyDecorators, propertyName, property.getDecorators(), void 0);
 		});
 		this.getStaticMethodDefinitionExpressions().forEach(method => {
-			const propertyName = method.getKey().get(stack);
-			const propertyValue = method.getValue()?.get(stack);
-			classEval[propertyName] = propertyValue;
+			const methodName = method.getKey().get(stack);
+			const methodValue = method.getValue()?.get(stack);
+			classEval[methodName] = methodValue;
+			this.initBodyDecorators(stack, bodyDecorators, methodName, method.getDecorators(), null);
 		});
 
 		// init class body properties and methods
@@ -412,11 +436,13 @@ export class Class extends AbstractExpressionNode {
 			const propertyName = property.getKey().get(stack);
 			const propertyValue = property.getValue()?.get(stack);
 			classEval.prototype[propertyName] = propertyValue;
+			this.initBodyDecorators(stack, bodyDecorators, propertyName, property.getDecorators(), void 0);
 		});
 		this.getClassMethodDefinitionExpressions().forEach(method => {
-			const propertyName = method.getKey().get(stack);
-			const propertyValue = method.getValue()?.get(stack);
-			classEval.prototype[propertyName] = propertyValue;
+			const methodName = method.getKey().get(stack);
+			const methodValue = method.getValue()?.get(stack);
+			classEval.prototype[methodName] = methodValue;
+			this.initBodyDecorators(stack, bodyDecorators, methodName, method.getDecorators(), null);
 		});
 
 		// run initialize static code
@@ -424,6 +450,13 @@ export class Class extends AbstractExpressionNode {
 		if (initializeBlock) {
 			initializeBlock.get(stack);
 		}
+		// run decorators
+
+		bodyDecorators.forEach(item => {
+			__decorate(item.decorators, classEval.prototype, item.name, item.desc);
+		});
+		const decorators = this.decorators.map(decorator => decorator.get(stack));
+		classEval = __decorate(decorators, classEval);
 		return classEval;
 	}
 	private getConstructorExpression(): MethodDefinition | undefined {
@@ -467,6 +500,12 @@ export class Class extends AbstractExpressionNode {
 			return body ?? [];
 		}
 		return body.slice(1);
+	}
+	private initBodyDecorators(stack: Stack, bodyDecorators: { name: string, decorators: any[], desc: any }[], name: string, decorators: Decorator[], desc: any) {
+		const decoratorsRef = decorators.map(decorator => decorator.get(stack));
+		if (decoratorsRef.length > 0) {
+			bodyDecorators.push({ name, decorators: decoratorsRef, desc });
+		}
 	}
 	private initClassScope(stack: Stack) {
 		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
@@ -541,7 +580,6 @@ export class Class extends AbstractExpressionNode {
 		};
 		return TEMP[className];
 	}
-
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
 	}
@@ -549,6 +587,7 @@ export class Class extends AbstractExpressionNode {
 		throw new Error('Method not implemented.');
 	}
 	toString() {
+		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
 		let classDeclaration = 'class ';
 		if (this.id) {
 			classDeclaration += this.id.toString();
@@ -556,11 +595,12 @@ export class Class extends AbstractExpressionNode {
 		if (this.superClass) {
 			classDeclaration += ' extends ' + this.superClass.toString();
 		}
-		return `${classDeclaration} {${this.body.toString()}\n`;
+		return `${decorators}${classDeclaration} {${this.body.toString()}\n`;
 	}
 	toJson(): object {
 		return {
 			body: this.body.toJSON(),
+			decorators: this.decorators.map(decorator => decorator.toJSON()),
 			id: this.id?.toJSON(),
 			superClass: this.superClass?.toJSON(),
 		};
