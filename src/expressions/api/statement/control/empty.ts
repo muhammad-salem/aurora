@@ -13,7 +13,11 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  */
 @Deserializer('EmptyStatement')
 export class EmptyStatement extends AbstractExpressionNode {
-	static INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
+	static readonly INSTANCE: EmptyStatement;
+	static {
+		const instance = Object.freeze(new this()) as EmptyStatement;
+		Reflect.set(this, 'INSTANCE', instance);
+	}
 	static fromJSON(node: EmptyStatement): EmptyStatement {
 		return EmptyStatement.INSTANCE;
 	}

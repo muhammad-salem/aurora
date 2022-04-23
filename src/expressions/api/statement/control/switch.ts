@@ -62,7 +62,11 @@ export class SwitchCase extends AbstractExpressionNode {
 @Deserializer('default')
 export class DefaultExpression extends SwitchCase {
 	static DEFAULT_KEYWORD = 'default';
-	static DefaultNode = Object.freeze(new Identifier(DefaultExpression.DEFAULT_KEYWORD)) as Identifier;
+	static DefaultNode: Identifier;
+	static {
+		const instance = Object.freeze(new Identifier('default')) as Identifier;
+		Reflect.set(this, 'DefaultNode', instance);
+	}
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
 		return new DefaultExpression(deserializer(node.consequent));
 	}
