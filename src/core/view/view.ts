@@ -136,4 +136,5 @@ export function getComponentView<T extends object>(modelClass: TypeOf<T>, select
 		}
 		return Reflect.get(modelClass, viewClassName);
 	}
+	return;
 }

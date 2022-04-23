@@ -7,6 +7,7 @@
 		"declarationMap": false,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"noImplicitReturns": true,
 		"strictBindCallApply": true,
 		"downlevelIteration": true,
 		"experimentalDecorators": true,

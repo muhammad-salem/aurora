@@ -68,6 +68,7 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 		if (pipeRef?.asynchronous) {
 			return pipeRef.modelClass;
 		}
+		return;
 	}
 	getClass(): TypeOf<AsyncPipeProvider> {
 		return AsyncPipeProvider;

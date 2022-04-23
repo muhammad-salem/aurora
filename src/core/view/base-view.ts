@@ -152,6 +152,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (outputRef) {
 				return this._model[outputRef.modelProperty] as EventEmitter<V>;
 			}
+			return;
 		}
 
 		hasProp(propName: string): boolean {

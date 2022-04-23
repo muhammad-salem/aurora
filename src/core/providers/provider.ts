@@ -44,16 +44,17 @@ export class ClassRegistry {
 				return componentRef;
 			}
 		}
+		return;
 	}
 
 	getComponent<T>(selector: string) {
-		// this.componentSet.
 		for (const modelClass of this.componentSet) {
 			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return modelClass;
 			}
 		}
+		return;
 	}
 
 	getComponentView(selector: string) {

@@ -43,13 +43,13 @@ export class UnaryExpression extends AbstractExpressionNode {
 	}
 	get(stack: Stack, thisContext?: any) {
 		switch (this.operator) {
-			case 'delete': return this.getDelete(stack, thisContext);
+			case 'delete': return this.executeDelete(stack, thisContext);
 			default:
 				const value = this.argument.get(stack);
 				return UnaryExpression.Evaluations[this.operator](value);
 		}
 	}
-	private getDelete(stack: Stack, thisContext?: any) {
+	private executeDelete(stack: Stack, thisContext?: any): boolean {
 		if (this.argument instanceof MemberExpression) {
 			const scope = this.argument.findScope<ScopeContext>(stack);
 			let propertyKey: PropertyKey;
@@ -66,6 +66,7 @@ export class UnaryExpression extends AbstractExpressionNode {
 			}
 			return scope.delete(propertyKey);
 		}
+		return false;
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.argument.dependency(computed);
