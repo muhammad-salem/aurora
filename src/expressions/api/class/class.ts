@@ -757,7 +757,7 @@ export class ClassDeclaration extends Class implements CanDeclareExpression {
 		node.id && visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
 	}
-	protected id?: Identifier;
+	declare protected id?: Identifier;
 	declareVariable(stack: Stack, propertyValue?: any) {
 		this.id && stack.declareVariable(this.id.getName(), propertyValue);
 	}

@@ -359,7 +359,7 @@ export class FunctionDeclaration extends FunctionExpression {
 		node.params.forEach(visitNode);
 		node.body.forEach(visitNode);
 	}
-	protected id?: CanDeclareExpression;
+	declare protected id?: CanDeclareExpression;
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
 		kind: FunctionKind, id?: CanDeclareExpression,

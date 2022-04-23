@@ -35,7 +35,7 @@ export class CaseOfSwitchDirective extends StructuralDirective implements OnInit
 
 	private _view: SwitchView = new SwitchView(this.viewContainerRef, this.templateRef);
 
-	host: SwitchDirective;
+	declare host: SwitchDirective;
 
 	private _caseValue: any;
 
@@ -70,7 +70,7 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 	@Input('default')
 	defaultCaseValue: any;
 
-	host: SwitchDirective;
+	declare host: SwitchDirective;
 
 	onInit() {
 		const defaultView = new SwitchView(this.viewContainerRef, this.templateRef);

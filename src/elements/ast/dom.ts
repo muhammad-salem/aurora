@@ -134,6 +134,7 @@ export class BaseNode {
 	}
 
 }
+
 export class DomAttributeDirectiveNode extends BaseNode {
 
 	/**
@@ -145,7 +146,7 @@ export class DomAttributeDirectiveNode extends BaseNode {
 	/**
 	 * set to `undefined` stop, loop
 	 */
-	attributeDirectives: undefined;
+	declare attributeDirectives: undefined;
 
 	constructor(name: string) {
 		super();

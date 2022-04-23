@@ -221,7 +221,7 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('TemplateLiteral')
 export class TemplateLiteral extends TemplateLiteralExpressionNode {
-	protected tag: undefined;
+	declare protected tag: undefined;
 	constructor(quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions);
 	}
@@ -232,7 +232,7 @@ export class TemplateLiteral extends TemplateLiteralExpressionNode {
 
 @Deserializer('TaggedTemplateExpression')
 export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
-	protected tag: ExpressionNode;
+	declare protected tag: ExpressionNode;
 	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions, tag);
 	}
