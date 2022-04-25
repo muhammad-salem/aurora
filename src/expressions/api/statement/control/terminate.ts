@@ -46,14 +46,8 @@ class TerminateStatement extends AbstractExpressionNode {
 
 @Deserializer('BreakStatement')
 export class BreakStatement extends TerminateStatement {
-	static readonly BreakSymbol: Symbol;
-	static readonly BREAK_INSTANCE: BreakStatement;
-	static {
-		const symbol = Symbol.for('break');
-		const instance = Object.freeze(new this(symbol)) as BreakStatement;
-		Reflect.set(this, 'BreakSymbol', symbol);
-		Reflect.set(this, 'BREAK_INSTANCE', instance);
-	}
+	static readonly BreakSymbol = Symbol.for('break');
+	static readonly BREAK_INSTANCE = Object.freeze(new BreakStatement(BreakStatement.BreakSymbol)) as BreakStatement;
 	static fromJSON(node: BreakStatement): BreakStatement {
 		return BreakStatement.BREAK_INSTANCE;
 	}
@@ -65,11 +59,7 @@ export class BreakStatement extends TerminateStatement {
 @Deserializer('ContinueStatement')
 export class ContinueStatement extends TerminateStatement {
 	static readonly ContinueSymbol = Symbol.for('continue');
-	static readonly CONTINUE_INSTANCE: ContinueStatement;
-	static {
-		const instance = Object.freeze(new this(this.ContinueSymbol)) as ContinueStatement;
-		Reflect.set(this, 'CONTINUE_INSTANCE', instance);
-	}
+	static readonly CONTINUE_INSTANCE = Object.freeze(new ContinueStatement(ContinueStatement.ContinueSymbol)) as ContinueStatement;
 	static fromJSON(node: ContinueStatement): ContinueStatement {
 		return ContinueStatement.CONTINUE_INSTANCE;
 	}
