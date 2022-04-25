@@ -365,9 +365,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					(listener as Function)(data);
 				});
 			}
-			else {
-				this._model.subscribeModel(eventName, listener as () => void);
-			}
+			// else {
+			// 	this._model.subscribeModel(eventName, listener as () => void);
+			// }
 		}
 
 		triggerOutput(eventName: string, value?: any): void {

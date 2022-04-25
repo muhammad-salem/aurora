@@ -7,17 +7,19 @@ import {
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
 	TextContent, DomAttributeDirectiveNode
 } from '@ibyar/elements';
-import { ComponentRef, ListenerRef } from '../component/component.js';
+import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
-import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { HostListenerHandler } from '../render/host-listener.js';
+
+type ViewScopeContext = { [element: string]: HTMLElement };
 
 function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined {
 	switch (true) {
@@ -35,6 +37,7 @@ export class ComponentRender<T extends object> {
 	private template: DomNode;
 	private contextStack: Stack;
 	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
+	private viewScope: ReactiveScope<ViewScopeContext> = new ReactiveScope({});
 
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<ScopeContext>[]) {
 		this.componentRef = this.view.getComponentRef();
@@ -95,55 +98,13 @@ export class ComponentRender<T extends object> {
 		}
 	}
 	initHostListener(): void {
-		this.componentRef.hostListeners?.forEach(
-			listener => this.handelHostListener(listener)
-		);
-	}
-	handelHostListener(listener: ListenerRef) {
-		let eventName: string = listener.eventName, source: HTMLElement | Window;
-		if (listener.eventName.includes(':')) {
-			const eventSource = eventName.substring(0, eventName.indexOf(':'));
-			eventName = eventName.substring(eventName.indexOf(':') + 1);
-			if ('window' === eventSource.toLowerCase()) {
-				source = window;
-				this.addNativeEventListener(source, eventName, (event: any) => {
-					(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-				});
-				return;
-			} else if (eventSource in this.view) {
-				source = Reflect.get(this.view, eventSource);
-				if (!Reflect.has(source, '_model')) {
-					this.addNativeEventListener(source, eventName, (event: any) => {
-						(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-					});
-					return;
-				}
-			} else {
-				source = this.view;
-			}
-		} else {
-			source = this.view;
-		}
-		const sourceModel = Reflect.get(source, '_model') as { [key: string]: EventEmitter<any> };
-		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
-		if (output) {
-			sourceModel[output.modelProperty].subscribe((value: any) => {
-				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, value);
-			});
-		}
-		else if (Reflect.has(source, 'on' + eventName)) {
-			this.addNativeEventListener(source, eventName, (event: any) => {
-				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-			});
-		}
-		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
-		// 	this.addNativeEventListener(this.view, eventName, eventCallback);
-		// }
-		else {
-			// listen to internal changes
-			// TODO: need to resolve parameter
-			// addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
-		}
+		const handlers = this.componentRef.hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, this.view, this.viewScope));
+		handlers.forEach(handler => handler.onInit());
+		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
+			() => handler.onDestroy(),
+			() => handler.onDisconnect(),
+			() => handler.onConnect(),
+		)));
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
@@ -290,6 +251,7 @@ export class ComponentRender<T extends object> {
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {
 			Reflect.set(this.view, templateRefName.name, element);
+			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
