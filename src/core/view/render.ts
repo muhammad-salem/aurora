@@ -17,7 +17,7 @@ import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
-import { HostListenerHandler } from '../render/host-listener.js';
+import { HostListenerHandler } from '../render/host-listener.handler.js';
 
 type ViewScopeContext = { [element: string]: HTMLElement };
 
