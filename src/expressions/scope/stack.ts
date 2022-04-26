@@ -140,8 +140,6 @@ export interface Stack {
 	onDestroy(action: () => void): void;
 }
 
-FinalizationRegistry
-
 export class Stack implements Stack {
 	static for(...contexts: Scope<ScopeContext>[]): Stack {
 		if (contexts.length === 0) {

@@ -1,4 +1,4 @@
-import { ReactiveScope, ScopeSubscription } from '@ibyar/expressions';
+import { ArrayExpression, JavaScriptParser, ReactiveScope, ScopeSubscription, Stack } from '@ibyar/expressions';
 import { ListenerRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { RenderHandler } from './render-handler.js';
@@ -17,16 +17,7 @@ type ElementScope = { [element: string]: HTMLElement };
  * }
  * ```
  * 
- * window.addEventListener('load', function($event, arg0 = $event.target, arg1 = 'load') {listener(arg0, arg1);});
- * 
- * window.addEventListener('load', function($event) {listener($event.target, 'load');});
- * 
  * window.addEventListener('load', $event => listener($event.target, 'load'));
- * 
- * 
- * view.addEventListener('click', function($event, arg0 = $event.target, arg1 = 'click') {listener(arg0, arg1)});
- * 
- * view.addEventListener('click', function($event) {listener($event.target, 'click');});
  * 
  * view.addEventListener('click', $event => listener($event.target, 'click'));
  * 
@@ -36,16 +27,30 @@ export class HostListenerHandler implements RenderHandler {
 	private source: HTMLElement | Window;
 	private eventName: string;
 
+	private argumentsExpression: ArrayExpression;
+	private stack: Stack;
+
 	private scopeSubscription?: ScopeSubscription<ElementScope>;
 
 
-	private listener = (event: any) => {
-		this.element._proxyModel[this.listenerRef.modelCallbackName](event);
+	private listener = (event: Event) => {
+		const method: Function | undefined = this.element._proxyModel[this.listenerRef.modelCallbackName];
+		if (typeof method === 'function') {
+			const eventScope = this.stack.pushBlockScopeFor({ $event: event });
+			const params = this.argumentsExpression.get(this.stack);
+			this.stack.clearTo(eventScope);
+			method.apply(this.element._proxyModel, params);
+			typeof event.preventDefault === 'function' && event.preventDefault();
+		}
 	};
 
-	constructor(private listenerRef: ListenerRef, private element: HTMLComponent<any>, private elementScope: ReactiveScope<ElementScope>) { }
+	constructor(private listenerRef: ListenerRef, private element: HTMLComponent<any>, private elementScope: ReactiveScope<ElementScope>) {
+		this.stack = new Stack(elementScope);
+	}
 	onInit(): void {
-		this.listenerRef.eventName
+		const args = this.listenerRef.args ?? [];
+		const array = `[${args.join(', ')}]`;
+		this.argumentsExpression = JavaScriptParser.parse(array) as ArrayExpression;
 		if (this.listenerRef.eventName.includes(':')) {
 			const [eventSource, eventName] = this.listenerRef.eventName.split(':', 2);
 			this.eventName = eventName;
