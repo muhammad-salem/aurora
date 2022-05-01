@@ -31,7 +31,7 @@ import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { YieldExpression } from '../api/computing/yield.js';
-import { VariableNode, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
+import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
 import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
@@ -653,13 +653,14 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.VAR:
 				this.consume(token);
 				mode = 'var';
+				break;
 			case Token.LET:
 			default:
 				this.consume(token);
 				mode = 'let';
 				break;
 		}
-		const variables: VariableNode[] = [];
+		const variables: VariableDeclarator[] = [];
 		do {
 
 			let name: ExpressionNode;
@@ -688,7 +689,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableNode(name as CanDeclareExpression, value));
+			variables.push(new VariableDeclarator(name as CanDeclareExpression, value));
 		} while (this.check(Token.COMMA));
 		return new VariableDeclarationNode(variables, mode);
 	}

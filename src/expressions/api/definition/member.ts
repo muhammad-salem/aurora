@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanFindScope,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope, ScopeContext } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -17,7 +17,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			node.optional
 		);
 	}
-	static visit(node: MemberExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: MemberExpression, visitNode: VisitNodeType): void {
 		visitNode(node.object);
 		visitNode(node.property);
 	}

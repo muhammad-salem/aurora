@@ -1,4 +1,4 @@
-import type { ExpressionEventPath, ExpressionNode, VisitNodeListType, VisitNodeType } from '../../expression.js';
+import type { ExpressionEventPath, ExpressionNode, VisitNodeType } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -51,7 +51,7 @@ export class BreakStatement extends TerminateStatement {
 	static fromJSON(node: BreakStatement): BreakStatement {
 		return BreakStatement.BREAK_INSTANCE;
 	}
-	static visit(node: BreakStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: BreakStatement, visitNode: VisitNodeType): void {
 		node.label && visitNode(node.label);
 	}
 }
@@ -63,7 +63,7 @@ export class ContinueStatement extends TerminateStatement {
 	static fromJSON(node: ContinueStatement): ContinueStatement {
 		return ContinueStatement.CONTINUE_INSTANCE;
 	}
-	static visit(node: ContinueStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ContinueStatement, visitNode: VisitNodeType): void {
 		node.label && visitNode(node.label);
 	}
 }

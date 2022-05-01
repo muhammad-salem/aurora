@@ -1,6 +1,6 @@
 import type {
 	CanDeclareExpression, ExpressionEventPath, ExpressionNode,
-	NodeDeserializer, VisitNodeListType, VisitNodeType
+	NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
@@ -46,7 +46,7 @@ export class Param extends AbstractExpressionNode {
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
-	static visit(node: Param, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: Param, visitNode: VisitNodeType): void {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
@@ -63,7 +63,7 @@ export class Param extends AbstractExpressionNode {
 		this.defaultValue?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: Function) {
-		this.identifier.declareVariable?.(stack, 'function', value);
+		this.identifier.declareVariable?.(stack, value);
 	}
 	get(stack: Stack) {
 		throw new Error('Param#get() has no implementation.');
@@ -92,7 +92,7 @@ export abstract class FunctionBaseExpression extends AbstractExpressionNode {
 		this.sharedVariables = scopeList;
 	}
 	initFunctionScope(stack: Stack) {
-		const scope = Scope.functionScope<object>();
+		const scope = Scope.blockScope<object>();
 		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
 		innerScopes.push(scope);
 		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
@@ -115,10 +115,10 @@ export class FunctionExpression extends FunctionBaseExpression {
 			node.generator
 		);
 	}
-	static visit(node: FunctionExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: FunctionExpression, visitNode: VisitNodeType): void {
 		node.id && visitNode(node.id);
-		visitNodeList(node.params);
-		visitNodeList(node.body);
+		node.params.forEach(visitNode);
+		node.body.forEach(visitNode);
 	}
 	constructor(
 		protected params: ExpressionNode[], protected body: ExpressionNode[],
@@ -144,7 +144,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 	set(stack: Stack, value: Function) {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	private setParameter(stack: Stack, args: any[]) {
+	setParameter(stack: Stack, args: any[]) {
 		const limit = this.rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
@@ -160,7 +160,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.ASYNC:
 				func = async function (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -170,7 +170,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}
@@ -208,7 +208,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.GENERATOR:
 				func = function* (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -229,7 +229,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.ASYNC_GENERATOR:
 				func = async function* (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -239,7 +239,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}
@@ -285,7 +285,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 			case FunctionKind.NORMAL:
 				func = function (this: any, ...args: any[]) {
 					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('function', 'this', this);
+					stack.declareVariable('this', this);
 					self.setParameter(stack, args);
 					let returnValue: any;
 					for (const statement of self.body) {
@@ -300,7 +300,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 				};
 				break;
 		}
-		this.id?.declareVariable(stack, 'block', func);
+		this.id?.declareVariable(stack, func);
 		return func;
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -349,20 +349,20 @@ export class FunctionDeclaration extends FunctionExpression {
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
-			deserializer(node.id!) as CanDeclareExpression,
+			node.id ? deserializer(node.id) as CanDeclareExpression : void 0,
 			node.rest,
 			node.generator
 		);
 	}
-	static visit(node: FunctionDeclaration, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNode(node.id);
-		visitNodeList(node.params);
-		visitNodeList(node.body);
+	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
+		node.id && visitNode(node.id);
+		node.params.forEach(visitNode);
+		node.body.forEach(visitNode);
 	}
-	protected id: CanDeclareExpression;
+	declare protected id?: CanDeclareExpression;
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id: CanDeclareExpression,
+		kind: FunctionKind, id?: CanDeclareExpression,
 		rest?: boolean, generator?: boolean) {
 		super(params, body, kind, id, rest, generator);
 	}
@@ -382,10 +382,10 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 			node.generator
 		);
 	}
-	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.params);
+	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType): void {
+		node.params.forEach(visitNode);
 		Array.isArray(node.body)
-			? visitNodeList(node.body)
+			? node.body.forEach(visitNode)
 			: visitNode(node.body);
 	}
 	constructor(private params: ExpressionNode[], private body: ExpressionNode | ExpressionNode[],
@@ -429,7 +429,7 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 							for (const awaitRef of stack.awaitPromise) {
 								const awaitValue = await awaitRef.promise;
 								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitRef.scopeType, awaitValue);
+									awaitRef.node.declareVariable(stack, awaitValue);
 								} else {
 									awaitRef.node.set(stack, awaitValue);
 								}

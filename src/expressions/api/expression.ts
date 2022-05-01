@@ -1,5 +1,6 @@
-import type { Scope, ScopeType } from '../scope/scope.js';
+import type { Scope, ScopeContext } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
+import { TypeOf } from './utils.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
@@ -30,7 +31,7 @@ export interface ExpressionNode {
 	 * }
 	 * ```
 	 */
-	shareVariables(scopeList: Scope<any>[]): void;
+	shareVariables(scopeList: Scope<ScopeContext>[]): void;
 
 	/**
 	 * assign the value to this expression in stack.
@@ -140,14 +141,9 @@ export interface ExpressionNode {
 	getClass(): NodeExpressionClass<ExpressionNode>;
 }
 
-interface TypeOf<T> {
-	new(...params: any[]): T;
-}
-
 export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
 
 export type VisitNodeType = (expression: ExpressionNode) => void;
-export type VisitNodeListType = (expressions: ExpressionNode[]) => void;
 
 /**
  * this is how to:
@@ -168,7 +164,7 @@ export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N>
 	 * @param expression 
 	 * @param callback 
 	 */
-	visit?(node: N, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void;
+	visit?(node: N, visitNode: VisitNodeType): void;
 }
 
 export interface NodeExpressionWithType<N extends ExpressionNode> extends NodeExpressionClass<N> {
@@ -188,7 +184,12 @@ export interface CanDeclareExpression extends ExpressionNode {
 	 * @param propertyValue the initial value of identifier
 	 * @param scope which scop to declare this identifier
 	 */
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
+	declareVariable(stack: Stack, propertyValue?: any): any;
+
+	/**
+	 * get the variable declaration name
+	 */
+	getDeclarationName?(): string;
 }
 
 
@@ -201,7 +202,7 @@ export interface CanFindScope {
 	 * try to search for scope of this expression
 	 * @param stack 
 	 */
-	findScope<T extends object>(stack: Stack): Scope<T>;
-	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
-	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined;
+	findScope<T extends ScopeContext>(stack: Stack): Scope<T>;
+	findScope<T extends ScopeContext>(stack: Stack, scope: Scope<ScopeContext>): Scope<T>;
+	findScope<T extends ScopeContext>(stack: Stack, scope?: Scope<ScopeContext>): Scope<T> | undefined;
 }

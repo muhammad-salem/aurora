@@ -1,6 +1,6 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
 import type { Stack } from '../../scope/stack.js';
-import type { NodeDeserializer, VisitNodeListType, VisitNodeType } from '../expression.js';
+import type { NodeDeserializer, VisitNodeType } from '../expression.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
@@ -22,7 +22,7 @@ export class BinaryExpression extends InfixExpressionNode<BinaryOperator> {
 			deserializer(node.right)
 		);
 	}
-	static visit(node: BinaryExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: BinaryExpression, visitNode: VisitNodeType): void {
 		visitNode(node.left);
 		visitNode(node.right);
 	}

@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
@@ -12,6 +12,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export class ReturnStatement extends AbstractExpressionNode {
 	static fromJSON(node: ReturnStatement, deserializer: NodeDeserializer): ReturnStatement {
 		return new ReturnStatement(node.argument ? deserializer(node.argument) : void 0);
+	}
+	static visit(node: ReturnStatement, visitNode: VisitNodeType): void {
+		node.argument && visitNode(node.argument);
 	}
 	constructor(private argument?: ExpressionNode) {
 		super();

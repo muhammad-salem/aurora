@@ -182,6 +182,7 @@ export class NodeParser {
 			this.propType = 'attr';
 			return this.parsePropertyName;
 		}
+		throw new SyntaxError('Error while parsing open tag');
 	}
 
 	private parsePropertyName(token: string) {

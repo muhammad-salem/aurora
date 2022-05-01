@@ -84,10 +84,9 @@ export class PersonModel implements OnInit {
 		console.log(this, e);
 	}
 
-	@HostListener('click', ['$event.target'])		// TODO: $event.target'
-	onClick(event: Event) {
-		event.preventDefault();
-		console.log('button', event, 'number of clicks:');
+	@HostListener('click', ['$event.target'])
+	onClick(target: HTMLElement) {
+		console.log('target', target);
 		this._select.emit(this.person);
 	}
 

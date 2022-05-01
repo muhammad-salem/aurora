@@ -1,0 +1,40 @@
+{
+	"name": "@ibyar/platform",
+	"version": "0.5.4",
+	"description": "Aurora Platform, A utility package for Aurora",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/platform"
+	},
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"reflect-metadata": "^0.1.13",
+		"tslib": "^2.4.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.6.4"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"platform"
+	]
+}

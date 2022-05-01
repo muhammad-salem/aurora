@@ -1,4 +1,5 @@
-import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
+import { Directive, EmbeddedViewRef, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
+import { diff, PatchArray, PatchOperation, PatchRoot, TrackBy } from '@ibyar/platform';
 
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }
@@ -18,6 +19,10 @@ export class ForContext<T> {
 	get odd(): boolean {
 		return !this.even;
 	}
+
+	public update(forContext: ForContext<T>): void {
+		Object.assign(this, forContext);
+	}
 }
 
 export class ForOfContext<T> extends ForContext<T> {
@@ -36,19 +41,61 @@ export class ForInContext<T> extends ForContext<T> {
 	}
 }
 
+const TRACK_BY_IDENTITY: TrackBy<any, any> = (index: number, item: any) => item;
+
 export abstract class AbstractForDirective<T> extends StructuralDirective implements OnDestroy {
 
 	protected _forOf: T[] | null | undefined;
+	protected _forTrackBy: TrackBy<T, any> = TRACK_BY_IDENTITY;
+	private _$implicitTrackBy: TrackBy<ForOfContext<T>, any> = (index: number, item: ForOfContext<T>) => this._forTrackBy(index, item.$implicit);
 
 	protected _updateUI() {
-		this.viewContainerRef.clear();
-		if (!this._forOf) {
+		if (!this._forOf || this._forOf.length == 0) {
+			this.viewContainerRef.clear();
 			return;
 		}
-		this._forOf.forEach((value, index, array) => {
-			const context = new ForOfContext<T>(value, array, index, array.length);
-			this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
-		});
+		const lastContext: ForOfContext<T>[] = new Array(this.viewContainerRef.length);
+		for (let i = 0; i < lastContext.length; i++) {
+			lastContext[i] = (this.viewContainerRef.get(i) as EmbeddedViewRef<ForOfContext<T>>).context;
+		}
+		const currentContext = this._forOf.map((item, index, array) => new ForOfContext<T>(item, array, index, array.length));
+
+		if (lastContext.length === 0) {
+			currentContext.forEach(context => {
+				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
+			});
+			return;
+		}
+		const patchActions = diff(lastContext, currentContext, { trackBy: this._$implicitTrackBy });
+		if (patchActions.length === 0) {
+			return;
+		} else if (PatchRoot === patchActions[0]) {
+			currentContext.forEach(context => {
+				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
+			});
+		} else {
+			(patchActions as PatchArray<ForOfContext<T>>[]).forEach(action => {
+				switch (action.op) {
+					case PatchOperation.REMOVE:
+						this.viewContainerRef.remove(action.currentIndex);
+						break;
+					case PatchOperation.ADD:
+						this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
+						break;
+					default:
+					case PatchOperation.KEEP:
+					case PatchOperation.REPLACE:
+					case PatchOperation.MOVE:
+						const last = lastContext[action.nextIndex];
+						if (last) {
+							last.update(action.item);
+						} else {
+							this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
+						}
+						break;
+				}
+			});
+		}
 	}
 
 	onDestroy() {
@@ -67,11 +114,22 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 		this._forOf = forOf;
 		this._updateUI();
 	}
+
+	@Input('trackBy')
+	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
+		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
+		this._updateUI();
+	}
+
+	get trackBy() {
+		return this._forTrackBy;
+	}
+
 }
+
 @Directive({
 	selector: '*forOf',
 })
-
 export class ForOfDirective<T> extends AbstractForDirective<T>  {
 
 	@Input('of')
@@ -79,6 +137,17 @@ export class ForOfDirective<T> extends AbstractForDirective<T>  {
 		this._forOf = forOf;
 		this._updateUI();
 	}
+
+	@Input('trackBy')
+	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
+		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
+		this._updateUI();
+	}
+
+	get trackBy() {
+		return this._forTrackBy;
+	}
+
 }
 
 @Directive({

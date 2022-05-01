@@ -1,5 +1,6 @@
 import { Component } from '@ibyar/aurora';
-import { FetchApp } from './index.js';
+import { TrackByComponent } from './directive/track-by-example.js';
+import { FetchApp } from './fetch/fetch-app.js';
 import { PersonApp } from './person-app/person-app.js';
 import { PipeAppComponent } from './pipe-app/pipe-test.js';
 import { Binding2Way } from './two-way/binding-2-way.js';
@@ -30,9 +31,13 @@ import { VideoPlayList } from './video-player/video.js';
 })
 export class AppRoot {
 
-	selectedComponent = PersonApp;
+	selectedComponent = TrackByComponent;
 
 	appList: { title: string, component: {} }[] = [
+		{
+			title: 'Track By Example',
+			component: TrackByComponent,
+		},
 		{
 			title: 'Directives',
 			component: PersonApp,

@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
@@ -21,7 +21,7 @@ export class IfStatement extends AbstractExpressionNode {
 			node.alternate ? deserializer(node.alternate) : void 0
 		);
 	}
-	static visit(node: IfStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: IfStatement, visitNode: VisitNodeType): void {
 		visitNode(node.test);
 		visitNode(node.consequent);
 		node.alternate && visitNode(node.alternate);

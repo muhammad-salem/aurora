@@ -1,8 +1,8 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanDeclareExpression,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope, ScopeType } from '../../scope/scope.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -13,7 +13,7 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
 		return new Property(deserializer(node.key), deserializer(node.value) as CanDeclareExpression, node.kind);
 	}
-	static visit(node: Property, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: Property, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		visitNode(node.value);
 	}
@@ -54,10 +54,10 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 		}
 		return value;
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
+	declareVariable(stack: Stack, objectValue: any): void {
 		const propertyName = this.key.get(stack);
 		const propertyValue = objectValue[propertyName];
-		(this.value as CanDeclareExpression).declareVariable(stack, scopeType, propertyValue);
+		(this.value as CanDeclareExpression).declareVariable(stack, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.key.dependency(computed).concat(this.value.dependency(computed));
@@ -82,8 +82,8 @@ export class ObjectExpression extends AbstractExpressionNode {
 	static fromJSON(node: ObjectExpression, deserializer: NodeDeserializer): ObjectExpression {
 		return new ObjectExpression(node.properties.map(deserializer) as Property[]);
 	}
-	static visit(node: ObjectExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.properties);
+	static visit(node: ObjectExpression, visitNode: VisitNodeType): void {
+		node.properties.forEach(visitNode);
 	}
 	constructor(private properties: Property[]) {
 		super();
@@ -125,8 +125,8 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
 		return new ObjectPattern(node.properties.map(deserializer) as (Property | RestElement)[]);
 	}
-	static visit(node: ObjectPattern, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.properties);
+	static visit(node: ObjectPattern, visitNode: VisitNodeType): void {
+		node.properties.forEach(visitNode);
 	}
 	constructor(private properties: (Property | RestElement)[]) {
 		super();
@@ -141,12 +141,12 @@ export class ObjectPattern extends AbstractExpressionNode implements CanDeclareE
 	get(scopeProvider: Stack) {
 		throw new Error('ObjectPattern#get() has no implementation.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, objectValue: any): void {
+	declareVariable(stack: Stack, objectValue: any): void {
 		for (const property of this.properties) {
 			if (property instanceof RestElement) {
 				objectValue = this.getFromObject(stack, objectValue);
 			}
-			property.declareVariable(stack, scopeType, objectValue);
+			property.declareVariable(stack, objectValue);
 		}
 	}
 	private getFromObject(stack: Stack, objectValue: { [key: PropertyKey]: any }) {

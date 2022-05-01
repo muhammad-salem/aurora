@@ -39,8 +39,8 @@ export class DirectiveExpressionParser {
 		};
 	}
 	scan(): void {
-		// parse 'let' if found, or switch to expression mode.
-		if (this.isLet()) {
+		// parse 'let/const/var' if found, or switch to expression mode.
+		if (this.isDeclareKeyword()) {
 			this.parseTemplateInput();
 		} else {
 			// parse expression, possible ends is semicolon, comma, let and 'EOS'
@@ -88,8 +88,9 @@ export class DirectiveExpressionParser {
 		return true;
 	}
 
-	protected isLet(): boolean {
-		return this.stream.peek().isType(Token.LET);
+	protected isDeclareKeyword(): boolean {
+		const peek = this.stream.peek();
+		return peek.isType(Token.LET) || peek.isType(Token.CONST) || peek.isType(Token.VAR);
 	}
 
 	protected isIdentifier(): boolean {
@@ -119,20 +120,21 @@ export class DirectiveExpressionParser {
 	}
 	protected parseTemplateInput() {
 		// let = "let" :local "=" :export ";"?
-		if (this.isLet()) {
-			const list: TokenExpression[] = [];
-			this.consumeToList(Token.LET, list);
-			const peek = this.stream.peek();
+		if (this.isDeclareKeyword()) {
+			let peek = this.stream.peek();
+			const list: TokenExpression[] = [peek];
+			this.consume(peek.token);
+			peek = this.stream.peek();
 			if (Token.isOpenPair(peek.token) && peek.isNotType(Token.L_PARENTHESES)) {
 				// object and array pattern, destructing
 				this.stream.readTill(Token.closeOf(peek.token), list);
 			} else if (peek.isType(Token.IDENTIFIER)) {
 				this.consumeToList(Token.IDENTIFIER, list);
 			} else {
-				throw new Error(this.stream.createError(`Can't parse let {IDENTIFIER/ObjectPattern}`));
+				throw new Error(this.stream.createError(`Can't parse let/const/var {IDENTIFIER/ObjectPattern}`));
 			}
 			if (this.consumeIfToken(Token.ASSIGN, list)) {
-				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
 			} else {
 				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
 			}
@@ -180,9 +182,11 @@ export class DirectiveExpressionParser {
 			return;
 		}
 
+		this.check(Token.ASSIGN) || this.check(Token.COLON);
+
 		const list: TokenExpression[] = [];
 		// keyExp = :key ":"? :expression ("as" :local)? ";"?
-		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.EOS);
+		this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
 
 		// mix for directive input and template input
 		if (this.isAsKeyword()) {

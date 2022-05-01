@@ -1,4 +1,4 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath } from '../expression.js';
+import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, YieldDelegateValue, YieldValue } from '../abstract.js';
@@ -8,6 +8,9 @@ import { Deserializer } from '../deserialize/deserialize.js';
 export class YieldExpression extends AbstractExpressionNode {
 	static fromJSON(node: YieldExpression, deserializer: NodeDeserializer): YieldExpression {
 		return new YieldExpression(node.delegate, node.argument ? deserializer(node.argument) : void 0);
+	}
+	static visit(node: YieldExpression, visitNode: VisitNodeType): void {
+		node.argument && visitNode(node.argument);
 	}
 	constructor(private delegate: boolean, private argument?: ExpressionNode) {
 		super();

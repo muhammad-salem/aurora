@@ -105,7 +105,7 @@ import { Person, PersonModel } from './person';
 })
 export class PersonApp {
 	@Input()
-	appVersion: string = '22.01.08';
+	appVersion: string = '2022.05.01';
 
 	title = 'Testing Components';
 
@@ -156,24 +156,14 @@ export class PersonApp {
 		}
 	};
 
-	@HostListener('person1:select')
-	onClose(data: any) {
-		console.log('AppRoot => person1:select', data);
-		// setTimeout(() => {
-		// 	if (isModel(this)) {
-		// 		this.emitChangeModel('asyncIterable');
-		// 	}
-		// }, 3000);
+	@HostListener('personEdit:input', ['$event'])
+	onPersonEdit(event: Event) {
+		console.log('personEdit:input', event, this.view);
 	}
 
-	@HostListener('personEdit:input')
-	onPersonEdit(data: any) {
-		console.log('personEdit:input', data, this.view);
-	}
-
-	@HostListener('personEdit:person.age')
-	onPersonAge(data: any) {
-		console.log('personEdit:person.age', data, this.view);
+	@HostListener('personEdit:person', ['$event'])
+	onPerson(person: Person) {
+		console.log('personEdit:person', person, this.view);
 	}
 
 	printPerson(person: PersonModel) {

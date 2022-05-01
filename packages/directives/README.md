@@ -166,7 +166,7 @@ The following tables describe each portion of the structural directive grammar:
     <td colspan="3"><code>keyExp = :key ":"? :expression ("as" :local)? ";"? </code></td>
   </tr>
   <tr>
-    <td colspan="3"><code>let = "let" :local "=" :export ";"?</code></td>
+    <td colspan="3"><code>let = "let" | "const" | "var" :local "=" :export ";"?</code></td>
   </tr>
   <tr>
     <td colspan="3"><code>as = :export "as" :local ";"?</code></td>
@@ -223,8 +223,5 @@ The following table provides shorthand examples:
     <td><code>&lt;ng-template [if]="exp" [value]="if"&gt;</code></td>
   </tr>
 </table>
-
--- in *for `trackBy` not supported yet.
-
 
 <hr>

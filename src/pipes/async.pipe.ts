@@ -8,7 +8,7 @@
  */
 
 
-import { AsyncPipeTransform, OnDestroy, Pipe, PipeTransform } from '@ibyar/core';
+import { AsyncPipeTransform, OnDestroy, Pipe } from '@ibyar/core';
 
 interface Observer<T> {
 	complete: () => void;

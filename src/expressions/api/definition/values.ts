@@ -1,8 +1,8 @@
 import type {
-	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType
+	CanDeclareExpression, ExpressionNode, NodeDeserializer,
+	CanFindScope, ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope, ScopeType } from '../../scope/scope.js';
+import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -46,8 +46,11 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 		scope = stack.findScope(this.name);
 		return scope.getScope(this.name);
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
-		return stack.declareVariable(scopeType, this.name, propertyValue);
+	declareVariable(stack: Stack, propertyValue: any): any {
+		return stack.declareVariable(this.name, propertyValue);
+	}
+	getDeclarationName(): string {
+		return this.toString();
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [this];
@@ -161,9 +164,9 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType): void {
 		node.tag && visitNode(node.tag);
-		visitNodeList(node.expressions);
+		node.expressions.forEach(visitNode);
 	}
 	constructor(protected quasis: string[], protected expressions: ExpressionNode[], protected tag?: ExpressionNode,) {
 		super();
@@ -218,7 +221,7 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('TemplateLiteral')
 export class TemplateLiteral extends TemplateLiteralExpressionNode {
-	protected tag: undefined;
+	declare protected tag: undefined;
 	constructor(quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions);
 	}
@@ -229,7 +232,7 @@ export class TemplateLiteral extends TemplateLiteralExpressionNode {
 
 @Deserializer('TaggedTemplateExpression')
 export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
-	protected tag: ExpressionNode;
+	declare protected tag: ExpressionNode;
 	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions, tag);
 	}

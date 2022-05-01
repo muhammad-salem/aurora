@@ -2,6 +2,7 @@
 	"references": [
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
+		{ "path": "src/platform" },
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },

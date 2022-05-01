@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -12,8 +12,8 @@ export class SequenceExpression extends AbstractExpressionNode {
 	static fromJSON(node: SequenceExpression, deserializer: NodeDeserializer): SequenceExpression {
 		return new SequenceExpression(node.expressions.map(expression => deserializer(expression as any)));
 	}
-	static visit(node: SequenceExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.expressions);
+	static visit(node: SequenceExpression, visitNode: VisitNodeType): void {
+		node.expressions.forEach(visitNode);
 	}
 	constructor(private expressions: ExpressionNode[]) {
 		super();

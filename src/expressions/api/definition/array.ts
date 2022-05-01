@@ -1,21 +1,20 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanDeclareExpression,
-	ExpressionEventPath, VisitNodeType, VisitNodeListType
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
-import { ScopeType } from '../../scope/scope.js';
 
 @Deserializer('ArrayExpression')
 export class ArrayExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
 		return new ArrayExpression(node.elements.map(expression => deserializer(expression)));
 	}
-	static visit(node: ArrayExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.elements);
+	static visit(node: ArrayExpression, visitNode: VisitNodeType): void {
+		node.elements.forEach(visitNode);
 	}
 	constructor(private elements: ExpressionNode[]) {
 		super();
@@ -54,8 +53,8 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
 		return new ArrayPattern(node.elements.map(expression => deserializer(expression)) as CanDeclareExpression[]);
 	}
-	static visit(node: ArrayPattern, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.elements);
+	static visit(node: ArrayPattern, visitNode: VisitNodeType): void {
+		node.elements.forEach(visitNode);
 	}
 	constructor(private elements: CanDeclareExpression[]) {
 		super();
@@ -70,25 +69,25 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 	get(scopeProvider: Stack) {
 		throw new Error('ArrayPattern#get() has no implementation.');
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, values: any) {
+	declareVariable(stack: Stack, values: any) {
 		if (Array.isArray(values)) {
-			this.declareVariableFromArray(stack, scopeType, values);
+			this.declareVariableFromArray(stack, values);
 		} else if (Reflect.has(values, Symbol.iterator)) {
-			this.declareVariableFromIterator(stack, scopeType, values);
+			this.declareVariableFromIterator(stack, values);
 		}
 	}
-	declareVariableFromArray(stack: Stack, scopeType: ScopeType, values: any[]) {
+	declareVariableFromArray(stack: Stack, values: any[]) {
 		for (let index = 0; index < this.elements.length; index++) {
 			const elem = this.elements[index];
 			if (elem instanceof RestElement) {
 				const rest = values.slice(index);
-				elem.declareVariable(stack, 'block', rest);
+				elem.declareVariable(stack, rest);
 				break;
 			}
-			elem.declareVariable(stack, 'block', values[index]);
+			elem.declareVariable(stack, values[index]);
 		}
 	}
-	declareVariableFromIterator(stack: Stack, scopeType: ScopeType, iterator: Iterator<any>) {
+	declareVariableFromIterator(stack: Stack, iterator: Iterator<any>) {
 		let index = 0;
 		while (true) {
 			let iteratorResult = iterator.next();
@@ -102,10 +101,10 @@ export class ArrayPattern extends AbstractExpressionNode implements CanDeclareEx
 					iteratorResult = iterator.next();
 					rest.push(iteratorResult.value);
 				}
-				elem.declareVariable(stack, 'block', rest);
+				elem.declareVariable(stack, rest);
 				break;
 			}
-			elem.declareVariable(stack, 'block', iteratorResult.value);
+			elem.declareVariable(stack, iteratorResult.value);
 			if (index >= this.elements.length) {
 				break;
 			}
