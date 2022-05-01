@@ -132,9 +132,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		setInputValue(viewProp: PropertyKey, value: any): void {
 			const inputRef = this.getInput(viewProp as string);
 			if (inputRef) {
-				// console.log('about to change input', inputRef.modelProperty, value);
-				// Reflect.set(this._model, inputRef.modelProperty, value);
-				// this._model.emitChangeModel(inputRef.modelProperty);
 				this._modelScope.set(inputRef.modelProperty as never, value);
 			}
 		}
@@ -187,11 +184,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (newValue === oldValue) {
 				return;
 			}
-			// this._changeObservable.emit(name);
-			const inputRef = this.getInput(name);
-			if (inputRef) {
-				// this._model.emitChangeModel(inputRef.modelProperty);
-			}
 			if (isOnChanges(this._model)) {
 				this._model.onChanges.call(this._proxyModel);
 			}
@@ -209,13 +201,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					this.setAttributeHelper(input.viewAttribute, inputDefaultValue);
 				}
 			});
-
-			// if (!this.hasParentComponent() && this.attributes.length > 0) {
-			// 	let oldAttrValues = Array.prototype.slice.call(this.attributes);
-			//	oldAttrValues.forEach((attr: Attr) => {
-			// 		Reflect.set(this, attr.name, attr.value);
-			// 	});
-			// }
 
 			if (!this.hasParentComponent() && this.attributes.length > 0) {
 				let attrs: Attr[] = Array.prototype.slice.call(this.attributes);
@@ -237,12 +222,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (isAfterContentChecked(this._model)) {
 				this._model.afterContentChecked.call(this._proxyModel);
 			}
-
-			// if (!this.hasParentComponent()) {
-			// 	Array.prototype.slice.call(this.attributes).forEach((attr: Attr) => {
-			// 		this.initOuterAttribute(attr);
-			// 	});
-			// }
 
 			// do once
 			if (this.childNodes.length === 0) {
@@ -269,21 +248,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				if (isAfterViewChecked(this._model)) {
 					this._model.afterViewChecked.call(this._proxyModel);
 				}
-				// this.emitRootChanges();
 			};
-			// this.emitRootChanges();
 		}
 
-		// emitRootChanges(): void {
-		// 	this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
-		// }
-
-		// emitChanges(...events: string[]): void {
-		// 	const sources: any[] = [];
-		// 	events.forEach(key => {
-		// 		this._model.emitChangeModel(key, sources);
-		// 	});
-		// }
 
 		initOuterAttribute(attr: Attr) {
 			// [window, this] scop
@@ -294,21 +261,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				if (Reflect.has(window, modelProperty)) {
 					this.setInputValue(elementAttr, Reflect.get(window, modelProperty));
 				}
-				//   else {
-				// 	let value: any;
-				// 	Object.defineProperty(window, modelProperty, {
-				// 		set: (v: any) => {
-				// 			value = v;
-				// 			if (this) {
-				// 				this.setInputValue(elementAttr, v);
-				// 				// fake connect element
-				// 				this.connectedCallback();
-				// 			}
-				// 		},
-				// 		get: (): any => value
-				// 	});
-				// }
-
 			}
 			else if (elementAttr.startsWith('(')) {
 				// (elementAttr)="modelProperty()"
@@ -360,14 +312,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 			const modelOutput = this.getEventEmitter<any>(eventName);
 			if (modelOutput) {
-				// modelOutput.subscribe(listener);
 				modelOutput.subscribe((data: any) => {
 					(listener as Function)(data);
 				});
 			}
-			// else {
-			// 	this._model.subscribeModel(eventName, listener as () => void);
-			// }
 		}
 
 		triggerOutput(eventName: string, value?: any): void {
@@ -381,32 +329,3 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 	FACTORY_CACHE.set(htmlElementType, CustomView);
 	return CustomView;
 }
-
-// const CustomViewTypes: WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>> = new WeakMap();
-// function createViewClass(elementType: TypeOf<HTMLElement>, isForm: boolean) {
-//     if (isForm) {
-//         let ViewClass = baseFormFactoryView(elementType);
-//         CustomViewTypes.set(elementType, ViewClass);
-//         return ViewClass;
-//     }
-//     else {
-//         let ViewClass = baseFactoryView(elementType);
-//         CustomViewTypes.set(elementType, ViewClass);
-//         return ViewClass;
-//     }
-// }
-
-// export function getBaseViewClassByHTMLElementType(elementType?: TypeOf<HTMLElement>, isFormAssociated?: boolean) {
-//     if (elementType && CustomViewTypes.has(elementType)) {
-//         return CustomViewTypes.get(elementType);
-//     }
-//     // start to created view class
-//     else if (!elementType || elementType === HTMLElement) {
-//             return createViewClass(HTMLElement, isFormAssociated || false);
-//         }
-//     if (CustomViewTypes.has(elementType)) {
-//         return CustomViewTypes.get(elementType);
-//     } else {
-
-//     }
-// }
