@@ -5,15 +5,53 @@ import type {
 import type { Scope } from '../../scope/scope.js';
 import { __decorate } from 'tslib';
 import { Stack } from '../../scope/stack.js';
-import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
+import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
 import { MemberExpression } from '../definition/member.js';
 import { FunctionExpression } from '../definition/function.js';
 import { BlockStatement } from '../statement/control/block.js';
 import { TypeOf } from '../utils.js';
-import { CallExpression } from '../computing/call.js';
 import { Decorator } from './decorator.js';
+import { CallExpression } from '../computing/call.js';
+
+const TEMP_CLASS_NAME: unique symbol = Symbol('temp_class_name');
+const SUPER: unique symbol = Symbol('super');
+const NEW_TARGET: unique symbol = Symbol('new.target');
+const IMPORT_META: unique symbol = Symbol('import.meta');
+const STACK: unique symbol = Symbol('stack');
+
+const GET_PARAMETERS: unique symbol = Symbol('getParameters');
+const GET_SUPER_PROPERTY: unique symbol = Symbol('getSuperProperty');
+const CALL_SUPER_Method: unique symbol = Symbol('callSuperMethod');
+
+const CONSTRUCTOR: unique symbol = Symbol('constructor');
+const PRIVATE_SYMBOL: unique symbol = Symbol('#private');
+const INIT_PRIVATE_SYMBOL: unique symbol = Symbol('#init_private');
+const STATIC_INITIALIZATION_BLOCK: unique symbol = Symbol('static_block');
+
+interface ClassConstructor {
+	/**
+	 * A reference to the prototype.
+	 */
+	readonly prototype: ClassInstance;
+
+	[GET_PARAMETERS](args: any[]): any[];
+	[STATIC_INITIALIZATION_BLOCK]: Function[];
+
+	[INIT_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[key: string]: any;
+}
+
+declare var ClassInstance: ClassConstructor;
+interface ClassInstance {
+	[CONSTRUCTOR]: Function;
+	[INIT_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[STACK]: Stack;
+	[key: string]: any;
+}
 
 
 /**
@@ -93,7 +131,7 @@ export class MetaProperty extends MemberExpression {
 	shareVariables(scopeList: Scope<any>[]): void { }
 	get(stack: Stack, thisContext?: any) {
 		if (MetaProperty.getJsonName(this.meta) === 'new' && MetaProperty.getJsonName(this.property) === 'target') {
-			return stack.get('new.target');
+			return stack.get(NEW_TARGET);
 		}
 		else if (MetaProperty.getJsonName(this.meta) === 'import' && MetaProperty.getJsonName(this.property) === 'meta') {
 			const importObject = stack.getModule()?.get('import');
@@ -129,11 +167,11 @@ export class PrivateIdentifier extends AbstractExpressionNode {
 		return this.name;
 	}
 	set(stack: Stack, value: any) {
-		const privateScope = stack.findScope('#__private__');
-		privateScope.getScope('#__private__')?.set(this.name, value);
+		const privateScope = stack.findScope(PRIVATE_SYMBOL);
+		privateScope.getScope(PRIVATE_SYMBOL)?.set(this.name, value);
 	}
 	get(stack: Stack, thisContext?: any) {
-		const privateObj = stack.get('#__private__');
+		const privateObj = stack.get(PRIVATE_SYMBOL);
 		return privateObj[this.name];
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -163,6 +201,10 @@ export class StaticBlock extends BlockStatement {
 	}
 	constructor(body: ExpressionNode[], isStatement: boolean) {
 		super(body, isStatement);
+	}
+	get(stack: Stack, classConstructor?: ClassConstructor): void {
+		const constructor = classConstructor!;
+		constructor[STATIC_INITIALIZATION_BLOCK].push(() => super.get(stack));
 	}
 	toString(): string {
 		return `static ${super.toString()}`;
@@ -199,15 +241,13 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error('AbstractDefinition.#set() Method not implemented.');
 	}
-	get(stack: Stack, thisContext?: any) {
-		throw new Error('AbstractDefinition.#get() Method not implemented.');
-	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [];
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
+	abstract get(stack: Stack, classConstructor: ClassConstructor): void;
 	abstract toString(): string;
 	abstract toJson(): { [key: string]: any; };
 }
@@ -249,6 +289,67 @@ export class MethodDefinition extends AbstractDefinition {
 	}
 	getValue() {
 		return this.value;
+	}
+	get(stack: Stack, classConstructor: ClassConstructor): void {
+		if (this.kind === 'constructor') {
+			this.initConstructor(stack, classConstructor);
+			return;
+		}
+		const target = this.static ? classConstructor : classConstructor.prototype;
+		const value = this.value?.get(stack);
+		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
+		switch (this.kind) {
+			case 'method':
+				ref[name] = value;
+				break;
+			case 'set':
+				Object.defineProperty(ref, name, {
+					configurable: true,
+					enumerable: false,
+					set: value as (v: any) => void,
+				});
+				break;
+			case 'get':
+				Object.defineProperty(ref, name, {
+					configurable: true,
+					enumerable: false,
+					get: value as () => any,
+				});
+				break;
+			default:
+				break;
+		}
+		const decorators = this.decorators.map(decorator => decorator.get(stack));
+		__decorate(decorators, target, name, null);
+	}
+	private initConstructor(stack: Stack, classConstructor: ClassConstructor) {
+		let superIndex = this.value.getBody()
+			.findIndex(call => call instanceof CallExpression && Super.INSTANCE === call.getCallee());
+		if (superIndex === -1) {
+			superIndex = this.value.getBody().length;
+		}
+		const superCall = this.value.getBody()[superIndex] as CallExpression | undefined;
+
+		const blockBeforeSuper = new BlockStatement(this.value.getBody().slice(0, superIndex), false);
+		const blockAfterSuper = new BlockStatement(this.value.getBody().slice(superIndex + 1), false);
+
+		if (superCall) {
+			classConstructor[GET_PARAMETERS] = function (this: ClassConstructor, params: any[]) {
+				const scope = stack.pushBlockScope();
+				this.value.setParameter(stack, params);
+				blockBeforeSuper.get(stack);
+				const parameters = superCall.getCallParameters(stack);
+				stack.clearTo(scope);
+				return parameters;
+			};
+		}
+
+		classConstructor.prototype[CONSTRUCTOR] = function (this: ClassInstance, params: any[]) {
+			const scope = this[STACK].pushBlockScope();
+			blockAfterSuper.get(this[STACK]);
+			stack.clearTo(scope);
+		};
 	}
 	toString(): string {
 		let str = this.decorators.map(decorator => decorator.toString()).join(' ');
@@ -305,7 +406,6 @@ export class PropertyDefinition extends AbstractDefinition {
 		visitNode(node.key);
 		node.value && visitNode(node.value);
 	}
-
 	constructor(
 		key: ExpressionNode | PrivateIdentifier,
 		decorators: Decorator[],
@@ -313,6 +413,15 @@ export class PropertyDefinition extends AbstractDefinition {
 		isStatic: boolean,
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
+	}
+	get(stack: Stack, classConstructor: ClassConstructor): void {
+		const target = this.static ? classConstructor : classConstructor.prototype;
+		const value = this.value?.get(stack);
+		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
+		ref[name as string] = value;
+		const decorators = this.decorators.map(decorator => decorator.get(stack));
+		__decorate(decorators, target, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -352,12 +461,34 @@ export class AccessorProperty extends AbstractDefinition {
 		node.decorators.forEach(visitNode);
 	}
 	constructor(
-		key: ExpressionNode | PrivateIdentifier,
+		key: ExpressionNode,
 		decorators: Decorator[],
 		computed: boolean,
 		isStatic: boolean,
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
+	}
+	get(stack: Stack, classConstructor: ClassConstructor): void {
+		const target = this.static ? classConstructor : classConstructor.prototype;
+		const value = this.value?.get(stack);
+		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		target[INIT_PRIVATE_SYMBOL][name] = value;
+		Object.defineProperty(target, name, {
+			configurable: true,
+			enumerable: false,
+			set: function (this: ClassInstance, setValue: any) {
+				this[PRIVATE_SYMBOL][name] = setValue;
+			},
+		});
+		Object.defineProperty(target, name, {
+			configurable: true,
+			enumerable: false,
+			get: function (this: ClassInstance) {
+				return this[PRIVATE_SYMBOL][name];
+			},
+		});
+		const decorators = this.decorators.map(decorator => decorator.get(stack));
+		__decorate(decorators, target, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -389,7 +520,7 @@ export class ClassBody extends AbstractExpressionNode {
 	static visit(node: ClassBody, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private body: (MethodDefinition | PropertyDefinition | StaticBlock | AccessorProperty)[]) {
+	constructor(private body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[]) {
 		super();
 	}
 	getBody() {
@@ -399,8 +530,8 @@ export class ClassBody extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
-	get(stack: Stack, thisContext?: any) {
-		throw new Error('Method not implemented.');
+	get(stack: Stack, classConstructor: ClassConstructor) {
+		this.body.forEach(definition => definition.get(stack, classConstructor));
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
@@ -417,19 +548,6 @@ export class ClassBody extends AbstractExpressionNode {
 		};
 	}
 }
-
-type Definition = {
-	key: string,
-	private: boolean,
-	static: boolean,
-	value: any
-};
-type BodyDefinition = {
-	methods: (Definition & { kind: MethodDefinitionKind })[],
-	properties: Definition[],
-	accessors: Definition[]
-};
-type DecoratorsInfo = { name: string, decorators: any[], desc: any };
 
 export class Class extends AbstractExpressionNode {
 	private sharedVariables?: Scope<any>[];
@@ -459,311 +577,59 @@ export class Class extends AbstractExpressionNode {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-
-		// _name = new WeakMap(), _age = new WeakMap();
-		let classEval: TypeOf<any> & { [keyL: string]: any };
-		const bodyDefinition: BodyDefinition = {
-			methods: [],
-			properties: [],
-			accessors: []
-		};
-
-		// init class body properties and methods
-		const bodyDecorators: DecoratorsInfo[] = [];
-		const bodyStaticDecorators: DecoratorsInfo[] = [];
-		this.getMethodDefinitions().forEach(method => {
-			const methodDefinition: Definition & { kind: MethodDefinitionKind } = {
-				kind: method.getKind(),
-				key: method.getKey().get(stack),
-				value: method.getValue()?.get(stack),
-				static: method.isStatic(),
-				private: method.getKey() instanceof PrivateIdentifier
-			};
-			bodyDefinition.methods.push(methodDefinition);
-			this.initBodyDecorators(stack, method.isStatic() ? bodyStaticDecorators : bodyDecorators, methodDefinition.key, method.getDecorators(), null);
-		});
-
-		this.getPropertyDefinitions().forEach(property => {
-			const propertyDefinition: Definition = {
-				key: property.getKey().get(stack),
-				value: property.getValue()?.get(stack),
-				static: property.isStatic(),
-				private: property.getKey() instanceof PrivateIdentifier
-			};
-			bodyDefinition.properties.push(propertyDefinition);
-			this.initBodyDecorators(stack, property.isStatic() ? bodyStaticDecorators : bodyDecorators, propertyDefinition.key, property.getDecorators(), null);
-		});
-		this.getAccessorProperties().forEach(accessorProperty => {
-			const accessorDefinition: Definition = {
-				key: accessorProperty.getKey().get(stack),
-				value: accessorProperty.getValue()?.get(stack),
-				static: accessorProperty.isStatic(),
-				private: accessorProperty.getKey() instanceof PrivateIdentifier
-			};
-			bodyDefinition.accessors.push(accessorDefinition);
-			this.initBodyDecorators(stack, accessorProperty.isStatic() ? bodyStaticDecorators : bodyDecorators, accessorDefinition.key, accessorProperty.getDecorators(), null);
-		});
-
-
-
 		const className = this.id?.get(stack) as string | undefined;
-		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined;
+		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined ?? class { };
+		let classConstructor: ClassConstructor = this.createClass(stack, parentClass, className);
+		// build class body
+		this.body.get(stack, classConstructor);
 
-		if (parentClass) {
-			classEval = this.createSubClass(parentClass, bodyDefinition, className)
-		} else {
-			classEval = this.createClass(bodyDefinition, className);
-		}
-
-		// run initialize static code
-		const initializeBlock = this.getStaticBlockExpression();
-		if (initializeBlock) {
-			initializeBlock.get(stack);
-		}
-
-		// run decorators
-		bodyDecorators.forEach(item => {
-			__decorate(item.decorators, classEval.prototype, item.name, item.desc);
-		});
-		bodyStaticDecorators.forEach(item => {
-			__decorate(item.decorators, classEval.prototype, item.name, item.desc);
-		});
+		classConstructor[PRIVATE_SYMBOL] = Object.assign(classConstructor[PRIVATE_SYMBOL], classConstructor[INIT_PRIVATE_SYMBOL]);
+		Reflect.deleteProperty(classConstructor, INIT_PRIVATE_SYMBOL);
+		// apply class decorators
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		classEval = __decorate(decorators, classEval);
-		return classEval;
+		classConstructor = __decorate(decorators, classConstructor);
+		return classConstructor;
 	}
-	private getConstructorExpression(): MethodDefinition | undefined {
-		return this.body.getBody()
-			.filter(field => field instanceof MethodDefinition && field.getKind() == 'constructor')[0] as MethodDefinition | undefined;
-	}
-	private getStaticBlockExpression(): StaticBlock | undefined {
-		return this.body.getBody()
-			.filter(field => field instanceof StaticBlock)[0] as StaticBlock | undefined;
-	}
-	private getMethodDefinitions(): MethodDefinition[] {
-		return this.body.getBody()
-			.filter(field => field instanceof MethodDefinition && 'constructor' !== field.getKind()) as MethodDefinition[];
-	}
-	private getPropertyDefinitions(): PropertyDefinition[] {
-		return this.body.getBody()
-			.filter(field => field instanceof PropertyDefinition) as PropertyDefinition[];
-	}
-	private getAccessorProperties(): AccessorProperty[] {
-		return this.body.getBody()
-			.filter(field => field instanceof AccessorProperty) as AccessorProperty[];
-	}
-	private getSuperCall(constructorExpression: MethodDefinition): CallExpression {
-		const firstCall = constructorExpression.getValue().getBody()[0];
-		if (!(firstCall instanceof CallExpression && Super.INSTANCE === firstCall.getCallee())) {
-			throw new ReferenceError(`Must call super constructor in derived class before accessing 'this' or returning from derived constructor`);
-		}
-		return firstCall;
-	}
-	private getConstructorBodyAfterSuper(constructorExpression: MethodDefinition): ExpressionNode[] {
-		const body = constructorExpression.getValue().getBody();
-		if (!body || body.length == 0) {
-			return [];
-		}
-		const firstCall = constructorExpression.getValue().getBody()[0];
-		if (!(firstCall instanceof CallExpression && Super.INSTANCE === firstCall.getCallee())) {
-			return body ?? [];
-		}
-		return body.slice(1);
-	}
-	private initBodyDecorators(stack: Stack, bodyDecorators: { name: string, decorators: any[], desc: any }[], name: string, decorators: Decorator[], desc: any) {
-		const decoratorsRef = decorators.map(decorator => decorator.get(stack));
-		if (decoratorsRef.length > 0) {
-			bodyDecorators.push({ name, decorators: decoratorsRef, desc });
-		}
-	}
-	private initClassScope(stack: Stack) {
-		const innerScopes = this.sharedVariables ? this.sharedVariables.slice() : [];
-		innerScopes.forEach(variableScope => stack.pushScope(variableScope));
-		stack.pushBlockScope();
-		return innerScopes;
-	}
-	private createSubClass(parentClass: TypeOf<any>, bodyDefinition: BodyDefinition, className?: string) {
-		const constructorExpression = this.getConstructorExpression();
-		if (!constructorExpression) {
-			return class extends parentClass { };
-		}
-		const superCallExpression = this.getSuperCall(constructorExpression);
-		const constructorBody = this.getConstructorBodyAfterSuper(constructorExpression);
-		let classStack: Stack;
-		let classScopes: Scope<any>[];
-		const handleSuperCall = (params: any[]): any[] => {
-			classStack = new Stack();
-			classScopes = this.initClassScope(classStack);
-			constructorExpression.getValue().setParameter(classStack, params);
-			return superCallExpression.getCallParameters(classStack);
-		};
-		className ??= '__temp_class_name__'
-		const TEMP = {
+
+	private createClass(stack: Stack, parentClass: TypeOf<any>, className: string | symbol = TEMP_CLASS_NAME) {
+		const TEMP: { [key: typeof className]: ClassConstructor } = {
 			[className]: class extends parentClass {
-				static #__static_private__: { [key: string | number | symbol]: any } = {};
+				static [GET_PARAMETERS](args: any[]): any[] {
+					return [];
+				}
+				static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
+				static [INIT_PRIVATE_SYMBOL] = {};
+
+				static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+
 				static {
 					// init statics
-
+					this[STATIC_INITIALIZATION_BLOCK].forEach(block => block());
 				}
-				#__private_body__: { [key: string | number | symbol]: any } = {};
+
+				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+				[INIT_PRIVATE_SYMBOL] = {};
+
+				[STACK]: Stack;
 				constructor(...params: any[]) {
-					super(...handleSuperCall(params));
-					classStack.declareVariable('this', this);
-					classStack.declareVariable('new.target', new.target);
-					classStack.declareVariable('#__private', this.#__private_body__);
-					classStack.declareVariable('__callSuperMethod', this.__callSuperMethod);
-					classStack.declareVariable('__getSuperProperty', this.__getSuperProperty);
-
-					bodyDefinition.methods
-						.filter(property => property.static || !property.private)
-						.forEach(method => {
-							switch (method.kind) {
-								case 'method':
-									this.#__private_body__[method.key] = method.value;
-									break;
-								case 'set':
-									Object.defineProperty(this.#__private_body__, method.key, {
-										configurable: true,
-										enumerable: false,
-										set: method.value as (v: any) => void,
-									});
-									break;
-								case 'get':
-									Object.defineProperty(this.#__private_body__, method.key, {
-										configurable: true,
-										enumerable: false,
-										get: method.value as () => any,
-									});
-									break;
-								default:
-									break;
-							}
-						});
-					bodyDefinition.accessors
-						.filter(property => property.static)
-						.forEach(accessorProperty => {
-							this.#__private_body__[accessorProperty.key] = accessorProperty.value;
-							Object.defineProperty(this, accessorProperty.key, {
-								configurable: true,
-								enumerable: false,
-								set: (value: any): void => {
-									this.#__private_body__[accessorProperty.key] = value;
-								},
-								get: (): any => {
-									return this.#__private_body__[accessorProperty.key];
-								},
-							});
-						});
-					bodyDefinition.properties
-						.filter(property => property.static || !property.private)
-						.forEach(property => {
-							this.#__private_body__[property.key] = property.value;
-						});
-
-
-					for (const statement of constructorBody) {
-						statement.shareVariables(classScopes);
-						const returnValue = statement.get(classStack);
-						if (returnValue instanceof ReturnValue) {
-							classStack.clearTo(classScopes[0]);
-							return;
-						}
-					}
-					classStack.clearTo(classScopes[0]);
+					const parameters = TEMP[className][GET_PARAMETERS](params);
+					super(...parameters);
+					this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], this[INIT_PRIVATE_SYMBOL]);
+					this[STACK] = stack.copyStack();
+					const instanceStack = this[STACK];
+					instanceStack.pushBlockScope();
+					instanceStack.declareVariable('this', this);
+					instanceStack.declareVariable(NEW_TARGET, new.target);
+					instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
+					instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
+					instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
+					instanceStack.pushReactiveScope();
+					this[CONSTRUCTOR]();
 				}
-				__getSuperProperty(name: string) {
-					return super[name];
-				}
-				__callSuperMethod(name: string) {
-					return super[name]();
-				}
+				[CONSTRUCTOR](): void { }
 			}
 		};
-		return TEMP[className];
-	}
-	private createClass(bodyDefinition: BodyDefinition, className?: string) {
-		const constructorExpression = this.getConstructorExpression();
-		if (!constructorExpression) {
-			return class { };
-		}
-		const self = this;
-
-		// define class name
-		className ??= '__temp_class_name__'
-		const TEMP = {
-			[className]: class {
-				static #__static_private__: { [key: string | number | symbol]: any } = {};
-				static {
-					// init statics
-
-				}
-				#__private_body__: { [key: string | number | symbol]: any } = {};
-				constructor(...params: any[]) {
-					const classStack = new Stack();
-					const classScopes = self.initClassScope(classStack);
-					constructorExpression!.getValue().setParameter(classStack, params);
-					classStack.declareVariable('this', this);
-					classStack.declareVariable('new.target', new.target);
-					classStack.declareVariable('#__private__', this.#__private_body__);
-					bodyDefinition.methods
-						.filter(property => property.static || !property.private)
-						.forEach(method => {
-							switch (method.kind) {
-								case 'method':
-									this.#__private_body__[method.key] = method.value;
-									break;
-								case 'set':
-									Object.defineProperty(this.#__private_body__, method.key, {
-										configurable: true,
-										enumerable: false,
-										set: method.value as (v: any) => void,
-									});
-									break;
-								case 'get':
-									Object.defineProperty(this.#__private_body__, method.key, {
-										configurable: true,
-										enumerable: false,
-										get: method.value as () => any,
-									});
-									break;
-								default:
-									break;
-							}
-						});
-					bodyDefinition.accessors
-						.filter(property => property.static)
-						.forEach(accessorProperty => {
-							this.#__private_body__[accessorProperty.key] = accessorProperty.value;
-							Object.defineProperty(this, accessorProperty.key, {
-								configurable: true,
-								enumerable: false,
-								set: (value: any): void => {
-									this.#__private_body__[accessorProperty.key] = value;
-								},
-								get: (): any => {
-									return this.#__private_body__[accessorProperty.key];
-								},
-							});
-						});
-					bodyDefinition.properties
-						.filter(property => property.static || !property.private)
-						.forEach(property => {
-							this.#__private_body__[property.key] = property.value;
-						});
-
-					for (const statement of constructorExpression!.getValue().getBody()) {
-						statement.shareVariables(classScopes);
-						const returnValue = statement.get(classStack);
-						if (returnValue instanceof ReturnValue) {
-							classStack.clearTo(classScopes[0]);
-							return;
-						}
-					}
-					classStack.clearTo(classScopes[0]);
-				}
-			}
-		};
-		return TEMP[className];
+		return TEMP[className as string];
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
