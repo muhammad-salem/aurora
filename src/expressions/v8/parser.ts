@@ -393,7 +393,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
 	}
-	protected parseBlock(): ExpressionNode {
+	protected parseBlock(): BlockStatement {
 		this.expect(Token.L_CURLY);
 		const statements: ExpressionNode[] = [];
 		const block = new BlockStatement(statements, false);

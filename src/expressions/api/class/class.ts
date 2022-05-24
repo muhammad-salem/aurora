@@ -197,10 +197,10 @@ export class PrivateIdentifier extends AbstractExpressionNode {
 @Deserializer('StaticBlock')
 export class StaticBlock extends BlockStatement {
 	static fromJSON(node: StaticBlock, deserializer: NodeDeserializer<any>): StaticBlock {
-		return new StaticBlock(deserializer(node.body), node.isStatement);
+		return new StaticBlock(deserializer(node.body));
 	}
-	constructor(body: ExpressionNode[], isStatement: boolean) {
-		super(body, isStatement);
+	constructor(body: ExpressionNode[]) {
+		super(body, false);
 	}
 	get(stack: Stack, classConstructor?: ClassConstructor): void {
 		const constructor = classConstructor!;
@@ -208,6 +208,11 @@ export class StaticBlock extends BlockStatement {
 	}
 	toString(): string {
 		return `static ${super.toString()}`;
+	}
+	toJson(): object {
+		return {
+			body: this.body.map(node => node.toJSON())
+		};
 	}
 }
 
