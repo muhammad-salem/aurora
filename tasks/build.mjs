@@ -43,8 +43,8 @@ function buildDoc() {
 		name: '"Ibyar Aurora API Reference"',
 		logger: 'none',
 		exclude: '**/test/**/*.ts',
-		excludeExternals: '',
-		excludePrivate: '',
+		excludeExternals: true,
+		excludePrivate: false,
 	};
 
 	let cmd = join(

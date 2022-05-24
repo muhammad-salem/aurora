@@ -9,5 +9,5 @@
 		"/**/*.ts"
 	],
 	"excludeExternals": true,
-	"excludePrivate": true
+	"excludePrivate": false
 }

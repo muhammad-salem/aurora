@@ -30,6 +30,7 @@
 		"update:config": "./tasks/update-config",
 		"local:npm": "./tasks/run-local-npm",
 		"local:publish": "./tasks/publish-local",
-		"build:doc": "node tasks/build.mjs builddoc"
+		"build:doc": "node tasks/build.mjs builddoc",
+		"typedoc": "./node_modules/typedoc/bin/typedoc --options ./typedoc.json "
 	}
 }
