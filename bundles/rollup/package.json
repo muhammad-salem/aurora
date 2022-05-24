@@ -15,10 +15,10 @@
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",
-		"@rollup/plugin-node-resolve": "^13.2.1",
+		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@rollup/plugin-typescript": "^8.3.2",
 		"@types/estree": "^0.0.51",
-		"rollup": "^2.70.2",
+		"rollup": "^2.74.1",
 		"rollup-plugin-css-only": "^3.1.0",
 		"rollup-plugin-html": "^0.2.1",
 		"rollup-plugin-serve": "^1.1.0",
