@@ -57,7 +57,6 @@ export class StyleDirective extends AttributeDirective implements OnInit {
 	}
 
 	private updateStyle(property: string, value: string | null, priority?: string | undefined) {
-		console.log(property, value as string, priority);
 		if (value != null) {
 			this.el.style.setProperty(property, value as string, priority);
 		} else {
