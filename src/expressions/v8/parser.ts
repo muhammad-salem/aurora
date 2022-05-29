@@ -51,6 +51,9 @@ export enum PropertyKind {
 	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
 	Spread, NotSet
 }
+export function isAccessor(kind: PropertyKind) {
+	return kind === PropertyKind.AccessorGetter || kind === PropertyKind.AccessorSetter;
+}
 export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind, name: string };
 export type FunctionInfo = { rest?: boolean };
 export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
