@@ -1,9 +1,9 @@
 import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
 import { Token } from './token.js';
-import { ClassExpression, MetaProperty, StaticBlock } from '../api/class/class.js';
+import { ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
-import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral } from '../api/definition/values.js';
+import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral, UndefinedNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 
@@ -122,7 +122,6 @@ export enum StaticFlag {
 	Static
 };
 
-
 export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
 	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
 }
@@ -169,6 +168,7 @@ export class ParsePropertyInfo implements PropertyKindInfo {
 	}
 
 }
+
 enum ObjectLiteralPropertyKind {
 	CONSTANT = 'CONSTANT',	// Property with constant value (compile time).
 	COMPUTED = 'COMPUTED',	// Property with computed value (execution time).
@@ -320,7 +320,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 
 			const property = this.parseClassPropertyDefinition(classInfo, propInfo, hasExtends);
 
-			// if (has_error()) return impl() -> FailureExpression();
+			// if (has_error()) return impl() . FailureExpression();
 
 			const propertyKind = classPropertyKindFor(propInfo.kind);
 			if (!classInfo.hasStaticComputedNames && propInfo.isStatic && propInfo.isComputedName) {
@@ -354,7 +354,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 
 		this.expect(Token.R_CURLY);
-		return this.rewriteClassLiteral(name, classInfo);
+		return this.rewriteClassLiteral(classInfo, name);
 	}
 	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: ExpressionNode, isConstructor: boolean, classInfo: ClassInfo): void {
 		// throw new Error('Method not implemented.');
@@ -380,8 +380,8 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			// We create a synthetic variable name here so that scope
 			// analysis doesn't dedupe the vars.
 			// Variable * computed_name_var =
-			// CreateSyntheticContextVariable(ClassFieldVariableName(ast_value_factory(), class_info -> computed_field_count));
-			// property -> set_computed_name_var(computed_name_var);
+			// CreateSyntheticContextVariable(ClassFieldVariableName(ast_value_factory(), classinfo . computed_field_count));
+			// property . set_computed_name_var(computed_name_var);
 			classInfo.publicMembers.push(property);
 		}
 
@@ -566,11 +566,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			classInfo.hasSeenConstructor = true;
 		}
 	}
-	protected setFunctionNameFromPropertyName(property: ExpressionNode, name: string, prefix?: string): void {
-		// TODO: no need for this now
-		// check later when needed
-		// the ClassExpression* handle this
-	}
+
 	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
 		const isGenerator = functionFlags.includes('GENERATOR');
 		const isAsync = functionFlags.includes('ASYNC');
@@ -579,12 +575,6 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			isGenerator,
 			isAsync
 		);
-	}
-	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean): ExpressionNode {
-		throw new Error('Method not implemented.');
-	}
-	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode {
-		throw new Error('Method not implemented.');
 	}
 	protected parseClassStaticBlock(classInfo: ClassInfo): StaticBlock {
 		this.consume(Token.STATIC);
@@ -603,27 +593,129 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		return value;
 	}
-	protected parseSuperExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (supper) not supported.'));
-	}
-	protected parseImportExpressions(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (import) not supported.'));
-	}
+
 	protected declareVariable(name: ExpressionNode | undefined, mode: 'let' | 'const' | 'var') {
 		if (!name) {
 			throw new Error(this.errorMessage('Variable name is undefined'));
 		}
-		switch (mode) {
-			case 'const':
-				return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], 'const');
-			default:
-			case 'var':
-				return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], 'var');
-			case 'let':
-				return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], 'let');
-		}
+		return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], mode);
 	}
-	protected rewriteClassLiteral(name: ExpressionNode | undefined, classInfo: ClassInfo): ClassExpression {
-		throw new Error('Method not implemented.');
+	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean): ExpressionNode {
+		switch (kind) {
+			case ClassLiteralPropertyKind.METHOD:
+				if (nameExpression.toString() === 'constructor') {
+					return new MethodDefinition('constructor', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+				}
+				return new MethodDefinition('method', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.SETTER:
+				return new MethodDefinition('get', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.SETTER:
+				return new MethodDefinition('set', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.FIELD:
+				return new PropertyDefinition(nameExpression, [], isComputedName, isStatic, initializer);
+			default:
+				break;
+		}
+		throw new Error(this.errorMessage('UNREACHABLE'));
+	}
+	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode {
+		const initializer: ExpressionNode = this.check(Token.ASSIGN) ? this.parseAssignmentExpression() : UndefinedNode;
+		if (isStatic) {
+			classInfo.hasStaticElements = true;
+		} else {
+			classInfo.hasInstanceMembers = true;
+		}
+		return initializer;
+	}
+	protected setFunctionNameFromPropertyName(property: ExpressionNode, name: string, prefix?: string): void {
+		// TODO: no need for this now
+		// check later when needed
+		// the ClassExpression* handle this
+	}
+	protected parseSuperExpression(): ExpressionNode {
+		this.consume(Token.SUPER);
+		if (Token.isProperty(this.peek().token)) {
+			if (this.peek().isType(Token.PERIOD) && this.peekAhead().isType(Token.PRIVATE_NAME)) {
+				this.consume(Token.PERIOD);
+				this.consume(Token.PRIVATE_NAME);
+				throw new Error(this.errorMessage('Unexpected Private Field'));
+			}
+			if (this.peek().isType(Token.QUESTION_PERIOD)) {
+				this.consume(Token.QUESTION_PERIOD);
+				throw new Error(this.errorMessage('Optional Chaining No Super'));
+			}
+			return Super.INSTANCE;
+		}
+		throw new Error(this.errorMessage('Unexpected Super'));
+	}
+	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassExpression {
+		// const hasDefaultConstructor = !classInfo.hasSeenConstructor;
+		// // Account for the default constructor.
+		// if (hasDefaultConstructor) {
+		// 	const hasExtends = !!classInfo.extends;
+		// 	const kind = hasExtends ? FunctionKind.DEFAULT_DERIVED_CONSTRUCTOR : FunctionKind.DEFAULT_BASE_CONSTRUCTOR;
+		// }
+		// if (classInfo.hasStaticElements) {
+		// }
+		// if (classInfo.hasInstanceMembers) {
+		// }
+		const hasExtends = !!classInfo.extends;
+		const hasDefaultConstructor = !classInfo.hasSeenConstructor;
+		if (hasDefaultConstructor) {
+			// ignore setting default constructor for now
+			// classInfo.constructor = DefaultConstructor(name, has_extends);
+		}
+
+
+		//   bool has_extends = classInfo ->extends != nullptr;
+		//   bool has_default_constructor = classInfo -> constructor == nullptr;
+		// 		if (has_default_constructor) {
+		// 			classInfo -> constructor =
+		// 			DefaultConstructor(name, has_extends, pos, end_pos);
+		// 		}
+
+		// if (name != nullptr) {
+		// 	DCHECK_NOT_NULL(block_scope -> class_variable());
+		// 	block_scope -> class_variable() -> set_initializer_position(end_pos);
+		// }
+
+		// FunctionLiteral * static_initializer = nullptr;
+		// if (classInfo -> has_static_elements) {
+		// 	static_initializer = CreateInitializerFunction(
+		// 		"<static_initializer>", classInfo -> static_elements_scope,
+		// 		factory() -> NewInitializeClassStaticElementsStatement(
+		// 			classInfo -> static_elements, kNoSourcePosition));
+		// }
+
+		// FunctionLiteral * instance_members_initializer_function = nullptr;
+		// if (classInfo -> has_instance_members) {
+		// 	instance_members_initializer_function = CreateInitializerFunction(
+		// 		"<instance_members_initializer>", classInfo -> instance_members_scope,
+		// 		factory() -> NewInitializeClassMembersStatement(
+		// 			classInfo -> instance_fields, kNoSourcePosition));
+		// 	classInfo -> constructor -> set_requires_instance_members_initializer(true);
+		// 	classInfo -> constructor -> add_expected_properties(
+		// 		classInfo -> instance_fields -> length());
+		// }
+
+		// if (classInfo -> requires_brand) {
+		// 	classInfo -> constructor -> set_class_scope_has_private_brand(true);
+		// }
+		// if (classInfo -> has_static_private_methods) {
+		// 	classInfo -> constructor -> set_has_static_private_methods_or_accessors(true);
+		// }
+		// ClassLiteral * class_literal = factory() -> NewClassLiteral(
+		// 	block_scope, classInfo ->extends, classInfo -> constructor,
+		// 	classInfo -> public_members, classInfo -> private_members,
+		// 	static_initializer, instance_members_initializer_function, pos, end_pos,
+		// 	classInfo -> has_static_computed_names, classInfo -> is_anonymous,
+		// 	classInfo -> has_private_methods, classInfo -> home_object_variable,
+		// 	classInfo -> static_home_object_variable);
+
+		// AddFunctionForNameInference(classInfo -> constructor);
+		// return class_literal;
+	}
+	protected parseImportExpressions(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (import) not supported.'));
 	}
 }
