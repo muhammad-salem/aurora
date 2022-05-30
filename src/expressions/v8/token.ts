@@ -609,6 +609,12 @@ export class Token {
 	private static isInRange(op: number, start: Token, end: Token) {
 		return op >= start.precedence && op <= end.precedence;
 	}
+	public static isProperty(token: number | Token) {
+		if (token instanceof Token) {
+			token = token.precedence;
+		}
+		return Token.isInRange(token, Token.PERIOD, Token.L_BRACKETS);
+	}
 	public static isBinary(token: number | Token) {
 		if (token instanceof Token) {
 			token = token.precedence;
