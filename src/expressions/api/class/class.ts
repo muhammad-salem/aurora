@@ -600,7 +600,7 @@ export class Class extends AbstractExpressionNode {
 		const TEMP: { [key: typeof className]: ClassConstructor } = {
 			[className]: class extends parentClass {
 				static [GET_PARAMETERS](args: any[]): any[] {
-					return [];
+					return args;
 				}
 				static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
 				static [INIT_PRIVATE_SYMBOL] = {};
@@ -629,6 +629,7 @@ export class Class extends AbstractExpressionNode {
 					instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
 					instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
 					instanceStack.pushReactiveScope();
+					// init fields and methods values
 					this[CONSTRUCTOR]();
 				}
 				[CONSTRUCTOR](): void { }
