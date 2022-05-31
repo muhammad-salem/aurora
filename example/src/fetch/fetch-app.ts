@@ -26,7 +26,7 @@ export class FetchApp implements OnInit {
 	selected: number = 1;
 
 	onInit(): void {
-		fetch('/web_modules/@ibyar/example/dist/fetch/data.json')
+		fetch('https://raw.githubusercontent.com/ibyar/aurora/dev/example/src/fetch/data.json')
 			.then(response => response.json())
 			.then((list: string[]) => this.list = list.map(i => +i));
 	}
