@@ -1,7 +1,7 @@
 import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
 import { Token } from './token.js';
-import { ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
+import { ClassBody, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
 import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral, UndefinedNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
@@ -714,6 +714,9 @@ export class JavaScriptAppParser extends JavaScriptParser {
 
 		// AddFunctionForNameInference(classInfo -> constructor);
 		// return class_literal;
+		const body = new ClassBody([]);
+		const classLiteral = new ClassExpression(body, []);
+		return classLiteral;
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));
