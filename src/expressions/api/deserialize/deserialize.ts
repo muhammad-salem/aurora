@@ -1,14 +1,18 @@
-import type { ExpressionNode, NodeExpressionWithType } from '../expression.js';
+import type { ExpressionNode, ExpressionNodConstructor } from '../expression.js';
 import { expressionTypes } from './type-store.js';
 
 
 
 export function Deserializer(type: string): Function {
-	return (target: NodeExpressionWithType<ExpressionNode>) => {
-		Reflect.set(target, 'type', type)
+	return (target: ExpressionNodConstructor<ExpressionNode>) => {
+		target.type = type;
 		expressionTypes.set(type, target);
 		return target;
 	};
+}
+
+export function getDeserializerType(target: ExpressionNodConstructor<ExpressionNode>) {
+	return target.type;
 }
 
 export function serializeNode(node: ExpressionNode) {

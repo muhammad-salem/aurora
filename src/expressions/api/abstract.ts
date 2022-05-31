@@ -1,7 +1,8 @@
 import type { Scope } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
+import { getDeserializerType } from './deserialize/deserialize.js';
 import type {
-	NodeDeserializer, ExpressionNode, NodeExpressionClass,
+	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
 	NodeJsonType, CanDeclareExpression, ExpressionEventMap,
 	ExpressionEventPath, VisitNodeType
 } from './expression.js';
@@ -30,13 +31,13 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
 	}
-	getClass(): NodeExpressionClass<ExpressionNode> {
-		return this.constructor as NodeExpressionClass<ExpressionNode>;
+	getClass(): ExpressionNodConstructor<ExpressionNode> {
+		return this.constructor as ExpressionNodConstructor<ExpressionNode>;
 	}
 	toJSON(key?: string): NodeJsonType {
-		const json = this.toJson(key) as NodeJsonType;
-		json.type = Reflect.get(this.constructor, 'type');
-		return json;
+		const type = this.getClass().type;
+		const json = this.toJson(key);
+		return { type, ...json };
 	}
 	events(): ExpressionEventMap {
 		const dependencyNodes = this.dependency();

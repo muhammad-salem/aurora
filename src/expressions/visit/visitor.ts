@@ -1,5 +1,5 @@
 import { expressionTypes } from '../api/deserialize/type-store.js';
-import { ExpressionNode, NodeExpressionWithType, VisitNodeType } from '../api/expression.js';
+import { ExpressionNode, ExpressionNodConstructor, VisitNodeType } from '../api/expression.js';
 
 export interface VisitorControl {
 
@@ -23,7 +23,7 @@ export type VisitorCallback = (expression: ExpressionNode, type: string, control
 export class ExpressionVisitor {
 
 	private getType(node: ExpressionNode): string {
-		return (node.constructor as NodeExpressionWithType<ExpressionNode>).type;
+		return (node.constructor as ExpressionNodConstructor<ExpressionNode>).type;
 	}
 
 	visit(node: ExpressionNode, visitorCallback: VisitorCallback): void {

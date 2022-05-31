@@ -138,7 +138,7 @@ export interface ExpressionNode {
 	 * from an [ESTree](https://github.com/estree/estree) json object,
 	 * with all necessary implementation to execute the code
 	 */
-	getClass(): NodeExpressionClass<ExpressionNode>;
+	getClass(): ExpressionNodConstructor<ExpressionNode>;
 }
 
 export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
@@ -150,7 +150,12 @@ export type VisitNodeType = (expression: ExpressionNode) => void;
  * describe a class with it's static functions and properties
  * in the interface add getClass method
  */
-export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N> {
+export interface ExpressionNodConstructor<N extends ExpressionNode> extends TypeOf<N> {
+
+	/**
+	 * the type of an expression
+	 */
+	type: string;
 
 	/**
 	 * build expression node from [ESTree](https://github.com/estree/estree) json object
@@ -164,15 +169,7 @@ export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N>
 	 * @param expression 
 	 * @param callback 
 	 */
-	visit?(node: N, visitNode: VisitNodeType): void;
-}
-
-export interface NodeExpressionWithType<N extends ExpressionNode> extends NodeExpressionClass<N> {
-
-	/**
-	 * the type of an expression
-	 */
-	type: string;
+	visit?(node: N, visitNode: Object): void;
 }
 
 export interface CanDeclareExpression extends ExpressionNode {
