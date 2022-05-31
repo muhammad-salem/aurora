@@ -2,7 +2,7 @@ import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
 	Stack, findReactiveScopeByEventMap, ReactiveScope,
 	ScopeContext, ValueChangedCallback, Scope,
-	MemberExpression, Identifier
+	MemberExpression, Identifier, Deserializer
 } from '@ibyar/expressions';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { isOnDestroy } from '../component/lifecycle.js';
@@ -17,6 +17,7 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 }
 
 
+@Deserializer('OneWayAssignment')
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 
 	declare protected left: MemberExpression;
@@ -75,6 +76,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  * 
  * 
  */
+@Deserializer('TwoWayAssignment')
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
 
 	declare protected left: MemberExpression;
