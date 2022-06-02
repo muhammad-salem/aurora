@@ -1,12 +1,10 @@
-import { Component } from '@ibyar/aurora';
-import { TrackByComponent } from './directive/track-by-example.js';
-import { FetchApp } from './fetch/fetch-app.js';
-import { PersonApp } from './person-app/person-app.js';
-import { PipeAppComponent } from './pipe-app/pipe-test.js';
-import { Binding2Way } from './two-way/binding-2-way.js';
-import { EditorApp } from './two-way/shared-model.js';
-import { VideoPlayList } from './video-player/video.js';
+import { Component, TypeOf } from '@ibyar/aurora';
 
+export interface App {
+	title: string;
+	component?: TypeOf<object>;
+	load: () => Promise<any>;
+}
 
 @Component({
 	selector: 'app-root',
@@ -17,7 +15,7 @@ import { VideoPlayList } from './video-player/video.js';
 				<li class="nav-item">
 					<a  class="nav-link" href="javascript:void(0)" 
 						[class]="{active: selectedComponent == app.component}"
-						@click="selectedComponent = app.component"
+						@click="lazyLoad(app)"
 					>{{app.title}}</a>
 				</li>
 			</template>
@@ -31,36 +29,42 @@ import { VideoPlayList } from './video-player/video.js';
 })
 export class AppRoot {
 
-	selectedComponent = TrackByComponent;
+	selectedComponent: TypeOf<object> | null = null;
+	selectedApp: App;
 
-	appList: { title: string, component: {} }[] = [
+	lazyLoad(app: App) {
+		this.selectedApp = app;
+		app.load().then(component => this.selectedComponent = app.component = component);
+	}
+
+	appList: App[] = [
 		{
 			title: 'Track By Example',
-			component: TrackByComponent,
+			load: () => import('./directive/track-by-example.js').then(module => module.TrackByComponent),
 		},
 		{
 			title: 'Directives',
-			component: PersonApp,
+			load: () => import('./person-app/person-app.js').then(module => module.PersonApp),
 		},
 		{
 			title: 'Pipes',
-			component: PipeAppComponent,
+			load: () => import('./pipe-app/pipe-test.js').then(module => module.PipeAppComponent),
 		},
 		{
 			title: 'Two way Binding',
-			component: Binding2Way,
+			load: () => import('./two-way/binding-2-way.js').then(module => module.Binding2Way),
 		},
 		{
 			title: 'Edit',
-			component: EditorApp,
+			load: () => import('./two-way/shared-model.js').then(module => module.EditorApp),
 		},
 		{
 			title: 'Play List',
-			component: VideoPlayList,
+			load: () => import('./video-player/video.js').then(module => module.VideoPlayList),
 		},
 		{
 			title: 'HTTP Fetch',
-			component: FetchApp,
+			load: () => import('./fetch/fetch-app.js').then(module => module.FetchApp),
 		},
 	];
 
