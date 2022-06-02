@@ -1,11 +1,12 @@
 import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
-import { Token } from './token.js';
+import { Token, TokenExpression } from './token.js';
 import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
 import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral, UndefinedNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
+import { TokenStream } from './stream.js';
 
 
 export type ClassInfo = {
@@ -227,6 +228,13 @@ export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
 }
 
 export class JavaScriptAppParser extends JavaScriptParser {
+	static parse(source: string | TokenExpression[] | TokenStream) {
+		const stream = (typeof source === 'string' || Array.isArray(source))
+			? TokenStream.getTokenStream(source)
+			: source;
+		const parser = new JavaScriptAppParser(stream);
+		return parser.scan();
+	}
 	protected override parseNewTargetExpression(): ExpressionNode {
 		this.consume(Token.PERIOD);
 		const target: ExpressionNode = this.parsePropertyName();
