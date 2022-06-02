@@ -361,21 +361,6 @@ export class MethodDefinition extends AbstractDefinition {
 		if (str.length) {
 			str += ' ';
 		}
-		let name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
-		switch (this.kind) {
-			case 'constructor':
-				str += 'constructor ';
-				break;
-			case 'get':
-				str += `get ${name} `;
-				break;
-			case 'set':
-				str += `set ${name} `;
-				break
-			default:
-				str = `${name} `;
-				break;
-		}
 		str += this.value.toString();
 		return str;
 	}
