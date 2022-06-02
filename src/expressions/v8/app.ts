@@ -65,10 +65,6 @@ export enum AllowLabelledFunctionStatement {
 	DisallowLabelledFunctionStatement = 'DisallowLabelledFunctionStatement',
 };
 
-export enum ParsingArrowHeadFlag {
-	CertainlyNotArrowHead = 'CertainlyNotArrowHead',
-	MaybeArrowHead = 'MaybeArrowHead'
-};
 
 export enum PropertyPosition {
 	ObjectLiteral = 'ObjectLiteral',
