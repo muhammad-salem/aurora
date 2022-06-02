@@ -1,4 +1,4 @@
-import { Component, TypeOf } from '@ibyar/aurora';
+import { Component, OnInit, TypeOf } from '@ibyar/aurora';
 
 export interface App {
 	title: string;
@@ -27,7 +27,7 @@ export interface App {
 		</div>
 	</div>`
 })
-export class AppRoot {
+export class AppRoot implements OnInit {
 
 	selectedComponent: TypeOf<object> | null = null;
 	selectedApp: App;
@@ -67,5 +67,9 @@ export class AppRoot {
 			load: () => import('./fetch/fetch-app.js').then(module => module.FetchApp),
 		},
 	];
+
+	onInit(): void {
+		this.lazyLoad(this.appList[0]);
+	}
 
 }
