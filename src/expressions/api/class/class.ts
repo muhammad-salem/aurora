@@ -652,7 +652,7 @@ export class Class extends AbstractExpressionNode {
 		if (this.superClass) {
 			classDeclaration += ' extends ' + this.superClass.toString();
 		}
-		return `${decorators}${classDeclaration} {${this.body.toString()}\n`;
+		return `${decorators}${classDeclaration} {${this.body.toString()}}\n`;
 	}
 	toJson(): object {
 		return {
