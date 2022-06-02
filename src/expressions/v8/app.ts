@@ -1,7 +1,7 @@
 import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
 import { Token } from './token.js';
-import { ClassBody, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
+import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
 import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral, UndefinedNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
@@ -10,11 +10,11 @@ import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/de
 
 export type ClassInfo = {
 	extends?: ExpressionNode;
-	publicMembers: ExpressionNode[],
-	privateMembers: ExpressionNode[],
-	staticElements: ExpressionNode[],
-	instanceFields: ExpressionNode[],
-	constructor: FunctionExpression | NullishLiteral,
+	publicMembers: (MethodDefinition | PropertyDefinition)[],
+	privateMembers: (MethodDefinition | PropertyDefinition)[],
+	staticElements: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[],
+	instanceFields: (MethodDefinition | PropertyDefinition | AccessorProperty)[],
+	constructor: MethodDefinition | NullishLiteral,
 
 	hasSeenConstructor: boolean;
 	hasStaticComputedNames: boolean;
@@ -308,6 +308,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			if (this.peek().isType(Token.STATIC) && this.peekAhead().isType(Token.L_CURLY)) {
 				const staticBlock = this.parseClassStaticBlock(classInfo);
 				classInfo.staticElements.push(staticBlock);
+				classInfo.hasStaticBlocks = true;
 				continue;
 			}
 
@@ -338,7 +339,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 				const isMethod = propertyKind == ClassLiteralPropertyKind.METHOD;
 				classInfo.hasPrivateMethods ||= isMethod;
 				classInfo.hasStaticPrivateMethods ||= isMethod && propInfo.isStatic;
-				this.declarePrivateClassMember(propInfo.name, property, propertyKind, propInfo.isStatic, classInfo);
+				this.declarePrivateClassMember(propInfo.name, property as MethodDefinition | PropertyDefinition, propertyKind, propInfo.isStatic, classInfo);
 				continue;
 			}
 
@@ -346,30 +347,30 @@ export class JavaScriptAppParser extends JavaScriptParser {
 				if (propInfo.isComputedName) {
 					classInfo.computedFieldCount++;
 				}
-				this.declarePublicClassField(property, propInfo.isStatic, propInfo.isComputedName, classInfo);
+				this.declarePublicClassField(property as PropertyDefinition, propInfo.isStatic, propInfo.isComputedName, classInfo);
 				continue;
 			}
 
-			this.declarePublicClassMethod(name, property, isConstructor, classInfo);
+			this.declarePublicClassMethod(name, property as MethodDefinition, isConstructor, classInfo);
 		}
 
 		this.expect(Token.R_CURLY);
 		return this.rewriteClassLiteral(classInfo, name);
 	}
-	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: ExpressionNode, isConstructor: boolean, classInfo: ClassInfo): void {
+	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: MethodDefinition, isConstructor: boolean, classInfo: ClassInfo): void {
 		// throw new Error('Method not implemented.');
 		if (isConstructor) {
 			if (classInfo.constructor) {
 				throw new SyntaxError('A class may only have one constructor.');
 			}
-			classInfo.constructor = property as FunctionExpression;
+			classInfo.constructor = property;
 			// set the class name as the constructor name
 			Reflect.set(classInfo.constructor, 'id', name);
 			return;
 		}
 		classInfo.publicMembers.push(property);
 	}
-	protected declarePublicClassField(property: ExpressionNode, isStatic: boolean, isComputedName: boolean, classInfo: ClassInfo) {
+	protected declarePublicClassField(property: PropertyDefinition, isStatic: boolean, isComputedName: boolean, classInfo: ClassInfo) {
 		if (isStatic) {
 			classInfo.staticElements.push(property);
 		} else {
@@ -386,7 +387,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 
 	}
-	protected declarePrivateClassMember(propertyName: string, property: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo) {
+	protected declarePrivateClassMember(propertyName: string, property: MethodDefinition | PropertyDefinition, kind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo) {
 		if (ClassLiteralPropertyKind.FIELD == kind) {
 			if (isStatic) {
 				classInfo.staticElements.push(property);
@@ -404,7 +405,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 	// protected createPrivateNameVariable(mode: VariableMode, staticFlag: StaticFlag, propertyName: string) {
 	// 	throw new Error('Method not implemented.');
 	// }
-	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: ParsePropertyInfo, hasExtends: boolean): ExpressionNode {
+	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: ParsePropertyInfo, hasExtends: boolean) {
 		if (!classInfo) {
 			throw new Error(this.errorMessage('class info is undefined'));
 		}
@@ -600,7 +601,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], mode);
 	}
-	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean): ExpressionNode {
+	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
 		switch (kind) {
 			case ClassLiteralPropertyKind.METHOD:
 				if (nameExpression.toString() === 'constructor') {
@@ -714,9 +715,19 @@ export class JavaScriptAppParser extends JavaScriptParser {
 
 		// AddFunctionForNameInference(classInfo -> constructor);
 		// return class_literal;
-		const body = new ClassBody([]);
-		const classLiteral = new ClassExpression(body, []);
-		return classLiteral;
+		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
+
+		if (classInfo.hasSeenConstructor) {
+			body.push(classInfo.constructor as MethodDefinition);
+		}
+		body.push(...classInfo.staticElements);
+		body.push(...classInfo.privateMembers);
+		body.push(...classInfo.instanceFields);
+		body.push(...classInfo.publicMembers);
+		if (name) {
+			return new ClassDeclaration(new ClassBody(body), [], name as Identifier, classInfo.extends);
+		}
+		return new ClassExpression(new ClassBody(body), [], name, classInfo.extends);
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));
