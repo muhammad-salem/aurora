@@ -319,25 +319,39 @@ export class FunctionExpression extends FunctionBaseExpression {
 		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
-		let declare: string;
+		let declare: string = '';
 		switch (this.kind) {
-			case FunctionKind.ASYNC:
-				declare = 'async function'; break;
-			case FunctionKind.GENERATOR:
-				declare = 'function*'; break;
-			case FunctionKind.ASYNC_GENERATOR:
-				declare = 'async function*'; break;
-			default:
 			case FunctionKind.NORMAL:
-				declare = 'function'; break;
+				declare = 'function '; break;
+			case FunctionKind.ASYNC:
+				declare = 'async function '; break;
+			case FunctionKind.GENERATOR:
+				declare = 'function* '; break;
+			case FunctionKind.ASYNC_GENERATOR:
+				declare = 'async function* '; break;
+			case FunctionKind.SETTER_FUNCTION:
+				declare = 'set '; break;
+			case FunctionKind.GETTER_FUNCTION:
+				declare = 'get '; break;
+			case FunctionKind.STATIC_SETTER_FUNCTION:
+				declare = 'static set '; break;
+			case FunctionKind.STATIC_GETTER_FUNCTION:
+				declare = 'static get '; break;
+			case FunctionKind.BASE_CONSTRUCTOR:
+			case FunctionKind.DEFAULT_BASE_CONSTRUCTOR:
+			case FunctionKind.DERIVED_CONSTRUCTOR:
+			case FunctionKind.DEFAULT_DERIVED_CONSTRUCTOR:
+				declare = 'constructor '; break;
+			default:
+				break;
 		}
-		return `${declare} ${this.id?.toString() || ''}(${this.params.map((param, index, array) => {
+		return `${declare}${this.id?.toString() || ''}(${this.params.map((param, index, array) => {
 			if (index === array.length - 1 && this.rest) {
 				return '...' + param.toString();
 			} else {
 				return param.toString();
 			}
-		}).join(', ')}) ${this.body.toString()}`;
+		}).join(', ')}) {${this.body.toString()}}`;
 	}
 	toJson(): object {
 		return {
