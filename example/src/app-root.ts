@@ -66,6 +66,10 @@ export class AppRoot implements OnInit {
 			title: 'HTTP Fetch',
 			load: () => import('./fetch/fetch-app.js').then(module => module.FetchApp),
 		},
+		{
+			title: 'Expression Editor',
+			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
+		},
 	];
 
 	onInit(): void {
