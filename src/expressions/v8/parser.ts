@@ -878,30 +878,30 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected getIdentifier(): ExpressionNode {
 		const current = this.current();
-		const string = current.getValue().toString();
 		switch (current.token) {
 			case Token.AWAIT:
 				return AwaitIdentifier;
 			case Token.ASYNC:
 				return AsyncIdentifier;
 			case Token.PRIVATE_NAME:
-				return new Identifier(`#${string}`);
+				return current.getValue();
 			default:
 				break;
 		}
-		if (string == 'constructor') {
+		const name = current.getValue().toString();
+		if (name == 'constructor') {
 			return ConstructorIdentifier;
 		}
-		if (string == 'name') {
+		if (name == 'name') {
 			return NameIdentifier;
 		}
-		if (string == 'eval') {
+		if (name == 'eval') {
 			return EvalIdentifier;
 		}
-		else if (string == 'arguments') {
+		else if (name == 'arguments') {
 			return ArgumentsIdentifier;
 		}
-		throw new Error(this.errorMessage(`can't identify token ${string}`));
+		throw new Error(this.errorMessage(`can't identify token ${name}`));
 	}
 	protected parseFunctionLiteral(flag: FunctionKind, name?: ExpressionNode): ExpressionNode {
 		// Function ::

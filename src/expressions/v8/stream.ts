@@ -5,6 +5,7 @@ import {
 	RegExpLiteral, StringLiteral, SymbolNode, AsNode
 } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { PrivateIdentifier } from '../api/class/class.js';
 
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 
@@ -411,7 +412,7 @@ export class TokenStreamImpl extends TokenStream {
 
 				default:
 					if (isPrivate) {
-						node = new Identifier(`#${prop}`);
+						node = new PrivateIdentifier(prop.substring(1));
 						this.current = this.newToken(Token.PRIVATE_NAME, node);
 					} else {
 						node = new Identifier(prop);
