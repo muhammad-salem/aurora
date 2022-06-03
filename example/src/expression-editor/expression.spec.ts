@@ -13,11 +13,11 @@ class ClassWithPrivateField {
   #privateField;
 }
 
-// class ClassWithPrivateMethod {
-//   #privateMethod() {
-//     return 'hello world';
-//   }
-// }
+class ClassWithPrivateMethod {
+  #privateMethod() {
+    return 'hello world';
+  }
+}
 
 class ClassWithPublicStaticField {
   static PUBLIC_STATIC_FIELD;
@@ -31,10 +31,10 @@ class ClassWithPrivateStaticField {
   static #PRIVATE_STATIC_FIELD;
 }
 
-// class ClassWithPrivateStaticMethod {
-//   static #privateStaticMethod() {
-//     return 'hello world';
-//   }
-// }
+class ClassWithPrivateStaticMethod {
+  static #privateStaticMethod() {
+    return 'hello world';
+  }
+}
 
 `;
