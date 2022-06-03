@@ -3,7 +3,7 @@ import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './
 import { Token, TokenExpression } from './token.js';
 import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
-import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral, UndefinedNode } from '../api/definition/values.js';
+import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
@@ -458,7 +458,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 				// 	this.checkClassFieldName(propInfo.name, propInfo.isStatic);
 				// }
 
-				const initializer: ExpressionNode = this.parseMemberInitializer(classInfo, propInfo.isStatic);
+				const initializer = this.parseMemberInitializer(classInfo, propInfo.isStatic);
 				this.expectSemicolon();
 
 				const result: ExpressionNode = this.newClassLiteralProperty(
@@ -605,7 +605,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		return new VariableDeclarationNode([new VariableDeclarator(name as DeclarationExpression)], mode);
 	}
-	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
+	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode | undefined, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
 		switch (kind) {
 			case ClassLiteralPropertyKind.METHOD:
 				if (nameExpression.toString() === 'constructor') {
@@ -623,8 +623,8 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
-	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode {
-		const initializer: ExpressionNode = this.check(Token.ASSIGN) ? this.parseAssignmentExpression() : UndefinedNode;
+	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode | undefined {
+		const initializer = this.check(Token.ASSIGN) ? this.parseAssignmentExpression() : undefined;
 		if (isStatic) {
 			classInfo.hasStaticElements = true;
 		} else {
