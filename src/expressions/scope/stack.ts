@@ -1,4 +1,4 @@
-import type { CanDeclareExpression } from '../api/expression.js';
+import type { DeclarationExpression } from '../api/expression.js';
 import { finalizerRegister } from './finalizer.js';
 import {
 	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
@@ -8,7 +8,7 @@ import {
 
 export interface AwaitPromiseInfo {
 	promise: Promise<any>;
-	node: CanDeclareExpression;
+	node: DeclarationExpression;
 
 	declareVariable: boolean;
 }

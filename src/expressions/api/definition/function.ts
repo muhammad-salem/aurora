@@ -1,5 +1,5 @@
 import type {
-	CanDeclareExpression, ExpressionEventPath, ExpressionNode,
+	DeclarationExpression, ExpressionEventPath, ExpressionNode,
 	NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
@@ -51,7 +51,7 @@ export enum ArrowFunctionType {
 export class Param extends AbstractExpressionNode {
 	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
 		return new Param(
-			deserializer(node.identifier) as CanDeclareExpression,
+			deserializer(node.identifier) as DeclarationExpression,
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
@@ -59,7 +59,7 @@ export class Param extends AbstractExpressionNode {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
-	constructor(private identifier: CanDeclareExpression, private defaultValue?: ExpressionNode) {
+	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode) {
 		super();
 	}
 	getIdentifier() {
@@ -131,7 +131,7 @@ export class FunctionExpression extends FunctionBaseExpression {
 	}
 	constructor(
 		protected params: ExpressionNode[], protected body: ExpressionNode[],
-		protected kind: FunctionKind, protected id?: CanDeclareExpression,
+		protected kind: FunctionKind, protected id?: DeclarationExpression,
 		protected rest?: boolean, protected generator?: boolean) {
 		super();
 	}
@@ -372,7 +372,7 @@ export class FunctionDeclaration extends FunctionExpression {
 			node.params.map(deserializer),
 			node.body.map(deserializer),
 			FunctionKind[node.kind],
-			node.id ? deserializer(node.id) as CanDeclareExpression : void 0,
+			node.id ? deserializer(node.id) as DeclarationExpression : void 0,
 			node.rest,
 			node.generator
 		);
@@ -382,10 +382,10 @@ export class FunctionDeclaration extends FunctionExpression {
 		node.params.forEach(visitNode);
 		node.body.forEach(visitNode);
 	}
-	declare protected id?: CanDeclareExpression;
+	declare protected id?: DeclarationExpression;
 	constructor(
 		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id?: CanDeclareExpression,
+		kind: FunctionKind, id?: DeclarationExpression,
 		rest?: boolean, generator?: boolean) {
 		super(params, body, kind, id, rest, generator);
 	}

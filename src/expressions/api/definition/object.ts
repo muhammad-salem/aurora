@@ -1,5 +1,5 @@
 import type {
-	NodeDeserializer, ExpressionNode, CanDeclareExpression,
+	NodeDeserializer, ExpressionNode, DeclarationExpression,
 	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
@@ -9,15 +9,15 @@ import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
 
 @Deserializer('Property')
-export class Property extends AbstractExpressionNode implements CanDeclareExpression {
+export class Property extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
-		return new Property(deserializer(node.key), deserializer(node.value) as CanDeclareExpression, node.kind);
+		return new Property(deserializer(node.key), deserializer(node.value) as DeclarationExpression, node.kind);
 	}
 	static visit(node: Property, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		visitNode(node.value);
 	}
-	constructor(protected key: ExpressionNode, protected value: CanDeclareExpression | ExpressionNode, protected kind: 'init' | 'get' | 'set') {
+	constructor(protected key: ExpressionNode, protected value: DeclarationExpression | ExpressionNode, protected kind: 'init' | 'get' | 'set') {
 		super();
 	}
 	getKey() {
@@ -57,7 +57,7 @@ export class Property extends AbstractExpressionNode implements CanDeclareExpres
 	declareVariable(stack: Stack, objectValue: any): void {
 		const propertyName = this.key.get(stack);
 		const propertyValue = objectValue[propertyName];
-		(this.value as CanDeclareExpression).declareVariable(stack, propertyValue);
+		(this.value as DeclarationExpression).declareVariable(stack, propertyValue);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.key.dependency(computed).concat(this.value.dependency(computed));
@@ -121,7 +121,7 @@ export class ObjectExpression extends AbstractExpressionNode {
 }
 
 @Deserializer('ObjectPattern')
-export class ObjectPattern extends AbstractExpressionNode implements CanDeclareExpression {
+export class ObjectPattern extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
 		return new ObjectPattern(node.properties.map(deserializer) as (Property | RestElement)[]);
 	}

@@ -1,5 +1,5 @@
 import type {
-	CanDeclareExpression, ExpressionNode, NodeDeserializer,
+	DeclarationExpression, ExpressionNode, NodeDeserializer,
 	CanFindScope, ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
@@ -17,7 +17,7 @@ import { AbstractExpressionNode } from '../abstract.js';
  * but sometimes it is possible to parse strings into identifiers.
  */
 @Deserializer('Identifier')
-export class Identifier extends AbstractExpressionNode implements CanDeclareExpression, CanFindScope {
+export class Identifier extends AbstractExpressionNode implements DeclarationExpression, CanFindScope {
 	static fromJSON(node: Identifier): Identifier {
 		return new Identifier(node.name);
 	}

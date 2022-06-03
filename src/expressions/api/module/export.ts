@@ -35,7 +35,7 @@
 
 import type {
 	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType, CanDeclareExpression
+	ExpressionEventPath, VisitNodeType, DeclarationExpression
 } from '../expression.js';
 import { ModuleContext, ReactiveScope, Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
@@ -125,7 +125,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 		return new ExportNamedDeclaration(
 			node.specifiers.map(deserializer) as ExportSpecifier[],
 			node.source ? deserializer(node.source) as StringLiteral : void 0,
-			node.declaration ? deserializer(node.declaration) as CanDeclareExpression : void 0,
+			node.declaration ? deserializer(node.declaration) as DeclarationExpression : void 0,
 		);
 	}
 	static visit(node: ExportNamedDeclaration, visitNode: VisitNodeType): void {
@@ -136,7 +136,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	constructor(
 		private specifiers: ExportSpecifier[],
 		private source?: StringLiteral,
-		private declaration?: CanDeclareExpression) {
+		private declaration?: DeclarationExpression) {
 		super();
 	}
 	getSource() {

@@ -172,7 +172,7 @@ export interface ExpressionNodConstructor<N extends ExpressionNode> extends Type
 	visit?(node: N, visitNode: Object): void;
 }
 
-export interface CanDeclareExpression extends ExpressionNode {
+export interface DeclarationExpression extends ExpressionNode {
 	/**
 	 * declare variable in the current local scope (block),
 	 * or closest function scope (global) scop,

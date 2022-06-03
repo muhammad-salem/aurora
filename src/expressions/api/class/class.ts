@@ -1,5 +1,5 @@
 import type {
-	CanDeclareExpression, ExpressionEventPath,
+	DeclarationExpression, ExpressionEventPath,
 	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
@@ -647,7 +647,7 @@ export class Class extends AbstractExpressionNode {
 }
 
 @Deserializer('ClassDeclaration')
-export class ClassDeclaration extends Class implements CanDeclareExpression {
+export class ClassDeclaration extends Class implements DeclarationExpression {
 	static fromJSON(node: ClassDeclaration, deserializer: NodeDeserializer<any>): ClassDeclaration {
 		return new ClassDeclaration(
 			deserializer(node.body),

@@ -3,7 +3,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import { getDeserializerType } from './deserialize/deserialize.js';
 import type {
 	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
-	NodeJsonType, CanDeclareExpression, ExpressionEventMap,
+	NodeJsonType, DeclarationExpression, ExpressionEventMap,
 	ExpressionEventPath, VisitNodeType
 } from './expression.js';
 
@@ -121,7 +121,7 @@ export class YieldDelegateValue {
 }
 
 export class AwaitPromise implements AwaitPromiseInfo {
-	node: CanDeclareExpression;
+	node: DeclarationExpression;
 	declareVariable: boolean;
 	constructor(public promise: Promise<any>) { }
 }

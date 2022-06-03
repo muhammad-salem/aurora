@@ -1,4 +1,4 @@
-import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
+import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
@@ -692,7 +692,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableDeclarator(name as CanDeclareExpression, value));
+			variables.push(new VariableDeclarator(name as DeclarationExpression, value));
 		} while (this.check(Token.COMMA));
 		return new VariableDeclarationNode(variables, mode);
 	}
@@ -723,11 +723,11 @@ export class JavaScriptParser extends AbstractParser {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			const value = this.parseFunctionDeclaration() as DeclarationExpression;
 			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
+			const value = this.parseFunctionDeclaration() as DeclarationExpression;
 			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
@@ -913,7 +913,7 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.R_PARENTHESES);
 		const body = this.parseFunctionBody();
 		if (name) {
-			return new FunctionDeclaration(formals, body, flag, name as CanDeclareExpression, functionInfo.rest);
+			return new FunctionDeclaration(formals, body, flag, name as DeclarationExpression, functionInfo.rest);
 		}
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
@@ -991,9 +991,9 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			const value = this.parseAssignmentExpression();
-			initializer = new Param(pattern as CanDeclareExpression, value);
+			initializer = new Param(pattern as DeclarationExpression, value);
 		} else {
-			initializer = new Param(pattern as CanDeclareExpression);
+			initializer = new Param(pattern as DeclarationExpression);
 		}
 		return initializer;
 	}
@@ -1069,12 +1069,12 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected toParamNode(expression: ExpressionNode): Param {
 		if (expression instanceof AssignmentExpression) {
-			return new Param(expression.getLeft() as CanDeclareExpression, expression.getRight());
+			return new Param(expression.getLeft() as DeclarationExpression, expression.getRight());
 		}
 		if (expression instanceof GroupingExpression) {
-			return new Param(expression.getNode() as CanDeclareExpression);
+			return new Param(expression.getNode() as DeclarationExpression);
 		}
-		return new Param(expression as CanDeclareExpression);
+		return new Param(expression as DeclarationExpression);
 	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
@@ -1293,11 +1293,11 @@ export class JavaScriptParser extends AbstractParser {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
 			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions().map(expr => new Param(expr as CanDeclareExpression));
+				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
 				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as CanDeclareExpression)], ArrowFunctionType.NORMAL);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], ArrowFunctionType.NORMAL);
 			}
 			return this.parseArrowFunctionLiteral([new Param(expression)], ArrowFunctionType.NORMAL);
 		}
@@ -1372,7 +1372,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (this.check(Token.ELLIPSIS)) {
 				const argument = this.parsePossibleDestructuringSubPattern();
 				elem = isPattern
-					? new RestElement(argument as CanDeclareExpression)
+					? new RestElement(argument as DeclarationExpression)
 					: new SpreadElement(argument)
 
 				if (firstSpreadIndex < 0) {
@@ -1387,7 +1387,7 @@ export class JavaScriptParser extends AbstractParser {
 			values.push(elem);
 		}
 		if (isPattern) {
-			return new ArrayPattern(values as CanDeclareExpression[]);
+			return new ArrayPattern(values as DeclarationExpression[]);
 		}
 		return new ArrayExpression(values);
 	}
@@ -1420,7 +1420,7 @@ export class JavaScriptParser extends AbstractParser {
 			case PropertyKind.Spread:
 				let value: SpreadElement | RestElement = nameExpression as SpreadElement;
 				if (isPattern) {
-					value = new RestElement(value.getArgument() as CanDeclareExpression);
+					value = new RestElement(value.getArgument() as DeclarationExpression);
 				}
 				return new Property(value.getArgument(), value, 'init');
 

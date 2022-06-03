@@ -1,18 +1,18 @@
-import type { CanDeclareExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../expression.js';
+import type { DeclarationExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('RestElement')
-export class RestElement extends AbstractExpressionNode implements CanDeclareExpression {
+export class RestElement extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: RestElement, deserializer: NodeDeserializer): RestElement {
-		return new RestElement(deserializer(node.argument) as CanDeclareExpression);
+		return new RestElement(deserializer(node.argument) as DeclarationExpression);
 	}
 	static visit(node: RestElement, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
-	constructor(private argument: CanDeclareExpression) {
+	constructor(private argument: DeclarationExpression) {
 		super();
 	}
 	getArgument() {

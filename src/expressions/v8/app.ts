@@ -1,4 +1,4 @@
-import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
+import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
@@ -603,7 +603,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		if (!name) {
 			throw new Error(this.errorMessage('Variable name is undefined'));
 		}
-		return new VariableDeclarationNode([new VariableDeclarator(name as CanDeclareExpression)], mode);
+		return new VariableDeclarationNode([new VariableDeclarator(name as DeclarationExpression)], mode);
 	}
 	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
 		switch (kind) {
