@@ -3,12 +3,12 @@ import { Component, ExpressionNode, JavaScriptAppParser, OnInit } from '@ibyar/a
 
 @Component({
 	selector: 'expression-editor',
-	template: `<div class="row">
-		<div class="col-6">
-			<div class="col-12"><pre>{{code}}</pre></div>
-			<div class="col-12"><pre>{{str}}</pre></div>
+	template: `<div class="row h-100 w-100">
+		<div class="col-6 h-100">
+			<div class="col-12 h-100"><pre styles="sc">{{code}}</pre></div>
+			<div class="col-12 h-100"><pre>{{str}}</pre></div>
 		</div>
-		<div class="col-6"><pre>{{ast}}</pre></div>
+		<div class="col-6 h-100"><pre>{{ast}}</pre></div>
 	</div>`,
 	styles: `pre {white-space: pre-wrap; }`
 
