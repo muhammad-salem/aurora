@@ -1,7 +1,10 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
-import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo } from './parser.js';
+import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition } from './parser.js';
 import { Token, TokenExpression } from './token.js';
-import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
+import {
+	AccessorProperty, ClassBody, ClassDeclaration, ClassExpression,
+	MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super
+} from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
 import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
@@ -67,11 +70,6 @@ export enum AllowLabelledFunctionStatement {
 };
 
 
-export enum PropertyPosition {
-	ObjectLiteral = 'ObjectLiteral',
-	ClassLiteral = 'ClassLiteral'
-}
-
 const FUNCTIONS_TYPES: FunctionKind[][][] = [
 	[
 		// SubFunctionKind::kNormalFunction
@@ -121,49 +119,6 @@ export enum StaticFlag {
 
 export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
 	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export class ParsePropertyInfo implements PropertyKindInfo {
-	name: string;
-	position = PropertyPosition.ClassLiteral;
-	funcFlag = FunctionKind.NORMAL;
-	kind = PropertyKind.NotSet;
-	isComputedName = false;
-	isPrivate = false;
-	isStatic = false;
-	isRest = false;
-
-	PropertyKindFromToken(token: Token): boolean {
-		// This returns true, setting the property kind, iff the given token is
-		// one which must occur after a property name, indicating that the
-		// previous token was in fact a name and not a modifier (like the "get" in
-		// "get x").
-		switch (token) {
-			case Token.COLON:
-				this.kind = PropertyKind.Value;
-				return true;
-			case Token.COMMA:
-				this.kind = PropertyKind.Shorthand;
-				return true;
-			case Token.R_CURLY:
-				this.kind = PropertyKind.ShorthandOrClassField;
-				return true;
-			case Token.ASSIGN:
-				this.kind = PropertyKind.Assign;
-				return true;
-			case Token.L_PARENTHESES:
-				this.kind = PropertyKind.Method;
-				return true;
-			case Token.MUL:
-			case Token.SEMICOLON:
-				this.kind = PropertyKind.ClassField;
-				return true;
-			default:
-				break;
-		}
-		return false;
-	}
-
 }
 
 enum ObjectLiteralPropertyKind {
@@ -320,7 +275,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			// If we haven't seen the constructor yet, it potentially is the next
 			// property.
 			let isConstructor = !classInfo.hasSeenConstructor;
-			const propInfo = new ParsePropertyInfo();
+			const propInfo = new PropertyKindInfo();
 			propInfo.position = PropertyPosition.ClassLiteral;
 
 			const property = this.parseClassPropertyDefinition(classInfo, propInfo, hasExtends);
@@ -409,7 +364,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 	// protected createPrivateNameVariable(mode: VariableMode, staticFlag: StaticFlag, propertyName: string) {
 	// 	throw new Error('Method not implemented.');
 	// }
-	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: ParsePropertyInfo, hasExtends: boolean) {
+	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: PropertyKindInfo, hasExtends: boolean) {
 		if (!classInfo) {
 			throw new Error(this.errorMessage('class info is undefined'));
 		}
@@ -549,7 +504,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
-	protected checkClassMethodName(propInfo: ParsePropertyInfo, classInfo: ClassInfo) {
+	protected checkClassMethodName(propInfo: PropertyKindInfo, classInfo: ClassInfo) {
 		if (!(propInfo.kind == PropertyKind.Method || isAccessor(propInfo.kind))) {
 			throw new Error(this.errorMessage('not kind of method or setter or getter'));
 		}

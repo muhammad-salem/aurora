@@ -44,6 +44,7 @@ import {
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
 import { BinaryExpression } from '../api/operators/binary.js';
+import { PrivateIdentifier } from '../api/class/class.js';
 
 export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
 export enum PropertyKind {
@@ -54,34 +55,56 @@ export enum PropertyKind {
 export function isAccessor(kind: PropertyKind) {
 	return kind === PropertyKind.AccessorGetter || kind === PropertyKind.AccessorSetter;
 }
-export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind, name: string };
-export type FunctionInfo = { rest?: boolean };
-export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
-	switch (token) {
-		case Token.COLON:
-			info.kind = PropertyKind.Value;
-			return true;
-		case Token.COMMA:
-			info.kind = PropertyKind.Shorthand;
-			return true;
-		case Token.R_CURLY:
-			info.kind = PropertyKind.ShorthandOrClassField;
-			return true;
-		case Token.ASSIGN:
-			info.kind = PropertyKind.Assign;
-			return true;
-		case Token.L_PARENTHESES:
-			info.kind = PropertyKind.Method;
-			return true;
-		case Token.MUL:
-		case Token.SEMICOLON:
-			info.kind = PropertyKind.ClassField;
-			return true;
-		default:
-			break;
-	}
-	return false;
+
+export enum PropertyPosition {
+	ObjectLiteral = 'ObjectLiteral',
+	ClassLiteral = 'ClassLiteral'
 }
+
+export class PropertyKindInfo {
+	name: string;
+	position = PropertyPosition.ClassLiteral;
+	funcFlag = FunctionKind.NORMAL;
+	kind = PropertyKind.NotSet;
+	isComputedName = false;
+	isPrivate = false;
+	isStatic = false;
+	isRest = false;
+
+	parsePropertyKindFromToken(token: Token): boolean {
+		// This returns true, setting the property kind, iff the given token is
+		// one which must occur after a property name, indicating that the
+		// previous token was in fact a name and not a modifier (like the "get" in
+		// "get x").
+		switch (token) {
+			case Token.COLON:
+				this.kind = PropertyKind.Value;
+				return true;
+			case Token.COMMA:
+				this.kind = PropertyKind.Shorthand;
+				return true;
+			case Token.R_CURLY:
+				this.kind = PropertyKind.ShorthandOrClassField;
+				return true;
+			case Token.ASSIGN:
+				this.kind = PropertyKind.Assign;
+				return true;
+			case Token.L_PARENTHESES:
+				this.kind = PropertyKind.Method;
+				return true;
+			case Token.MUL:
+			case Token.SEMICOLON:
+				this.kind = PropertyKind.ClassField;
+				return true;
+			default:
+				break;
+		}
+		return false;
+	}
+
+}
+
+export type FunctionInfo = { rest?: boolean };
 
 export enum PreParserIdentifierType {
 	NullIdentifier = 'NullIdentifier',
@@ -1413,7 +1436,7 @@ export class JavaScriptParser extends AbstractParser {
 		return new ObjectExpression(properties as Property[]);
 	}
 	protected parseObjectPropertyDefinition(isPattern: boolean): ExpressionNode {
-		const propInfo = { kind: PropertyKind.NotSet } as Required<PropertyKindInfo>;
+		const propInfo = new PropertyKindInfo();
 		const nameExpression = this.parseProperty(propInfo);
 
 		switch (propInfo.kind) {
@@ -1482,7 +1505,7 @@ export class JavaScriptParser extends AbstractParser {
 			// async
 			nextToken = this.peek();
 			if (nextToken.isNotType(Token.MUL)
-				&& parsePropertyKindFromToken(nextToken.token, propInfo)
+				&& propInfo.parsePropertyKindFromToken(nextToken.token)
 				|| this.scanner.hasLineTerminatorBeforeNext()) {
 				return AsyncIdentifier;
 			}
@@ -1499,7 +1522,7 @@ export class JavaScriptParser extends AbstractParser {
 		nextToken = this.peek();
 		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
 			const token = this.next();
-			if (parsePropertyKindFromToken(this.peek().token, propInfo)) {
+			if (propInfo.parsePropertyKindFromToken(this.peek().token)) {
 				return nextToken.isType(Token.GET) ? GetIdentifier : SetIdentifier;
 			}
 			if (token.isType(Token.GET)) {
@@ -1511,11 +1534,16 @@ export class JavaScriptParser extends AbstractParser {
 		let propertyName: ExpressionNode;
 		switch (nextToken.token) {
 			case Token.PRIVATE_NAME:
+				propInfo.isPrivate = true;
 				this.consume(Token.PRIVATE_NAME);
 				if (propInfo.kind == PropertyKind.NotSet) {
-					parsePropertyKindFromToken(this.peek().token, propInfo);
+					propInfo.parsePropertyKindFromToken(this.peek().token);
 				}
 				propertyName = this.getIdentifier();
+				propInfo.name = (propertyName as PrivateIdentifier).getName();
+				if (propInfo.position == PropertyPosition.ObjectLiteral) {
+					throw new TypeError(this.errorMessage('UnexpectedToken PRIVATE_NAME'));
+				}
 				break;
 			case Token.STRING:
 			case Token.NUMBER:
@@ -1533,7 +1561,7 @@ export class JavaScriptParser extends AbstractParser {
 				propertyName = this.parseAssignmentExpression();
 				this.expect(Token.R_BRACKETS);
 				if (propInfo.kind === PropertyKind.NotSet) {
-					parsePropertyKindFromToken(this.peek().token, propInfo);
+					propInfo.parsePropertyKindFromToken(this.peek().token);
 				}
 				propInfo.name = propertyName.toString();
 				return propertyName;
@@ -1559,7 +1587,7 @@ export class JavaScriptParser extends AbstractParser {
 				break;
 		}
 		if (propInfo.kind === PropertyKind.NotSet) {
-			parsePropertyKindFromToken(this.peek().token, propInfo);
+			propInfo.parsePropertyKindFromToken(this.peek().token);
 		}
 		return propertyName;
 	}
