@@ -1,4 +1,5 @@
-import { Component, ExpressionNode, JavaScriptAppParser, OnInit, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, ExpressionNode, JavaScriptAppParser, OnInit, ViewChild } from '@ibyar/aurora';
+import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
 	.content {
@@ -29,7 +30,7 @@ const styles = `
 		<div class="content w-100 h-100">
 			<div class="box">
 				<div class="column">Selector</div>
-				<div #editor class="column"><pre contentEditable="true" (input)="loadCode($event.target.textContent)">...</pre></div>
+				<div class="column"><pre #editor contentEditable="true">...</pre></div>
 				<div class="column"><pre>{{str}}</pre></div>
 				<div class="column"><pre>{{ast}}</pre></div>
 			</div>
@@ -37,12 +38,11 @@ const styles = `
 		`,
 	styles: styles,
 })
-export class ExpressionEditorComponent implements OnInit {
+export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
-	code = '';
 	ast = '';
 	str = '';
-	node: ExpressionNode;
+	node?: ExpressionNode;
 
 	@ViewChild('editor')
 	editor: HTMLPreElement;
@@ -50,11 +50,27 @@ export class ExpressionEditorComponent implements OnInit {
 	onInit(): void {
 		import('./expression.spec.js')
 			.then(module => this.loadCode(module.default))
-			.then(code => this.editor.innerText = code)
-			.then(code => this.code = code);
+			.then(code => this.editor.innerText = code!);
+
+
 	}
 
-	loadCode(code: string) {
+	afterViewInit(): void {
+		fromEvent(this.editor, 'input')
+			.pipe(
+				debounceTime(400),
+				distinctUntilChanged(),
+				map(() => this.editor.innerText),
+			).subscribe(code => this.loadCode(code))
+	}
+
+	loadCode(code: string | null | undefined) {
+		if (!code) {
+			this.ast = '';
+			this.str = '';
+			this.node = undefined;
+			return;
+		}
 		try {
 			const node = JavaScriptAppParser.parse(code);
 			this.ast = JSON.stringify(node.toJSON(), undefined, 2);
