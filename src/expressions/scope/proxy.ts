@@ -8,12 +8,14 @@ export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T>
 
 	private computeThisArg(targetThisArg: any): any {
 		switch (true) {
+			// exclude classes that have binding hook
 			case this.thisContext instanceof Map:
 			case this.thisContext instanceof Set:
 			case this.thisContext instanceof Date:
 			case this.thisContext instanceof WeakMap:
 			case this.thisContext instanceof WeakSet:
 			case this.thisContext instanceof Promise:
+			case this.thisContext instanceof HTMLElement:
 				return this.thisContext;
 			default:
 				return targetThisArg;
