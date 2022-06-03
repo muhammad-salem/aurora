@@ -1,31 +1,16 @@
 
 
 export default `
-
 class ClassWithPublicField {
   publicField;
 }
 
-class ClassWithPublicStaticField {
-  static PUBLIC_STATIC_FIELD;
-}
-
 class ClassWithPublicMethod {
-  publicMethod () {
-
-  }
-}
-
-class ClassWithPublicStaticMethod {
-  static publicStaticMethod() {};
+  publicMethod () { }
 }
 
 class ClassWithPrivateField {
   #privateField;
-}
-
-class ClassWithPrivateStaticField {
-  static #PRIVATE_STATIC_FIELD;
 }
 
 // class ClassWithPrivateMethod {
@@ -33,6 +18,18 @@ class ClassWithPrivateStaticField {
 //     return 'hello world';
 //   }
 // }
+
+class ClassWithPublicStaticField {
+  static PUBLIC_STATIC_FIELD;
+}
+
+class ClassWithPublicStaticMethod {
+  static publicStaticMethod() {};
+}
+
+class ClassWithPrivateStaticField {
+  static #PRIVATE_STATIC_FIELD;
+}
 
 // class ClassWithPrivateStaticMethod {
 //   static #privateStaticMethod() {

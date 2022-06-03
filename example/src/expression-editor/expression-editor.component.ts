@@ -1,17 +1,41 @@
-import { Component, ExpressionNode, JavaScriptAppParser, OnInit } from '@ibyar/aurora';
+import { Component, ExpressionNode, JavaScriptAppParser, OnInit, ViewChild } from '@ibyar/aurora';
 
+const styles = `
+	.content {
+		flex: 1;
+		display: flex;
+	}
+
+	.box {
+		display: flex;
+		min-height: min-content;
+	}
+
+	.column {
+		padding: 20px;
+		border-right: 1px solid #999;
+		overflow-y: auto;
+	}
+
+	.column > pre {
+		height: 750px;
+		overflow: unset !important;
+	}
+`;
 
 @Component({
 	selector: 'expression-editor',
-	template: `<div class="row h-100 w-100">
-		<div class="col-6 h-100">
-			<div class="col-12 h-100"><pre styles="sc">{{code}}</pre></div>
-			<div class="col-12 h-100"><pre>{{str}}</pre></div>
+	template: `
+		<div class="content w-100 h-100">
+			<div class="box">
+				<div class="column">Selector</div>
+				<div #editor class="column"><pre contentEditable="true" (input)="loadCode($event.target.textContent)">...</pre></div>
+				<div class="column"><pre>{{str}}</pre></div>
+				<div class="column"><pre>{{ast}}</pre></div>
+			</div>
 		</div>
-		<div class="col-6 h-100"><pre>{{ast}}</pre></div>
-	</div>`,
-	styles: `pre {white-space: pre-wrap; }`
-
+		`,
+	styles: styles,
 })
 export class ExpressionEditorComponent implements OnInit {
 
@@ -20,22 +44,27 @@ export class ExpressionEditorComponent implements OnInit {
 	str = '';
 	node: ExpressionNode;
 
+	@ViewChild('editor')
+	editor: HTMLPreElement;
+
 	onInit(): void {
-		import('./expression.spec.js').then(module => this.loadCode(module.default));
+		import('./expression.spec.js')
+			.then(module => this.loadCode(module.default))
+			.then(code => this.editor.innerText = code)
+			.then(code => this.code = code);
 	}
 
 	loadCode(code: string) {
-		this.code = code;
 		try {
 			const node = JavaScriptAppParser.parse(code);
 			this.ast = JSON.stringify(node.toJSON(), undefined, 2);
 			this.str = node.toString();
 			this.node = node;
-
 		} catch (e: any) {
 			this.ast = e.stack;
 			throw e;
 		}
+		return code;
 	}
 
 }
