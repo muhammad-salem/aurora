@@ -39,7 +39,7 @@ export class ExpressionStatement extends AbstractExpressionNode {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
-		return this.body.map(node => node.toString()).join('; ').concat(';');
+		return this.body.map(node => node.toString()).join('');
 	}
 	toJson(): object {
 		return { body: this.body.map(exp => exp.toJSON()) };
