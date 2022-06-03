@@ -120,7 +120,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements C
 		return this.declarations.flatMap(declareVariable => declareVariable.dependencyPath(computed));
 	}
 	toString(): string {
-		return `${this.kind} ${this.declarations.map(v => v.toString()).join(', ')}`;
+		return `${this.kind} ${this.declarations.map(v => v.toString()).join(', ')};`;
 	}
 	toJson(): object {
 		return {
