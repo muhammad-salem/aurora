@@ -1053,7 +1053,7 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'e':
-				if (/else(\s|\{])/.test(this.expression.substring(this.pos, this.pos + 5))) {
+				if (/else[\s|\{]/.test(this.expression.substring(this.pos, this.pos + 5))) {
 					this.current = this.newToken(Token.ELSE);
 					this.pos += 4;
 					return true;
@@ -1094,7 +1094,7 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'i':
-				if (/if(\s|\(])/.test(this.expression.substring(this.pos, this.pos + 3))) {
+				if (/if[\s|\(]/.test(this.expression.substring(this.pos, this.pos + 3))) {
 					this.current = this.newToken(Token.IF);
 					this.pos += 2;
 					return true;
