@@ -2,28 +2,36 @@
 
 export default `
 
-class Book {
-	static #PRIVATE_STATIC_FIELD = true;
-	name = 'A Song of Ice and Fire';
-	#privateField = 7;
-
-	getName() {
-		return this.name;
-	}
+class ClassWithPublicField {
+  publicField;
 }
 
-// class ClassWithPrivateField {
-//   #privateField;
-// }
+class ClassWithPublicStaticField {
+  static PUBLIC_STATIC_FIELD;
+}
+
+class ClassWithPublicMethod {
+  publicMethod () {
+
+  }
+}
+
+class ClassWithPublicStaticMethod {
+  static publicStaticMethod() {};
+}
+
+class ClassWithPrivateField {
+  #privateField;
+}
+
+class ClassWithPrivateStaticField {
+  static #PRIVATE_STATIC_FIELD;
+}
 
 // class ClassWithPrivateMethod {
 //   #privateMethod() {
 //     return 'hello world';
 //   }
-// }
-
-// class ClassWithPrivateStaticField {
-//   static #PRIVATE_STATIC_FIELD;
 // }
 
 // class ClassWithPrivateStaticMethod {

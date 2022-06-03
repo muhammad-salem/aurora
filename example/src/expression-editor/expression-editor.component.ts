@@ -9,7 +9,9 @@ import { Component, ExpressionNode, JavaScriptAppParser, OnInit } from '@ibyar/a
 			<div class="col-12"><pre>{{str}}</pre></div>
 		</div>
 		<div class="col-6"><pre>{{ast}}</pre></div>
-	</div>`
+	</div>`,
+	styles: `pre {white-space: pre-wrap; }`
+
 })
 export class ExpressionEditorComponent implements OnInit {
 
@@ -30,8 +32,9 @@ export class ExpressionEditorComponent implements OnInit {
 			this.str = node.toString();
 			this.node = node;
 
-		} catch (error: any) {
-			this.ast = error.message;
+		} catch (e: any) {
+			this.ast = e.stack;
+			throw e;
 		}
 	}
 
