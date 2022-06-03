@@ -680,7 +680,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			body.push(classInfo.constructor as MethodDefinition);
 		}
 		body.push(...classInfo.staticElements);
-		body.push(...classInfo.privateMembers);
+		// body.push(...classInfo.privateMembers);
 		body.push(...classInfo.instanceFields);
 		body.push(...classInfo.publicMembers);
 		if (name) {
