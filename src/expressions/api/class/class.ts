@@ -361,6 +361,9 @@ export class MethodDefinition extends AbstractDefinition {
 		if (str.length) {
 			str += ' ';
 		}
+		if (this.static) {
+			str += 'static ';
+		}
 		str += this.value.toString();
 		return str;
 	}
@@ -416,10 +419,7 @@ export class PropertyDefinition extends AbstractDefinition {
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
 		const name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
-		if (this.value) {
-			return `${name} = ${this.value.toString()};`
-		}
-		return `${decorators.length ? decorators + ' ' : ''}${name};`
+		return `${decorators.length ? decorators + ' ' : ''}${this.static ? 'static ' : ''}${name}${this.value ? ` = ${this.value.toString()}` : ''};`
 	}
 	toJson(): { [key: string]: any; } {
 		return {
@@ -483,10 +483,7 @@ export class AccessorProperty extends AbstractDefinition {
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
 		const name = this.computed ? `[${this.key.toString()}]` : this.key.toString();
-		if (this.value) {
-			return `${name} = ${this.value.toString()};`
-		}
-		return `${decorators.length ? decorators + ' ' : ''}accessor ${name};`
+		return `${decorators.length ? decorators.concat(' ') : ''}${this.static ? 'static ' : ''}accessor ${name}${this.value ? ` = ${this.value.toString()}` : ''};`
 	}
 	toJson(): { [key: string]: any; } {
 		return {
