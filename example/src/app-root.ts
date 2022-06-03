@@ -73,7 +73,7 @@ export class AppRoot implements OnInit {
 	];
 
 	onInit(): void {
-		this.lazyLoad(this.appList[0]);
+		this.lazyLoad(this.appList.at(-1)!);
 	}
 
 }
