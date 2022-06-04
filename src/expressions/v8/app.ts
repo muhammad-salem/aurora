@@ -255,11 +255,6 @@ export class JavaScriptAppParser extends JavaScriptParser {
 
 		const hasExtends = !!classInfo.extends;
 
-		// const staticBlockList: ExpressionNode[] = [];
-		// const privateClassMemberList: ExpressionNode[] = [];
-		// const publicClassFieldList: ExpressionNode[] = [];
-		// const publicClassMethodList: ExpressionNode[] = [];
-
 		while (this.peek().isNotType(Token.R_CURLY)) {
 			if (this.check(Token.SEMICOLON)) continue;
 
@@ -320,7 +315,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		// throw new Error('Method not implemented.');
 		if (isConstructor) {
 			if (classInfo.constructor) {
-				throw new SyntaxError('A class may only have one constructor.');
+				throw new SyntaxError(this.errorMessage('A class may only have one constructor.'));
 			}
 			classInfo.constructor = property;
 			// set the class name as the constructor name
@@ -336,29 +331,12 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			classInfo.instanceFields.push(property);
 		}
 
-		if (isComputedName) {
-			// We create a synthetic variable name here so that scope
-			// analysis doesn't dedupe the vars.
-			// Variable * computed_name_var =
-			// CreateSyntheticContextVariable(ClassFieldVariableName(ast_value_factory(), classinfo . computed_field_count));
-			// property . set_computed_name_var(computed_name_var);
-			classInfo.publicMembers.push(property);
-		}
+		// if (isComputedName) {
+		// 	classInfo.publicMembers.push(property);
+		// }
 
 	}
 	protected declarePrivateClassMember(propertyName: string, property: MethodDefinition | PropertyDefinition, kind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo) {
-		if (ClassLiteralPropertyKind.FIELD == kind) {
-			if (isStatic) {
-				classInfo.staticElements.push(property);
-			} else {
-				classInfo.instanceFields.push(property);
-			}
-		}
-		// const privateNameVar = this.createPrivateNameVariable(
-		// 	getVariableMode(kind),
-		// 	isStatic ? StaticFlag.Static : StaticFlag.NotStatic,
-		// 	propertyName
-		// );
 		classInfo.privateMembers.push(property);
 	}
 	// protected createPrivateNameVariable(mode: VariableMode, staticFlag: StaticFlag, propertyName: string) {
@@ -609,80 +587,14 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
 	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassExpression {
-		// const hasDefaultConstructor = !classInfo.hasSeenConstructor;
-		// // Account for the default constructor.
-		// if (hasDefaultConstructor) {
-		// 	const hasExtends = !!classInfo.extends;
-		// 	const kind = hasExtends ? FunctionKind.DEFAULT_DERIVED_CONSTRUCTOR : FunctionKind.DEFAULT_BASE_CONSTRUCTOR;
-		// }
-		// if (classInfo.hasStaticElements) {
-		// }
-		// if (classInfo.hasInstanceMembers) {
-		// }
-		const hasExtends = !!classInfo.extends;
-		const hasDefaultConstructor = !classInfo.hasSeenConstructor;
-		if (hasDefaultConstructor) {
-			// ignore setting default constructor for now
-			// classInfo.constructor = DefaultConstructor(name, has_extends);
-		}
-
-
-		//   bool has_extends = classInfo ->extends != nullptr;
-		//   bool has_default_constructor = classInfo -> constructor == nullptr;
-		// 		if (has_default_constructor) {
-		// 			classInfo -> constructor =
-		// 			DefaultConstructor(name, has_extends, pos, end_pos);
-		// 		}
-
-		// if (name != nullptr) {
-		// 	DCHECK_NOT_NULL(block_scope -> class_variable());
-		// 	block_scope -> class_variable() -> set_initializer_position(end_pos);
-		// }
-
-		// FunctionLiteral * static_initializer = nullptr;
-		// if (classInfo -> has_static_elements) {
-		// 	static_initializer = CreateInitializerFunction(
-		// 		"<static_initializer>", classInfo -> static_elements_scope,
-		// 		factory() -> NewInitializeClassStaticElementsStatement(
-		// 			classInfo -> static_elements, kNoSourcePosition));
-		// }
-
-		// FunctionLiteral * instance_members_initializer_function = nullptr;
-		// if (classInfo -> has_instance_members) {
-		// 	instance_members_initializer_function = CreateInitializerFunction(
-		// 		"<instance_members_initializer>", classInfo -> instance_members_scope,
-		// 		factory() -> NewInitializeClassMembersStatement(
-		// 			classInfo -> instance_fields, kNoSourcePosition));
-		// 	classInfo -> constructor -> set_requires_instance_members_initializer(true);
-		// 	classInfo -> constructor -> add_expected_properties(
-		// 		classInfo -> instance_fields -> length());
-		// }
-
-		// if (classInfo -> requires_brand) {
-		// 	classInfo -> constructor -> set_class_scope_has_private_brand(true);
-		// }
-		// if (classInfo -> has_static_private_methods) {
-		// 	classInfo -> constructor -> set_has_static_private_methods_or_accessors(true);
-		// }
-		// ClassLiteral * class_literal = factory() -> NewClassLiteral(
-		// 	block_scope, classInfo ->extends, classInfo -> constructor,
-		// 	classInfo -> public_members, classInfo -> private_members,
-		// 	static_initializer, instance_members_initializer_function, pos, end_pos,
-		// 	classInfo -> has_static_computed_names, classInfo -> is_anonymous,
-		// 	classInfo -> has_private_methods, classInfo -> home_object_variable,
-		// 	classInfo -> static_home_object_variable);
-
-		// AddFunctionForNameInference(classInfo -> constructor);
-		// return class_literal;
 		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
-
 		if (classInfo.hasSeenConstructor) {
 			body.push(classInfo.constructor as MethodDefinition);
 		}
 		body.push(...classInfo.staticElements);
-		// body.push(...classInfo.privateMembers);
 		body.push(...classInfo.instanceFields);
 		body.push(...classInfo.publicMembers);
+		body.push(...classInfo.privateMembers);
 		if (name) {
 			return new ClassDeclaration(new ClassBody(body), [], name as Identifier, classInfo.extends);
 		}
