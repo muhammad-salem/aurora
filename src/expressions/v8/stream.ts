@@ -657,7 +657,6 @@ export class TokenStreamImpl extends TokenStream {
 
 		if (valid) {
 			const rawString = this.expression.substring(startPos, pos);
-			console.log('BigInt', rawString);
 			if (this.expression.charAt(pos) === 'n') {
 				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString);
 				this.current = this.newToken(Token.BIGINT, bigintNode);
