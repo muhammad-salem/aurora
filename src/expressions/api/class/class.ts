@@ -39,7 +39,6 @@ interface ClassConstructor {
 	[GET_PARAMETERS](args: any[]): any[];
 	[STATIC_INITIALIZATION_BLOCK]: Function[];
 
-	[INIT_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
 	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
 	[key: string]: any;
 }
@@ -252,6 +251,19 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
+	getTarget(classConstructor: ClassConstructor) {
+		return this.static
+			? (this.key instanceof PrivateIdentifier ? classConstructor[PRIVATE_SYMBOL] : classConstructor)
+			: (this.key instanceof PrivateIdentifier ? classConstructor.prototype[INIT_PRIVATE_SYMBOL] : classConstructor.prototype);
+	}
+	getKeyName(stack: Stack) {
+		switch (true) {
+			case this.computed: return this.key.get(stack);
+			case this.key instanceof Identifier:
+			case this.key instanceof PrivateIdentifier: return (this.key as Identifier | PrivateIdentifier).getName() as string;
+			default: return this.key.toString();
+		}
+	}
 	abstract get(stack: Stack, classConstructor: ClassConstructor): void;
 	abstract toString(): string;
 	abstract toJson(): { [key: string]: any; };
@@ -300,23 +312,22 @@ export class MethodDefinition extends AbstractDefinition {
 			this.initConstructor(stack, classConstructor);
 			return;
 		}
-		const target = this.static ? classConstructor : classConstructor.prototype;
+		const target = this.getTarget(classConstructor);
+		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
-		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
 		switch (this.kind) {
 			case 'method':
-				ref[name] = value;
+				target[name] = value;
 				break;
 			case 'set':
-				Object.defineProperty(ref, name, {
+				Object.defineProperty(target, name, {
 					configurable: true,
 					enumerable: false,
 					set: value as (v: any) => void,
 				});
 				break;
 			case 'get':
-				Object.defineProperty(ref, name, {
+				Object.defineProperty(target, name, {
 					configurable: true,
 					enumerable: false,
 					get: value as () => any,
@@ -326,7 +337,7 @@ export class MethodDefinition extends AbstractDefinition {
 				break;
 		}
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		__decorate(decorators, target, name, null);
+		decorators.length && __decorate(decorators, target, name, null);
 	}
 	private initConstructor(stack: Stack, classConstructor: ClassConstructor) {
 		let superIndex = this.value.getBody()
@@ -408,13 +419,12 @@ export class PropertyDefinition extends AbstractDefinition {
 		super(key, decorators, computed, isStatic, value);
 	}
 	get(stack: Stack, classConstructor: ClassConstructor): void {
-		const target = this.static ? classConstructor : classConstructor.prototype;
+		const target = this.getTarget(classConstructor);
+		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
-		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
-		ref[name as string] = value;
+		target[name as string] = value;
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		__decorate(decorators, target, name, null);
+		decorators.length && __decorate(decorators, target, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -459,18 +469,19 @@ export class AccessorProperty extends AbstractDefinition {
 		super(key, decorators, computed, isStatic, value);
 	}
 	get(stack: Stack, classConstructor: ClassConstructor): void {
-		const target = this.static ? classConstructor : classConstructor.prototype;
+		const target = this.getTarget(classConstructor);
+		const name = this.getKeyName(stack);
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
-		target[INIT_PRIVATE_SYMBOL][name] = value;
-		Object.defineProperty(target, name, {
+		target[name] = value;
+		const ref = this.static ? classConstructor : classConstructor.prototype;
+		Object.defineProperty(ref, name, {
 			configurable: true,
 			enumerable: false,
 			set: function (this: ClassInstance, setValue: any) {
 				this[PRIVATE_SYMBOL][name] = setValue;
 			},
 		});
-		Object.defineProperty(target, name, {
+		Object.defineProperty(ref, name, {
 			configurable: true,
 			enumerable: false,
 			get: function (this: ClassInstance) {
@@ -478,7 +489,7 @@ export class AccessorProperty extends AbstractDefinition {
 			},
 		});
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		__decorate(decorators, target, name, null);
+		decorators.length && __decorate(decorators, ref, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -570,8 +581,9 @@ export class Class extends AbstractExpressionNode {
 		// build class body
 		this.body.get(stack, classConstructor);
 
-		classConstructor[PRIVATE_SYMBOL] = Object.assign(classConstructor[PRIVATE_SYMBOL], classConstructor[INIT_PRIVATE_SYMBOL]);
-		Reflect.deleteProperty(classConstructor, INIT_PRIVATE_SYMBOL);
+		// classConstructor[PRIVATE_SYMBOL] = Object.assign(classConstructor[PRIVATE_SYMBOL], classConstructor[INIT_PRIVATE_SYMBOL]);
+		// Reflect.deleteProperty(classConstructor, INIT_PRIVATE_SYMBOL);
+
 		// apply class decorators
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
 		classConstructor = __decorate(decorators, classConstructor);
@@ -585,7 +597,6 @@ export class Class extends AbstractExpressionNode {
 					return args;
 				}
 				static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
-				static [INIT_PRIVATE_SYMBOL] = {};
 
 				static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
 
@@ -594,8 +605,8 @@ export class Class extends AbstractExpressionNode {
 					this[STATIC_INITIALIZATION_BLOCK].forEach(block => block());
 				}
 
-				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
 				[INIT_PRIVATE_SYMBOL] = {};
+				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
 
 				[STACK]: Stack;
 				constructor(...params: any[]) {
@@ -617,6 +628,8 @@ export class Class extends AbstractExpressionNode {
 				[CONSTRUCTOR](): void { }
 			}
 		};
+		TEMP[className as string].prototype[INIT_PRIVATE_SYMBOL] = {};
+		TEMP[className as string].prototype[PRIVATE_SYMBOL] = {};
 		return TEMP[className as string];
 	}
 	dependency(computed?: true): ExpressionNode[] {
