@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ExpressionNode, JavaScriptAppParser, OnInit, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, ExpressionNode, JavaScriptAppParser, OnInit, Scope, ScopeContext, Stack, ViewChild } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
@@ -18,7 +18,7 @@ const styles = `
 		overflow-y: auto;
 	}
 
-	.column > pre {
+	.column > pre, textarea {
 		height: 750px;
 		overflow: unset !important;
 	}
@@ -30,8 +30,15 @@ const styles = `
 		<div class="content w-100 h-100">
 			<div class="box">
 				<div class="column">Selector</div>
-				<div class="column"><pre #editor contentEditable="true">...</pre></div>
-				<div class="column"><pre>{{str}}</pre></div>
+				<div class="column"><textarea #editor cols="40" rows="700">...</textarea></div>
+				<div class="column">
+					<div class="d-flex flex-column">
+						<pre class="text-success">{{str}}</pre>
+						<button class="btn btn-outline-primary" (click)="executeCode()">Run</button>
+						<pre class="text-secondary" #logs></pre>
+						<pre class="text-danger" #error></pre>
+					</div>
+				</div>
 				<div class="column"><pre>{{ast}}</pre></div>
 			</div>
 		</div>
@@ -42,25 +49,30 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
 	ast = '';
 	str = '';
-	node?: ExpressionNode;
+
+	node: ExpressionNode;
 
 	@ViewChild('editor')
-	editor: HTMLPreElement;
+	editor: HTMLTextAreaElement;
+
+	@ViewChild('logs')
+	logs: HTMLPreElement;
+
+	@ViewChild('error')
+	error: HTMLPreElement;
 
 	onInit(): void {
 		import('./expression.spec.js')
 			.then(module => this.loadCode(module.default))
-			.then(code => this.editor.innerText = code!);
-
-
+			.then(code => this.editor.value = code!);
 	}
 
 	afterViewInit(): void {
-		fromEvent(this.editor, 'input')
+		fromEvent(this.editor, 'change')
 			.pipe(
+				map(() => this.editor.value),
 				debounceTime(400),
 				distinctUntilChanged(),
-				map(() => this.editor.innerText),
 			).subscribe(code => this.loadCode(code))
 	}
 
@@ -68,7 +80,6 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		if (!code) {
 			this.ast = '';
 			this.str = '';
-			this.node = undefined;
 			return;
 		}
 		try {
@@ -77,10 +88,30 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			this.str = node.toString();
 			this.node = node;
 		} catch (e: any) {
-			this.ast = e.stack;
+			this.error.innerText = e.stack;
 			throw e;
 		}
 		return code;
+	}
+
+	executeCode() {
+		this.logs.innerText = '';
+		this.error.innerText = '';
+		try {
+			const mockConsole = {
+				log: (...data: any[]): void => {
+					this.logs.innerText += data.join('\t') + '\n';
+					console.log(...data);
+				},
+			};
+			mockConsole.log('run code...');
+			const context: ScopeContext = { console: mockConsole };
+			const stack = new Stack(Scope.for(context));
+			this.node.get(stack);
+		} catch (e: any) {
+			this.error.innerText = e.stack;
+			throw e;
+		}
 	}
 
 }
