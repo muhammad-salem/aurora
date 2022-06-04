@@ -302,7 +302,7 @@ export class MethodDefinition extends AbstractDefinition {
 		}
 		const target = this.static ? classConstructor : classConstructor.prototype;
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
 		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
 		switch (this.kind) {
 			case 'method':
@@ -410,7 +410,7 @@ export class PropertyDefinition extends AbstractDefinition {
 	get(stack: Stack, classConstructor: ClassConstructor): void {
 		const target = this.static ? classConstructor : classConstructor.prototype;
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
 		const ref = this.key instanceof PrivateIdentifier ? target[INIT_PRIVATE_SYMBOL] : target;
 		ref[name as string] = value;
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
@@ -461,7 +461,7 @@ export class AccessorProperty extends AbstractDefinition {
 	get(stack: Stack, classConstructor: ClassConstructor): void {
 		const target = this.static ? classConstructor : classConstructor.prototype;
 		const value = this.value?.get(stack);
-		const name = this.computed ? this.key.get(stack) as symbol : (this.key as Identifier).getName() as string;
+		const name = this.computed ? this.key.get(stack) as symbol : this.key.toString();
 		target[INIT_PRIVATE_SYMBOL][name] = value;
 		Object.defineProperty(target, name, {
 			configurable: true,
