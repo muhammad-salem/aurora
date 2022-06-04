@@ -1,7 +1,8 @@
-export const PLAY = `let y = class {i = 9;}
-console.log(y);
-let x = new y();
-console.log(x.i);`;
+export const PLAY = `
+let Y = class {i = 9; #j = 'name'; getJ(){ return this.#j;}}
+let y = new Y();
+console.log(y.i, y.getJ());
+`;
 
 export const CLASS_EXAMPLE = `
 class ClassWithPublicField {
