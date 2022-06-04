@@ -103,7 +103,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			this.node = node;
 		} catch (e: any) {
 			this.error.innerText = e.stack;
-			throw e;
+			console.error(e);
 		}
 		return code;
 	}
@@ -124,7 +124,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			this.node.get(stack);
 		} catch (e: any) {
 			this.error.innerText = e.stack;
-			throw e;
+			console.error(e);
 		}
 	}
 
