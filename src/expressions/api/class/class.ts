@@ -657,10 +657,14 @@ export class ClassDeclaration extends Class implements DeclarationExpression {
 	}
 	static visit(node: ClassDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.body);
+		node.decorators.forEach(visitNode);
 		node.id && visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
 	}
 	declare protected id: Identifier;
+	constructor(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode) {
+		super(body, decorators, id, superClass);
+	}
 	declareVariable(stack: Stack, propertyValue?: any) {
 		stack.declareVariable(this.id.getName(), propertyValue);
 	}
@@ -674,13 +678,16 @@ export class ClassExpression extends Class {
 	static fromJSON(node: ClassExpression, deserializer: NodeDeserializer<any>): ClassExpression {
 		return new ClassExpression(
 			deserializer(node.body),
-			node.id && deserializer(node.id),
 			node.superClass && deserializer(node.superClass)
 		);
 	}
 	static visit(node: ClassExpression, visitNode: VisitNodeType): void {
 		visitNode(node.body);
-		node.id && visitNode(node.id);
+		node.decorators.forEach(visitNode);
 		node.superClass && visitNode(node.superClass);
+	}
+	declare protected id: undefined;
+	constructor(body: ClassBody, decorators: Decorator[], superClass?: ExpressionNode) {
+		super(body, decorators, undefined, superClass);
 	}
 }
