@@ -1,6 +1,6 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal } from '../api/definition/values.js';
+import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal, ThisNode, NullNode, UndefinedNode, TrueNode, FalseNode } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 
@@ -261,7 +261,7 @@ export class TokenStreamImpl extends TokenStream {
 				this.pos = index + 1;
 				if (this.expression.charAt(index - 1) !== '\\') {
 					const rawString = this.expression.substring(startPos + 1, index);
-					const stringNode = new Literal<string>(this.unescape(rawString), rawString);
+					const stringNode = new Literal<string>(this.unescape(rawString), `${quote}${rawString}${quote}`);
 					this.current = this.newToken(Token.STRING, stringNode);
 					return true;
 				}
@@ -396,11 +396,11 @@ export class TokenStreamImpl extends TokenStream {
 			const prop = this.expression.substring(startPos, i);
 			let node: ExpressionNode;
 			switch (prop) {
-				case 'this': this.current = this.newToken(Token.THIS); break;
-				case 'null': this.current = this.newToken(Token.NULL_LITERAL); break;
-				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL); break;
-				case 'true': this.current = this.newToken(Token.TRUE_LITERAL); break;
-				case 'false': this.current = this.newToken(Token.FALSE_LITERAL); break;
+				case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
+				case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
+				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
+				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
+				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
 
 				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
 				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
@@ -657,8 +657,9 @@ export class TokenStreamImpl extends TokenStream {
 
 		if (valid) {
 			const rawString = this.expression.substring(startPos, pos);
+			console.log('BigInt', rawString);
 			if (this.expression.charAt(pos) === 'n') {
-				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString);
+				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString);
 				this.current = this.newToken(Token.BIGINT, bigintNode);
 				pos++;
 			} else {

@@ -82,18 +82,29 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: Literal<any>):
 		Literal<string>
 		| Literal<number>
-		| Literal<bigint>
 		| Literal<boolean>
 		| Literal<RegExp>
+		| Literal<bigint>
 		| Literal<null>
 		| Literal<undefined> {
-		return new Literal(node.value, node.raw, node.regex);
+		if (node.bigint) {
+			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint);
+		} else if (node.regex) {
+			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex);
+		}
+		return new Literal(node.value, node.raw);
 	}
-	constructor(protected value: T, protected raw?: string, protected regex?: { pattern: string, flags: string }) {
+	constructor(protected value: T, protected raw?: string, protected regex?: { pattern: string, flags: string }, protected bigint?: string) {
 		super();
 	}
 	getValue() {
 		return this.value;
+	}
+	getRegex() {
+		return this.regex;
+	}
+	getBigint() {
+		return this.bigint;
 	}
 	geRaw() {
 		return this.raw;
@@ -124,47 +135,23 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		return this.raw ?? String(this.value);
 	}
 	toJson(): object {
+		if (this.bigint) {
+			return {
+				bigint: this.bigint,
+				raw: this.raw,
+			};
+		} else if (this.regex) {
+			return {
+				regex: { pattern: this.regex?.pattern, flags: this.regex?.flags },
+				raw: this.raw,
+			};
+		}
 		return {
 			value: this.value,
 			raw: this.raw,
-			regex: { pattern: this.regex?.pattern, flags: this.regex?.flags },
 		};
 	}
 }
-
-// @Deserializer('StringLiteral')
-// export class StringLiteral extends Literal<string> {
-// 	static fromJSON(node: StringLiteral): StringLiteral {
-// 		return new StringLiteral(node.value, node.quote);
-// 	}
-// 	private quote: string;
-// 	constructor(value: string, quote?: string) {
-// 		super(value);
-// 		const firstChar = value.charAt(0);
-// 		if (quote) {
-// 			this.quote = quote;
-// 			this.value = value;
-// 		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
-// 			this.quote = firstChar;
-// 			this.value = `"${value.substring(1, value.length - 1)}"`;
-// 		} else {
-// 			this.quote = '';
-// 			this.value = value;
-// 		}
-// 	}
-// 	getQuote() {
-// 		return this.quote;
-// 	}
-// 	toString(): string {
-// 		return `${this.quote}${this.value}${this.quote}`;
-// 	}
-// 	toJson(): object {
-// 		return {
-// 			value: this.value,
-// 			quote: this.quote
-// 		};
-// 	}
-// }
 
 class TemplateArray extends Array<string> implements TemplateStringsArray {
 	raw: readonly string[];
@@ -260,16 +247,6 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 }
 
 
-// @Deserializer('NumberLiteral')
-// export class NumberLiteral extends Literal<number> {
-// 	static fromJSON(node: NumberLiteral): NumberLiteral {
-// 		return new NumberLiteral(node.value);
-// 	}
-// 	constructor(value: number) {
-// 		super(value);
-// 	}
-// }
-
 // @Deserializer('BigIntLiteral')
 // export class BigIntLiteral extends Literal<bigint> {
 // 	static fromJSON(node: BigIntLiteral): BigIntLiteral {
@@ -282,63 +259,13 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 // 		return { value: this.value.toString() };
 // 	}
 // }
-// @Deserializer('RegExpLiteral')
-// export class RegExpLiteral extends Literal<RegExp> {
-// 	static fromJSON(node: RegExpLiteral & { regex: { pattern: string, flags: string } }): RegExpLiteral {
-// 		return new RegExpLiteral(new RegExp(node.regex.pattern, node.regex.flags));
-// 	}
-// 	toString(): string {
-// 		return `${this.value}n`;
-// 	}
-// 	toJson(): object {
-// 		return {
-// 			regex: {
-// 				pattern: this.value.source,
-// 				flags: this.value.flags
-// 			}
-// 		};;
-// 	}
-// }
+
 
 export const TRUE = String(true);
 export const FALSE = String(false);
-// @Deserializer('BooleanLiteral')
-// export class BooleanLiteral extends Literal<boolean> {
-// 	static fromJSON(node: BooleanLiteral): BooleanLiteral {
-// 		switch (String(node.value)) {
-// 			case TRUE: return TrueNode;
-// 			case FALSE:
-// 			default:
-// 				return FalseNode;
-// 		}
-// 	}
-// }
 
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
-
-// @Deserializer('NullishLiteral')
-// export class NullishLiteral extends Literal<null | undefined> {
-// 	static fromJSON(node: NullishLiteral): NullishLiteral {
-// 		switch (String(node.value)) {
-// 			case NULL: return NullNode;
-// 			case UNDEFINED:
-// 			default: return UndefinedNode;
-// 		}
-// 	}
-
-// 	toString(): string {
-// 		if (typeof this.value === 'undefined') {
-// 			return UNDEFINED;
-// 		}
-// 		return NULL;
-// 	}
-// 	toJson(): object {
-// 		return { value: this.toString() };
-// 	}
-// }
-
-
 
 export const NullNode = Object.freeze(new Literal<null>(null)) as Literal<null>;
 export const UndefinedNode = Object.freeze(new Literal<undefined>(undefined)) as Literal<undefined>;
