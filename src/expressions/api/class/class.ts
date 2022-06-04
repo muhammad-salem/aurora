@@ -658,7 +658,7 @@ export class ClassDeclaration extends Class implements DeclarationExpression {
 	static visit(node: ClassDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		node.decorators.forEach(visitNode);
-		node.id && visitNode(node.id);
+		visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
 	}
 	declare protected id: Identifier;
@@ -669,7 +669,13 @@ export class ClassDeclaration extends Class implements DeclarationExpression {
 		stack.declareVariable(this.id.getName(), propertyValue);
 	}
 	getDeclarationName(): string {
-		return this.id?.getDeclarationName()!;
+		return this.id.getDeclarationName()!;
+	}
+
+	override get(stack: Stack) {
+		const classConstructor = super.get(stack);
+		this.id.declareVariable(stack, classConstructor);
+		return classConstructor;
 	}
 }
 
@@ -684,10 +690,8 @@ export class ClassExpression extends Class {
 	static visit(node: ClassExpression, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		node.decorators.forEach(visitNode);
+		node.id && visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
 	}
-	declare protected id: undefined;
-	constructor(body: ClassBody, decorators: Decorator[], superClass?: ExpressionNode) {
-		super(body, decorators, undefined, superClass);
-	}
+
 }

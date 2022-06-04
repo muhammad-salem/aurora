@@ -2,7 +2,7 @@ import type { DeclarationExpression, ExpressionNode } from '../api/expression.js
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	AccessorProperty, ClassBody, ClassDeclaration, ClassExpression,
+	AccessorProperty, Class, ClassBody, ClassDeclaration, ClassExpression,
 	MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super
 } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
@@ -198,7 +198,18 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		return MetaProperty.NewTarget;
 	}
-	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ExpressionNode {
+	protected override parseClassExpression(): ClassExpression {
+		this.consume(Token.CLASS);
+		let name: ExpressionNode | undefined;
+		let isStrictReserved = false;
+		if (this.peekAnyIdentifier()) {
+			name = this.parseAndClassifyIdentifier(this.next());
+			isStrictReserved = Token.isStrictReservedWord(this.current().token);
+		}
+		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
+		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
+	}
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ClassDeclaration {
 		// ClassDeclaration ::
 		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
 		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'
@@ -229,10 +240,10 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			variableName = identifier.getName() as string;
 			name = identifier;
 		}
-		const value = this.parseClassLiteral(name, isStrictReserved);
-		return this.declareClass(variableName, value, names);
+		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
+		return new ClassDeclaration(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
 	}
-	protected override parseClassLiteral(name: ExpressionNode | undefined, nameIsStrictReserved: boolean): ExpressionNode {
+	protected override parseClassLiteral(name: ExpressionNode | undefined, nameIsStrictReserved: boolean): Class {
 		const isAnonymous = !!!name;
 
 		// All parts of a ClassDeclaration and ClassExpression are strict code.
@@ -310,7 +321,8 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 
 		this.expect(Token.R_CURLY);
-		return this.rewriteClassLiteral(classInfo, name);
+		const classBody = this.rewriteClassLiteral(classInfo, name);
+		return new Class(classBody, [], name as Identifier, classInfo.extends);
 	}
 	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: MethodDefinition, isConstructor: boolean, classInfo: ClassInfo): void {
 		// throw new Error('Method not implemented.');
@@ -505,7 +517,6 @@ export class JavaScriptAppParser extends JavaScriptParser {
 			classInfo.hasSeenConstructor = true;
 		}
 	}
-
 	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
 		const isGenerator = functionFlags.includes('GENERATOR');
 		const isAsync = functionFlags.includes('ASYNC');
@@ -580,7 +591,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
-	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassExpression | ClassDeclaration {
+	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassBody {
 		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
 		if (classInfo.hasSeenConstructor) {
 			body.push(classInfo.constructor as MethodDefinition);
@@ -589,11 +600,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		body.push(...classInfo.instanceFields);
 		body.push(...classInfo.publicMembers);
 		body.push(...classInfo.privateMembers);
-		const classBody = new ClassBody(body);
-		if (classInfo.isAnonymous) {
-			return new ClassExpression(classBody, [], classInfo.extends);
-		}
-		return new ClassDeclaration(classBody, [], name as Identifier, classInfo.extends);
+		return new ClassBody(body);
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));

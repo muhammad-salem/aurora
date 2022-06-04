@@ -44,7 +44,7 @@ import {
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
 import { BinaryExpression } from '../api/operators/binary.js';
-import { PrivateIdentifier } from '../api/class/class.js';
+import { ClassDeclaration, ClassExpression, PrivateIdentifier } from '../api/class/class.js';
 
 export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
 export enum PropertyKind {
@@ -1216,14 +1216,7 @@ export class JavaScriptParser extends AbstractParser {
 				return expression;
 			}
 			case Token.CLASS: {
-				this.consume(Token.CLASS);
-				let name: ExpressionNode | undefined;
-				let isStrictReserved = false;
-				if (this.peekAnyIdentifier()) {
-					name = this.parseAndClassifyIdentifier(this.next());
-					isStrictReserved = Token.isStrictReservedWord(this.current().token);
-				}
-				return this.parseClassLiteral(name, isStrictReserved);
+				return this.parseClassExpression();
 			}
 			case Token.TEMPLATE_LITERALS:
 				return this.parseTemplateLiteral();
@@ -1581,8 +1574,7 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				propertyName = new StringLiteral(this.parsePropertyName().toString());
-				// propertyName = this.parsePropertyName();
+				propertyName = this.parsePropertyName();
 				propInfo.name = propertyName.toString();
 				break;
 		}
@@ -2086,7 +2078,10 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
 	}
-	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ExpressionNode {
+	protected parseClassExpression(): ClassExpression {
+		throw new Error(this.errorMessage(`Expression (class) not supported.`));
+	}
+	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ClassDeclaration {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
 	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {
