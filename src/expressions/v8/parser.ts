@@ -889,17 +889,17 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.parseFunctionLiteral(flag, name);
 	}
-	protected parseIdentifier(): ExpressionNode {
+	protected parseIdentifier(): Identifier {
 		const next = this.next();
 		if (!Token.isValidIdentifier(next.token)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
 		}
 		if (next.isType(Token.IDENTIFIER)) {
-			return next.getValue();
+			return next.getValue<Identifier>();
 		}
 		return this.getIdentifier();
 	}
-	protected getIdentifier(): ExpressionNode {
+	protected getIdentifier(): Identifier {
 		const current = this.current();
 		switch (current.token) {
 			case Token.AWAIT:
@@ -2086,7 +2086,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
 	}
-	protected parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
+	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ExpressionNode {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
 	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {

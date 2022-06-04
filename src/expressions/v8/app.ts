@@ -198,7 +198,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		return MetaProperty.NewTarget;
 	}
-	protected override parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ExpressionNode {
 		// ClassDeclaration ::
 		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
 		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'
@@ -220,13 +220,14 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		const nextToken = this.peek().token;
 		const isStrictReserved = Token.isStrictReservedWord(nextToken);
 		let name: ExpressionNode | undefined;
-		let variableName: ExpressionNode | undefined;
+		let variableName: string | undefined;
 		if (defaultExport && (nextToken == Token.EXTENDS || nextToken == Token.L_CURLY)) {
 			name = new Literal('default');
-			variableName = new Literal('.default');
+			variableName = '.default';
 		} else {
-			name = this.parseIdentifier();
-			variableName = name;
+			const identifier = this.parseIdentifier();
+			variableName = identifier.getName() as string;
+			name = identifier;
 		}
 		const value = this.parseClassLiteral(name, isStrictReserved);
 		return this.declareClass(variableName, value, names);
@@ -523,20 +524,13 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		classInfo.hasStaticElements = true;
 		return new StaticBlock(block.getBody());
 	}
-	protected declareClass(variableName: ExpressionNode | undefined, value: ExpressionNode, names: ExpressionNode[] | undefined): ExpressionNode {
-		if (names && variableName) {
-			const proxy = this.declareVariable(variableName, 'let');
-			names.push(variableName);
-			return new AssignmentExpression('=', proxy, value);
-		}
-		return value;
+	protected declareClass(variableName: string, value: ExpressionNode, names: string[] | undefined): ExpressionNode {
+		names?.push(variableName);
+		const proxy = this.declareVariable(variableName, 'let');
+		return new AssignmentExpression('=', proxy, value);
 	}
-
-	protected declareVariable(name: ExpressionNode | undefined, mode: 'let' | 'const' | 'var') {
-		if (!name) {
-			throw new Error(this.errorMessage('Variable name is undefined'));
-		}
-		return new VariableDeclarationNode([new VariableDeclarator(name as DeclarationExpression)], mode);
+	protected declareVariable(name: string, mode: 'let' | 'const' | 'var') {
+		return new VariableDeclarationNode([new VariableDeclarator(new Identifier(name))], mode);
 	}
 	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode | undefined, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
 		switch (kind) {
@@ -586,7 +580,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		}
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
-	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassExpression {
+	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassExpression | ClassDeclaration {
 		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
 		if (classInfo.hasSeenConstructor) {
 			body.push(classInfo.constructor as MethodDefinition);
@@ -595,10 +589,11 @@ export class JavaScriptAppParser extends JavaScriptParser {
 		body.push(...classInfo.instanceFields);
 		body.push(...classInfo.publicMembers);
 		body.push(...classInfo.privateMembers);
-		if (name) {
-			return new ClassDeclaration(new ClassBody(body), [], name as Identifier, classInfo.extends);
+		const classBody = new ClassBody(body);
+		if (classInfo.isAnonymous) {
+			return new ClassExpression(classBody, [], classInfo.extends);
 		}
-		return new ClassExpression(new ClassBody(body), [], name, classInfo.extends);
+		return new ClassDeclaration(classBody, [], name as Identifier, classInfo.extends);
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));
