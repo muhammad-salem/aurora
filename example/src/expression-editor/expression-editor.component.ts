@@ -16,6 +16,7 @@ const styles = `
 		padding: 20px;
 		border-right: 1px solid #999;
 		overflow-y: auto;
+		max-width: 700px;
 	}
 
 	.column > pre, textarea {
@@ -29,7 +30,11 @@ const styles = `
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
-				<div class="column">Selector</div>
+				<div class="column">
+					<div class="h-25 d-flex flex-column d-flex justify-content-evenly">
+						<button class="btn btn-link" *for="let name of examples" @click="loadExample(name)">{{name}}</button>
+					</div>
+				</div>
 				<div class="column"><textarea #editor cols="40" rows="700">...</textarea></div>
 				<div class="column">
 					<div class="d-flex flex-column">
@@ -61,9 +66,18 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	@ViewChild('error')
 	error: HTMLPreElement;
 
+	examples = [
+		'PLAY',
+		'CLASS_EXAMPLE'
+	];
+
 	onInit(): void {
+		this.loadExample('PLAY');
+	}
+
+	loadExample(name: keyof typeof import('./expression.spec.js')) {
 		import('./expression.spec.js')
-			.then(module => this.loadCode(module.default))
+			.then(module => this.loadCode(module[name]))
 			.then(code => this.editor.value = code!);
 	}
 
