@@ -6,11 +6,7 @@ import { LogicalExpression } from '../api/operators/logical.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import {
-	Literal, BigIntLiteral, NumberLiteral,
-	BooleanLiteral, TrueNode, FalseNode,
-	NullNode, StringLiteral, UndefinedNode
-} from '../api/definition/values.js';
+import { Literal, TrueNode, FalseNode, NullNode, UndefinedNode } from '../api/definition/values.js';
 import { AwaitExpression } from '../api/operators/await.js';
 import { UpdateExpression } from '../api/operators/update.js';
 import { BinaryExpression } from '../api/operators/binary.js';
@@ -78,61 +74,23 @@ export function createTernaryExpression(op: string, logical: ExpressionNode, ifT
 	}
 }
 
-export function cretePrefixExpression(op: string, node: ExpressionNode): ExpressionNode {
-	switch (op) {
-		case '++':
-		case '--':
-			return new UpdateExpression(op, node, true);
-		case '+':
-		case '-':
-		case '!':
-		case '~':
-		case 'typeof':
-		case 'void':
-		case 'delete':
-			return new UnaryExpression(op, node);
-		case 'await':
-			return new AwaitExpression(node);
-		default:
-			throw new Error(`${op} is not prefix operator`);
-	}
-}
-
-export function cretePostfixExpression(op: string, node: ExpressionNode): ExpressionNode {
-	switch (op) {
-		case '++':
-		case '--':
-			return new UpdateExpression(op, node, false);
-		default:
-			throw new Error(`${op} is not postfix operator`);
-	}
-}
-
 export function creteCommaExpression(nodes: ExpressionNode[]): ExpressionNode {
 	return new SequenceExpression(nodes);
 }
 
 const USELESS_STACK: Stack = null as unknown as Stack;//Object.create(null);
+const ALLOWED_TYPES = ['string', 'number', 'bigint', 'boolean'];
 
 export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: ExpressionNode, op: Token): ExpressionNode {
 	const expression = creteInfixExpression(op.getName(), x, y);
-	if (expression
-		&& (
-			(x instanceof NumberLiteral && y instanceof NumberLiteral)
-			|| (x instanceof StringLiteral && y instanceof StringLiteral)
-			|| (x instanceof BigIntLiteral && y instanceof BigIntLiteral)
-			|| (x instanceof BooleanLiteral && y instanceof BooleanLiteral)
-		)) {
-		const result = expression.get(USELESS_STACK);
-		if (result !== false) {
-			switch (true) {
-				case typeof result === 'number': return new NumberLiteral(result);
-				case typeof result === 'string': return new StringLiteral(result);
-				case typeof result === 'bigint': return new BigIntLiteral(result);
-				case typeof result === 'boolean': return result ? TrueNode : FalseNode;
-				default:
-					break;
-			}
+
+	if (x instanceof Literal && y instanceof Literal) {
+		const typeX = typeof x.getValue();
+		const typeY = typeof y.getValue();
+		if (x === y && ALLOWED_TYPES.indexOf(typeX) > -1) {
+			const result = expression.get(USELESS_STACK);
+			const rawString = `${x.toString()} ${op.getName()} ${x.toString()}`;
+			return new Literal<any>(result, rawString);
 		}
 	}
 	return expression!;
@@ -141,9 +99,10 @@ export function coverValue(value: any) {
 	switch (typeof value) {
 		case 'undefined': return UndefinedNode;
 		case 'boolean': return value ? TrueNode : FalseNode;
-		case 'number': return new NumberLiteral(value);
-		case 'bigint': return new BigIntLiteral(value);
-		case 'string': return new StringLiteral(value);
+		case 'number':
+		case 'bigint':
+		case 'string':
+			return new Literal<number | string | bigint>(value);
 		case 'object':
 			if (value === null) {
 				return NullNode;
@@ -157,27 +116,35 @@ export function coverValue(value: any) {
 }
 
 export function buildUnaryExpression(expression: ExpressionNode, op: Token) {
-	let result = cretePrefixExpression(op.getName(), expression);
-	if (expression instanceof Literal) {
-		const value = result.get(USELESS_STACK);
-		const temp = coverValue(value);
-		if (temp !== false) {
-			result = temp;
-		}
+	const name = op.getName();
+	switch (name) {
+		case '++':
+		case '--':
+			return new UpdateExpression(name, expression, true);
+		case '+':
+		case '-':
+		case '!':
+		case '~':
+		case 'typeof':
+		case 'void':
+		case 'delete':
+			return new UnaryExpression(name, expression);
+		case 'await':
+			return new AwaitExpression(expression);
+		default:
+			throw new Error(`${op} is not prefix operator`);
 	}
-	return result;
 }
 
 export function buildPostfixExpression(expression: ExpressionNode, op: Token) {
-	let result = cretePostfixExpression(op.getName(), expression);
-	if (expression instanceof Literal) {
-		const value = result.get(USELESS_STACK);
-		const temp = coverValue(value);
-		if (temp !== false) {
-			result = temp;
-		}
+	const name = op.getName();
+	switch (name) {
+		case '++':
+		case '--':
+			return new UpdateExpression(name, expression, false);
+		default:
+			throw new Error(`${op} is not postfix operator`);
 	}
-	return result;
 }
 
 export function expressionFromLiteral(te: TokenExpression) {

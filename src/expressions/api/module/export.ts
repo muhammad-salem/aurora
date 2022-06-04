@@ -41,7 +41,7 @@ import { ModuleContext, ReactiveScope, Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { Identifier, StringLiteral } from '../definition/values.js';
+import { Identifier, Literal } from '../definition/values.js';
 import { ModuleSpecifier } from './import.js';
 import { FunctionDeclaration } from '../definition/function.js';
 import { ClassDeclaration } from '../class/class.js';
@@ -124,7 +124,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportNamedDeclaration, deserializer: NodeDeserializer): ExportNamedDeclaration {
 		return new ExportNamedDeclaration(
 			node.specifiers.map(deserializer) as ExportSpecifier[],
-			node.source ? deserializer(node.source) as StringLiteral : void 0,
+			node.source ? deserializer(node.source) as Literal<string> : void 0,
 			node.declaration ? deserializer(node.declaration) as DeclarationExpression : void 0,
 		);
 	}
@@ -135,7 +135,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	}
 	constructor(
 		private specifiers: ExportSpecifier[],
-		private source?: StringLiteral,
+		private source?: Literal<string>,
 		private declaration?: DeclarationExpression) {
 		super();
 	}
@@ -292,13 +292,13 @@ export class ExportDefaultDeclaration extends AbstractExpressionNode {
 @Deserializer('ExportAllDeclaration')
 export class ExportAllDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportAllDeclaration, deserializer: NodeDeserializer): ExportAllDeclaration {
-		return new ExportAllDeclaration(deserializer(node.source) as StringLiteral);
+		return new ExportAllDeclaration(deserializer(node.source) as Literal<string>);
 	}
 	static visit(node: ExportAllDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.source);
 	}
 	constructor(
-		private source: StringLiteral) {
+		private source: Literal<string>) {
 		super();
 	}
 	getSource() {

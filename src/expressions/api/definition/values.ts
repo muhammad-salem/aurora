@@ -67,6 +67,16 @@ export class Identifier extends AbstractExpressionNode implements DeclarationExp
 	}
 }
 
+@Deserializer('ThisExpression')
+export class ThisExpression extends Identifier {
+	static fromJSON(node: ThisExpression): ThisExpression {
+		return ThisNode;
+	}
+	constructor() {
+		super('this');
+	}
+}
+
 @Deserializer('Literal')
 export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: Literal<any>):
@@ -75,14 +85,18 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		| Literal<bigint>
 		| Literal<boolean>
 		| Literal<RegExp>
-		| Literal<null | undefined> {
-		return new Literal(node.value);
+		| Literal<null>
+		| Literal<undefined> {
+		return new Literal(node.value, node.raw, node.regex);
 	}
-	constructor(protected value: T) {
+	constructor(protected value: T, protected raw?: string, protected regex?: { pattern: string, flags: string }) {
 		super();
 	}
 	getValue() {
 		return this.value;
+	}
+	geRaw() {
+		return this.raw;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set() {
@@ -107,46 +121,50 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		return computed ? [{ computed: false, path: this.toString() }] : [];
 	}
 	toString(): string {
-		return String(this.value);
-	}
-	toJson(): object {
-		return { value: this.value };
-	}
-}
-
-@Deserializer('StringLiteral')
-export class StringLiteral extends Literal<string> {
-	static fromJSON(node: StringLiteral): StringLiteral {
-		return new StringLiteral(node.value, node.quote);
-	}
-	private quote: string;
-	constructor(value: string, quote?: string) {
-		super(value);
-		const firstChar = value.charAt(0);
-		if (quote) {
-			this.quote = quote;
-			this.value = value;
-		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
-			this.quote = firstChar;
-			this.value = `"${value.substring(1, value.length - 1)}"`;
-		} else {
-			this.quote = '';
-			this.value = value;
-		}
-	}
-	getQuote() {
-		return this.quote;
-	}
-	toString(): string {
-		return `${this.quote}${this.value}${this.quote}`;
+		return this.raw ?? String(this.value);
 	}
 	toJson(): object {
 		return {
 			value: this.value,
-			quote: this.quote
+			raw: this.raw,
+			regex: { pattern: this.regex?.pattern, flags: this.regex?.flags },
 		};
 	}
 }
+
+// @Deserializer('StringLiteral')
+// export class StringLiteral extends Literal<string> {
+// 	static fromJSON(node: StringLiteral): StringLiteral {
+// 		return new StringLiteral(node.value, node.quote);
+// 	}
+// 	private quote: string;
+// 	constructor(value: string, quote?: string) {
+// 		super(value);
+// 		const firstChar = value.charAt(0);
+// 		if (quote) {
+// 			this.quote = quote;
+// 			this.value = value;
+// 		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
+// 			this.quote = firstChar;
+// 			this.value = `"${value.substring(1, value.length - 1)}"`;
+// 		} else {
+// 			this.quote = '';
+// 			this.value = value;
+// 		}
+// 	}
+// 	getQuote() {
+// 		return this.quote;
+// 	}
+// 	toString(): string {
+// 		return `${this.quote}${this.value}${this.quote}`;
+// 	}
+// 	toJson(): object {
+// 		return {
+// 			value: this.value,
+// 			quote: this.quote
+// 		};
+// 	}
+// }
 
 class TemplateArray extends Array<string> implements TemplateStringsArray {
 	raw: readonly string[];
@@ -242,98 +260,90 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 }
 
 
-@Deserializer('NumberLiteral')
-export class NumberLiteral extends Literal<number> {
-	static fromJSON(node: NumberLiteral): NumberLiteral {
-		return new NumberLiteral(node.value);
-	}
-	constructor(value: number) {
-		super(value);
-	}
-}
+// @Deserializer('NumberLiteral')
+// export class NumberLiteral extends Literal<number> {
+// 	static fromJSON(node: NumberLiteral): NumberLiteral {
+// 		return new NumberLiteral(node.value);
+// 	}
+// 	constructor(value: number) {
+// 		super(value);
+// 	}
+// }
 
-@Deserializer('BigIntLiteral')
-export class BigIntLiteral extends Literal<bigint> {
-	static fromJSON(node: BigIntLiteral): BigIntLiteral {
-		return new BigIntLiteral(BigInt(String(node.value)));
-	}
-	toString(): string {
-		return `${this.value}n`;
-	}
-	toJson(): object {
-		return { value: this.value.toString() };
-	}
-}
-@Deserializer('RegExpLiteral')
-export class RegExpLiteral extends Literal<RegExp> {
-	static fromJSON(node: RegExpLiteral & { regex: { pattern: string, flags: string } }): RegExpLiteral {
-		return new RegExpLiteral(new RegExp(node.regex.pattern, node.regex.flags));
-	}
-	toString(): string {
-		return `${this.value}n`;
-	}
-	toJson(): object {
-		return {
-			regex: {
-				pattern: this.value.source,
-				flags: this.value.flags
-			}
-		};;
-	}
-}
+// @Deserializer('BigIntLiteral')
+// export class BigIntLiteral extends Literal<bigint> {
+// 	static fromJSON(node: BigIntLiteral): BigIntLiteral {
+// 		return new BigIntLiteral(BigInt(String(node.value)));
+// 	}
+// 	toString(): string {
+// 		return `${this.value}n`;
+// 	}
+// 	toJson(): object {
+// 		return { value: this.value.toString() };
+// 	}
+// }
+// @Deserializer('RegExpLiteral')
+// export class RegExpLiteral extends Literal<RegExp> {
+// 	static fromJSON(node: RegExpLiteral & { regex: { pattern: string, flags: string } }): RegExpLiteral {
+// 		return new RegExpLiteral(new RegExp(node.regex.pattern, node.regex.flags));
+// 	}
+// 	toString(): string {
+// 		return `${this.value}n`;
+// 	}
+// 	toJson(): object {
+// 		return {
+// 			regex: {
+// 				pattern: this.value.source,
+// 				flags: this.value.flags
+// 			}
+// 		};;
+// 	}
+// }
 
 export const TRUE = String(true);
 export const FALSE = String(false);
-@Deserializer('BooleanLiteral')
-export class BooleanLiteral extends Literal<boolean> {
-	static fromJSON(node: BooleanLiteral): BooleanLiteral {
-		switch (String(node.value)) {
-			case TRUE: return TrueNode;
-			case FALSE:
-			default:
-				return FalseNode;
-		}
-	}
-}
+// @Deserializer('BooleanLiteral')
+// export class BooleanLiteral extends Literal<boolean> {
+// 	static fromJSON(node: BooleanLiteral): BooleanLiteral {
+// 		switch (String(node.value)) {
+// 			case TRUE: return TrueNode;
+// 			case FALSE:
+// 			default:
+// 				return FalseNode;
+// 		}
+// 	}
+// }
 
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
-@Deserializer('NullishLiteral')
-export class NullishLiteral extends Literal<null | undefined> {
-	static fromJSON(node: NullishLiteral): NullishLiteral {
-		switch (String(node.value)) {
-			case NULL: return NullNode;
-			case UNDEFINED:
-			default: return UndefinedNode;
-		}
-	}
+// @Deserializer('NullishLiteral')
+// export class NullishLiteral extends Literal<null | undefined> {
+// 	static fromJSON(node: NullishLiteral): NullishLiteral {
+// 		switch (String(node.value)) {
+// 			case NULL: return NullNode;
+// 			case UNDEFINED:
+// 			default: return UndefinedNode;
+// 		}
+// 	}
 
-	toString(): string {
-		if (typeof this.value === 'undefined') {
-			return UNDEFINED;
-		}
-		return NULL;
-	}
-	toJson(): object {
-		return { value: this.toString() };
-	}
-}
+// 	toString(): string {
+// 		if (typeof this.value === 'undefined') {
+// 			return UNDEFINED;
+// 		}
+// 		return NULL;
+// 	}
+// 	toJson(): object {
+// 		return { value: this.toString() };
+// 	}
+// }
 
-@Deserializer('ThisExpression')
-export class ThisExpression extends Identifier {
-	static fromJSON(node: ThisExpression): ThisExpression {
-		return ThisNode;
-	}
-	constructor() {
-		super('this');
-	}
-}
 
-export const NullNode = Object.freeze(new NullishLiteral(null)) as NullishLiteral;
-export const UndefinedNode = Object.freeze(new NullishLiteral(undefined)) as NullishLiteral;
-export const TrueNode = Object.freeze(new BooleanLiteral(true)) as BooleanLiteral;
-export const FalseNode = Object.freeze(new BooleanLiteral(false)) as BooleanLiteral;
+
+export const NullNode = Object.freeze(new Literal<null>(null)) as Literal<null>;
+export const UndefinedNode = Object.freeze(new Literal<undefined>(undefined)) as Literal<undefined>;
+export const TrueNode = Object.freeze(new Literal<boolean>(true)) as Literal<boolean>;
+export const FalseNode = Object.freeze(new Literal<boolean>(false)) as Literal<boolean>;
 export const ThisNode = Object.freeze(new ThisExpression()) as ThisExpression;
 export const GlobalThisNode = Object.freeze(new Identifier('globalThis')) as Identifier;
 export const SymbolNode = Object.freeze(new Identifier('Symbol')) as Identifier;

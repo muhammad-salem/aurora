@@ -4,9 +4,10 @@ import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
 	OfNode, Identifier, ThisNode,
 	GetIdentifier, SetIdentifier, AsyncIdentifier,
-	NullNode, StringLiteral, AwaitIdentifier,
+	NullNode, AwaitIdentifier,
 	ConstructorIdentifier, NameIdentifier,
-	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpression, TemplateLiteral
+	EvalIdentifier, ArgumentsIdentifier,
+	TaggedTemplateExpression, TemplateLiteral, Literal
 } from '../api/definition/values.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
@@ -1546,7 +1547,7 @@ export class JavaScriptParser extends AbstractParser {
 				//   12.30 -> "12.3"
 				this.consume(nextToken.token);
 				propertyName = nextToken.getValue();
-				propInfo.name = (propertyName as StringLiteral).getValue();
+				propInfo.name = (propertyName as Literal<string>).getValue();
 				break;
 			case Token.L_BRACKETS:
 				// [Symbol.iterator]

@@ -1,4 +1,4 @@
-import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
+import type { ExpressionNode } from '../api/expression.js';
 import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import {
@@ -6,7 +6,7 @@ import {
 	MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super
 } from '../api/class/class.js';
 import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
-import { Identifier, Literal, NullishLiteral, NullNode, StringLiteral } from '../api/definition/values.js';
+import { Identifier, Literal, NullNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
@@ -18,7 +18,7 @@ export type ClassInfo = {
 	privateMembers: (MethodDefinition | PropertyDefinition)[],
 	staticElements: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[],
 	instanceFields: (MethodDefinition | PropertyDefinition | AccessorProperty)[],
-	constructor: MethodDefinition | NullishLiteral,
+	constructor: MethodDefinition | undefined,
 
 	hasSeenConstructor: boolean;
 	hasStaticComputedNames: boolean;
@@ -42,7 +42,7 @@ export function createClassInfo(): ClassInfo {
 		privateMembers: [],
 		staticElements: [],
 		instanceFields: [],
-		'constructor': NullNode,
+		'constructor': undefined,
 
 		hasSeenConstructor: false,
 		hasStaticComputedNames: false,
@@ -464,7 +464,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 					// Make sure the name expression is a string since we need a Name for
 					// Runtime_DefineAccessorPropertyUnchecked and since we can determine
 					// this statically we can skip the extra runtime check.
-					nameExpression = new StringLiteral(propInfo.name);
+					nameExpression = new Literal<string>(propInfo.name);
 				}
 
 				let kind: FunctionKind;

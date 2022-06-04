@@ -1,9 +1,6 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import {
-	BigIntLiteral, GlobalThisNode, NumberLiteral, OfNode, Identifier,
-	RegExpLiteral, StringLiteral, SymbolNode, AsNode
-} from '../api/definition/values.js';
+import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 
@@ -264,7 +261,7 @@ export class TokenStreamImpl extends TokenStream {
 				this.pos = index + 1;
 				if (this.expression.charAt(index - 1) !== '\\') {
 					const rawString = this.expression.substring(startPos + 1, index);
-					const stringNode = new StringLiteral(this.unescape(rawString), quote);
+					const stringNode = new Literal<string>(this.unescape(rawString), rawString);
 					this.current = this.newToken(Token.STRING, stringNode);
 					return true;
 				}
@@ -495,7 +492,7 @@ export class TokenStreamImpl extends TokenStream {
 					currentPos++;
 				}
 			}
-			const regexNode = new RegExpLiteral(new RegExp(pattern, flags));
+			const regexNode = new Literal<RegExp>(new RegExp(pattern, flags), `/${pattern}/${flags}`, { pattern, flags });
 			this.current = this.newToken(Token.REGEXP_LITERAL, regexNode);
 			this.pos = currentPos;
 			return true;
@@ -600,7 +597,9 @@ export class TokenStreamImpl extends TokenStream {
 		}
 
 		if (valid) {
-			const numNode = new NumberLiteral(parseInt(this.expression.substring(startPos, pos), radix));
+			const string = this.expression.substring(startPos, pos);
+			const rawString = this.expression.substring(this.pos, pos);
+			const numNode = new Literal<number>(parseInt(string, radix), rawString);
 			this.current = this.newToken(Token.NUMBER, numNode);
 			this.pos = pos;
 		}
@@ -657,12 +656,13 @@ export class TokenStreamImpl extends TokenStream {
 		}
 
 		if (valid) {
+			const rawString = this.expression.substring(startPos, pos);
 			if (this.expression.charAt(pos) === 'n') {
-				const bigintNode = new BigIntLiteral(BigInt(this.expression.substring(startPos, pos)));
+				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString);
 				this.current = this.newToken(Token.BIGINT, bigintNode);
 				pos++;
 			} else {
-				const numNode = new NumberLiteral(parseFloat(this.expression.substring(startPos, pos)));
+				const numNode = new Literal<number>(parseFloat(rawString), rawString);
 				this.current = this.newToken(Token.NUMBER, numNode);
 			}
 			this.pos = pos;
