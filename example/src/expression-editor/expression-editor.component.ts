@@ -114,7 +114,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		try {
 			const mockConsole = {
 				log: (...data: any[]): void => {
-					this.logs.innerText += data.join('\t') + '\n';
+					this.logs.innerText += data.join(' ').concat('\n');
 					console.log(...data);
 				},
 			};

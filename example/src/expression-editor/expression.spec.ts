@@ -1,5 +1,13 @@
 export const PLAY = `
-let Y = class {i = 9; #j = 'name'; getJ(){ return this.#j;}}
+let Y = class YY {
+	static FF = 10;
+	i = 9;
+	#j = 'hello';
+	getJ(){ 
+		return this.#j + ' world ' + this.constructor.FF;
+	}
+};
+
 let y = new Y();
 console.log(y.i, y.getJ());
 `;
