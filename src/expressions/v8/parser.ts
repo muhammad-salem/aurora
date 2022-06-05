@@ -1575,7 +1575,7 @@ export class JavaScriptParser extends AbstractParser {
 					return propertyName;
 				}
 			default:
-				propertyName = this.parsePropertyName();
+				propertyName = this.parsePropertyOrPrivatePropertyName();
 				propInfo.name = propertyName.toString();
 				break;
 		}
@@ -1605,7 +1605,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				case Token.PERIOD: {
 					this.consume(Token.PERIOD);
-					const key: ExpressionNode = this.parsePropertyName();
+					const key: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
 					expression = new MemberExpression(expression, key, false);
 					break;
 				}
@@ -1619,9 +1619,9 @@ export class JavaScriptParser extends AbstractParser {
 		} while (Token.isMember(this.peek().token));
 		return expression;
 	}
-	protected parsePropertyName(): ExpressionNode {
+	protected parsePropertyOrPrivatePropertyName(): ExpressionNode {
 		const next = this.next();
-		if (next.getValue() instanceof Identifier) {
+		if (next.isType(Token.IDENTIFIER) || next.isType(Token.PRIVATE_NAME)) {
 			return next.getValue();
 		}
 		// check keyword as identifier
@@ -1928,7 +1928,7 @@ export class JavaScriptParser extends AbstractParser {
 					isOptional = true;
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
-					const key = this.parsePropertyName();
+					const key = this.parsePropertyOrPrivatePropertyName();
 					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
@@ -1948,7 +1948,7 @@ export class JavaScriptParser extends AbstractParser {
 						throw new Error(this.errorMessage(`Unexpected Token:${this.position()}`));
 					}
 					this.consume(Token.PERIOD);
-					const key = this.parsePropertyName();
+					const key = this.parsePropertyOrPrivatePropertyName();
 					result = new MemberExpression(result, key, false, isOptional);
 					break;
 				}
@@ -1969,7 +1969,7 @@ export class JavaScriptParser extends AbstractParser {
 						throw new Error(this.errorMessage(`Unexpected Token:${this.position()}`));
 					}
 					this.consume(Token.BIND);
-					const key = this.parsePropertyName();
+					const key = this.parsePropertyOrPrivatePropertyName();
 					result = new BindExpression(result, key, false, isOptional);
 					break;
 				}
@@ -1982,7 +1982,7 @@ export class JavaScriptParser extends AbstractParser {
 					this.consume(Token.QUESTION_BIND);
 					isOptional = true;
 					optionalChaining = true;
-					const key = this.parsePropertyName();
+					const key = this.parsePropertyOrPrivatePropertyName();
 					result = new BindExpression(result, key, true, isOptional);
 					break;
 				}

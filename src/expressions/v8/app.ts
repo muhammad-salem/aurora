@@ -192,7 +192,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 	}
 	protected override parseNewTargetExpression(): ExpressionNode {
 		this.consume(Token.PERIOD);
-		const target: ExpressionNode = this.parsePropertyName();
+		const target: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
 		if (target.toString() !== 'target') {
 			throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
 		}
