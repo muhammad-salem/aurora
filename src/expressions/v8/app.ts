@@ -440,7 +440,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 
 				const value = this.parseFunctionLiteral(
 					kind,
-					nameExpression
+					// nameExpression
 					// ,kSkipFunctionNameCheck, kind, FunctionSyntaxKind.kAccessorOrMethod
 				);
 
@@ -476,7 +476,7 @@ export class JavaScriptAppParser extends JavaScriptParser {
 						: FunctionKind.SETTER_FUNCTION;
 				}
 
-				const value = this.parseFunctionLiteral(kind, nameExpression);
+				const value = this.parseFunctionLiteral(kind, /* nameExpression */);
 
 				const propertyKind: ClassLiteralPropertyKind = isGet ? ClassLiteralProperty.Kind.GETTER : ClassLiteralProperty.Kind.SETTER;
 				const result = this.newClassLiteralProperty(

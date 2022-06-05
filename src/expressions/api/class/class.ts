@@ -382,6 +382,7 @@ export class MethodDefinition extends AbstractDefinition {
 		if (this.static) {
 			str += 'static ';
 		}
+		str += this.key.toString().concat(' ');
 		str += this.value.toString();
 		return str;
 	}
