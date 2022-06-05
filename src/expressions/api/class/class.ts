@@ -15,20 +15,20 @@ import { TypeOf } from '../utils.js';
 import { Decorator } from './decorator.js';
 import { CallExpression } from '../computing/call.js';
 
-const TEMP_CLASS_NAME: unique symbol = Symbol('temp_class_name');
-const SUPER: unique symbol = Symbol('super');
-const NEW_TARGET: unique symbol = Symbol('new.target');
-const IMPORT_META: unique symbol = Symbol('import.meta');
-const STACK: unique symbol = Symbol('stack');
+const TEMP_CLASS_NAME: unique symbol = Symbol('TempClassName');
+const SUPER: unique symbol = Symbol('Super');
+const NEW_TARGET: unique symbol = Symbol('NewTarget');
+const IMPORT_META: unique symbol = Symbol('ImportMeta');
+const STACK: unique symbol = Symbol('Stack');
 
-const GET_PARAMETERS: unique symbol = Symbol('getParameters');
-const GET_SUPER_PROPERTY: unique symbol = Symbol('getSuperProperty');
-const CALL_SUPER_Method: unique symbol = Symbol('callSuperMethod');
+const GET_PARAMETERS: unique symbol = Symbol('GetParameters');
+const GET_SUPER_PROPERTY: unique symbol = Symbol('GetSuperProperty');
+const CALL_SUPER_Method: unique symbol = Symbol('CallSuperMethod');
 
-const CONSTRUCTOR: unique symbol = Symbol('constructor');
-const PRIVATE_SYMBOL: unique symbol = Symbol('#private');
-const INIT_PRIVATE_SYMBOL: unique symbol = Symbol('#init_private');
-const STATIC_INITIALIZATION_BLOCK: unique symbol = Symbol('static_block');
+const CONSTRUCTOR: unique symbol = Symbol('Constructor');
+const PRIVATE_SYMBOL: unique symbol = Symbol('Private');
+const INSTANCE_PRIVATE_SYMBOL: unique symbol = Symbol('InstancePrivate');
+const STATIC_INITIALIZATION_BLOCK: unique symbol = Symbol('StaticBlock');
 
 interface ClassConstructor {
 	/**
@@ -38,15 +38,14 @@ interface ClassConstructor {
 
 	[GET_PARAMETERS](args: any[]): any[];
 	[STATIC_INITIALIZATION_BLOCK]: Function[];
-
 	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[INSTANCE_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[CONSTRUCTOR]: Function;
 	[key: string]: any;
 }
 
 declare var ClassInstance: ClassConstructor;
 interface ClassInstance {
-	[CONSTRUCTOR]: Function;
-	[INIT_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
 	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
 	[STACK]: Stack;
 	[key: string]: any;
@@ -169,8 +168,16 @@ export class PrivateIdentifier extends AbstractExpressionNode {
 		const privateScope = stack.findScope(PRIVATE_SYMBOL);
 		privateScope.getScope(PRIVATE_SYMBOL)?.set(this.name, value);
 	}
-	get(stack: Stack, thisContext?: any) {
-		const privateObj = stack.get(PRIVATE_SYMBOL);
+	get(stack: Stack, thisContext?: ClassInstance | ClassConstructor) {
+		if (thisContext) {
+			return thisContext[PRIVATE_SYMBOL][this.name];
+		}
+		// return stack.get(this.name);
+		let privateObj = stack.get('this');
+		if (privateObj) {
+			return privateObj[PRIVATE_SYMBOL][this.name];
+		}
+		privateObj = stack.get(PRIVATE_SYMBOL);
 		return privateObj[this.name];
 	}
 	dependency(computed?: true): ExpressionNode[] {
@@ -254,7 +261,7 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	getTarget(classConstructor: ClassConstructor) {
 		return this.static
 			? (this.key instanceof PrivateIdentifier ? classConstructor[PRIVATE_SYMBOL] : classConstructor)
-			: (this.key instanceof PrivateIdentifier ? classConstructor.prototype[INIT_PRIVATE_SYMBOL] : classConstructor.prototype);
+			: (this.key instanceof PrivateIdentifier ? classConstructor[INSTANCE_PRIVATE_SYMBOL] : classConstructor.prototype);
 	}
 	getKeyName(stack: Stack) {
 		switch (true) {
@@ -361,7 +368,7 @@ export class MethodDefinition extends AbstractDefinition {
 			};
 		}
 
-		classConstructor.prototype[CONSTRUCTOR] = function (this: ClassInstance, params: any[]) {
+		classConstructor[CONSTRUCTOR] = function (this: ClassInstance, params: any[]) {
 			const scope = this[STACK].pushBlockScope();
 			blockAfterSuper.get(this[STACK]);
 			stack.clearTo(scope);
@@ -581,12 +588,14 @@ export class Class extends AbstractExpressionNode {
 		// build class body
 		this.body.get(stack, classConstructor);
 
-		// classConstructor[PRIVATE_SYMBOL] = Object.assign(classConstructor[PRIVATE_SYMBOL], classConstructor[INIT_PRIVATE_SYMBOL]);
-		// Reflect.deleteProperty(classConstructor, INIT_PRIVATE_SYMBOL);
-
 		// apply class decorators
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
 		classConstructor = __decorate(decorators, classConstructor);
+
+		// run static initialization block
+		classConstructor[STATIC_INITIALIZATION_BLOCK].forEach(block => block());
+		Reflect.deleteProperty(classConstructor, STATIC_INITIALIZATION_BLOCK);
+
 		return classConstructor;
 	}
 
@@ -597,22 +606,17 @@ export class Class extends AbstractExpressionNode {
 					return args;
 				}
 				static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
-
 				static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+				static [INSTANCE_PRIVATE_SYMBOL] = {};
+				static [CONSTRUCTOR](): void { }
 
-				static {
-					// init statics
-					this[STATIC_INITIALIZATION_BLOCK].forEach(block => block());
-				}
-
-				[INIT_PRIVATE_SYMBOL] = {};
 				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
 
 				[STACK]: Stack;
 				constructor(...params: any[]) {
 					const parameters = TEMP[className][GET_PARAMETERS](params);
 					super(...parameters);
-					this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], this[INIT_PRIVATE_SYMBOL]);
+					this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], TEMP[className][INSTANCE_PRIVATE_SYMBOL]);
 					this[STACK] = stack.copyStack();
 					const instanceStack = this[STACK];
 					instanceStack.pushBlockScope();
@@ -623,13 +627,10 @@ export class Class extends AbstractExpressionNode {
 					instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
 					instanceStack.pushReactiveScope();
 					// init fields and methods values
-					this[CONSTRUCTOR]();
+					TEMP[className][CONSTRUCTOR]();
 				}
-				[CONSTRUCTOR](): void { }
 			}
 		};
-		TEMP[className as string].prototype[INIT_PRIVATE_SYMBOL] = {};
-		TEMP[className as string].prototype[PRIVATE_SYMBOL] = {};
 		return TEMP[className as string];
 	}
 	dependency(computed?: true): ExpressionNode[] {
