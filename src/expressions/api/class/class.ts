@@ -546,7 +546,7 @@ export class ClassBody extends AbstractExpressionNode {
 		throw new Error('Method not implemented.');
 	}
 	toString(): string {
-		return this.body.map(definition => definition.toString()).join('\n');
+		return this.body.map(definition => `\t${definition.toString()}`).join('\n');
 	}
 	toJson(): { [key: string]: any; } {
 		return {
@@ -649,7 +649,7 @@ export class Class extends AbstractExpressionNode {
 		if (this.superClass) {
 			classDeclaration += ' extends ' + this.superClass.toString();
 		}
-		return `${decorators}${classDeclaration} {${this.body.toString()}}`;
+		return `${decorators}${classDeclaration} {\n${this.body.toString()}\n}`;
 	}
 	toJson(): object {
 		return {
