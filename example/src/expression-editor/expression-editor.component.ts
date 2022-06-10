@@ -108,13 +108,17 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		return code;
 	}
 
+	stringify(str: any) {
+		return JSON.stringify(str, undefined, 2);
+	}
+
 	executeCode() {
 		this.logs.innerText = '';
 		this.error.innerText = '';
 		try {
 			const mockConsole = {
 				log: (...data: any[]): void => {
-					this.logs.innerText += data.join(' ').concat('\n');
+					this.logs.innerText += data.map(item => this.stringify(item)).join(' ').concat('\n');
 					console.log(...data);
 				},
 			};
