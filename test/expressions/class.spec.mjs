@@ -1,4 +1,4 @@
-import { JavaScriptAppParser, Scope, Stack } from '@ibyar/expressions';
+import { JavaScriptProgramParser, Scope, Stack } from '@ibyar/expressions';
 
 const source = `
 
@@ -64,7 +64,7 @@ function testInstance(instance) {
 	console.log(Object.values(instance));
 }
 
-const ast = JavaScriptAppParser.parse(source);
+const ast = JavaScriptProgramParser.parse(source);
 console.group('ast');
 console.log(JSON.stringify(ast.toJSON(), undefined, 2));
 console.groupEnd();

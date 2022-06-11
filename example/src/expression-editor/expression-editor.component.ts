@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ExpressionNode, JavaScriptAppParser, OnInit, Scope, ScopeContext, Stack, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, ExpressionNode, JavaScriptProgramParser, OnInit, Scope, ScopeContext, Stack, ViewChild } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
@@ -97,7 +97,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			return;
 		}
 		try {
-			const node = JavaScriptAppParser.parse(code);
+			const node = JavaScriptProgramParser.parse(code);
 			this.ast = JSON.stringify(node.toJSON(), undefined, 2);
 			this.str = node.toString();
 			this.node = node;
