@@ -182,12 +182,12 @@ export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
 	}
 }
 
-export class JavaScriptAppParser extends JavaScriptParser {
+export class JavaScriptProgramParser extends JavaScriptParser {
 	static parse(source: string | TokenExpression[] | TokenStream) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptAppParser(stream);
+		const parser = new JavaScriptProgramParser(stream);
 		return parser.scan();
 	}
 	protected override parseNewTargetExpression(): ExpressionNode {
