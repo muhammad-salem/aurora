@@ -26,7 +26,7 @@ export class Program extends AbstractExpressionNode {
 		throw new Error(`Program#set() has no implementation.`);
 	}
 	get(stack: Stack): any {
-		return this.body.forEach(statement => statement.get(stack));
+		return this.body.map(statement => statement.get(stack)).at(-1);
 	}
 
 	dependency(computed?: true): ExpressionNode[] {
