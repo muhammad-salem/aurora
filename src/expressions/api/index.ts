@@ -3,6 +3,8 @@ export * from './abstract.js';
 
 export * from './deserialize/deserialize.js';
 
+export * from './program.js';
+
 export * from './definition/values.js';
 export * from './definition/array.js';
 export * from './definition/comment.js';
