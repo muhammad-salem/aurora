@@ -1240,7 +1240,7 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.NEW);
 		let classRef: ExpressionNode;
 		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.L_PARENTHESES)) {
-			throw new Error(this.errorMessage(`parsing new import (`));
+			throw new Error(this.errorMessage(`Import Call Not New Expression`));
 		} else if (this.peek().isType(Token.SUPER)) {
 			throw new Error(this.errorMessage(`parsing new super() is never allowed`));
 		} else if (this.peek().isType(Token.PERIOD)) {
