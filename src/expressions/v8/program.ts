@@ -246,7 +246,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		const isStrictReserved = Token.isStrictReservedWord(nextToken);
 		let name: ExpressionNode | undefined;
 		let variableName: string | undefined;
-		if (defaultExport && (nextToken == Token.EXTENDS || nextToken == Token.L_CURLY)) {
+		if (defaultExport && (nextToken == Token.EXTENDS || nextToken == Token.LBRACE)) {
 			name = new Literal('default');
 			variableName = '.default';
 		} else {
@@ -277,15 +277,15 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			classInfo.extends = this.parseLeftHandSideExpression();
 		}
 
-		this.expect(Token.L_CURLY);
+		this.expect(Token.LBRACE);
 
 		const hasExtends = !!classInfo.extends;
 
-		while (this.peek().isNotType(Token.R_CURLY)) {
+		while (this.peek().isNotType(Token.RBRACE)) {
 			if (this.check(Token.SEMICOLON)) continue;
 
 			// Either we're parsing a `static { }` initialization block or a property.
-			if (this.peek().isType(Token.STATIC) && this.peekAhead().isType(Token.L_CURLY)) {
+			if (this.peek().isType(Token.STATIC) && this.peekAhead().isType(Token.LBRACE)) {
 				const staticBlock = this.parseClassStaticBlock(classInfo);
 				classInfo.staticElements.push(staticBlock);
 				classInfo.hasStaticBlocks = true;
@@ -334,7 +334,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			this.declarePublicClassMethod(name, property as MethodDefinition, isConstructor, classInfo);
 		}
 
-		this.expect(Token.R_CURLY);
+		this.expect(Token.RBRACE);
 		const classBody = this.rewriteClassLiteral(classInfo, name);
 		return new Class(classBody, [], name as Identifier, classInfo.extends);
 	}
@@ -381,13 +381,13 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		let nameExpression: ExpressionNode;
 		if (nameToken.isType(Token.STATIC)) {
 			this.consume(Token.STATIC);
-			if (this.peek().isType(Token.L_PARENTHESES)) {
+			if (this.peek().isType(Token.LPAREN)) {
 				propInfo.kind = PropertyKind.Method;
 				nameExpression = this.parseIdentifier();
 				propInfo.name = (nameExpression as Identifier).getName() as string;
 			} else if (this.peek().isType(Token.ASSIGN)
 				|| this.peek().isType(Token.SEMICOLON)
-				|| this.peek().isType(Token.R_BRACKETS)) {
+				|| this.peek().isType(Token.RBRACK)) {
 				nameExpression = this.parseIdentifier();
 				propInfo.name = (nameExpression as Identifier).getName() as string;
 			} else {
@@ -650,7 +650,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			// We must be careful not to parse a dynamic import expression as an import
 			// declaration. Same for import.meta expressions.
 			const peekAhead = this.peekAhead();
-			if (peekAhead.isNotType(Token.L_PARENTHESES) && peekAhead.isNotType(Token.PERIOD)) {
+			if (peekAhead.isNotType(Token.LPAREN) && peekAhead.isNotType(Token.PERIOD)) {
 				return this.parseImportDeclaration();
 				// return factory() -> EmptyStatement();
 			}
@@ -697,7 +697,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			case Token.MUL:
 				return this.parseExportStar();
 
-			case Token.L_CURLY: {
+			case Token.LBRACE: {
 				// There are two cases here:
 				//
 				// 'export' ExportClause ';'
@@ -828,7 +828,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		// Parse ImportedDefaultBinding if present.
 		let importDefaultBinding: string | undefined;
 		// Scanner::Location import_default_binding_loc;
-		if (tok.isNotType(Token.MUL) && tok.isNotType(Token.L_CURLY)) {
+		if (tok.isNotType(Token.MUL) && tok.isNotType(Token.LBRACE)) {
 			importDefaultBinding = this.parseNonRestrictedIdentifier();
 			// DeclareUnboundVariable(import_default_binding, VariableMode:: kConst,kNeedsInitialization, pos);
 		}
@@ -853,7 +853,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 					break;
 				}
 
-				case Token.L_CURLY:
+				case Token.LBRACE:
 					namedImports = this.parseNamedImports();
 					break;
 
@@ -905,30 +905,30 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			return MetaProperty.ImportMeta;
 		}
 
-		if (this.peek().isNotType(Token.L_PARENTHESES)) {
+		if (this.peek().isNotType(Token.LPAREN)) {
 			throw new SyntaxError(this.errorMessage('Unexpected Token'));
 		}
 
-		this.consume(Token.L_PARENTHESES);
-		if (this.peek().isType(Token.R_PARENTHESES)) {
+		this.consume(Token.LPAREN);
+		if (this.peek().isType(Token.RPAREN)) {
 			throw new SyntaxError(this.errorMessage('Import Missing Specifier'));
 		}
 		const specifier = this.parseAssignmentExpressionCoverGrammar();
 
 		if (this.check(Token.COMMA)) {
-			if (this.check(Token.R_PARENTHESES)) {
+			if (this.check(Token.RPAREN)) {
 				// A trailing comma allowed after the specifier.
 				return new ImportExpression(specifier as Literal<string>);
 			} else {
 				const importAssertions = this.parseAssignmentExpressionCoverGrammar();
 				this.check(Token.COMMA);  // A trailing comma is allowed after the import
 				// assertions.
-				this.expect(Token.R_PARENTHESES);
+				this.expect(Token.RPAREN);
 				return new ImportExpression(specifier as Literal<string>, importAssertions);
 			}
 		}
 
-		this.expect(Token.R_PARENTHESES);
+		this.expect(Token.RPAREN);
 		return new ImportExpression(specifier as Literal<string>);
 	}
 	protected parseVariableStatement(names: string[]): ExpressionNode | undefined {

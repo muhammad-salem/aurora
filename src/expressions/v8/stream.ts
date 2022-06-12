@@ -312,11 +312,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '(') {
-			this.current = this.newToken(Token.L_PARENTHESES);
+			this.current = this.newToken(Token.LPAREN);
 			this.pos++;
 			return true;
 		} else if (char === ')') {
-			this.current = this.newToken(Token.R_PARENTHESES);
+			this.current = this.newToken(Token.RPAREN);
 			this.pos++;
 			return true;
 		}
@@ -325,11 +325,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isBracket() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '[') {
-			this.current = this.newToken(Token.L_BRACKETS);
+			this.current = this.newToken(Token.LBRACK);
 			this.pos++;
 			return true;
 		} else if (char === ']') {
-			this.current = this.newToken(Token.R_BRACKETS);
+			this.current = this.newToken(Token.RBRACK);
 			this.pos++;
 			return true;
 		}
@@ -338,11 +338,11 @@ export class TokenStreamImpl extends TokenStream {
 	private isCurlY() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '{') {
-			this.current = this.newToken(Token.L_CURLY);
+			this.current = this.newToken(Token.LBRACE);
 			this.pos++;
 			return true;
 		} else if (char === '}') {
-			this.current = this.newToken(Token.R_CURLY);
+			this.current = this.newToken(Token.RBRACE);
 			this.pos++;
 			return true;
 		}

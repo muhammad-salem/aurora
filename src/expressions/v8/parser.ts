@@ -84,13 +84,13 @@ export class PropertyKindInfo {
 			case Token.COMMA:
 				this.kind = PropertyKind.Shorthand;
 				return true;
-			case Token.R_CURLY:
+			case Token.RBRACE:
 				this.kind = PropertyKind.ShorthandOrClassField;
 				return true;
 			case Token.ASSIGN:
 				this.kind = PropertyKind.Assign;
 				return true;
-			case Token.L_PARENTHESES:
+			case Token.LPAREN:
 				this.kind = PropertyKind.Method;
 				return true;
 			case Token.MUL:
@@ -201,8 +201,8 @@ export abstract class AbstractParser {
 		}
 		const nextNextToken = this.peekAhead().token;
 		switch (nextNextToken) {
-			case Token.L_CURLY:
-			case Token.L_BRACKETS:
+			case Token.LBRACE:
+			case Token.LBRACK:
 			case Token.IDENTIFIER:
 			case Token.STATIC:
 			case Token.LET:  // `let let;` is disallowed by static semantics, but the
@@ -319,7 +319,7 @@ export class JavaScriptParser extends AbstractParser {
 	 */
 	protected parseStatement(): ExpressionNode {
 		switch (this.peek().token) {
-			case Token.L_CURLY:
+			case Token.LBRACE:
 				return this.parseBlock();
 			case Token.SEMICOLON:
 				this.consume(Token.SEMICOLON);
@@ -400,10 +400,10 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.check(Token.CATCH)) {
 			// bool has_binding;
 			let catchVar: ExpressionNode | undefined;
-			const hasBinding = this.check(Token.L_PARENTHESES);
+			const hasBinding = this.check(Token.LPAREN);
 			if (hasBinding) {
 				catchVar = this.parseIdentifier();
-				this.expect(Token.R_PARENTHESES);
+				this.expect(Token.RPAREN);
 			}
 			const block = this.parseBlock();
 			if (block instanceof BlockStatement) {
@@ -421,10 +421,10 @@ export class JavaScriptParser extends AbstractParser {
 		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
 	}
 	protected parseBlock(): BlockStatement {
-		this.expect(Token.L_CURLY);
+		this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
 		const block = new BlockStatement(statements, false);
-		while (this.peek().isNotType(Token.R_CURLY)) {
+		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
 				return block;
@@ -433,7 +433,7 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			statements.push(stat);
 		}
-		this.expect(Token.R_CURLY);
+		this.expect(Token.RBRACE);
 		return block;
 	}
 	/**
@@ -489,12 +489,12 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseFunctionExpression(type: FunctionKind): ExpressionNode {
 		let funcName: ExpressionNode | undefined;
 		const peek = this.peek();
-		if (peek.isNotType(Token.L_PARENTHESES)) {
-			if (peek.isType(Token.L_BRACKETS)) {
+		if (peek.isNotType(Token.LPAREN)) {
+			if (peek.isType(Token.LBRACK)) {
 				// [Symbol.iterator]() {}
-				this.consume(Token.L_BRACKETS);
+				this.consume(Token.LBRACK);
 				funcName = this.parseMemberExpression();
-				this.expect(Token.R_BRACKETS);
+				this.expect(Token.RBRACK);
 			} else {
 				funcName = this.parseIdentifier();
 			}
@@ -503,9 +503,9 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseIfStatement(): ExpressionNode {
 		this.consume(Token.IF);
-		this.consume(Token.L_PARENTHESES);
+		this.consume(Token.LPAREN);
 		const condition = this.parseExpression();
-		this.consume(Token.R_PARENTHESES);
+		this.consume(Token.RPAREN);
 		const thenStatement = this.parseStatement();
 		if (thenStatement instanceof BlockStatement) {
 			thenStatement.isStatement = true;
@@ -526,9 +526,9 @@ export class JavaScriptParser extends AbstractParser {
 			body.isStatement = true;
 		}
 		this.expect(Token.WHILE);
-		this.expect(Token.L_PARENTHESES);
+		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
+		this.expect(Token.RPAREN);
 		this.check(Token.SEMICOLON);
 		return new DoWhileNode(condition, body);
 	}
@@ -536,9 +536,9 @@ export class JavaScriptParser extends AbstractParser {
 		// WhileStatement ::
 		//   'while' '(' Expression ')' Statement
 		this.consume(Token.WHILE);
-		this.expect(Token.L_PARENTHESES);
+		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
+		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
 		if (body instanceof BlockStatement) {
 			body.isStatement = true;
@@ -564,16 +564,16 @@ export class JavaScriptParser extends AbstractParser {
 		//   'default' ':' StatementList
 
 		this.consume(Token.SWITCH);
-		this.expect(Token.L_PARENTHESES);
+		this.expect(Token.LPAREN);
 		const tag = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
+		this.expect(Token.RPAREN);
 
 		const cases: SwitchCase[] = [];
 		const switchStatement = new SwitchStatement(tag, cases);
 
 		let defaultSeen = false;
-		this.expect(Token.L_CURLY);
-		while (this.peek().isNotType(Token.R_CURLY)) {
+		this.expect(Token.LBRACE);
+		while (this.peek().isNotType(Token.RBRACE)) {
 			const statements: ExpressionNode[] = [];
 			let label: ExpressionNode;
 			if (this.check(Token.CASE)) {
@@ -588,7 +588,7 @@ export class JavaScriptParser extends AbstractParser {
 			this.expect(Token.COLON);
 			while (this.peek().isNotType(Token.CASE)
 				&& this.peek().isNotType(Token.DEFAULT)
-				&& this.peek().isNotType(Token.R_CURLY)) {
+				&& this.peek().isNotType(Token.RBRACE)) {
 				const statement = this.parseStatementListItem();
 				if (!statement || this.isEmptyStatement(statement)) {
 					continue;
@@ -599,7 +599,7 @@ export class JavaScriptParser extends AbstractParser {
 			const clause = defaultSeen ? new DefaultExpression(block) : new SwitchCase(label!, block);
 			cases.push(clause);
 		}
-		this.expect(Token.R_CURLY);
+		this.expect(Token.RBRACE);
 		return switchStatement;
 	}
 	protected parseForStatement(): ExpressionNode {
@@ -611,7 +611,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.FOR);
 		const isAwait = this.check(Token.AWAIT);
-		this.expect(Token.L_PARENTHESES);
+		this.expect(Token.LPAREN);
 		const peek = this.peek();
 		const startsWithLet = peek.isType(Token.LET) || peek.isType(Token.VAR);
 		let initializer: ExpressionNode;
@@ -626,14 +626,14 @@ export class JavaScriptParser extends AbstractParser {
 			// x in y 
 			const objectNode = initializer.getRight();
 			initializer = initializer.getLeft();
-			this.expect(Token.R_PARENTHESES)
+			this.expect(Token.RPAREN)
 			const statement = this.parseStatement();
 			return new ForInNode(initializer as ForDeclaration, objectNode, statement);
 		}
 		const forMode = this.checkInOrOf();
 		if (forMode) {
 			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
-			this.expect(Token.R_PARENTHESES)
+			this.expect(Token.RPAREN)
 			const statement = this.parseStatement();
 			if (statement instanceof BlockStatement) {
 				statement.isStatement = true;
@@ -655,9 +655,9 @@ export class JavaScriptParser extends AbstractParser {
 			this.expect(Token.SEMICOLON);
 		}
 		let finalExpression: ExpressionNode | undefined;
-		if (!this.check(Token.R_PARENTHESES)) {
+		if (!this.check(Token.RPAREN)) {
 			finalExpression = this.parseExpression();
-			this.expect(Token.R_PARENTHESES);
+			this.expect(Token.RPAREN);
 		}
 		const body = this.parseStatement();
 		if (body instanceof BlockStatement) {
@@ -734,9 +734,9 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			return name;
 		}
-		if (token == Token.L_BRACKETS) {
+		if (token == Token.LBRACK) {
 			return this.parseArrayLiteral(isPattern);
-		} else if (token == Token.L_CURLY) {
+		} else if (token == Token.LBRACE) {
 			return this.parseObjectLiteral(isPattern);
 		} else {
 			throw new Error(this.errorMessage(`Unexpected Token: ${this.next().getValue()}`));
@@ -810,7 +810,7 @@ export class JavaScriptParser extends AbstractParser {
 
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-			case Token.L_CURLY:
+			case Token.LBRACE:
 				throw new Error(this.errorMessage(`Unreachable state`));
 			case Token.CLASS:
 				throw new Error(this.errorMessage(`Unexpected Token ${this.next().getValue().toString()}`));
@@ -819,8 +819,8 @@ export class JavaScriptParser extends AbstractParser {
 				// "let" followed by either "[", "{" or an identifier means a lexical
 				// declaration, which should not appear here.
 				// However, ASI may insert a line break before an identifier or a brace.
-				if (nextNext.isNotType(Token.L_BRACKETS) &&
-					((nextNext.isNotType(Token.L_CURLY) && nextNext.isNotType(Token.IDENTIFIER)))) {
+				if (nextNext.isNotType(Token.LBRACK) &&
+					((nextNext.isNotType(Token.LBRACE) && nextNext.isNotType(Token.IDENTIFIER)))) {
 					break;
 				}
 				throw new Error(this.errorMessage(`Unexpected Lexical Declaration ${this.position()}`));
@@ -891,7 +891,7 @@ export class JavaScriptParser extends AbstractParser {
 			flag = FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR;
 		}
 		let name: ExpressionNode | undefined;
-		if (this.peek().isType(Token.L_PARENTHESES)) {
+		if (this.peek().isType(Token.LPAREN)) {
 			if (defaultExport) {
 				name = new Identifier('default');
 			} else {
@@ -944,9 +944,9 @@ export class JavaScriptParser extends AbstractParser {
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
 		const functionInfo: FunctionInfo = {};
-		this.expect(Token.L_PARENTHESES);
+		this.expect(Token.LPAREN);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
-		this.expect(Token.R_PARENTHESES);
+		this.expect(Token.RPAREN);
 		const body = this.parseFunctionBody();
 		if (name) {
 			return new FunctionDeclaration(formals, body, flag, name as DeclarationExpression, functionInfo.rest);
@@ -954,7 +954,7 @@ export class JavaScriptParser extends AbstractParser {
 		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
 	}
 	protected parseArrowFunctionBody(): ExpressionNode | ExpressionNode[] {
-		const isExpression = this.peek().isNotType(Token.L_CURLY);
+		const isExpression = this.peek().isNotType(Token.LBRACE);
 		if (isExpression) {
 			const expression = this.parseAssignmentExpression();
 			return expression;
@@ -963,9 +963,9 @@ export class JavaScriptParser extends AbstractParser {
 		}
 	}
 	protected parseFunctionBody(): ExpressionNode[] {
-		this.expect(Token.L_CURLY);
-		const list = this.parseStatementList(Token.R_CURLY);
-		this.expect(Token.R_CURLY);
+		this.expect(Token.LBRACE);
+		const list = this.parseStatementList(Token.RBRACE);
+		this.expect(Token.RBRACE);
 		return list;
 	}
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
@@ -997,7 +997,7 @@ export class JavaScriptParser extends AbstractParser {
 		//   FormalParameterList[?Yield] , FormalParameter[?Yield]
 
 		const parameters: ExpressionNode[] = [];
-		if (this.peek().isNotType(Token.R_PARENTHESES)) {
+		if (this.peek().isNotType(Token.RPAREN)) {
 			while (true) {
 				const param: ExpressionNode = this.parseFormalParameter(functionInfo);
 				parameters.push(param);
@@ -1008,7 +1008,7 @@ export class JavaScriptParser extends AbstractParser {
 					break;
 				}
 				if (!this.check(Token.COMMA)) break;
-				if (this.peek().isType(Token.R_PARENTHESES)) {
+				if (this.peek().isType(Token.RPAREN)) {
 					// allow the trailing comma
 					break;
 				}
@@ -1056,7 +1056,7 @@ export class JavaScriptParser extends AbstractParser {
 
 			if (!this.check(Token.COMMA)) break;
 
-			if (this.peek().isType(Token.R_PARENTHESES) && this.peekAhead().isType(Token.ARROW)) {
+			if (this.peek().isType(Token.RPAREN) && this.peekAhead().isType(Token.ARROW)) {
 				// a trailing comma is allowed at the end of an arrow parameter list
 				break;
 			}
@@ -1076,7 +1076,7 @@ export class JavaScriptParser extends AbstractParser {
 		// 'x, y, ...z' in CoverParenthesizedExpressionAndArrowParameterList only
 		// as the formal parameters of'(x, y, ...z) => foo', and is not itself a
 		// valid expression.
-		if (this.peek().isNotType(Token.R_PARENTHESES) || this.peekAhead().isNotType(Token.ARROW)) {
+		if (this.peek().isNotType(Token.RPAREN) || this.peekAhead().isNotType(Token.ARROW)) {
 			throw new Error(this.errorMessage(`Error Unexpected Token At ${this.position()}`));
 		}
 		list.push(pattern);
@@ -1185,20 +1185,20 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.IMPORT:
 				return this.parseImportExpressions();
 
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 				return this.parseArrayLiteral(false);
 
-			case Token.L_CURLY:
+			case Token.LBRACE:
 				return this.parseObjectLiteral(false);
 
-			case Token.L_PARENTHESES: {
-				this.consume(Token.L_PARENTHESES);
-				if (this.check(Token.R_PARENTHESES)) {
+			case Token.LPAREN: {
+				this.consume(Token.LPAREN);
+				if (this.check(Token.RPAREN)) {
 					// ()=>x.  The continuation that consumes the => is in
 					// ParseAssignmentExpressionCoverGrammar.
 
 					if (!this.peek().isType(Token.ARROW)) {
-						throw new Error(this.errorMessage(`Unexpected Token: ${Token.R_PARENTHESES.getName()}`));
+						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
 					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
 				}
@@ -1218,7 +1218,7 @@ export class JavaScriptParser extends AbstractParser {
 				} else {
 					expression = this.parseExpressionCoverGrammar(info);
 				}
-				this.expect(Token.R_PARENTHESES);
+				this.expect(Token.RPAREN);
 				if (this.peek().isType(Token.ARROW)) {
 					if (expression instanceof SequenceExpression) {
 						expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
@@ -1251,7 +1251,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
 		this.consume(Token.NEW);
 		let classRef: ExpressionNode;
-		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.L_PARENTHESES)) {
+		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.LPAREN)) {
 			throw new Error(this.errorMessage(`Import Call Not New Expression`));
 		} else if (this.peek().isType(Token.SUPER)) {
 			throw new Error(this.errorMessage(`parsing new super() is never allowed`));
@@ -1261,7 +1261,7 @@ export class JavaScriptParser extends AbstractParser {
 		} else {
 			classRef = this.parseMemberExpression();
 		}
-		if (this.peek().isType(Token.L_PARENTHESES)) {
+		if (this.peek().isType(Token.LPAREN)) {
 			// NewExpression with arguments.
 			const args: ExpressionNode[] = this.parseArguments();
 			classRef = new NewExpression(classRef, args);
@@ -1277,9 +1277,9 @@ export class JavaScriptParser extends AbstractParser {
 		// Arguments ::
 		//   '(' (AssignmentExpression)*[','] ')'
 
-		this.consume(Token.L_PARENTHESES);
+		this.consume(Token.LPAREN);
 		const args: ExpressionNode[] = [];
-		while (this.peek().isNotType(Token.R_PARENTHESES)) {
+		while (this.peek().isNotType(Token.RPAREN)) {
 			const isSpread = this.check(Token.ELLIPSIS);
 			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
 			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
@@ -1298,7 +1298,7 @@ export class JavaScriptParser extends AbstractParser {
 			args.push(argument);
 			if (!this.check(Token.COMMA)) break;
 		}
-		if (!this.check(Token.R_PARENTHESES)) {
+		if (!this.check(Token.RPAREN)) {
 			throw new Error(this.errorMessage(`parsing arguments call, expecting ')'`));
 		}
 		return args;
@@ -1389,11 +1389,11 @@ export class JavaScriptParser extends AbstractParser {
 		// ArrayLiteral ::
 		//   '[' Expression? (',' Expression?)* ']'
 
-		this.consume(Token.L_BRACKETS);
+		this.consume(Token.LBRACK);
 		const values: ExpressionNode[] = [];
 		let firstSpreadIndex = -1;
 
-		while (!this.check(Token.R_BRACKETS)) {
+		while (!this.check(Token.RBRACK)) {
 			let elem: ExpressionNode;
 			if (this.peek().isType(Token.COMMA)) {
 				this.consume(Token.COMMA);
@@ -1427,12 +1427,12 @@ export class JavaScriptParser extends AbstractParser {
 		// ObjectLiteral ::
 		// '{' (PropertyDefinition (',' PropertyDefinition)* ','? )? '}'
 
-		this.consume(Token.L_CURLY);
+		this.consume(Token.LBRACE);
 		const properties: ExpressionNode[] = [];
-		while (!this.check(Token.R_CURLY)) {
+		while (!this.check(Token.RBRACE)) {
 			const property: ExpressionNode = this.parseObjectPropertyDefinition(isPattern);
 			properties.push(property);
-			if (this.peek().isNotType(Token.R_CURLY)) {
+			if (this.peek().isNotType(Token.RBRACE)) {
 				this.expect(Token.COMMA);
 			}
 		}
@@ -1561,11 +1561,11 @@ export class JavaScriptParser extends AbstractParser {
 				propertyName = nextToken.getValue();
 				propInfo.name = (propertyName as Literal<string>).getValue();
 				break;
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 				// [Symbol.iterator]
-				this.consume(Token.L_BRACKETS);
+				this.consume(Token.LBRACK);
 				propertyName = this.parseAssignmentExpression();
-				this.expect(Token.R_BRACKETS);
+				this.expect(Token.RBRACK);
 				if (propInfo.kind === PropertyKind.NotSet) {
 					propInfo.parsePropertyKindFromToken(this.peek().token);
 				}
@@ -1580,7 +1580,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (!this.isValidReferenceExpression(propertyName)) {
 						throw new Error(this.errorMessage('Invalid Rest Binding/Assignment Pattern'));
 					}
-					if (this.peek().isNotType(Token.R_CURLY)) {
+					if (this.peek().isNotType(Token.RBRACE)) {
 						throw new Error(this.errorMessage('Element After Rest'));
 					}
 					propInfo.name = propertyName.toString();
@@ -1608,11 +1608,11 @@ export class JavaScriptParser extends AbstractParser {
 		// ('[' Expression ']' | '.' Identifier | TemplateLiteral)*
 		do {
 			switch (this.peek().token) {
-				case Token.L_BRACKETS: {
-					this.consume(Token.L_BRACKETS);
+				case Token.LBRACK: {
+					this.consume(Token.LBRACK);
 					const index = this.parseExpressionCoverGrammar();
 					expression = new MemberExpression(expression, index, true);
-					this.expect(Token.R_BRACKETS);
+					this.expect(Token.RBRACK);
 					break;
 				}
 				case Token.PERIOD: {
@@ -1694,7 +1694,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (body) {
 			return new PipelineExpression(lhs, body);
 		}
-		if (token.isType(Token.L_PARENTHESES)) {
+		if (token.isType(Token.LPAREN)) {
 			// parse arrow function
 			// x |> ( y => y+1 )
 			body = this.parsePrimaryExpression();
@@ -1727,11 +1727,11 @@ export class JavaScriptParser extends AbstractParser {
 					}
 				} while (this.peek().isType(Token.COLON));
 				break;
-			case Token.L_PARENTHESES:
+			case Token.LPAREN:
 				// es2022 syntax, F# & partial operator
-				this.consume(Token.L_PARENTHESES);
+				this.consume(Token.LPAREN);
 				let indexed = false;
-				while (this.peek().isNotType(Token.R_PARENTHESES)) {
+				while (this.peek().isNotType(Token.RPAREN)) {
 					const isSpread = this.check(Token.ELLIPSIS);
 					if (this.peek().isType(Token.CONDITIONAL)) {
 						this.consume(Token.CONDITIONAL);
@@ -1751,7 +1751,7 @@ export class JavaScriptParser extends AbstractParser {
 					}
 					this.check(Token.COMMA);
 				}
-				this.expect(Token.R_PARENTHESES);
+				this.expect(Token.RPAREN);
 				// should be indexed, has partial operator
 				if (!indexed) {
 					// z |> method(x, y) === method(x, y)(z)
@@ -1912,7 +1912,7 @@ export class JavaScriptParser extends AbstractParser {
 		return this.parseLeftHandSideContinuation(result);
 	}
 	protected parseLeftHandSideContinuation(result: ExpressionNode): ExpressionNode {
-		if (this.peek().isType(Token.L_PARENTHESES)
+		if (this.peek().isType(Token.LPAREN)
 			&& this.isIdentifier(result)
 			&& this.scanner.currentToken().isType(Token.ASYNC)
 			&& !this.scanner.hasLineTerminatorBeforeNext()) {
@@ -1946,11 +1946,11 @@ export class JavaScriptParser extends AbstractParser {
 				}
 
 				/* Property */
-				case Token.L_BRACKETS: {
-					this.consume(Token.L_BRACKETS);
+				case Token.LBRACK: {
+					this.consume(Token.LBRACK);
 					const index = this.parseExpressionCoverGrammar();
 					result = new MemberExpression(result, index, true, isOptional);
-					this.expect(Token.R_BRACKETS);
+					this.expect(Token.RBRACK);
 					break;
 				}
 
@@ -1966,7 +1966,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 
 				/* Call */
-				case Token.L_PARENTHESES: {
+				case Token.LPAREN: {
 					const args = this.parseArguments();
 					if (result.toString() === 'eval') {
 						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
@@ -2068,9 +2068,9 @@ export class JavaScriptParser extends AbstractParser {
 		switch (this.peek().token) {
 			case Token.EOS:
 			case Token.SEMICOLON:
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
+			case Token.RBRACE:
+			case Token.RBRACK:
+			case Token.RPAREN:
 			case Token.COLON:
 			case Token.COMMA:
 			case Token.IN:

@@ -298,32 +298,32 @@ export class Token {
 	/**
 	 * (
 	 */
-	public static readonly L_PARENTHESES = new Token('(', 0);
+	public static readonly LPAREN = new Token('(', 0);
 
 	/**
 	 * )
 	 */
-	public static readonly R_PARENTHESES = new Token(')', 0);
+	public static readonly RPAREN = new Token(')', 0);
 
 	/**
 	 * [
 	 */
-	public static readonly L_BRACKETS = new Token('[', 0);
+	public static readonly LBRACK = new Token('[', 0);
 
 	/**
 	 * ]
 	 */
-	public static readonly R_BRACKETS = new Token(']', 0);
+	public static readonly RBRACK = new Token(']', 0);
 
 	/**
 	 * {
 	 */
-	public static readonly L_CURLY = new Token('{', 0);
+	public static readonly LBRACE = new Token('{', 0);
 
 	/**
 	 * }
 	 */
-	public static readonly R_CURLY = new Token('}', 0);
+	public static readonly RBRACE = new Token('}', 0);
 
 	/**
 	 * :
@@ -417,12 +417,12 @@ export class Token {
 
 	public static isPair(token: Token): boolean {
 		switch (token) {
-			case Token.L_PARENTHESES:
-			case Token.L_BRACKETS:
-			case Token.L_CURLY:
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
+			case Token.LPAREN:
+			case Token.LBRACK:
+			case Token.LBRACE:
+			case Token.RBRACE:
+			case Token.RBRACK:
+			case Token.RPAREN:
 				return true;
 			default:
 				return false;
@@ -430,9 +430,9 @@ export class Token {
 	}
 	public static isOpenPair(token: Token): boolean {
 		switch (token) {
-			case Token.L_PARENTHESES:
-			case Token.L_BRACKETS:
-			case Token.L_CURLY:
+			case Token.LPAREN:
+			case Token.LBRACK:
+			case Token.LBRACE:
 				return true;
 			default:
 				return false;
@@ -440,9 +440,9 @@ export class Token {
 	}
 	public static isClosePair(token: Token): boolean {
 		switch (token) {
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
+			case Token.RBRACE:
+			case Token.RBRACK:
+			case Token.RPAREN:
 				return true;
 			default:
 				return false;
@@ -450,23 +450,23 @@ export class Token {
 	}
 	public static openOf(token: Token): Token {
 		switch (token) {
-			case Token.R_CURLY:
-				return Token.L_CURLY;
-			case Token.R_BRACKETS:
-				return Token.L_BRACKETS;
-			case Token.R_PARENTHESES:
-				return Token.L_PARENTHESES;
+			case Token.RBRACE:
+				return Token.LBRACE;
+			case Token.RBRACK:
+				return Token.LBRACK;
+			case Token.RPAREN:
+				return Token.LPAREN;
 		}
 		return token;
 	}
 	public static closeOf(token: Token): Token {
 		switch (token) {
-			case Token.L_CURLY:
-				return Token.R_CURLY;
-			case Token.L_BRACKETS:
-				return Token.R_BRACKETS;
-			case Token.L_PARENTHESES:
-				return Token.R_PARENTHESES;
+			case Token.LBRACE:
+				return Token.RBRACE;
+			case Token.LBRACK:
+				return Token.RBRACK;
+			case Token.LPAREN:
+				return Token.RPAREN;
 		}
 		return token;
 	}
@@ -547,7 +547,7 @@ export class Token {
 	public static isAutoSemicolon(token: Token) {
 		switch (token) {
 			case Token.SEMICOLON:
-			case Token.R_CURLY:
+			case Token.RBRACE:
 			case Token.EOS:
 				return true;
 		}
@@ -557,7 +557,7 @@ export class Token {
 		switch (token) {
 			case Token.TEMPLATE_LITERALS:
 			case Token.PERIOD:
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 				return true;
 		}
 		return false;
@@ -572,8 +572,8 @@ export class Token {
 
 	public static isNextLetKeyword(token: Token) {
 		switch (token) {
-			case Token.L_CURLY:
-			case Token.L_BRACKETS:
+			case Token.LBRACE:
+			case Token.LBRACK:
 			case Token.IDENTIFIER:
 			case Token.STATIC:
 			case Token.LET:  // `let let;` is disallowed by static semantics, but the
@@ -596,9 +596,9 @@ export class Token {
 		switch (token) {
 			case Token.TEMPLATE_LITERALS:
 			case Token.PERIOD:
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 			case Token.QUESTION_PERIOD:
-			case Token.L_PARENTHESES:
+			case Token.LPAREN:
 				return true;
 		}
 		return false;
@@ -613,7 +613,7 @@ export class Token {
 		if (token instanceof Token) {
 			token = token.precedence;
 		}
-		return Token.isInRange(token, Token.PERIOD, Token.L_BRACKETS);
+		return Token.isInRange(token, Token.PERIOD, Token.LBRACK);
 	}
 	public static isBinary(token: number | Token) {
 		if (token instanceof Token) {
