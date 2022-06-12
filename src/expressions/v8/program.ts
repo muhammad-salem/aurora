@@ -12,6 +12,7 @@ import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/de
 import { TokenStream } from './stream.js';
 import { Program } from '../api/program.js';
 import { ExportNamedDeclaration } from '../api/module/export.js';
+import { ImportExpression } from '../api/module/import.js';
 
 
 export type ClassInfo = {
@@ -897,7 +898,38 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		return undefined;
 	}
 	protected parseImportExpressions(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (import) not supported.'));
+		this.consume(Token.IMPORT);
+		if (this.check(Token.PERIOD)) {
+			this.expectContextualKeyword(this.peek(), 'meta');
+			this.consume(Token.STRING);
+			return MetaProperty.ImportMeta;
+		}
+
+		if (this.peek().isNotType(Token.L_PARENTHESES)) {
+			throw new SyntaxError(this.errorMessage('Unexpected Token'));
+		}
+
+		this.consume(Token.L_PARENTHESES);
+		if (this.peek().isType(Token.R_PARENTHESES)) {
+			throw new SyntaxError(this.errorMessage('Import Missing Specifier'));
+		}
+		const specifier = this.parseAssignmentExpressionCoverGrammar();
+
+		if (this.check(Token.COMMA)) {
+			if (this.check(Token.R_PARENTHESES)) {
+				// A trailing comma allowed after the specifier.
+				return new ImportExpression(specifier as Literal<string>);
+			} else {
+				const importAssertions = this.parseAssignmentExpressionCoverGrammar();
+				this.check(Token.COMMA);  // A trailing comma is allowed after the import
+				// assertions.
+				this.expect(Token.R_PARENTHESES);
+				return new ImportExpression(specifier as Literal<string>, importAssertions);
+			}
+		}
+
+		this.expect(Token.R_PARENTHESES);
+		return new ImportExpression(specifier as Literal<string>);
 	}
 	protected parseVariableStatement(names: string[]): ExpressionNode | undefined {
 		throw new Error('Method not implemented.');
@@ -923,5 +955,16 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 	protected parseNonRestrictedIdentifier(): string | undefined {
 		throw new Error('Method not implemented.');
 	}
+	/**
+		Token.IMPORT
+		Token.EXPORT
+		ParseModuleItem
+		ParseImportExpressions
+		ParseExportDeclaration
+		ParsePrimaryExpression
 
+		ParseModuleItemList
+
+		DoParseProgram
+	*/
 }
