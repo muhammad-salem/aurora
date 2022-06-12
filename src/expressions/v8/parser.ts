@@ -747,11 +747,11 @@ export class JavaScriptParser extends AbstractParser {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration() as DeclarationExpression;
+			const value = this.parseFunctionDeclaration(false) as DeclarationExpression;
 			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration() as DeclarationExpression;
+			const value = this.parseFunctionDeclaration(false) as DeclarationExpression;
 			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
@@ -841,7 +841,7 @@ export class JavaScriptParser extends AbstractParser {
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
 			if (this.peek().isType(Token.FUNCTION) /*&& allow_function == kAllowLabelledFunctionStatement */) {
-				return this.parseFunctionDeclaration();
+				return this.parseFunctionDeclaration(false);
 			}
 			return this.parseStatement();
 		}
@@ -852,21 +852,21 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseExpression(): ExpressionNode {
 		return this.parseExpressionCoverGrammar();
 	}
-	protected parseFunctionDeclaration(): ExpressionNode {
+	protected parseFunctionDeclaration(defaultExport: boolean): ExpressionNode {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
+		return this.parseHoistableDeclaration(FunctionKind.NORMAL, false);
 	}
-	protected parseFunctionDeclarationAndGenerator() {
+	protected parseFunctionDeclarationAndGenerator(defaultExport: boolean) {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
-			return this.parseHoistableDeclaration(FunctionKind.GENERATOR);
+			return this.parseHoistableDeclaration(FunctionKind.GENERATOR, defaultExport);
 		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
+		return this.parseHoistableDeclaration(FunctionKind.NORMAL, defaultExport);
 	}
-	protected parseHoistableDeclaration(flag: FunctionKind): ExpressionNode {
+	protected parseHoistableDeclaration(flag: FunctionKind, defaultExport: boolean): ExpressionNode {
 		// FunctionDeclaration ::
 		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
 		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
@@ -883,9 +883,21 @@ export class JavaScriptParser extends AbstractParser {
 		if (FunctionKind.ASYNC === flag && this.check(Token.MUL)) {
 			// Async generator
 			flag = FunctionKind.ASYNC_GENERATOR;
+		} else if (FunctionKind.ASYNC_CONCISE === flag && this.check(Token.MUL)) {
+			// Async concise generator
+			flag = FunctionKind.ASYNC_CONCISE_GENERATOR;
+		} else if (FunctionKind.STATIC_ASYNC_CONCISE === flag && this.check(Token.MUL)) {
+			// Async concise generator
+			flag = FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR;
 		}
 		let name: ExpressionNode | undefined;
-		if (this.peek().isNotType(Token.L_PARENTHESES)) {
+		if (this.peek().isType(Token.L_PARENTHESES)) {
+			if (defaultExport) {
+				name = new Identifier('default');
+			} else {
+				throw new SyntaxError(this.errorMessage('Missing Function Name'));
+			}
+		} else {
 			name = this.parseIdentifier();
 		}
 		return this.parseFunctionLiteral(flag, name);
@@ -1123,7 +1135,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
-					return this.parseFunctionDeclarationAndGenerator();
+					return this.parseFunctionDeclarationAndGenerator(false);
 				};
 				// async Identifier => ...
 				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
