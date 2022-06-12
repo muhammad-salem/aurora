@@ -1,6 +1,5 @@
 import type { Scope } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
-import { getDeserializerType } from './deserialize/deserialize.js';
 import type {
 	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
 	NodeJsonType, DeclarationExpression, ExpressionEventMap,
