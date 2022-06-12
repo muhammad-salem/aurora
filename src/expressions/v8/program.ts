@@ -10,6 +10,8 @@ import { Identifier, Literal, NullNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
+import { Program } from '../api/program.js';
+import { ExportNamedDeclaration } from '../api/module/export.js';
 
 
 export type ClassInfo = {
@@ -189,6 +191,17 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			: source;
 		const parser = new JavaScriptProgramParser(stream);
 		return parser.scan();
+	}
+
+	static parseProgram(source: string | TokenExpression[] | TokenStream): Program {
+		const stream = (typeof source === 'string' || Array.isArray(source))
+			? TokenStream.getTokenStream(source)
+			: source;
+		const parser = new JavaScriptProgramParser(stream);
+		return parser.doParseProgram();
+	}
+	protected doParseProgram(): Program {
+		return new Program('module', []);
 	}
 	protected override parseNewTargetExpression(): ExpressionNode {
 		this.consume(Token.PERIOD);
@@ -602,7 +615,313 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		body.push(...classInfo.privateMembers);
 		return new ClassBody(body);
 	}
+	protected parseModuleItemList(body: ExpressionNode[]) {
+		// ecma262/#prod-Module
+		// Module :
+		//    ModuleBody?
+		//
+		// ecma262/#prod-ModuleItemList
+		// ModuleBody :
+		//    ModuleItem*
+		while (this.peek().isNotType(Token.EOS)) {
+			const stat = this.parseModuleItem();
+			if (!stat) {
+				return;
+			}
+			if (this.isEmptyStatement(stat)) {
+				continue;
+			}
+			body.push(stat);
+		}
+	}
+	protected parseModuleItem(): ExpressionNode | undefined {
+		// ecma262/#prod-ModuleItem
+		// ModuleItem :
+		//    ImportDeclaration
+		//    ExportDeclaration
+		//    StatementListItem
+
+		const next = this.peek();
+		if (next.isType(Token.EXPORT)) {
+			return this.parseExportDeclaration();
+		}
+		if (next.isType(Token.IMPORT)) {
+			// We must be careful not to parse a dynamic import expression as an import
+			// declaration. Same for import.meta expressions.
+			const peekAhead = this.peekAhead();
+			if (peekAhead.isNotType(Token.L_PARENTHESES) && peekAhead.isNotType(Token.PERIOD)) {
+				return this.parseImportDeclaration();
+				// return factory() -> EmptyStatement();
+			}
+		}
+
+		return this.parseStatementListItem();
+	}
+
+	protected expectContextualKeyword(tokenExp: TokenExpression, keyword: string) {
+		return tokenExp.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString());
+	}
+	protected parseExportDeclaration(): ExpressionNode | undefined {
+		// ExportDeclaration:
+		//    'export' '*' 'from' ModuleSpecifier ';'
+		//    'export' '*' 'from' ModuleSpecifier [no LineTerminator here]
+		//        AssertClause ';'
+		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
+		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier
+		//        [no LineTerminator here] AssertClause ';'
+		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
+		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
+		//        [no LineTerminator here] AssertClause ';'
+		//    'export' ExportClause ('from' ModuleSpecifier)? ';'
+		//    'export' ExportClause ('from' ModuleSpecifier [no LineTerminator here]
+		//        AssertClause)? ';'
+		//    'export' VariableStatement
+		//    'export' Declaration
+		//    'export' 'default' ... (handled in ParseExportDefault)
+		//
+		// ModuleExportName :
+		//   StringLiteral
+
+		this.expect(Token.EXPORT);
+		let result: ExpressionNode | undefined;
+		const names: string[] = [];
+
+		// Statement * result = nullptr;
+		// ZonePtrList <const AstRawString> names(1, zone());
+		// Scanner::Location loc = scanner() -> peek_location();
+		switch (this.peek().token) {
+			case Token.DEFAULT:
+				return this.parseExportDefault();
+
+			case Token.MUL:
+				return this.parseExportStar();
+
+			case Token.L_CURLY: {
+				// There are two cases here:
+				//
+				// 'export' ExportClause ';'
+				// and
+				// 'export' ExportClause FromClause ';'
+				//
+				// In the first case, the exported identifiers in ExportClause must
+				// not be reserved words, while in the latter they may be. We
+				// pass in a location that gets filled with the first reserved word
+				// encountered, and then throw a SyntaxError if we are in the
+				// non-FromClause case.
+
+				// Scanner::Location reserved_loc = Scanner:: Location:: invalid();
+				// Scanner::Location string_literal_local_name_loc =
+				// Scanner:: Location:: invalid();
+				// ZoneChunkList < ExportClauseData >* export_data =
+				// ParseExportClause(& reserved_loc, & string_literal_local_name_loc);
+
+				const exportData = this.parseExportClause();
+
+				if (this.expectContextualKeyword(this.peek(), 'from')) {
+					// Scanner::Location specifier_loc = scanner() -> peek_location();
+					const moduleSpecifier = this.parseModuleSpecifier();
+					const importAssertions = this.parseImportAssertClause();
+					this.expectSemicolon();
+
+					// if (exportData.isEmpty()) {
+					// 	// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc, zone());
+					// } else {
+					// 	// for (const ExportClauseData& data : * export_data) {
+					// 	// 	module() -> AddExport(data.local_name, data.export_name,
+					// 	// 		module_specifier, import_assertions,
+					// 	// 		data.location, specifier_loc, zone());
+					// 	// }
+					// }
+				} else {
+					// if (reserved_loc.IsValid()) {
+					// 	// No FromClause, so reserved words are invalid in ExportClause.
+					// 	ReportMessageAt(reserved_loc, MessageTemplate:: kUnexpectedReserved);
+					// 	return nullptr;
+					// } else if (string_literal_local_name_loc.IsValid()) {
+					// 	ReportMessageAt(string_literal_local_name_loc,
+					// 		MessageTemplate:: kModuleExportNameWithoutFromClause);
+					// 	return nullptr;
+					// }
+
+					this.expectSemicolon();
+
+					// for (const ExportClauseData& data : * export_data) {
+					// 	module() -> AddExport(data.local_name, data.export_name, data.location,
+					// 		zone());
+					// }
+				}
+				return new ExportNamedDeclaration([]);
+				// return factory() -> EmptyStatement();
+			}
+
+			case Token.FUNCTION:
+				result = this.parseFunctionDeclaration(false);
+				break;
+
+			case Token.CLASS:
+				this.consume(Token.CLASS);
+				result = this.parseClassDeclaration(names, false);
+				break;
+
+			case Token.VAR:
+			case Token.LET:
+			case Token.CONST:
+				result = this.parseVariableStatement(names);
+				break;
+
+			case Token.ASYNC:
+				this.consume(Token.ASYNC);
+				if (this.peek().isType(Token.FUNCTION)
+					// && !scanner() -> HasLineTerminatorBeforeNext()
+				) {
+					// result = this.parseAsyncFunctionDeclaration(names, false);
+					result = this.parseHoistableDeclaration(FunctionKind.ASYNC, false);
+					break;
+				}
+
+			default:
+				throw new SyntaxError(this.errorMessage('Unexpected Token'));
+		}
+		// loc.end_pos = scanner() -> location().end_pos;
+
+		// SourceTextModuleDescriptor * descriptor = module();
+		// for (const AstRawString* name : names) {
+		// 	descriptor -> AddExport(name, name, loc, zone());
+		// }
+
+		return result;
+	}
+	protected parseImportDeclaration(): ExpressionNode | undefined {
+		// ImportDeclaration :
+		//   'import' ImportClause 'from' ModuleSpecifier ';'
+		//   'import' ModuleSpecifier ';'
+		//   'import' ImportClause 'from' ModuleSpecifier [no LineTerminator here]
+		//       AssertClause ';'
+		//   'import' ModuleSpecifier [no LineTerminator here] AssertClause';'
+		//
+		// ImportClause :
+		//   ImportedDefaultBinding
+		//   NameSpaceImport
+		//   NamedImports
+		//   ImportedDefaultBinding ',' NameSpaceImport
+		//   ImportedDefaultBinding ',' NamedImports
+		//
+		// NameSpaceImport :
+		//   '*' 'as' ImportedBinding
+
+		this.expect(Token.IMPORT);
+
+		const tok = this.peek();
+
+		// 'import' ModuleSpecifier ';'
+		if (tok.isType(Token.STRING)) {
+			// Scanner::Location specifier_loc = scanner() -> peek_location();
+			const moduleSpecifier = this.parseModuleSpecifier();
+			const importAssertions = this.parseImportAssertClause();
+			this.expectSemicolon();
+
+			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
+			return undefined;
+		}
+
+		// Parse ImportedDefaultBinding if present.
+		let importDefaultBinding: string | undefined;
+		// Scanner::Location import_default_binding_loc;
+		if (tok.isNotType(Token.MUL) && tok.isNotType(Token.L_CURLY)) {
+			importDefaultBinding = this.parseNonRestrictedIdentifier();
+			// DeclareUnboundVariable(import_default_binding, VariableMode:: kConst,kNeedsInitialization, pos);
+		}
+
+		// Parse NameSpaceImport or NamedImports if present.
+		let moduleNamespaceBinding: string | undefined;
+		let namedImports: string[] | undefined;
+		// Scanner::Location module_namespace_binding_loc;
+		// const ZonePtrList<const NamedImport >* named_imports = nullptr;
+		if (importDefaultBinding == undefined || this.check(Token.COMMA)) {
+			switch (this.peek().token) {
+				case Token.MUL: {
+					this.consume(Token.MUL);
+					if (this.expectContextualKeyword(this.peek(), 'as')) {
+
+					}
+					moduleNamespaceBinding = this.parseNonRestrictedIdentifier();
+					// ExpectContextualKeyword(ast_value_factory() -> as_string());
+					// module_namespace_binding = ParseNonRestrictedIdentifier();
+					// module_namespace_binding_loc = scanner() -> location();
+					// DeclareUnboundVariable(module_namespace_binding, VariableMode:: kConst, kCreatedInitialized, pos);
+					break;
+				}
+
+				case Token.L_CURLY:
+					namedImports = this.parseNamedImports();
+					break;
+
+				default:
+					throw new SyntaxError(this.errorMessage('Unexpected Token'));
+			}
+		}
+		if (this.expectContextualKeyword(this.peek(), 'from')) {
+
+		}
+		// ExpectContextualKeyword(ast_value_factory() -> from_string());
+		// Scanner::Location specifier_loc = scanner() -> peek_location();
+		const moduleSpecifier = this.parseModuleSpecifier();
+		const importAssertions = this.parseImportAssertClause();
+		this.expectSemicolon();
+
+		// Now that we have all the information, we can make the appropriate
+		// declarations.
+
+		// TODO(neis): Would prefer to call DeclareVariable for each case below rather
+		// than above and in ParseNamedImports, but then a possible error message
+		// would point to the wrong location.  Maybe have a DeclareAt version of
+		// Declare that takes a location?
+
+		if (moduleNamespaceBinding) {
+			// module() -> AddStarImport(module_namespace_binding, module_specifier, import_assertions, module_namespace_binding_loc, specifier_loc, zone());
+		}
+
+		if (importDefaultBinding) {
+			// module() -> AddImport(ast_value_factory() -> default_string(), import_default_binding, module_specifier, import_assertions, import_default_binding_loc, specifier_loc, zone());
+		}
+
+		if (namedImports) {
+			if (namedImports.length == 0) {
+				// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc, zone());
+			} else {
+				for (const namedImport of namedImports) {
+					// module() -> AddImport(import -> import_name, import -> local_name, module_specifier, import_assertions, import -> location, specifier_loc, zone());
+				}
+			}
+		}
+		return undefined;
+	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));
 	}
+	protected parseVariableStatement(names: string[]): ExpressionNode | undefined {
+		throw new Error('Method not implemented.');
+	}
+	protected parseImportAssertClause() {
+		throw new Error('Method not implemented.');
+	}
+	protected parseModuleSpecifier() {
+		throw new Error('Method not implemented.');
+	}
+	protected parseExportClause() {
+		throw new Error('Method not implemented.');
+	}
+	protected parseExportStar(): ExpressionNode | undefined {
+		throw new Error('Method not implemented.');
+	}
+	protected parseExportDefault(): ExpressionNode | undefined {
+		throw new Error('Method not implemented.');
+	}
+	protected parseNamedImports(): string[] | undefined {
+		throw new Error('Method not implemented.');
+	}
+	protected parseNonRestrictedIdentifier(): string | undefined {
+		throw new Error('Method not implemented.');
+	}
+
 }
