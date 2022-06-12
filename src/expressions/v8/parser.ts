@@ -156,6 +156,14 @@ export abstract class AbstractParser {
 		}
 		return false;
 	}
+	protected checkAndGetValue(token: Token): ExpressionNode | undefined {
+		const next = this.scanner.peek();
+		if (next.isType(token)) {
+			this.scanner.next();
+			return next.value;
+		}
+		return undefined;
+	}
 	protected checkValue(value: ExpressionNode): boolean {
 		const next = this.scanner.peek();
 		if (next.value == value) {
@@ -169,6 +177,13 @@ export abstract class AbstractParser {
 		if (current.isNotType(token)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(token)}, current is ${JSON.stringify(current)}`));
 		}
+	}
+	protected expectAndGetValue(token: Token) {
+		const current = this.scanner.next();
+		if (current.isNotType(token)) {
+			throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(token)}, current is ${JSON.stringify(current)}`));
+		}
+		return current.getValue();
 	}
 	protected checkInOrOf(): 'IN' | 'OF' | false {
 		if (this.check(Token.IN)) {
@@ -665,7 +680,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return new ForNode(body, initializer, condition, finalExpression);
 	}
-	protected parseVariableDeclarations(): ExpressionNode {
+	protected parseVariableDeclarations(): VariableDeclarationNode {
 		// VariableDeclarations ::
 		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
 		// var converted into ==> 'let' by parser
