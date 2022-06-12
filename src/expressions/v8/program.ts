@@ -659,8 +659,20 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		return this.parseStatementListItem();
 	}
 
-	protected expectContextualKeyword(tokenExp: TokenExpression, keyword: string) {
-		return tokenExp.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString());
+	protected expectContextualKeyword(keyword: string) {
+		const current = this.scanner.next();
+		if (!current.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
+			throw new Error(this.errorMessage(`Unexpected Token: current Token is ${JSON.stringify(current)}`));
+		}
+		return true;
+	}
+	protected checkContextualKeyword(keyword: string) {
+		const next = this.scanner.peek();
+		if (next.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
+			this.scanner.next();
+			return true;
+		}
+		return false;
 	}
 	protected parseExportDeclaration(): ExpressionNode | undefined {
 		// ExportDeclaration:
@@ -718,7 +730,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 
 				const exportData = this.parseExportClause();
 
-				if (this.expectContextualKeyword(this.peek(), 'from')) {
+				if (this.expectContextualKeyword('from')) {
 					// Scanner::Location specifier_loc = scanner() -> peek_location();
 					const moduleSpecifier = this.parseModuleSpecifier();
 					const importAssertions = this.parseImportAssertClause();
@@ -842,9 +854,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			switch (this.peek().token) {
 				case Token.MUL: {
 					this.consume(Token.MUL);
-					if (this.expectContextualKeyword(this.peek(), 'as')) {
-
-					}
+					this.expectContextualKeyword('as');
 					moduleNamespaceBinding = this.parseNonRestrictedIdentifier();
 					// ExpectContextualKeyword(ast_value_factory() -> as_string());
 					// module_namespace_binding = ParseNonRestrictedIdentifier();
@@ -861,9 +871,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 					throw new SyntaxError(this.errorMessage('Unexpected Token'));
 			}
 		}
-		if (this.expectContextualKeyword(this.peek(), 'from')) {
-
-		}
+		this.expectContextualKeyword('from');
 		// ExpectContextualKeyword(ast_value_factory() -> from_string());
 		// Scanner::Location specifier_loc = scanner() -> peek_location();
 		const moduleSpecifier = this.parseModuleSpecifier();
@@ -900,8 +908,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 	protected parseImportExpressions(): ExpressionNode {
 		this.consume(Token.IMPORT);
 		if (this.check(Token.PERIOD)) {
-			this.expectContextualKeyword(this.peek(), 'meta');
-			this.consume(Token.STRING);
+			this.expectContextualKeyword('meta');
 			return MetaProperty.ImportMeta;
 		}
 
@@ -932,16 +939,137 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		return new ImportExpression(specifier as Literal<string>);
 	}
 	protected parseVariableStatement(names: string[]): ExpressionNode | undefined {
-		throw new Error('Method not implemented.');
+		// VariableStatement ::
+		//   VariableDeclarations ';'
+
+		// The scope of a var declared variable anywhere inside a function
+		// is the entire function (ECMA-262, 3rd, 10.1.3, and 12.2). Thus we can
+		// transform a source-level var declaration into a (Function) Scope
+		// declaration, and rewrite the source-level initialization into an assignment
+		// statement. We use a block to collect multiple assignments.
+		//
+		// We mark the block as initializer block because we don't want the
+		// rewriter to add a '.result' assignment to such a block (to get compliant
+		// behavior for code such as print(eval('var x = 7')), and for cosmetic
+		// reasons when pretty-printing. Also, unless an assignment (initialization)
+		// is inside an initializer block, it is ignored.
+		const declarations = this.parseVariableDeclarations();
+		this.expectSemicolon();
+		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
+		return declarations;
 	}
-	protected parseImportAssertClause() {
-		throw new Error('Method not implemented.');
+	protected parseImportAssertClause(): [ExpressionNode, ExpressionNode][] {
+		// AssertClause :
+		//    assert '{' '}'
+		//    assert '{' AssertEntries '}'
+
+		// AssertEntries :
+		//    IdentifierName: AssertionKey
+		//    IdentifierName: AssertionKey , AssertEntries
+
+		// AssertionKey :
+		//     IdentifierName
+		//     StringLiteral
+
+		//   auto import_assertions = zone() -> New<ImportAssertions>(zone());
+
+		// if (!FLAG_harmony_import_assertions) {
+		// 	return import_assertions;
+		// }
+
+		// Assert clause is optional, and cannot be preceded by a LineTerminator.
+		const importAssertions: [ExpressionNode, ExpressionNode][] = [];
+		if (this.scanner.hasLineTerminatorBeforeNext() || !this.checkContextualKeyword('assert')) {
+			return importAssertions;
+		}
+
+		this.expect(Token.LBRACE);
+		const counts = {} as { [key: string]: number };
+
+		while (this.peek().isNotType(Token.RBRACE)) {
+			let attributeKey = this.checkAndGetValue(Token.STRING);
+			if (!attributeKey) {
+				attributeKey = this.parsePropertyOrPrivatePropertyName();
+			}
+			this.expect(Token.COLON);
+			const attributeValue = this.expectAndGetValue(Token.STRING);
+			importAssertions.push([attributeKey, attributeValue]);
+			counts[attributeKey.toString()] = (counts[attributeKey.toString()] ?? 0) + 1;
+			if (counts[attributeKey.toString()] > 1) {
+				// 	// It is a syntax error if two AssertEntries have the same key.
+				throw new SyntaxError(this.errorMessage('Import Assertion  Duplicate Key'));
+			}
+
+			if (this.peek().isType(Token.RBRACE)) break;
+			if (!this.check(Token.COMMA)) {
+				throw new SyntaxError('Unexpected Token');
+			}
+		}
+		this.expect(Token.RBRACE);
+		return importAssertions;
 	}
 	protected parseModuleSpecifier() {
-		throw new Error('Method not implemented.');
+		// ModuleSpecifier :
+		//    StringLiteral
+
+		return this.expectAndGetValue(Token.STRING);
 	}
 	protected parseExportClause() {
-		throw new Error('Method not implemented.');
+		// ExportClause :
+		//   '{' '}'
+		//   '{' ExportsList '}'
+		//   '{' ExportsList ',' '}'
+		//
+		// ExportsList :
+		//   ExportSpecifier
+		//   ExportsList ',' ExportSpecifier
+		//
+		// ExportSpecifier :
+		//   IdentifierName
+		//   IdentifierName 'as' IdentifierName
+		//   IdentifierName 'as' ModuleExportName
+		//   ModuleExportName
+		//   ModuleExportName 'as' ModuleExportName
+		//
+		// ModuleExportName :
+		//   StringLiteral
+		// ZoneChunkList < ExportClauseData >* export_data = zone() -> New<ZoneChunkList<ExportClauseData>>(zone());
+
+		this.expect(Token.LBRACE);
+
+		const exportData: { exportName: Identifier | Literal<string>, localName: Identifier | Literal<string> }[] = [];
+		let nameTok = this.peek();
+		while (nameTok.isNotType(Token.RBRACE)) {
+			const localName = this.parseExportSpecifierName();
+			let exportName;
+			if (this.checkContextualKeyword('as')) {
+				exportName = this.parseExportSpecifierName();
+			} else {
+				exportName = localName;
+			}
+			exportData.push({ exportName, localName });
+			if (this.peek().isType(Token.RBRACE)) break;
+			if (!this.check(Token.COMMA)) {
+				throw new SyntaxError('Unexpected Token');
+			}
+		}
+		this.expect(Token.RBRACE);
+		return exportData;
+	}
+	protected parseExportSpecifierName() {
+		const next = this.next();
+
+		// IdentifierName
+		if (next.isType(Token.IDENTIFIER) || Token.isPropertyName(next.token)) {
+			return next.getValue() as Identifier;
+		}
+
+		// ModuleExportName
+		if (next.isType(Token.STRING)) {
+			const exportName = next.getValue() as Literal<string>;
+			return exportName;
+		}
+		throw new SyntaxError(this.errorMessage('Unexpected Token'));
 	}
 	protected parseExportStar(): ExpressionNode | undefined {
 		throw new Error('Method not implemented.');
