@@ -766,6 +766,9 @@ export class Token {
 	getPrecedence() {
 		return this.precedence;
 	}
+	equal(token: Token) {
+		return this === token || this.name === token.name;
+	}
 }
 
 export class TokenExpression {
@@ -780,8 +783,8 @@ export class TokenExpression {
 		return this.token !== type;
 	}
 
-	test(func: (token: Token) => boolean): boolean {
-		return func(this.token);
+	test(func: (token: Token, value?: ExpressionNode) => boolean): boolean {
+		return func(this.token, this.value);
 	}
 	toString(): string {
 		return JSON.stringify(this);
