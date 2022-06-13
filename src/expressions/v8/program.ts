@@ -12,7 +12,7 @@ import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/de
 import { TokenStream } from './stream.js';
 import { Program } from '../api/program.js';
 import { ExportNamedDeclaration } from '../api/module/export.js';
-import { ImportExpression } from '../api/module/import.js';
+import { ImportExpression, ImportSpecifier, ModuleSpecifier } from '../api/module/import.js';
 
 
 export type ClassInfo = {
@@ -838,7 +838,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		}
 
 		// Parse ImportedDefaultBinding if present.
-		let importDefaultBinding: string | undefined;
+		let importDefaultBinding: Identifier | undefined;
 		// Scanner::Location import_default_binding_loc;
 		if (tok.isNotType(Token.MUL) && tok.isNotType(Token.LBRACE)) {
 			importDefaultBinding = this.parseNonRestrictedIdentifier();
@@ -846,8 +846,8 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		}
 
 		// Parse NameSpaceImport or NamedImports if present.
-		let moduleNamespaceBinding: string | undefined;
-		let namedImports: string[] | undefined;
+		let moduleNamespaceBinding: Identifier | undefined;
+		let namedImports: ModuleSpecifier[] | undefined;
 		// Scanner::Location module_namespace_binding_loc;
 		// const ZonePtrList<const NamedImport >* named_imports = nullptr;
 		if (importDefaultBinding == undefined || this.check(Token.COMMA)) {
@@ -1071,16 +1071,65 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		}
 		throw new SyntaxError(this.errorMessage('Unexpected Token'));
 	}
+	protected parseNamedImports(): ImportSpecifier[] {
+		// NamedImports :
+		//   '{' '}'
+		//   '{' ImportsList '}'
+		//   '{' ImportsList ',' '}'
+		//
+		// ImportsList :
+		//   ImportSpecifier
+		//   ImportsList ',' ImportSpecifier
+		//
+		// ImportSpecifier :
+		//   BindingIdentifier
+		//   IdentifierName 'as' BindingIdentifier
+		//   ModuleExportName 'as' BindingIdentifier
+
+		this.expect(Token.LBRACE);
+		const result: ImportSpecifier[] = [];
+
+		//   auto result = zone() -> New < ZonePtrList <const NamedImport>> (1, zone());
+		while (this.peek().isNotType(Token.RBRACE)) {
+			const importName = this.parseExportSpecifierName() as Identifier;
+			let localName = importName;
+			// In the presence of 'as', the left-side of the 'as' can
+			// be any IdentifierName. But without 'as', it must be a valid
+			// BindingIdentifier.
+			if (this.checkContextualKeyword('as')) {
+				localName = this.parsePropertyOrPrivatePropertyName() as Identifier;
+			}
+			if (!Token.isValidIdentifier(this.current().token)) {
+				throw new SyntaxError(this.errorMessage('Unexpected Reserved Keyword'));
+			} else if (this.isEvalOrArguments(localName)) {
+				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
+			}
+
+			result.push(new ImportSpecifier(localName, importName));
+
+			// DeclareUnboundVariable(localName, VariableMode:: kConst, kNeedsInitialization, position());
+
+			// NamedImport * import = zone() -> New<NamedImport>(import_name, local_name, location);
+			// result-> Add(import, zone());
+
+			if (this.peek().isType(Token.RBRACE)) break;
+			this.expect(Token.COMMA);
+		}
+
+		this.expect(Token.RBRACE);
+		return result;
+	}
+	protected parseNonRestrictedIdentifier() {
+		const result = this.parseIdentifier();
+		if (this.isEvalOrArguments(result)) {
+			throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
+		}
+		return result;
+	}
 	protected parseExportStar(): ExpressionNode | undefined {
 		throw new Error('Method not implemented.');
 	}
 	protected parseExportDefault(): ExpressionNode | undefined {
-		throw new Error('Method not implemented.');
-	}
-	protected parseNamedImports(): string[] | undefined {
-		throw new Error('Method not implemented.');
-	}
-	protected parseNonRestrictedIdentifier(): string | undefined {
 		throw new Error('Method not implemented.');
 	}
 	/**
