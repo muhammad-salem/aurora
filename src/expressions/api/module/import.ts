@@ -262,7 +262,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			const importSpecifiersString = importSpecifiers.map(importSpecifier => importSpecifier.toString()).join(',');
 			parts.push(`{ ${importSpecifiersString} }`);
 		}
-		return `import ${parts.join(', ')} ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
+		return `import ${parts.join(', ')} from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {

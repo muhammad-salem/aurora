@@ -315,11 +315,15 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 	}
 	constructor(
 		private source: Literal<string>,
+		private exported?: Identifier,
 		private assertions?: ImportAttribute[],) {
 		super();
 	}
 	getSource() {
 		return this.source;
+	}
+	getExported() {
+		return this.exported;
 	}
 	getAssertions() {
 		return this.assertions;
@@ -340,8 +344,14 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 		}
 		const localModule = stack.getModule()!;
 		const sourceModule = stack.importModule(this.source.get(), importCallOptions);
-		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];
 
+		if (this.exported) {
+			const exportedName = this.exported.get(stack);
+			localModule.set(exportedName, sourceModule.getContext());
+			return;
+		}
+
+		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];
 		properties.forEach(property => {
 
 			const localValue = sourceModule.get(property);
@@ -361,11 +371,12 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 		return [];
 	}
 	toString() {
-		return `export * from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
+		return `export *${this.exported ? ` as ${this.exported.toString()}` : ''} from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {
 			source: this.source.toJSON(),
+			exported: this.exported?.toJSON(),
 			assertions: this.assertions?.map(assertion => assertion.toJSON()),
 		};
 	}

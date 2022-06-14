@@ -1176,7 +1176,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			const importAssertions = this.parseImportAssertClause();
 			this.expectSemicolon();
 			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
-			return new ExportAllDeclaration(moduleSpecifier, importAssertions);
+			return new ExportAllDeclaration(moduleSpecifier, undefined, importAssertions);
 		}
 
 		// 'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
@@ -1203,10 +1203,10 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		const importAssertions = this.parseImportAssertClause();
 		this.expectSemicolon();
 
-		const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];
+		// const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];
 
 		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
 		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
-		return new ExportNamedDeclaration(specifiers, undefined, moduleSpecifier, importAssertions);
+		return new ExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions);
 	}
 }
