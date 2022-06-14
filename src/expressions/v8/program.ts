@@ -11,8 +11,9 @@ import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
 import { Program } from '../api/program.js';
-import { ExportNamedDeclaration } from '../api/module/export.js';
-import { ImportExpression, ImportSpecifier, ModuleSpecifier } from '../api/module/import.js';
+import { ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
+import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
 
 
 export type ClassInfo = {
@@ -658,22 +659,6 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 
 		return this.parseStatementListItem();
 	}
-
-	protected expectContextualKeyword(keyword: string) {
-		const current = this.scanner.next();
-		if (!current.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
-			throw new Error(this.errorMessage(`Unexpected Token: current Token is ${JSON.stringify(current)}`));
-		}
-		return true;
-	}
-	protected checkContextualKeyword(keyword: string) {
-		const next = this.scanner.peek();
-		if (next.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
-			this.scanner.next();
-			return true;
-		}
-		return false;
-	}
 	protected parseExportDeclaration(): ExpressionNode | undefined {
 		// ExportDeclaration:
 		//    'export' '*' 'from' ModuleSpecifier ';'
@@ -834,7 +819,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			this.expectSemicolon();
 
 			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
-			return undefined;
+			return new ImportDeclaration(moduleSpecifier, undefined, importAssertions);
 		}
 
 		// Parse ImportedDefaultBinding if present.
@@ -886,24 +871,17 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		// would point to the wrong location.  Maybe have a DeclareAt version of
 		// Declare that takes a location?
 
+		const specifiers: ModuleSpecifier[] = [];
 		if (moduleNamespaceBinding) {
-			// module() -> AddStarImport(module_namespace_binding, module_specifier, import_assertions, module_namespace_binding_loc, specifier_loc, zone());
+			specifiers.push(new ImportNamespaceSpecifier(moduleNamespaceBinding));
 		}
-
 		if (importDefaultBinding) {
-			// module() -> AddImport(ast_value_factory() -> default_string(), import_default_binding, module_specifier, import_assertions, import_default_binding_loc, specifier_loc, zone());
+			specifiers.push(new ImportDefaultSpecifier(importDefaultBinding));
 		}
-
-		if (namedImports) {
-			if (namedImports.length == 0) {
-				// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc, zone());
-			} else {
-				for (const namedImport of namedImports) {
-					// module() -> AddImport(import -> import_name, import -> local_name, module_specifier, import_assertions, import -> location, specifier_loc, zone());
-				}
-			}
+		if (namedImports?.length) {
+			specifiers.push(...namedImports);
 		}
-		return undefined;
+		return new ImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions);
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		this.consume(Token.IMPORT);
@@ -958,7 +936,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
 		return declarations;
 	}
-	protected parseImportAssertClause(): [ExpressionNode, ExpressionNode][] {
+	protected parseImportAssertClause(): ImportAttribute[] | undefined {
 		// AssertClause :
 		//    assert '{' '}'
 		//    assert '{' AssertEntries '}'
@@ -978,14 +956,12 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		// }
 
 		// Assert clause is optional, and cannot be preceded by a LineTerminator.
-		const importAssertions: [ExpressionNode, ExpressionNode][] = [];
 		if (this.scanner.hasLineTerminatorBeforeNext() || !this.checkContextualKeyword('assert')) {
-			return importAssertions;
+			return undefined;
 		}
-
 		this.expect(Token.LBRACE);
 		const counts = {} as { [key: string]: number };
-
+		const importAssertions: ImportAttribute[] = [];
 		while (this.peek().isNotType(Token.RBRACE)) {
 			let attributeKey = this.checkAndGetValue(Token.STRING);
 			if (!attributeKey) {
@@ -993,7 +969,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			}
 			this.expect(Token.COLON);
 			const attributeValue = this.expectAndGetValue(Token.STRING);
-			importAssertions.push([attributeKey, attributeValue]);
+			importAssertions.push(new ImportAttribute(attributeKey as Identifier, attributeValue as Literal<string>));
 			counts[attributeKey.toString()] = (counts[attributeKey.toString()] ?? 0) + 1;
 			if (counts[attributeKey.toString()] > 1) {
 				// 	// It is a syntax error if two AssertEntries have the same key.
@@ -1008,11 +984,11 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		this.expect(Token.RBRACE);
 		return importAssertions;
 	}
-	protected parseModuleSpecifier() {
+	protected parseModuleSpecifier(): Literal<string> {
 		// ModuleSpecifier :
 		//    StringLiteral
 
-		return this.expectAndGetValue(Token.STRING);
+		return this.expectAndGetValue(Token.STRING) as Literal<string>;
 	}
 	protected parseExportClause() {
 		// ExportClause :
@@ -1037,7 +1013,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 
 		this.expect(Token.LBRACE);
 
-		const exportData: { exportName: Identifier | Literal<string>, localName: Identifier | Literal<string> }[] = [];
+		const exportData: ExportSpecifier[] = [];
 		let nameTok = this.peek();
 		while (nameTok.isNotType(Token.RBRACE)) {
 			const localName = this.parseExportSpecifierName();
@@ -1047,7 +1023,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			} else {
 				exportName = localName;
 			}
-			exportData.push({ exportName, localName });
+			exportData.push(new ExportSpecifier(exportName as Identifier, localName as Identifier));
 			if (this.peek().isType(Token.RBRACE)) break;
 			if (!this.check(Token.COMMA)) {
 				throw new SyntaxError('Unexpected Token');
@@ -1126,11 +1102,110 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		}
 		return result;
 	}
-	protected parseExportStar(): ExpressionNode | undefined {
-		throw new Error('Method not implemented.');
+	protected parseExportDefault(): ExportDefaultDeclaration {
+		//  Supports the following productions, starting after the 'default' token:
+		//    'export' 'default' HoistableDeclaration
+		//    'export' 'default' ClassDeclaration
+		//    'export' 'default' AssignmentExpression[In] ';'
+
+		this.expect(Token.DEFAULT);
+		// Scanner::Location default_loc = scanner() -> location();
+
+		// ZonePtrList <const AstRawString> localNames(1, zone());
+		const localNames: string[] = [];
+		let result: ExpressionNode;
+		switch (this.peek().token) {
+			case Token.FUNCTION:
+				result = this.parseHoistableDeclaration(FunctionKind.NORMAL, true);
+				break;
+
+			case Token.CLASS:
+				this.consume(Token.CLASS);
+				result = this.parseClassDeclaration(localNames, true);
+				break;
+
+			case Token.ASYNC:
+				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
+					this.consume(Token.ASYNC);
+					result = this.parseHoistableDeclaration(FunctionKind.ASYNC, true);
+					// result = this.ParseAsyncFunctionDeclaration(& localNames, true);
+					break;
+				}
+
+			default: {
+				// int pos = position();
+				// AcceptINScope scope(this, true);
+				result = this.parseAssignmentExpression();
+
+				// SetFunctionName(value, ast_value_factory() -> default_string());
+
+				// const AstRawString* local_name = ast_value_factory() -> dot_default_string();
+				// localNames.Add(local_name, zone());
+
+				// It's fine to declare this as VariableMode::kConst because the user has
+				// no way of writing to it.
+				// VariableProxy * proxy = DeclareBoundVariable(local_name, VariableMode:: kConst, pos);
+				// proxy ->var() -> set_initializer_position(position());
+
+				// Assignment * assignment = factory() -> NewAssignment(Token.INIT, proxy, value, kNoSourcePosition);
+				// result = IgnoreCompletion( factory() -> NewExpressionStatement(assignment, kNoSourcePosition));
+
+				this.expectSemicolon();
+				break;
+			}
+		}
+
+		// if (!result) {
+		// 	DCHECK_EQ(localNames.length(), 1);
+		// 	module() -> AddExport(localNames.first(), ast_value_factory() -> default_string(), default_loc, zone());
+		// }
+
+		return new ExportDefaultDeclaration(result);
 	}
-	protected parseExportDefault(): ExpressionNode | undefined {
-		throw new Error('Method not implemented.');
+	protected parseExportStar(): ExpressionNode | undefined {
+		this.consume(Token.MUL);
+
+		if (!this.peekContextualKeyword('as')) {
+			// 'export' '*' 'from' ModuleSpecifier ';'
+			// Scanner::Location loc = scanner() -> location();
+			this.expectContextualKeyword('from');
+			// Scanner::Location specifier_loc = scanner() -> peek_location();
+			const moduleSpecifier = this.parseModuleSpecifier();
+			const importAssertions = this.parseImportAssertClause();
+			this.expectSemicolon();
+			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
+			return new ExportAllDeclaration(moduleSpecifier, importAssertions);
+		}
+
+		// 'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
+		//
+		// Desugaring:
+		//   export * as x from "...";
+		// ~>
+		//   import * as .x from "..."; export {.x as x};
+		//
+		// Note that the desugared internal namespace export name (.x above) will
+		// never conflict with a string literal export name, as literal string export
+		// names in local name positions (i.e. left of 'as' or in a clause without
+		// 'as') are disallowed without a following 'from' clause.
+
+		this.expectContextualKeyword('as');
+		const exportName = this.parseExportSpecifierName();
+		// Scanner::Location export_name_loc = scanner() -> location();
+		// const localName = this.nextInternalNamespaceExportName();
+		// Scanner::Location local_name_loc = Scanner:: Location:: invalid();
+		// DeclareUnboundVariable(local_name, VariableMode:: kConst, kCreatedInitialized,pos);
+
+		this.expectContextualKeyword('from');
+		const moduleSpecifier = this.parseModuleSpecifier();
+		const importAssertions = this.parseImportAssertClause();
+		this.expectSemicolon();
+
+		const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];
+
+		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
+		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
+		return new ExportNamedDeclaration(specifiers, undefined, moduleSpecifier, importAssertions);
 	}
 	/**
 		Token.IMPORT

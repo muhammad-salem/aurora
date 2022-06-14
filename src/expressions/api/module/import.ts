@@ -164,7 +164,6 @@ export class ImportNamespaceSpecifier extends ModuleSpecifier {
  * 
  * import "module-name";
  * 
- * var promise = import("module-name");
  */
 @Deserializer('ImportDeclaration')
 export class ImportDeclaration extends AbstractExpressionNode {
@@ -279,6 +278,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
  * `ImportExpression` node represents Dynamic Imports such as `import(source)`.
  * The `source` property is the importing source as similar to ImportDeclaration node,
  * but it can be an arbitrary expression node.
+ * var promise = import("module-name");
  */
 @Deserializer('ImportExpression')
 export class ImportExpression extends AbstractExpressionNode {
