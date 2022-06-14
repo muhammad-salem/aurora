@@ -1,6 +1,6 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal, ThisNode, NullNode, UndefinedNode, TrueNode, FalseNode } from '../api/definition/values.js';
+import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal, ThisNode, NullNode, UndefinedNode, TrueNode, FalseNode, DefaultNode } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 
@@ -416,6 +416,7 @@ export class TokenStreamImpl extends TokenStream {
 				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
 				case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
 				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
+				case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
 
 				default:
 					if (isPrivate) {
