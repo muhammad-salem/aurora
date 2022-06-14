@@ -203,7 +203,9 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		return parser.doParseProgram();
 	}
 	protected doParseProgram(): Program {
-		return new Program('module', []);
+		const body: ExpressionNode[] = [];
+		this.parseModuleItemList(body);
+		return new Program('module', body);
 	}
 	protected override parseNewTargetExpression(): ExpressionNode {
 		this.consume(Token.PERIOD);
@@ -1207,16 +1209,4 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
 		return new ExportNamedDeclaration(specifiers, undefined, moduleSpecifier, importAssertions);
 	}
-	/**
-		Token.IMPORT
-		Token.EXPORT
-		ParseModuleItem
-		ParseImportExpressions
-		ParseExportDeclaration
-		ParsePrimaryExpression
-
-		ParseModuleItemList
-
-		DoParseProgram
-	*/
 }
