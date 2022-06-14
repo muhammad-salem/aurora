@@ -125,7 +125,7 @@ export class DirectiveExpressionParser {
 			const list: TokenExpression[] = [peek];
 			this.consume(peek.token);
 			peek = this.stream.peek();
-			if (Token.isOpenPair(peek.token) && peek.isNotType(Token.L_PARENTHESES)) {
+			if (Token.isOpenPair(peek.token) && peek.isNotType(Token.LPAREN)) {
 				// object and array pattern, destructing
 				this.stream.readTill(Token.closeOf(peek.token), list);
 			} else if (peek.isType(Token.IDENTIFIER)) {
