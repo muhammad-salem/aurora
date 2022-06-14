@@ -97,7 +97,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			return;
 		}
 		try {
-			const node = JavaScriptProgramParser.parse(code);
+			const node = JavaScriptProgramParser.parseProgram(code);
 			this.ast = JSON.stringify(node.toJSON(), undefined, 2);
 			this.str = node.toString();
 			this.node = node;
