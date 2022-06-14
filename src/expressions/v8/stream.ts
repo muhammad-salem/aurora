@@ -188,6 +188,7 @@ export abstract class TokenStream {
 
 	abstract next(): TokenExpression;
 	abstract hasLineTerminatorBeforeNext(): boolean;
+	abstract hasLineTerminatorAfterNext(): boolean;
 	abstract createError(message: String): string;
 }
 
@@ -206,6 +207,9 @@ export class TokenStreamer extends TokenStream {
 		return 'parse error [' + this.pos + ']: ' + message;
 	}
 	hasLineTerminatorBeforeNext(): boolean {
+		return false;
+	}
+	hasLineTerminatorAfterNext(): boolean {
 		return false;
 	}
 }
@@ -250,6 +254,12 @@ export class TokenStreamImpl extends TokenStream {
 	hasLineTerminatorBeforeNext(): boolean {
 		const limit = this.peekPosition();
 		const str = this.expression.substring(this.pos, limit);
+		return /(?:\r?\n)/g.test(str);
+	}
+	hasLineTerminatorAfterNext(): boolean {
+		const start = this.peekPosition();
+		const end = this.peekAheadPosition();
+		const str = this.expression.substring(start, end);
 		return /(?:\r?\n)/g.test(str);
 	}
 	private isString() {
