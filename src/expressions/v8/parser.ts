@@ -295,14 +295,14 @@ export abstract class AbstractParser {
 	}
 	protected expectContextualKeyword(keyword: string) {
 		const current = this.scanner.next();
-		if (!current.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
+		if (!current.test((token, value) => Token.IDENTIFIER.equal(token) && keyword === value?.toString())) {
 			throw new Error(this.errorMessage(`Unexpected Token: current Token is ${JSON.stringify(current)}`));
 		}
 		return true;
 	}
 	protected checkContextualKeyword(keyword: string) {
 		const next = this.scanner.peek();
-		if (next.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString())) {
+		if (next.test((token, value) => Token.IDENTIFIER.equal(token) && keyword === value?.toString())) {
 			this.scanner.next();
 			return true;
 		}
@@ -310,7 +310,7 @@ export abstract class AbstractParser {
 	}
 	protected peekContextualKeyword(keyword: string) {
 		const next = this.scanner.peek();
-		return next.test((token, value) => Token.STRING.equal(token) && keyword === value?.toString());
+		return next.test((token, value) => Token.IDENTIFIER.equal(token) && keyword === value?.toString());
 	}
 	protected errorMessage(message: string): string {
 		return this.scanner.createError(message);
