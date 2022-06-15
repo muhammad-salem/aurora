@@ -187,6 +187,11 @@ export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
 }
 
 export class JavaScriptProgramParser extends JavaScriptParser {
+	/**
+	 * minimal parser same as parseScript but without the parent `Program` Expression
+	 * @param source 
+	 * @returns 
+	 */
 	static parse(source: string | TokenExpression[] | TokenStream) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
@@ -194,13 +199,33 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		const parser = new JavaScriptProgramParser(stream);
 		return parser.scan();
 	}
-
-	static parseProgram(source: string | TokenExpression[] | TokenStream): Program {
+	/**
+	 * parse script file
+	 * @param source 
+	 * @returns 
+	 */
+	static parseScript(source: string | TokenExpression[] | TokenStream) {
+		const stream = (typeof source === 'string' || Array.isArray(source))
+			? TokenStream.getTokenStream(source)
+			: source;
+		const parser = new JavaScriptProgramParser(stream);
+		return parser.doParseScript();
+	}
+	/**
+	 * parse module file with `import` and `export`
+	 * @param source 
+	 * @returns 
+	 */
+	static parseModule(source: string | TokenExpression[] | TokenStream): Program {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
 		const parser = new JavaScriptProgramParser(stream);
 		return parser.doParseProgram();
+	}
+	protected doParseScript(): Program {
+		const body = this.parseStatementList(Token.EOS);
+		return new Program('script', body);
 	}
 	protected doParseProgram(): Program {
 		const body: ExpressionNode[] = [];
