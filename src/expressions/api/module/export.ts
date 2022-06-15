@@ -308,10 +308,16 @@ export class ExportDefaultDeclaration extends AbstractExpressionNode {
 @Deserializer('ExportAllDeclaration')
 export class ExportAllDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportAllDeclaration, deserializer: NodeDeserializer): ExportAllDeclaration {
-		return new ExportAllDeclaration(deserializer(node.source) as Literal<string>);
+		return new ExportAllDeclaration(
+			deserializer(node.source) as Literal<string>,
+			node.exported ? deserializer(node.exported) as Identifier : void 0,
+			node.assertions?.map(deserializer) as ImportAttribute[],
+		);
 	}
 	static visit(node: ExportAllDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.source);
+		node.exported && visitNode(node.exported);
+		node.assertions?.forEach(visitNode);
 	}
 	constructor(
 		private source: Literal<string>,
@@ -342,13 +348,13 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 				importCallOptions = { assert: importAssertions };
 			}
 		}
-		const localModule = stack.getModule()!;
+		let localModule: ReactiveScope<ModuleContext> = stack.getModule()!;
 		const sourceModule = stack.importModule(this.source.get(), importCallOptions);
 
 		if (this.exported) {
 			const exportedName = this.exported.get(stack);
-			localModule.set(exportedName, sourceModule.getContext());
-			return;
+			localModule.set(exportedName, {});
+			localModule = localModule.getScope(exportedName)!;
 		}
 
 		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];
