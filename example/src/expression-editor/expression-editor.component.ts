@@ -32,7 +32,11 @@ const styles = `
 			<div class="box">
 				<div class="column">
 					<div class="h-25 d-flex flex-column d-flex justify-content-evenly">
-						<button class="btn btn-link" *for="let name of examples" @click="loadExample(name)">{{name}}</button>
+						<button class="btn"
+							*for="let name of examples"
+							@click="loadExample(name)"
+							[class]="{'btn-outline-primary': example == name, 'btn-link': example != name}"
+							>{{name |> splitUnderscore |> titlecase}}</button>
 					</div>
 				</div>
 				<div class="column"><textarea #editor cols="40" rows="700">...</textarea></div>
@@ -67,16 +71,23 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	error: HTMLPreElement;
 
 	examples = [
+		'IMPORT_ALL',
+		'IMPORT_DEFAULT',
+		'IMPORT_NAMED',
+		'IMPORT_NAMED_ALIAS',
 		'PLAY',
 		'CLASS_EXAMPLE'
 	];
+	example: string;
 
 	onInit(): void {
-		this.loadExample('PLAY');
+		this.loadExample('IMPORT_ALL');
 	}
 
 	loadExample(name: keyof typeof import('./expression.spec.js')) {
+		this.example = name;
 		import('./expression.spec.js')
+			.then(module => (this.error.innerText = '', module))
 			.then(module => this.loadCode(module[name]))
 			.then(code => this.editor.value = code!);
 	}
@@ -130,6 +141,10 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			this.error.innerText = e.stack;
 			console.error(e);
 		}
+	}
+
+	splitUnderscore(title: string) {
+		return title.replace(/_/g, ' ');
 	}
 
 }

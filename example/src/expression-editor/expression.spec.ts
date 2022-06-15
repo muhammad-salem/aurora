@@ -1,3 +1,9 @@
+
+export const IMPORT_ALL = `import * as foo from 'mod';`;
+export const IMPORT_DEFAULT = `import defaultName from 'mod';`;
+export const IMPORT_NAMED = `import {foo, bar} from 'mod';`;
+export const IMPORT_NAMED_ALIAS = `import {default as defaultName, foo as bar} from 'mod';`;
+
 export const PLAY = `
 let Y = class YY {
 	static FF = 10;
