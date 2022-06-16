@@ -381,29 +381,15 @@ export class JavaScriptParser extends AbstractParser {
 				return this.parseTryStatement();
 			case Token.SWITCH:
 				return this.parseSwitchStatement();
-			// case Token.FUNCTION:
-			// 	// FunctionDeclaration only allowed as a StatementListItem, not in
-			// 	// an arbitrary Statement position. Exceptions such as
-			// 	// ES#sec-functiondeclarations-in-ifstatement-statement-clauses
-			// 	// are handled by calling ParseScopedStatement rather than
-			// 	// ParseStatement directly.
-			// 	impl() -> ReportMessageAt(scanner() -> peek_location(),
-			// 		is_strict(language_mode())
-			// 			? MessageTemplate.kStrictFunction
-			// 			: MessageTemplate.kSloppyFunction);
-			// 	return impl() -> NullStatement();
+			case Token.FUNCTION:
+				throw new SyntaxError(this.errorMessage(`FunctionDeclaration only allowed as a StatementListItem not in an arbitrary Statement position.`));
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
 				return this.parseVariableDeclarations();
 			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-					}
-					return this.parseFunctionExpression(FunctionKind.ASYNC);
+				if (!this.scanner.hasLineTerminatorAfterNext() && this.peekAhead().isType(Token.FUNCTION)) {
+					throw new SyntaxError(this.errorMessage(`async function in single statement context.`));
 				}
 			default:
 				return this.parseExpressionOrLabelledStatement();
@@ -491,12 +477,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseStatementListItem(): ExpressionNode | undefined {
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionKind.GENERATOR);
-				}
-				return this.parseFunctionExpression(FunctionKind.NORMAL);
+				this.parseHoistableDeclaration(undefined, false);
 			case Token.CLASS:
 				this.consume(Token.CLASS);
 				return this.parseClassDeclaration(undefined, false);
@@ -505,14 +486,9 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.CONST:
 				return this.parseVariableDeclarations();
 			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
+				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorAfterNext()) {
 					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						this.consume(Token.MUL);
-						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-					}
-					return this.parseFunctionExpression(FunctionKind.ASYNC);
+					return this.parseAsyncFunctionDeclaration(undefined, false);
 				}
 				break;
 			default:
@@ -520,20 +496,26 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.parseStatement();
 	}
-	protected parseFunctionExpression(type: FunctionKind): ExpressionNode {
-		let funcName: ExpressionNode | undefined;
+	protected parseFunctionExpression() {
+		this.consume(Token.FUNCTION);
+		const functionKind = this.check(Token.MUL) ? FunctionKind.GENERATOR : FunctionKind.NORMAL;
+		let name: Identifier | undefined;
 		const peek = this.peek();
 		if (peek.isNotType(Token.LPAREN)) {
-			if (peek.isType(Token.LBRACK)) {
-				// [Symbol.iterator]() {}
-				this.consume(Token.LBRACK);
-				funcName = this.parseMemberExpression();
-				this.expect(Token.RBRACK);
-			} else {
-				funcName = this.parseIdentifier();
-			}
+			name = this.parseIdentifier();
 		}
-		return this.parseFunctionLiteral(type, funcName);
+		return this.parseFunctionLiteral(functionKind, name);
+	}
+	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean) {
+		// AsyncFunctionDeclaration ::
+		//   async [no LineTerminator here] function BindingIdentifier[Await]
+		//       ( FormalParameters[Await] ) { AsyncFunctionBody }
+		if (this.scanner.hasLineTerminatorBeforeNext()) {
+			throw new SyntaxError(this.errorMessage('Line Terminator Before `function` parsing `async function`.'));
+		}
+		this.consume(Token.FUNCTION);
+		return this.parseHoistableDeclaration01(FunctionKind.ASYNC, names, defaultExport);
+
 	}
 	protected parseIfStatement(): ExpressionNode {
 		this.consume(Token.IF);
@@ -777,20 +759,27 @@ export class JavaScriptParser extends AbstractParser {
 		}
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
+		if (Token.isValidIdentifier(next.token)) {
+			const name = this.getIdentifier();
+			this.isEvalOrArguments(name);
+			if (this.isEvalOrArguments(name)) {
+				throw new SyntaxError(this.errorMessage('Arguments Disallowed In Initializer And Static Block'));
+			}
+			return name;
+		}
 		if (next.isType(Token.IDENTIFIER)) {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration(false) as DeclarationExpression;
+			const value = this.parseFunctionDeclaration() as DeclarationExpression;
 			return new Property(next.getValue(), value, 'set');
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration(false) as DeclarationExpression;
+			const value = this.parseFunctionDeclaration() as DeclarationExpression;
 			return new Property(next.getValue(), value, 'get');
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
-
 		}
 		return next.getValue();
 	}
@@ -875,7 +864,7 @@ export class JavaScriptParser extends AbstractParser {
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
 			if (this.peek().isType(Token.FUNCTION) /*&& allow_function == kAllowLabelledFunctionStatement */) {
-				return this.parseFunctionDeclaration(false);
+				return this.parseFunctionDeclaration();
 			}
 			return this.parseStatement();
 		}
@@ -886,21 +875,46 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseExpression(): ExpressionNode {
 		return this.parseExpressionCoverGrammar();
 	}
-	protected parseFunctionDeclaration(defaultExport: boolean): ExpressionNode {
+	protected parseFunctionDeclaration(): ExpressionNode {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL, false);
+		return this.parseHoistableDeclaration01(FunctionKind.NORMAL, undefined, false);
 	}
-	protected parseFunctionDeclarationAndGenerator(defaultExport: boolean) {
-		this.consume(Token.FUNCTION);
-		if (this.check(Token.MUL)) {
-			return this.parseHoistableDeclaration(FunctionKind.GENERATOR, defaultExport);
+
+	protected parseAsyncFunctionLiteral() {
+		// AsyncFunctionLiteral ::
+		//   async [no LineTerminator here] function ( FormalParameters[Await] )
+		//       { AsyncFunctionBody }
+		//
+		//   async [no LineTerminator here] function BindingIdentifier[Await]
+		//       ( FormalParameters[Await] ) { AsyncFunctionBody }
+		if (this.current().isNotType(Token.ASYNC)) {
+			throw new SyntaxError(this.errorMessage('invalid token'));
 		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL, defaultExport);
+		this.consume(Token.FUNCTION);
+		let name: Identifier | undefined;
+		let flags = FunctionKind.ASYNC;
+		if (this.check(Token.MUL)) {
+			flags = FunctionKind.ASYNC_GENERATOR;
+		}
+		if (this.peekAnyIdentifier()) {
+			name = this.parseIdentifier();
+		}
+		return this.parseFunctionLiteral(flags, name);
+
 	}
-	protected parseHoistableDeclaration(flag: FunctionKind, defaultExport: boolean): ExpressionNode {
+	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean) {
+		this.consume(Token.FUNCTION);
+		let flags = FunctionKind.NORMAL;
+		if (this.check(Token.MUL)) {
+			flags = FunctionKind.GENERATOR;
+		}
+		return this.parseHoistableDeclaration01(flags, names, defaultExport);
+	}
+
+	protected parseHoistableDeclaration01(flag: FunctionKind, names: string[] | undefined, defaultExport: boolean): ExpressionNode {
 		// FunctionDeclaration ::
 		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
 		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
@@ -934,6 +948,7 @@ export class JavaScriptParser extends AbstractParser {
 		} else {
 			name = this.parseIdentifier();
 		}
+		names?.push(name.toString());
 		return this.parseFunctionLiteral(flag, name);
 	}
 	protected parseIdentifier(): Identifier {
@@ -953,6 +968,7 @@ export class JavaScriptParser extends AbstractParser {
 				return AwaitIdentifier;
 			case Token.ASYNC:
 				return AsyncIdentifier;
+			case Token.IDENTIFIER:
 			case Token.PRIVATE_NAME:
 				return current.getValue();
 			default:
@@ -971,7 +987,7 @@ export class JavaScriptParser extends AbstractParser {
 		else if (name == 'arguments') {
 			return ArgumentsIdentifier;
 		}
-		throw new Error(this.errorMessage(`can't identify token ${name}`));
+		throw new Error(this.errorMessage(`can't identify token '${name}'`));
 	}
 	protected parseFunctionLiteral(flag: FunctionKind, name?: ExpressionNode): ExpressionNode {
 		// Function ::
@@ -1067,23 +1083,16 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return initializer;
 	}
-	protected parseExpressionCoverGrammar(info?: FunctionInfo): ExpressionNode {
+	protected parseExpressionCoverGrammar(): ExpressionNode {
 		// Expression ::
 		//   AssignmentExpression
 		//   Expression ',' AssignmentExpression
 
-		// ExpressionListT list(pointer_buffer());
-		// ExpressionT expression;
-		// AccumulationScope accumulation_scope(expression_scope());
-		let variableIndex = 0;
 		const list: ExpressionNode[] = [];
 		let expression: ExpressionNode;
 		while (true) {
 			if (this.peek().isType(Token.ELLIPSIS)) {
-				if (info) {
-					info.rest = true;
-				}
-				return this.parseArrowParametersWithRest(list, variableIndex);
+				return this.parseArrowParametersWithRest(list);
 			}
 			expression = this.parseAssignmentExpressionCoverGrammar();
 			list.push(expression);
@@ -1098,7 +1107,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (list.length == 1) return expression;
 		return this.expressionListToExpression(list);
 	}
-	protected parseArrowParametersWithRest(list: ExpressionNode[], variableIndex: number): ExpressionNode {
+	protected parseArrowParametersWithRest(list: ExpressionNode[]): ExpressionNode {
 		this.consume(Token.ELLIPSIS);
 		const pattern: ExpressionNode = this.parseBindingPattern(true);
 		if (this.peek().isType(Token.ASSIGN)) {
@@ -1169,7 +1178,7 @@ export class JavaScriptParser extends AbstractParser {
 			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
-					return this.parseFunctionDeclarationAndGenerator(false);
+					return this.parseAsyncFunctionLiteral();
 				};
 				// async Identifier => ...
 				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
@@ -1207,12 +1216,7 @@ export class JavaScriptParser extends AbstractParser {
 				// return token.value!;
 				return this.parseRegExpLiteral();
 			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionKind.GENERATOR);
-				}
-				return this.parseFunctionExpression(FunctionKind.NORMAL);
+				return this.parseFunctionExpression();
 			case Token.SUPER: {
 				return this.parseSuperExpression();
 			}
@@ -1239,28 +1243,31 @@ export class JavaScriptParser extends AbstractParser {
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
 
-				const peekToken = this.peek();
-				let expression: ExpressionNode;
-				const info: FunctionInfo = {};
-				if (peekToken.isType(Token.FUNCTION)) {
-					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionKind.NORMAL);
-				} else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionKind.ASYNC);
-				} else {
-					expression = this.parseExpressionCoverGrammar(info);
-				}
+				const expression = this.parseExpressionCoverGrammar();
 				this.expect(Token.RPAREN);
-				if (this.peek().isType(Token.ARROW)) {
-					if (expression instanceof SequenceExpression) {
-						expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
-					} else {
-						expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
-					}
-				}
 				return expression;
+				// const peekToken = this.peek();
+				// let expression: ExpressionNode;
+				// const info: FunctionInfo = {};
+				// if (peekToken.isType(Token.FUNCTION)) {
+				// 	this.consume(Token.FUNCTION);
+				// 	expression = this.parseFunctionLiteral(FunctionKind.NORMAL);
+				// } else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
+				// 	this.consume(Token.ASYNC);
+				// 	this.consume(Token.FUNCTION);
+				// 	expression = this.parseFunctionLiteral(FunctionKind.ASYNC);
+				// } else {
+				// }
+				// expression = this.parseExpressionCoverGrammar(info);
+				// this.expect(Token.RPAREN);
+				// if (this.peek().isType(Token.ARROW)) {
+				// 	if (expression instanceof SequenceExpression) {
+				// 		expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
+				// 	} else {
+				// 		expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
+				// 	}
+				// }
+				// return expression;
 			}
 			case Token.CLASS: {
 				return this.parseClassExpression();
@@ -1701,26 +1708,11 @@ export class JavaScriptParser extends AbstractParser {
 		// parse function
 		switch (token.token) {
 			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					body = this.parseFunctionExpression(FunctionKind.GENERATOR);
-					break;
-				}
-				body = this.parseFunctionExpression(FunctionKind.NORMAL);
+				body = this.parseFunctionExpression();
 				break;
 			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						this.consume(Token.MUL);
-						body = this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-						break;
-					}
-					body = this.parseFunctionExpression(FunctionKind.ASYNC);
-					break;
-				}
+				this.consume(Token.ASYNC);
+				body = this.parseAsyncFunctionLiteral();
 				break;
 			default:
 				break;

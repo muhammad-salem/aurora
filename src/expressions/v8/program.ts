@@ -125,6 +125,14 @@ export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerato
 	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
 }
 
+export function functionKindFor(isGenerator: boolean, isAsync: boolean): FunctionKind {
+	return FUNCTIONS_TYPES[SubFunctionKind.NormalFunction][isGenerator ? 1 : 0][isAsync ? 1 : 0];
+}
+
+export function methodKindFor(isStatic: boolean, isGenerator: boolean, isAsync: boolean): FunctionKind {
+	return FUNCTIONS_TYPES[isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod][isGenerator ? 1 : 0][isAsync ? 1 : 0];
+}
+
 enum ObjectLiteralPropertyKind {
 	CONSTANT = 'CONSTANT',	// Property with constant value (compile time).
 	COMPUTED = 'COMPUTED',	// Property with computed value (execution time).
@@ -780,7 +788,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			}
 
 			case Token.FUNCTION:
-				result = this.parseFunctionDeclaration(false);
+				result = this.parseFunctionDeclaration();
 				break;
 
 			case Token.CLASS:
@@ -796,11 +804,8 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 
 			case Token.ASYNC:
 				this.consume(Token.ASYNC);
-				if (this.peek().isType(Token.FUNCTION)
-					// && !scanner() -> HasLineTerminatorBeforeNext()
-				) {
-					// result = this.parseAsyncFunctionDeclaration(names, false);
-					result = this.parseHoistableDeclaration(FunctionKind.ASYNC, false);
+				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
+					result = this.parseAsyncFunctionDeclaration(names, false);
 					break;
 				}
 
@@ -1143,7 +1148,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		let result: ExpressionNode;
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-				result = this.parseHoistableDeclaration(FunctionKind.NORMAL, true);
+				result = this.parseHoistableDeclaration(localNames, true);
 				break;
 
 			case Token.CLASS:
@@ -1154,8 +1159,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
 					this.consume(Token.ASYNC);
-					result = this.parseHoistableDeclaration(FunctionKind.ASYNC, true);
-					// result = this.ParseAsyncFunctionDeclaration(& localNames, true);
+					result = this.parseHoistableDeclaration(localNames, true);
 					break;
 				}
 
