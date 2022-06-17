@@ -347,15 +347,16 @@ export class MethodDefinition extends AbstractDefinition {
 		decorators.length && __decorate(decorators, target, name, null);
 	}
 	private initConstructor(stack: Stack, classConstructor: ClassConstructor) {
-		let superIndex = this.value.getBody()
+		const body = (this.value.getBody() as BlockStatement).getBody();
+		let superIndex = body
 			.findIndex(call => call instanceof CallExpression && Super.INSTANCE === call.getCallee());
 		if (superIndex === -1) {
-			superIndex = this.value.getBody().length;
+			superIndex = body.length;
 		}
-		const superCall = this.value.getBody()[superIndex] as CallExpression | undefined;
+		const superCall = body[superIndex] as CallExpression | undefined;
 
-		const blockBeforeSuper = new BlockStatement(this.value.getBody().slice(0, superIndex), false);
-		const blockAfterSuper = new BlockStatement(this.value.getBody().slice(superIndex + 1), false);
+		const blockBeforeSuper = new BlockStatement(body.slice(0, superIndex), false);
+		const blockAfterSuper = new BlockStatement(body.slice(superIndex + 1), false);
 
 		if (superCall) {
 			classConstructor[GET_PARAMETERS] = function (this: ClassConstructor, params: any[]) {
@@ -382,8 +383,32 @@ export class MethodDefinition extends AbstractDefinition {
 		if (this.static) {
 			str += 'static ';
 		}
-		str += this.key.toString().concat(' ');
-		str += this.value.toString();
+		const methodName = this.key.toString();
+		switch (this.kind) {
+			case 'get':
+				str += 'get ' + methodName;
+				break;
+			case 'set':
+				str += 'set ' + methodName;
+				break;
+			case 'method':
+				if (this.value.getAsync() && this.value.getGenerator()) {
+					str += 'async *';
+				}
+				else if (this.value.getAsync()) {
+					str += 'async ';
+				} else if (this.value.getGenerator()) {
+					str += '*';
+				}
+				str += methodName;
+				break;
+			case 'constructor':
+				str += 'constructor';
+				break;
+			default:
+				break;
+		}
+		str += this.value.paramsAndBodyToString();
 		return str;
 	}
 	toJson(): { [key: string]: any; } {
