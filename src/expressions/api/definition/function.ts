@@ -449,7 +449,7 @@ export class ArrowFunctionExpression extends BaseFunctionExpression {
 				}
 			}
 			this.clearFunctionScope(stack, innerScopes);
-			if (!Array.isArray(this.body)) {
+			if (this.expression) {
 				return returnValue;
 			}
 		};
@@ -469,7 +469,7 @@ export class ArrowFunctionExpression extends BaseFunctionExpression {
 				}
 			}
 			this.clearFunctionScope(stack, innerScopes);
-			if (!Array.isArray(this.body)) {
+			if (this.expression) {
 				return returnValue;
 			}
 		};
