@@ -251,11 +251,11 @@ export abstract class AbstractParser {
 		}
 		return true;
 	}
-	protected isPattern(expression: ExpressionNode): expression is (ObjectPattern | ArrayPattern) {
-		return expression instanceof ObjectPattern || expression instanceof ArrayPattern;
+	protected isPattern(expression: ExpressionNode): expression is (ObjectExpression | ArrayExpression) {
+		return expression instanceof ObjectExpression || expression instanceof ArrayExpression;
 	}
-	protected isProperty(expression: ExpressionNode): expression is MemberExpression {
-		return expression instanceof MemberExpression;
+	protected isProperty(expression: ExpressionNode): expression is Property {
+		return expression instanceof Property;
 	}
 	protected isCallNew(expression: ExpressionNode): expression is NewExpression {
 		return expression instanceof NewExpression;
@@ -265,14 +265,6 @@ export abstract class AbstractParser {
 	}
 	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyStatement {
 		return expression instanceof EmptyStatement;
-	}
-	protected isThisProperty(expression: ExpressionNode): boolean {
-		if (this.isProperty(expression)) {
-			if (expression.getObject() === ThisNode || expression.getObject().toString() === 'this') {
-				return true;
-			}
-		}
-		return false;
 	}
 	protected isValidReferenceExpression(expression: ExpressionNode): boolean {
 		return this.isAssignableIdentifier(expression) || this.isProperty(expression);
@@ -365,9 +357,9 @@ export class JavaScriptParser extends AbstractParser {
 			case Token.WHILE:
 				return this.parseWhileStatement();
 			case Token.FOR:
-				// if (this.peekAhead().isType(Token.AWAIT)) {
-				// 	return this.parseForAwaitStatement();
-				// }
+				if (this.peekAhead().isType(Token.AWAIT)) {
+					return this.parseForAwaitStatement();
+				}
 				return this.parseForStatement();
 			case Token.CONTINUE:
 				return this.parseContinueStatement();
@@ -618,68 +610,165 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.RBRACE);
 		return switchStatement;
 	}
-	protected parseForStatement(): ExpressionNode {
+	protected parseForStatement() {
+
 		// Either a standard for loop
 		//   for (<init>; <cond>; <next>) { ... }
 		// or a for-each loop
 		//   for (<each> of|in <iterable>) { ... }
 		//
+		// We parse a declaration/expression after the 'for (' and then read the first
+		// expression/declaration before we know if this is a for or a for-each.
+		//   typename FunctionState::LoopScope loop_scope(function_state_);
 
 		this.consume(Token.FOR);
-		const isAwait = this.check(Token.AWAIT);
 		this.expect(Token.LPAREN);
 		const peek = this.peek();
-		const startsWithLet = peek.isType(Token.LET) || peek.isType(Token.VAR);
+		const starts_with_let = peek.isType(Token.LET);
+		if (peek.isType(Token.CONST) || (starts_with_let && this.isNextLetKeyword())) {
+
+			// The initializer contains lexical declarations,
+			// so create an in-between scope.
+
+			// Also record whether inner functions or evals are found inside
+			// this loop, as this information is used to simplify the desugaring
+			// if none are found.
+			// typename FunctionState::FunctionOrEvalRecordingScope recording_scope(function_state_);
+			const initializer = this.parseVariableDeclarations();
+
+			const forMode = this.checkInOrOf();
+			if (forMode) {
+				return this.parseForEachStatementWithDeclarations(initializer, forMode);
+			}
+
+			this.expect(Token.SEMICOLON);
+
+			// Parse the remaining code in the inner block scope since the declaration
+			// above was parsed there. We'll finalize the unnecessary outer block scope
+			// after parsing the rest of the loop.
+			return this.parseStandardForLoopWithLexicalDeclarations(initializer);
+		}
+
 		let initializer: ExpressionNode;
-		if (peek.isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
+		if (peek.isType(Token.VAR)) {
 			initializer = this.parseVariableDeclarations();
-		} else if (peek.isType(Token.SEMICOLON)) {
-			initializer = EmptyStatement.INSTANCE;
-		} else {
+			// ParseVariableDeclarations(kForStatement, & for_info.parsing_result,& for_info.bound_names);
+			// DCHECK_EQ(for_info.parsing_result.descriptor.mode, VariableMode:: kVar);
+			// for_info.position = scanner() -> location().beg_pos;
+			const forMode = this.checkInOrOf();
+			if (forMode) {
+				return this.parseForEachStatementWithDeclarations(initializer as VariableDeclarationNode, forMode);
+			}
+			// init = impl() -> BuildInitializationBlock(& for_info.parsing_result);
+		} else if (this.peek().isNotType(Token.SEMICOLON)) {
+			// The initializer does not contain declarations.
 			initializer = this.parseExpressionCoverGrammar();
-		}
-		if (initializer instanceof BinaryExpression) {
-			// x in y 
-			const objectNode = initializer.getRight();
-			initializer = initializer.getLeft();
-			this.expect(Token.RPAREN)
-			const statement = this.parseStatement();
-			return new ForInNode(initializer as ForDeclaration, objectNode, statement);
-		}
-		const forMode = this.checkInOrOf();
-		if (forMode) {
-			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
-			this.expect(Token.RPAREN)
-			const statement = this.parseStatement();
-			if (statement instanceof BlockStatement) {
-				statement.isStatement = true;
+			//   ExpressionParsingScope parsing_scope(impl());
+			//   AcceptINScope scope(this, false);
+			// `for (async of` is disallowed but `for (async.x of` is allowed, so
+			// check if the token is ASYNC after parsing the expression.
+			// Initializer is reference followed by in/of.
+			const expression_is_async = this.current().isType(Token.ASYNC);
+			const forMode = this.checkInOrOf();
+			if (forMode) {
+				if (starts_with_let || expression_is_async) {
+					throw new SyntaxError(this.errorMessage(starts_with_let ? 'For Of Let' : 'For Of Async'));
+				}
+				return this.parseForEachStatementWithoutDeclarations(initializer, forMode)
 			}
-			if (isAwait && forMode === 'OF') {
-				return new ForAwaitOfNode(initializer as ForDeclaration, object, statement);
-			} else if (forMode === 'OF') {
-				return new ForOfNode(initializer as ForDeclaration, object, statement);
-			} else if (forMode === 'IN') {
-				return new ForInNode(initializer as ForDeclaration, object, statement);
-			} else {
-				throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
-			}
+		}
+
+		this.expect(Token.SEMICOLON);
+		return this.parseStandardForLoop(initializer!);
+	}
+	protected parseStandardForLoopWithLexicalDeclarations(initializer: VariableDeclarationNode) {
+		// The condition and the next statement of the for loop must be parsed
+		// in a new scope.
+		return this.parseStandardForLoop(initializer);
+	}
+	protected parseForEachStatementWithDeclarations(initializer: VariableDeclarationNode, forMode: 'IN' | 'OF') {
+		// Just one declaration followed by in/of.
+		if (initializer.getDeclarations().length != 1) {
+			throw new SyntaxError(this.errorMessage('For In/Of loop Multi Bindings'));
+		}
+		return this.parseForEachStatementWithoutDeclarations(initializer, forMode);
+	}
+	protected parseForEachStatementWithoutDeclarations(initializer: ExpressionNode, forMode: 'IN' | 'OF') {
+		const enumerable = forMode == 'OF'
+			? this.parseAssignmentExpression()
+			: this.parseExpression();
+		this.expect(Token.RPAREN);
+		const body = this.parseStatement();
+		if (forMode === 'OF') {
+			return new ForOfNode(initializer as ForDeclaration, enumerable, body);
+		} else if (forMode === 'IN') {
+			return new ForInNode(initializer as ForDeclaration, enumerable, body);
+		} else {
+			throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
+		}
+	}
+	protected parseStandardForLoop(initializer: ExpressionNode) {
+		// CheckStackOverflow();
+		//   ForStatementT loop = factory() -> NewForStatement(stmt_pos);
+		//   Target target(this, loop, labels, own_labels, Target:: TARGET_FOR_ANONYMOUS);
+
+		let cond: ExpressionNode = new EmptyStatement();
+		if (this.peek().isNotType(Token.SEMICOLON)) {
+			cond = this.parseExpression();
 		}
 		this.expect(Token.SEMICOLON);
-		let condition: ExpressionNode | undefined;
-		if (!this.check(Token.SEMICOLON)) {
-			condition = this.parseExpression();
-			this.expect(Token.SEMICOLON);
+
+		let next: ExpressionNode = new EmptyStatement();
+		if (this.peek().isNotType(Token.RPAREN)) {
+			next = this.parseExpression();
 		}
-		let finalExpression: ExpressionNode | undefined;
-		if (!this.check(Token.RPAREN)) {
-			finalExpression = this.parseExpression();
-			this.expect(Token.RPAREN);
-		}
+		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
+		return new ForNode(body, initializer, cond, next);
+	}
+	protected parseForAwaitStatement() {
+		// for await '(' ForDeclaration of AssignmentExpression ')'
+
+		// Create an in-between scope for let-bound iteration variables.
+		//   BlockState for_state(zone(), & scope_);
+		this.expect(Token.FOR);
+		this.expect(Token.AWAIT);
+		this.expect(Token.LPAREN);
+
+		let hasDeclarations = false;
+		// Scope * inner_block_scope = NewScope(BLOCK_SCOPE);
+		let eachVariable: ExpressionNode;
+
+		let peek = this.peek();
+		let startsWithLet = peek.isType(Token.LET);
+		if (peek.isType(Token.VAR) || peek.isType(Token.CONST)
+			|| (startsWithLet && this.isNextLetKeyword())) {
+			// The initializer contains declarations
+			// 'for' 'await' '(' ForDeclaration 'of' AssignmentExpression ')'
+			//     Statement
+			// 'for' 'await' '(' 'var' ForBinding 'of' AssignmentExpression ')'
+			//     Statement
+			hasDeclarations = true;
+			const initializer = this.parseVariableDeclarations();
+			if (initializer.getDeclarations().length != 1) {
+				throw new SyntaxError(this.errorMessage('For In/Of Loop MultiBindings, "for-await-of"'));
+			}
+			eachVariable = initializer;
+		} else {
+			// The initializer does not contain declarations.
+			// 'for' 'await' '(' LeftHandSideExpression 'of' AssignmentExpression ')'
+			//     Statement
+			if (startsWithLet) {
+				throw new SyntaxError(this.errorMessage('The initializer does not contain declarations, For Of Let, "for-await-of"'));
+			}
+			eachVariable = this.parseLeftHandSideExpression();
 		}
-		return new ForNode(body, initializer, condition, finalExpression);
+
+		this.expectContextualKeyword('of');
+		const iterable = this.parseAssignmentExpression();
+		this.expect(Token.RPAREN);
+		const body = this.parseStatement();
+		return new ForAwaitOfNode(eachVariable as ForDeclaration, iterable, body);
 	}
 	protected parseVariableDeclarations(): VariableDeclarationNode {
 		// VariableDeclarations ::
@@ -1392,6 +1481,9 @@ export class JavaScriptParser extends AbstractParser {
 				// 	impl() -> ReportMessageAt(loc, MessageTemplate.kInvalidLhsInAssignment);
 				// }
 			}
+			expression = expression instanceof ObjectExpression
+				? new ObjectPattern(expression.getProperties())
+				: new ArrayPattern(expression.getElements() as DeclarationExpression[]);
 			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
 		} else {
 			if (!this.isValidReferenceExpression(expression)) {
@@ -1426,40 +1518,40 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		return this.scanner.currentToken().getValue();
 	}
-	protected parseArrayLiteral(isPattern: boolean): ExpressionNode {
+	protected parseArrayLiteral(isPattern: boolean) {
+
 		// ArrayLiteral ::
 		//   '[' Expression? (',' Expression?)* ']'
 
 		this.consume(Token.LBRACK);
-		const values: ExpressionNode[] = [];
-		let firstSpreadIndex = -1;
+		let first_spread_index = -1;
+		const values: (ExpressionNode | null)[] = [];
 
 		while (!this.check(Token.RBRACK)) {
-			let elem: ExpressionNode;
+			let elem: ExpressionNode | null;
 			if (this.peek().isType(Token.COMMA)) {
-				this.consume(Token.COMMA);
-				continue;
+				elem = null;
 			} else if (this.check(Token.ELLIPSIS)) {
 				const argument = this.parsePossibleDestructuringSubPattern();
-				elem = isPattern
-					? new RestElement(argument as DeclarationExpression)
-					: new SpreadElement(argument)
-
-				if (firstSpreadIndex < 0) {
-					firstSpreadIndex = values.length;
+				elem = new SpreadElement(argument);
+				if (first_spread_index < 0) {
+					first_spread_index = values.length;
+				}
+				if (argument instanceof AssignmentExpression) {
+					throw new SyntaxError(this.errorMessage('Invalid Destructuring Target'));
 				}
 				if (this.peek().isType(Token.COMMA)) {
-					throw new Error(this.errorMessage(`Element After Rest @${this.position()}`));
+					throw new SyntaxError(this.errorMessage('Element After Rest'));
 				}
 			} else {
 				elem = this.parsePossibleDestructuringSubPattern();
 			}
 			values.push(elem);
+			if (this.peek().isNotType(Token.RBRACK)) {
+				this.expect(Token.COMMA);
+			}
 		}
-		if (isPattern) {
-			return new ArrayPattern(values as DeclarationExpression[]);
-		}
-		return new ArrayExpression(values);
+		return new (isPattern ? ArrayPattern : ArrayExpression)(values as DeclarationExpression[]);
 	}
 	protected parsePossibleDestructuringSubPattern(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
@@ -1857,10 +1949,22 @@ export class JavaScriptParser extends AbstractParser {
 
 		return x;
 	}
+	// Precedence >= 4
 	protected parseBinaryExpression(precedence: number): ExpressionNode {
+		// "#foo in ShiftExpression" needs to be parsed separately, since private
+		// identifiers are not valid PrimaryExpressions.
+		if (this.peek().isType(Token.PRIVATE_NAME)) {
+			const x = this.parsePropertyOrPrivatePropertyName();
+			const precedence1 = this.peek().token.getPrecedence();
+
+			if (this.peek().isNotType(Token.IN) || precedence1 < precedence) {
+				throw new SyntaxError(this.errorMessage('Unexpected Token Token.PRIVATE_NAME "#name"'));
+			}
+			return this.parseBinaryContinuation(x, precedence, precedence1);
+		}
 		const x: ExpressionNode = this.parseUnaryExpression();
 		const precedence1 = this.peek().token.getPrecedence();
-		if (precedence1 >= precedence) {
+		if (this.peek().isNotType(Token.IN) && precedence1 >= precedence) {
 			return this.parseBinaryContinuation(x, precedence, precedence1);
 		}
 		return x;
