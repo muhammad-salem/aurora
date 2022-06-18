@@ -943,7 +943,7 @@ export class JavaScriptParser extends AbstractParser {
 			} else if (!this.peekInOrOf()) {
 				// ES6 'const' and binding patterns require initializers.
 				if (mode === 'const' && (name === undefined || value === undefined)) {
-					throw new Error(this.errorMessage(`Declaration Missing Initializer : ${this.position()}`));
+					throw new Error(this.errorMessage(`Declaration Missing Initializer`));
 				}
 				// value = undefined;
 			}
