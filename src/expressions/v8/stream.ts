@@ -6,7 +6,7 @@ import { PrivateIdentifier } from '../api/class/class.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 
-// export const IdentifierRegex = /^[_A-Za-z\u00A1-\uFFFF][_A-Za-z0-9\u00A1-\uFFFF]*/;
+export const IdentifierRegex = /^[_A-Za-z\u00A1-\uFFFF][_A-Za-z0-9\u00A1-\uFFFF]*/;
 
 export const IdentifierStartRegex = /[_$a-zA-Z\xA0-\uFFFF]/;
 
@@ -390,8 +390,8 @@ export class TokenStreamImpl extends TokenStream {
 	private isProperty() {
 		let startPos = this.pos;
 		let i = startPos;
-		let hasLetter = false;
 		let isPrivate = false;
+		let escape = false;
 		// check is private property 
 		let char = this.expression.charAt(i);
 		if (char === '#') {
@@ -401,48 +401,72 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		char = this.expression.charAt(i);
 		if (!IdentifierStartRegex.test(char)) {
-			return false;
+			if (char === '\\' && this.expression.charAt(i + 1) === 'u') {
+				i += 2;
+				escape = true;
+				// need to valid the unicode char
+			} else {
+				return false;
+			}
 		} else {
 			i++;
-			hasLetter = true;
 		}
 
 		for (; i < this.expression.length; i++) {
 			char = this.expression.charAt(i);
 			if (!IdentifierPartRegex.test(char)) {
+				if (char === '\\' && this.expression.charAt(i + 1) === 'u') {
+					i++;
+					escape = true;
+					continue;
+				}
+				if ('{' === this.expression.charAt(i)) {
+					const end = this.expression.indexOf('}', i + 1);
+					if (end === -1) {
+						return false;
+					}
+					i = end;
+					continue;
+				}
 				break;
 			}
 		}
-		if (hasLetter) {
-			const prop = this.expression.substring(startPos, i);
-			let node: ExpressionNode;
-			switch (prop) {
-				case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
-				case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
-				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
-				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
-				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
-
-				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
-				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
-				case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
-				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
-				case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
-
-				default:
-					if (isPrivate) {
-						node = new PrivateIdentifier(prop);
-						this.current = this.newToken(Token.PRIVATE_NAME, node);
-					} else {
-						node = new Identifier(prop);
-						this.current = this.newToken(Token.IDENTIFIER, node);
-					}
-					break;
+		let identifierName = this.expression.substring(startPos, i);
+		if (escape) {
+			identifierName = this.unescape(identifierName);
+			if (!IdentifierRegex.test(identifierName)) {
+				return false;
 			}
-			this.pos += prop.length + (isPrivate ? 1 : 0);
-			return true;
+			this.pos = i;
+		} else {
+			this.pos += identifierName.length + (isPrivate ? 1 : 0);
 		}
-		return false;
+		let node: ExpressionNode;
+		switch (identifierName) {
+			case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
+			case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
+			case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
+			case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
+			case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
+
+			case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
+			case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
+			case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
+			case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
+			case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
+
+			default:
+				if (isPrivate) {
+					node = new PrivateIdentifier(identifierName);
+					this.current = this.newToken(Token.PRIVATE_NAME, node);
+				} else {
+					node = new Identifier(identifierName);
+					this.current = this.newToken(Token.IDENTIFIER, node);
+				}
+				break;
+		}
+		return true;
+
 	}
 	private isWhitespace() {
 		let result = false;
@@ -579,7 +603,7 @@ export class TokenStreamImpl extends TokenStream {
 						if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
 							throw new Error(this.createError('Illegal escape sequence: \\u' + codePoint));
 						}
-						buffer += String.fromCharCode(parseInt(codePoint, 16));
+						buffer += String.fromCodePoint(parseInt(codePoint, 16));
 						index += 4;
 					}
 					break;
@@ -1240,12 +1264,12 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	public createError(message: String): string {
 		let coords = this.getCoordinates();
-		const lastLinePos = this.expression.lastIndexOf('\n', this.pos);
+		const lastLinePos = this.expression.lastIndexOf('\n', this.pos) + 1;
 		let nextLinePos = this.expression.indexOf('\n', this.pos + 1);
 		if (nextLinePos == -1) {
 			nextLinePos = this.expression.length;
 		}
-		const subStart = Math.max(0, lastLinePos, this.pos - 25);
+		const subStart = Math.max(lastLinePos, this.pos - 25);
 		const subEnd = Math.min(nextLinePos, this.pos + 25, this.expression.length);
 
 		const errorAt = this.expression.substring(subStart, subEnd);
