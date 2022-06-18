@@ -494,8 +494,9 @@ export class TokenStreamImpl extends TokenStream {
 			let flags = '';
 			const remainFlags = TokenStreamImpl.REGEXP_FLAGS.slice();
 			while (true) {
+				const code = this.expression.charCodeAt(currentPos);
 				const nextChar = this.expression.charAt(currentPos);
-				if (/[\.\s]/.test(nextChar)) {
+				if (/[\.\s]/.test(nextChar) || Number.isNaN(code) /* || FORBIDDEN_CODE_POINT.includes(code.toString(16))*/) {
 					break;
 				}
 				const nextCharIndex = remainFlags.indexOf(nextChar);
