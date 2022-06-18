@@ -6,6 +6,8 @@ import { PrivateIdentifier } from '../api/class/class.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 
+// export const IdentifierRegex = /^[_A-Za-z\u00A1-\uFFFF][_A-Za-z0-9\u00A1-\uFFFF]*/;
+
 export const IdentifierStartRegex = /[_$a-zA-Z\xA0-\uFFFF]/;
 
 export const IdentifierPartRegex = /[_$a-zA-Z0-9\xA0-\uFFFF]/;
@@ -538,37 +540,54 @@ export class TokenStreamImpl extends TokenStream {
 				case '"':
 				case '\\':
 				case '/':
+					index++;
 					buffer += c;
 					break;
 
 				case 'b':
+					index++;
 					buffer += '\b';
 					break;
 				case 'f':
+					index++;
 					buffer += '\f';
 					break;
 				case 'n':
+					index++;
 					buffer += '\n';
 					break;
 				case 'r':
+					index++;
 					buffer += '\r';
 					break;
 				case 't':
+					index++;
 					buffer += '\t';
 					break;
 				case 'u': {
+					index++;
 					// interpret the following 4 characters as the hex of the unicode code point
-					let codePoint = v.substring(index + 1, index + 5);
-					if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
-						throw new Error(this.createError('Illegal escape sequence: \\u' + codePoint));
+					if ('{' === v.charAt(index)) {
+						index++;
+						const start = index;
+						const end = v.indexOf('}', start + 1);
+						const codePoint = v.substring(start, end);
+						buffer += String.fromCodePoint(parseInt(codePoint, 16));
+						index = end + 1;
+					} else {
+						const codePoint = v.substring(index, index + 4);
+						if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
+							throw new Error(this.createError('Illegal escape sequence: \\u' + codePoint));
+						}
+						buffer += String.fromCharCode(parseInt(codePoint, 16));
+						index += 4;
 					}
-					buffer += String.fromCharCode(parseInt(codePoint, 16));
-					index += 4;
 					break;
 				}
 				case 'x': {
+					index++;
 					// interpret the following 2 characters as the hex of the decimal code point
-					let codePoint = v.substring(index + 1, index + 3);
+					let codePoint = v.substring(index, index + 2);
 					if (!TokenStreamImpl.DecimalPattern.test(codePoint)) {
 						throw new Error(this.createError('Illegal escape sequence: \\x' + codePoint));
 					}
@@ -579,10 +598,14 @@ export class TokenStreamImpl extends TokenStream {
 				default:
 					throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
 			}
-			++index;
 			let backslash = v.indexOf('\\', index);
-			buffer += v.substring(index, backslash < 0 ? v.length : backslash);
-			index = backslash;
+			if (backslash == -1) {
+				buffer += v.substring(index, v.length);
+				break;
+			} else {
+				buffer += v.substring(index, backslash);
+				index = backslash;
+			}
 		}
 		return buffer;
 	}
