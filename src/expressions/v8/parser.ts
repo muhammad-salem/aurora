@@ -12,8 +12,8 @@ import {
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import {
-	ArrowFunctionExpression, ArrowFunctionType, FunctionKind,
-	Param, FunctionExpression, FunctionDeclaration
+	ArrowFunctionExpression, Param,
+	FunctionExpression, FunctionDeclaration
 } from '../api/definition/function.js';
 import { IfStatement } from '../api/statement/control/if.js';
 import { NewExpression } from '../api/computing/new.js';
@@ -44,7 +44,6 @@ import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
-import { BinaryExpression } from '../api/operators/binary.js';
 import { ClassDeclaration, ClassExpression, PrivateIdentifier } from '../api/class/class.js';
 
 export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
@@ -118,6 +117,123 @@ export enum PreParserIdentifierType {
 	NameIdentifier = 'NameIdentifier',
 	PrivateNameIdentifier = 'PrivateNameIdentifier'
 }
+
+export enum FunctionBodyType {
+	EXPRESSION = 'EXPRESSION',
+	BLOCK = 'BLOCK',
+}
+
+export enum FunctionKind {
+	NORMAL = 'NORMAL',
+	ASYNC = 'ASYNC',
+	GENERATOR = 'GENERATOR',
+	ASYNC_GENERATOR = 'ASYNC_GENERATOR',
+
+	CONCISE = 'CONCISE',
+	ASYNC_CONCISE = 'ASYNC_CONCISE',
+	CONCISE_GENERATOR = 'CONCISE_GENERATOR',
+	ASYNC_CONCISE_GENERATOR = 'ASYNC_CONCISE_GENERATOR',
+
+	STATIC_CONCISE = 'STATIC_CONCISE',
+	STATIC_ASYNC_CONCISE = 'STATIC_ASYNC_CONCISE',
+	STATIC_CONCISE_GENERATOR = 'STATIC_CONCISE_GENERATOR',
+	STATIC_ASYNC_CONCISE_GENERATOR = 'STATIC_ASYNC_CONCISE_GENERATOR',
+
+	DERIVED_CONSTRUCTOR = 'DERIVED_CONSTRUCTOR',
+	BASE_CONSTRUCTOR = 'BASE_CONSTRUCTOR',
+	DEFAULT_BASE_CONSTRUCTOR = 'DEFAULT_BASE_CONSTRUCTOR',
+	DEFAULT_DERIVED_CONSTRUCTOR = 'DEFAULT_DERIVED_CONSTRUCTOR',
+
+	// BEGIN accessors
+	GETTER_FUNCTION = 'GETTER_FUNCTION',
+	SETTER_FUNCTION = 'SETTER_FUNCTION',
+	STATIC_GETTER_FUNCTION = 'STATIC_GETTER_FUNCTION',
+	STATIC_SETTER_FUNCTION = 'STATIC_SETTER_FUNCTION',
+	// END accessors
+
+}
+
+export function isAsyncFunction(kind: FunctionKind) {
+	return kind.includes('ASYNC');
+}
+
+export function isGeneratorFunction(kind: FunctionKind) {
+	return kind.includes('GENERATOR');
+}
+
+export function isAsyncGeneratorFunction(kind: FunctionKind) {
+	return kind.includes('ASYNC') && kind.includes('GENERATOR');
+}
+
+
+const FUNCTIONS_TYPES: FunctionKind[][][] = [
+	[
+		// SubFunctionKind::kNormalFunction
+		[// is_generator=false
+			FunctionKind.NORMAL,
+			FunctionKind.ASYNC
+		],
+		[// is_generator=true
+			FunctionKind.GENERATOR,
+			FunctionKind.ASYNC_GENERATOR
+		],
+	],
+	[
+		// SubFunctionKind::kNonStaticMethod
+		[// is_generator=false
+			FunctionKind.CONCISE,
+			FunctionKind.ASYNC_CONCISE
+		],
+		[// is_generator=true
+			FunctionKind.CONCISE_GENERATOR,
+			FunctionKind.ASYNC_CONCISE_GENERATOR
+		],
+	],
+	[
+		// SubFunctionKind::kStaticMethod
+		[// is_generator=false
+			FunctionKind.STATIC_CONCISE,
+			FunctionKind.STATIC_ASYNC_CONCISE
+		],
+		[// is_generator=true
+			FunctionKind.STATIC_CONCISE_GENERATOR,
+			FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR
+		],
+	]
+];
+
+export enum SubFunctionKind {
+	NormalFunction,
+	NonStaticMethod,
+	StaticMethod,
+}
+
+export enum StaticFlag {
+	NotStatic,
+	Static
+};
+
+export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
+	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
+}
+
+export function functionKindFor(isGenerator: boolean, isAsync: boolean): FunctionKind {
+	return FUNCTIONS_TYPES[SubFunctionKind.NormalFunction][isGenerator ? 1 : 0][isAsync ? 1 : 0];
+}
+
+export function methodKindFor(isStatic: boolean, isGenerator: boolean, isAsync: boolean): FunctionKind {
+	return FUNCTIONS_TYPES[isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod][isGenerator ? 1 : 0][isAsync ? 1 : 0];
+}
+
+export enum FunctionSyntaxKind {
+	AnonymousExpression,
+	NamedExpression,
+	Declaration,
+	AccessorOrMethod,
+	Wrapped,
+
+	LastFunctionSyntaxKind = Wrapped,
+};
 
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
@@ -304,6 +420,15 @@ export abstract class AbstractParser {
 		const next = this.scanner.peek();
 		return next.test((token, value) => Token.IDENTIFIER.equal(token) && keyword === value?.toString());
 	}
+	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
+		const isGenerator = functionFlags.includes('GENERATOR');
+		const isAsync = functionFlags.includes('ASYNC');
+		return functionKindForImpl(
+			isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod,
+			isGenerator,
+			isAsync
+		);
+	}
 	protected errorMessage(message: string): string {
 		return this.scanner.createError(message);
 	}
@@ -401,41 +526,42 @@ export class JavaScriptParser extends AbstractParser {
 
 		this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
-		if (tryBlock instanceof BlockStatement) {
-			tryBlock.isStatement = true;
-		}
 		let peek = this.peek();
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
 		}
 		let catchBlock: ExpressionNode | undefined;
 		if (this.check(Token.CATCH)) {
-			// bool has_binding;
-			let catchVar: ExpressionNode | undefined;
+			let identifier: ExpressionNode | undefined;
 			const hasBinding = this.check(Token.LPAREN);
 			if (hasBinding) {
-				catchVar = this.parseIdentifier();
+				if (this.peekAnyIdentifier()) {
+					identifier = this.parseNonRestrictedIdentifier();
+				} else {
+					identifier = this.parseBindingPattern(true);
+				}
 				this.expect(Token.RPAREN);
 			}
 			const block = this.parseBlock();
-			if (block instanceof BlockStatement) {
-				block.isStatement = true;
-			}
-			catchBlock = new CatchClauseNode(block, catchVar);
+			catchBlock = new CatchClauseNode(block, identifier);
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
-			if (finallyBlock instanceof BlockStatement) {
-				finallyBlock.isStatement = true;
-			}
 		}
 		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
+	}
+	protected parseNonRestrictedIdentifier() {
+		const result = this.parseIdentifier();
+		if (this.isEvalOrArguments(result)) {
+			throw new SyntaxError(this.errorMessage('Strict Eval/Arguments '));
+		}
+		return result;
 	}
 	protected parseBlock(): BlockStatement {
 		this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const block = new BlockStatement(statements, false);
+		const block = new BlockStatement(statements);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
@@ -469,7 +595,7 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseStatementListItem(): ExpressionNode | undefined {
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-				this.parseHoistableDeclaration(undefined, false);
+				return this.parseHoistableDeclaration(undefined, false);
 			case Token.CLASS:
 				this.consume(Token.CLASS);
 				return this.parseClassDeclaration(undefined, false);
@@ -492,11 +618,13 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.FUNCTION);
 		const functionKind = this.check(Token.MUL) ? FunctionKind.GENERATOR : FunctionKind.NORMAL;
 		let name: Identifier | undefined;
+		let functionSyntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		const peek = this.peek();
 		if (peek.isNotType(Token.LPAREN)) {
 			name = this.parseIdentifier();
+			functionSyntaxKind = FunctionSyntaxKind.NamedExpression;
 		}
-		return this.parseFunctionLiteral(functionKind, name);
+		return this.parseFunctionLiteral(functionKind, functionSyntaxKind, name);
 	}
 	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean) {
 		// AsyncFunctionDeclaration ::
@@ -514,25 +642,26 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.LPAREN);
 		const condition = this.parseExpression();
 		this.consume(Token.RPAREN);
-		const thenStatement = this.parseStatement();
-		if (thenStatement instanceof BlockStatement) {
-			thenStatement.isStatement = true;
-		}
-		let elseStatement;
+		const thenStatement = this.parseScopedStatement();
+		let elseStatement: ExpressionNode | undefined;
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
-			elseStatement = this.parseStatement();
+			elseStatement = this.parseScopedStatement();
 		}
 		return new IfStatement(condition, thenStatement, elseStatement);
+	}
+	protected parseScopedStatement(): ExpressionNode {
+		if (this.peek().isNotType(Token.FUNCTION)) {
+			return this.parseStatement();
+		} else {
+			return this.parseFunctionDeclaration();
+		}
 	}
 	protected parseDoWhileStatement(): ExpressionNode {
 		// DoStatement ::
 		//   'do' Statement 'while' '(' Expression ')' ';'
 		this.consume(Token.DO);
 		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
-		}
 		this.expect(Token.WHILE);
 		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
@@ -548,9 +677,6 @@ export class JavaScriptParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
-		}
 		return new WhileNode(condition, body);
 	}
 	protected parseThrowStatement(): ExpressionNode {
@@ -603,7 +729,7 @@ export class JavaScriptParser extends AbstractParser {
 				}
 				statements.push(statement);
 			}
-			const block = new BlockStatement(statements, true);
+			const block = new BlockStatement(statements);
 			const clause = defaultSeen ? new DefaultExpression(block) : new SwitchCase(label!, block);
 			cases.push(clause);
 		}
@@ -984,15 +1110,16 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		this.consume(Token.FUNCTION);
 		let name: Identifier | undefined;
+		let syntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		let flags = FunctionKind.ASYNC;
 		if (this.check(Token.MUL)) {
 			flags = FunctionKind.ASYNC_GENERATOR;
 		}
 		if (this.peekAnyIdentifier()) {
+			syntaxKind = FunctionSyntaxKind.NamedExpression;
 			name = this.parseIdentifier();
 		}
-		return this.parseFunctionLiteral(flags, name);
-
+		return this.parseFunctionLiteral(flags, syntaxKind, name);
 	}
 	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean) {
 		this.consume(Token.FUNCTION);
@@ -1038,7 +1165,7 @@ export class JavaScriptParser extends AbstractParser {
 			name = this.parseIdentifier();
 		}
 		names?.push(name.toString());
-		return this.parseFunctionLiteral(flag, name);
+		return this.parseFunctionLiteral(flag, FunctionSyntaxKind.Declaration, name);
 	}
 	protected parseIdentifier(): Identifier {
 		const next = this.next();
@@ -1078,7 +1205,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		throw new Error(this.errorMessage(`can't identify token '${name}'`));
 	}
-	protected parseFunctionLiteral(flag: FunctionKind, name?: ExpressionNode): ExpressionNode {
+	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name?: ExpressionNode): ExpressionNode {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
@@ -1086,26 +1213,59 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.LPAREN);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.RPAREN);
-		const body = this.parseFunctionBody();
+		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
+		const bodyBlock = new BlockStatement(body);
 		if (name) {
-			return new FunctionDeclaration(formals, body, flag, name as DeclarationExpression, functionInfo.rest);
+			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name as Identifier);
 		}
-		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
+		return new FunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag));
 	}
-	protected parseArrowFunctionBody(): ExpressionNode | ExpressionNode[] {
-		const isExpression = this.peek().isNotType(Token.LBRACE);
-		if (isExpression) {
-			const expression = this.parseAssignmentExpression();
-			return expression;
+	protected parseFunctionBody(
+		kind: FunctionKind,
+		bodyType: FunctionBodyType.BLOCK,
+		functionSyntaxKind: FunctionSyntaxKind): ExpressionNode[];
+	protected parseFunctionBody(
+		kind: FunctionKind,
+		bodyType: FunctionBodyType.EXPRESSION,
+		functionSyntaxKind: FunctionSyntaxKind): ExpressionNode
+	protected parseFunctionBody(
+		kind: FunctionKind,
+		bodyType: FunctionBodyType,
+		functionSyntaxKind: FunctionSyntaxKind): ExpressionNode[] | ExpressionNode {
+		// Building the parameter initialization block declares the parameters.
+		// TODO(verwaest): Rely on ArrowHeadParsingScope instead.
+
+		let innerBody: ExpressionNode[] | ExpressionNode;
+		if (bodyType == FunctionBodyType.EXPRESSION) {
+			innerBody = this.parseAssignmentExpression();
 		} else {
-			return this.parseFunctionBody();
+			// DCHECK(accept_IN_);
+			// DCHECK_EQ(FunctionBodyType:: kBlock, body_type);
+			// If we are parsing the source as if it is wrapped in a function, the
+			// source ends without a closing brace.
+			const closing_token = functionSyntaxKind == FunctionSyntaxKind.Wrapped ? Token.EOS : Token.RBRACE;
+
+			if (isAsyncGeneratorFunction(kind)) {
+				innerBody = this.parseAndRewriteAsyncGeneratorFunctionBody(kind);
+			} else if (isGeneratorFunction(kind)) {
+				innerBody = this.parseAndRewriteGeneratorFunctionBody(kind);
+			} else if (isAsyncFunction(kind)) {
+				innerBody = this.parseAsyncFunctionBody();
+			} else {
+				innerBody = this.parseStatementList(closing_token);
+			}
+			this.expect(closing_token);
 		}
+		return innerBody;
 	}
-	protected parseFunctionBody(): ExpressionNode[] {
-		this.expect(Token.LBRACE);
-		const list = this.parseStatementList(Token.RBRACE);
-		this.expect(Token.RBRACE);
-		return list;
+	protected parseAndRewriteAsyncGeneratorFunctionBody(kind: FunctionKind): ExpressionNode[] {
+		return this.parseStatementList(Token.RBRACE);
+	}
+	protected parseAndRewriteGeneratorFunctionBody(kind: FunctionKind): ExpressionNode[] {
+		return this.parseStatementList(Token.RBRACE);
+	}
+	protected parseAsyncFunctionBody(): ExpressionNode[] {
+		return this.parseStatementList(Token.RBRACE);
 	}
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
 		// StatementList ::
@@ -1263,7 +1423,7 @@ export class JavaScriptParser extends AbstractParser {
 		let token = this.peek();
 		if (Token.isAnyIdentifier(token.token)) {
 			this.consume(token.token);
-			let kind: ArrowFunctionType = ArrowFunctionType.NORMAL;
+			let kind = FunctionKind.NORMAL;
 			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
@@ -1272,7 +1432,7 @@ export class JavaScriptParser extends AbstractParser {
 				// async Identifier => ...
 				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
 					token = this.next();
-					kind = ArrowFunctionType.ASYNC;
+					kind = FunctionKind.ASYNC;
 				}
 			}
 			if (this.peek().isType(Token.ARROW)) {
@@ -1327,7 +1487,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (!this.peek().isType(Token.ARROW)) {
 						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
-					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
+					return this.parseArrowFunctionLiteral([], FunctionKind.NORMAL);
 				}
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
@@ -1453,12 +1613,12 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
-				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
+				return this.parseArrowFunctionLiteral(params, FunctionKind.NORMAL);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], ArrowFunctionType.NORMAL);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NORMAL);
 			}
-			return this.parseArrowFunctionLiteral([new Param(expression)], ArrowFunctionType.NORMAL);
+			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NORMAL);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {
@@ -1507,10 +1667,24 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
-	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
+	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], kind: FunctionKind): ExpressionNode {
+		if (this.peek().isNotType(Token.ARROW)) {
+			throw new SyntaxError(this.errorMessage('SyntaxError Expecting Arrow Token'));
+		}
+		if (this.scanner.hasLineTerminatorBeforeNext()) {
+			throw new SyntaxError(this.errorMessage('Unexpected Token "\n" a line terminator after arrow token"'));
+		}
+		let body: ExpressionNode[] | ExpressionNode;
+		let has_braces = true;
 		this.consume(Token.ARROW);
-		const body = this.parseArrowFunctionBody();
-		return new ArrowFunctionExpression(parameters, body, flag, rest);
+		if (this.peek().isType(Token.LBRACE)) {
+			this.consume(Token.LBRACE);
+			body = this.parseFunctionBody(kind, FunctionBodyType.BLOCK, FunctionSyntaxKind.AnonymousExpression);
+		} else {
+			has_braces = false;
+			body = this.parseFunctionBody(kind, FunctionBodyType.EXPRESSION, FunctionSyntaxKind.AnonymousExpression);
+		}
+		return new ArrowFunctionExpression(parameters, body, !has_braces, isAsyncFunction(kind));
 	}
 	protected parseRegExpLiteral(): ExpressionNode {
 		if (!this.scanner.scanRegExpPattern()) {
@@ -1622,14 +1796,22 @@ export class JavaScriptParser extends AbstractParser {
 				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 
-				const value = this.parseFunctionLiteral(propInfo.funcFlag);
+				const value = this.parseFunctionLiteral(
+					propInfo.funcFlag,
+					FunctionSyntaxKind.AccessorOrMethod,
+					propInfo.name ? new Literal<string>(propInfo.name) : undefined
+				);
 				return new Property(nameExpression, value, 'init');
 			}
 
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
-				const value = this.parseFunctionLiteral(propInfo.funcFlag);
+				const value = this.parseFunctionLiteral(
+					propInfo.funcFlag,
+					FunctionSyntaxKind.AccessorOrMethod,
+					propInfo.name ? new Literal<string>(propInfo.name) : undefined
+				);
 				return new Property(nameExpression, value, isGet ? 'get' : 'set');
 			}
 

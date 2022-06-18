@@ -1,11 +1,11 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition } from './parser.js';
+import { FunctionKind, functionKindForImpl, FunctionSyntaxKind, isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition, SubFunctionKind } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty, Class, ClassBody, ClassDeclaration, ClassExpression,
 	MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super
 } from '../api/class/class.js';
-import { FunctionExpression, FunctionKind } from '../api/definition/function.js';
+import { FunctionExpression } from '../api/definition/function.js';
 import { Identifier, Literal, NullNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
@@ -74,64 +74,6 @@ export enum AllowLabelledFunctionStatement {
 };
 
 
-const FUNCTIONS_TYPES: FunctionKind[][][] = [
-	[
-		// SubFunctionKind::kNormalFunction
-		[// is_generator=false
-			FunctionKind.NORMAL,
-			FunctionKind.ASYNC
-		],
-		[// is_generator=true
-			FunctionKind.GENERATOR,
-			FunctionKind.ASYNC_GENERATOR
-		],
-	],
-	[
-		// SubFunctionKind::kNonStaticMethod
-		[// is_generator=false
-			FunctionKind.CONCISE,
-			FunctionKind.ASYNC_CONCISE
-		],
-		[// is_generator=true
-			FunctionKind.CONCISE_GENERATOR,
-			FunctionKind.ASYNC_CONCISE_GENERATOR
-		],
-	],
-	[
-		// SubFunctionKind::kStaticMethod
-		[// is_generator=false
-			FunctionKind.STATIC_CONCISE,
-			FunctionKind.STATIC_ASYNC_CONCISE
-		],
-		[// is_generator=true
-			FunctionKind.STATIC_CONCISE_GENERATOR,
-			FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR
-		],
-	]
-];
-
-export enum SubFunctionKind {
-	NormalFunction,
-	NonStaticMethod,
-	StaticMethod,
-}
-
-export enum StaticFlag {
-	NotStatic,
-	Static
-};
-
-export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export function functionKindFor(isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[SubFunctionKind.NormalFunction][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export function methodKindFor(isStatic: boolean, isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
 
 enum ObjectLiteralPropertyKind {
 	CONSTANT = 'CONSTANT',	// Property with constant value (compile time).
@@ -488,11 +430,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 					kind = hasExtends ? FunctionKind.DERIVED_CONSTRUCTOR : FunctionKind.BASE_CONSTRUCTOR;
 				}
 
-				const value = this.parseFunctionLiteral(
-					kind,
-					// nameExpression
-					// ,kSkipFunctionNameCheck, kind, FunctionSyntaxKind.kAccessorOrMethod
-				);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
 
 				const result = this.newClassLiteralProperty(
 					nameExpression, value, ClassLiteralProperty.Kind.METHOD,
@@ -526,7 +464,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 						: FunctionKind.SETTER_FUNCTION;
 				}
 
-				const value = this.parseFunctionLiteral(kind, /* nameExpression */);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
 
 				const propertyKind: ClassLiteralPropertyKind = isGet ? ClassLiteralProperty.Kind.GETTER : ClassLiteralProperty.Kind.SETTER;
 				const result = this.newClassLiteralProperty(
@@ -566,15 +504,6 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			}
 			classInfo.hasSeenConstructor = true;
 		}
-	}
-	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
-		const isGenerator = functionFlags.includes('GENERATOR');
-		const isAsync = functionFlags.includes('ASYNC');
-		return functionKindForImpl(
-			isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod,
-			isGenerator,
-			isAsync
-		);
 	}
 	protected parseClassStaticBlock(classInfo: ClassInfo): StaticBlock {
 		this.consume(Token.STATIC);
@@ -1127,13 +1056,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		this.expect(Token.RBRACE);
 		return result;
 	}
-	protected parseNonRestrictedIdentifier() {
-		const result = this.parseIdentifier();
-		if (this.isEvalOrArguments(result)) {
-			throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
-		}
-		return result;
-	}
+
 	protected parseExportDefault(): ExportDefaultDeclaration {
 		//  Supports the following productions, starting after the 'default' token:
 		//    'export' 'default' HoistableDeclaration
