@@ -15,12 +15,12 @@ import { BreakStatement, ContinueStatement } from './terminate.js';
 @Deserializer('BlockStatement')
 export class BlockStatement extends AbstractExpressionNode {
 	static fromJSON(node: BlockStatement, deserializer: NodeDeserializer): BlockStatement {
-		return new BlockStatement(node.body.map(line => deserializer(line)), node.isStatement);
+		return new BlockStatement(node.body.map(deserializer));
 	}
 	static visit(node: BlockStatement, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(protected body: ExpressionNode[], public isStatement: boolean) {
+	constructor(protected body: ExpressionNode[]) {
 		super();
 	}
 	getBody() {
@@ -34,24 +34,19 @@ export class BlockStatement extends AbstractExpressionNode {
 	}
 	get(stack: Stack) {
 		const blockScope = stack.pushBlockScope();
+		let value: any;
 		for (const node of this.body) {
-			const value = node.get(stack);
-			if (this.isStatement) {
-				switch (true) {
-					case BreakStatement.BreakSymbol === value:
-					case ContinueStatement.ContinueSymbol === value:
-					case value instanceof ReturnValue:
-						stack.clearTo(blockScope);
-						return value;
-				}
-			} else {
-				if (value instanceof ReturnValue) {
-					stack.clearTo(blockScope);
-					return value.value;
-				}
+			value = node.get(stack);
+			if (value instanceof ReturnValue) {
+				stack.clearTo(blockScope);
+				return value.value;
+			}
+			if (value == BreakStatement.BreakSymbol || value == ContinueStatement.ContinueSymbol) {
+				return value;
 			}
 		}
 		stack.clearTo(blockScope);
+		return value;
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.body.flatMap(exp => exp.dependency(computed));
@@ -63,6 +58,6 @@ export class BlockStatement extends AbstractExpressionNode {
 		return `{ ${this.body.map(node => node.toString()).join('; ')}; }`;
 	}
 	toJson(): object {
-		return { body: this.body.map(node => node.toJSON()), isStatement: this.isStatement };
+		return { body: this.body.map(node => node.toJSON()) };
 	}
 }

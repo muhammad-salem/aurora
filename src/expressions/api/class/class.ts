@@ -206,7 +206,7 @@ export class StaticBlock extends BlockStatement {
 		return new StaticBlock(deserializer(node.body));
 	}
 	constructor(body: ExpressionNode[]) {
-		super(body, false);
+		super(body);
 	}
 	get(stack: Stack, classConstructor?: ClassConstructor): void {
 		const constructor = classConstructor!;
@@ -355,8 +355,8 @@ export class MethodDefinition extends AbstractDefinition {
 		}
 		const superCall = body[superIndex] as CallExpression | undefined;
 
-		const blockBeforeSuper = new BlockStatement(body.slice(0, superIndex), false);
-		const blockAfterSuper = new BlockStatement(body.slice(superIndex + 1), false);
+		const blockBeforeSuper = new BlockStatement(body.slice(0, superIndex));
+		const blockAfterSuper = new BlockStatement(body.slice(superIndex + 1));
 
 		if (superCall) {
 			classConstructor[GET_PARAMETERS] = function (this: ClassConstructor, params: any[]) {
