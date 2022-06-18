@@ -7,6 +7,7 @@ import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
 import { BreakStatement, ContinueStatement } from './terminate.js';
+import { isDeclarationExpression } from '../../utils.js';
 
 /**
  * A block statement (or compound statement in other languages) is used to group zero or more statements.
@@ -55,7 +56,12 @@ export class BlockStatement extends AbstractExpressionNode {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
-		return `{ ${this.body.map(node => node.toString()).join('; ')}; }`;
+		return `{
+			${this.body
+				.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
+				.map(ref => `${ref.string}${ref.insert ? ';' : ''}`)
+				.join('\n')}
+		}`;
 	}
 	toJson(): object {
 		return { body: this.body.map(node => node.toJSON()) };

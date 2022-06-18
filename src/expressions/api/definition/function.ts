@@ -309,10 +309,10 @@ export class FunctionExpression extends BaseFunctionExpression {
 		} else if (this.generator) {
 			declare = 'function* ';
 		}
-		return `${declare}${this.paramsAndBodyToString()}`;
+		return `${declare}${this.id?.toString() || ''}${this.paramsAndBodyToString()}`;
 	}
 	paramsAndBodyToString() {
-		return `${this.id?.toString() || ''}(${this.params.map(param => param, this.toString()).join(', ')}) ${this.body.toString()}`;
+		return `(${this.params.map(param => param.toString()).join(', ')}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
