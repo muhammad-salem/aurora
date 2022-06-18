@@ -1276,10 +1276,11 @@ export class TokenStreamImpl extends TokenStream {
 		const indictor = new Array<string>(subEnd - subStart).fill(' ');
 		indictor[this.pos - subStart] = '^';
 		const errorIndictor = indictor.join('');
-		return `${message}
-			token name: ${this.current?.token?.getName()} parsed : ${this.current?.value?.toString()}
-			${coords.line}:${coords.column}\t${errorAt}
-			${coords.line}:${coords.column}\t${errorIndictor}
+		return `
+			> ${message}
+			> token name: '${this.current?.token?.getName()}' ${this.current.value ? `parsed: ${this.current.value.toString()}` : ''}
+			> ${coords.line}:${coords.column}\t${errorAt}
+			> ${coords.line}:${coords.column}\t${errorIndictor}
 			`;
 	}
 }
