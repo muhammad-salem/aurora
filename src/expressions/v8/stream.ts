@@ -6,6 +6,10 @@ import { PrivateIdentifier } from '../api/class/class.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 
+export const IdentifierStartRegex = /[_$a-zA-Z\xA0-\uFFFF]/;
+
+export const IdentifierPartRegex = /[_$a-zA-Z0-9\xA0-\uFFFF]/;
+
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 
 export interface PreTemplateLiteral extends ExpressionNode { };
@@ -387,23 +391,24 @@ export class TokenStreamImpl extends TokenStream {
 		let hasLetter = false;
 		let isPrivate = false;
 		// check is private property 
-		if (this.expression.charAt(i) === '#') {
+		let char = this.expression.charAt(i);
+		if (char === '#') {
 			isPrivate = true;
+			startPos++;
 			i++;
 		}
+		char = this.expression.charAt(i);
+		if (!IdentifierStartRegex.test(char)) {
+			return false;
+		} else {
+			i++;
+			hasLetter = true;
+		}
+
 		for (; i < this.expression.length; i++) {
-			const char = this.expression.charAt(i);
-			if (char.toUpperCase() === char.toLowerCase()) {
-				if (i === this.pos && (char === '$' || char === '_')) {
-					if (char === '_') {
-						hasLetter = true;
-					}
-					continue;
-				} else if (i === this.pos || !hasLetter || (char !== '_' && (char < '0' || char > '9'))) {
-					break;
-				}
-			} else {
-				hasLetter = true;
+			char = this.expression.charAt(i);
+			if (!IdentifierPartRegex.test(char)) {
+				break;
 			}
 		}
 		if (hasLetter) {
@@ -424,7 +429,7 @@ export class TokenStreamImpl extends TokenStream {
 
 				default:
 					if (isPrivate) {
-						node = new PrivateIdentifier(prop.substring(1));
+						node = new PrivateIdentifier(prop);
 						this.current = this.newToken(Token.PRIVATE_NAME, node);
 					} else {
 						node = new Identifier(prop);
@@ -432,7 +437,7 @@ export class TokenStreamImpl extends TokenStream {
 					}
 					break;
 			}
-			this.pos += prop.length;
+			this.pos += prop.length + (isPrivate ? 1 : 0);
 			return true;
 		}
 		return false;
