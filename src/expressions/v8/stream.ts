@@ -1066,11 +1066,11 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				return false;
 			case 'd':
-				if (/^(do\s?\{)/.test(this.expression.substring(this.pos, this.pos + 4))) {
+				if (/do[\s|\{]/.test(this.expression.substring(this.pos, this.pos + 3))) {
 					this.current = this.newToken(Token.DO);
 					this.pos += 2;
 					return true;
-				} else if (/^(default\s?:)/.test(this.expression.substring(this.pos, this.pos + 9))) {
+				} else if (/default[\s|:]/.test(this.expression.substring(this.pos, this.pos + 8))) {
 					this.current = this.newToken(Token.DEFAULT);
 					this.pos += 7;
 					return true;
@@ -1222,8 +1222,8 @@ export class TokenStreamImpl extends TokenStream {
 		if (nextLinePos == -1) {
 			nextLinePos = this.expression.length;
 		}
-		const subStart = Math.max(0, lastLinePos, this.pos - 25) + 1;
-		const subEnd = Math.min(nextLinePos, this.pos + 25, this.expression.length) - 1;
+		const subStart = Math.max(0, lastLinePos, this.pos - 25);
+		const subEnd = Math.min(nextLinePos, this.pos + 25, this.expression.length);
 
 		const errorAt = this.expression.substring(subStart, subEnd);
 		const indictor = new Array<string>(subEnd - subStart).fill(' ');
