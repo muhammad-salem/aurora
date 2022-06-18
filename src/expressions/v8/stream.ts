@@ -1212,10 +1212,22 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	public createError(message: String): string {
 		let coords = this.getCoordinates();
-		const subStart = Math.max(0, this.pos - 25);
-		const subEnd = Math.min(this.pos + 25, this.expression.length);
-		return `@[line: ${coords.line}, column: ${coords.column}] current token: ${JSON.stringify(this.current)}
-			${message}
-			\`${this.expression.substring(subStart, subEnd)}\``;
+		const lastLinePos = this.expression.lastIndexOf('\n', this.pos);
+		let nextLinePos = this.expression.indexOf('\n', this.pos + 1);
+		if (nextLinePos == -1) {
+			nextLinePos = this.expression.length;
+		}
+		const subStart = Math.max(0, lastLinePos, this.pos - 25) + 1;
+		const subEnd = Math.min(nextLinePos, this.pos + 25, this.expression.length) - 1;
+
+		const errorAt = this.expression.substring(subStart, subEnd);
+		const indictor = new Array<string>(subEnd - subStart).fill(' ');
+		indictor[this.pos - subStart] = '^';
+		const errorIndictor = indictor.join('');
+		return `${message}
+			token name: ${this.current?.token?.getName()} parsed : ${this.current?.value?.toString()}
+			${coords.line}:${coords.column}\t${errorAt}
+			${coords.line}:${coords.column}\t${errorIndictor}
+			`;
 	}
 }
