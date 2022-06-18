@@ -319,10 +319,10 @@ export abstract class AbstractParser {
 		return false;
 	}
 	protected isEvalOrArguments(name: ExpressionNode): boolean {
-		if (name.toString() === 'eval') {
-			return true;
-		} else if (name.toString() === 'arguments') {
-			return true;
+		if (name instanceof Identifier) {
+			if (name.getName() === 'eval' || name.getName() === 'arguments') {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -976,7 +976,6 @@ export class JavaScriptParser extends AbstractParser {
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
 		if (Token.isValidIdentifier(next.token)) {
 			const name = this.getIdentifier();
-			this.isEvalOrArguments(name);
 			if (this.isEvalOrArguments(name)) {
 				throw new SyntaxError(this.errorMessage('Arguments Disallowed In Initializer And Static Block'));
 			}
@@ -1213,6 +1212,7 @@ export class JavaScriptParser extends AbstractParser {
 		this.expect(Token.LPAREN);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.RPAREN);
+		this.expect(Token.LBRACE);
 		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
 		const bodyBlock = new BlockStatement(body);
 		if (name) {
@@ -2280,9 +2280,6 @@ export class JavaScriptParser extends AbstractParser {
 				/* Call */
 				case Token.LPAREN: {
 					const args = this.parseArguments();
-					if (result.toString() === 'eval') {
-						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
-					}
 					result = new CallExpression(result, args, isOptional);
 					break;
 				}
