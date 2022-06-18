@@ -4,6 +4,8 @@ import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal, ThisNo
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 
+const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
+
 const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
 
 export interface PreTemplateLiteral extends ExpressionNode { };
@@ -227,7 +229,7 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	next(): TokenExpression {
 		if (this.pos >= this.expression.length) {
-			return EOFToken;
+			return this.current = EOFToken;
 		}
 		this.last = this.current;
 		if (this.isWhitespace() || this.isComment()) {
@@ -247,6 +249,8 @@ export class TokenStreamImpl extends TokenStream {
 			|| this.isStatement()
 			|| this.isProperty()) {
 			return this.current;
+		} else if (this.pos >= this.expression.length) {
+			return this.current = EOFToken;
 		} else {
 			throw new Error(this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"'));
 		}
@@ -435,6 +439,9 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	private isWhitespace() {
 		let result = false;
+		while (FORBIDDEN_CODE_POINT.includes(this.expression.charCodeAt(this.pos).toString(16)!)) {
+			this.pos++;
+		}
 		let char = this.expression.charAt(this.pos);
 		while (/\s/.test(char)) {
 			result = true;
