@@ -529,7 +529,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 					return new MethodDefinition('constructor', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
 				}
 				return new MethodDefinition('method', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
-			case ClassLiteralPropertyKind.SETTER:
+			case ClassLiteralPropertyKind.GETTER:
 				return new MethodDefinition('get', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
 			case ClassLiteralPropertyKind.SETTER:
 				return new MethodDefinition('set', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
