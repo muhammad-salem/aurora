@@ -986,11 +986,11 @@ export class JavaScriptParser extends AbstractParser {
 		}
 		else if (next.isType(Token.SET)) {
 			const value = this.parseFunctionDeclaration() as DeclarationExpression;
-			return new Property(next.getValue(), value, 'set');
+			return new Property(next.getValue(), value, 'set', false, false, false);
 		}
 		else if (next.isType(Token.GET)) {
 			const value = this.parseFunctionDeclaration() as DeclarationExpression;
-			return new Property(next.getValue(), value, 'get');
+			return new Property(next.getValue(), value, 'get', false, false, false);
 		}
 		else if (next.isType(Token.AWAIT)) {
 			throw new Error(this.errorMessage(`un supported expression (await)`));
@@ -1758,12 +1758,26 @@ export class JavaScriptParser extends AbstractParser {
 				if (isPattern) {
 					value = new RestElement(value.getArgument() as DeclarationExpression);
 				}
-				return new Property(value.getArgument(), value, 'init');
+				return new Property(
+					value.getArgument(),
+					value,
+					'init',
+					false,
+					false,
+					propInfo.isComputedName
+				);
 
 			case PropertyKind.Value: {
 				this.consume(Token.COLON);
 				const value = this.parsePossibleDestructuringSubPattern();
-				return new Property(nameExpression, value, 'init');
+				return new Property(
+					nameExpression,
+					value,
+					'init',
+					false,
+					false,
+					propInfo.isComputedName
+				);
 			}
 
 			case PropertyKind.Assign:
@@ -1788,7 +1802,14 @@ export class JavaScriptParser extends AbstractParser {
 				} else {
 					value = lhs;
 				}
-				return new Property(nameExpression, value, 'init');
+				return new Property(
+					nameExpression,
+					value,
+					'init',
+					false,
+					propInfo.kind !== PropertyKind.Assign,
+					propInfo.isComputedName
+				);
 			}
 
 			case PropertyKind.Method: {
@@ -1801,7 +1822,14 @@ export class JavaScriptParser extends AbstractParser {
 					FunctionSyntaxKind.AccessorOrMethod,
 					propInfo.name ? new Literal<string>(propInfo.name) : undefined
 				);
-				return new Property(nameExpression, value, 'init');
+				return new Property(
+					nameExpression,
+					value,
+					'init',
+					true,
+					false,
+					propInfo.isComputedName
+				);
 			}
 
 			case PropertyKind.AccessorGetter:
@@ -1812,7 +1840,14 @@ export class JavaScriptParser extends AbstractParser {
 					FunctionSyntaxKind.AccessorOrMethod,
 					propInfo.name ? new Literal<string>(propInfo.name) : undefined
 				);
-				return new Property(nameExpression, value, isGet ? 'get' : 'set');
+				return new Property(
+					nameExpression,
+					value,
+					isGet ? 'get' : 'set',
+					false,
+					false,
+					propInfo.isComputedName
+				);
 			}
 
 			case PropertyKind.ClassField:

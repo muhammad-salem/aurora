@@ -7,17 +7,31 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
+import { FunctionDeclaration, FunctionExpression } from './function.js';
 
 @Deserializer('Property')
 export class Property extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: Property, deserializer: NodeDeserializer): Property {
-		return new Property(deserializer(node.key), deserializer(node.value) as DeclarationExpression, node.kind);
+		return new Property(
+			deserializer(node.key),
+			deserializer(node.value) as DeclarationExpression,
+			node.kind,
+			node.method,
+			node.shorthand,
+			node.computed,
+		);
 	}
 	static visit(node: Property, visitNode: VisitNodeType): void {
 		visitNode(node.key);
 		visitNode(node.value);
 	}
-	constructor(protected key: ExpressionNode, protected value: DeclarationExpression | ExpressionNode, protected kind: 'init' | 'get' | 'set') {
+	constructor(
+		protected key: ExpressionNode,
+		protected value: DeclarationExpression | ExpressionNode,
+		protected kind: 'init' | 'get' | 'set',
+		protected method: boolean,
+		protected shorthand: boolean,
+		protected computed: boolean,) {
 		super();
 	}
 	getKey() {
@@ -66,7 +80,33 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 		return this.key.dependencyPath(computed).concat(this.value.dependencyPath(computed));
 	}
 	toString(): string {
-		return `${this.key.toString()}: ${this.value.toString()}`;
+		const key = this.computed ? `[${this.key.toString()}]` : this.key.toString();
+		if (this.shorthand) {
+			return key;
+		}
+		let value = '';
+		switch (this.kind) {
+			case 'get':
+			case 'set':
+				const expression = (this.value as FunctionDeclaration);
+				value += this.kind;
+				value += ' ' + key
+				value += expression.paramsAndBodyToString();
+				break;
+			case 'init':
+				if (this.method) {
+					const expression = (this.value as FunctionDeclaration);
+					value += ' ' + key
+					value += expression.paramsAndBodyToString();
+				} else {
+					value += this.value.toString();
+					return `${key}: ${value}`;
+				}
+				break;
+			default:
+				break;
+		}
+		return value;
 	}
 	toJson(): object {
 		return {
