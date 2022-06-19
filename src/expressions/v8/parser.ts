@@ -975,11 +975,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
 		if (Token.isValidIdentifier(next.token)) {
-			const name = this.getIdentifier();
-			if (this.isEvalOrArguments(name)) {
-				throw new SyntaxError(this.errorMessage('Arguments Disallowed In Initializer And Static Block'));
-			}
-			return name;
+			return this.getIdentifier();
 		}
 		if (next.isType(Token.IDENTIFIER)) {
 			return next.getValue();
