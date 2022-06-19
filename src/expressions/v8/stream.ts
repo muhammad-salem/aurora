@@ -454,6 +454,7 @@ export class TokenStreamImpl extends TokenStream {
 			case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
 			case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
 			case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
+			case 'yield': this.current = this.newToken(Token.YIELD); break;
 
 			default:
 				if (isPrivate) {
@@ -1053,18 +1054,6 @@ export class TokenStreamImpl extends TokenStream {
 				if (/new\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
 					this.current = this.newToken(Token.NEW);
 					this.pos += 4;
-					return true;
-				}
-				return false;
-			case 'y':			// void
-				if (/yield\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.YIELD);
-					this.pos += 6;
-					return true;
-				}
-				else if (/yield\*\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.YIELD);
-					this.pos += 5;
 					return true;
 				}
 				return false;
