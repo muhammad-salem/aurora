@@ -15,7 +15,7 @@
 		"@ibyar/esmpack": "^0.1.93",
 		"progress": "^2.0.3",
 		"test262-parser-tests": "^0.0.5",
-		"typescript": "^4.7.3"
+		"typescript": "^4.7.4"
 	},
 	"scripts": {
 		"clean": "./tasks/clean",
