@@ -285,3 +285,4 @@ export const ConstructorIdentifier = Object.freeze(new Identifier('constructor')
 export const NameIdentifier = Object.freeze(new Identifier('name')) as Identifier;
 export const EvalIdentifier = Object.freeze(new Identifier('eval')) as Identifier;
 export const ArgumentsIdentifier = Object.freeze(new Identifier('arguments')) as Identifier;
+export const YieldIdentifier = Object.freeze(new Identifier('yield')) as Identifier;
