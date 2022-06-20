@@ -250,12 +250,12 @@ export abstract class AbstractParser {
 	}
 }
 
-export class JavaScriptParser extends AbstractParser {
+export class JavaScriptInlineParser extends AbstractParser {
 	static parse(source: string | TokenExpression[] | TokenStream) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptParser(stream);
+		const parser = new JavaScriptInlineParser(stream);
 		return parser.scan();
 	}
 	scan(): ExpressionNode {
@@ -1337,7 +1337,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseTemplateLiteral(tag?: ExpressionNode): ExpressionNode {
 		const template = this.next().getValue() as PreTemplateLiteral;
-		const exprs = template.expressions.map(expr => JavaScriptParser.parse(expr));
+		const exprs = template.expressions.map(expr => JavaScriptInlineParser.parse(expr));
 
 		if (tag) {
 			return new TaggedTemplateExpression(tag, template.strings, exprs);

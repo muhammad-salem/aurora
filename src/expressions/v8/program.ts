@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { JavaScriptParser } from './parser.js';
+import { JavaScriptInlineParser } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty, Class, ClassBody, ClassDeclaration, ClassExpression,
@@ -138,31 +138,27 @@ export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
 	}
 }
 
-export class JavaScriptProgramParser extends JavaScriptParser {
+export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
-	 * minimal parser same as parseScript but without the parent `Program` Expression
+	 * parser js with
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream) {
+	static parse(source: string | TokenExpression[] | TokenStream, { module } = { module: true }) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptProgramParser(stream);
-		return parser.scan();
+		const parser = new JavaScriptParser(stream);
+		return module ? parser.doParseProgram() : parser.doParseScript();
 	}
+
 	/**
-	 * parse script file
-	 * @param source 
-	 * @returns 
+	 * parse inline code like that used in html 2 or 1 way binding
 	 */
 	static parseScript(source: string | TokenExpression[] | TokenStream) {
-		const stream = (typeof source === 'string' || Array.isArray(source))
-			? TokenStream.getTokenStream(source)
-			: source;
-		const parser = new JavaScriptProgramParser(stream);
-		return parser.doParseScript();
+		return JavaScriptInlineParser.parse(source);
 	}
+
 	/**
 	 * parse module file with `import` and `export`
 	 * @param source 
@@ -172,7 +168,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptProgramParser(stream);
+		const parser = new JavaScriptParser(stream);
 		return parser.doParseProgram();
 	}
 	protected doParseScript(): Program {
