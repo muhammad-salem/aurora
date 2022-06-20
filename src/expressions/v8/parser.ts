@@ -15,128 +15,17 @@ import { ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration,
 import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
 import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
 import {
+	ClassInfo,
+	ClassLiteralProperty,
+	ClassLiteralPropertyKind,
+	classPropertyKindFor,
+	createClassInfo,
 	FunctionKind, FunctionSyntaxKind, isAccessor,
 	ParseFunctionFlag, PropertyKind,
 	PropertyKindInfo, PropertyPosition
 } from './enums.js';
 
 
-export type ClassInfo = {
-	extends?: ExpressionNode;
-	publicMembers: (MethodDefinition | PropertyDefinition)[],
-	privateMembers: (MethodDefinition | PropertyDefinition)[],
-	staticElements: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[],
-	instanceFields: (MethodDefinition | PropertyDefinition | AccessorProperty)[],
-	constructor: MethodDefinition | undefined,
-
-	hasSeenConstructor: boolean;
-	hasStaticComputedNames: boolean;
-	hasStaticElements: boolean;
-	hasStaticPrivateMethods: boolean;
-	hasStaticBlocks: boolean;
-	hasInstanceMembers: boolean;
-	requiresBrand: boolean;
-	isAnonymous: boolean;
-	hasPrivateMethods: boolean,
-
-	computedFieldCount: number;
-
-	homeObjectVariable?: VariableDeclarator;
-	staticHomeObjectVariable?: VariableDeclarator;
-};
-
-export function createClassInfo(): ClassInfo {
-	return {
-		publicMembers: [],
-		privateMembers: [],
-		staticElements: [],
-		instanceFields: [],
-		'constructor': undefined,
-
-		hasSeenConstructor: false,
-		hasStaticComputedNames: false,
-		hasStaticElements: false,
-		hasStaticPrivateMethods: false,
-		hasStaticBlocks: false,
-		hasInstanceMembers: false,
-		requiresBrand: false,
-		isAnonymous: false,
-		hasPrivateMethods: false,
-
-		computedFieldCount: 0,
-	};
-}
-
-export enum FunctionNameValidity {
-	FunctionNameIsStrictReserved = 'FunctionNameIsStrictReserved',
-	SkipFunctionNameCheck = 'SkipFunctionNameCheck',
-	FunctionNameValidityUnknown = 'FunctionNameValidityUnknown'
-};
-
-export enum AllowLabelledFunctionStatement {
-	AllowLabelledFunctionStatement = 'AllowLabelledFunctionStatement',
-	DisallowLabelledFunctionStatement = 'DisallowLabelledFunctionStatement',
-};
-
-
-
-enum ObjectLiteralPropertyKind {
-	CONSTANT = 'CONSTANT',	// Property with constant value (compile time).
-	COMPUTED = 'COMPUTED',	// Property with computed value (execution time).
-	MATERIALIZED_LITERAL = 'MATERIALIZED_LITERAL',  // Property value is a materialized literal.
-	GETTER = 'GETTER',
-	SETTER = 'SETTER',		// Property is an accessor function.
-	PROTOTYPE = 'PROTOTYPE',	// Property is __proto__.
-	SPREAD = 'SPREAD'
-}
-export class ObjectLiteralProperty {
-	static Kind = ObjectLiteralPropertyKind;
-}
-
-enum ClassLiteralPropertyKind {
-	METHOD = 'METHOD',
-	GETTER = 'GETTER',
-	SETTER = 'SETTER',
-	FIELD = 'FIELD'
-}
-
-export class ClassLiteralProperty {
-	static Kind = ClassLiteralPropertyKind;
-}
-
-export function classPropertyKindFor(kind: PropertyKind): ClassLiteralPropertyKind {
-	switch (kind) {
-		case PropertyKind.AccessorGetter:
-			return ClassLiteralPropertyKind.GETTER;
-		case PropertyKind.AccessorSetter:
-			return ClassLiteralPropertyKind.SETTER;
-		case PropertyKind.Method:
-			return ClassLiteralPropertyKind.METHOD;
-		case PropertyKind.ClassField:
-			return ClassLiteralPropertyKind.FIELD;
-	}
-	throw new Error(`unexpected property kind: ${kind}`);
-}
-
-export enum VariableMode {
-	Const = 'Const',
-	PrivateMethod = 'PrivateMethod',
-	PrivateGetterOnly = 'PrivateGetterOnly',
-	PrivateSetterOnly = 'PrivateSetterOnly'
-}
-
-export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
-	switch (kind) {
-		case ClassLiteralPropertyKind.FIELD:
-			return VariableMode.Const;
-		case ClassLiteralPropertyKind.METHOD:
-			return VariableMode.PrivateMethod;
-		case ClassLiteralPropertyKind.GETTER:
-			return VariableMode.PrivateGetterOnly;
-		case ClassLiteralPropertyKind.SETTER:
-			return VariableMode.PrivateSetterOnly;
-	}
-}
 
 export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
