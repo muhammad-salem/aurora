@@ -753,10 +753,11 @@ export class Token {
 		return false;
 	}
 
-	public static isValidIdentifier(token: Token) {
+	public static isValidIdentifier(token: Token, isGenerator: boolean, disallowAwait: boolean, isSloppy: boolean) {
 		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
-		if (token == Token.AWAIT || token == Token.YIELD) return false;
-		return Token.isStrictReservedWord(token) && false;
+		if (token == Token.AWAIT) return !disallowAwait;
+		if (token == Token.YIELD) return !isGenerator;
+		return Token.isStrictReservedWord(token) && isSloppy;
 	}
 
 	constructor(private name: string, private precedence: number) { }
