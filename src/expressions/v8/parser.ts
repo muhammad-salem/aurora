@@ -48,18 +48,6 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		return JavaScriptInlineParser.parse(source);
 	}
 
-	/**
-	 * parse module file with `import` and `export`
-	 * @param source 
-	 * @returns 
-	 */
-	static parseModule(source: string | TokenExpression[] | TokenStream): Program {
-		const stream = (typeof source === 'string' || Array.isArray(source))
-			? TokenStream.getTokenStream(source)
-			: source;
-		const parser = new JavaScriptParser(stream);
-		return parser.doParseProgram();
-	}
 	protected doParseScript(): Program {
 		const body = this.parseStatementList(Token.EOS);
 		return new Program('script', body);
