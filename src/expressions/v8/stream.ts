@@ -1106,10 +1106,6 @@ export class TokenStreamImpl extends TokenStream {
 					this.current = this.newToken(Token.DO);
 					this.pos += 2;
 					return true;
-				} else if (/default[\s|:]/.test(this.expression.substring(this.pos, this.pos + 8))) {
-					this.current = this.newToken(Token.DEFAULT);
-					this.pos += 7;
-					return true;
 				}
 				return false;
 			case 'e':
