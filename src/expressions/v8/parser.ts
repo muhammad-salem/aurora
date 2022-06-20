@@ -45,195 +45,14 @@ import {
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
 import { ClassDeclaration, ClassExpression, PrivateIdentifier } from '../api/class/class.js';
-
-export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
-export enum PropertyKind {
-	Value, Shorthand, ShorthandOrClassField,
-	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
-	Spread, NotSet
-}
-export function isAccessor(kind: PropertyKind) {
-	return kind === PropertyKind.AccessorGetter || kind === PropertyKind.AccessorSetter;
-}
-
-export enum PropertyPosition {
-	ObjectLiteral = 'ObjectLiteral',
-	ClassLiteral = 'ClassLiteral'
-}
-
-export class PropertyKindInfo {
-	name: string;
-	position = PropertyPosition.ClassLiteral;
-	funcFlag = FunctionKind.NORMAL;
-	kind = PropertyKind.NotSet;
-	isComputedName = false;
-	isPrivate = false;
-	isStatic = false;
-	isRest = false;
-
-	parsePropertyKindFromToken(token: Token): boolean {
-		// This returns true, setting the property kind, iff the given token is
-		// one which must occur after a property name, indicating that the
-		// previous token was in fact a name and not a modifier (like the "get" in
-		// "get x").
-		switch (token) {
-			case Token.COLON:
-				this.kind = PropertyKind.Value;
-				return true;
-			case Token.COMMA:
-				this.kind = PropertyKind.Shorthand;
-				return true;
-			case Token.RBRACE:
-				this.kind = PropertyKind.ShorthandOrClassField;
-				return true;
-			case Token.ASSIGN:
-				this.kind = PropertyKind.Assign;
-				return true;
-			case Token.LPAREN:
-				this.kind = PropertyKind.Method;
-				return true;
-			case Token.MUL:
-			case Token.SEMICOLON:
-				this.kind = PropertyKind.ClassField;
-				return true;
-			default:
-				break;
-		}
-		return false;
-	}
-
-}
-
-export type FunctionInfo = { rest?: boolean };
-
-export enum PreParserIdentifierType {
-	NullIdentifier = 'NullIdentifier',
-	UnknownIdentifier = 'UnknownIdentifier',
-	EvalIdentifier = 'EvalIdentifier',
-	ArgumentsIdentifier = 'ArgumentsIdentifier',
-	ConstructorIdentifier = 'ConstructorIdentifier',
-	AwaitIdentifier = 'AwaitIdentifier',
-	AsyncIdentifier = 'AsyncIdentifier',
-	NameIdentifier = 'NameIdentifier',
-	PrivateNameIdentifier = 'PrivateNameIdentifier'
-}
-
-export enum FunctionBodyType {
-	EXPRESSION = 'EXPRESSION',
-	BLOCK = 'BLOCK',
-}
-
-export enum FunctionKind {
-	NORMAL = 'NORMAL',
-	ASYNC = 'ASYNC',
-	GENERATOR = 'GENERATOR',
-	ASYNC_GENERATOR = 'ASYNC_GENERATOR',
-
-	CONCISE = 'CONCISE',
-	ASYNC_CONCISE = 'ASYNC_CONCISE',
-	CONCISE_GENERATOR = 'CONCISE_GENERATOR',
-	ASYNC_CONCISE_GENERATOR = 'ASYNC_CONCISE_GENERATOR',
-
-	STATIC_CONCISE = 'STATIC_CONCISE',
-	STATIC_ASYNC_CONCISE = 'STATIC_ASYNC_CONCISE',
-	STATIC_CONCISE_GENERATOR = 'STATIC_CONCISE_GENERATOR',
-	STATIC_ASYNC_CONCISE_GENERATOR = 'STATIC_ASYNC_CONCISE_GENERATOR',
-
-	DERIVED_CONSTRUCTOR = 'DERIVED_CONSTRUCTOR',
-	BASE_CONSTRUCTOR = 'BASE_CONSTRUCTOR',
-	DEFAULT_BASE_CONSTRUCTOR = 'DEFAULT_BASE_CONSTRUCTOR',
-	DEFAULT_DERIVED_CONSTRUCTOR = 'DEFAULT_DERIVED_CONSTRUCTOR',
-
-	// BEGIN accessors
-	GETTER_FUNCTION = 'GETTER_FUNCTION',
-	SETTER_FUNCTION = 'SETTER_FUNCTION',
-	STATIC_GETTER_FUNCTION = 'STATIC_GETTER_FUNCTION',
-	STATIC_SETTER_FUNCTION = 'STATIC_SETTER_FUNCTION',
-	// END accessors
-
-}
-
-export function isAsyncFunction(kind: FunctionKind) {
-	return kind.includes('ASYNC');
-}
-
-export function isGeneratorFunction(kind: FunctionKind) {
-	return kind.includes('GENERATOR');
-}
-
-export function isAsyncGeneratorFunction(kind: FunctionKind) {
-	return kind.includes('ASYNC') && kind.includes('GENERATOR');
-}
-
-
-const FUNCTIONS_TYPES: FunctionKind[][][] = [
-	[
-		// SubFunctionKind::kNormalFunction
-		[// is_generator=false
-			FunctionKind.NORMAL,
-			FunctionKind.ASYNC
-		],
-		[// is_generator=true
-			FunctionKind.GENERATOR,
-			FunctionKind.ASYNC_GENERATOR
-		],
-	],
-	[
-		// SubFunctionKind::kNonStaticMethod
-		[// is_generator=false
-			FunctionKind.CONCISE,
-			FunctionKind.ASYNC_CONCISE
-		],
-		[// is_generator=true
-			FunctionKind.CONCISE_GENERATOR,
-			FunctionKind.ASYNC_CONCISE_GENERATOR
-		],
-	],
-	[
-		// SubFunctionKind::kStaticMethod
-		[// is_generator=false
-			FunctionKind.STATIC_CONCISE,
-			FunctionKind.STATIC_ASYNC_CONCISE
-		],
-		[// is_generator=true
-			FunctionKind.STATIC_CONCISE_GENERATOR,
-			FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR
-		],
-	]
-];
-
-export enum SubFunctionKind {
-	NormalFunction,
-	NonStaticMethod,
-	StaticMethod,
-}
-
-export enum StaticFlag {
-	NotStatic,
-	Static
-};
-
-export function functionKindForImpl(subFunctionKind: SubFunctionKind, isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[subFunctionKind as number][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export function functionKindFor(isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[SubFunctionKind.NormalFunction][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export function methodKindFor(isStatic: boolean, isGenerator: boolean, isAsync: boolean): FunctionKind {
-	return FUNCTIONS_TYPES[isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod][isGenerator ? 1 : 0][isAsync ? 1 : 0];
-}
-
-export enum FunctionSyntaxKind {
-	AnonymousExpression,
-	NamedExpression,
-	Declaration,
-	AccessorOrMethod,
-	Wrapped,
-
-	LastFunctionSyntaxKind = Wrapped,
-};
+import {
+	FunctionBodyType, FunctionInfo, FunctionKind,
+	functionKindForImpl, FunctionSyntaxKind,
+	isAsyncFunction, isAsyncGeneratorFunction,
+	isGeneratorFunction, methodKindFor, ParseFunctionFlag,
+	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
+	PropertyPosition, SubFunctionKind
+} from './enums.js';
 
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
@@ -420,13 +239,10 @@ export abstract class AbstractParser {
 		const next = this.scanner.peek();
 		return next.test((token, value) => Token.IDENTIFIER.equal(token) && keyword === value?.toString());
 	}
-	protected methodKindFor(isStatic: boolean, functionFlags: FunctionKind): FunctionKind {
-		const isGenerator = functionFlags.includes('GENERATOR');
-		const isAsync = functionFlags.includes('ASYNC');
+	protected methodKindFor(isStatic: boolean, flag: ParseFunctionFlag): FunctionKind {
 		return functionKindForImpl(
 			isStatic ? SubFunctionKind.StaticMethod : SubFunctionKind.NonStaticMethod,
-			isGenerator,
-			isAsync
+			flag
 		);
 	}
 	protected errorMessage(message: string): string {
@@ -616,7 +432,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseFunctionExpression() {
 		this.consume(Token.FUNCTION);
-		const functionKind = this.check(Token.MUL) ? FunctionKind.GENERATOR : FunctionKind.NORMAL;
+		const functionKind = this.check(Token.MUL) ? FunctionKind.GENERATOR_FUNCTION : FunctionKind.NORMAL_FUNCTION;
 		let name: Identifier | undefined;
 		let functionSyntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		const peek = this.peek();
@@ -634,7 +450,7 @@ export class JavaScriptParser extends AbstractParser {
 			throw new SyntaxError(this.errorMessage('Line Terminator Before `function` parsing `async function`.'));
 		}
 		this.consume(Token.FUNCTION);
-		return this.parseHoistableDeclaration01(FunctionKind.ASYNC, names, defaultExport);
+		return this.parseHoistableDeclaration01(FunctionKind.ASYNC_FUNCTION, names, defaultExport);
 
 	}
 	protected parseIfStatement(): ExpressionNode {
@@ -974,7 +790,7 @@ export class JavaScriptParser extends AbstractParser {
 		}
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
-		if (Token.isValidIdentifier(next.token)) {
+		if (Token.isValidIdentifier(next.token, false, true, false)) {
 			return this.getIdentifier();
 		}
 		if (next.isType(Token.IDENTIFIER)) {
@@ -1090,7 +906,7 @@ export class JavaScriptParser extends AbstractParser {
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration01(FunctionKind.NORMAL, undefined, false);
+		return this.parseHoistableDeclaration01(FunctionKind.NORMAL_FUNCTION, undefined, false);
 	}
 
 	protected parseAsyncFunctionLiteral() {
@@ -1106,9 +922,9 @@ export class JavaScriptParser extends AbstractParser {
 		this.consume(Token.FUNCTION);
 		let name: Identifier | undefined;
 		let syntaxKind = FunctionSyntaxKind.AnonymousExpression;
-		let flags = FunctionKind.ASYNC;
+		let flags = FunctionKind.ASYNC_FUNCTION;
 		if (this.check(Token.MUL)) {
-			flags = FunctionKind.ASYNC_GENERATOR;
+			flags = FunctionKind.ASYNC_GENERATOR_FUNCTION;
 		}
 		if (this.peekAnyIdentifier()) {
 			syntaxKind = FunctionSyntaxKind.NamedExpression;
@@ -1118,9 +934,9 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean) {
 		this.consume(Token.FUNCTION);
-		let flags = FunctionKind.NORMAL;
+		let flags = FunctionKind.NORMAL_FUNCTION;
 		if (this.check(Token.MUL)) {
-			flags = FunctionKind.GENERATOR;
+			flags = FunctionKind.GENERATOR_FUNCTION;
 		}
 		return this.parseHoistableDeclaration01(flags, names, defaultExport);
 	}
@@ -1139,16 +955,11 @@ export class JavaScriptParser extends AbstractParser {
 
 		// (FunctionType.ASYNC === flag || FunctionType.GENERATOR === flag);
 
-		if (FunctionKind.ASYNC === flag && this.check(Token.MUL)) {
+		if ((flag & ParseFunctionFlag.IsAsync) != 0 && this.check(Token.MUL)) {
 			// Async generator
-			flag = FunctionKind.ASYNC_GENERATOR;
-		} else if (FunctionKind.ASYNC_CONCISE === flag && this.check(Token.MUL)) {
-			// Async concise generator
-			flag = FunctionKind.ASYNC_CONCISE_GENERATOR;
-		} else if (FunctionKind.STATIC_ASYNC_CONCISE === flag && this.check(Token.MUL)) {
-			// Async concise generator
-			flag = FunctionKind.STATIC_ASYNC_CONCISE_GENERATOR;
+			flag |= ParseFunctionFlag.IsGenerator;
 		}
+
 		let name: ExpressionNode | undefined;
 		if (this.peek().isType(Token.LPAREN)) {
 			if (defaultExport) {
@@ -1164,7 +975,7 @@ export class JavaScriptParser extends AbstractParser {
 	}
 	protected parseIdentifier(): Identifier {
 		const next = this.next();
-		if (!Token.isValidIdentifier(next.token)) {
+		if (!Token.isValidIdentifier(next.token, false, true, false)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
 		}
 		if (next.isType(Token.IDENTIFIER)) {
@@ -1419,7 +1230,7 @@ export class JavaScriptParser extends AbstractParser {
 		let token = this.peek();
 		if (Token.isAnyIdentifier(token.token)) {
 			this.consume(token.token);
-			let kind = FunctionKind.NORMAL;
+			let kind = FunctionKind.NORMAL_FUNCTION;
 			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
@@ -1428,7 +1239,7 @@ export class JavaScriptParser extends AbstractParser {
 				// async Identifier => ...
 				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
 					token = this.next();
-					kind = FunctionKind.ASYNC;
+					kind = FunctionKind.ASYNC_FUNCTION;
 				}
 			}
 			if (this.peek().isType(Token.ARROW)) {
@@ -1483,7 +1294,7 @@ export class JavaScriptParser extends AbstractParser {
 					if (!this.peek().isType(Token.ARROW)) {
 						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
-					return this.parseArrowFunctionLiteral([], FunctionKind.NORMAL);
+					return this.parseArrowFunctionLiteral([], FunctionKind.NORMAL_FUNCTION);
 				}
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
@@ -1609,12 +1420,12 @@ export class JavaScriptParser extends AbstractParser {
 			}
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
-				return this.parseArrowFunctionLiteral(params, FunctionKind.NORMAL);
+				return this.parseArrowFunctionLiteral(params, FunctionKind.NORMAL_FUNCTION);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NORMAL);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NORMAL_FUNCTION);
 			}
-			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NORMAL);
+			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NORMAL_FUNCTION);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {
@@ -1813,8 +1624,9 @@ export class JavaScriptParser extends AbstractParser {
 				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
 
+				const kind = this.methodKindFor(propInfo.isStatic, propInfo.funcFlag);
 				const value = this.parseFunctionLiteral(
-					propInfo.funcFlag,
+					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
 					propInfo.name ? new Literal<string>(propInfo.name) : undefined
 				);
@@ -1831,8 +1643,9 @@ export class JavaScriptParser extends AbstractParser {
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
+				const kind = this.methodKindFor(propInfo.isStatic, propInfo.funcFlag);
 				const value = this.parseFunctionLiteral(
-					propInfo.funcFlag,
+					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
 					propInfo.name ? new Literal<string>(propInfo.name) : undefined
 				);
@@ -1862,13 +1675,13 @@ export class JavaScriptParser extends AbstractParser {
 				return AsyncIdentifier;
 			}
 			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionKind.ASYNC;
+			propInfo.funcFlag = ParseFunctionFlag.IsAsync;
 		}
 
 		if (this.check(Token.MUL)) {
 			// async*
 			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionKind.ASYNC_GENERATOR;
+			propInfo.funcFlag = ParseFunctionFlag.IsGenerator;
 		}
 
 		nextToken = this.peek();

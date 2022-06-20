@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { FunctionKind, functionKindForImpl, FunctionSyntaxKind, isAccessor, JavaScriptParser, PropertyKind, PropertyKindInfo, PropertyPosition, SubFunctionKind } from './parser.js';
+import { JavaScriptParser } from './parser.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty, Class, ClassBody, ClassDeclaration, ClassExpression,
@@ -14,6 +14,11 @@ import { Program } from '../api/program.js';
 import { ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
 import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
+import {
+	FunctionKind, FunctionSyntaxKind, isAccessor,
+	ParseFunctionFlag, PropertyKind,
+	PropertyKindInfo, PropertyPosition
+} from './enums.js';
 
 
 export type ClassInfo = {
@@ -99,9 +104,6 @@ export class ClassLiteralProperty {
 	static Kind = ClassLiteralPropertyKind;
 }
 
-function assertUnreachable(x: never): never {
-	throw new Error(`Didn't expect to get here`);
-}
 export function classPropertyKindFor(kind: PropertyKind): ClassLiteralPropertyKind {
 	switch (kind) {
 		case PropertyKind.AccessorGetter:
@@ -442,7 +444,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 
 			case PropertyKind.AccessorGetter:
 			case PropertyKind.AccessorSetter: {
-				if (propInfo.funcFlag !== FunctionKind.NORMAL) {
+				if (propInfo.funcFlag !== ParseFunctionFlag.IsNormal) {
 					throw new Error(this.errorMessage('accessor is not normal function'));
 				}
 				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
@@ -492,10 +494,10 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 		} else if (propInfo.isStatic && propInfo.name.toString() === 'prototype') {
 			throw new Error(this.errorMessage('static prototype'));
 		} else if (propInfo.name.toString() === 'constructor') {
-			if (propInfo.funcFlag !== FunctionKind.NORMAL || isAccessor(propInfo.kind)) {
-				if (propInfo.funcFlag === FunctionKind.GENERATOR) {
+			if (propInfo.funcFlag !== ParseFunctionFlag.IsNormal || isAccessor(propInfo.kind)) {
+				if (propInfo.funcFlag === ParseFunctionFlag.IsGenerator) {
 					throw new Error(this.errorMessage('constructor is generator'));
-				} else if (propInfo.funcFlag === FunctionKind.ASYNC) {
+				} else if (propInfo.funcFlag === ParseFunctionFlag.IsAsync) {
 					throw new Error(this.errorMessage('constructor is async'));
 				}
 				if (classInfo.hasSeenConstructor) {
@@ -1036,7 +1038,7 @@ export class JavaScriptProgramParser extends JavaScriptParser {
 			if (this.checkContextualKeyword('as')) {
 				localName = this.parsePropertyOrPrivatePropertyName() as Identifier;
 			}
-			if (!Token.isValidIdentifier(this.current().token)) {
+			if (!Token.isValidIdentifier(this.current().token, false, true, false)) {
 				throw new SyntaxError(this.errorMessage('Unexpected Reserved Keyword'));
 			} else if (this.isEvalOrArguments(localName)) {
 				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
