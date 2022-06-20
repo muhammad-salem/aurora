@@ -1,10 +1,11 @@
 import { doesNotThrow, throws, deepStrictEqual } from 'assert';
 import { readdirSync, readFileSync } from 'fs';
-import { JavaScriptProgramParser } from '@ibyar/expressions';
+import { JavaScriptParser } from '@ibyar/expressions';
 
 function parse(src, { isModule, earlyErrors }) {
 	console.log('src:\n', src);
-	(isModule ? JavaScriptProgramParser.parseModule : JavaScriptProgramParser.parseScript)(src, { earlyErrors });
+	JavaScriptParser.parse(src, { module: isModule, /* earlyErrors */ });
+	// return JavaScriptParser.parse(src, { module: isModule, /* earlyErrors */ });
 }
 
 let passExcludes = [];
@@ -14,7 +15,7 @@ let earlyExcludes = ['557.script.js', '558.script.js', '559.script.js', '560.scr
 const rootTest = '../../node_modules/test262-parser-tests';
 let x = 0;
 readdirSync(`${rootTest}/pass`).filter(f => !passExcludes.includes(f)).forEach(f => {
-	// f = '066b76285ce79182.js';
+	// f = '08c3105bb3f7ccb7.js';
 	console.log('parse `pass` file: ', f, ++x);
 	let firstTree, secondTree;
 	doesNotThrow(() => {
