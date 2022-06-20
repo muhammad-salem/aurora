@@ -50,7 +50,7 @@ export class HostListenerHandler implements RenderHandler {
 	onInit(): void {
 		const args = this.listenerRef.args ?? [];
 		const array = `[${args.join(', ')}]`;
-		this.argumentsExpression = JavaScriptParser.parse(array) as ArrayExpression;
+		this.argumentsExpression = JavaScriptParser.parseScript(array) as ArrayExpression;
 		if (this.listenerRef.eventName.includes(':')) {
 			const [eventSource, eventName] = this.listenerRef.eventName.split(':', 2);
 			this.eventName = eventName;

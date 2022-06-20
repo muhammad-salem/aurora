@@ -45,7 +45,7 @@ declare module '@ibyar/elements' {
 	}
 }
 
-const ThisTextContent = JavaScriptParser.parse('this.textContent') as MemberExpression;
+const ThisTextContent = JavaScriptParser.parseScript('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parse(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
@@ -75,8 +75,8 @@ function checkAndValidateObjectSyntax(source: string) {
 }
 function parseLiveAttribute(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
-	const elementExpression = JavaScriptParser.parse(elementSource);
-	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
+	const elementExpression = JavaScriptParser.parseScript(elementSource);
+	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
 	if (elementExpression instanceof MemberExpression
 		&& (modelExpression instanceof MemberExpression || modelExpression instanceof Identifier)) {
 		attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
@@ -101,8 +101,8 @@ function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
-	const elementExpression = JavaScriptParser.parse(elementSource);
-	const modelExpression = JavaScriptParser.parse(checkAndValidateObjectSyntax(attr.value));
+	const elementExpression = JavaScriptParser.parseScript(elementSource);
+	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
 	if (elementExpression instanceof MemberExpression) {
 		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
@@ -112,7 +112,7 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 }
 
 function parseOutputExpression(attr: ElementAttribute<string, string>) {
-	attr.expression = JavaScriptParser.parse(attr.value);
+	attr.expression = JavaScriptParser.parseScript(attr.value);
 }
 
 function parseAttributeDirectives(directive: DomAttributeDirectiveNode) {
@@ -141,7 +141,7 @@ function parseChild(child: DomNode) {
 		if (child.value) {
 			// use shorthand syntax, possible mixed with input and outputs
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
-			expressions.push(...info.templateExpressions.map(JavaScriptParser.parse));
+			expressions.push(...info.templateExpressions.map(JavaScriptParser.parseScript));
 			// <div let-i="index">{{item}}</div>
 
 			searchForLetAttributes(child, expressions);
@@ -178,7 +178,7 @@ function searchForLetAttributes(child: DomStructuralDirectiveNode, expressions: 
 		child.attributes!.splice(child.attributes!.indexOf(attr), 1);
 		const attrName = convertToMemberAccessStyle(attr.name.split('-').slice(1));
 		const expression = `let ${attrName} = ${(typeof attr.value == 'string') ? attr.value : '$implicit'}`;
-		expressions.push(JavaScriptParser.parse(expression));
+		expressions.push(JavaScriptParser.parseScript(expression));
 	});
 }
 
