@@ -432,7 +432,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseFunctionExpression() {
 		this.consume(Token.FUNCTION);
-		const functionKind = this.check(Token.MUL) ? FunctionKind.GENERATOR_FUNCTION : FunctionKind.NORMAL_FUNCTION;
+		const functionKind = this.check(Token.MUL) ? FunctionKind.GeneratorFunction : FunctionKind.NormalFunction;
 		let name: Identifier | undefined;
 		let functionSyntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		const peek = this.peek();
@@ -450,7 +450,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new SyntaxError(this.errorMessage('Line Terminator Before `function` parsing `async function`.'));
 		}
 		this.consume(Token.FUNCTION);
-		return this.parseHoistableDeclaration01(FunctionKind.ASYNC_FUNCTION, names, defaultExport);
+		return this.parseHoistableDeclaration01(FunctionKind.AsyncFunction, names, defaultExport);
 
 	}
 	protected parseIfStatement(): ExpressionNode {
@@ -906,7 +906,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration01(FunctionKind.NORMAL_FUNCTION, undefined, false);
+		return this.parseHoistableDeclaration01(FunctionKind.NormalFunction, undefined, false);
 	}
 
 	protected parseAsyncFunctionLiteral() {
@@ -922,9 +922,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.consume(Token.FUNCTION);
 		let name: Identifier | undefined;
 		let syntaxKind = FunctionSyntaxKind.AnonymousExpression;
-		let flags = FunctionKind.ASYNC_FUNCTION;
+		let flags = FunctionKind.AsyncFunction;
 		if (this.check(Token.MUL)) {
-			flags = FunctionKind.ASYNC_GENERATOR_FUNCTION;
+			flags = FunctionKind.AsyncGeneratorFunction;
 		}
 		if (this.peekAnyIdentifier()) {
 			syntaxKind = FunctionSyntaxKind.NamedExpression;
@@ -934,9 +934,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean) {
 		this.consume(Token.FUNCTION);
-		let flags = FunctionKind.NORMAL_FUNCTION;
+		let flags = FunctionKind.NormalFunction;
 		if (this.check(Token.MUL)) {
-			flags = FunctionKind.GENERATOR_FUNCTION;
+			flags = FunctionKind.GeneratorFunction;
 		}
 		return this.parseHoistableDeclaration01(flags, names, defaultExport);
 	}
@@ -1230,7 +1230,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		let token = this.peek();
 		if (Token.isAnyIdentifier(token.token)) {
 			this.consume(token.token);
-			let kind = FunctionKind.NORMAL_FUNCTION;
+			let kind = FunctionKind.NormalFunction;
 			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
 				// async function ...
 				if (this.peek().isType(Token.FUNCTION)) {
@@ -1239,7 +1239,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// async Identifier => ...
 				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
 					token = this.next();
-					kind = FunctionKind.ASYNC_FUNCTION;
+					kind = FunctionKind.AsyncFunction;
 				}
 			}
 			if (this.peek().isType(Token.ARROW)) {
@@ -1294,7 +1294,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					if (!this.peek().isType(Token.ARROW)) {
 						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
-					return this.parseArrowFunctionLiteral([], FunctionKind.NORMAL_FUNCTION);
+					return this.parseArrowFunctionLiteral([], FunctionKind.NormalFunction);
 				}
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
@@ -1420,12 +1420,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
-				return this.parseArrowFunctionLiteral(params, FunctionKind.NORMAL_FUNCTION);
+				return this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
 			}
 			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NORMAL_FUNCTION);
+				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
 			}
-			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NORMAL_FUNCTION);
+			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NormalFunction);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {

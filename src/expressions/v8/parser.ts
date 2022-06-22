@@ -302,7 +302,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 				if (!propInfo.isStatic && propInfo.name.toString() === 'constructor') {
 					classInfo.hasSeenConstructor = true;
-					kind = hasExtends ? FunctionKind.DERIVED_CONSTRUCTOR : FunctionKind.BASE_CONSTRUCTOR;
+					kind = hasExtends ? FunctionKind.DerivedConstructor : FunctionKind.BaseConstructor;
 				}
 
 				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
@@ -332,11 +332,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 				let kind: FunctionKind;
 				if (propInfo.isStatic) {
-					kind = isGet ? FunctionKind.STATIC_GETTER_FUNCTION
-						: FunctionKind.STATIC_SETTER_FUNCTION;
+					kind = isGet ? FunctionKind.StaticGetterFunction
+						: FunctionKind.StaticSetterFunction;
 				} else {
-					kind = isGet ? FunctionKind.GETTER_FUNCTION
-						: FunctionKind.SETTER_FUNCTION;
+					kind = isGet ? FunctionKind.GetterFunction
+						: FunctionKind.SetterFunction;
 				}
 
 				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
