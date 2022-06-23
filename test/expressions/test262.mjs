@@ -11,7 +11,6 @@ function parse(src, { isModule, earlyErrors }) {
 
 
 let passExcludes = [
-	'402e8d30db64e5af.js', '9681f5d844d7acd0.js', '079b7b699d0cacab.js',
 	'0b1fc7208759253b.js', '0b281915a3227177.js', '0c7719169ed21a87.js',
 	'0e3ca454ddfb4729.js', '0f9f10c894a7d811.js', '0fe1f55610641156.js',
 	'110fa1efdd0868b8.js', '1270d541e0fd6af8.js', '14199f22a45c7e30.js',
@@ -72,7 +71,6 @@ let passExcludes = [
 let failExcludes = [];
 let earlyExcludes = ['557.script.js', '558.script.js', '559.script.js', '560.script.js', '561.script.js', '563.script.js', '564.script.js', '565.script.js', '566.script.js', '567.script.js', '568.script.js', '569.script.js', '570.script.js', '571.script.js', '572.script.js', '574.script.js', '575.script.js', '576.script.js', '577.script.js', '578.script.js', '579.script.js', '580.script.js', '581.script.js', '582.script.js', '583.script.js', '585.script.js', '586.script.js', '587.script.js', '588.script.js', '589.script.js', '590.script.js', '591.script.js', '592.script.js', '593.script.js', '594.script.js', '596.script.js', '597.script.js', '598.script.js', '599.script.js', '600.script.js', '601.script.js', '602.script.js'];
 earlyExcludes = [];
-
 
 const rootTest = '../../node_modules/test262-parser-tests';
 let x = 0;
