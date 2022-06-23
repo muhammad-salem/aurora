@@ -1012,7 +1012,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		else if (name == 'arguments') {
 			return ArgumentsIdentifier;
 		}
-		throw new Error(this.errorMessage(`can't identify token '${name}'`));
+		return current.getValue();
 	}
 	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name?: ExpressionNode): ExpressionNode {
 		// Function ::
