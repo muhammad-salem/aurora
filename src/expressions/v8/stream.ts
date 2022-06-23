@@ -235,6 +235,7 @@ export class TokenStreamImpl extends TokenStream {
 	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
 	static UnicodePattern = /^[0-9a-f]{4}$/i;
 	static DecimalPattern = /^[0-9a-f]{2}$/i;
+	static AsciiPattern = /^[0-7]{3}$/i;
 
 	constructor(private expression: string) {
 		super();
@@ -616,7 +617,7 @@ export class TokenStreamImpl extends TokenStream {
 					} else {
 						const codePoint = v.substring(index, index + 4);
 						if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
-							throw new Error(this.createError('Illegal escape sequence: \\u' + codePoint));
+							throw new Error(this.createError('Illegal escape sequence: \\u ' + codePoint));
 						}
 						buffer += String.fromCodePoint(parseInt(codePoint, 16));
 						index += 4;
@@ -628,13 +629,22 @@ export class TokenStreamImpl extends TokenStream {
 					// interpret the following 2 characters as the hex of the decimal code point
 					let codePoint = v.substring(index, index + 2);
 					if (!TokenStreamImpl.DecimalPattern.test(codePoint)) {
-						throw new Error(this.createError('Illegal escape sequence: \\x' + codePoint));
+						throw new Error(this.createError('Illegal escape sequence: \\x ' + codePoint));
 					}
 					buffer += String.fromCharCode(parseInt(codePoint, 16));
 					index += 2;
 					break;
 				}
 				default:
+					if (!Number.isNaN(parseInt(c, 8))) {
+						let codePoint = v.substring(index, index + 3);
+						if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
+							throw new Error(this.createError('Illegal escape sequence: ASCII 8 base, ' + codePoint));
+						}
+						buffer += String.fromCharCode(parseInt(codePoint, 8));
+						index += 3;
+						break;
+					}
 					throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
 			}
 			let backslash = v.indexOf('\\', index);
