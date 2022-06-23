@@ -599,6 +599,10 @@ export class TokenStreamImpl extends TokenStream {
 					index++;
 					buffer += '\t';
 					break;
+				case 'v':
+					index++;
+					buffer += '\v';
+					break;
 				case 'u': {
 					index++;
 					// interpret the following 4 characters as the hex of the unicode code point
