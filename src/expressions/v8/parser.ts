@@ -45,6 +45,7 @@ import {
 	FunctionKind,
 	FunctionSyntaxKind,
 	isAccessor,
+	isStrict,
 	LanguageMode,
 	ParseFunctionFlag,
 	PropertyKind,
@@ -65,7 +66,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			? TokenStream.getTokenStream(source)
 			: source;
 		const parser = new JavaScriptParser(stream, mode);
-		return module ? parser.doParseProgram() : parser.doParseScript();
+		return isStrict(mode) ? parser.doParseProgram() : parser.doParseScript();
 	}
 
 	/**
