@@ -1,11 +1,11 @@
 import { doesNotThrow, throws, deepStrictEqual } from 'assert';
 import { readdirSync, readFileSync } from 'fs';
-import { JavaScriptParser, LanguageMode } from '@ibyar/expressions';
+import { getLanguageMode, JavaScriptParser } from '@ibyar/expressions';
 
 function parse(src, { isModule, earlyErrors }) {
 	console.log('src:\n', src);
-	JavaScriptParser.parse(src, { mode: LanguageMode[isModule], /* earlyErrors */ });
-	// return JavaScriptParser.parse(src, { module: isModule, /* earlyErrors */ });
+	JavaScriptParser.parse(src, { mode: getLanguageMode(isModule), /* earlyErrors */ });
+	// return JavaScriptParser.parse(src, { mode: getLanguageMode(isModule), /* earlyErrors */ });
 }
 
 let passExcludes = [];
@@ -14,49 +14,55 @@ let earlyExcludes = ['557.script.js', '558.script.js', '559.script.js', '560.scr
 
 const rootTest = '../../node_modules/test262-parser-tests';
 let x = 0;
-readdirSync(`${rootTest}/pass`).filter(f => !passExcludes.includes(f)).forEach(f => {
-	// f = '08c3105bb3f7ccb7.js';
-	console.log('parse `pass` file: ', f, ++x);
-	let firstTree, secondTree;
-	doesNotThrow(() => {
-		firstTree = parse(
-			readFileSync(`${rootTest}/pass/${f}`, 'utf8'),
-			{ isModule: f.match('.module.js'), earlyErrors: true }
-		);
+readdirSync(`${rootTest}/pass`)
+	.filter(f => !passExcludes.includes(f))
+	.forEach(f => {
+		// f = '08c3105bb3f7ccb7.js';
+		console.log('parse `pass` file: ', f, ++x);
+		let firstTree, secondTree;
+		doesNotThrow(() => {
+			firstTree = parse(
+				readFileSync(`${rootTest}/pass/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: true }
+			);
+		});
+		doesNotThrow(() => {
+			secondTree = parse(
+				readFileSync(`${rootTest}/pass-explicit/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: true }
+			);
+		});
+		deepStrictEqual(firstTree, secondTree);
 	});
-	doesNotThrow(() => {
-		secondTree = parse(
-			readFileSync(`${rootTest}/pass-explicit/${f}`, 'utf8'),
-			{ isModule: f.match('.module.js'), earlyErrors: true }
-		);
-	});
-	deepStrictEqual(firstTree, secondTree);
-});
 
 x = 0;
-readdirSync(`${rootTest}/fail`).filter(f => !failExcludes.includes(f)).forEach(f => {
-	console.log('parse `fail` file: ', f, ++x);
-	throws(() => {
-		parse(
-			readFileSync(`${rootTest}/fail/${f}`, 'utf8'),
-			{ isModule: f.match('.module.js'), earlyErrors: false }
-		);
+readdirSync(`${rootTest}/fail`)
+	.filter(f => !failExcludes.includes(f))
+	.forEach(f => {
+		console.log('parse `fail` file: ', f, ++x);
+		throws(() => {
+			parse(
+				readFileSync(`${rootTest}/fail/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: false }
+			);
+		});
 	});
-});
 
 x = 0;
-readdirSync(`${rootTest}/early`).filter(f => !earlyExcludes.includes(f)).forEach(f => {
-	console.log('parse `early` file: ', f, ++x);
-	doesNotThrow(() => {
-		parse(
-			readFileSync(`${rootTest}/early/${f}`, 'utf8'),
-			{ isModule: f.match('.module.js'), earlyErrors: false }
-		);
+readdirSync(`${rootTest}/early`)
+	.filter(f => !earlyExcludes.includes(f))
+	.forEach(f => {
+		console.log('parse `early` file: ', f, ++x);
+		doesNotThrow(() => {
+			parse(
+				readFileSync(`${rootTest}/early/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: false }
+			);
+		});
+		throws(() => {
+			parse(
+				readFileSync(`${rootTest}/early/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: true }
+			);
+		});
 	});
-	throws(() => {
-		parse(
-			readFileSync(`${rootTest}/early/${f}`, 'utf8'),
-			{ isModule: f.match('.module.js'), earlyErrors: true }
-		);
-	});
-});
