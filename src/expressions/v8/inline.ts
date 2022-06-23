@@ -49,14 +49,14 @@ import {
 	FunctionBodyType, FunctionInfo, FunctionKind,
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
-	isGeneratorFunction, LanguageMode, ParseFunctionFlag,
+	isGeneratorFunction, isStrict, LanguageMode, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind
 } from './enums.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 
 export abstract class AbstractParser {
-	constructor(protected scanner: TokenStream) { }
+	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) { }
 	abstract scan(): ExpressionNode;
 	protected position() {
 		return this.scanner.getPos();
@@ -182,7 +182,7 @@ export abstract class AbstractParser {
 		if (!(expression instanceof Identifier)) {
 			return false;
 		}
-		if (this.isEvalOrArguments(expression)) {
+		if (isStrict(this.languageMode) && this.isEvalOrArguments(expression)) {
 			return false;
 		}
 		return true;
@@ -190,8 +190,8 @@ export abstract class AbstractParser {
 	protected isPattern(expression: ExpressionNode): expression is (ObjectExpression | ArrayExpression) {
 		return expression instanceof ObjectExpression || expression instanceof ArrayExpression;
 	}
-	protected isProperty(expression: ExpressionNode): expression is Property {
-		return expression instanceof Property;
+	protected isProperty(expression: ExpressionNode): expression is Property | MemberExpression {
+		return expression instanceof Property || expression instanceof MemberExpression;
 	}
 	protected isCallNew(expression: ExpressionNode): expression is NewExpression {
 		return expression instanceof NewExpression;
@@ -259,8 +259,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const parser = new JavaScriptInlineParser(stream, mode);
 		return parser.scan();
 	}
-	constructor(scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) {
-		super(scanner);
+	constructor(scanner: TokenStream, languageMode: LanguageMode = LanguageMode.Strict) {
+		super(scanner, languageMode);
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
