@@ -1,10 +1,10 @@
 import { doesNotThrow, throws, deepStrictEqual } from 'assert';
 import { readdirSync, readFileSync } from 'fs';
-import { JavaScriptParser } from '@ibyar/expressions';
+import { JavaScriptParser, LanguageMode } from '@ibyar/expressions';
 
 function parse(src, { isModule, earlyErrors }) {
 	console.log('src:\n', src);
-	JavaScriptParser.parse(src, { module: isModule, /* earlyErrors */ });
+	JavaScriptParser.parse(src, { mode: LanguageMode[isModule], /* earlyErrors */ });
 	// return JavaScriptParser.parse(src, { module: isModule, /* earlyErrors */ });
 }
 
