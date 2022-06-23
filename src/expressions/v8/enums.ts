@@ -437,3 +437,21 @@ export function getVariableMode(kind: ClassLiteralPropertyKind): VariableMode {
 			return VariableMode.PrivateSetterOnly;
 	}
 }
+
+/**
+ * *note: LanguageMode is a boolean enum
+ * `Sloppy` is false,
+ * `Strict` is true
+ */
+export enum LanguageMode {
+	Sloppy = false as any as 0,
+	Strict = true as any as 1,
+};
+
+export function isSloppy(mode: LanguageMode) {
+	return LanguageMode.Sloppy === mode;
+}
+
+export function isStrict(mode: LanguageMode) {
+	return LanguageMode.Strict === mode;
+}
