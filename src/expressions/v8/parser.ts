@@ -2,17 +2,39 @@ import type { ExpressionNode } from '../api/expression.js';
 import { JavaScriptInlineParser } from './inline.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	AccessorProperty, Class, ClassBody, ClassDeclaration, ClassExpression,
-	MetaProperty, MethodDefinition, PropertyDefinition, StaticBlock, Super
+	AccessorProperty,
+	Class,
+	ClassBody,
+	ClassDeclaration,
+	ClassExpression,
+	MetaProperty,
+	MethodDefinition,
+	PropertyDefinition,
+	StaticBlock,
+	Super
 } from '../api/class/class.js';
 import { FunctionExpression } from '../api/definition/function.js';
 import { Identifier, Literal, NullNode } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
-import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
+import {
+	VariableDeclarationNode,
+	VariableDeclarator
+} from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
 import { Program } from '../api/program.js';
-import { ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
-import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
+import {
+	ExportAllDeclaration,
+	ExportDefaultDeclaration,
+	ExportNamedDeclaration,
+	ExportSpecifier
+} from '../api/module/export.js';
+import {
+	ImportDeclaration,
+	ImportDefaultSpecifier,
+	ImportExpression,
+	ImportNamespaceSpecifier,
+	ImportSpecifier
+} from '../api/module/import.js';
 import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
 import {
 	ClassInfo,
@@ -20,9 +42,14 @@ import {
 	ClassLiteralPropertyKind,
 	classPropertyKindFor,
 	createClassInfo,
-	FunctionKind, FunctionSyntaxKind, isAccessor,
-	ParseFunctionFlag, PropertyKind,
-	PropertyKindInfo, PropertyPosition
+	FunctionKind,
+	FunctionSyntaxKind,
+	isAccessor,
+	LanguageMode,
+	ParseFunctionFlag,
+	PropertyKind,
+	PropertyKindInfo,
+	PropertyPosition
 } from './enums.js';
 
 
@@ -33,19 +60,19 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream, { module } = { module: true }) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode } = { mode: LanguageMode.Strict }) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptParser(stream);
+		const parser = new JavaScriptParser(stream, mode);
 		return module ? parser.doParseProgram() : parser.doParseScript();
 	}
 
 	/**
 	 * parse inline code like that used in html 2 or 1 way binding
 	 */
-	static parseScript(source: string | TokenExpression[] | TokenStream) {
-		return JavaScriptInlineParser.parse(source);
+	static parseScript(source: string | TokenExpression[] | TokenStream, options = { mode: LanguageMode.Strict }) {
+		return JavaScriptInlineParser.parse(source, options);
 	}
 
 	protected doParseScript(): Program {
@@ -911,7 +938,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			if (this.checkContextualKeyword('as')) {
 				localName = this.parsePropertyOrPrivatePropertyName() as Identifier;
 			}
-			if (!Token.isValidIdentifier(this.current().token, false, true, false)) {
+			if (!Token.isValidIdentifier(this.current().token, this.languageMode, false, true)) {
 				throw new SyntaxError(this.errorMessage('Unexpected Reserved Keyword'));
 			} else if (this.isEvalOrArguments(localName)) {
 				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));

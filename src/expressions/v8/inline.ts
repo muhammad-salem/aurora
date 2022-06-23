@@ -49,7 +49,7 @@ import {
 	FunctionBodyType, FunctionInfo, FunctionKind,
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
-	isGeneratorFunction, methodKindFor, ParseFunctionFlag,
+	isGeneratorFunction, LanguageMode, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind
 } from './enums.js';
@@ -251,12 +251,15 @@ export abstract class AbstractParser {
 }
 
 export class JavaScriptInlineParser extends AbstractParser {
-	static parse(source: string | TokenExpression[] | TokenStream) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode } = { mode: LanguageMode.Strict }) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptInlineParser(stream);
+		const parser = new JavaScriptInlineParser(stream, mode);
 		return parser.scan();
+	}
+	constructor(scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) {
+		super(scanner);
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
@@ -790,7 +793,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
-		if (Token.isValidIdentifier(next.token, false, true, false)) {
+		if (Token.isValidIdentifier(next.token, this.languageMode, false, true)) {
 			return this.getIdentifier();
 		}
 		if (next.isType(Token.IDENTIFIER)) {
@@ -975,7 +978,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseIdentifier(): Identifier {
 		const next = this.next();
-		if (!Token.isValidIdentifier(next.token, false, true, false)) {
+		if (!Token.isValidIdentifier(next.token, this.languageMode, false, true)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
 		}
 		if (next.isType(Token.IDENTIFIER)) {

@@ -1,4 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
+import { isSloppy, LanguageMode } from './enums.js';
 
 export class Token {
 
@@ -753,11 +754,11 @@ export class Token {
 		return false;
 	}
 
-	public static isValidIdentifier(token: Token, isGenerator: boolean, disallowAwait: boolean, isSloppy: boolean) {
+	public static isValidIdentifier(token: Token, mode: LanguageMode, isGenerator: boolean, disallowAwait: boolean) {
 		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
 		if (token == Token.AWAIT) return !disallowAwait;
 		if (token == Token.YIELD) return !isGenerator;
-		return Token.isStrictReservedWord(token) && isSloppy;
+		return Token.isStrictReservedWord(token) && isSloppy(mode);
 	}
 
 	constructor(private name: string, private precedence: number) { }
