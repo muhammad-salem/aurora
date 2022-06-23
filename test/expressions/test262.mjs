@@ -11,7 +11,6 @@ function parse(src, { isModule, earlyErrors }) {
 
 
 let passExcludes = [
-	'2160fc99c3589501.js',
 	'402e8d30db64e5af.js', '9681f5d844d7acd0.js', '079b7b699d0cacab.js',
 	'0b1fc7208759253b.js', '0b281915a3227177.js', '0c7719169ed21a87.js',
 	'0e3ca454ddfb4729.js', '0f9f10c894a7d811.js', '0fe1f55610641156.js',
@@ -80,7 +79,7 @@ let x = 0;
 readdirSync(`${rootTest}/pass`)
 	.filter(f => !passExcludes.includes(f))
 	.forEach(f => {
-		// f = '2160fc99c3589501.js';
+		// f = '402e8d30db64e5af.js';
 		console.log('parse `pass` file: ', f, ++x);
 		let firstTree, secondTree;
 		doesNotThrow(() => {
