@@ -11,6 +11,7 @@ import {
 } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
+import { DebuggerStatement } from '../api/computing/debugger.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 
@@ -471,6 +472,7 @@ export class TokenStreamImpl extends TokenStream {
 				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, ArgumentsIdentifier); break;
 				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
 				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
+				case 'debugger': this.current = this.newToken(Token.DEBUGGER, DebuggerStatement.INSTANCE); break;
 
 				default:
 					node = new Identifier(identifierName);
@@ -501,17 +503,13 @@ export class TokenStreamImpl extends TokenStream {
 		const char = this.expression.charAt(this.pos);
 		const nextChar = this.expression.charAt(this.pos + 1);
 		if (char === '/' && nextChar === '*') {
-			this.pos = this.expression.indexOf('*/', this.pos) + 2;
-			if (this.pos === 1) {
-				this.pos = this.expression.length;
-			}
+			const endPos = this.expression.indexOf('*/', this.pos);
+			this.pos = endPos == -1 ? this.expression.length : endPos + 2;
 			return true;
 		}
 		if (char === '/' && nextChar === '/') {
-			this.pos = this.expression.indexOf('\n', this.pos) + 1;
-			if (this.pos === -1) {
-				this.pos = this.expression.length;
-			}
+			const endPos = this.expression.indexOf('\n', this.pos);
+			this.pos = endPos == -1 ? this.expression.length : endPos + 1;
 			return true;
 		}
 		return false;

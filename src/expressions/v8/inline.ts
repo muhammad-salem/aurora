@@ -53,6 +53,7 @@ import {
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind
 } from './enums.js';
+import { DebuggerStatement } from '../api/computing/debugger.js';
 
 export abstract class AbstractParser {
 	constructor(protected scanner: TokenStream) { }
@@ -319,6 +320,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseSwitchStatement();
 			case Token.FUNCTION:
 				throw new SyntaxError(this.errorMessage(`FunctionDeclaration only allowed as a StatementListItem not in an arbitrary Statement position.`));
+			case Token.DEBUGGER:
+				return this.parseDebuggerStatement();
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
@@ -330,6 +333,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			default:
 				return this.parseExpressionOrLabelledStatement();
 		}
+	}
+	protected parseDebuggerStatement() {
+		this.consume(Token.DEBUGGER);
+		this.expectSemicolon();
+		return DebuggerStatement.INSTANCE;
 	}
 	protected parseTryStatement(): ExpressionNode {
 		// TryStatement ::
