@@ -7,7 +7,7 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
-import { FunctionDeclaration, FunctionExpression } from './function.js';
+import { FunctionDeclaration } from './function.js';
 
 @Deserializer('Property')
 export class Property extends AbstractExpressionNode implements DeclarationExpression {
