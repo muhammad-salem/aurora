@@ -1,6 +1,14 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import { GlobalThisNode, OfNode, Identifier, SymbolNode, AsNode, Literal, ThisNode, NullNode, UndefinedNode, TrueNode, FalseNode, DefaultNode } from '../api/definition/values.js';
+import {
+	GlobalThisNode, OfNode, Identifier,
+	SymbolNode, AsNode, Literal,
+	ThisNode, NullNode, UndefinedNode,
+	TrueNode, FalseNode, DefaultNode,
+	YieldIdentifier, ConstructorIdentifier,
+	ArgumentsIdentifier, NameIdentifier,
+	EvalIdentifier
+} from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 
@@ -442,29 +450,33 @@ export class TokenStreamImpl extends TokenStream {
 			this.pos += identifierName.length + (isPrivate ? 1 : 0);
 		}
 		let node: ExpressionNode;
-		switch (identifierName) {
-			case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
-			case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
-			case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
-			case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
-			case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
+		if (isPrivate) {
+			node = new PrivateIdentifier(identifierName);
+			this.current = this.newToken(Token.PRIVATE_NAME, node);
+		} else {
+			switch (identifierName) {
+				case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
+				case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
+				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
+				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
+				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
 
-			case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
-			case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
-			case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
-			case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
-			case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
-			case 'yield': this.current = this.newToken(Token.YIELD); break;
+				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
+				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
+				case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
+				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
+				case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
+				case 'yield': this.current = this.newToken(Token.YIELD, YieldIdentifier); break;
+				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, ConstructorIdentifier); break;
+				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, ArgumentsIdentifier); break;
+				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
+				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
 
-			default:
-				if (isPrivate) {
-					node = new PrivateIdentifier(identifierName);
-					this.current = this.newToken(Token.PRIVATE_NAME, node);
-				} else {
+				default:
 					node = new Identifier(identifierName);
 					this.current = this.newToken(Token.IDENTIFIER, node);
-				}
-				break;
+					break;
+			}
 		}
 		return true;
 
