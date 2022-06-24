@@ -1992,7 +1992,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const peek = this.peek();
 		if (peek.isType(Token.AND) || peek.isType(Token.OR)) {
 			// LogicalORExpression, pickup parsing where we left off.
-			const precedence = peek.token.getPrecedence();
+			const precedence = Token.precedence(peek.token, this.acceptIN);
 			expression = this.parseBinaryContinuation(expression, 4, precedence);
 		} else if (peek.isType(Token.NULLISH)) {
 			expression = this.parseNullishExpression(expression);
@@ -2002,7 +2002,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseBinaryContinuation(x: ExpressionNode, prec: number, prec1: number): ExpressionNode {
 		do {
 			// prec1 >= 4
-			while (this.peek().token.getPrecedence() === prec1) {
+			while (Token.precedence(this.peek().token, this.acceptIN) === prec1) {
 				let y: ExpressionNode;
 				let op = this.next();
 
@@ -2043,16 +2043,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// identifiers are not valid PrimaryExpressions.
 		if (this.peek().isType(Token.PRIVATE_NAME)) {
 			const x = this.parsePropertyOrPrivatePropertyName();
-			const precedence1 = this.peek().token.getPrecedence();
-
+			const precedence1 = Token.precedence(this.peek().token, this.acceptIN);
 			if (this.peek().isNotType(Token.IN) || precedence1 < precedence) {
 				throw new SyntaxError(this.errorMessage('Unexpected Token Token.PRIVATE_NAME "#name"'));
 			}
 			return this.parseBinaryContinuation(x, precedence, precedence1);
 		}
 		const x: ExpressionNode = this.parseUnaryExpression();
-		const precedence1 = this.peek().token.getPrecedence();
-		if (this.peek().isNotType(Token.IN) && precedence1 >= precedence) {
+		const precedence1 = Token.precedence(this.peek().token, this.acceptIN);
+		if (precedence1 >= precedence) {
 			return this.parseBinaryContinuation(x, precedence, precedence1);
 		}
 		return x;
