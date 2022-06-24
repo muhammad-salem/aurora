@@ -504,17 +504,25 @@ export class TokenStreamImpl extends TokenStream {
 	private isComment() {
 		const char = this.expression.charAt(this.pos);
 		const nextChar = this.expression.charAt(this.pos + 1);
-		if (char === '/' && nextChar === '*') {
-			const endPos = this.expression.indexOf('*/', this.pos);
-			this.pos = endPos == -1 ? this.expression.length : endPos + 2;
-			return true;
+		let closeTag: string;
+		switch (true) {
+			case (char === '/' && nextChar === '/'):
+				closeTag = '\n';
+				break;
+			case (char === '/' && nextChar === '*'):
+				closeTag = '*/';
+				break;
+			case (char === '<' && nextChar === '!'):
+				if ('<!--' === this.expression.substring(this.pos, this.pos + 4)) {
+					closeTag = '-->';
+					break;
+				}
+			default:
+				return false;
 		}
-		if (char === '/' && nextChar === '/') {
-			const endPos = this.expression.indexOf('\n', this.pos);
-			this.pos = endPos == -1 ? this.expression.length : endPos + 1;
-			return true;
-		}
-		return false;
+		const endPos = this.expression.indexOf(closeTag, this.pos);
+		this.pos = endPos == -1 ? this.expression.length : endPos + closeTag.length;
+		return true;
 	}
 	public scanRegExpPattern() {
 		const peek = this.peek()
