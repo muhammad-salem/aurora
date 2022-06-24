@@ -236,6 +236,7 @@ export class TokenStreamImpl extends TokenStream {
 	static UnicodePattern = /^[0-9a-f]{4}$/i;
 	static DecimalPattern = /^[0-9a-f]{2}$/i;
 	static AsciiPattern = /^[0-7]{3}$/i;
+	static OctalPattern = /^[0-7]+$/i;
 
 	constructor(private expression: string) {
 		super();
@@ -708,6 +709,7 @@ export class TokenStreamImpl extends TokenStream {
 		let resetPos = pos;
 		let foundDot = false;
 		let foundDigits = false;
+		let isOctal = false;
 		let c;
 
 		while (pos < this.expression.length) {
@@ -720,6 +722,13 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				pos++;
 				valid = foundDigits;
+			} else if ('o' == c.toLowerCase()) {
+				if (pos == startPos + 1) {
+					pos++;
+					isOctal = true;
+				} else {
+					break;
+				}
 			} else {
 				break;
 			}
@@ -758,7 +767,17 @@ export class TokenStreamImpl extends TokenStream {
 				this.current = this.newToken(Token.BIGINT, bigintNode);
 				pos++;
 			} else {
-				const numNode = new Literal<number>(parseFloat(rawString), rawString);
+				let numNode: Literal<number>;
+				if (isOctal) {
+					const octal = rawString.substring(2);
+					if (TokenStreamImpl.OctalPattern.test(octal)) {
+						numNode = new Literal<number>(parseInt(octal, 8), rawString);
+					} else {
+						return false;
+					}
+				} else {
+					numNode = new Literal<number>(parseFloat(rawString), rawString);
+				}
 				this.current = this.newToken(Token.NUMBER, numNode);
 			}
 			this.pos = pos;
