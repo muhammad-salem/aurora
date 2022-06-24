@@ -46,6 +46,7 @@ import {
 } from './nodes.js';
 import { ClassDeclaration, ClassExpression, PrivateIdentifier } from '../api/class/class.js';
 import {
+	AllowLabelledFunctionStatement,
 	FunctionBodyType, FunctionInfo, FunctionKind,
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
@@ -323,7 +324,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 	 * TryStatement
 	 * DebuggerStatement
 	 */
-	protected parseStatement(): ExpressionNode {
+	protected parseStatement(
+		allowFunction: AllowLabelledFunctionStatement = AllowLabelledFunctionStatement.DisallowLabelledFunctionStatement
+	): ExpressionNode {
 		switch (this.peek().token) {
 			case Token.LBRACE:
 				return this.parseBlock();
@@ -364,7 +367,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					throw new SyntaxError(this.errorMessage(`async function in single statement context.`));
 				}
 			default:
-				return this.parseExpressionOrLabelledStatement();
+				return this.parseExpressionOrLabelledStatement(allowFunction);
 		}
 	}
 	protected parseDebuggerStatement() {
@@ -476,7 +479,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			default:
 				break;
 		}
-		return this.parseStatement();
+		return this.parseStatement(AllowLabelledFunctionStatement.AllowLabelledFunctionStatement);
 	}
 	protected parseFunctionExpression() {
 		this.consume(Token.FUNCTION);
@@ -907,7 +910,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.expectSemicolon()
 		return new ReturnStatement(returnValue);
 	}
-	protected parseExpressionOrLabelledStatement(): ExpressionNode {
+	protected parseExpressionOrLabelledStatement(allowFunction: AllowLabelledFunctionStatement): ExpressionNode {
 		// ExpressionStatement | LabelledStatement ::
 		//   Expression ';'
 		//   Identifier ':' Statement
@@ -948,12 +951,14 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
-			if (this.peek().isType(Token.FUNCTION) && isSloppy(this.languageMode)  /*&& allow_function == kAllowLabelledFunctionStatement */) {
+			if (this.peek().isType(Token.FUNCTION)
+				&& isSloppy(this.languageMode)
+				&& allowFunction == AllowLabelledFunctionStatement.AllowLabelledFunctionStatement) {
 				const result = this.parseFunctionDeclaration();
 				this.restoreAcceptIN();
 				return result;
 			}
-			const result = this.parseStatement();
+			const result = this.parseStatement(allowFunction);
 			this.restoreAcceptIN();
 			return result;
 		}

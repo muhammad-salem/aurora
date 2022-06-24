@@ -375,11 +375,6 @@ export enum FunctionNameValidity {
 	FunctionNameValidityUnknown = 'FunctionNameValidityUnknown'
 };
 
-export enum AllowLabelledFunctionStatement {
-	AllowLabelledFunctionStatement = 'AllowLabelledFunctionStatement',
-	DisallowLabelledFunctionStatement = 'DisallowLabelledFunctionStatement',
-};
-
 export enum ObjectLiteralPropertyKind {
 	CONSTANT = 'CONSTANT',	// Property with constant value (compile time).
 	COMPUTED = 'COMPUTED',	// Property with computed value (execution time).
@@ -459,4 +454,9 @@ export enum VariableDeclarationContext {
 	StatementListItem,
 	Statement,
 	ForStatement
+};
+
+export enum AllowLabelledFunctionStatement {
+	AllowLabelledFunctionStatement,
+	DisallowLabelledFunctionStatement,
 };
