@@ -580,7 +580,15 @@ export class TokenStreamImpl extends TokenStream {
 					index++;
 					buffer += c;
 					break;
-
+				case '\b':
+				case '\f':
+				case '\n':
+				case '\r':
+				case '\t':
+				case '\v':
+					index++;
+					buffer += '\\' + c;
+					break;
 				case 'b':
 					index++;
 					buffer += '\b';
