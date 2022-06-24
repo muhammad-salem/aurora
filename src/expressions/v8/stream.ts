@@ -403,6 +403,7 @@ export class TokenStreamImpl extends TokenStream {
 		let i = startPos;
 		let isPrivate = false;
 		let escape = false;
+		let escapeFlag = false;
 		// check is private property 
 		let char = this.expression.charAt(i);
 		if (char === '#') {
@@ -414,7 +415,7 @@ export class TokenStreamImpl extends TokenStream {
 		if (!IdentifierStartRegex.test(char)) {
 			if (char === '\\' && this.expression.charAt(i + 1) === 'u') {
 				i += 2;
-				escape = true;
+				escapeFlag = escape = true;
 				// need to valid the unicode char
 			} else {
 				return false;
@@ -428,14 +429,15 @@ export class TokenStreamImpl extends TokenStream {
 			if (!IdentifierPartRegex.test(char)) {
 				if (char === '\\' && this.expression.charAt(i + 1) === 'u') {
 					i++;
-					escape = true;
+					escapeFlag = escape = true;
 					continue;
 				}
-				if ('{' === this.expression.charAt(i)) {
+				if ('{' === char && escapeFlag) {
 					const end = this.expression.indexOf('}', i + 1);
 					if (end === -1) {
 						return false;
 					}
+					escapeFlag = false;
 					i = end;
 					continue;
 				}
