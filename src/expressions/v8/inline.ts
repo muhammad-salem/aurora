@@ -849,11 +849,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return next.getValue();
 		}
 		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration() as DeclarationExpression;
+			const value = this.parseFunctionDeclaration();
 			return new Property(next.getValue(), value, 'set', false, false, false);
 		}
 		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration() as DeclarationExpression;
+			const value = this.parseFunctionDeclaration();
 			return new Property(next.getValue(), value, 'get', false, false, false);
 		}
 		else if (next.isType(Token.AWAIT)) {
@@ -962,7 +962,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.restoreAcceptIN();
 		return result;
 	}
-	protected parseFunctionDeclaration(): ExpressionNode {
+	protected parseFunctionDeclaration() {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
@@ -1002,7 +1002,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.parseHoistableDeclaration01(flags, names, defaultExport);
 	}
 
-	protected parseHoistableDeclaration01(flag: FunctionKind, names: string[] | undefined, defaultExport: boolean): ExpressionNode {
+	protected parseHoistableDeclaration01(flag: FunctionKind, names: string[] | undefined, defaultExport: boolean) {
 		// FunctionDeclaration ::
 		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
 		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
@@ -1021,7 +1021,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			flag |= ParseFunctionFlag.IsGenerator;
 		}
 
-		let name: ExpressionNode | undefined;
+		let name: Identifier | undefined;
 		if (this.peek().isType(Token.LPAREN)) {
 			if (defaultExport) {
 				name = new Identifier('default');
@@ -1072,7 +1072,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return current.getValue();
 	}
-	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name?: ExpressionNode): ExpressionNode {
+	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name?: Identifier): FunctionDeclaration | FunctionExpression {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
@@ -1086,7 +1086,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.restoreAcceptIN();
 		const bodyBlock = new BlockStatement(body);
 		if (name) {
-			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name as Identifier);
+			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name);
 		}
 		return new FunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag));
 	}
@@ -1717,7 +1717,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Literal<string>(propInfo.name) : undefined
+					propInfo.name ? new Identifier(propInfo.name) : undefined
 				);
 				return new Property(
 					nameExpression,
@@ -1736,7 +1736,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Literal<string>(propInfo.name) : undefined
+					propInfo.name ? new Identifier(propInfo.name) : undefined
 				);
 				return new Property(
 					nameExpression,
