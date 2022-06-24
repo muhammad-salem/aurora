@@ -484,7 +484,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return this.parseFunctionLiteral(functionKind, functionSyntaxKind, name);
 	}
-	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean) {
+	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean): FunctionDeclaration {
 		// AsyncFunctionDeclaration ::
 		//   async [no LineTerminator here] function BindingIdentifier[Await]
 		//       ( FormalParameters[Await] ) { AsyncFunctionBody }
@@ -492,7 +492,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new SyntaxError(this.errorMessage('Line Terminator Before `function` parsing `async function`.'));
 		}
 		this.consume(Token.FUNCTION);
-		return this.parseHoistableDeclaration01(FunctionKind.AsyncFunction, names, defaultExport);
+		return this.parseHoistableDeclaration01(FunctionKind.AsyncFunction, names, defaultExport) as FunctionDeclaration;
 
 	}
 	protected parseIfStatement(): ExpressionNode {
@@ -962,12 +962,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.restoreAcceptIN();
 		return result;
 	}
-	protected parseFunctionDeclaration() {
+	protected parseFunctionDeclaration(): FunctionDeclaration {
 		this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration01(FunctionKind.NormalFunction, undefined, false);
+		return this.parseHoistableDeclaration01(FunctionKind.NormalFunction, undefined, false) as FunctionDeclaration;
 	}
 
 	protected parseAsyncFunctionLiteral() {

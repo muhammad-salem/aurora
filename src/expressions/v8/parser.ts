@@ -632,7 +632,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case Token.FUNCTION: {
 				const declaration = this.parseFunctionDeclaration();
 				const identifier = declaration.getId()!;
-				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 				break;
 			}
 
@@ -640,7 +640,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				this.consume(Token.CLASS);
 				const declaration = this.parseClassDeclaration(names, false);
 				const identifier = declaration.getId()!;
-				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 				break;
 			}
 
@@ -658,7 +658,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
 					const declaration = this.parseAsyncFunctionDeclaration(names, false);
 					const identifier = declaration.getId()!;
-					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
+					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 					break;
 				}
 
