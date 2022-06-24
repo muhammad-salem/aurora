@@ -477,6 +477,7 @@ export class TokenStreamImpl extends TokenStream {
 				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
 				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
 				case 'debugger': this.current = this.newToken(Token.DEBUGGER, DebuggerStatement.INSTANCE); break;
+				case 'class': this.current = this.newToken(Token.CLASS); break;
 
 				default:
 					node = new Identifier(identifierName);
