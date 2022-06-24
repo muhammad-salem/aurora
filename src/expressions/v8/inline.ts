@@ -201,8 +201,14 @@ export abstract class AbstractParser {
 	protected isIdentifier(expression: ExpressionNode): expression is Identifier {
 		return expression instanceof Identifier;
 	}
-	protected isParenthesized(expression: ExpressionNode): expression is (GroupingExpression | SequenceExpression) {
-		return expression instanceof GroupingExpression || expression instanceof SequenceExpression;
+	protected markParenthesized(expression: ExpressionNode) {
+		Reflect.set(expression, 'parenthesized', true);
+	}
+	protected clearParenthesized(expression: ExpressionNode) {
+		Reflect.deleteProperty(expression, 'parenthesized');
+	}
+	protected isParenthesized(expression: ExpressionNode): boolean {
+		return Reflect.get(expression, 'parenthesized') === true;
 	}
 	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
 		// return expression instanceof AssignmentNode;
@@ -1362,13 +1368,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 					if (!this.peek().isType(Token.ARROW)) {
 						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
-					return this.parseArrowFunctionLiteral([], FunctionKind.NormalFunction);
+					const result = new SequenceExpression([]);
+					this.markParenthesized(result);
+					return result;
 				}
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
 
 				this.setAcceptIN(true);
 				const expression = this.parseExpressionCoverGrammar();
+				this.markParenthesized(expression);
 				this.expect(Token.RPAREN);
 				this.restoreAcceptIN();
 				return expression;
@@ -1504,7 +1513,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (expression instanceof GroupingExpression) {
 				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
 			}
-			return this.parseArrowFunctionLiteral([new Param(expression)], FunctionKind.NormalFunction);
+			return this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction);
 		}
 		if (this.isAssignableIdentifier(expression)) {
 			if (this.isParenthesized(expression)) {
