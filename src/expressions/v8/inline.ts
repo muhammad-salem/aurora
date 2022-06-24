@@ -7,7 +7,7 @@ import {
 	NullNode, AwaitIdentifier,
 	ConstructorIdentifier, NameIdentifier,
 	EvalIdentifier, ArgumentsIdentifier,
-	TaggedTemplateExpression, TemplateLiteral, Literal
+	TaggedTemplateExpression, TemplateLiteral, Literal, SuperIdentifier
 } from '../api/definition/values.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
@@ -1357,29 +1357,56 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
+		// NewExpression ::
+		//   ('new')+ MemberExpression
+		//
+		// NewTarget ::
+		//   'new' '.' 'target'
+
+		// The grammar for new expressions is pretty warped. We can have several 'new'
+		// keywords following each other, and then a MemberExpression. When we see '('
+		// after the MemberExpression, it's associated with the rightmost unassociated
+		// 'new' to create a NewExpression with arguments. However, a NewExpression
+		// can also occur without arguments.
+
+		// Examples of new expression:
+		// new foo.bar().baz means (new (foo.bar)()).baz
+		// new foo()() means (new foo())()
+		// new new foo()() means (new (new foo())())
+		// new new foo means new (new foo)
+		// new new foo() means new (new foo())
+		// new new foo().bar().baz means (new (new foo()).bar()).baz
+		// new super.x means new (super.x)
 		this.consume(Token.NEW);
-		let classRef: ExpressionNode;
+
+		let result: ExpressionNode;
+
+		// CheckStackOverflow();
+
 		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.LPAREN)) {
-			throw new Error(this.errorMessage(`Import Call Not New Expression`));
-		} else if (this.peek().isType(Token.SUPER)) {
-			throw new Error(this.errorMessage(`parsing new super() is never allowed`));
+			throw new SyntaxError(this.errorMessage(`Import Call Not New Expression`));
 		} else if (this.peek().isType(Token.PERIOD)) {
-			classRef = this.parseNewTargetExpression();
-			return this.parseMemberExpressionContinuation(classRef);
+			result = this.parseNewTargetExpression();
+			return this.parseMemberExpressionContinuation(result);
 		} else {
-			classRef = this.parseMemberExpression();
+			result = this.parseMemberExpression();
+			if (result === SuperIdentifier) {
+				// new super() is never allowed
+				throw new SyntaxError(this.errorMessage(`Unexpected Super, new super() is never allowed`));
+			}
 		}
 		if (this.peek().isType(Token.LPAREN)) {
 			// NewExpression with arguments.
-			const args: ExpressionNode[] = this.parseArguments();
-			classRef = new NewExpression(classRef, args);
+			const args = this.parseArguments();
+			result = new NewExpression(result, args);
 			// The expression can still continue with . or [ after the arguments.
-			return this.parseMemberExpressionContinuation(classRef);
+			return this.parseMemberExpressionContinuation(result);
 		}
+
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
-			throw new Error(this.errorMessage(`parsing new xxx?.yyy at position`));
+			throw new SyntaxError(this.errorMessage(`Optional Chaining with New not allowed,  new x?.y()`));
 		}
-		return new NewExpression(classRef);
+		return new NewExpression(result);
 	}
 	protected parseArguments(maybeArrow?: ParsingArrowHeadFlag): ExpressionNode[] {
 		// Arguments ::
