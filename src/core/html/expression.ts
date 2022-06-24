@@ -141,7 +141,7 @@ function parseChild(child: DomNode) {
 		if (child.value) {
 			// use shorthand syntax, possible mixed with input and outputs
 			const info = DirectiveExpressionParser.parse(child.name.substring(1), child.value);
-			expressions.push(...info.templateExpressions.map(template => JavaScriptParser.parseScript(template, { mode: LanguageMode.Strict })));
+			expressions.push(...info.templateExpressions.map(template => JavaScriptParser.parseScript(template)));
 			// <div let-i="index">{{item}}</div>
 
 			searchForLetAttributes(child, expressions);
