@@ -1138,6 +1138,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseStatementList(endToken: Token): ExpressionNode[] {
 		// StatementList ::
 		//   (StatementListItem)* <end_token>
+		if (this.peek().test((token, value) => Token.STRING === token && 'use strict' === (value as Literal<string>).getValue())) {
+			this.languageMode = LanguageMode.Strict;
+		}
 		const list: ExpressionNode[] = [];
 		while (this.peek().isNotType(endToken)) {
 			const stat = this.parseStatementListItem();
