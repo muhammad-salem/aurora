@@ -141,7 +141,7 @@ export class FunctionExpression extends BaseFunctionExpression {
 		} else {
 			func = this.getFunction(stack);
 		}
-		this.id?.declareVariable(stack, func);
+		// this.id?.declareVariable(stack, func);
 		return func;
 	}
 	private getAsyncFunction(stack: Stack) {
@@ -326,7 +326,7 @@ export class FunctionExpression extends BaseFunctionExpression {
 }
 
 @Deserializer('FunctionDeclaration')
-export class FunctionDeclaration extends FunctionExpression {
+export class FunctionDeclaration extends FunctionExpression implements DeclarationExpression {
 	static fromJSON(node: FunctionDeclaration, deserializer: NodeDeserializer): FunctionDeclaration {
 		return new FunctionDeclaration(
 			node.params.map(deserializer),
@@ -349,6 +349,9 @@ export class FunctionDeclaration extends FunctionExpression {
 		generator: boolean,
 		id: Identifier) {
 		super(params, body, async, generator, id);
+	}
+	declareVariable(stack: Stack, value: Function) {
+		this.id.declareVariable(stack, value);
 	}
 }
 
