@@ -332,7 +332,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					kind = hasExtends ? FunctionKind.DerivedConstructor : FunctionKind.BaseConstructor;
 				}
 
-				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
 
 				const result = this.newClassLiteralProperty(
 					nameExpression, value, ClassLiteralProperty.Kind.METHOD,
@@ -366,7 +366,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 						: FunctionKind.SetterFunction;
 				}
 
-				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
 
 				const propertyKind: ClassLiteralPropertyKind = isGet ? ClassLiteralProperty.Kind.GETTER : ClassLiteralProperty.Kind.SETTER;
 				const result = this.newClassLiteralProperty(
@@ -589,11 +589,13 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				// ParseExportClause(& reserved_loc, & string_literal_local_name_loc);
 
 				const exportData = this.parseExportClause();
+				let moduleSpecifier: Literal<string> | undefined;
+				let importAssertions: ImportAttribute[] | undefined;
 
-				if (this.expectContextualKeyword('from')) {
+				if (this.checkContextualKeyword('from')) {
 					// Scanner::Location specifier_loc = scanner() -> peek_location();
-					const moduleSpecifier = this.parseModuleSpecifier();
-					const importAssertions = this.parseImportAssertClause();
+					moduleSpecifier = this.parseModuleSpecifier();
+					importAssertions = this.parseImportAssertClause();
 					this.expectSemicolon();
 
 					// if (exportData.isEmpty()) {
@@ -623,29 +625,40 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					// 		zone());
 					// }
 				}
-				return new ExportNamedDeclaration([]);
+				return new ExportNamedDeclaration(exportData, undefined, moduleSpecifier, importAssertions);
 				// return factory() -> EmptyStatement();
 			}
 
-			case Token.FUNCTION:
-				result = this.parseFunctionDeclaration();
+			case Token.FUNCTION: {
+				const declaration = this.parseFunctionDeclaration();
+				const identifier = declaration.getId()!;
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
 				break;
+			}
 
-			case Token.CLASS:
+			case Token.CLASS: {
 				this.consume(Token.CLASS);
-				result = this.parseClassDeclaration(names, false);
+				const declaration = this.parseClassDeclaration(names, false);
+				const identifier = declaration.getId()!;
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
 				break;
+			}
 
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
-				result = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
+				const declaration = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
+				const specifiers = declaration.getDeclarations()
+					.map(node => new ExportSpecifier(node.getId() as Identifier, node.getId() as Identifier));
+				result = new ExportNamedDeclaration(specifiers, declaration);
 				break;
 
 			case Token.ASYNC:
 				this.consume(Token.ASYNC);
 				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
-					result = this.parseAsyncFunctionDeclaration(names, false);
+					const declaration = this.parseAsyncFunctionDeclaration(names, false);
+					const identifier = declaration.getId()!;
+					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)]);
 					break;
 				}
 
@@ -790,7 +803,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		this.restoreAcceptIN();
 		return new ImportExpression(specifier as Literal<string>);
 	}
-	protected parseVariableStatement(varContext: VariableDeclarationContext, names: string[]): ExpressionNode | undefined {
+	protected parseVariableStatement(varContext: VariableDeclarationContext, names: string[]) {
 		// VariableStatement ::
 		//   VariableDeclarations ';'
 
