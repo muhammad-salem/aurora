@@ -352,8 +352,6 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.DEBUGGER:
 				return this.parseDebuggerStatement();
 			case Token.VAR:
-			case Token.LET:
-			case Token.CONST:
 				return this.parseVariableDeclarations(VariableDeclarationContext.Statement);
 			case Token.ASYNC:
 				if (!this.scanner.hasLineTerminatorAfterNext() && this.peekAhead().isType(Token.FUNCTION)) {
@@ -456,9 +454,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.consume(Token.CLASS);
 				return this.parseClassDeclaration(undefined, false);
 			case Token.VAR:
-			case Token.LET:
 			case Token.CONST:
 				return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
+			case Token.LET:
+				if (this.isNextLetKeyword()) {
+					return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
+				}
+				break;
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorAfterNext()) {
 					this.consume(Token.ASYNC);
