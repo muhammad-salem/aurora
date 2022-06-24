@@ -49,7 +49,7 @@ import {
 	FunctionBodyType, FunctionInfo, FunctionKind,
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
-	isGeneratorFunction, isStrict, LanguageMode, ParseFunctionFlag,
+	isGeneratorFunction, isSloppy, isStrict, LanguageMode, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
@@ -413,7 +413,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseNonRestrictedIdentifier() {
 		const result = this.parseIdentifier();
-		if (this.isEvalOrArguments(result)) {
+		if (isStrict(this.languageMode) && this.isEvalOrArguments(result)) {
 			throw new SyntaxError(this.errorMessage('Strict Eval/Arguments '));
 		}
 		return result;
@@ -515,7 +515,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return new IfStatement(condition, thenStatement, elseStatement);
 	}
 	protected parseScopedStatement(): ExpressionNode {
-		if (this.peek().isNotType(Token.FUNCTION)) {
+		if (isStrict(this.languageMode) || this.peek().isNotType(Token.FUNCTION)) {
 			return this.parseStatement();
 		} else {
 			return this.parseFunctionDeclaration();
@@ -800,7 +800,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// where there is no initializer (and so no proxy needs to be created).
 			if (Token.isAnyIdentifier(this.peek().token)) {
 				name = this.parseAndClassifyIdentifier(this.next());
-				if (this.isEvalOrArguments(name)) {
+				if (isStrict(this.languageMode) && this.isEvalOrArguments(name)) {
 					throw new Error(this.errorMessage(`Strict Eval Arguments`));
 				}
 				// if (this.peekInOrOf()) {
@@ -834,7 +834,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const token = this.peek().token;
 		if (Token.isAnyIdentifier(token)) {
 			const name = this.parseAndClassifyIdentifier(this.next());
-			if (this.isEvalOrArguments(name)) {
+			if (isStrict(this.languageMode) && this.isEvalOrArguments(name)) {
 				throw new Error(this.errorMessage(`Strict Eval Arguments`));
 			}
 			return name;
@@ -948,7 +948,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
-			if (this.peek().isType(Token.FUNCTION) /*&& allow_function == kAllowLabelledFunctionStatement */) {
+			if (this.peek().isType(Token.FUNCTION) && isSloppy(this.languageMode)  /*&& allow_function == kAllowLabelledFunctionStatement */) {
 				const result = this.parseFunctionDeclaration();
 				this.restoreAcceptIN();
 				return result;
