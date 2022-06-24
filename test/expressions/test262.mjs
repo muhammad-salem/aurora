@@ -55,31 +55,31 @@ earlyExcludes = [];
 
 const errors = [];
 
-const rootTest = '../../node_modules/test262-parser-tests';
+const rootTest = './node_modules/test262-parser-tests';
 let x = 0;
 readdirSync(`${rootTest}/pass`)
-	// .filter(f => !passExcludes.includes(f))
+	.filter(f => !passExcludes.includes(f))
 	.forEach(f => {
 		// f = '402e8d30db64e5af.js';
 		console.log('parse `pass` file: ', f, ++x);
 		let firstTree, secondTree;
-		try {
-			doesNotThrow(() => {
-				firstTree = parse(
-					readFileSync(`${rootTest}/pass/${f}`, 'utf8'),
-					{ isModule: f.includes('.module.js'), earlyErrors: true }
-				);
-			});
-			doesNotThrow(() => {
-				secondTree = parse(
-					readFileSync(`${rootTest}/pass-explicit/${f}`, 'utf8'),
-					{ isModule: f.includes('.module.js'), earlyErrors: true }
-				);
-			});
-			deepStrictEqual(firstTree, secondTree);
-		} catch (error) {
-			errors.push(f);
-		}
+		// try {
+		doesNotThrow(() => {
+			firstTree = parse(
+				readFileSync(`${rootTest}/pass/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: true }
+			);
+		});
+		doesNotThrow(() => {
+			secondTree = parse(
+				readFileSync(`${rootTest}/pass-explicit/${f}`, 'utf8'),
+				{ isModule: f.includes('.module.js'), earlyErrors: true }
+			);
+		});
+		deepStrictEqual(firstTree, secondTree);
+		// } catch (error) {
+		// 	errors.push(f);
+		// }
 	});
 
 const errorString = errors.map(JSON.stringify).map(s => s.replace(/"/g, "'")).map((s, i) => i % 3 ? s + ',' : `${s},\n`).join('');
