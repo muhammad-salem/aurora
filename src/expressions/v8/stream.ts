@@ -7,7 +7,7 @@ import {
 	TrueNode, FalseNode, DefaultNode,
 	YieldIdentifier, ConstructorIdentifier,
 	ArgumentsIdentifier, NameIdentifier,
-	EvalIdentifier, SuperIdentifier
+	EvalIdentifier, SuperIdentifier, LetIdentifier
 } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
@@ -1226,7 +1226,7 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.LET);
+					this.current = this.newToken(Token.LET, LetIdentifier);
 					this.pos += 4;
 					return true;
 				}
