@@ -11,7 +11,6 @@ function parse(src, { isModule, earlyErrors }) {
 
 
 let passExcludes = [
-	'0f9f10c894a7d811.js',
 	'110fa1efdd0868b8.js', '1270d541e0fd6af8.js', '14199f22a45c7e30.js',
 	'17302b9b0cab0c69.module.js', '18cc9a6b7038070f.js', '1a7800a74a866638.js',
 	'1d3dd296a717e478.js', '29e41f46ede71f11.js', '2bd8ae9202baa31e.js',
@@ -77,7 +76,7 @@ readdirSync(`${rootTest}/pass`)
 		}
 	});
 
-const errorString = errors.map(JSON.stringify).map(s => s.replace(/"/g, "'")).map((s, i) => i % 3 ? s + ',' : `${s},\n`).join('');
+const errorString = errors.map(JSON.stringify).map(s => s.replace(/"/g, "'")).map((s, i) => ((i + 1) % 3) ? s + ',' : `${s},\n`).join('');
 console.log('pass errors', errors.length, `[\n${errorString}]`);
 
 x = 0;
