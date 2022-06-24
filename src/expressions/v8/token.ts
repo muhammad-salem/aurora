@@ -761,6 +761,13 @@ export class Token {
 		return Token.isStrictReservedWord(token) && isSloppy(mode);
 	}
 
+	public static precedence(token: Token, acceptIN: boolean) {
+		if (!acceptIN && Token.IN === token) {
+			return 0;
+		}
+		return token.getPrecedence();
+	}
+
 	constructor(private name: string, private precedence: number) { }
 	getName() {
 		return this.name;
