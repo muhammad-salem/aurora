@@ -56,10 +56,34 @@ import {
 import { DebuggerStatement } from '../api/computing/debugger.js';
 
 export abstract class AbstractParser {
-	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) { }
+
+	protected acceptIN: boolean;
+	protected previousAcceptIN: boolean[] = [];
+
+	protected functionState: boolean;
+	protected previousFunctionState: boolean[] = [];
+
+	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) {
+		this.previousAcceptIN.push(this.acceptIN = false);
+		this.previousFunctionState.push(this.functionState = false);
+	}
 	abstract scan(): ExpressionNode;
 	protected position() {
 		return this.scanner.getPos();
+	}
+	protected setAcceptIN(acceptIN: boolean) {
+		this.previousAcceptIN.push(this.acceptIN);
+		this.acceptIN = acceptIN;
+	}
+	protected restoreAcceptIN() {
+		this.acceptIN = this.previousAcceptIN.pop() ?? false;
+	}
+	protected setFunctionState(functionState: boolean) {
+		this.previousFunctionState.push(this.functionState);
+		this.functionState = functionState;
+	}
+	protected restoreFunctionState() {
+		this.functionState = this.previousFunctionState.pop() ?? false;
 	}
 	protected current() {
 		return this.scanner.currentToken();
