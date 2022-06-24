@@ -51,9 +51,12 @@ import {
 	isAsyncFunction, isAsyncGeneratorFunction,
 	isGeneratorFunction, isStrict, LanguageMode, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
-	PropertyPosition, SubFunctionKind
+	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
+
+
+export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean };
 
 export abstract class AbstractParser {
 
@@ -63,8 +66,8 @@ export abstract class AbstractParser {
 	protected functionState: boolean;
 	protected previousFunctionState: boolean[] = [];
 
-	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict) {
-		this.previousAcceptIN.push(this.acceptIN = false);
+	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict, acceptIN?: boolean) {
+		this.previousAcceptIN.push(this.acceptIN = acceptIN ?? false);
 		this.previousFunctionState.push(this.functionState = false);
 	}
 	abstract scan(): ExpressionNode;
@@ -276,15 +279,17 @@ export abstract class AbstractParser {
 }
 
 export class JavaScriptInlineParser extends AbstractParser {
-	static parse(source: string | TokenExpression[] | TokenStream, { mode } = { mode: LanguageMode.Strict }) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN }: InlineParserOptions = {}) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptInlineParser(stream, mode);
+		mode ??= LanguageMode.Strict;
+		acceptIN ??= false;
+		const parser = new JavaScriptInlineParser(stream, mode, acceptIN);
 		return parser.scan();
 	}
-	constructor(scanner: TokenStream, languageMode: LanguageMode = LanguageMode.Strict) {
-		super(scanner, languageMode);
+	constructor(scanner: TokenStream, languageMode: LanguageMode = LanguageMode.Strict, acceptIN?: boolean) {
+		super(scanner, languageMode, acceptIN);
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
@@ -349,7 +354,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
-				return this.parseVariableDeclarations();
+				return this.parseVariableDeclarations(VariableDeclarationContext.Statement);
 			case Token.ASYNC:
 				if (!this.scanner.hasLineTerminatorAfterNext() && this.peekAhead().isType(Token.FUNCTION)) {
 					throw new SyntaxError(this.errorMessage(`async function in single statement context.`));
@@ -453,7 +458,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
-				return this.parseVariableDeclarations();
+				return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorAfterNext()) {
 					this.consume(Token.ASYNC);
@@ -611,7 +616,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// this loop, as this information is used to simplify the desugaring
 			// if none are found.
 			// typename FunctionState::FunctionOrEvalRecordingScope recording_scope(function_state_);
-			const initializer = this.parseVariableDeclarations();
+			const initializer = this.parseVariableDeclarations(VariableDeclarationContext.ForStatement);
 
 			const forMode = this.checkInOrOf();
 			if (forMode) {
@@ -628,7 +633,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		let initializer: ExpressionNode;
 		if (peek.isType(Token.VAR)) {
-			initializer = this.parseVariableDeclarations();
+			initializer = this.parseVariableDeclarations(VariableDeclarationContext.ForStatement);
 			// ParseVariableDeclarations(kForStatement, & for_info.parsing_result,& for_info.bound_names);
 			// DCHECK_EQ(for_info.parsing_result.descriptor.mode, VariableMode:: kVar);
 			// for_info.position = scanner() -> location().beg_pos;
@@ -639,7 +644,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// init = impl() -> BuildInitializationBlock(& for_info.parsing_result);
 		} else if (this.peek().isNotType(Token.SEMICOLON)) {
 			// The initializer does not contain declarations.
+			this.setAcceptIN(false);
 			initializer = this.parseExpressionCoverGrammar();
+			this.restoreAcceptIN();
 			//   ExpressionParsingScope parsing_scope(impl());
 			//   AcceptINScope scope(this, false);
 			// `for (async of` is disallowed but `for (async.x of` is allowed, so
@@ -671,9 +678,14 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.parseForEachStatementWithoutDeclarations(initializer, forMode);
 	}
 	protected parseForEachStatementWithoutDeclarations(initializer: ExpressionNode, forMode: 'IN' | 'OF') {
-		const enumerable = forMode == 'OF'
-			? this.parseAssignmentExpression()
-			: this.parseExpression();
+		let enumerable: ExpressionNode;
+		if (forMode == 'OF') {
+			this.setAcceptIN(true);
+			enumerable = this.parseAssignmentExpression();
+			this.restoreAcceptIN();
+		} else {
+			enumerable = this.parseExpression();
+		}
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
 		if (forMode === 'OF') {
@@ -726,7 +738,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// 'for' 'await' '(' 'var' ForBinding 'of' AssignmentExpression ')'
 			//     Statement
 			hasDeclarations = true;
-			const initializer = this.parseVariableDeclarations();
+			const initializer = this.parseVariableDeclarations(VariableDeclarationContext.ForStatement);
 			if (initializer.getDeclarations().length != 1) {
 				throw new SyntaxError(this.errorMessage('For In/Of Loop MultiBindings, "for-await-of"'));
 			}
@@ -742,12 +754,14 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 
 		this.expectContextualKeyword('of');
+		this.setAcceptIN(true);
 		const iterable = this.parseAssignmentExpression();
+		this.restoreAcceptIN();
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
 		return new ForAwaitOfNode(eachVariable as ForDeclaration, iterable, body);
 	}
-	protected parseVariableDeclarations(): VariableDeclarationNode {
+	protected parseVariableDeclarations(varContext: VariableDeclarationContext): VariableDeclarationNode {
 		// VariableDeclarations ::
 		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
 		// var converted into ==> 'let' by parser
@@ -790,6 +804,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 
 			if (this.check(Token.ASSIGN)) {
+				this.setAcceptIN(varContext !== VariableDeclarationContext.ForStatement)
 				value = this.parseAssignmentExpression();
 			} else if (!this.peekInOrOf()) {
 				// ES6 'const' and binding patterns require initializers.
@@ -913,6 +928,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				break;
 		}
 		const startsWithIdentifier = Token.isAnyIdentifier(this.peek().token);
+		this.setAcceptIN(true);
 		const expression: ExpressionNode = this.parseExpressionCoverGrammar();
 		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.isIdentifier(expression)) {
 			// The whole expression was a single identifier, and not, e.g.,
@@ -925,16 +941,24 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.consume(Token.COLON);
 			// ES#sec-labelled-function-declarations Labelled Function Declarations
 			if (this.peek().isType(Token.FUNCTION) /*&& allow_function == kAllowLabelledFunctionStatement */) {
-				return this.parseFunctionDeclaration();
+				const result = this.parseFunctionDeclaration();
+				this.restoreAcceptIN();
+				return result;
 			}
-			return this.parseStatement();
+			const result = this.parseStatement();
+			this.restoreAcceptIN();
+			return result;
 		}
+		this.restoreAcceptIN();
 		// Parsed expression statement, followed by semicolon.
 		this.expectSemicolon();
 		return expression;
 	}
 	protected parseExpression(): ExpressionNode {
-		return this.parseExpressionCoverGrammar();
+		this.setAcceptIN(true);
+		const result = this.parseExpressionCoverGrammar();
+		this.restoreAcceptIN();
+		return result;
 	}
 	protected parseFunctionDeclaration(): ExpressionNode {
 		this.consume(Token.FUNCTION);
@@ -1055,7 +1079,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.RPAREN);
 		this.expect(Token.LBRACE);
+		this.setAcceptIN(true);
 		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
+		this.restoreAcceptIN();
 		const bodyBlock = new BlockStatement(body);
 		if (name) {
 			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name as Identifier);
@@ -1167,7 +1193,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (functionInfo.rest) {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
+			this.setAcceptIN(true);
 			const value = this.parseAssignmentExpression();
+			this.restoreAcceptIN();
 			initializer = new Param(pattern as DeclarationExpression, value);
 		} else {
 			initializer = new Param(pattern as DeclarationExpression);
@@ -1334,31 +1362,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// Heuristically try to detect immediately called functions before
 				// seeing the call parentheses.
 
+				this.setAcceptIN(true);
 				const expression = this.parseExpressionCoverGrammar();
 				this.expect(Token.RPAREN);
+				this.restoreAcceptIN();
 				return expression;
-				// const peekToken = this.peek();
-				// let expression: ExpressionNode;
-				// const info: FunctionInfo = {};
-				// if (peekToken.isType(Token.FUNCTION)) {
-				// 	this.consume(Token.FUNCTION);
-				// 	expression = this.parseFunctionLiteral(FunctionKind.NORMAL);
-				// } else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
-				// 	this.consume(Token.ASYNC);
-				// 	this.consume(Token.FUNCTION);
-				// 	expression = this.parseFunctionLiteral(FunctionKind.ASYNC);
-				// } else {
-				// }
-				// expression = this.parseExpressionCoverGrammar(info);
-				// this.expect(Token.RPAREN);
-				// if (this.peek().isType(Token.ARROW)) {
-				// 	if (expression instanceof SequenceExpression) {
-				// 		expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
-				// 	} else {
-				// 		expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
-				// 	}
-				// }
-				// return expression;
 			}
 			case Token.CLASS: {
 				return this.parseClassExpression();
@@ -1372,7 +1380,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseTemplateLiteral(tag?: ExpressionNode): ExpressionNode {
 		const template = this.next().getValue() as PreTemplateLiteral;
-		const exprs = template.expressions.map(expr => JavaScriptInlineParser.parse(expr));
+		const exprs = template.expressions.map(expr => JavaScriptInlineParser.parse(expr, { mode: this.languageMode, acceptIN: true }));
 
 		if (tag) {
 			return new TaggedTemplateExpression(tag, template.strings, exprs);
@@ -1440,13 +1448,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const args: ExpressionNode[] = [];
 		while (this.peek().isNotType(Token.RPAREN)) {
 			const isSpread = this.check(Token.ELLIPSIS);
+			this.setAcceptIN(true);
 			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
 			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
 				if (isSpread) {
 					if (argument instanceof AssignmentExpression) {
+						this.restoreAcceptIN();
 						throw new Error(this.errorMessage(` Rest parameter may not have a default initializer'`));
 					}
 					if (this.peek().isType(Token.COMMA)) {
+						this.restoreAcceptIN();
 						throw new Error(this.errorMessage(`parsing '...spread,arg =>'`));
 					}
 				}
@@ -1455,6 +1466,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				argument = new SpreadElement(argument);
 			}
 			args.push(argument);
+			this.restoreAcceptIN();
 			if (!this.check(Token.COMMA)) break;
 		}
 		if (!this.check(Token.RPAREN)) {
@@ -1548,7 +1560,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.consume(Token.ARROW);
 		if (this.peek().isType(Token.LBRACE)) {
 			this.consume(Token.LBRACE);
+			this.setAcceptIN(true);
 			body = this.parseFunctionBody(kind, FunctionBodyType.BLOCK, FunctionSyntaxKind.AnonymousExpression);
+			this.restoreAcceptIN();
 		} else {
 			has_braces = false;
 			body = this.parseFunctionBody(kind, FunctionBodyType.EXPRESSION, FunctionSyntaxKind.AnonymousExpression);
@@ -1575,7 +1589,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (this.peek().isType(Token.COMMA)) {
 				elem = null;
 			} else if (this.check(Token.ELLIPSIS)) {
+				this.setAcceptIN(true);
 				const argument = this.parsePossibleDestructuringSubPattern();
+				this.restoreAcceptIN();
 				elem = new SpreadElement(argument);
 				if (first_spread_index < 0) {
 					first_spread_index = values.length;
@@ -1587,7 +1603,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 					throw new SyntaxError(this.errorMessage('Element After Rest'));
 				}
 			} else {
+				this.setAcceptIN(true);
 				elem = this.parsePossibleDestructuringSubPattern();
+				this.restoreAcceptIN();
 			}
 			values.push(elem);
 			if (this.peek().isNotType(Token.RBRACK)) {
@@ -1638,7 +1656,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			case PropertyKind.Value: {
 				this.consume(Token.COLON);
+				this.setAcceptIN(true);
 				const value = this.parsePossibleDestructuringSubPattern();
+				this.restoreAcceptIN();
 				return new Property(
 					nameExpression,
 					value,
@@ -1666,7 +1686,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 				let value: ExpressionNode;
 				if (this.peek().isType(Token.ASSIGN)) {
 					this.consume(Token.ASSIGN);
+					this.setAcceptIN(true);
 					const rhs = this.parseAssignmentExpression();
+					this.restoreAcceptIN();
 					value = new AssignmentExpression(Token.ASSIGN.getName() as AssignmentOperator, lhs, rhs);
 				} else {
 					value = lhs;
@@ -1785,16 +1807,19 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.LBRACK:
 				// [Symbol.iterator]
 				this.consume(Token.LBRACK);
+				this.setAcceptIN(true);
 				propertyName = this.parseAssignmentExpression();
 				this.expect(Token.RBRACK);
 				if (propInfo.kind === PropertyKind.NotSet) {
 					propInfo.parsePropertyKindFromToken(this.peek().token);
 				}
 				propInfo.name = propertyName.toString();
+				this.restoreAcceptIN();
 				return propertyName;
 			case Token.ELLIPSIS:
 				if (propInfo.kind == PropertyKind.NotSet) {
 					this.consume(Token.ELLIPSIS);
+					this.setAcceptIN(true);
 					propertyName = this.parsePossibleDestructuringSubPattern();
 					propInfo.kind = PropertyKind.Spread;
 
@@ -1805,6 +1830,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 						throw new Error(this.errorMessage('Element After Rest'));
 					}
 					propInfo.name = propertyName.toString();
+					this.restoreAcceptIN();
 					return propertyName;
 				}
 			default:
@@ -1831,9 +1857,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			switch (this.peek().token) {
 				case Token.LBRACK: {
 					this.consume(Token.LBRACK);
+					this.setAcceptIN(true);
 					const index = this.parseExpressionCoverGrammar();
 					expression = new MemberExpression(expression, index, true);
 					this.expect(Token.RBRACK);
+					this.restoreAcceptIN();
 					break;
 				}
 				case Token.PERIOD: {
@@ -2165,7 +2193,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 				/* Property */
 				case Token.LBRACK: {
 					this.consume(Token.LBRACK);
+					this.setAcceptIN(true);
 					const index = this.parseExpressionCoverGrammar();
+					this.restoreAcceptIN();
 					result = new MemberExpression(result, index, true, isOptional);
 					this.expect(Token.RBRACK);
 					break;
@@ -2265,7 +2295,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseConditionalContinuation(expression: ExpressionNode): ExpressionNode {
 		this.consume(Token.CONDITIONAL);
+		this.setAcceptIN(true);
 		const left: ExpressionNode = this.parseAssignmentExpression();
+		this.restoreAcceptIN();
 		this.expect(Token.COLON);
 		const right = this.parseAssignmentExpression();
 		return new ConditionalExpression(expression, left, right);

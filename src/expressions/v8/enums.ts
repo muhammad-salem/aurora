@@ -454,3 +454,9 @@ export function isStrict(mode: LanguageMode) {
 export function getLanguageMode(isModule: boolean) {
 	return !!isModule ? LanguageMode.Strict : LanguageMode.Sloppy;
 }
+
+export enum VariableDeclarationContext {
+	StatementListItem,
+	Statement,
+	ForStatement
+};

@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { JavaScriptInlineParser } from './inline.js';
+import { InlineParserOptions, JavaScriptInlineParser } from './inline.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty,
@@ -50,10 +50,12 @@ import {
 	ParseFunctionFlag,
 	PropertyKind,
 	PropertyKindInfo,
-	PropertyPosition
+	PropertyPosition,
+	VariableDeclarationContext
 } from './enums.js';
 
 
+export type ParserOptions = { mode?: LanguageMode };
 
 export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
@@ -61,18 +63,19 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream, { mode } = { mode: LanguageMode.Strict }) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}) {
 		const stream = (typeof source === 'string' || Array.isArray(source))
 			? TokenStream.getTokenStream(source)
 			: source;
-		const parser = new JavaScriptParser(stream, mode);
+		mode ??= LanguageMode.Strict;
+		const parser = new JavaScriptParser(stream, mode, false);
 		return isStrict(mode) ? parser.doParseProgram() : parser.doParseScript();
 	}
 
 	/**
 	 * parse inline code like that used in html 2 or 1 way binding
 	 */
-	static parseScript(source: string | TokenExpression[] | TokenStream, options = { mode: LanguageMode.Strict }) {
+	static parseScript(source: string | TokenExpression[] | TokenStream, options?: InlineParserOptions) {
 		return JavaScriptInlineParser.parse(source, options);
 	}
 
@@ -413,7 +416,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// Each static block has its own var and lexical scope, so make a new var
 		// block scope instead of using the synthetic members initializer function
 		// scope.
+		this.setAcceptIN(true);
 		const block = this.parseBlock();
+		this.restoreAcceptIN();
 		classInfo.hasStaticElements = true;
 		return new StaticBlock(block.getBody());
 	}
@@ -444,7 +449,12 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
 	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode | undefined {
-		const initializer = this.check(Token.ASSIGN) ? this.parseAssignmentExpression() : undefined;
+		let initializer: ExpressionNode | undefined = undefined;
+		if (this.check(Token.ASSIGN)) {
+			this.setAcceptIN(true);
+			initializer = this.parseAssignmentExpression();
+			this.restoreAcceptIN();
+		}
 		if (isStatic) {
 			classInfo.hasStaticElements = true;
 		} else {
@@ -631,7 +641,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case Token.VAR:
 			case Token.LET:
 			case Token.CONST:
-				result = this.parseVariableStatement(names);
+				result = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
 				break;
 
 			case Token.ASYNC:
@@ -762,6 +772,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (this.peek().isType(Token.RPAREN)) {
 			throw new SyntaxError(this.errorMessage('Import Missing Specifier'));
 		}
+		this.setAcceptIN(true);
 		const specifier = this.parseAssignmentExpressionCoverGrammar();
 
 		if (this.check(Token.COMMA)) {
@@ -778,9 +789,10 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		}
 
 		this.expect(Token.RPAREN);
+		this.restoreAcceptIN();
 		return new ImportExpression(specifier as Literal<string>);
 	}
-	protected parseVariableStatement(names: string[]): ExpressionNode | undefined {
+	protected parseVariableStatement(varContext: VariableDeclarationContext, names: string[]): ExpressionNode | undefined {
 		// VariableStatement ::
 		//   VariableDeclarations ';'
 
@@ -795,7 +807,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// behavior for code such as print(eval('var x = 7')), and for cosmetic
 		// reasons when pretty-printing. Also, unless an assignment (initialization)
 		// is inside an initializer block, it is ignored.
-		const declarations = this.parseVariableDeclarations();
+		const declarations = this.parseVariableDeclarations(varContext);
 		this.expectSemicolon();
 		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
 		return declarations;
@@ -992,8 +1004,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			default: {
 				// int pos = position();
 				// AcceptINScope scope(this, true);
+				this.setAcceptIN(true);
 				result = this.parseAssignmentExpression();
-
 				// SetFunctionName(value, ast_value_factory() -> default_string());
 
 				// const AstRawString* local_name = ast_value_factory() -> dot_default_string();
@@ -1008,6 +1020,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				// result = IgnoreCompletion( factory() -> NewExpressionStatement(assignment, kNoSourcePosition));
 
 				this.expectSemicolon();
+				this.restoreAcceptIN();
 				break;
 			}
 		}
