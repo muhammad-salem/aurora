@@ -69,7 +69,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			: source;
 		mode ??= LanguageMode.Strict;
 		const parser = new JavaScriptParser(stream, mode, false);
-		return isStrict(mode) ? parser.doParseProgram() : parser.doParseScript();
+		return parser.scan();
 	}
 
 	/**
@@ -79,14 +79,10 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		return JavaScriptInlineParser.parse(source, options);
 	}
 
-	protected doParseScript(): Program {
-		const body = this.parseStatementList(Token.EOS);
-		return new Program('script', body);
-	}
-	protected doParseProgram(): Program {
-		const body: ExpressionNode[] = [];
-		this.parseModuleItemList(body);
-		return new Program('module', body);
+	override scan(): ExpressionNode {
+		const isModule = isStrict(this.languageMode);
+		const body = isModule ? this.parseModuleItemList() : this.parseStatementList(Token.EOS);
+		return new Program(isModule ? 'module' : 'script', body);
 	}
 	protected override parseNewTargetExpression(): ExpressionNode {
 		this.consume(Token.PERIOD);
@@ -494,7 +490,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		body.push(...classInfo.privateMembers);
 		return new ClassBody(body);
 	}
-	protected parseModuleItemList(body: ExpressionNode[]) {
+	protected parseModuleItemList(): ExpressionNode[] {
 		// ecma262/#prod-Module
 		// Module :
 		//    ModuleBody?
@@ -502,16 +498,18 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// ecma262/#prod-ModuleItemList
 		// ModuleBody :
 		//    ModuleItem*
+		const body: ExpressionNode[] = [];
 		while (this.peek().isNotType(Token.EOS)) {
 			const stat = this.parseModuleItem();
 			if (!stat) {
-				return;
+				break;
 			}
 			if (this.isEmptyStatement(stat)) {
 				continue;
 			}
 			body.push(stat);
 		}
+		return body;
 	}
 	protected parseModuleItem(): ExpressionNode | undefined {
 		// ecma262/#prod-ModuleItem
