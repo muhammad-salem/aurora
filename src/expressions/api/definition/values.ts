@@ -286,3 +286,4 @@ export const NameIdentifier = Object.freeze(new Identifier('name')) as Identifie
 export const EvalIdentifier = Object.freeze(new Identifier('eval')) as Identifier;
 export const ArgumentsIdentifier = Object.freeze(new Identifier('arguments')) as Identifier;
 export const YieldIdentifier = Object.freeze(new Identifier('yield')) as Identifier;
+export const SuperIdentifier = Object.freeze(new Identifier('super')) as Identifier;

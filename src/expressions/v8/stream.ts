@@ -7,7 +7,7 @@ import {
 	TrueNode, FalseNode, DefaultNode,
 	YieldIdentifier, ConstructorIdentifier,
 	ArgumentsIdentifier, NameIdentifier,
-	EvalIdentifier
+	EvalIdentifier, SuperIdentifier
 } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
@@ -1239,7 +1239,7 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.SUPER);
+					this.current = this.newToken(Token.SUPER, SuperIdentifier);
 					this.pos += 5;
 					return true;
 				}
