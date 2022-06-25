@@ -1838,7 +1838,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					}
 					propInfo.name = propertyName.toString();
 					this.restoreAcceptIN();
-					return propertyName;
+					return new SpreadElement(propertyName);
 				}
 			default:
 				propertyName = this.parsePropertyOrPrivatePropertyName();
@@ -1877,12 +1877,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 					expression = new MemberExpression(expression, key, false);
 					break;
 				}
+				default:
 				case Token.TEMPLATE_LITERALS: {
 					expression = this.parseTemplateLiteral(expression);
 					break;
 				}
-				default:
-					break;
 			}
 		} while (Token.isMember(this.peek().token));
 		return expression;
