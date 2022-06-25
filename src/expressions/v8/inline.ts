@@ -1505,7 +1505,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		let expression: ExpressionNode = this.parseConditionalExpression();
 		const op = this.peek().token;
-		if (!Token.isArrowOrAssignmentOp(op)) return expression;
+		if (!Token.isArrowOrAssignmentOp(op)) {
+			this.clearParenthesized(expression);
+			return expression;
+		};
 		// Arrow functions.
 		if (op === Token.ARROW) {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
@@ -1514,9 +1517,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
 				return this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
-			}
-			if (expression instanceof GroupingExpression) {
+			} else if (expression instanceof GroupingExpression) {
 				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
+			} else {
+				this.clearParenthesized(expression);
 			}
 			return this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction);
 		}
