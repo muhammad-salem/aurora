@@ -235,7 +235,7 @@ export class TokenStreamImpl extends TokenStream {
 	static REGEXP_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
 	static UnicodePattern = /^[0-9a-f]{4}$/i;
 	static DecimalPattern = /^[0-9a-f]{2}$/i;
-	static AsciiPattern = /^[0-7]{3}$/i;
+	static AsciiPattern = /^[0-7]{1,3}$/i;
 	static OctalPattern = /^[0-7]+$/i;
 
 	constructor(private expression: string) {
@@ -657,12 +657,20 @@ export class TokenStreamImpl extends TokenStream {
 				}
 				default:
 					if (!Number.isNaN(parseInt(c, 8))) {
-						let codePoint = v.substring(index, index + 3);
+						let codePoint = c;
+						for (const i of [1, 2]) {
+							const tempChar = v.charAt(index + i);
+							if (!Number.isNaN(parseInt(tempChar, 8))) {
+								codePoint += tempChar;
+							} else {
+								break;
+							}
+						}
 						if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
 							throw new Error(this.createError('Illegal escape sequence: ASCII 8 base, ' + codePoint));
 						}
 						buffer += String.fromCharCode(parseInt(codePoint, 8));
-						index += 3;
+						index += codePoint.length;
 						break;
 					}
 					throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
@@ -1325,7 +1333,7 @@ export class TokenStreamImpl extends TokenStream {
 		const errorIndictor = indictor.join('');
 		return `
 			> ${message}
-			> token name: '${this.current?.token?.getName()}' ${this.current.value ? `parsed: ${this.current.value.toString()}` : ''}
+			> token name: '${this.current?.token?.getName()}' ${this.current?.value ? `parsed: ${this.current.value.toString()}` : ''}
 			> ${coords.line}:${coords.column}\t${errorAt}
 			> ${coords.line}:${coords.column}\t${errorIndictor}
 			`;
