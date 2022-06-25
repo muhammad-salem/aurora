@@ -2135,7 +2135,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const expression = this.parseUnaryExpression();
 		if (Token.isUnary(op.token)) {
 			if (op.isType(Token.DELETE)) {
-				if (this.isIdentifier(expression)) {
+				if (this.isIdentifier(expression) && isStrict(this.languageMode)) {
 					// "delete identifier" is a syntax error in strict mode.
 					throw new Error(this.errorMessage(`"delete identifier" is a syntax error in strict mode`));
 				}
