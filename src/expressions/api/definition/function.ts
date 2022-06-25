@@ -350,6 +350,11 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 		id: Identifier) {
 		super(params, body, async, generator, id);
 	}
+	override get(stack: Stack): Function {
+		const func = super.get(stack);
+		this.declareVariable(stack, func);
+		return func;
+	}
 	declareVariable(stack: Stack, value: Function) {
 		this.id.declareVariable(stack, value);
 	}
