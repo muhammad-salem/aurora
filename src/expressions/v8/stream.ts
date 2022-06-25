@@ -571,6 +571,9 @@ export class TokenStreamImpl extends TokenStream {
 		this.pos = endPos == -1 ? this.expression.length : endPos + closeTag.length;
 		return true;
 	}
+	private isLineTerminator(c: string) {
+		return /[\n\r\u2028\u2029]/.test(c);
+	}
 	public scanRegExpPattern() {
 		const peek = this.peek();
 		if (peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN)) {
@@ -580,13 +583,13 @@ export class TokenStreamImpl extends TokenStream {
 			let inCharacterClass = false;
 			let c = this.expression.charAt(currentPos);
 			while (c !== '/' || inCharacterClass) {
-				if (c == '' || /\s/.test(c)) {
+				if (c == '' || this.isLineTerminator(c)) {
 					return false;
 				}
 				if (c === '\\') {  // Escape sequence.
 					pattern += c;
 					c = this.expression.charAt(++currentPos);
-					if (c == '' || /\s/.test(c)) {
+					if (c == '' || this.isLineTerminator(c)) {
 						return false;
 					}
 					pattern += c;
