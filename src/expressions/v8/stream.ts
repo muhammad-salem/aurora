@@ -504,26 +504,70 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return result;
 	}
+	/**
+	 * [JavaScript 5 Comment Types](https://developer.adobe.com/experience-manager/reference-materials/6-5/javadoc/org/mozilla/javascript/ast/Comment.html)
+	 * @returns boolean
+	 */
 	private isComment() {
 		const char = this.expression.charAt(this.pos);
 		const nextChar = this.expression.charAt(this.pos + 1);
 		let closeTag: string;
+		let endPos: number;
 		switch (true) {
+			// // line comments
 			case (char === '/' && nextChar === '/'):
 				closeTag = '\n';
+				endPos = this.expression.indexOf(closeTag, this.pos)
 				break;
+			// /* block comments *\/ and /** jsdoc comments *\/
 			case (char === '/' && nextChar === '*'):
 				closeTag = '*/';
+				endPos = this.expression.indexOf(closeTag, this.pos);
 				break;
+			// <!-- html-open line comments
 			case (char === '<' && nextChar === '!'):
 				if ('<!--' === this.expression.substring(this.pos, this.pos + 4)) {
-					closeTag = '-->';
+					const nextLinePos = this.expression.indexOf('\n', this.pos);
+					const closePos = this.expression.indexOf('-->', this.pos);
+					if (nextLinePos < closePos) {
+						closeTag = '\n';
+						endPos = nextLinePos;
+					} else if (closePos < nextLinePos) {
+						closeTag = '-->';
+						endPos = closePos;
+					} else {
+						closeTag = '';
+						endPos = -1;
+					}
+					break;
+				}
+			// ^\\s*--> html-close line comments
+			case (char === '-' && nextChar === '-'):
+				if ('-->' === this.expression.substring(this.pos, this.pos + 3)) {
+					// check if '-->' is the first non-whitespace on the line
+					let indexOfLastLine = this.expression.lastIndexOf('\n', this.pos + 1);
+					if (indexOfLastLine == -1) {
+						indexOfLastLine = 0;
+					}
+					let lastLine = this.expression.substring(indexOfLastLine, this.pos + 3);
+					if (!/^\s*-->$/g.test(lastLine)) {
+						// test with close of block comments
+						let lastBlockCommentPos = lastLine.lastIndexOf('*/');
+						if (lastBlockCommentPos == -1) {
+							return false;
+						}
+						lastLine = lastLine.substring(lastBlockCommentPos + 2);
+						if (!/^\s*-->$/g.test(lastLine)) {
+							return false;
+						}
+					}
+					endPos = this.expression.indexOf('\n', this.pos)
+					closeTag = '\n';
 					break;
 				}
 			default:
 				return false;
 		}
-		const endPos = this.expression.indexOf(closeTag, this.pos);
 		this.pos = endPos == -1 ? this.expression.length : endPos + closeTag.length;
 		return true;
 	}
