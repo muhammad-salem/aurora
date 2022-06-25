@@ -10,20 +10,14 @@ function parse(src, { isModule, earlyErrors }) {
 
 
 let passExcludes = [
-	'29e41f46ede71f11.js', '2aa1db78027ba395.js', '31ad88cae27258b7.js',
-	'4789c3375f112cd4.js', '4f5419fe648c691b.js', '569a2c1bad3beeb2.js',
-	'56fd564979894636.js', '598a5cedba92154d.js', '5a2a8e992fa4fe37.js',
-	'5b39aca97d9006f4.js', '5beffd72ddb47f13.js', '5d5b9de6d9b95f3e.js',
-	'6196b3f969486455.js', '714be6d28082eaa7.js', '77db52b103913973.js',
-	'8ec6a55806087669.js', '9027dae72a91a9ed.js', '925443c6cf79aa88.js',
-	'946bee37652a31fa.js', '96941f16c2d7cec4.js', '9aa93e1e417ce8e3.js',
-	'9ec644dbf797e95c.js', '9f0d8eb6f7ab8180.js', '9fe1d41db318afba.js',
-	'ad06370e34811a6a.js', 'affd557fd820e1f2.js', 'afffb6d317e53b92.js',
-	'b376d3924d77aa8a.js', 'ba00173ff473e7da.js', 'c412905e229d6f2b.js',
-	'c532e126a986c1d4.js', 'c83a2dcf75fa419a.js', 'c8b9a4d186ec2eb8.js',
-	'ce0aaec02d5d4465.js', 'dc3afa2f13259ae0.js', 'dec1ae80150e1664.js',
-	'e03ae54743348d7d.js', 'e08e181172bad2b1.js', 'e5570b178254bfb9.js',
-	'eed97872dd924560.js',
+	'29e41f46ede71f11.js', '31ad88cae27258b7.js', '569a2c1bad3beeb2.js',
+	'56fd564979894636.js', '5b39aca97d9006f4.js', '5beffd72ddb47f13.js',
+	'6196b3f969486455.js', '77db52b103913973.js', '925443c6cf79aa88.js',
+	'9aa93e1e417ce8e3.js', '9ec644dbf797e95c.js', '9fe1d41db318afba.js',
+	'affd557fd820e1f2.js', 'afffb6d317e53b92.js', 'b376d3924d77aa8a.js',
+	'c83a2dcf75fa419a.js', 'c8b9a4d186ec2eb8.js', 'ce0aaec02d5d4465.js',
+	'dc3afa2f13259ae0.js', 'dec1ae80150e1664.js', 'e08e181172bad2b1.js',
+	'e5570b178254bfb9.js', 'eed97872dd924560.js',
 ];
 
 let failExcludes = [];
@@ -37,7 +31,7 @@ let x = 0;
 readdirSync(`${rootTest}/pass`)
 	// .filter(f => passExcludes.includes(f))
 	.forEach(f => {
-		// f = 'fa736f4b0cf19c0c.js';
+		// f = '31ad88cae27258b7.js';
 		console.log('parse `pass` file: ', f, ++x);
 		let firstTree, secondTree;
 		try {
@@ -53,13 +47,14 @@ readdirSync(`${rootTest}/pass`)
 					{ isModule: f.includes('.module.js'), earlyErrors: true }
 				);
 			});
-			const firstAST = JSON.stringify(firstTree);
-			const secondAST = JSON.stringify(secondTree);
-			console.log('firstTree', firstTree.toString(), firstAST);
-			console.log('secondTree', secondTree.toString(), secondAST);
+			// const firstAST = JSON.stringify(firstTree);
+			// const secondAST = JSON.stringify(secondTree);
+			// console.log('firstTree', firstTree.toString(), firstAST);
+			// console.log('secondTree', secondTree.toString(), secondAST);
 			// deepStrictEqual(firstAST, secondAST);
 		} catch (error) {
-			console.error('error', f, error);
+			// console.error('error', f, error);
+			console.error('error', f, readFileSync(`${rootTest}/pass/${f}`, 'utf8'), readFileSync(`${rootTest}/pass-explicit/${f}`, 'utf8'));
 			errors.push(f);
 			// throw error;
 		}
