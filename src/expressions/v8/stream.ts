@@ -572,24 +572,34 @@ export class TokenStreamImpl extends TokenStream {
 		return true;
 	}
 	public scanRegExpPattern() {
-		const peek = this.peek()
+		const peek = this.peek();
 		if (peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN)) {
 			this.next();
 			let pattern = peek.isType(Token.DIV_ASSIGN) ? '=' : '';
-
-			let start = this.pos;
 			let currentPos = this.pos;
-			currentPos = this.expression.indexOf('/', currentPos + 1);
-			while (currentPos !== -1 && this.expression.charAt(currentPos - 1) === '\\') {
-				pattern += this.expression.substring(start, currentPos - 1);
-				start = currentPos;
-				currentPos = this.expression.indexOf('/', currentPos + 1);
+			let inCharacterClass = false;
+			let c = this.expression.charAt(currentPos);
+			while (c !== '/' || inCharacterClass) {
+				if (c == '' || /\s/.test(c)) {
+					return false;
+				}
+				if (c === '\\') {  // Escape sequence.
+					pattern += c;
+					c = this.expression.charAt(++currentPos);
+					if (c == '' || /\s/.test(c)) {
+						return false;
+					}
+					pattern += c;
+					c = this.expression.charAt(++currentPos);
+				} else {
+					if (c == '[') inCharacterClass = true;
+					if (c == ']') inCharacterClass = false;
+					pattern += c;
+					c = this.expression.charAt(++currentPos);
+				}
 			}
-			if (currentPos === -1) {
-				return false;
-			}
-			pattern += this.expression.substring(start, currentPos);
-			currentPos++;
+			currentPos++;   // consume '/'
+
 			let flags = '';
 			const remainFlags = TokenStreamImpl.REGEXP_FLAGS.slice();
 			while (true) {
