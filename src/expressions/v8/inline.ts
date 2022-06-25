@@ -817,6 +817,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (this.check(Token.ASSIGN)) {
 				this.setAcceptIN(varContext !== VariableDeclarationContext.ForStatement)
 				value = this.parseAssignmentExpression();
+				this.restoreAcceptIN();
 			} else if (!this.peekInOrOf()) {
 				// ES6 'const' and binding patterns require initializers.
 				if (mode === 'const' && (name === undefined || value === undefined)) {
