@@ -1525,26 +1525,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction);
 		}
 		if (this.isAssignableIdentifier(expression)) {
-			if (this.isParenthesized(expression)) {
-				throw new Error(this.errorMessage(`Invalid Destructuring Target`));
-			}
 		} else if (this.isProperty(expression)) {
-			// throw new Error(this.errorMessage(`Invalid Property Binding Pattern`));
 		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
-			if (this.isParenthesized(expression)) {
-				// Scanner.Location loc(lhs_beg_pos, end_position());
-				// if (expression_scope() -> IsCertainlyDeclaration()) {
-				// 	impl() -> ReportMessageAt(loc,
-				// 		MessageTemplate.kInvalidDestructuringTarget);
-				// } else {
-				// 	// Syntax Error if LHS is neither object literal nor an array literal
-				// 	// (Parenthesized literals are
-				// 	// CoverParenthesizedExpressionAndArrowParameterList).
-				// 	// #sec-assignment-operators-static-semantics-early-errors
-				// 	impl() -> ReportMessageAt(loc, MessageTemplate.kInvalidLhsInAssignment);
-				// }
-			}
 			expression = expression instanceof ObjectExpression
 				? new ObjectPattern(expression.getProperties())
 				: new ArrayPattern(expression.getElements() as DeclarationExpression[]);
