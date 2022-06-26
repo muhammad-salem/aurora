@@ -409,7 +409,21 @@ export class Token {
 	public static readonly BIGINT = new Token('BIGINT', 0);
 	public static readonly STRING = new Token('STRING', 0);
 	public static readonly IDENTIFIER = new Token('IDENTIFIER', 0);
-	public static readonly TEMPLATE_LITERALS = new Token('TEMPLATE_LITERALS', 0);
+	/**
+	 * TEMPLATE_SPAN ::
+	 * 
+	 * 		` LiteralChars* ${
+	 * 		| } LiteralChars* ${
+	 */
+	public static readonly TEMPLATE_SPAN = new Token('TEMPLATE_SPAN', 0);
+
+	/**
+	 * TEMPLATE_TAIL ::
+	 * 
+	 * 		` LiteralChars* `
+	 * 		| } LiteralChar* `
+	 */
+	public static readonly TEMPLATE_TAIL = new Token('TEMPLATE_TAIL', 0);
 	public static readonly ILLEGAL = new Token('ILLEGAL', 0);
 	public static readonly ESCAPED_KEYWORD = new Token('ESCAPED_KEYWORD', 0);
 	public static readonly WHITESPACE = new Token('WHITESPACE', 0);
@@ -556,7 +570,8 @@ export class Token {
 	}
 	public static isMember(token: Token): boolean {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 			case Token.PERIOD:
 			case Token.LBRACK:
 				return true;
@@ -565,7 +580,8 @@ export class Token {
 	}
 	public static isTemplate(token: Token): boolean {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 				return true;
 		}
 		return false;
@@ -595,7 +611,8 @@ export class Token {
 	}
 	public static isPropertyOrCall(token: Token) {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 			case Token.PERIOD:
 			case Token.LBRACK:
 			case Token.QUESTION_PERIOD:
