@@ -367,9 +367,10 @@ export class TokenStreamImpl extends TokenStream {
 						if (c0 == '\n') advance();
 						lastChar = '\n';
 					}
+					addLiteralChar(lastChar);
 				} else {
 					const char = this.scanEscape();
-					if (char == false) {
+					if (char === false) {
 						throw new SyntaxError(this.createError('Unterminated Template Escape char'));
 					}
 					addLiteralChar(char);
@@ -415,16 +416,18 @@ export class TokenStreamImpl extends TokenStream {
 			case 'r': c = '\r'; break;
 			case 't': c = '\t'; break;
 			case 'u': {
+				this.pos++;
 				c = this.scanUnicodeEscape();
-				if (this.isInvalid(c)) return false;
+				if (c === false) return false;
 				break;
 			}
 			case 'v':
 				c = '\v';
 				break;
 			case 'x': {
+				this.pos++;
 				c = this.scanHexNumber(2);
-				if (this.isInvalid(c)) return false;
+				if (c === false) return false;
 				break;
 			}
 			case '0':
@@ -456,7 +459,7 @@ export class TokenStreamImpl extends TokenStream {
 			const codePoint = this.expression.substring(this.pos, end);
 			try {
 				c0 = String.fromCodePoint(parseInt(codePoint, 16));
-				this.pos = end + 1;
+				this.pos = end;
 				return c0;
 			} catch (error) {
 				return false;
@@ -466,12 +469,13 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	private scanHexNumber(length: number): string | false {
 		const codePoint = this.expression.substring(this.pos, this.pos + length);
-		if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
+		try {
+			const char = String.fromCodePoint(parseInt(codePoint, 16));
+			this.pos += length - 1;
+			return char;
+		} catch (error) {
 			return false;
 		}
-		const char = String.fromCodePoint(parseInt(codePoint, 16));
-		this.pos += length;
-		return char;
 	}
 	private scanOctalEscape(c: string, length: number): string | false {
 		let codePoint = c;
@@ -489,18 +493,11 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		try {
 			const char = String.fromCharCode(parseInt(codePoint, 8));
-			this.pos += length;
+			this.pos += lenIndexes.length;
 			return char;
 		} catch (error) {
 			return false;
 		}
-	}
-	private isInvalid(c: string | false): boolean {
-		if (c == false) {
-			return false;
-		}
-		const int = parseInt(c, 16);
-		return int < 0 || int > 0x10ffff;
 	}
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
