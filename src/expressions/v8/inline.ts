@@ -1,6 +1,6 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import { PreTemplateLiteral, TokenStream } from './stream.js';
+import { TemplateStringLiteral, TokenStream } from './stream.js';
 import {
 	OfNode, Identifier, ThisNode,
 	GetIdentifier, SetIdentifier, AsyncIdentifier,
@@ -1391,7 +1391,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.CLASS: {
 				return this.parseClassExpression();
 			}
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 				return this.parseTemplateLiteral();
 			default:
 				break;
@@ -1399,13 +1400,61 @@ export class JavaScriptInlineParser extends AbstractParser {
 		throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(this.next())}`));
 	}
 	protected parseTemplateLiteral(tag?: ExpressionNode): ExpressionNode {
-		const template = this.next().getValue() as PreTemplateLiteral;
-		const exprs = template.expressions.map(expr => JavaScriptInlineParser.parse(expr, { mode: this.languageMode, acceptIN: true }));
-
+		// A TemplateLiteral is made up of 0 or more TEMPLATE_SPAN tokens (literal
+		// text followed by a substitution expression), finalized by a single
+		// TEMPLATE_TAIL.
+		//
+		// In terms of draft language, TEMPLATE_SPAN may be either the TemplateHead or
+		// TemplateMiddle productions, while TEMPLATE_TAIL is either TemplateTail, or
+		// NoSubstitutionTemplate.
+		//
+		// When parsing a TemplateLiteral, we must have scanned either an initial
+		// TEMPLATE_SPAN, or a TEMPLATE_TAIL.
+		let next = this.peek();
+		if (!Token.isTemplate(next.token)) {
+			throw new SyntaxError(this.errorMessage(`Unexpected Token: ${JSON.stringify(this.next())}`));
+		}
+		// If we reach a TEMPLATE_TAIL first, we are parsing a NoSubstitutionTemplate.
+		// In this case we may simply consume the token and build a template with a
+		// single TEMPLATE_SPAN and no expressions.
+		if (next.isType(Token.TEMPLATE_TAIL)) {
+			this.consume(Token.TEMPLATE_TAIL);
+			const string = next.getValue<TemplateStringLiteral>().string;
+			return this.createTemplateLiteralExpressionNode([string], [], tag);
+		}
+		this.consume(Token.TEMPLATE_SPAN);
+		const expressions: ExpressionNode[] = [];
+		const strings: string[] = [];
+		strings.push(next.getValue<TemplateStringLiteral>().string);
+		// If we open with a TEMPLATE_SPAN, we must scan the subsequent expression,
+		// and repeat if the following token is a TEMPLATE_SPAN as well (in this
+		// case, representing a TemplateMiddle).
+		do {
+			this.setAcceptIN(true);
+			const expression = this.parseExpressionCoverGrammar();
+			expressions.push(expression);
+			next = this.next();
+			if (next.isNotType(Token.RBRACE)) {
+				this.restoreAcceptIN();
+				throw new SyntaxError(this.errorMessage('Unterminated Template Expr'));
+			}
+			// If we didn't die parsing that expression, our next token should be a
+			// TEMPLATE_SPAN or TEMPLATE_TAIL.
+			next = this.scanner.scanTemplateContinuation();
+			strings.push(next.getValue<TemplateStringLiteral>().string);
+			this.restoreAcceptIN();
+		} while (next.isType(Token.TEMPLATE_SPAN));
+		if (next.isNotType(Token.TEMPLATE_TAIL)) {
+			throw new SyntaxError(this.errorMessage(`Unexpected Token: ${JSON.stringify(next)}`));
+		}
+		// Once we've reached a TEMPLATE_TAIL, we can close the TemplateLiteral.
+		return this.createTemplateLiteralExpressionNode(strings, expressions, tag);
+	}
+	protected createTemplateLiteralExpressionNode(strings: string[], expressions: ExpressionNode[], tag?: ExpressionNode): TaggedTemplateExpression | TemplateLiteral {
 		if (tag) {
-			return new TaggedTemplateExpression(tag, template.strings, exprs);
+			return new TaggedTemplateExpression(tag, strings, expressions);
 		} else {
-			return new TemplateLiteral(template.strings, exprs);
+			return new TemplateLiteral(strings, expressions);
 		}
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
@@ -1877,11 +1926,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 					expression = new MemberExpression(expression, key, false);
 					break;
 				}
-				default:
-				case Token.TEMPLATE_LITERALS: {
+				case Token.TEMPLATE_SPAN:
+				case Token.TEMPLATE_TAIL: {
 					expression = this.parseTemplateLiteral(expression);
 					break;
 				}
+				default:
+					throw new SyntaxError(this.errorMessage('unknown token position'));
 			}
 		} while (Token.isMember(this.peek().token));
 		return expression;
