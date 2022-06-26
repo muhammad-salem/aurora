@@ -800,13 +800,6 @@ export class TokenStreamImpl extends TokenStream {
 		while (index >= 0) {
 			const c = v.charAt(++index);
 			switch (c) {
-				case '\'':
-				case '"':
-				case '\\':
-				case '/':
-					index++;
-					buffer += c;
-					break;
 				case '\b':
 				case '\f':
 				case '\n':
@@ -889,7 +882,10 @@ export class TokenStreamImpl extends TokenStream {
 						index += codePoint.length;
 						break;
 					}
-					throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
+					index++;
+					buffer += c;
+					break;
+				// throw new Error(this.createError('Illegal escape sequence: "\\' + c + '"'));
 			}
 			let backslash = v.indexOf('\\', index);
 			if (backslash == -1) {
