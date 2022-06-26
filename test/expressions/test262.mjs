@@ -10,14 +10,10 @@ function parse(src, { isModule, earlyErrors }) {
 
 
 let passExcludes = [
-	'29e41f46ede71f11.js', '31ad88cae27258b7.js', '569a2c1bad3beeb2.js',
-	'56fd564979894636.js', '5b39aca97d9006f4.js', '5beffd72ddb47f13.js',
-	'6196b3f969486455.js', '77db52b103913973.js', '925443c6cf79aa88.js',
-	'9aa93e1e417ce8e3.js', '9ec644dbf797e95c.js', '9fe1d41db318afba.js',
-	'affd557fd820e1f2.js', 'afffb6d317e53b92.js', 'b376d3924d77aa8a.js',
-	'c83a2dcf75fa419a.js', 'c8b9a4d186ec2eb8.js', 'ce0aaec02d5d4465.js',
-	'dc3afa2f13259ae0.js', 'dec1ae80150e1664.js', 'e08e181172bad2b1.js',
-	'e5570b178254bfb9.js', 'eed97872dd924560.js',
+	'29e41f46ede71f11.js', '6196b3f969486455.js', '77db52b103913973.js',
+	'925443c6cf79aa88.js', '9aa93e1e417ce8e3.js', '9fe1d41db318afba.js',
+	'affd557fd820e1f2.js', 'b376d3924d77aa8a.js', 'c8b9a4d186ec2eb8.js',
+	'ce0aaec02d5d4465.js', 'e08e181172bad2b1.js', 'e5570b178254bfb9.js',
 ];
 
 let failExcludes = [];
@@ -31,7 +27,7 @@ let x = 0;
 readdirSync(`${rootTest}/pass`)
 	// .filter(f => passExcludes.includes(f))
 	.forEach(f => {
-		// f = '31ad88cae27258b7.js';
+		// f = 'c8b9a4d186ec2eb8.js';
 		console.log('parse `pass` file: ', f, ++x);
 		let firstTree, secondTree;
 		try {
