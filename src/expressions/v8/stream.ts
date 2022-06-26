@@ -28,6 +28,11 @@ export class PreTemplateLiteral {
 	constructor(public strings: string[], public expressions: string[]) { }
 }
 
+export interface TemplateStringLiteral extends ExpressionNode { };
+export class TemplateStringLiteral {
+	constructor(public string: string) { }
+}
+
 export abstract class TokenStream {
 	public static getTokenStream(source: string | TokenExpression[]): TokenStream {
 		if (Array.isArray(source)) {
@@ -207,6 +212,7 @@ export abstract class TokenStream {
 	abstract hasLineTerminatorBeforeNext(): boolean;
 	abstract hasLineTerminatorAfterNext(): boolean;
 	abstract createError(message: String): string;
+	abstract scanTemplateContinuation(): TokenExpression;
 }
 
 export class TokenStreamer extends TokenStream {
@@ -228,6 +234,9 @@ export class TokenStreamer extends TokenStream {
 	}
 	hasLineTerminatorAfterNext(): boolean {
 		return false;
+	}
+	scanTemplateContinuation(): TokenExpression {
+		return this.next();
 	}
 }
 
@@ -304,41 +313,194 @@ export class TokenStreamImpl extends TokenStream {
 	private isTemplateLiteral(): boolean {
 		const quote = this.expression.charAt(this.pos);
 		if (quote === '`') {
-			const strings: string[] = [], exprs: string[] = [];
-			let start = this.pos + 1;
-			let i = start;
-			for (; i < this.expression.length; i++) {
-				if (this.expression[i] === '$' && this.expression[i + 1] === '{') {
-					strings.push(this.expression.substring(start, i));
-					i += 2;
-					start = i;
-					let openCount = 0;
-					for (; i < this.expression.length; i++) {
-						if (this.expression[i] === '$' && this.expression[i + 1] === '{') {
-							// if (openCount === 0) {
-							// 	start = i;
-							// }
-							openCount++;
-							i++;
-						} else if (openCount === 0 && this.expression[i] === '}') {
-							exprs.push(this.expression.substring(start, i));
-							break;
-						} else if (this.expression[i] === '}') {
-							openCount--;
-						}
-					}
-					start = i + 1;
-				}
-				else if (this.expression[i] === '`') {
-					break;
-				}
-			}
-			strings.push(this.expression.substring(start, i));
-			this.current = this.newToken(Token.TEMPLATE_LITERALS, new PreTemplateLiteral(strings, exprs));
-			this.pos = i + 1;
+			this.pos++;
+			this.current = this.scanTemplateSpan();
 			return true;
 		}
 		return false;
+	}
+	private scanTemplateSpan(): TokenExpression {
+		// When scanning a TemplateSpan, we are looking for the following construct:
+		// TEMPLATE_SPAN ::
+		//     ` LiteralChars* ${
+		//   | } LiteralChars* ${
+		//
+		// TEMPLATE_TAIL ::
+		//     ` LiteralChars* `
+		//   | } LiteralChar* `
+		//
+		// A TEMPLATE_SPAN should always be followed by an Expression, while a
+		// TEMPLATE_TAIL terminates a TemplateLiteral and does not need to be
+		// followed by an Expression.
+
+		// These scoped helpers save and restore the original error state, so that we
+		// can specially treat invalid escape sequences in templates (which are
+		// handled by the parser).
+
+		let result = Token.TEMPLATE_SPAN;
+		let literal: string[] = [],
+			c0: string = this.expression.charAt(this.pos);
+		const advance = () => {
+			this.pos++;
+			c0 = this.expression.charAt(this.pos);
+		};
+		const addLiteralChar = (char: string) => literal.push(char);
+		while (true) {
+			let c = c0;
+			if (c == '`') {
+				advance();  // Consume '`'
+				result = Token.TEMPLATE_TAIL;
+				break;
+			} else if (c == '$' && this.expression.charAt(this.pos + 1) == '{') {
+				advance();	// Consume '$'
+				advance();	// Consume '{'
+				break;
+			} else if (c == '\\') {
+				advance();  // Consume '\\'
+				if (this.isLineTerminator(c0)) {
+					// The TV of LineContinuation :: \ LineTerminatorSequence is the empty
+					// code unit sequence.
+					let lastChar = c0;
+					advance();
+					if (lastChar == '\r') {
+						// Also skip \n.
+						if (c0 == '\n') advance();
+						lastChar = '\n';
+					}
+				} else {
+					const char = this.scanEscape();
+					if (char == false) {
+						throw new SyntaxError(this.createError('Unterminated Template Escape char'));
+					}
+					addLiteralChar(char);
+					advance();
+				}
+			} else if (c == '' || this.pos >= this.expression.length) {
+				// Unterminated template literal
+				break;
+			} else {
+				advance();  // Consume c.
+				// The TRV of LineTerminatorSequence :: <CR> is the CV 0x000A.
+				// The TRV of LineTerminatorSequence :: <CR><LF> is the sequence
+				// consisting of the CV 0x000A.
+				if (c == '\r') {
+					if (c0 == '\n') advance();  // Consume '\n'
+					c = '\n';
+				}
+				addLiteralChar(c);
+			}
+		}
+		return this.newToken(result, new TemplateStringLiteral(literal.join('')));
+	}
+	public scanTemplateContinuation(): TokenExpression {
+		if (this.current.isNotType(Token.RBRACE)) {
+			throw new SyntaxError(this.createError('Unterminated Template Expr'));
+		}
+		return this.scanTemplateSpan();
+	}
+	private scanEscape(): string | false {
+		let c0: string = this.expression.charAt(this.pos);
+		let c: string | false = c0;
+		// Skip escaped newlines.
+		if (this.isLineTerminator(c)) {
+			// Allow escaped CR+LF newlines in multiline string literals.
+			if (c == '\r' && this.expression.charAt(this.pos + 1) == '\n') this.pos++;
+			return '\n';
+		}
+
+		switch (c) {
+			case 'b': c = '\b'; break;
+			case 'f': c = '\f'; break;
+			case 'n': c = '\n'; break;
+			case 'r': c = '\r'; break;
+			case 't': c = '\t'; break;
+			case 'u': {
+				c = this.scanUnicodeEscape();
+				if (this.isInvalid(c)) return false;
+				break;
+			}
+			case 'v':
+				c = '\v';
+				break;
+			case 'x': {
+				c = this.scanHexNumber(2);
+				if (this.isInvalid(c)) return false;
+				break;
+			}
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+				c = this.scanOctalEscape(c, 2);
+				break;
+			case '8':
+			case '9':
+				// '\8' and '\9' are disallowed in strict mode.
+				// Re-use the octal error state to propagate the error.
+				throw new SyntaxError(this.createError(`'\\8' and '\\9' are disallowed in strict mode.`));
+		}
+		// Other escaped characters are interpreted as their non-escaped version.
+		return c;
+	}
+	private scanUnicodeEscape(): string | false {
+		// Accept both \uxxxx and \u{xxxxxx}. In the latter case, the number of
+		// hex digits between { } is arbitrary. \ and u have already been read.
+		let c0: string = this.expression.charAt(this.pos);
+		if (c0 == '{') {
+			this.pos++;
+			const end = this.expression.indexOf('}', this.pos);
+			const codePoint = this.expression.substring(this.pos, end);
+			try {
+				c0 = String.fromCodePoint(parseInt(codePoint, 16));
+				this.pos = end + 1;
+				return c0;
+			} catch (error) {
+				return false;
+			}
+		}
+		return this.scanHexNumber(4);
+	}
+	private scanHexNumber(length: number): string | false {
+		const codePoint = this.expression.substring(this.pos, this.pos + length);
+		if (!TokenStreamImpl.UnicodePattern.test(codePoint)) {
+			return false;
+		}
+		const char = String.fromCodePoint(parseInt(codePoint, 16));
+		this.pos += length;
+		return char;
+	}
+	private scanOctalEscape(c: string, length: number): string | false {
+		let codePoint = c;
+		const lenIndexes = new Array(length - 1).fill(0).map((v, i) => i + 2);
+		for (const i of lenIndexes) {
+			const tempChar = this.expression.charAt(this.pos + i);
+			if (!Number.isNaN(parseInt(tempChar, 8))) {
+				codePoint += tempChar;
+			} else {
+				break;
+			}
+		}
+		if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
+			return false;
+		}
+		try {
+			const char = String.fromCharCode(parseInt(codePoint, 8));
+			this.pos += length;
+			return char;
+		} catch (error) {
+			return false;
+		}
+	}
+	private isInvalid(c: string | false): boolean {
+		if (c == false) {
+			return false;
+		}
+		const int = parseInt(c, 16);
+		return int < 0 || int > 0x10ffff;
 	}
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
