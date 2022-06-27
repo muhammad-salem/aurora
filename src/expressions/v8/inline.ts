@@ -1652,7 +1652,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (first_spread_index < 0) {
 					first_spread_index = values.length;
 				}
-				if (argument instanceof AssignmentExpression) {
+				if (argument instanceof AssignmentExpression && isPattern) {
 					throw new SyntaxError(this.errorMessage('Invalid Destructuring Target'));
 				}
 				if (this.peek().isType(Token.COMMA)) {
