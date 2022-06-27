@@ -666,7 +666,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			const expression_is_async = this.current().isType(Token.ASYNC);
 			const forMode = this.checkInOrOf();
 			if (forMode) {
-				if (starts_with_let || expression_is_async) {
+				if (forMode === 'OF' && starts_with_let || expression_is_async) {
 					throw new SyntaxError(this.errorMessage(starts_with_let ? 'For Of Let' : 'For Of Async'));
 				}
 				return this.parseForEachStatementWithoutDeclarations(initializer, forMode)
