@@ -7,7 +7,8 @@ import {
 	TrueNode, FalseNode, DefaultNode,
 	YieldIdentifier, ConstructorIdentifier,
 	ArgumentsIdentifier, NameIdentifier,
-	EvalIdentifier, SuperIdentifier, LetIdentifier
+	EvalIdentifier, SuperIdentifier, LetIdentifier,
+	SetIdentifier, GetIdentifier
 } from '../api/definition/values.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
@@ -1409,7 +1410,7 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'g':
 				if (/get\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.GET);
+					this.current = this.newToken(Token.GET, GetIdentifier);
 					this.pos += 4;
 					return true;
 				}
@@ -1492,7 +1493,7 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.SET);
+					this.current = this.newToken(Token.SET, SetIdentifier);
 					this.pos += 4;
 					return true;
 				}
