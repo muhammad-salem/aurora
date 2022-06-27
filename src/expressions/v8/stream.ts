@@ -296,14 +296,15 @@ export class TokenStreamImpl extends TokenStream {
 	private isString() {
 		const quote = this.expression.charAt(this.pos);
 		if (quote === '\'' || quote === '"') {
+			const escape = `\\${quote}`;
 			const startPos = this.pos;
 			let index = this.expression.indexOf(quote, startPos + 1);
 			while (index >= 0 && this.pos < this.expression.length) {
-				this.pos = index + 1;
-				if (this.expression.charAt(index - 1) !== '\\') {
+				if (this.expression.substring(index - 1, index + 1) !== escape) {
 					const rawString = this.expression.substring(startPos + 1, index);
 					const stringNode = new Literal<string>(this.unescape(rawString), `${quote}${rawString}${quote}`);
 					this.current = this.newToken(Token.STRING, stringNode);
+					this.pos = index + 1;
 					return true;
 				}
 				index = this.expression.indexOf(quote, index + 1);
