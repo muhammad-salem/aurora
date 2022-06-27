@@ -1835,6 +1835,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			} else if (token.isType(Token.SET)) {
 				propInfo.kind = PropertyKind.AccessorSetter;
 			}
+			nextToken = this.peek();
 		}
 		let propertyName: ExpressionNode;
 		switch (nextToken.token) {
