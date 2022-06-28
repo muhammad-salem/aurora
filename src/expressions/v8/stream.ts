@@ -296,18 +296,55 @@ export class TokenStreamImpl extends TokenStream {
 	private isString() {
 		const quote = this.expression.charAt(this.pos);
 		if (quote === '\'' || quote === '"') {
-			const escape = `\\${quote}`;
-			const startPos = this.pos;
-			let index = this.expression.indexOf(quote, startPos + 1);
-			while (index >= 0 && this.pos < this.expression.length) {
-				if (this.expression.substring(index - 1, index + 1) !== escape) {
-					const rawString = this.expression.substring(startPos + 1, index);
-					const stringNode = new Literal<string>(this.unescape(rawString), `${quote}${rawString}${quote}`);
+			const start = this.pos;
+			let literal: string[] = [];
+			let c0: string = '';
+			const advance = () => {
+				c0 = this.expression.charAt(++this.pos);
+			};
+			const advanceUntil = (check: (char: string) => boolean) => {
+				while (true) {
+					c0 = this.expression.charAt(++this.pos);
+					const result = check(c0);
+					if (result) {
+						break;
+					}
+				}
+			};
+			const addLiteralChar = (char: string) => literal.push(char);
+
+			while (true) {
+				advanceUntil(char => {
+					if (char.charCodeAt(0) > 127) {
+						if (this.isStringLiteralLineTerminator(char)) {
+							return true;
+						}
+						addLiteralChar(char);
+						return false;
+					}
+					if (this.mayTerminateString(char)) return true;
+					addLiteralChar(c0);
+					return false;
+				});
+				while (c0 === '\\') {
+					advance();
+					const char = this.scanEscape(true);
+					if (char == '' || !char) {
+						return false;
+					}
+					addLiteralChar(char);
+					advance();
+				}
+				if (c0 === quote) {
+					advance();
+					const end = this.pos;
+					const string = literal.join('');
+					const rawString = this.expression.substring(start, end);
+					const stringNode = new Literal<string>(string, rawString);
 					this.current = this.newToken(Token.STRING, stringNode);
-					this.pos = index + 1;
 					return true;
 				}
-				index = this.expression.indexOf(quote, index + 1);
+				addLiteralChar(c0);
 			}
 		}
 		return false;
@@ -371,7 +408,7 @@ export class TokenStreamImpl extends TokenStream {
 					}
 					addLiteralChar(lastChar);
 				} else {
-					const char = this.scanEscape();
+					const char = this.scanEscape(false);
 					if (char === false) {
 						throw new SyntaxError(this.createError('Unterminated Template Escape char'));
 					}
@@ -401,11 +438,11 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return this.scanTemplateSpan();
 	}
-	private scanEscape(): string | false {
+	private scanEscape(captureRaw: boolean): string | false {
 		let c0: string = this.expression.charAt(this.pos);
 		let c: string | false = c0;
 		// Skip escaped newlines.
-		if (this.isLineTerminator(c)) {
+		if (!captureRaw && this.isLineTerminator(c)) {
 			// Allow escaped CR+LF newlines in multiline string literals.
 			if (c == '\r' && this.expression.charAt(this.pos + 1) == '\n') this.pos++;
 			return '\n';
@@ -480,26 +517,32 @@ export class TokenStreamImpl extends TokenStream {
 		}
 	}
 	private scanOctalEscape(c: string, length: number): string | false {
-		let codePoint = c;
-		const lenIndexes = new Array(length - 1).fill(0).map((v, i) => i + 2);
+		// let codePoint = c;
+		const lenIndexes = new Array(length - 1).fill(0).map((v, i) => i + 1);
+		const zero = '0'.charCodeAt(0);
+		let x = c.charCodeAt(0) - zero;
+		let scanned = 0;
 		for (const i of lenIndexes) {
-			const tempChar = this.expression.charAt(this.pos + i);
-			if (!Number.isNaN(parseInt(tempChar, 8))) {
-				codePoint += tempChar;
-			} else {
-				break;
-			}
+			const char = this.expression.charAt(this.pos + i);
+			let d = char.charCodeAt(0) - zero;
+			if (d < 0 || d > 7) break;
+			const nx = x * 8 + d;
+			if (nx >= 256) break;
+			x = nx;
+			scanned++;
 		}
-		if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
-			return false;
-		}
-		try {
-			const char = String.fromCharCode(parseInt(codePoint, 8));
-			this.pos += lenIndexes.length;
-			return char;
-		} catch (error) {
-			return false;
-		}
+		this.pos += scanned;
+		return String.fromCharCode(x);
+		// if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
+		// 	return false;
+		// }
+		// try {
+		// 	const char = String.fromCharCode(parseInt(codePoint, 8));
+		// 	this.pos += scanned;
+		// 	return char;
+		// } catch (error) {
+		// 	return false;
+		// }
 	}
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
@@ -734,6 +777,12 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	private isLineTerminator(c: string) {
 		return /[\n\r\u2028\u2029]/.test(c);
+	}
+	private isStringLiteralLineTerminator(c: string) {
+		return /[\n\r]/.test(c);
+	}
+	private mayTerminateString(c: string) {
+		return (c == '\'' || c == '"' || c == '\n' || c == '\r' || c == '\\');
 	}
 	public scanRegExpPattern() {
 		const peek = this.peek();
