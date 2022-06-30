@@ -89,6 +89,14 @@ export abstract class AbstractParser {
 	protected restoreFunctionKind() {
 		this.functionKind = this.previousFunctionKind.pop() ?? FunctionKind.NormalFunction;
 	}
+	protected setStatue(acceptIN: boolean, functionKind: FunctionKind) {
+		this.setFunctionKind(functionKind);
+		this.setAcceptIN(acceptIN);
+	}
+	protected restoreStatue() {
+		this.restoreFunctionKind();
+		this.restoreAcceptIN();
+	}
 	protected current() {
 		return this.scanner.currentToken();
 	}
@@ -1099,6 +1107,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
+		this.setFunctionKind(flag);
 		const functionInfo: FunctionInfo = {};
 		this.expect(Token.LPAREN);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
@@ -1107,6 +1116,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.setAcceptIN(true);
 		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
 		this.restoreAcceptIN();
+		this.restoreFunctionKind();
 		const bodyBlock = new BlockStatement(body);
 		if (name) {
 			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name);
@@ -1627,9 +1637,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.consume(Token.ARROW);
 		if (this.peek().isType(Token.LBRACE)) {
 			this.consume(Token.LBRACE);
-			this.setAcceptIN(true);
+			this.setStatue(true, kind);
 			body = this.parseFunctionBody(kind, FunctionBodyType.BLOCK, FunctionSyntaxKind.AnonymousExpression);
-			this.restoreAcceptIN();
+			this.restoreStatue();
 		} else {
 			has_braces = false;
 			body = this.parseFunctionBody(kind, FunctionBodyType.EXPRESSION, FunctionSyntaxKind.AnonymousExpression);

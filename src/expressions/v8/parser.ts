@@ -412,9 +412,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// Each static block has its own var and lexical scope, so make a new var
 		// block scope instead of using the synthetic members initializer function
 		// scope.
-		this.setAcceptIN(true);
+		this.setStatue(true, FunctionKind.ClassStaticInitializerFunction);
 		const block = this.parseBlock();
-		this.restoreAcceptIN();
+		this.restoreStatue();
 		classInfo.hasStaticElements = true;
 		return new StaticBlock(block.getBody());
 	}
@@ -445,11 +445,16 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
 	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode | undefined {
+		const kind = isStatic
+			? FunctionKind.ClassStaticInitializerFunction
+			: FunctionKind.ClassMembersInitializerFunction;
+
+
 		let initializer: ExpressionNode | undefined = undefined;
 		if (this.check(Token.ASSIGN)) {
-			this.setAcceptIN(true);
+			this.setStatue(true, kind);
 			initializer = this.parseAssignmentExpression();
-			this.restoreAcceptIN();
+			this.restoreStatue();
 		}
 		if (isStatic) {
 			classInfo.hasStaticElements = true;
