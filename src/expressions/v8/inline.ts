@@ -64,12 +64,12 @@ export abstract class AbstractParser {
 	protected acceptIN: boolean;
 	protected previousAcceptIN: boolean[] = [];
 
-	protected functionState: boolean;
-	protected previousFunctionState: boolean[] = [];
+	protected functionKind: FunctionKind;
+	protected previousFunctionKind: FunctionKind[] = [];
 
 	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict, acceptIN?: boolean) {
 		this.previousAcceptIN.push(this.acceptIN = acceptIN ?? false);
-		this.previousFunctionState.push(this.functionState = false);
+		this.previousFunctionKind.push(this.functionKind = FunctionKind.NormalFunction);
 	}
 	abstract scan(): ExpressionNode;
 	protected position() {
@@ -82,12 +82,12 @@ export abstract class AbstractParser {
 	protected restoreAcceptIN() {
 		this.acceptIN = this.previousAcceptIN.pop() ?? false;
 	}
-	protected setFunctionState(functionState: boolean) {
-		this.previousFunctionState.push(this.functionState);
-		this.functionState = functionState;
+	protected setFunctionKind(functionKind: FunctionKind) {
+		this.previousFunctionKind.push(this.functionKind);
+		this.functionKind = functionKind;
 	}
-	protected restoreFunctionState() {
-		this.functionState = this.previousFunctionState.pop() ?? false;
+	protected restoreFunctionKind() {
+		this.functionKind = this.previousFunctionKind.pop() ?? FunctionKind.NormalFunction;
 	}
 	protected current() {
 		return this.scanner.currentToken();
