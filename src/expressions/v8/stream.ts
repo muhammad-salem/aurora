@@ -486,6 +486,7 @@ export class TokenStreamImpl extends TokenStream {
 			case '5':
 			case '6':
 			case '7':
+				this.pos++;
 				c = this.scanOctalEscape(c, 2);
 				break;
 			case '8':
@@ -558,12 +559,16 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	private scanOctalEscape(c: string, length: number): string | false {
 		// let codePoint = c;
-		const lenIndexes = new Array(length - 1).fill(0).map((v, i) => i + 1);
+		if (!('0' <= c && c <= '7')) {
+			throw new SyntaxError(this.createError('Invalid octal escape sequence'));
+		}
 		const zero = '0'.charCodeAt(0);
 		let x = c.charCodeAt(0) - zero;
 		let scanned = 0;
-		for (const i of lenIndexes) {
-			const char = this.expression.charAt(this.pos + i);
+		let i: number = 0;
+		let char: string = '';
+		for (; i < length; i++) {
+			char = this.expression.charAt(this.pos + i);
 			let d = char.charCodeAt(0) - zero;
 			if (d < 0 || d > 7) break;
 			const nx = x * 8 + d;
@@ -571,7 +576,7 @@ export class TokenStreamImpl extends TokenStream {
 			x = nx;
 			scanned++;
 		}
-		this.pos += scanned;
+		this.pos += scanned - 1;
 		return String.fromCharCode(x);
 	}
 	private isParentheses() {
