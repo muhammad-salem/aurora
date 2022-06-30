@@ -2012,10 +2012,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return next.getValue();
 		}
 		// check keyword as identifier
-		if (Token.isPropertyName(next.token)) {
+		if (Token.isPropertyName(next.token) && next.isNotType(Token.EOS)) {
 			return new Identifier(next.token.getName());
 		}
-		throw new Error(this.errorMessage(`Parsing property expression: Unexpected Token`));
+		throw new SyntaxError(this.errorMessage(`Parsing property expression: Unexpected Token`));
 	}
 	protected parsePipelineExpression(expression: ExpressionNode): ExpressionNode {
 		// ConditionalExpression ::
