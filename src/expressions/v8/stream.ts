@@ -10,7 +10,6 @@ import {
 	EvalIdentifier, SuperIdentifier, LetIdentifier,
 	SetIdentifier, GetIdentifier
 } from '../api/definition/values.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 
@@ -1406,7 +1405,7 @@ export class TokenStreamImpl extends TokenStream {
 			// return false;
 			case 'b':
 				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.BREAK, BreakStatement.BREAK_INSTANCE);
+					this.current = this.newToken(Token.BREAK);
 					this.pos += 5;
 					return true;
 				}
@@ -1429,7 +1428,7 @@ export class TokenStreamImpl extends TokenStream {
 					this.pos += 6;
 					return true;
 				} else if (/continue[\s;]/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(Token.CONTINUE, ContinueStatement.CONTINUE_INSTANCE);
+					this.current = this.newToken(Token.CONTINUE);
 					this.pos += 8;
 					return true;
 				}

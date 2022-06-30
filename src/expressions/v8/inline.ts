@@ -29,7 +29,7 @@ import { CallExpression } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
@@ -877,17 +877,28 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// Identifier? is not supported
 
 		this.consume(Token.CONTINUE);
+		let label: Identifier | undefined;
+		if (!this.scanner.hasLineTerminatorBeforeNext() &&
+			!Token.isAutoSemicolon(this.peek().token)) {
+			// ECMA allows "eval" or "arguments" as labels even in strict mode.
+			label = this.parseIdentifier();
+		}
 		this.expectSemicolon();
-		return ContinueStatement.CONTINUE_INSTANCE;
+		return label ? new ContinueStatement(label) : ContinueStatement.CONTINUE_INSTANCE;
 	}
 	protected parseBreakStatement(): ExpressionNode {
 		// BreakStatement ::
 		//   'break' ';'
 		// Identifier? is not supported
 
-		this.consume(Token.BREAK);
+		this.consume(Token.BREAK); let label: Identifier | undefined;
+		if (!this.scanner.hasLineTerminatorBeforeNext() &&
+			!Token.isAutoSemicolon(this.peek().token)) {
+			// ECMA allows "eval" or "arguments" as labels even in strict mode.
+			label = this.parseIdentifier();
+		}
 		this.expectSemicolon();
-		return BreakStatement.BREAK_INSTANCE;
+		return label ? new BreakStatement(label) : BreakStatement.BREAK_INSTANCE;
 	}
 	protected parseReturnStatement(): ExpressionNode {
 		// ReturnStatement ::
@@ -957,11 +968,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 				&& allowFunction == AllowLabelledFunctionStatement.AllowLabelledFunctionStatement) {
 				const result = this.parseFunctionDeclaration();
 				this.restoreAcceptIN();
-				return result;
+				return new LabeledStatement(expression, result);
 			}
 			const result = this.parseStatement(allowFunction);
 			this.restoreAcceptIN();
-			return result;
+			return new LabeledStatement(expression, result);
 		}
 		this.restoreAcceptIN();
 		// Parsed expression statement, followed by semicolon.
