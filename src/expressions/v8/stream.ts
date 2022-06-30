@@ -437,11 +437,11 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return this.scanTemplateSpan();
 	}
-	private scanEscape(captureRaw: boolean): string | false {
+	private scanEscape(raw: boolean): string | false {
 		let c0: string = this.expression.charAt(this.pos);
 		let c: string | false = c0;
 		// Skip escaped newlines.
-		if (!captureRaw && this.isLineTerminator(c)) {
+		if (!raw && this.isLineTerminator(c)) {
 			// Allow escaped CR+LF newlines in multiline string literals.
 			if (c == '\r' && this.expression.charAt(this.pos + 1) == '\n') this.pos++;
 			return '\n';
@@ -464,7 +464,7 @@ export class TokenStreamImpl extends TokenStream {
 				break;
 			case 'x': {
 				this.pos++;
-				c = this.scanHexNumber(2);
+				c = this.scanHexNumber(2, false);
 				if (c === false) return false;
 				break;
 			}
@@ -493,27 +493,62 @@ export class TokenStreamImpl extends TokenStream {
 		let c0: string = this.expression.charAt(this.pos);
 		if (c0 == '{') {
 			this.pos++;
-			const end = this.expression.indexOf('}', this.pos);
-			const codePoint = this.expression.substring(this.pos, end);
-			try {
-				c0 = String.fromCodePoint(parseInt(codePoint, 16));
-				this.pos = end;
-				return c0;
-			} catch (error) {
-				return false;
+			const cp = this.scanUnlimitedLengthHexNumber(0x10ffff);
+			c0 = this.expression.charAt(++this.pos);
+			if (c0 != '}') {
+				throw new SyntaxError(this.createError('Invalid Unicode Escape Sequence'));
 			}
+			return cp;
 		}
-		return this.scanHexNumber(4);
+		return this.scanHexNumber(4, true);
 	}
-	private scanHexNumber(length: number): string | false {
-		const codePoint = this.expression.substring(this.pos, this.pos + length);
-		try {
-			const char = String.fromCodePoint(parseInt(codePoint, 16));
-			this.pos += length - 1;
-			return char;
-		} catch (error) {
-			return false;
+	private scanHexNumber(length: number, unicode: boolean): string | false {
+		if (length > 4) { // prevent overflow
+			throw new RangeError(this.createError('ScanHexNumber: length should be less than or equal to 4'));
 		}
+		let x = 0;
+		let scanned = this.pos;
+		let c0: string = this.expression.charAt(scanned);
+		for (let i = 0; i < length; i++) {
+			let d = this.hexValue(c0);
+			if (d < 0) {
+				throw new SyntaxError(this.createError(
+					unicode
+						? 'Invalid Unicode Escape Sequence'
+						: 'Invalid Hex Escape Sequence'
+				));
+			}
+			x = x * 16 + d;
+			c0 = this.expression.charAt(++scanned);
+		}
+		this.pos = scanned - 1;
+		return String.fromCodePoint(x);
+	}
+	private scanUnlimitedLengthHexNumber(max_value: number) {
+		let x = 0;
+		let scanned = this.pos;
+		let c0: string = this.expression.charAt(scanned);
+		let d = this.hexValue(c0);
+		if (d < 0) {
+			throw new RangeError(this.createError('Invalid code'));
+		}
+		while (d >= 0) {
+			x = x * 16 + d;
+			if (x > max_value) {
+				throw new RangeError(this.createError('Undefined Unicode Code Point'));
+			}
+			c0 = this.expression.charAt(++scanned);
+			d = this.hexValue(c0);
+		}
+		this.pos = scanned - 1;
+		return String.fromCodePoint(x);
+	}
+	private hexValue(c: string) {
+		let x = c.charCodeAt(0) - '0'.charCodeAt(0);
+		if (x <= 9) return x;
+		x = (x | 0x20) - ('a'.charCodeAt(0) - '0'.charCodeAt(0));  // detect 0x11..0x16 and 0x31..0x36.
+		if (x <= 5) return x + 10;
+		return -1;
 	}
 	private scanOctalEscape(c: string, length: number): string | false {
 		// let codePoint = c;
@@ -532,16 +567,6 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		this.pos += scanned;
 		return String.fromCharCode(x);
-		// if (!TokenStreamImpl.AsciiPattern.test(codePoint)) {
-		// 	return false;
-		// }
-		// try {
-		// 	const char = String.fromCharCode(parseInt(codePoint, 8));
-		// 	this.pos += scanned;
-		// 	return char;
-		// } catch (error) {
-		// 	return false;
-		// }
 	}
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
