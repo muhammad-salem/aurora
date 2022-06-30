@@ -1571,7 +1571,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   YieldExpression
 		//   LeftHandSideExpression AssignmentOperator AssignmentExpression
 
-		if (this.peek().isType(Token.YIELD) /*&& this.isGenerator()*/) {
+		if (this.peek().isType(Token.YIELD) && isGeneratorFunction(this.functionKind)) {
 			return this.parseYieldExpression();
 		}
 		let expression: ExpressionNode = this.parseConditionalExpression();
