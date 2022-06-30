@@ -6,7 +6,7 @@ import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement, ContinueStatement } from '../control/terminate.js';
+import { TerminateReturnType } from '../control/terminate.js';
 import { VariableDeclarationNode } from '../declarations/declares.js';
 import { ArrayPattern } from '../../definition/array.js';
 import { ObjectPattern } from '../../definition/object.js';
@@ -67,11 +67,12 @@ export class ForNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);
@@ -154,11 +155,12 @@ export class ForOfNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			else if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			else if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);
@@ -231,11 +233,12 @@ export class ForInNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			else if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			else if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);

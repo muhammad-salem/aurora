@@ -6,7 +6,7 @@ import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement, ContinueStatement } from './terminate.js';
+import { TerminateReturnType } from './terminate.js';
 import { isDeclarationExpression } from '../../utils.js';
 
 /**
@@ -42,7 +42,7 @@ export class BlockStatement extends AbstractExpressionNode {
 				stack.clearTo(blockScope);
 				return value.value;
 			}
-			if (value == BreakStatement.BreakSymbol || value == ContinueStatement.ContinueSymbol) {
+			if (value instanceof TerminateReturnType) {
 				return value;
 			}
 		}

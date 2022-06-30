@@ -10,7 +10,7 @@ import {
 } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
-import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
+import { TerminateReturnType } from '../statement/control/terminate.js';
 import { RestElement } from '../computing/rest.js';
 import { BlockStatement } from '../statement/control/block.js';
 
@@ -169,11 +169,12 @@ export class FunctionExpression extends BaseFunctionExpression {
 				else if (stack.forAwaitAsyncIterable) {
 					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-						if (ContinueStatement.ContinueSymbol === result) {
-							continue;
-						}
-						else if (BreakStatement.BreakSymbol === result) {
-							break;
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
 						}
 						else if (result instanceof ReturnValue) {
 							returnValue = result;
@@ -243,11 +244,12 @@ export class FunctionExpression extends BaseFunctionExpression {
 				else if (stack.forAwaitAsyncIterable) {
 					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-						if (ContinueStatement.ContinueSymbol === result) {
-							continue;
-						}
-						else if (BreakStatement.BreakSymbol === result) {
-							break;
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
 						}
 						else if (result instanceof ReturnValue) {
 							self.clearFunctionScope(stack, innerScopes);
@@ -435,11 +437,12 @@ export class ArrowFunctionExpression extends BaseFunctionExpression {
 				else if (stack.forAwaitAsyncIterable) {
 					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
 						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-						if (ContinueStatement.ContinueSymbol === result) {
-							continue;
-						}
-						else if (BreakStatement.BreakSymbol === result) {
-							break;
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
 						}
 						else if (result instanceof ReturnValue) {
 							returnValue = result;

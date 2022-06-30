@@ -6,7 +6,7 @@ import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement, ContinueStatement } from '../control/terminate.js';
+import { TerminateReturnType } from '../control/terminate.js';
 
 /**
  * The while statement creates a loop that executes a specified
@@ -49,11 +49,12 @@ export class WhileNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			if (result instanceof ReturnValue) {
 				stack.clearTo(whileBlock);
@@ -114,11 +115,12 @@ export class DoWhileNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			if (result instanceof ReturnValue) {
 				stack.clearTo(whileBlock);
