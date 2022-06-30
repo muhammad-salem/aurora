@@ -304,6 +304,9 @@ export class TokenStreamImpl extends TokenStream {
 			const advanceUntil = (check: (char: string) => boolean) => {
 				while (true) {
 					c0 = this.expression.charAt(++this.pos);
+					if (this.pos >= this.expression.length) {
+						return;
+					}
 					const result = check(c0);
 					if (result) {
 						break;
@@ -327,7 +330,7 @@ export class TokenStreamImpl extends TokenStream {
 				});
 				while (c0 === '\\') {
 					advance();
-					const char = this.scanEscape(true);
+					const char = this.scanEscape(false);
 					if (char == '' || !char) {
 						return false;
 					}
@@ -342,6 +345,10 @@ export class TokenStreamImpl extends TokenStream {
 					const stringNode = new Literal<string>(string, rawString);
 					this.current = this.newToken(Token.STRING, stringNode);
 					return true;
+				}
+				if (c0 == '' || this.pos >= this.expression.length) {
+					// Unterminated string literal
+					break;
 				}
 				addLiteralChar(c0);
 			}
@@ -407,7 +414,7 @@ export class TokenStreamImpl extends TokenStream {
 					}
 					addLiteralChar(lastChar);
 				} else {
-					const char = this.scanEscape(false);
+					const char = this.scanEscape(true);
 					if (char === false) {
 						throw new SyntaxError(this.createError('Unterminated Template Escape char'));
 					}
@@ -437,11 +444,11 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		return this.scanTemplateSpan();
 	}
-	private scanEscape(raw: boolean): string | false {
+	private scanEscape(scanTemplateSpan: boolean): string | false {
 		let c0: string = this.expression.charAt(this.pos);
 		let c: string | false = c0;
 		// Skip escaped newlines.
-		if (!raw && this.isLineTerminator(c)) {
+		if (!scanTemplateSpan && this.isLineTerminator(c)) {
 			// Allow escaped CR+LF newlines in multiline string literals.
 			if (c == '\r' && this.expression.charAt(this.pos + 1) == '\n') this.pos++;
 			return '\n';
@@ -464,7 +471,7 @@ export class TokenStreamImpl extends TokenStream {
 				break;
 			case 'x': {
 				this.pos++;
-				c = this.scanHexNumber(2, false);
+				c = this.scanHexNumber(2);
 				if (c === false) return false;
 				break;
 			}
@@ -496,13 +503,13 @@ export class TokenStreamImpl extends TokenStream {
 			const cp = this.scanUnlimitedLengthHexNumber(0x10ffff);
 			c0 = this.expression.charAt(++this.pos);
 			if (c0 != '}') {
-				throw new SyntaxError(this.createError('Invalid Unicode Escape Sequence'));
+				return false;
 			}
 			return cp;
 		}
-		return this.scanHexNumber(4, true);
+		return this.scanHexNumber(4);
 	}
-	private scanHexNumber(length: number, unicode: boolean): string | false {
+	private scanHexNumber(length: number): string | false {
 		if (length > 4) { // prevent overflow
 			throw new RangeError(this.createError('ScanHexNumber: length should be less than or equal to 4'));
 		}
@@ -512,11 +519,7 @@ export class TokenStreamImpl extends TokenStream {
 		for (let i = 0; i < length; i++) {
 			let d = this.hexValue(c0);
 			if (d < 0) {
-				throw new SyntaxError(this.createError(
-					unicode
-						? 'Invalid Unicode Escape Sequence'
-						: 'Invalid Hex Escape Sequence'
-				));
+				return false;
 			}
 			x = x * 16 + d;
 			c0 = this.expression.charAt(++scanned);
