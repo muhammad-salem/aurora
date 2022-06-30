@@ -330,10 +330,10 @@ export abstract class AbstractParser {
 
 export class JavaScriptInlineParser extends AbstractParser {
 	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN }: InlineParserOptions = {}) {
-		const stream = (typeof source === 'string' || Array.isArray(source))
-			? TokenStream.getTokenStream(source)
-			: source;
 		mode ??= LanguageMode.Strict;
+		const stream = (typeof source === 'string')
+			? TokenStream.getTokenStream(source, mode)
+			: Array.isArray(source) ? TokenStream.getTokenStream(source) : source;
 		acceptIN ??= false;
 		const parser = new JavaScriptInlineParser(stream, mode, acceptIN);
 		return parser.scan();

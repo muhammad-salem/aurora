@@ -64,10 +64,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @returns 
 	 */
 	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}) {
-		const stream = (typeof source === 'string' || Array.isArray(source))
-			? TokenStream.getTokenStream(source)
-			: source;
 		mode ??= LanguageMode.Strict;
+		const stream = (typeof source === 'string') ?
+			TokenStream.getTokenStream(source, mode)
+			: Array.isArray(source)
+				? TokenStream.getTokenStream(source) : source;
 		const parser = new JavaScriptParser(stream, mode, false);
 		return parser.scan();
 	}

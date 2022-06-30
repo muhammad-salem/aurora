@@ -12,6 +12,7 @@ import {
 } from '../api/definition/values.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
+import { isStrict, LanguageMode } from './enums.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 
@@ -34,12 +35,14 @@ export class TemplateStringLiteral {
 }
 
 export abstract class TokenStream {
-	public static getTokenStream(source: string | TokenExpression[]): TokenStream {
+	public static getTokenStream(source: TokenExpression[]): TokenStream;
+	public static getTokenStream(source: string, mode: LanguageMode): TokenStream;
+	public static getTokenStream(source: string | TokenExpression[], mode?: LanguageMode): TokenStream {
 		if (Array.isArray(source)) {
 			return new TokenStreamer(source);
 		}
 		else if (typeof source === 'string') {
-			return new TokenStreamImpl(source);
+			return new TokenStreamImpl(source, mode);
 		}
 		throw new Error(`Can't build token stream for ${source}`);
 	}
@@ -247,7 +250,7 @@ export class TokenStreamImpl extends TokenStream {
 	static AsciiPattern = /^[0-7]{1,3}$/i;
 	static OctalPattern = /^[0-7]+$/i;
 
-	constructor(private expression: string) {
+	constructor(private expression: string, private mode = LanguageMode.Strict) {
 		super();
 	}
 	private newToken(type: Token, value?: ExpressionNode): TokenExpression {
@@ -754,10 +757,16 @@ export class TokenStreamImpl extends TokenStream {
 			case (char === '/' && nextChar === '*'):
 				closeTag = '*/';
 				endPos = this.expression.indexOf(closeTag, this.pos);
+				if (endPos === -1) {
+					throw new SyntaxError(this.createError('Invalid or unexpected token'));
+				}
 				break;
 			// <!-- html-open line comments
 			case (char === '<' && nextChar === '!'):
 				if ('<!--' === this.expression.substring(this.pos, this.pos + 4)) {
+					if (isStrict(this.mode)) {
+						throw new SyntaxError('Html Comment not allowed In Module');
+					}
 					const nextLinePos = this.expression.indexOf('\n', this.pos);
 					const closePos = this.expression.indexOf('-->', this.pos);
 					if (nextLinePos < closePos) {
@@ -775,6 +784,9 @@ export class TokenStreamImpl extends TokenStream {
 			// ^\\s*--> html-close line comments
 			case (char === '-' && nextChar === '-'):
 				if ('-->' === this.expression.substring(this.pos, this.pos + 3)) {
+					if (isStrict(this.mode)) {
+						throw new SyntaxError('Html Comment not allowed In Module');
+					}
 					// check if '-->' is the first non-whitespace on the line
 					let indexOfLastLine = this.expression.lastIndexOf('\n', this.pos + 1);
 					if (indexOfLastLine == -1) {
