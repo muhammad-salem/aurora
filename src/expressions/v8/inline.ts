@@ -50,7 +50,9 @@ import {
 	FunctionBodyType, FunctionInfo, FunctionKind,
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
-	isGeneratorFunction, isSloppy, isStrict, LanguageMode, ParseFunctionFlag,
+	isAwaitAsIdentifierDisallowed, isClassMembersInitializerFunction,
+	isGeneratorFunction, isModule, isResumableFunction,
+	isSloppy, isStrict, LanguageMode, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
@@ -174,13 +176,14 @@ export abstract class AbstractParser {
 		}
 		return false;
 	}
+	protected isArguments(name: ExpressionNode): boolean {
+		return name instanceof Identifier && name.getName() === 'arguments';
+	}
+	protected isEval(name: ExpressionNode): boolean {
+		return name instanceof Identifier && name.getName() === 'eval';
+	}
 	protected isEvalOrArguments(name: ExpressionNode): boolean {
-		if (name instanceof Identifier) {
-			if (name.getName() === 'eval' || name.getName() === 'arguments') {
-				return true;
-			}
-		}
-		return false;
+		return name instanceof Identifier && (name.getName() === 'eval' || name.getName() === 'arguments');
 	}
 	protected isNextLetKeyword() {
 		if (this.peek().isNotType(Token.LET)) {
@@ -256,7 +259,7 @@ export abstract class AbstractParser {
 		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tok.token)) {
 			return;
 		}
-		if (this.scanner.currentToken().isType(Token.AWAIT)) {
+		if (this.scanner.currentToken().isType(Token.AWAIT) && !isAsyncFunction(this.functionKind)) {
 			throw new Error(this.errorMessage(`Await Not In Async Context/Function`));
 		}
 	}
@@ -288,8 +291,37 @@ export abstract class AbstractParser {
 			flag
 		);
 	}
+	protected isGenerator() {
+		return isGeneratorFunction(this.functionKind);
+	}
+	protected isAsyncFunction() {
+		return isAsyncFunction(this.functionKind);
+	}
+	protected is_async_function() {
+		return isAsyncFunction(this.functionKind);
+	}
+	protected is_async_generator() {
+		return isAsyncGeneratorFunction(this.functionKind);
+	}
+	protected is_resumable() {
+		return isResumableFunction(this.functionKind);
+	}
+	protected isAwaitAllowed() {
+		return this.isAsyncFunction() || isModule(this.functionKind);
+	}
+	protected isAwaitAsIdentifierDisallowed() {
+		return isStrict(this.languageMode) ||
+			isAwaitAsIdentifierDisallowed(this.functionKind);
+	}
+	protected shouldBanArguments() {
+		return isClassMembersInitializerFunction(this.functionKind);
+	}
 	protected errorMessage(message: string): string {
 		return this.scanner.createError(message);
+	}
+
+	protected reportErrorMessage(message: string): void {
+		console.error(this.scanner.createError(message));
 	}
 }
 
@@ -348,7 +380,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.WHILE:
 				return this.parseWhileStatement();
 			case Token.FOR:
-				if (this.peekAhead().isType(Token.AWAIT)) {
+				if (this.isAwaitAllowed() && this.peekAhead().isType(Token.AWAIT)) {
 					return this.parseForAwaitStatement();
 				}
 				return this.parseForStatement();
@@ -739,6 +771,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		// Create an in-between scope for let-bound iteration variables.
 		//   BlockState for_state(zone(), & scope_);
+		if (!this.isAwaitAllowed()) {
+			throw new SyntaxError(this.errorMessage('"await" is not allowed'));
+		}
 		this.expect(Token.FOR);
 		this.expect(Token.AWAIT);
 		this.expect(Token.LPAREN);
@@ -860,24 +895,27 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
-		if (Token.isValidIdentifier(next.token, this.languageMode, false, true)) {
-			return this.getIdentifier();
+		// Updates made here must be reflected on ClassifyPropertyIdentifier.
+		if (Token.isInRangeIdentifierAndAsync(next.token)) {
+			const name = next.getValue<Identifier>();
+			if (this.isArguments(name) && this.shouldBanArguments()) {
+				throw new SyntaxError(this.errorMessage('Arguments Disallowed In Initializer And Static Block'));
+			}
+			return name;
 		}
-		if (next.isType(Token.IDENTIFIER)) {
-			return next.getValue();
+
+		if (!Token.isValidIdentifier(next.token, this.languageMode, this.isGenerator(), this.isAwaitAsIdentifierDisallowed())) {
+			throw new SyntaxError(this.errorMessage('Invalid Identifier'));
 		}
-		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value, 'set', false, false, false);
+
+		if (next.isType(Token.AWAIT)) {
+			return next.getValue<Identifier>();
 		}
-		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration();
-			return new Property(next.getValue(), value, 'get', false, false, false);
+
+		if (!Token.isStrictReservedWord(next.token)) {
+			this.reportErrorMessage('Unexpected Strict Reserved');
 		}
-		else if (next.isType(Token.AWAIT)) {
-			throw new Error(this.errorMessage(`un supported expression (await)`));
-		}
-		return next.getValue();
+		return next.getValue<Identifier>();
 	}
 	protected parseContinueStatement(): ExpressionNode {
 		// ContinueStatement ::
@@ -921,7 +959,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// ExpressionT return_value = impl() -> NullExpression();
 		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tokenExp.token)) {
 			// check if this scope is belong to 'constructor' method to return this at the end;
-			// if (this.isDerivedConstructor(function_state_ -> kind())) {
+			// if (this.isDerivedConstructor(this.functionKind)) {
 			// 	returnValue = ThisNode;
 			// }
 		} else {
@@ -1344,6 +1382,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				}
 			}
 			if (this.peek().isType(Token.ARROW)) {
+				this.setFunctionKind(kind);
 				const name = this.parseAndClassifyIdentifier(token);
 				const params: Param[] = [];
 				if (name instanceof SequenceExpression) {
@@ -1351,7 +1390,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 				} else {
 					params.push(this.toParamNode(name));
 				}
-				return this.parseArrowFunctionLiteral(params, kind);
+				const arrow = this.parseArrowFunctionLiteral(params, kind);
+				this.restoreFunctionKind();
+				return arrow;
 			}
 			return this.parseAndClassifyIdentifier(token);
 		}
@@ -1585,15 +1626,20 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
+			const kind = FunctionKind.NormalFunction;
+			this.setFunctionKind(kind);
+			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
-				return this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
+				arrow = this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
 			} else if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
+				arrow = this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
 			} else {
 				this.clearParenthesized(expression);
+				arrow = this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction);
 			}
-			return this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction);
+			this.restoreFunctionKind();
+			return arrow;
 		}
 		if (this.isAssignableIdentifier(expression)) {
 		} else if (this.isProperty(expression)) {
@@ -2181,7 +2227,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (Token.isUnaryOrCount(op.token)) {
 			return this.parseUnaryOrPrefixExpression();
 		}
-		if (op.isType(Token.AWAIT)) {
+		if (op.isType(Token.AWAIT) && this.isAwaitAllowed()) {
 			return this.parseAwaitExpression();
 		}
 		return this.parsePostfixExpression();

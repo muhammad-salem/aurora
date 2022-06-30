@@ -609,6 +609,18 @@ export class Token {
 				return false;
 		}
 	}
+
+	public static isInRangeIdentifierAndAsync(token: Token) {
+		switch (token) {
+			case Token.IDENTIFIER:
+			case Token.GET:
+			case Token.SET:
+			case Token.ASYNC:
+				return true;
+			default:
+				return false;
+		}
+	}
 	public static isPropertyOrCall(token: Token) {
 		switch (token) {
 			case Token.TEMPLATE_SPAN:
@@ -772,7 +784,7 @@ export class Token {
 	}
 
 	public static isValidIdentifier(token: Token, mode: LanguageMode, isGenerator: boolean, disallowAwait: boolean) {
-		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
+		if (Token.isInRangeIdentifierAndAsync(token)) return true;
 		if (token == Token.AWAIT) return !disallowAwait;
 		if (token == Token.YIELD) return !isGenerator;
 		return Token.isStrictReservedWord(token) && isSloppy(mode);

@@ -8,7 +8,7 @@ import {
 	YieldIdentifier, ConstructorIdentifier,
 	ArgumentsIdentifier, NameIdentifier,
 	EvalIdentifier, SuperIdentifier, LetIdentifier,
-	SetIdentifier, GetIdentifier
+	SetIdentifier, GetIdentifier, AwaitIdentifier, AsyncIdentifier
 } from '../api/definition/values.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
@@ -1331,12 +1331,12 @@ export class TokenStreamImpl extends TokenStream {
 				return true;
 			case 'a':
 				if (/async\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.ASYNC);
+					this.current = this.newToken(Token.ASYNC, AsyncIdentifier);
 					this.pos += 5;
 					return true;
 				}
 				if (/await\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.AWAIT);
+					this.current = this.newToken(Token.AWAIT, AwaitIdentifier);
 					this.pos += 5;
 					return true;
 				}
