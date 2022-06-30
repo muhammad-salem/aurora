@@ -84,6 +84,9 @@ export abstract class AbstractParser {
 	protected restoreAcceptIN() {
 		this.acceptIN = this.previousAcceptIN.pop() ?? false;
 	}
+	protected getLastFunctionKind() {
+		return this.previousFunctionKind.at(-2) ?? FunctionKind.NormalFunction;
+	}
 	protected setFunctionKind(functionKind: FunctionKind) {
 		this.previousFunctionKind.push(this.functionKind);
 		this.functionKind = functionKind;
@@ -528,7 +531,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		let functionSyntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		const peek = this.peek();
 		if (peek.isNotType(Token.LPAREN)) {
-			name = this.parseIdentifier();
+			name = this.parseIdentifier(this.getLastFunctionKind());
 			functionSyntaxKind = FunctionSyntaxKind.NamedExpression;
 		}
 		return this.parseFunctionLiteral(functionKind, functionSyntaxKind, name);
@@ -912,9 +915,6 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return next.getValue<Identifier>();
 		}
 
-		if (!Token.isStrictReservedWord(next.token)) {
-			this.reportErrorMessage('Unexpected Strict Reserved');
-		}
 		return next.getValue<Identifier>();
 	}
 	protected parseContinueStatement(): ExpressionNode {
@@ -1058,7 +1058,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		if (this.peekAnyIdentifier()) {
 			syntaxKind = FunctionSyntaxKind.NamedExpression;
-			name = this.parseIdentifier();
+			name = this.parseIdentifier(this.getLastFunctionKind());
 		}
 		return this.parseFunctionLiteral(flags, syntaxKind, name);
 	}
@@ -1098,14 +1098,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				throw new SyntaxError(this.errorMessage('Missing Function Name'));
 			}
 		} else {
-			name = this.parseIdentifier();
+			name = this.parseIdentifier(this.getLastFunctionKind());
 		}
 		names?.push(name.toString());
 		return this.parseFunctionLiteral(flag, FunctionSyntaxKind.Declaration, name);
 	}
-	protected parseIdentifier(): Identifier {
+	protected parseIdentifier(kind?: FunctionKind): Identifier {
+		kind ??= this.functionKind;
 		const next = this.next();
-		if (!Token.isValidIdentifier(next.token, this.languageMode, false, true)) {
+		if (!Token.isValidIdentifier(next.token, this.languageMode, isGeneratorFunction(kind), isAwaitAsIdentifierDisallowed(kind))) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
 		}
 		if (next.isType(Token.IDENTIFIER)) {

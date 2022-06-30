@@ -81,6 +81,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 	override scan(): ExpressionNode {
 		const isModule = isStrict(this.languageMode);
+		if (isModule) {
+			this.setFunctionKind(FunctionKind.Module);
+		}
 		const body = isModule ? this.parseModuleItemList() : this.parseStatementList(Token.EOS);
 		return new Program(isModule ? 'module' : 'script', body);
 	}
@@ -967,7 +970,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			if (this.checkContextualKeyword('as')) {
 				localName = this.parsePropertyOrPrivatePropertyName() as Identifier;
 			}
-			if (!Token.isValidIdentifier(this.current().token, this.languageMode, false, true)) {
+			if (!Token.isValidIdentifier(this.current().token, LanguageMode.Strict, false, isStrict(this.languageMode))) {
 				throw new SyntaxError(this.errorMessage('Unexpected Reserved Keyword'));
 			} else if (this.isEvalOrArguments(localName)) {
 				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
