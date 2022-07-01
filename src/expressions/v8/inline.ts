@@ -1329,7 +1329,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.expressionListToExpression(list);
 	}
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
-		if (list.length === 1) { return list[0]; }
+		const first = list[0];
+		if (list.length === 1) { return first; }
+		if (first instanceof SequenceExpression) {
+			first.getExpressions().push(...list.slice(1));
+			return first;
+		}
 		return new SequenceExpression(list);
 	}
 	protected parseMemberExpression(): ExpressionNode {
