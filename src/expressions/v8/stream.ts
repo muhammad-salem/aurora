@@ -36,7 +36,7 @@ export class TemplateStringLiteral {
 
 export abstract class TokenStream {
 	public static getTokenStream(source: TokenExpression[]): TokenStream;
-	public static getTokenStream(source: string, mode: LanguageMode): TokenStream;
+	public static getTokenStream(source: string, mode?: LanguageMode): TokenStream;
 	public static getTokenStream(source: string | TokenExpression[], mode?: LanguageMode): TokenStream {
 		if (Array.isArray(source)) {
 			return new TokenStreamer(source);
@@ -558,7 +558,6 @@ export class TokenStreamImpl extends TokenStream {
 		return -1;
 	}
 	private scanOctalEscape(c: string, length: number): string | false {
-		// let codePoint = c;
 		if (!('0' <= c && c <= '7')) {
 			throw new SyntaxError(this.createError('Invalid octal escape sequence'));
 		}
