@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/platform",
-	"version": "0.5.6",
+	"version": "0.5.7",
 	"description": "Aurora Platform, A utility package for Aurora",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
