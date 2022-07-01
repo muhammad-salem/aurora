@@ -68,8 +68,15 @@ export abstract class AbstractParser {
 
 	protected functionKind: FunctionKind;
 	protected previousFunctionKind: FunctionKind[] = [];
+	get languageMode() {
+		return this.scanner.getLanguageMode();
+	}
 
-	constructor(protected scanner: TokenStream, protected languageMode: LanguageMode = LanguageMode.Strict, acceptIN?: boolean) {
+	set languageMode(mode: LanguageMode) {
+		this.scanner.setLanguageMode(mode);
+	}
+
+	constructor(protected scanner: TokenStream, acceptIN?: boolean) {
 		this.previousAcceptIN.push(this.acceptIN = acceptIN ?? false);
 		this.previousFunctionKind.push(this.functionKind = FunctionKind.NormalFunction);
 	}
@@ -335,11 +342,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			? TokenStream.getTokenStream(source, mode)
 			: Array.isArray(source) ? TokenStream.getTokenStream(source) : source;
 		acceptIN ??= false;
-		const parser = new JavaScriptInlineParser(stream, mode, acceptIN);
+		const parser = new JavaScriptInlineParser(stream, acceptIN);
 		return parser.scan();
 	}
-	constructor(scanner: TokenStream, languageMode: LanguageMode = LanguageMode.Strict, acceptIN?: boolean) {
-		super(scanner, languageMode, acceptIN);
+	constructor(scanner: TokenStream, acceptIN?: boolean) {
+		super(scanner, acceptIN);
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
@@ -1318,7 +1325,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isNotType(Token.RPAREN) || this.peekAhead().isNotType(Token.ARROW)) {
 			throw new Error(this.errorMessage(`Error Unexpected Token At ${this.position()}`));
 		}
-		list.push(pattern);
+		list.push(new SpreadElement(pattern));
 		return this.expressionListToExpression(list);
 	}
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
@@ -1632,6 +1639,17 @@ export class JavaScriptInlineParser extends AbstractParser {
 			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
+				const last = params.at(-1)?.getIdentifier();
+				if (last instanceof SpreadElement) {
+					const arg = last.getArgument() as DeclarationExpression;
+					let param = arg;
+					if (arg instanceof ArrayExpression) {
+						param = new ArrayPattern(arg.getElements() as DeclarationExpression[]);
+					} else if (arg instanceof ObjectExpression) {
+						param = new ObjectPattern(arg.getProperties());
+					}
+					params[params.length - 1] = new Param(new RestElement(param));
+				}
 				arrow = this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
 			} else if (expression instanceof GroupingExpression) {
 				arrow = this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);

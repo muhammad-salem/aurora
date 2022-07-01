@@ -35,11 +35,9 @@ export class TemplateStringLiteral {
 }
 
 export abstract class TokenStream {
-	public static getTokenStream(source: TokenExpression[]): TokenStream;
-	public static getTokenStream(source: string, mode?: LanguageMode): TokenStream;
 	public static getTokenStream(source: string | TokenExpression[], mode?: LanguageMode): TokenStream {
 		if (Array.isArray(source)) {
-			return new TokenStreamer(source);
+			return new TokenStreamer(source, mode);
 		}
 		else if (typeof source === 'string') {
 			return new TokenStreamImpl(source, mode);
@@ -51,6 +49,13 @@ export abstract class TokenStream {
 	protected current: TokenExpression;
 	protected savedCurrent: TokenExpression;
 	protected last?: TokenExpression;
+	constructor(protected mode = LanguageMode.Strict) { }
+	setLanguageMode(mode: LanguageMode) {
+		this.mode = mode;
+	}
+	getLanguageMode() {
+		return this.mode;
+	}
 	save() {
 		this.savedPosition = this.pos;
 		this.savedCurrent = this.current;
@@ -219,8 +224,8 @@ export abstract class TokenStream {
 }
 
 export class TokenStreamer extends TokenStream {
-	constructor(private tokens: TokenExpression[]) {
-		super();
+	constructor(private tokens: TokenExpression[], mode?: LanguageMode) {
+		super(mode);
 	}
 	next(): TokenExpression {
 		if (this.pos === this.tokens.length) {
@@ -250,8 +255,8 @@ export class TokenStreamImpl extends TokenStream {
 	static AsciiPattern = /^[0-7]{1,3}$/i;
 	static OctalPattern = /^[0-7]+$/i;
 
-	constructor(private expression: string, private mode = LanguageMode.Strict) {
-		super();
+	constructor(private expression: string, mode?: LanguageMode) {
+		super(mode);
 	}
 	private newToken(type: Token, value?: ExpressionNode): TokenExpression {
 		return new TokenExpression(type, value);

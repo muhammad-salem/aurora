@@ -65,11 +65,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 */
 	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}) {
 		mode ??= LanguageMode.Strict;
-		const stream = (typeof source === 'string') ?
-			TokenStream.getTokenStream(source, mode)
-			: Array.isArray(source)
-				? TokenStream.getTokenStream(source) : source;
-		const parser = new JavaScriptParser(stream, mode, false);
+		const stream = (typeof source === 'string') || Array.isArray(source)
+			? TokenStream.getTokenStream(source, mode) : source;
+		const parser = new JavaScriptParser(stream);
 		return parser.scan();
 	}
 
