@@ -2434,29 +2434,31 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.consume(Token.YIELD);
 		let delegating = false;  // yield*
 		let expression: ExpressionNode | undefined;
-		if (this.check(Token.MUL)) {
-			delegating = true;
-		}
-		switch (this.peek().token) {
-			case Token.EOS:
-			case Token.SEMICOLON:
-			case Token.RBRACE:
-			case Token.RBRACK:
-			case Token.RPAREN:
-			case Token.COLON:
-			case Token.COMMA:
-			case Token.IN:
-				// The above set of tokens is the complete set of tokens that can appear
-				// after an AssignmentExpression, and none of them can start an
-				// AssignmentExpression.  This allows us to avoid looking for an RHS for
-				// a regular yield, given only one look-ahead token.
-				if (!delegating) break;
-				// Delegating yields require an RHS; fall through.
-				// V8_FALLTHROUGH;
-				throw new Error(this.errorMessage(`Delegating yields require an RHS`));
-			default:
-				expression = this.parseAssignmentExpressionCoverGrammar();
-				break;
+		if (!this.scanner.hasLineTerminatorBeforeNext()) {
+			if (this.check(Token.MUL)) {
+				delegating = true;
+			}
+			switch (this.peek().token) {
+				case Token.EOS:
+				case Token.SEMICOLON:
+				case Token.RBRACE:
+				case Token.RBRACK:
+				case Token.RPAREN:
+				case Token.COLON:
+				case Token.COMMA:
+				case Token.IN:
+					// The above set of tokens is the complete set of tokens that can appear
+					// after an AssignmentExpression, and none of them can start an
+					// AssignmentExpression.  This allows us to avoid looking for an RHS for
+					// a regular yield, given only one look-ahead token.
+					if (!delegating) break;
+					// Delegating yields require an RHS; fall through.
+					// V8_FALLTHROUGH;
+					throw new Error(this.errorMessage(`Delegating yields require an RHS`));
+				default:
+					expression = this.parseAssignmentExpressionCoverGrammar();
+					break;
+			}
 		}
 		return new YieldExpression(delegating, expression);
 	}
