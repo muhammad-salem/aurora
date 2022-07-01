@@ -21,6 +21,6 @@
 		],
 		"strict": true,
 		"strictPropertyInitialization": false,
-		"removeComments": true
+		"removeComments": false
 	}
 }
