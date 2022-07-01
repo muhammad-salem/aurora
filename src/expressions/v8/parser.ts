@@ -1,2070 +1,1098 @@
-import type { CanDeclareExpression, ExpressionNode } from '../api/expression.js';
+import type { ExpressionNode } from '../api/expression.js';
+import { InlineParserOptions, JavaScriptInlineParser } from './inline.js';
 import { Token, TokenExpression } from './token.js';
-import { PreTemplateLiteral, TokenStream } from './stream.js';
 import {
-	OfNode, Identifier, ThisNode,
-	GetIdentifier, SetIdentifier, AsyncIdentifier,
-	NullNode, StringLiteral, AwaitIdentifier,
-	ConstructorIdentifier, NameIdentifier,
-	EvalIdentifier, ArgumentsIdentifier, TaggedTemplateExpression, TemplateLiteral
-} from '../api/definition/values.js';
-import { EmptyStatement } from '../api/statement/control/empty.js';
-import { BlockStatement } from '../api/statement/control/block.js';
+	AccessorProperty,
+	Class,
+	ClassBody,
+	ClassDeclaration,
+	ClassExpression,
+	MetaProperty,
+	MethodDefinition,
+	PropertyDefinition,
+	StaticBlock,
+	Super
+} from '../api/class/class.js';
+import { FunctionExpression } from '../api/definition/function.js';
+import { Identifier, Literal, NullNode } from '../api/definition/values.js';
+import { AssignmentExpression } from '../api/operators/assignment.js';
 import {
-	ArrowFunctionExpression, ArrowFunctionType, FunctionKind,
-	Param, FunctionExpression, FunctionDeclaration
-} from '../api/definition/function.js';
-import { IfStatement } from '../api/statement/control/if.js';
-import { NewExpression } from '../api/computing/new.js';
-import { SpreadElement } from '../api/computing/spread.js';
-import { RestElement } from '../api/computing/rest.js';
-import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
-import { GroupingExpression } from '../api/operators/grouping.js';
-import { MemberExpression } from '../api/definition/member.js';
-import { BindExpression } from '../api/definition/bind.js';
-import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
-import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
-import { CallExpression } from '../api/computing/call.js';
-import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
-import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
-import { ReturnStatement } from '../api/computing/return.js';
-import { YieldExpression } from '../api/computing/yield.js';
-import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
-import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
-import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
-import { SequenceExpression } from '../api/operators/comma.js';
-import { ChainExpression } from '../api/operators/chaining.js';
-import { ExpressionStatement } from '../api/definition/statement.js';
+	VariableDeclarationNode,
+	VariableDeclarator
+} from '../api/statement/declarations/declares.js';
+import { TokenStream } from './stream.js';
+import { Program } from '../api/program.js';
 import {
-	buildPostfixExpression, buildUnaryExpression,
-	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
-} from './nodes.js';
-import { BinaryExpression } from '../api/operators/binary.js';
+	ExportAllDeclaration,
+	ExportDefaultDeclaration,
+	ExportNamedDeclaration,
+	ExportSpecifier
+} from '../api/module/export.js';
+import {
+	ImportDeclaration,
+	ImportDefaultSpecifier,
+	ImportExpression,
+	ImportNamespaceSpecifier,
+	ImportSpecifier
+} from '../api/module/import.js';
+import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
+import {
+	ClassInfo,
+	ClassLiteralProperty,
+	ClassLiteralPropertyKind,
+	classPropertyKindFor,
+	createClassInfo,
+	FunctionKind,
+	FunctionSyntaxKind,
+	isAccessor,
+	isStrict,
+	LanguageMode,
+	ParseFunctionFlag,
+	PropertyKind,
+	PropertyKindInfo,
+	PropertyPosition,
+	VariableDeclarationContext
+} from './enums.js';
 
-export enum ParsingArrowHeadFlag { CertainlyNotArrowHead, MaybeArrowHead, AsyncArrowFunction }
-export enum PropertyKind {
-	Value, Shorthand, ShorthandOrClassField,
-	Assign, Method, ClassField, AccessorGetter, AccessorSetter,
-	Spread, NotSet
-}
-export type PropertyKindInfo = { kind?: PropertyKind, funcFlag?: FunctionKind, name: string };
-export type FunctionInfo = { rest?: boolean };
-export function parsePropertyKindFromToken(token: Token, info: PropertyKindInfo) {
-	switch (token) {
-		case Token.COLON:
-			info.kind = PropertyKind.Value;
-			return true;
-		case Token.COMMA:
-			info.kind = PropertyKind.Shorthand;
-			return true;
-		case Token.R_CURLY:
-			info.kind = PropertyKind.ShorthandOrClassField;
-			return true;
-		case Token.ASSIGN:
-			info.kind = PropertyKind.Assign;
-			return true;
-		case Token.L_PARENTHESES:
-			info.kind = PropertyKind.Method;
-			return true;
-		case Token.MUL:
-		case Token.SEMICOLON:
-			info.kind = PropertyKind.ClassField;
-			return true;
-		default:
-			break;
-	}
-	return false;
-}
 
-export enum PreParserIdentifierType {
-	NullIdentifier = 'NullIdentifier',
-	UnknownIdentifier = 'UnknownIdentifier',
-	EvalIdentifier = 'EvalIdentifier',
-	ArgumentsIdentifier = 'ArgumentsIdentifier',
-	ConstructorIdentifier = 'ConstructorIdentifier',
-	AwaitIdentifier = 'AwaitIdentifier',
-	AsyncIdentifier = 'AsyncIdentifier',
-	NameIdentifier = 'NameIdentifier',
-	PrivateNameIdentifier = 'PrivateNameIdentifier'
-}
+export type ParserOptions = { mode?: LanguageMode };
 
-export abstract class AbstractParser {
-	constructor(protected scanner: TokenStream) { }
-	abstract scan(): ExpressionNode;
-	protected position() {
-		return this.scanner.getPos();
-	}
-	protected current() {
-		return this.scanner.currentToken();
-	}
-	protected next() {
-		return this.scanner.next();
-	}
-	protected peek(): TokenExpression {
-		return this.scanner.peek();
-	}
-	protected peekAhead(): TokenExpression {
-		return this.scanner.peekAhead();
-	}
-	protected peekAheadPosition() {
-		return this.scanner.peekAheadPosition();
-	}
-	protected peekPosition() {
-		return this.scanner.peekPosition();
-	}
-	protected consume(token: Token) {
-		if (this.scanner.next().isNotType(token)) {
-			throw new Error(this.errorMessage(`Parsing ${JSON.stringify(token)}`));
-		}
-	}
-	protected check(token: Token): boolean {
-		const next = this.scanner.peek();
-		if (next.isType(token)) {
-			this.scanner.next();
-			return true;
-		}
-		return false;
-	}
-	protected checkValue(value: ExpressionNode): boolean {
-		const next = this.scanner.peek();
-		if (next.value == value) {
-			this.scanner.next();
-			return true;
-		}
-		return false;
-	}
-	protected expect(token: Token) {
-		const current = this.scanner.next();
-		if (current.isNotType(token)) {
-			throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(token)}, current is ${JSON.stringify(current)}`));
-		}
-	}
-	protected checkInOrOf(): 'IN' | 'OF' | false {
-		if (this.check(Token.IN)) {
-			return 'IN';
-		} else if (this.checkValue(OfNode)) {
-			return 'OF';
-		}
-		return false;
-	}
-	protected peekInOrOf(): 'IN' | 'OF' | false {
-		var next = this.peek();
-		if (next.isType(Token.IN)) {
-			return 'IN';
-		} else if (next.value === OfNode) {
-			return 'OF';
-		}
-		return false;
-	}
-	protected isEvalOrArguments(name: ExpressionNode): boolean {
-		if (name.toString() === 'eval') {
-			return true;
-		} else if (name.toString() === 'arguments') {
-			return true;
-		}
-		return false;
-	}
-	protected isNextLetKeyword() {
-		if (this.peek().isNotType(Token.LET)) {
-			return false;
-		}
-		const nextNextToken = this.peekAhead().token;
-		switch (nextNextToken) {
-			case Token.L_CURLY:
-			case Token.L_BRACKETS:
-			case Token.IDENTIFIER:
-			case Token.STATIC:
-			case Token.LET:  // `let let;` is disallowed by static semantics, but the
-			// token must be first interpreted as a keyword in order
-			// for those semantics to apply. This ensures that ASI is
-			// not honored when a LineTerminator separates the
-			// tokens.
-			case Token.YIELD:
-			case Token.AWAIT:
-			case Token.GET:
-			case Token.SET:
-			case Token.ASYNC:
-				return true;
-			default:
-				return false;
-		}
-	}
-	protected isIdentifier(expression: ExpressionNode): expression is Identifier {
-		return expression instanceof Identifier;
-	}
-	protected isParenthesized(expression: ExpressionNode): expression is (GroupingExpression | SequenceExpression) {
-		return expression instanceof GroupingExpression || expression instanceof SequenceExpression;
-	}
-	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
-		// return expression instanceof AssignmentNode;
-		if (!(expression instanceof Identifier)) {
-			return false;
-		}
-		if (this.isEvalOrArguments(expression)) {
-			return false;
-		}
-		return true;
-	}
-	protected isPattern(expression: ExpressionNode): expression is (ObjectPattern | ArrayPattern) {
-		return expression instanceof ObjectPattern || expression instanceof ArrayPattern;
-	}
-	protected isProperty(expression: ExpressionNode): expression is MemberExpression {
-		return expression instanceof MemberExpression;
-	}
-	protected isCallNew(expression: ExpressionNode): expression is NewExpression {
-		return expression instanceof NewExpression;
-	}
-	protected isCall(expression: ExpressionNode): expression is CallExpression {
-		return expression instanceof CallExpression;
-	}
-	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyStatement {
-		return expression instanceof EmptyStatement;
-	}
-	protected isThisProperty(expression: ExpressionNode): boolean {
-		if (this.isProperty(expression)) {
-			if (expression.getObject() === ThisNode || expression.getObject().toString() === 'this') {
-				return true;
-			}
-		}
-		return false;
-	}
-	protected isValidReferenceExpression(expression: ExpressionNode): boolean {
-		return this.isAssignableIdentifier(expression) || this.isProperty(expression);
-	}
-	protected expectSemicolon() {
-		const tok = this.peek();
-		if (tok.isType(Token.SEMICOLON)) {
-			this.next();
-			return;
-		}
-		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tok.token)) {
-			return;
-		}
-		if (this.scanner.currentToken().isType(Token.AWAIT)) {
-			throw new Error(this.errorMessage(`Await Not In Async Context/Function`));
-		}
-	}
-	protected peekAnyIdentifier() {
-		return Token.isAnyIdentifier(this.peek().token);
-	}
-	protected errorMessage(message: string): string {
-		return this.scanner.createError(message);
-	}
-}
-
-export class JavaScriptParser extends AbstractParser {
-	static parse(source: string | TokenExpression[] | TokenStream) {
-		const stream = (typeof source === 'string' || Array.isArray(source))
-			? TokenStream.getTokenStream(source)
-			: source;
+export class JavaScriptParser extends JavaScriptInlineParser {
+	/**
+	 * parser js with
+	 * @param source 
+	 * @returns 
+	 */
+	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}) {
+		mode ??= LanguageMode.Strict;
+		const stream = (typeof source === 'string') || Array.isArray(source)
+			? TokenStream.getTokenStream(source, mode) : source;
 		const parser = new JavaScriptParser(stream);
 		return parser.scan();
 	}
-	scan(): ExpressionNode {
-		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
-		if (list.length === 1) {
-			return list[0];
-		}
-		return new ExpressionStatement(list);
-	}
 
 	/**
-	 * Statement ::
-	 * Block
-	 * VariableStatement
-	 * EmptyStatement
-	 * ExpressionStatement
-	 * IfStatement
-	 * IterationStatement
-	 * ContinueStatement
-	 * BreakStatement
-	 * ReturnStatement
-	 * WithStatement
-	 * LabelledStatement
-	 * SwitchStatement
-	 * ThrowStatement
-	 * TryStatement
-	 * DebuggerStatement
+	 * parse inline code like that used in html 2 or 1 way binding
 	 */
-	protected parseStatement(): ExpressionNode {
-		switch (this.peek().token) {
-			case Token.L_CURLY:
-				return this.parseBlock();
-			case Token.SEMICOLON:
-				this.consume(Token.SEMICOLON);
-				return EmptyStatement.INSTANCE;
-			case Token.IF:
-				return this.parseIfStatement();
-			case Token.DO:
-				return this.parseDoWhileStatement();
-			case Token.WHILE:
-				return this.parseWhileStatement();
-			case Token.FOR:
-				// if (this.peekAhead().isType(Token.AWAIT)) {
-				// 	return this.parseForAwaitStatement();
-				// }
-				return this.parseForStatement();
-			case Token.CONTINUE:
-				return this.parseContinueStatement();
-			case Token.BREAK:
-				return this.parseBreakStatement();
-			case Token.RETURN:
-				return this.parseReturnStatement();
-			case Token.THROW:
-				return this.parseThrowStatement();
-			case Token.TRY:
-				return this.parseTryStatement();
-			case Token.SWITCH:
-				return this.parseSwitchStatement();
-			// case Token.FUNCTION:
-			// 	// FunctionDeclaration only allowed as a StatementListItem, not in
-			// 	// an arbitrary Statement position. Exceptions such as
-			// 	// ES#sec-functiondeclarations-in-ifstatement-statement-clauses
-			// 	// are handled by calling ParseScopedStatement rather than
-			// 	// ParseStatement directly.
-			// 	impl() -> ReportMessageAt(scanner() -> peek_location(),
-			// 		is_strict(language_mode())
-			// 			? MessageTemplate.kStrictFunction
-			// 			: MessageTemplate.kSloppyFunction);
-			// 	return impl() -> NullStatement();
-			case Token.VAR:
-			case Token.LET:
-			case Token.CONST:
-				return this.parseVariableDeclarations();
-			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-					}
-					return this.parseFunctionExpression(FunctionKind.ASYNC);
-				}
-			default:
-				return this.parseExpressionOrLabelledStatement();
-		}
+	static parseScript(source: string | TokenExpression[] | TokenStream, options?: InlineParserOptions) {
+		return JavaScriptInlineParser.parse(source, options);
 	}
-	protected parseTryStatement(): ExpressionNode {
-		// TryStatement ::
-		//   'try' Block Catch
-		//   'try' Block Finally
-		//   'try' Block Catch Finally
-		//
-		// Catch ::
-		//   'catch' '(' Identifier ')' Block
-		//
-		// Finally ::
-		//   'finally' Block
 
-		this.consume(Token.TRY);
-		const tryBlock = this.parseBlock();
-		if (tryBlock instanceof BlockStatement) {
-			tryBlock.isStatement = true;
+	override scan(): ExpressionNode {
+		const isModule = isStrict(this.languageMode);
+		if (isModule) {
+			this.setFunctionKind(FunctionKind.Module);
 		}
-		let peek = this.peek();
-		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
-			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
-		}
-		let catchBlock: ExpressionNode | undefined;
-		if (this.check(Token.CATCH)) {
-			// bool has_binding;
-			let catchVar: ExpressionNode | undefined;
-			const hasBinding = this.check(Token.L_PARENTHESES);
-			if (hasBinding) {
-				catchVar = this.parseIdentifier();
-				this.expect(Token.R_PARENTHESES);
-			}
-			const block = this.parseBlock();
-			if (block instanceof BlockStatement) {
-				block.isStatement = true;
-			}
-			catchBlock = new CatchClauseNode(block, catchVar);
-		}
-		let finallyBlock: ExpressionNode | undefined;
-		if (this.check(Token.FINALLY)) {
-			finallyBlock = this.parseBlock();
-			if (finallyBlock instanceof BlockStatement) {
-				finallyBlock.isStatement = true;
-			}
-		}
-		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
+		const body = isModule ? this.parseModuleItemList() : this.parseStatementList(Token.EOS);
+		return new Program(isModule ? 'module' : 'script', body);
 	}
-	protected parseBlock(): ExpressionNode {
-		this.expect(Token.L_CURLY);
-		const statements: ExpressionNode[] = [];
-		const block = new BlockStatement(statements, false);
-		while (this.peek().isNotType(Token.R_CURLY)) {
-			const stat = this.parseStatementListItem();
-			if (!stat) {
-				return block;
-			} else if (stat instanceof EmptyStatement) {
+	protected override parseNewTargetExpression(): ExpressionNode {
+		this.consume(Token.PERIOD);
+		const target: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
+		if (target.toString() !== 'target') {
+			throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
+		}
+		return MetaProperty.NewTarget;
+	}
+	protected override parseClassExpression(): ClassExpression {
+		this.consume(Token.CLASS);
+		let name: ExpressionNode | undefined;
+		let isStrictReserved = false;
+		if (this.peekAnyIdentifier()) {
+			name = this.parseAndClassifyIdentifier(this.next());
+			isStrictReserved = Token.isStrictReservedWord(this.current().token);
+		}
+		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
+		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
+	}
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ClassDeclaration {
+		// ClassDeclaration ::
+		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
+		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'
+		//
+		// The anonymous form is allowed iff [default_export] is true.
+		//
+		// 'class' is expected to be consumed by the caller.
+		//
+		// A ClassDeclaration
+		//
+		//   class C { ... }
+		//
+		// has the same semantics as:
+		//
+		//   let C = class C { ... };
+		//
+		// so rewrite it as such.
+
+		const nextToken = this.peek().token;
+		const isStrictReserved = Token.isStrictReservedWord(nextToken);
+		let name: ExpressionNode | undefined;
+		let variableName: string | undefined;
+		if (defaultExport && (nextToken == Token.EXTENDS || nextToken == Token.LBRACE)) {
+			name = new Literal('default');
+			variableName = '.default';
+		} else {
+			const identifier = this.parseIdentifier();
+			variableName = identifier.getName() as string;
+			name = identifier;
+		}
+		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
+		return new ClassDeclaration(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
+	}
+	protected override parseClassLiteral(name: ExpressionNode | undefined, nameIsStrictReserved: boolean): Class {
+		const isAnonymous = !!!name;
+
+		// All parts of a ClassDeclaration and ClassExpression are strict code.
+		if (!isAnonymous) {
+			if (nameIsStrictReserved) {
+				throw new Error(this.errorMessage(`Unexpected Strict Reserved class name`));
+			}
+			if (this.isEvalOrArguments(name!)) {
+				throw new Error(this.errorMessage(`Strict Eval Arguments not allowed for class name`));
+			}
+		}
+
+		const classInfo: ClassInfo = createClassInfo();
+		classInfo.isAnonymous = isAnonymous;
+
+		if (this.check(Token.EXTENDS)) {
+			classInfo.extends = this.parseLeftHandSideExpression();
+		}
+
+		this.expect(Token.LBRACE);
+
+		const hasExtends = !!classInfo.extends;
+
+		while (this.peek().isNotType(Token.RBRACE)) {
+			if (this.check(Token.SEMICOLON)) continue;
+
+			// Either we're parsing a `static { }` initialization block or a property.
+			if (this.peek().isType(Token.STATIC) && this.peekAhead().isType(Token.LBRACE)) {
+				const staticBlock = this.parseClassStaticBlock(classInfo);
+				classInfo.staticElements.push(staticBlock);
+				classInfo.hasStaticBlocks = true;
 				continue;
 			}
-			statements.push(stat);
-		}
-		this.expect(Token.R_CURLY);
-		return block;
-	}
-	/**
-	 * ECMA 262 6th Edition
-	 * 	StatementListItem[Yield, Return] :
-	 * 	Statement[?Yield, ?Return]
-	 * 	Declaration[?Yield]
-	 * //
-	 * Declaration[Yield] :
-	 * 	HoistableDeclaration[?Yield]
-	 * 	ClassDeclaration[?Yield]
-	 * 	LexicalDeclaration[In, ?Yield]
-	 * //
-	 * HoistableDeclaration[Yield, Default] :
-	 * 	FunctionDeclaration[?Yield, ?Default]
-	 * 	GeneratorDeclaration[?Yield, ?Default]
-	 * //
-	 * LexicalDeclaration[In, Yield] :
-	 * 	LetOrConst BindingList[?In, ?Yield] ;
-	 */
-	protected parseStatementListItem(): ExpressionNode | undefined {
-		switch (this.peek().token) {
-			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionKind.GENERATOR);
-				}
-				return this.parseFunctionExpression(FunctionKind.NORMAL);
-			case Token.CLASS:
-				this.consume(Token.CLASS);
-				return this.parseClassDeclaration(undefined, false);
-			case Token.VAR:
-			case Token.LET:
-			case Token.CONST:
-				return this.parseVariableDeclarations();
-			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						this.consume(Token.MUL);
-						return this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-					}
-					return this.parseFunctionExpression(FunctionKind.ASYNC);
-				}
-				break;
-			default:
-				break;
-		}
-		return this.parseStatement();
-	}
-	protected parseFunctionExpression(type: FunctionKind): ExpressionNode {
-		let funcName: ExpressionNode | undefined;
-		const peek = this.peek();
-		if (peek.isNotType(Token.L_PARENTHESES)) {
-			if (peek.isType(Token.L_BRACKETS)) {
-				// [Symbol.iterator]() {}
-				this.consume(Token.L_BRACKETS);
-				funcName = this.parseMemberExpression();
-				this.expect(Token.R_BRACKETS);
-			} else {
-				funcName = this.parseIdentifier();
+
+			// FuncNameInferrerState fni_state(& fni_);
+			// If we haven't seen the constructor yet, it potentially is the next
+			// property.
+			let isConstructor = !classInfo.hasSeenConstructor;
+			const propInfo = new PropertyKindInfo();
+			propInfo.position = PropertyPosition.ClassLiteral;
+
+			const property = this.parseClassPropertyDefinition(classInfo, propInfo, hasExtends);
+
+			// if (has_error()) return impl() . FailureExpression();
+
+			const propertyKind = classPropertyKindFor(propInfo.kind);
+			if (!classInfo.hasStaticComputedNames && propInfo.isStatic && propInfo.isComputedName) {
+				classInfo.hasStaticComputedNames = true;
 			}
-		}
-		return this.parseFunctionLiteral(type, funcName);
-	}
-	protected parseIfStatement(): ExpressionNode {
-		this.consume(Token.IF);
-		this.consume(Token.L_PARENTHESES);
-		const condition = this.parseExpression();
-		this.consume(Token.R_PARENTHESES);
-		const thenStatement = this.parseStatement();
-		if (thenStatement instanceof BlockStatement) {
-			thenStatement.isStatement = true;
-		}
-		let elseStatement;
-		if (this.peek().isType(Token.ELSE)) {
-			this.consume(Token.ELSE);
-			elseStatement = this.parseStatement();
-		}
-		return new IfStatement(condition, thenStatement, elseStatement);
-	}
-	protected parseDoWhileStatement(): ExpressionNode {
-		// DoStatement ::
-		//   'do' Statement 'while' '(' Expression ')' ';'
-		this.consume(Token.DO);
-		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
-		}
-		this.expect(Token.WHILE);
-		this.expect(Token.L_PARENTHESES);
-		const condition = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
-		this.check(Token.SEMICOLON);
-		return new DoWhileNode(condition, body);
-	}
-	protected parseWhileStatement(): ExpressionNode {
-		// WhileStatement ::
-		//   'while' '(' Expression ')' Statement
-		this.consume(Token.WHILE);
-		this.expect(Token.L_PARENTHESES);
-		const condition = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
-		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
-		}
-		return new WhileNode(condition, body);
-	}
-	protected parseThrowStatement(): ExpressionNode {
-		// ThrowStatement ::
-		//   'throw' Expression ';'
-		this.consume(Token.THROW);
-		if (this.scanner.hasLineTerminatorBeforeNext()) {
-			throw new Error(this.scanner.createError(`New line After Throw`));
-		}
-		const exception = this.parseExpression();
-		this.expectSemicolon();
-		return new ThrowStatement(exception);
-	}
-	protected parseSwitchStatement(): ExpressionNode {
-		// SwitchStatement ::
-		//   'switch' '(' Expression ')' '{' CaseClause* '}'
-		// CaseClause ::
-		//   'case' Expression ':' StatementList
-		//   'default' ':' StatementList
+			isConstructor &&= classInfo.hasSeenConstructor;
 
-		this.consume(Token.SWITCH);
-		this.expect(Token.L_PARENTHESES);
-		const tag = this.parseExpression();
-		this.expect(Token.R_PARENTHESES);
+			const isField = propertyKind == ClassLiteralPropertyKind.FIELD;
 
-		const cases: SwitchCase[] = [];
-		const switchStatement = new SwitchStatement(tag, cases);
-
-		let defaultSeen = false;
-		this.expect(Token.L_CURLY);
-		while (this.peek().isNotType(Token.R_CURLY)) {
-			const statements: ExpressionNode[] = [];
-			let label: ExpressionNode;
-			if (this.check(Token.CASE)) {
-				label = this.parseExpression();
-			} else {
-				this.expect(Token.DEFAULT);
-				if (defaultSeen) {
-					throw new Error(this.errorMessage(`Multiple Defaults In Switch`));
+			if (propInfo.isPrivate) {
+				if (isConstructor) {
+					throw new Error(this.errorMessage('private constructor is not allowed'));
 				}
-				defaultSeen = true;
+				classInfo.requiresBrand ||= (!isField && !propInfo.isStatic);
+				const isMethod = propertyKind == ClassLiteralPropertyKind.METHOD;
+				classInfo.hasPrivateMethods ||= isMethod;
+				classInfo.hasStaticPrivateMethods ||= isMethod && propInfo.isStatic;
+				this.declarePrivateClassMember(propInfo.name, property as MethodDefinition | PropertyDefinition, propertyKind, propInfo.isStatic, classInfo);
+				continue;
 			}
-			this.expect(Token.COLON);
-			while (this.peek().isNotType(Token.CASE)
-				&& this.peek().isNotType(Token.DEFAULT)
-				&& this.peek().isNotType(Token.R_CURLY)) {
-				const statement = this.parseStatementListItem();
-				if (!statement || this.isEmptyStatement(statement)) {
-					continue;
-				}
-				statements.push(statement);
-			}
-			const block = new BlockStatement(statements, true);
-			const clause = defaultSeen ? new DefaultExpression(block) : new SwitchCase(label!, block);
-			cases.push(clause);
-		}
-		this.expect(Token.R_CURLY);
-		return switchStatement;
-	}
-	protected parseForStatement(): ExpressionNode {
-		// Either a standard for loop
-		//   for (<init>; <cond>; <next>) { ... }
-		// or a for-each loop
-		//   for (<each> of|in <iterable>) { ... }
-		//
 
-		this.consume(Token.FOR);
-		const isAwait = this.check(Token.AWAIT);
-		this.expect(Token.L_PARENTHESES);
-		const peek = this.peek();
-		const startsWithLet = peek.isType(Token.LET) || peek.isType(Token.VAR);
-		let initializer: ExpressionNode;
-		if (peek.isType(Token.CONST) || (startsWithLet && this.isNextLetKeyword())) {
-			initializer = this.parseVariableDeclarations();
-		} else if (peek.isType(Token.SEMICOLON)) {
-			initializer = EmptyStatement.INSTANCE;
+			if (isField) {
+				if (propInfo.isComputedName) {
+					classInfo.computedFieldCount++;
+				}
+				this.declarePublicClassField(property as PropertyDefinition, propInfo.isStatic, propInfo.isComputedName, classInfo);
+				continue;
+			}
+
+			this.declarePublicClassMethod(name, property as MethodDefinition, isConstructor, classInfo);
+		}
+
+		this.expect(Token.RBRACE);
+		const classBody = this.rewriteClassLiteral(classInfo, name);
+		return new Class(classBody, [], name as Identifier, classInfo.extends);
+	}
+	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: MethodDefinition, isConstructor: boolean, classInfo: ClassInfo): void {
+		// throw new Error('Method not implemented.');
+		if (isConstructor) {
+			if (classInfo.constructor) {
+				throw new SyntaxError(this.errorMessage('A class may only have one constructor.'));
+			}
+			classInfo.constructor = property;
+			// set the class name as the constructor name
+			Reflect.set(classInfo.constructor, 'id', name);
+			return;
+		}
+		classInfo.publicMembers.push(property);
+	}
+	protected declarePublicClassField(property: PropertyDefinition, isStatic: boolean, isComputedName: boolean, classInfo: ClassInfo) {
+		if (isStatic) {
+			classInfo.staticElements.push(property);
 		} else {
-			initializer = this.parseExpressionCoverGrammar();
+			classInfo.instanceFields.push(property);
 		}
-		if (initializer instanceof BinaryExpression) {
-			// x in y 
-			const objectNode = initializer.getRight();
-			initializer = initializer.getLeft();
-			this.expect(Token.R_PARENTHESES)
-			const statement = this.parseStatement();
-			return new ForInNode(initializer as ForDeclaration, objectNode, statement);
-		}
-		const forMode = this.checkInOrOf();
-		if (forMode) {
-			const object = forMode === 'IN' ? this.parseAssignmentExpression() : this.parseExpression();
-			this.expect(Token.R_PARENTHESES)
-			const statement = this.parseStatement();
-			if (statement instanceof BlockStatement) {
-				statement.isStatement = true;
-			}
-			if (isAwait && forMode === 'OF') {
-				return new ForAwaitOfNode(initializer as ForDeclaration, object, statement);
-			} else if (forMode === 'OF') {
-				return new ForOfNode(initializer as ForDeclaration, object, statement);
-			} else if (forMode === 'IN') {
-				return new ForInNode(initializer as ForDeclaration, object, statement);
-			} else {
-				throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
-			}
-		}
-		this.expect(Token.SEMICOLON);
-		let condition: ExpressionNode | undefined;
-		if (!this.check(Token.SEMICOLON)) {
-			condition = this.parseExpression();
-			this.expect(Token.SEMICOLON);
-		}
-		let finalExpression: ExpressionNode | undefined;
-		if (!this.check(Token.R_PARENTHESES)) {
-			finalExpression = this.parseExpression();
-			this.expect(Token.R_PARENTHESES);
-		}
-		const body = this.parseStatement();
-		if (body instanceof BlockStatement) {
-			body.isStatement = true;
-		}
-		return new ForNode(body, initializer, condition, finalExpression);
+
+		// if (isComputedName) {
+		// 	classInfo.publicMembers.push(property);
+		// }
+
 	}
-	protected parseVariableDeclarations(): ExpressionNode {
-		// VariableDeclarations ::
-		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
-		// var converted into ==> 'let' by parser
-
-		let mode: 'const' | 'let' | 'var';
-		const token = this.peek().token;
-		switch (token) {
-			case Token.CONST:
-				this.consume(token);
-				mode = 'const';
-				break;
-			case Token.VAR:
-				this.consume(token);
-				mode = 'var';
-				break;
-			case Token.LET:
-			default:
-				this.consume(token);
-				mode = 'let';
-				break;
+	protected declarePrivateClassMember(propertyName: string, property: MethodDefinition | PropertyDefinition, kind: ClassLiteralPropertyKind, isStatic: boolean, classInfo: ClassInfo) {
+		classInfo.privateMembers.push(property);
+	}
+	// protected createPrivateNameVariable(mode: VariableMode, staticFlag: StaticFlag, propertyName: string) {
+	// 	throw new Error('Method not implemented.');
+	// }
+	protected parseClassPropertyDefinition(classInfo: ClassInfo, propInfo: PropertyKindInfo, hasExtends: boolean) {
+		if (!classInfo) {
+			throw new Error(this.errorMessage('class info is undefined'));
 		}
-		const variables: VariableDeclarator[] = [];
-		do {
+		if (propInfo.position !== PropertyPosition.ClassLiteral) {
+			throw new Error(this.errorMessage('expected property position ClassLiteral'));
+		}
 
-			let name: ExpressionNode;
-			let value: ExpressionNode | undefined;
-			// Check for an identifier first, so that we can elide the pattern in cases
-			// where there is no initializer (and so no proxy needs to be created).
-			if (Token.isAnyIdentifier(this.peek().token)) {
-				name = this.parseAndClassifyIdentifier(this.next());
-				if (this.isEvalOrArguments(name)) {
-					throw new Error(this.errorMessage(`Strict Eval Arguments`));
-				}
-				// if (this.peekInOrOf()) {
-				// 	// // Assignments need the variable expression for the assignment LHS, and
-				// 	// // for of/in will need it later, so create the expression now.
+		const nameToken = this.peek();
+		let nameExpression: ExpressionNode;
+		if (nameToken.isType(Token.STATIC)) {
+			this.consume(Token.STATIC);
+			if (this.peek().isType(Token.LPAREN)) {
+				propInfo.kind = PropertyKind.Method;
+				nameExpression = this.parseIdentifier();
+				propInfo.name = (nameExpression as Identifier).getName() as string;
+			} else if (this.peek().isType(Token.ASSIGN)
+				|| this.peek().isType(Token.SEMICOLON)
+				|| this.peek().isType(Token.RBRACK)) {
+				nameExpression = this.parseIdentifier();
+				propInfo.name = (nameExpression as Identifier).getName() as string;
+			} else {
+				propInfo.isStatic = true;
+				nameExpression = this.parseProperty(propInfo);
+			}
+		} else {
+			nameExpression = this.parseProperty(propInfo);
+		}
+
+		switch (propInfo.kind) {
+			case PropertyKind.Assign:
+			case PropertyKind.ClassField:
+			case PropertyKind.ShorthandOrClassField:
+			case PropertyKind.NotSet: {
+				// This case is a name followed by a
+				// name or other property. Here we have
+				// to assume that's an uninitialized
+				// field followed by a line break
+				// followed by a property, with ASI
+				// adding the semicolon. If not, there
+				// will be a syntax error after parsing
+				// the first name as an uninitialized
+				// field.
+				propInfo.kind = PropertyKind.ClassField;
+
+				// if (!propInfo.isComputedName) {
+				// 	this.checkClassFieldName(propInfo.name, propInfo.isStatic);
 				// }
-			} else {
-				name = this.parseBindingPattern(true);
-			}
 
-			if (this.check(Token.ASSIGN)) {
-				value = this.parseAssignmentExpression();
-			} else if (!this.peekInOrOf()) {
-				// ES6 'const' and binding patterns require initializers.
-				if (mode === 'const' && (name === undefined || value === undefined)) {
-					throw new Error(this.errorMessage(`Declaration Missing Initializer : ${this.position()}`));
+				const initializer = this.parseMemberInitializer(classInfo, propInfo.isStatic);
+				this.expectSemicolon();
+
+				const result: ExpressionNode = this.newClassLiteralProperty(
+					nameExpression,
+					initializer,
+					ClassLiteralPropertyKind.FIELD,
+					propInfo.isStatic,
+					propInfo.isComputedName,
+					propInfo.isPrivate
+				);
+				this.setFunctionNameFromPropertyName(result, propInfo.name);
+				return result;
+			}
+			case PropertyKind.Method: {
+				// MethodDefinition
+				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
+				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
+				//    async PropertyName '(' StrictFormalParameters ')'
+				//        '{' FunctionBody '}'
+				//    async '*' PropertyName '(' StrictFormalParameters ')'
+				//        '{' FunctionBody '}'
+
+				if (!propInfo.isComputedName) {
+					this.checkClassMethodName(propInfo, classInfo);
 				}
-				// value = undefined;
-			}
-			variables.push(new VariableDeclarator(name as CanDeclareExpression, value));
-		} while (this.check(Token.COMMA));
-		return new VariableDeclarationNode(variables, mode);
-	}
-	protected parseBindingPattern(isPattern: boolean): ExpressionNode {
-		// Pattern ::
-		//   Identifier
-		//   ArrayLiteral
-		//   ObjectLiteral
 
-		const token = this.peek().token;
-		if (Token.isAnyIdentifier(token)) {
-			const name = this.parseAndClassifyIdentifier(this.next());
-			if (this.isEvalOrArguments(name)) {
-				throw new Error(this.errorMessage(`Strict Eval Arguments`));
-			}
-			return name;
-		}
-		if (token == Token.L_BRACKETS) {
-			return this.parseArrayLiteral(isPattern);
-		} else if (token == Token.L_CURLY) {
-			return this.parseObjectLiteral(isPattern);
-		} else {
-			throw new Error(this.errorMessage(`Unexpected Token: ${this.next().getValue()}`));
-		}
-	}
-	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
-		if (next.isType(Token.IDENTIFIER)) {
-			return next.getValue();
-		}
-		else if (next.isType(Token.SET)) {
-			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
-			return new Property(next.getValue(), value, 'set');
-		}
-		else if (next.isType(Token.GET)) {
-			const value = this.parseFunctionDeclaration() as CanDeclareExpression;
-			return new Property(next.getValue(), value, 'get');
-		}
-		else if (next.isType(Token.AWAIT)) {
-			throw new Error(this.errorMessage(`un supported expression (await)`));
+				let kind: FunctionKind = this.methodKindFor(propInfo.isStatic, propInfo.funcFlag);
 
-		}
-		return next.getValue();
-	}
-	protected parseContinueStatement(): ExpressionNode {
-		// ContinueStatement ::
-		//   'continue' ';'
-		// Identifier? is not supported
-
-		this.consume(Token.CONTINUE);
-		this.expectSemicolon();
-		return ContinueStatement.CONTINUE_INSTANCE;
-	}
-	protected parseBreakStatement(): ExpressionNode {
-		// BreakStatement ::
-		//   'break' ';'
-		// Identifier? is not supported
-
-		this.consume(Token.BREAK);
-		this.expectSemicolon();
-		return BreakStatement.BREAK_INSTANCE;
-	}
-	protected parseReturnStatement(): ExpressionNode {
-		// ReturnStatement ::
-		//   'return' [no line terminator] Expression? ';'
-
-		// Consume the return token. It is necessary to do that before
-		// reporting any errors on it, because of the way errors are
-		// reported (underlining).
-		this.consume(Token.RETURN);
-		const tokenExp = this.peek();
-		let returnValue: ExpressionNode | undefined;
-		// ExpressionT return_value = impl() -> NullExpression();
-		if (this.scanner.hasLineTerminatorBeforeNext() || Token.isAutoSemicolon(tokenExp.token)) {
-			// check if this scope is belong to 'constructor' method to return this at the end;
-			// if (this.isDerivedConstructor(function_state_ -> kind())) {
-			// 	returnValue = ThisNode;
-			// }
-		} else {
-			returnValue = this.parseExpression();
-		}
-		this.expectSemicolon()
-		return new ReturnStatement(returnValue);
-	}
-	protected parseExpressionOrLabelledStatement(): ExpressionNode {
-		// ExpressionStatement | LabelledStatement ::
-		//   Expression ';'
-		//   Identifier ':' Statement
-		//
-		// ExpressionStatement[Yield] :
-		//   [lookahead notin {{, function, class, let [}] Expression[In, ?Yield] ;
-
-		switch (this.peek().token) {
-			case Token.FUNCTION:
-			case Token.L_CURLY:
-				throw new Error(this.errorMessage(`Unreachable state`));
-			case Token.CLASS:
-				throw new Error(this.errorMessage(`Unexpected Token ${this.next().getValue().toString()}`));
-			case Token.LET: {
-				const nextNext = this.peekAhead();
-				// "let" followed by either "[", "{" or an identifier means a lexical
-				// declaration, which should not appear here.
-				// However, ASI may insert a line break before an identifier or a brace.
-				if (nextNext.isNotType(Token.L_BRACKETS) &&
-					((nextNext.isNotType(Token.L_CURLY) && nextNext.isNotType(Token.IDENTIFIER)))) {
-					break;
+				if (!propInfo.isStatic && propInfo.name.toString() === 'constructor') {
+					classInfo.hasSeenConstructor = true;
+					kind = hasExtends ? FunctionKind.DerivedConstructor : FunctionKind.BaseConstructor;
 				}
-				throw new Error(this.errorMessage(`Unexpected Lexical Declaration ${this.position()}`));
+
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
+
+				const result = this.newClassLiteralProperty(
+					nameExpression, value, ClassLiteralProperty.Kind.METHOD,
+					propInfo.isStatic, propInfo.isComputedName,
+					propInfo.isPrivate);
+				this.setFunctionNameFromPropertyName(result, propInfo.name);
+				return result;
 			}
+
+			case PropertyKind.AccessorGetter:
+			case PropertyKind.AccessorSetter: {
+				if (propInfo.funcFlag !== ParseFunctionFlag.IsNormal) {
+					throw new Error(this.errorMessage('accessor is not normal function'));
+				}
+				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
+
+				if (!propInfo.isComputedName) {
+					this.checkClassMethodName(propInfo, classInfo);
+					// Make sure the name expression is a string since we need a Name for
+					// Runtime_DefineAccessorPropertyUnchecked and since we can determine
+					// this statically we can skip the extra runtime check.
+					nameExpression = new Literal<string>(propInfo.name);
+				}
+
+				let kind: FunctionKind;
+				if (propInfo.isStatic) {
+					kind = isGet ? FunctionKind.StaticGetterFunction
+						: FunctionKind.StaticSetterFunction;
+				} else {
+					kind = isGet ? FunctionKind.GetterFunction
+						: FunctionKind.SetterFunction;
+				}
+
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
+
+				const propertyKind: ClassLiteralPropertyKind = isGet ? ClassLiteralProperty.Kind.GETTER : ClassLiteralProperty.Kind.SETTER;
+				const result = this.newClassLiteralProperty(
+					nameExpression, value, propertyKind,
+					propInfo.isStatic, propInfo.isComputedName,
+					propInfo.isPrivate);
+				const prefix = isGet ? 'get ' : 'set ';
+				this.setFunctionNameFromPropertyName(result, propInfo.name, prefix);
+				return result;
+			}
+			case PropertyKind.Value:
+			case PropertyKind.Shorthand:
+			case PropertyKind.Spread:
+				// throw new Error(this.errorMessage('Report Unexpected Token'));
+				return NullNode;
+		}
+		throw new Error(this.errorMessage('UNREACHABLE'));
+	}
+	protected checkClassMethodName(propInfo: PropertyKindInfo, classInfo: ClassInfo) {
+		if (!(propInfo.kind == PropertyKind.Method || isAccessor(propInfo.kind))) {
+			throw new Error(this.errorMessage('not kind of method or setter or getter'));
+		}
+		if (propInfo.isPrivate && propInfo.name.toString() === 'constructor') {
+			throw new Error(this.errorMessage('constructor is private'));
+		} else if (propInfo.isStatic && propInfo.name.toString() === 'prototype') {
+			throw new Error(this.errorMessage('static prototype'));
+		} else if (propInfo.name.toString() === 'constructor') {
+			if (propInfo.funcFlag !== ParseFunctionFlag.IsNormal || isAccessor(propInfo.kind)) {
+				if (propInfo.funcFlag === ParseFunctionFlag.IsGenerator) {
+					throw new Error(this.errorMessage('constructor is generator'));
+				} else if (propInfo.funcFlag === ParseFunctionFlag.IsAsync) {
+					throw new Error(this.errorMessage('constructor is async'));
+				}
+				if (classInfo.hasSeenConstructor) {
+					throw new Error(this.errorMessage('duplicate constructor'));
+				}
+			}
+			classInfo.hasSeenConstructor = true;
+		}
+	}
+	protected parseClassStaticBlock(classInfo: ClassInfo): StaticBlock {
+		this.consume(Token.STATIC);
+		// Each static block has its own var and lexical scope, so make a new var
+		// block scope instead of using the synthetic members initializer function
+		// scope.
+		this.setStatue(true, FunctionKind.ClassStaticInitializerFunction);
+		const block = this.parseBlock();
+		this.restoreStatue();
+		classInfo.hasStaticElements = true;
+		return new StaticBlock(block.getBody());
+	}
+	protected declareClass(variableName: string, value: ExpressionNode, names: string[] | undefined): ExpressionNode {
+		names?.push(variableName);
+		const proxy = this.declareVariable(variableName, 'let');
+		return new AssignmentExpression('=', proxy, value);
+	}
+	protected declareVariable(name: string, mode: 'let' | 'const' | 'var') {
+		return new VariableDeclarationNode([new VariableDeclarator(new Identifier(name))], mode);
+	}
+	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode | undefined, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
+		switch (kind) {
+			case ClassLiteralPropertyKind.METHOD:
+				if (nameExpression.toString() === 'constructor') {
+					return new MethodDefinition('constructor', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+				}
+				return new MethodDefinition('method', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.GETTER:
+				return new MethodDefinition('get', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.SETTER:
+				return new MethodDefinition('set', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+			case ClassLiteralPropertyKind.FIELD:
+				return new PropertyDefinition(nameExpression, [], isComputedName, isStatic, initializer);
 			default:
 				break;
 		}
-		const startsWithIdentifier = Token.isAnyIdentifier(this.peek().token);
-		const expression: ExpressionNode = this.parseExpressionCoverGrammar();
-		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.isIdentifier(expression)) {
-			// The whole expression was a single identifier, and not, e.g.,
-			// something starting with an identifier or a parenthesized identifier.
+		throw new Error(this.errorMessage('UNREACHABLE'));
+	}
+	protected parseMemberInitializer(classInfo: ClassInfo, isStatic: boolean): ExpressionNode | undefined {
+		const kind = isStatic
+			? FunctionKind.ClassStaticInitializerFunction
+			: FunctionKind.ClassMembersInitializerFunction;
 
-			// Remove the "ghost" variable that turned out to be a label from the top
-			// scope. This way, we don't try to resolve it during the scope
-			// processing.
 
-			this.consume(Token.COLON);
-			// ES#sec-labelled-function-declarations Labelled Function Declarations
-			if (this.peek().isType(Token.FUNCTION) /*&& allow_function == kAllowLabelledFunctionStatement */) {
-				return this.parseFunctionDeclaration();
-			}
-			return this.parseStatement();
+		let initializer: ExpressionNode | undefined = undefined;
+		if (this.check(Token.ASSIGN)) {
+			this.setStatue(true, kind);
+			initializer = this.parseAssignmentExpression();
+			this.restoreStatue();
 		}
-		// Parsed expression statement, followed by semicolon.
-		this.expectSemicolon();
-		return expression;
-	}
-	protected parseExpression(): ExpressionNode {
-		return this.parseExpressionCoverGrammar();
-	}
-	protected parseFunctionDeclaration(): ExpressionNode {
-		this.consume(Token.FUNCTION);
-		if (this.check(Token.MUL)) {
-			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
-		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
-	}
-	protected parseFunctionDeclarationAndGenerator() {
-		this.consume(Token.FUNCTION);
-		if (this.check(Token.MUL)) {
-			return this.parseHoistableDeclaration(FunctionKind.GENERATOR);
-		}
-		return this.parseHoistableDeclaration(FunctionKind.NORMAL);
-	}
-	protected parseHoistableDeclaration(flag: FunctionKind): ExpressionNode {
-		// FunctionDeclaration ::
-		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
-		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
-		// GeneratorDeclaration ::
-		//   'function' '*' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
-		//   'function' '*' '(' FormalParameters ')' '{' FunctionBody '}'
-		//
-		// The anonymous forms are allowed iff [default_export] is true.
-		//
-		// 'function' and '*' (if present) have been consumed by the caller.
-
-		// (FunctionType.ASYNC === flag || FunctionType.GENERATOR === flag);
-
-		if (FunctionKind.ASYNC === flag && this.check(Token.MUL)) {
-			// Async generator
-			flag = FunctionKind.ASYNC_GENERATOR;
-		}
-		let name: ExpressionNode | undefined;
-		if (this.peek().isNotType(Token.L_PARENTHESES)) {
-			name = this.parseIdentifier();
-		}
-		return this.parseFunctionLiteral(flag, name);
-	}
-	protected parseIdentifier(): ExpressionNode {
-		const next = this.next();
-		if (!Token.isValidIdentifier(next.token)) {
-			throw new Error(this.errorMessage(`Unexpected Token: ${next.getValue()}`));
-		}
-		if (next.isType(Token.IDENTIFIER)) {
-			return next.getValue();
-		}
-		return this.getIdentifier();
-	}
-	protected getIdentifier(): ExpressionNode {
-		const current = this.current();
-		const string = current.getValue().toString();
-		switch (current.token) {
-			case Token.AWAIT:
-				return AwaitIdentifier;
-			case Token.ASYNC:
-				return AsyncIdentifier;
-			case Token.PRIVATE_NAME:
-				return new Identifier(`#${string}`);
-			default:
-				break;
-		}
-		if (string == 'constructor') {
-			return ConstructorIdentifier;
-		}
-		if (string == 'name') {
-			return NameIdentifier;
-		}
-		if (string == 'eval') {
-			return EvalIdentifier;
-		}
-		else if (string == 'arguments') {
-			return ArgumentsIdentifier;
-		}
-		throw new Error(this.errorMessage(`can't identify token ${string}`));
-	}
-	protected parseFunctionLiteral(flag: FunctionKind, name?: ExpressionNode): ExpressionNode {
-		// Function ::
-		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
-
-		const functionInfo: FunctionInfo = {};
-		this.expect(Token.L_PARENTHESES);
-		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
-		this.expect(Token.R_PARENTHESES);
-		const body = this.parseFunctionBody();
-		if (name) {
-			return new FunctionDeclaration(formals, body, flag, name as CanDeclareExpression, functionInfo.rest);
-		}
-		return new FunctionExpression(formals, body, flag, name, functionInfo.rest);
-	}
-	protected parseArrowFunctionBody(): ExpressionNode | ExpressionNode[] {
-		const isExpression = this.peek().isNotType(Token.L_CURLY);
-		if (isExpression) {
-			const expression = this.parseAssignmentExpression();
-			return expression;
+		if (isStatic) {
+			classInfo.hasStaticElements = true;
 		} else {
-			return this.parseFunctionBody();
+			classInfo.hasInstanceMembers = true;
 		}
+		return initializer;
 	}
-	protected parseFunctionBody(): ExpressionNode[] {
-		this.expect(Token.L_CURLY);
-		const list = this.parseStatementList(Token.R_CURLY);
-		this.expect(Token.R_CURLY);
-		return list;
+	protected setFunctionNameFromPropertyName(property: ExpressionNode, name: string, prefix?: string): void {
+		// TODO: no need for this now
+		// check later when needed
+		// the ClassExpression* handle this
 	}
-	protected parseStatementList(endToken: Token): ExpressionNode[] {
-		// StatementList ::
-		//   (StatementListItem)* <end_token>
-		const list: ExpressionNode[] = [];
-		while (this.peek().isNotType(endToken)) {
-			const stat = this.parseStatementListItem();
+	protected parseSuperExpression(): ExpressionNode {
+		this.consume(Token.SUPER);
+		if (Token.isProperty(this.peek().token)) {
+			if (this.peek().isType(Token.PERIOD) && this.peekAhead().isType(Token.PRIVATE_NAME)) {
+				this.consume(Token.PERIOD);
+				this.consume(Token.PRIVATE_NAME);
+				throw new Error(this.errorMessage('Unexpected Private Field'));
+			}
+			if (this.peek().isType(Token.QUESTION_PERIOD)) {
+				this.consume(Token.QUESTION_PERIOD);
+				throw new Error(this.errorMessage('Optional Chaining No Super'));
+			}
+			return Super.INSTANCE;
+		}
+		throw new Error(this.errorMessage('Unexpected Super'));
+	}
+	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassBody {
+		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
+		if (classInfo.hasSeenConstructor) {
+			body.push(classInfo.constructor as MethodDefinition);
+		}
+		body.push(...classInfo.staticElements);
+		body.push(...classInfo.instanceFields);
+		body.push(...classInfo.publicMembers);
+		body.push(...classInfo.privateMembers);
+		return new ClassBody(body);
+	}
+	protected parseModuleItemList(): ExpressionNode[] {
+		// ecma262/#prod-Module
+		// Module :
+		//    ModuleBody?
+		//
+		// ecma262/#prod-ModuleItemList
+		// ModuleBody :
+		//    ModuleItem*
+		const body: ExpressionNode[] = [];
+		while (this.peek().isNotType(Token.EOS)) {
+			const stat = this.parseModuleItem();
 			if (!stat) {
 				break;
 			}
 			if (this.isEmptyStatement(stat)) {
 				continue;
 			}
-			list.push(stat);
+			body.push(stat);
 		}
-		return list;
+		return body;
 	}
-	protected parseFormalParameterList(functionInfo: FunctionInfo): ExpressionNode[] {
-		// FormalParameters[Yield] :
-		//   [empty]
-		//   FunctionRestParameter[?Yield]
-		//   FormalParameterList[?Yield]
-		//   FormalParameterList[?Yield] ,
-		//   FormalParameterList[?Yield] , FunctionRestParameter[?Yield]
+	protected parseModuleItem(): ExpressionNode | undefined {
+		// ecma262/#prod-ModuleItem
+		// ModuleItem :
+		//    ImportDeclaration
+		//    ExportDeclaration
+		//    StatementListItem
+
+		const next = this.peek();
+		if (next.isType(Token.EXPORT)) {
+			return this.parseExportDeclaration();
+		}
+		if (next.isType(Token.IMPORT)) {
+			// We must be careful not to parse a dynamic import expression as an import
+			// declaration. Same for import.meta expressions.
+			const peekAhead = this.peekAhead();
+			if (peekAhead.isNotType(Token.LPAREN) && peekAhead.isNotType(Token.PERIOD)) {
+				return this.parseImportDeclaration();
+				// return factory() -> EmptyStatement();
+			}
+		}
+
+		return this.parseStatementListItem();
+	}
+	protected parseExportDeclaration(): ExpressionNode | undefined {
+		// ExportDeclaration:
+		//    'export' '*' 'from' ModuleSpecifier ';'
+		//    'export' '*' 'from' ModuleSpecifier [no LineTerminator here]
+		//        AssertClause ';'
+		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
+		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier
+		//        [no LineTerminator here] AssertClause ';'
+		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
+		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
+		//        [no LineTerminator here] AssertClause ';'
+		//    'export' ExportClause ('from' ModuleSpecifier)? ';'
+		//    'export' ExportClause ('from' ModuleSpecifier [no LineTerminator here]
+		//        AssertClause)? ';'
+		//    'export' VariableStatement
+		//    'export' Declaration
+		//    'export' 'default' ... (handled in ParseExportDefault)
 		//
-		// FormalParameterList[Yield] :
-		//   FormalParameter[?Yield]
-		//   FormalParameterList[?Yield] , FormalParameter[?Yield]
+		// ModuleExportName :
+		//   StringLiteral
 
-		const parameters: ExpressionNode[] = [];
-		if (this.peek().isNotType(Token.R_PARENTHESES)) {
-			while (true) {
-				const param: ExpressionNode = this.parseFormalParameter(functionInfo);
-				parameters.push(param);
-				if (functionInfo.rest) {
-					if (this.peek().isType(Token.COMMA)) {
-						throw new Error(this.errorMessage(`Param After Rest`));
-					}
-					break;
+		this.expect(Token.EXPORT);
+		let result: ExpressionNode | undefined;
+		const names: string[] = [];
+
+		// Statement * result = nullptr;
+		// ZonePtrList <const AstRawString> names(1, zone());
+		// Scanner::Location loc = scanner() -> peek_location();
+		switch (this.peek().token) {
+			case Token.DEFAULT:
+				return this.parseExportDefault();
+
+			case Token.MUL:
+				return this.parseExportStar();
+
+			case Token.LBRACE: {
+				// There are two cases here:
+				//
+				// 'export' ExportClause ';'
+				// and
+				// 'export' ExportClause FromClause ';'
+				//
+				// In the first case, the exported identifiers in ExportClause must
+				// not be reserved words, while in the latter they may be. We
+				// pass in a location that gets filled with the first reserved word
+				// encountered, and then throw a SyntaxError if we are in the
+				// non-FromClause case.
+
+				// Scanner::Location reserved_loc = Scanner:: Location:: invalid();
+				// Scanner::Location string_literal_local_name_loc =
+				// Scanner:: Location:: invalid();
+				// ZoneChunkList < ExportClauseData >* export_data =
+				// ParseExportClause(& reserved_loc, & string_literal_local_name_loc);
+
+				const exportData = this.parseExportClause();
+				let moduleSpecifier: Literal<string> | undefined;
+				let importAssertions: ImportAttribute[] | undefined;
+
+				if (this.checkContextualKeyword('from')) {
+					// Scanner::Location specifier_loc = scanner() -> peek_location();
+					moduleSpecifier = this.parseModuleSpecifier();
+					importAssertions = this.parseImportAssertClause();
+					this.expectSemicolon();
+
+					// if (exportData.isEmpty()) {
+					// 	// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc, zone());
+					// } else {
+					// 	// for (const ExportClauseData& data : * export_data) {
+					// 	// 	module() -> AddExport(data.local_name, data.export_name,
+					// 	// 		module_specifier, import_assertions,
+					// 	// 		data.location, specifier_loc, zone());
+					// 	// }
+					// }
+				} else {
+					// if (reserved_loc.IsValid()) {
+					// 	// No FromClause, so reserved words are invalid in ExportClause.
+					// 	ReportMessageAt(reserved_loc, MessageTemplate:: kUnexpectedReserved);
+					// 	return nullptr;
+					// } else if (string_literal_local_name_loc.IsValid()) {
+					// 	ReportMessageAt(string_literal_local_name_loc,
+					// 		MessageTemplate:: kModuleExportNameWithoutFromClause);
+					// 	return nullptr;
+					// }
+
+					this.expectSemicolon();
+
+					// for (const ExportClauseData& data : * export_data) {
+					// 	module() -> AddExport(data.local_name, data.export_name, data.location,
+					// 		zone());
+					// }
 				}
-				if (!this.check(Token.COMMA)) break;
-				if (this.peek().isType(Token.R_PARENTHESES)) {
-					// allow the trailing comma
-					break;
-				}
+				return new ExportNamedDeclaration(exportData, undefined, moduleSpecifier, importAssertions);
+				// return factory() -> EmptyStatement();
 			}
-		}
-		return parameters;
-	}
-	protected parseFormalParameter(functionInfo: FunctionInfo): ExpressionNode {
-		// FormalParameter[Yield,GeneratorParameter] :
-		//   BindingElement[?Yield, ?GeneratorParameter]
-		functionInfo.rest = this.check(Token.ELLIPSIS);
-		let pattern = this.parseBindingPattern(true);
-		let initializer: Param;
-		if (this.check(Token.ASSIGN)) {
-			if (functionInfo.rest) {
-				throw new Error(this.errorMessage(`Rest Default Initializer`));
-			}
-			const value = this.parseAssignmentExpression();
-			initializer = new Param(pattern as CanDeclareExpression, value);
-		} else {
-			initializer = new Param(pattern as CanDeclareExpression);
-		}
-		return initializer;
-	}
-	protected parseExpressionCoverGrammar(info?: FunctionInfo): ExpressionNode {
-		// Expression ::
-		//   AssignmentExpression
-		//   Expression ',' AssignmentExpression
 
-		// ExpressionListT list(pointer_buffer());
-		// ExpressionT expression;
-		// AccumulationScope accumulation_scope(expression_scope());
-		let variableIndex = 0;
-		const list: ExpressionNode[] = [];
-		let expression: ExpressionNode;
-		while (true) {
-			if (this.peek().isType(Token.ELLIPSIS)) {
-				if (info) {
-					info.rest = true;
-				}
-				return this.parseArrowParametersWithRest(list, variableIndex);
-			}
-			expression = this.parseAssignmentExpressionCoverGrammar();
-			list.push(expression);
-
-			if (!this.check(Token.COMMA)) break;
-
-			if (this.peek().isType(Token.R_PARENTHESES) && this.peekAhead().isType(Token.ARROW)) {
-				// a trailing comma is allowed at the end of an arrow parameter list
+			case Token.FUNCTION: {
+				const declaration = this.parseFunctionDeclaration();
+				const identifier = declaration.getId()!;
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 				break;
 			}
-		}
-		if (list.length == 1) return expression;
-		return this.expressionListToExpression(list);
-	}
-	protected parseArrowParametersWithRest(list: ExpressionNode[], variableIndex: number): ExpressionNode {
-		this.consume(Token.ELLIPSIS);
-		const pattern: ExpressionNode = this.parseBindingPattern(true);
-		if (this.peek().isType(Token.ASSIGN)) {
-			throw new Error(this.errorMessage(`Error A rest parameter cannot have an initializer`));
-		}
-		if (this.peek().isType(Token.COMMA)) {
-			throw new Error(this.errorMessage(`Error A rest parameter or binding pattern may not have a trailing comma`));
-		}
-		// 'x, y, ...z' in CoverParenthesizedExpressionAndArrowParameterList only
-		// as the formal parameters of'(x, y, ...z) => foo', and is not itself a
-		// valid expression.
-		if (this.peek().isNotType(Token.R_PARENTHESES) || this.peekAhead().isNotType(Token.ARROW)) {
-			throw new Error(this.errorMessage(`Error Unexpected Token At ${this.position()}`));
-		}
-		list.push(pattern);
-		return this.expressionListToExpression(list);
-	}
-	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
-		if (list.length === 1) { return list[0]; }
-		return new SequenceExpression(list);
-	}
-	protected parseMemberExpression(): ExpressionNode {
-		// MemberExpression ::
-		//   (PrimaryExpression | FunctionLiteral | ClassLiteral)
-		//     ('[' Expression ']' | '.' Identifier | Arguments | TemplateLiteral)*
-		//
-		// CallExpression ::
-		//   (SuperCall | ImportCall)
-		//     ('[' Expression ']' | '.' Identifier | Arguments | TemplateLiteral)*
-		//
-		// The '[' Expression ']' and '.' Identifier parts are parsed by
-		// ParseMemberExpressionContinuation, and everything preceeding it is merged
-		// into ParsePrimaryExpression.
 
-		// Parse the initial primary or function expression.
-		const result = this.parsePrimaryExpression();
-		return this.parseMemberExpressionContinuation(result);
-	}
-	protected toParamNode(expression: ExpressionNode): Param {
-		if (expression instanceof AssignmentExpression) {
-			return new Param(expression.getLeft() as CanDeclareExpression, expression.getRight());
-		}
-		if (expression instanceof GroupingExpression) {
-			return new Param(expression.getNode() as CanDeclareExpression);
-		}
-		return new Param(expression as CanDeclareExpression);
-	}
-	protected parsePrimaryExpression(): ExpressionNode {
-		// PrimaryExpression ::
-		//   'this'
-		//   'null'
-		//   'true'
-		//   'false'
-		//   Identifier
-		//   Number
-		//   String
-		//   ArrayLiteral
-		//   ObjectLiteral
-		//   RegExpLiteral
-		//   '(' Expression ')'
-		//   do Block
-		//   AsyncFunctionLiteral
-
-		let token = this.peek();
-		if (Token.isAnyIdentifier(token.token)) {
-			this.consume(token.token);
-			let kind: ArrowFunctionType = ArrowFunctionType.NORMAL;
-			if (token.isType(Token.ASYNC) && !this.scanner.hasLineTerminatorBeforeNext()) {
-				// async function ...
-				if (this.peek().isType(Token.FUNCTION)) {
-					return this.parseFunctionDeclarationAndGenerator();
-				};
-				// async Identifier => ...
-				if (Token.isAnyIdentifier(this.peek().token) && this.peekAhead().isType(Token.ARROW)) {
-					token = this.next();
-					kind = ArrowFunctionType.ASYNC;
-				}
-			}
-			if (this.peek().isType(Token.ARROW)) {
-				const name = this.parseAndClassifyIdentifier(token);
-				const params: Param[] = [];
-				if (name instanceof SequenceExpression) {
-					params.push(...name.getExpressions().map(this.toParamNode));
-				} else {
-					params.push(this.toParamNode(name));
-				}
-				return this.parseArrowFunctionLiteral(params, kind);
-			}
-			return this.parseAndClassifyIdentifier(token);
-		}
-
-		if (Token.isLiteral(token.token)) {
-			return expressionFromLiteral(this.next());
-		}
-
-		switch (token.token) {
-			case Token.NEW:
-				return this.parseMemberWithPresentNewPrefixesExpression();
-			case Token.THIS:
-				this.consume(Token.THIS);
-				return ThisNode;
-			case Token.DIV:
-			case Token.DIV_ASSIGN:
-				// case Token.REGEXP_LITERAL:
-				// this.consume(Token.REGEXP_LITERAL);
-				// return token.value!;
-				return this.parseRegExpLiteral();
-			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					return this.parseFunctionExpression(FunctionKind.GENERATOR);
-				}
-				return this.parseFunctionExpression(FunctionKind.NORMAL);
-			case Token.SUPER: {
-				return this.parseSuperExpression();
-			}
-			case Token.IMPORT:
-				return this.parseImportExpressions();
-
-			case Token.L_BRACKETS:
-				return this.parseArrayLiteral(false);
-
-			case Token.L_CURLY:
-				return this.parseObjectLiteral(false);
-
-			case Token.L_PARENTHESES: {
-				this.consume(Token.L_PARENTHESES);
-				if (this.check(Token.R_PARENTHESES)) {
-					// ()=>x.  The continuation that consumes the => is in
-					// ParseAssignmentExpressionCoverGrammar.
-
-					if (!this.peek().isType(Token.ARROW)) {
-						throw new Error(this.errorMessage(`Unexpected Token: ${Token.R_PARENTHESES.getName()}`));
-					}
-					return this.parseArrowFunctionLiteral([], ArrowFunctionType.NORMAL);
-				}
-				// Heuristically try to detect immediately called functions before
-				// seeing the call parentheses.
-
-				const peekToken = this.peek();
-				let expression: ExpressionNode;
-				const info: FunctionInfo = {};
-				if (peekToken.isType(Token.FUNCTION)) {
-					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionKind.NORMAL);
-				} else if (peekToken.isType(Token.ASYNC) && this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					expression = this.parseFunctionLiteral(FunctionKind.ASYNC);
-				} else {
-					expression = this.parseExpressionCoverGrammar(info);
-				}
-				this.expect(Token.R_PARENTHESES);
-				if (this.peek().isType(Token.ARROW)) {
-					if (expression instanceof SequenceExpression) {
-						expression = this.parseArrowFunctionLiteral(expression.getExpressions(), ArrowFunctionType.NORMAL, info.rest);
-					} else {
-						expression = this.parseArrowFunctionLiteral([expression], ArrowFunctionType.NORMAL, info.rest);
-					}
-				}
-				return expression;
-			}
 			case Token.CLASS: {
 				this.consume(Token.CLASS);
-				let name: ExpressionNode | undefined;
-				let isStrictReserved = false;
-				if (this.peekAnyIdentifier()) {
-					name = this.parseAndClassifyIdentifier(this.next());
-					isStrictReserved = Token.isStrictReservedWord(this.current().token);
-				}
-				return this.parseClassLiteral(name, isStrictReserved);
-			}
-			case Token.TEMPLATE_LITERALS:
-				return this.parseTemplateLiteral();
-			default:
+				const declaration = this.parseClassDeclaration(names, false);
+				const identifier = declaration.getId()!;
+				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 				break;
-		}
-		throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(this.next())}`));
-	}
-	protected parseTemplateLiteral(tag?: ExpressionNode): ExpressionNode {
-		const template = this.next().getValue() as PreTemplateLiteral;
-		const exprs = template.expressions.map(expr => JavaScriptParser.parse(expr));
-
-		if (tag) {
-			return new TaggedTemplateExpression(tag, template.strings, exprs);
-		} else {
-			return new TemplateLiteral(template.strings, exprs);
-		}
-	}
-	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
-		this.consume(Token.NEW);
-		let classRef: ExpressionNode;
-		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.L_PARENTHESES)) {
-			throw new Error(this.errorMessage(`parsing new import (`));
-		} else if (this.peek().isType(Token.SUPER)) {
-			throw new Error(this.errorMessage(`parsing new super() is never allowed`));
-		} else if (this.peek().isType(Token.PERIOD)) {
-			classRef = this.parseNewTargetExpression();
-			return this.parseMemberExpressionContinuation(classRef);
-		} else {
-			classRef = this.parseMemberExpression();
-		}
-		if (this.peek().isType(Token.L_PARENTHESES)) {
-			// NewExpression with arguments.
-			const args: ExpressionNode[] = this.parseArguments();
-			classRef = new NewExpression(classRef, args);
-			// The expression can still continue with . or [ after the arguments.
-			return this.parseMemberExpressionContinuation(classRef);
-		}
-		if (this.peek().isType(Token.QUESTION_PERIOD)) {
-			throw new Error(this.errorMessage(`parsing new xxx?.yyy at position`));
-		}
-		return new NewExpression(classRef);
-	}
-	protected parseArguments(maybeArrow?: ParsingArrowHeadFlag): ExpressionNode[] {
-		// Arguments ::
-		//   '(' (AssignmentExpression)*[','] ')'
-
-		this.consume(Token.L_PARENTHESES);
-		const args: ExpressionNode[] = [];
-		while (this.peek().isNotType(Token.R_PARENTHESES)) {
-			const isSpread = this.check(Token.ELLIPSIS);
-			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
-			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
-				if (isSpread) {
-					if (argument instanceof AssignmentExpression) {
-						throw new Error(this.errorMessage(` Rest parameter may not have a default initializer'`));
-					}
-					if (this.peek().isType(Token.COMMA)) {
-						throw new Error(this.errorMessage(`parsing '...spread,arg =>'`));
-					}
-				}
-			}
-			if (isSpread) {
-				argument = new SpreadElement(argument);
-			}
-			args.push(argument);
-			if (!this.check(Token.COMMA)) break;
-		}
-		if (!this.check(Token.R_PARENTHESES)) {
-			throw new Error(this.errorMessage(`parsing arguments call, expecting ')'`));
-		}
-		return args;
-	}
-	protected parseAssignmentExpressionCoverGrammar(): ExpressionNode {
-		// AssignmentExpression ::
-		//   ConditionalExpression
-		//   ArrowFunction
-		//   YieldExpression
-		//   LeftHandSideExpression AssignmentOperator AssignmentExpression
-
-		if (this.peek().isType(Token.YIELD) /*&& this.isGenerator()*/) {
-			return this.parseYieldExpression();
-		}
-		let expression: ExpressionNode = this.parseConditionalExpression();
-		const op = this.peek().token;
-		if (!Token.isArrowOrAssignmentOp(op)) return expression;
-		// Arrow functions.
-		if (op === Token.ARROW) {
-			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
-				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
-			}
-			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions().map(expr => new Param(expr as CanDeclareExpression));
-				return this.parseArrowFunctionLiteral(params, ArrowFunctionType.NORMAL);
-			}
-			if (expression instanceof GroupingExpression) {
-				return this.parseArrowFunctionLiteral([new Param(expression.getNode() as CanDeclareExpression)], ArrowFunctionType.NORMAL);
-			}
-			return this.parseArrowFunctionLiteral([new Param(expression)], ArrowFunctionType.NORMAL);
-		}
-		if (this.isAssignableIdentifier(expression)) {
-			if (this.isParenthesized(expression)) {
-				throw new Error(this.errorMessage(`Invalid Destructuring Target`));
-			}
-		} else if (this.isProperty(expression)) {
-			// throw new Error(this.errorMessage(`Invalid Property Binding Pattern`));
-		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
-			// Destructuring assignment.
-			if (this.isParenthesized(expression)) {
-				// Scanner.Location loc(lhs_beg_pos, end_position());
-				// if (expression_scope() -> IsCertainlyDeclaration()) {
-				// 	impl() -> ReportMessageAt(loc,
-				// 		MessageTemplate.kInvalidDestructuringTarget);
-				// } else {
-				// 	// Syntax Error if LHS is neither object literal nor an array literal
-				// 	// (Parenthesized literals are
-				// 	// CoverParenthesizedExpressionAndArrowParameterList).
-				// 	// #sec-assignment-operators-static-semantics-early-errors
-				// 	impl() -> ReportMessageAt(loc, MessageTemplate.kInvalidLhsInAssignment);
-				// }
-			}
-			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
-		} else {
-			if (!this.isValidReferenceExpression(expression)) {
-				throw new Error(this.errorMessage(`Invalid Reference Expression`));
-			}
-			if (Token.isLogicalAssignmentOp(op)) {
-				throw new Error(this.errorMessage(`Invalid Lhs In Assignment`));
-			}
-		}
-
-		this.consume(op);
-		// const opPosition = this.position();
-		const right: ExpressionNode = this.parseAssignmentExpression();
-		// Anonymous function name inference applies to =, ||=, &&=, and ??=.
-
-		if (!Token.isAssignment(op)) {
-			throw new Error(this.errorMessage(`Invalid Destructuring Target`));
-		}
-		return new AssignmentExpression(op.getName() as AssignmentOperator, expression, right);
-	}
-	protected parseAssignmentExpression(): ExpressionNode {
-		return this.parseAssignmentExpressionCoverGrammar();
-	}
-	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], flag: ArrowFunctionType, rest?: boolean): ExpressionNode {
-		this.consume(Token.ARROW);
-		const body = this.parseArrowFunctionBody();
-		return new ArrowFunctionExpression(parameters, body, flag, rest);
-	}
-	protected parseRegExpLiteral(): ExpressionNode {
-		if (!this.scanner.scanRegExpPattern()) {
-			throw new Error('Unterminated RegExp');
-		}
-		return this.scanner.currentToken().getValue();
-	}
-	protected parseArrayLiteral(isPattern: boolean): ExpressionNode {
-		// ArrayLiteral ::
-		//   '[' Expression? (',' Expression?)* ']'
-
-		this.consume(Token.L_BRACKETS);
-		const values: ExpressionNode[] = [];
-		let firstSpreadIndex = -1;
-
-		while (!this.check(Token.R_BRACKETS)) {
-			let elem: ExpressionNode;
-			if (this.peek().isType(Token.COMMA)) {
-				this.consume(Token.COMMA);
-				continue;
-			} else if (this.check(Token.ELLIPSIS)) {
-				const argument = this.parsePossibleDestructuringSubPattern();
-				elem = isPattern
-					? new RestElement(argument as CanDeclareExpression)
-					: new SpreadElement(argument)
-
-				if (firstSpreadIndex < 0) {
-					firstSpreadIndex = values.length;
-				}
-				if (this.peek().isType(Token.COMMA)) {
-					throw new Error(this.errorMessage(`Element After Rest @${this.position()}`));
-				}
-			} else {
-				elem = this.parsePossibleDestructuringSubPattern();
-			}
-			values.push(elem);
-		}
-		if (isPattern) {
-			return new ArrayPattern(values as CanDeclareExpression[]);
-		}
-		return new ArrayExpression(values);
-	}
-	protected parsePossibleDestructuringSubPattern(): ExpressionNode {
-		return this.parseAssignmentExpressionCoverGrammar();
-	}
-	protected parseObjectLiteral(isPattern: boolean): ExpressionNode {
-		// ObjectLiteral ::
-		// '{' (PropertyDefinition (',' PropertyDefinition)* ','? )? '}'
-
-		this.consume(Token.L_CURLY);
-		const properties: ExpressionNode[] = [];
-		while (!this.check(Token.R_CURLY)) {
-			const property: ExpressionNode = this.parseObjectPropertyDefinition(isPattern);
-			properties.push(property);
-			if (this.peek().isNotType(Token.R_CURLY)) {
-				this.expect(Token.COMMA);
-			}
-		}
-		if (isPattern) {
-			return new ObjectPattern(properties as (Property | RestElement)[]);
-		}
-		return new ObjectExpression(properties as Property[]);
-	}
-	protected parseObjectPropertyDefinition(isPattern: boolean): ExpressionNode {
-		const propInfo = { kind: PropertyKind.NotSet } as Required<PropertyKindInfo>;
-		const nameExpression = this.parseProperty(propInfo);
-
-		switch (propInfo.kind) {
-			case PropertyKind.Spread:
-				let value: SpreadElement | RestElement = nameExpression as SpreadElement;
-				if (isPattern) {
-					value = new RestElement(value.getArgument() as CanDeclareExpression);
-				}
-				return new Property(value.getArgument(), value, 'init');
-
-			case PropertyKind.Value: {
-				this.consume(Token.COLON);
-				const value = this.parsePossibleDestructuringSubPattern();
-				return new Property(nameExpression, value, 'init');
 			}
 
-			case PropertyKind.Assign:
-			case PropertyKind.ShorthandOrClassField:
-			case PropertyKind.Shorthand: {
-				// PropertyDefinition
-				//    IdentifierReference
-				//    CoverInitializedName
-				//
-				// CoverInitializedName
-				//    IdentifierReference Initializer?
-
-				const lhs = new Identifier(propInfo.name);
-				if (!this.isAssignableIdentifier(lhs)) {
-					throw new Error(this.errorMessage('Strict Eval Arguments'));
-				}
-				let value: ExpressionNode;
-				if (this.peek().isType(Token.ASSIGN)) {
-					this.consume(Token.ASSIGN);
-					const rhs = this.parseAssignmentExpression();
-					value = new AssignmentExpression(Token.ASSIGN.getName() as AssignmentOperator, lhs, rhs);
-				} else {
-					value = lhs;
-				}
-				return new Property(nameExpression, value, 'init');
-			}
-
-			case PropertyKind.Method: {
-				// MethodDefinition
-				//    PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
-				//    '*' PropertyName '(' StrictFormalParameters ')' '{' FunctionBody '}'
-
-				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new Property(nameExpression, value, 'init');
-			}
-
-			case PropertyKind.AccessorGetter:
-			case PropertyKind.AccessorSetter: {
-				const isGet = propInfo.kind == PropertyKind.AccessorGetter;
-				const value = this.parseFunctionLiteral(propInfo.funcFlag);
-				return new Property(nameExpression, value, isGet ? 'get' : 'set');
-			}
-
-			case PropertyKind.ClassField:
-			case PropertyKind.NotSet:
-				return NullNode;
-		}
-	}
-	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
-		let nextToken = this.peek();
-		if (this.check(Token.ASYNC)) {
-			// async
-			nextToken = this.peek();
-			if (nextToken.isNotType(Token.MUL)
-				&& parsePropertyKindFromToken(nextToken.token, propInfo)
-				|| this.scanner.hasLineTerminatorBeforeNext()) {
-				return AsyncIdentifier;
-			}
-			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionKind.ASYNC;
-		}
-
-		if (this.check(Token.MUL)) {
-			// async*
-			propInfo.kind = PropertyKind.Method;
-			propInfo.funcFlag = FunctionKind.ASYNC_GENERATOR;
-		}
-
-		nextToken = this.peek();
-		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
-			const token = this.next();
-			if (parsePropertyKindFromToken(this.peek().token, propInfo)) {
-				return nextToken.isType(Token.GET) ? GetIdentifier : SetIdentifier;
-			}
-			if (token.isType(Token.GET)) {
-				propInfo.kind = PropertyKind.AccessorGetter;
-			} else if (token.isType(Token.SET)) {
-				propInfo.kind = PropertyKind.AccessorSetter;
-			}
-		}
-		let propertyName: ExpressionNode;
-		switch (nextToken.token) {
-			case Token.PRIVATE_NAME:
-				this.consume(Token.PRIVATE_NAME);
-				if (propInfo.kind == PropertyKind.NotSet) {
-					parsePropertyKindFromToken(this.peek().token, propInfo);
-				}
-				propertyName = this.getIdentifier();
+			case Token.VAR:
+			case Token.LET:
+			case Token.CONST:
+				const declaration = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
+				const specifiers = declaration.getDeclarations()
+					.map(node => new ExportSpecifier(node.getId() as Identifier, node.getId() as Identifier));
+				result = new ExportNamedDeclaration(specifiers, declaration);
 				break;
-			case Token.STRING:
-			case Token.NUMBER:
-			case Token.BIGINT:
-				//   "12" -> 12
-				//   12.3 -> "12.3"
-				//   12.30 -> "12.3"
-				this.consume(nextToken.token);
-				propertyName = nextToken.getValue();
-				propInfo.name = (propertyName as StringLiteral).getValue();
-				break;
-			case Token.L_BRACKETS:
-				// [Symbol.iterator]
-				this.consume(Token.L_BRACKETS);
-				propertyName = this.parseAssignmentExpression();
-				this.expect(Token.R_BRACKETS);
-				if (propInfo.kind === PropertyKind.NotSet) {
-					parsePropertyKindFromToken(this.peek().token, propInfo);
-				}
-				propInfo.name = propertyName.toString();
-				return propertyName;
-			case Token.ELLIPSIS:
-				if (propInfo.kind == PropertyKind.NotSet) {
-					this.consume(Token.ELLIPSIS);
-					propertyName = this.parsePossibleDestructuringSubPattern();
-					propInfo.kind = PropertyKind.Spread;
 
-					if (!this.isValidReferenceExpression(propertyName)) {
-						throw new Error(this.errorMessage('Invalid Rest Binding/Assignment Pattern'));
-					}
-					if (this.peek().isNotType(Token.R_CURLY)) {
-						throw new Error(this.errorMessage('Element After Rest'));
-					}
-					propInfo.name = propertyName.toString();
-					return propertyName;
-				}
-			default:
-				propertyName = new StringLiteral(this.parsePropertyName().toString());
-				// propertyName = this.parsePropertyName();
-				propInfo.name = propertyName.toString();
-				break;
-		}
-		if (propInfo.kind === PropertyKind.NotSet) {
-			parsePropertyKindFromToken(this.peek().token, propInfo);
-		}
-		return propertyName;
-	}
-	protected parseMemberExpressionContinuation(expression: ExpressionNode): ExpressionNode {
-		if (!Token.isMember(this.peek().token)) return expression;
-		return this.doParseMemberExpressionContinuation(expression);
-	}
-	protected doParseMemberExpressionContinuation(expression: ExpressionNode): ExpressionNode {
-		if (!Token.isMember(this.peek().token)) {
-			throw new Error(this.errorMessage(`Parsing member expression`));
-		}
-		// Parses this part of MemberExpression:
-		// ('[' Expression ']' | '.' Identifier | TemplateLiteral)*
-		do {
-			switch (this.peek().token) {
-				case Token.L_BRACKETS: {
-					this.consume(Token.L_BRACKETS);
-					const index = this.parseExpressionCoverGrammar();
-					expression = new MemberExpression(expression, index, true);
-					this.expect(Token.R_BRACKETS);
-					break;
-				}
-				case Token.PERIOD: {
-					this.consume(Token.PERIOD);
-					const key: ExpressionNode = this.parsePropertyName();
-					expression = new MemberExpression(expression, key, false);
-					break;
-				}
-				case Token.TEMPLATE_LITERALS: {
-					expression = this.parseTemplateLiteral(expression);
-					break;
-				}
-				default:
-					break;
-			}
-		} while (Token.isMember(this.peek().token));
-		return expression;
-	}
-	protected parsePropertyName(): ExpressionNode {
-		const next = this.next();
-		if (next.getValue() instanceof Identifier) {
-			return next.getValue();
-		}
-		// check keyword as identifier
-		if (Token.isPropertyName(next.token)) {
-			return new Identifier(next.token.getName());
-		}
-		throw new Error(this.errorMessage(`Parsing property expression: Unexpected Token`));
-	}
-	protected parsePipelineExpression(expression: ExpressionNode): ExpressionNode {
-		// ConditionalExpression ::
-		//   LogicalExpression
-		//   expression '|>' function [':' expression [':'? expression] ] *
-		//   expression '|>' function '('[expression ','?]* ')'
-		//
-		//   expression '|>' function ':' expression [':' expression | '?']*]
-		//   expression '|>' function '(' expression [',' expression | '?']* ')'
-		//
-		// [~Await]PipelineExpression[?In, ?Yield, ?Await] |> LogicalORExpression[?In, ?Yield, ?Await]
-		// [+Await]PipelineExpression[? In, ? Yield, ? Await] |> [lookahead ∉ { await }]LogicalORExpression[? In, ? Yield, ? Await]
-
-		let token: Token;
-		while (Token.isPipelineOperator(token = this.peek().token)) {
-			this.consume(token);
-			expression = this.parsePipelineBody(expression);
-		}
-		return expression;
-	}
-	protected parsePipelineBody(lhs: ExpressionNode): ExpressionNode {
-		let body: ExpressionNode | undefined;
-		let token = this.peek();
-		// parse function
-		switch (token.token) {
-			case Token.FUNCTION:
-				this.consume(Token.FUNCTION);
-				if (this.peek().isType(Token.MUL)) {
-					this.consume(Token.MUL);
-					body = this.parseFunctionExpression(FunctionKind.GENERATOR);
-					break;
-				}
-				body = this.parseFunctionExpression(FunctionKind.NORMAL);
-				break;
 			case Token.ASYNC:
-				if (this.peekAhead().isType(Token.FUNCTION)) {
-					this.consume(Token.ASYNC);
-					this.consume(Token.FUNCTION);
-					if (this.peek().isType(Token.MUL)) {
-						this.consume(Token.MUL);
-						body = this.parseFunctionExpression(FunctionKind.ASYNC_GENERATOR);
-						break;
-					}
-					body = this.parseFunctionExpression(FunctionKind.ASYNC);
+				this.consume(Token.ASYNC);
+				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
+					const declaration = this.parseAsyncFunctionDeclaration(names, false);
+					const identifier = declaration.getId()!;
+					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 					break;
 				}
-				break;
+
 			default:
-				break;
+				throw new SyntaxError(this.errorMessage('Unexpected Token'));
 		}
-		if (body) {
-			return new PipelineExpression(lhs, body);
-		}
-		if (token.isType(Token.L_PARENTHESES)) {
-			// parse arrow function
-			// x |> ( y => y+1 )
-			body = this.parsePrimaryExpression();
-			return new PipelineExpression(lhs, body);
-		}
+		// loc.end_pos = scanner() -> location().end_pos;
 
-		// parse angular-like and f# and partial operator syntax
-		const func = this.parseMemberExpression(); //this.parseLogicalExpression();
-		let args: (ExpressionNode | '?' | '...?')[] = [];
-		switch (this.peek().token) {
-			case Token.COLON:
-				// support angular pipeline syntax
-				do {
-					this.consume(Token.COLON);
-					const isSpread = this.check(Token.ELLIPSIS);
-					if (this.peek().isType(Token.CONDITIONAL)) {
-						this.consume(Token.CONDITIONAL);
-						if (isSpread) {
-							args.push('...?');
-						} else {
-							args.push('?');
-						}
-					} else {
-						const arg = this.parseAssignmentExpressionCoverGrammar();
-						if (isSpread) {
-							args.push(new SpreadElement(arg));
-						} else {
-							args.push(arg);
-						}
-					}
-				} while (this.peek().isType(Token.COLON));
-				break;
-			case Token.L_PARENTHESES:
-				// es2022 syntax, F# & partial operator
-				this.consume(Token.L_PARENTHESES);
-				let indexed = false;
-				while (this.peek().isNotType(Token.R_PARENTHESES)) {
-					const isSpread = this.check(Token.ELLIPSIS);
-					if (this.peek().isType(Token.CONDITIONAL)) {
-						this.consume(Token.CONDITIONAL);
-						indexed = true;
-						if (isSpread) {
-							args.push('...?');
-						} else {
-							args.push('?');
-						}
-					} else {
-						const arg = this.parseAssignmentExpressionCoverGrammar();
-						if (isSpread) {
-							args.push(new SpreadElement(arg));
-						} else {
-							args.push(arg);
-						}
-					}
-					this.check(Token.COMMA);
-				}
-				this.expect(Token.R_PARENTHESES);
-				// should be indexed, has partial operator
-				if (!indexed) {
-					// z |> method(x, y) === method(x, y)(z)
-					body = new CallExpression(func, args as ExpressionNode[]);
-					return new PipelineExpression(lhs, body);
-				}
-				break;
-			default:
-				break;
-		}
-		return new PipelineExpression(lhs, func, args);
-	}
-	protected parseConditionalExpression(): ExpressionNode {
-		// ConditionalExpression ::
-		//   LogicalExpression
-		//   LogicalExpression '?' AssignmentExpression ':' AssignmentExpression
-		//
+		// SourceTextModuleDescriptor * descriptor = module();
+		// for (const AstRawString* name : names) {
+		// 	descriptor -> AddExport(name, name, loc, zone());
+		// }
 
-		let expression: ExpressionNode = this.parseLogicalExpression();
-		expression = this.parsePipelineExpression(expression);
-		return this.peek().isType(Token.CONDITIONAL) ? this.parseConditionalContinuation(expression) : expression;
-	}
-	protected parseLogicalExpression(): ExpressionNode {
-		// LogicalExpression ::
-		//   LogicalORExpression
-		//   CoalesceExpression
-
-		// Both LogicalORExpression and CoalesceExpression start with BitwiseOR.
-		// Parse for binary expressions >= 6 (BitwiseOR);
-
-		let expression: ExpressionNode = this.parseBinaryExpression(6);
-		const peek = this.peek();
-		if (peek.isType(Token.AND) || peek.isType(Token.OR)) {
-			// LogicalORExpression, pickup parsing where we left off.
-			const precedence = peek.token.getPrecedence();
-			expression = this.parseBinaryContinuation(expression, 4, precedence);
-		} else if (peek.isType(Token.NULLISH)) {
-			expression = this.parseNullishExpression(expression);
-		}
-		return expression;
-	}
-	protected parseBinaryContinuation(x: ExpressionNode, prec: number, prec1: number): ExpressionNode {
-		do {
-			// prec1 >= 4
-			while (this.peek().token.getPrecedence() === prec1) {
-				let y: ExpressionNode;
-				let op = this.next();
-
-				const is_right_associative = op.isType(Token.EXP);
-				const next_prec = is_right_associative ? prec1 : prec1 + 1;
-				y = this.parseBinaryExpression(next_prec);
-
-
-				// For now we distinguish between comparisons and other binary
-				// operations.  (We could combine the two and get rid of this
-				// code and AST node eventually.)
-
-				if (Token.isCompare(op.token)) {
-					// We have a comparison.
-					let cmp = op.token;
-					switch (op.token) {
-						case Token.NE: cmp = Token.EQ; break;
-						case Token.NE_STRICT: cmp = Token.EQ_STRICT; break;
-						default: break;
-					}
-					x = shortcutNumericLiteralBinaryExpression(x, y, cmp);
-					if (op.isNotType(cmp)) {
-						// The comparison was negated - add a NOT.
-						x = buildUnaryExpression(x, Token.NOT);
-					}
-				} else {
-					x = shortcutNumericLiteralBinaryExpression(x, y, op.token);
-				}
-			}
-			--prec1;
-		} while (prec1 >= prec);
-
-		return x;
-	}
-	protected parseBinaryExpression(precedence: number): ExpressionNode {
-		const x: ExpressionNode = this.parseUnaryExpression();
-		const precedence1 = this.peek().token.getPrecedence();
-		if (precedence1 >= precedence) {
-			return this.parseBinaryContinuation(x, precedence, precedence1);
-		}
-		return x;
-	}
-	protected parseUnaryExpression(): ExpressionNode {
-		// UnaryExpression ::
-		//   PostfixExpression
-		//   'delete' UnaryExpression
-		//   'void' UnaryExpression
-		//   'typeof' UnaryExpression
-		//   '++' UnaryExpression
-		//   '--' UnaryExpression
-		//   '+' UnaryExpression
-		//   '-' UnaryExpression
-		//   '~' UnaryExpression
-		//   '!' UnaryExpression
-		//   [+Await] AwaitExpression[?Yield]
-
-		const op = this.peek();
-		if (Token.isUnaryOrCount(op.token)) {
-			return this.parseUnaryOrPrefixExpression();
-		}
-		if (op.isType(Token.AWAIT)) {
-			return this.parseAwaitExpression();
-		}
-		return this.parsePostfixExpression();
-	}
-	protected parseUnaryOrPrefixExpression(): ExpressionNode {
-		const op = this.next();
-		const expression = this.parseUnaryExpression();
-		if (Token.isUnary(op.token)) {
-			if (op.isType(Token.DELETE)) {
-				if (this.isIdentifier(expression)) {
-					// "delete identifier" is a syntax error in strict mode.
-					throw new Error(this.errorMessage(`"delete identifier" is a syntax error in strict mode`));
-				}
-				if (expression instanceof MemberExpression && expression.getProperty().toString().startsWith('#')) {
-					throw new Error(this.errorMessage(`"Delete Private Field" is a syntax error`));
-				}
-			}
-
-			if (this.peek().isType(Token.EXP)) {
-				throw new Error(this.errorMessage(`Unexpected Token Unary Exponentiation`));
-			}
-		}
-
-		if (Token.isCount(op.token) || Token.isUnary(op.token)) {
-			// Allow the parser to rewrite the expression.
-			return buildUnaryExpression(expression, op.token);
-		}
-		throw new Error(this.errorMessage(`while rewrite unary operation`));
-	}
-	protected parsePostfixExpression(): ExpressionNode {
-		// PostfixExpression ::
-		//   LeftHandSideExpression ('++' | '--')?
-
-		const expression: ExpressionNode = this.parseLeftHandSideExpression();
-		if (!Token.isCount(this.peek().token) || this.scanner.hasLineTerminatorBeforeNext()) {
-			return expression;
-		}
-		return this.parsePostfixContinuation(expression);
-	}
-	protected parsePostfixContinuation(expression: ExpressionNode): ExpressionNode {
-		if (!this.isValidReferenceExpression(expression)) {
-			throw new Error(this.errorMessage(`Invalid LHS In Postfix Op.`));
-		}
-		const op = this.next();
-		return buildPostfixExpression(expression, op.token);
-	}
-	protected parseLeftHandSideExpression(): ExpressionNode {
-		// LeftHandSideExpression ::
-		//   (NewExpression | MemberExpression) ...
-		const result = this.parseMemberExpression();
-		if (!Token.isPropertyOrCall(this.peek().token)) return result;
-		return this.parseLeftHandSideContinuation(result);
-	}
-	protected parseLeftHandSideContinuation(result: ExpressionNode): ExpressionNode {
-		if (this.peek().isType(Token.L_PARENTHESES)
-			&& this.isIdentifier(result)
-			&& this.scanner.currentToken().isType(Token.ASYNC)
-			&& !this.scanner.hasLineTerminatorBeforeNext()) {
-			const args = this.parseArguments(ParsingArrowHeadFlag.AsyncArrowFunction);
-			if (this.peek().isType(Token.ARROW)) {
-				// async () => ...
-				if (!args.length) return new EmptyStatement;
-				// async ( Arguments ) => ...
-				return this.expressionListToExpression(args);
-			}
-			result = new CallExpression(result, args);
-			if (!Token.isPropertyOrCall(this.peek().token)) return result;
-		}
-
-		let optionalChaining = false;
-		let isOptional = false;
-		do {
-			switch (this.peek().token) {
-				// chain
-				case Token.QUESTION_PERIOD: {
-					if (isOptional) {
-						throw new Error(this.errorMessage(`Failure Expression`));
-					}
-					this.consume(Token.QUESTION_PERIOD);
-					isOptional = true;
-					optionalChaining = true;
-					if (Token.isPropertyOrCall(this.peek().token)) continue;
-					const key = this.parsePropertyName();
-					result = new MemberExpression(result, key, false, isOptional);
-					break;
-				}
-
-				/* Property */
-				case Token.L_BRACKETS: {
-					this.consume(Token.L_BRACKETS);
-					const index = this.parseExpressionCoverGrammar();
-					result = new MemberExpression(result, index, true, isOptional);
-					this.expect(Token.R_BRACKETS);
-					break;
-				}
-
-				/* Property */
-				case Token.PERIOD: {
-					if (isOptional) {
-						throw new Error(this.errorMessage(`Unexpected Token:${this.position()}`));
-					}
-					this.consume(Token.PERIOD);
-					const key = this.parsePropertyName();
-					result = new MemberExpression(result, key, false, isOptional);
-					break;
-				}
-
-				/* Call */
-				case Token.L_PARENTHESES: {
-					const args = this.parseArguments();
-					if (result.toString() === 'eval') {
-						throw new Error(this.errorMessage(`'eval(...)' is not supported.`));
-					}
-					result = new CallExpression(result, args, isOptional);
-					break;
-				}
-
-				/* bind call */
-				case Token.BIND: {
-					if (isOptional) {
-						throw new Error(this.errorMessage(`Unexpected Token:${this.position()}`));
-					}
-					this.consume(Token.BIND);
-					const key = this.parsePropertyName();
-					result = new BindExpression(result, key, false, isOptional);
-					break;
-				}
-
-				/* chain bind call */
-				case Token.QUESTION_BIND: {
-					if (isOptional) {
-						throw new Error(this.errorMessage(`Failure Expression`));
-					}
-					this.consume(Token.QUESTION_BIND);
-					isOptional = true;
-					optionalChaining = true;
-					const key = this.parsePropertyName();
-					result = new BindExpression(result, key, true, isOptional);
-					break;
-				}
-
-				default:
-					// Template literals in/after an Optional Chain not supported:
-					if (optionalChaining) {
-						throw new Error(this.errorMessage(`Optional Chaining No Template support`));
-					}
-					/* Tagged Template */
-					result = this.parseTemplateLiteral(result);
-					break;
-			}
-			if (isOptional) {
-				isOptional = false;
-			}
-		} while (Token.isPropertyOrCall(this.peek().token));
-		if (optionalChaining) {
-			result = new ChainExpression(result);
-		}
 		return result;
 	}
-	protected parseAwaitExpression(): ExpressionNode {
-		this.consume(Token.AWAIT);
-		const value = this.parseUnaryExpression();
-		if (this.peek().isType(Token.EXP)) {
-			throw new Error(this.scanner.createError(`Unexpected Token Unary Exponentiation`));
-		}
-		return buildUnaryExpression(value, Token.AWAIT);
-	}
-	protected parseNullishExpression(expression: ExpressionNode): ExpressionNode {
-		// CoalesceExpression ::
-		//   CoalesceExpressionHead ?? BitwiseORExpression
+	protected parseImportDeclaration(): ExpressionNode | undefined {
+		// ImportDeclaration :
+		//   'import' ImportClause 'from' ModuleSpecifier ';'
+		//   'import' ModuleSpecifier ';'
+		//   'import' ImportClause 'from' ModuleSpecifier [no LineTerminator here]
+		//       AssertClause ';'
+		//   'import' ModuleSpecifier [no LineTerminator here] AssertClause';'
 		//
-		//   CoalesceExpressionHead ::
-		//     CoalesceExpression
-		//     BitwiseORExpression
+		// ImportClause :
+		//   ImportedDefaultBinding
+		//   NameSpaceImport
+		//   NamedImports
+		//   ImportedDefaultBinding ',' NameSpaceImport
+		//   ImportedDefaultBinding ',' NamedImports
+		//
+		// NameSpaceImport :
+		//   '*' 'as' ImportedBinding
 
-		// We create a binary operation for the first nullish, otherwise collapse
-		// into an nary expression.
+		this.expect(Token.IMPORT);
 
-		const list: ExpressionNode[] = [];
-		list.push(expression);
-		while (this.peek().isType(Token.NULLISH)) {
-			this.consume(Token.NULLISH);
-			// Parse BitwiseOR or higher.
-			expression = this.parseBinaryExpression(6);
-			list.push(expression);
+		const tok = this.peek();
+
+		// 'import' ModuleSpecifier ';'
+		if (tok.isType(Token.STRING)) {
+			// Scanner::Location specifier_loc = scanner() -> peek_location();
+			const moduleSpecifier = this.parseModuleSpecifier();
+			const importAssertions = this.parseImportAssertClause();
+			this.expectSemicolon();
+
+			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
+			return new ImportDeclaration(moduleSpecifier, undefined, importAssertions);
 		}
-		expression = list.pop()!;
-		expression = list.reverse()
-			.reduce((previous, current) => new LogicalExpression(Token.NULLISH.getName() as LogicalOperator, current, previous), expression);
-		return expression;
-	}
-	protected parseConditionalContinuation(expression: ExpressionNode): ExpressionNode {
-		this.consume(Token.CONDITIONAL);
-		const left: ExpressionNode = this.parseAssignmentExpression();
-		this.expect(Token.COLON);
-		const right = this.parseAssignmentExpression();
-		return new ConditionalExpression(expression, left, right);
-	}
-	protected parseYieldExpression(): ExpressionNode {
-		// YieldExpression ::
-		//   'yield' ([no line terminator] '*'? AssignmentExpression)?
-		this.consume(Token.YIELD);
-		let delegating = false;  // yield*
-		let expression: ExpressionNode | undefined;
-		if (this.check(Token.MUL)) {
-			delegating = true;
+
+		// Parse ImportedDefaultBinding if present.
+		let importDefaultBinding: Identifier | undefined;
+		// Scanner::Location import_default_binding_loc;
+		if (tok.isNotType(Token.MUL) && tok.isNotType(Token.LBRACE)) {
+			importDefaultBinding = this.parseNonRestrictedIdentifier();
+			// DeclareUnboundVariable(import_default_binding, VariableMode:: kConst,kNeedsInitialization, pos);
 		}
-		switch (this.peek().token) {
-			case Token.EOS:
-			case Token.SEMICOLON:
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
-			case Token.COLON:
-			case Token.COMMA:
-			case Token.IN:
-				// The above set of tokens is the complete set of tokens that can appear
-				// after an AssignmentExpression, and none of them can start an
-				// AssignmentExpression.  This allows us to avoid looking for an RHS for
-				// a regular yield, given only one look-ahead token.
-				if (!delegating) break;
-				// Delegating yields require an RHS; fall through.
-				// V8_FALLTHROUGH;
-				throw new Error(this.errorMessage(`Delegating yields require an RHS`));
-			default:
-				expression = this.parseAssignmentExpressionCoverGrammar();
-				break;
+
+		// Parse NameSpaceImport or NamedImports if present.
+		let moduleNamespaceBinding: Identifier | undefined;
+		let namedImports: ModuleSpecifier[] | undefined;
+		// Scanner::Location module_namespace_binding_loc;
+		// const ZonePtrList<const NamedImport >* named_imports = nullptr;
+		if (importDefaultBinding == undefined || this.check(Token.COMMA)) {
+			switch (this.peek().token) {
+				case Token.MUL: {
+					this.consume(Token.MUL);
+					this.expectContextualKeyword('as');
+					moduleNamespaceBinding = this.parseNonRestrictedIdentifier();
+					// ExpectContextualKeyword(ast_value_factory() -> as_string());
+					// module_namespace_binding = ParseNonRestrictedIdentifier();
+					// module_namespace_binding_loc = scanner() -> location();
+					// DeclareUnboundVariable(module_namespace_binding, VariableMode:: kConst, kCreatedInitialized, pos);
+					break;
+				}
+
+				case Token.LBRACE:
+					namedImports = this.parseNamedImports();
+					break;
+
+				default:
+					throw new SyntaxError(this.errorMessage('Unexpected Token'));
+			}
 		}
-		return new YieldExpression(delegating, expression);
-	}
-	protected parseNewTargetExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
-	}
-	protected parseClassDeclaration(names: ExpressionNode[] | undefined, defaultExport: boolean): ExpressionNode {
-		throw new Error(this.errorMessage(`Expression (class) not supported.`));
-	}
-	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {
-		throw new Error(this.errorMessage(`Expression (class) not supported.`));
-	}
-	protected parseSuperExpression(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (supper) not supported.'));
+		this.expectContextualKeyword('from');
+		// ExpectContextualKeyword(ast_value_factory() -> from_string());
+		// Scanner::Location specifier_loc = scanner() -> peek_location();
+		const moduleSpecifier = this.parseModuleSpecifier();
+		const importAssertions = this.parseImportAssertClause();
+		this.expectSemicolon();
+
+		// Now that we have all the information, we can make the appropriate
+		// declarations.
+
+		// TODO(neis): Would prefer to call DeclareVariable for each case below rather
+		// than above and in ParseNamedImports, but then a possible error message
+		// would point to the wrong location.  Maybe have a DeclareAt version of
+		// Declare that takes a location?
+
+		const specifiers: ModuleSpecifier[] = [];
+		if (moduleNamespaceBinding) {
+			specifiers.push(new ImportNamespaceSpecifier(moduleNamespaceBinding));
+		}
+		if (importDefaultBinding) {
+			specifiers.push(new ImportDefaultSpecifier(importDefaultBinding));
+		}
+		if (namedImports?.length) {
+			specifiers.push(...namedImports);
+		}
+		return new ImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions);
 	}
 	protected parseImportExpressions(): ExpressionNode {
-		throw new Error(this.errorMessage('Expression (import) not supported.'));
+		this.consume(Token.IMPORT);
+		if (this.check(Token.PERIOD)) {
+			this.expectContextualKeyword('meta');
+			return MetaProperty.ImportMeta;
+		}
+
+		if (this.peek().isNotType(Token.LPAREN)) {
+			throw new SyntaxError(this.errorMessage('Unexpected Token'));
+		}
+
+		this.consume(Token.LPAREN);
+		if (this.peek().isType(Token.RPAREN)) {
+			throw new SyntaxError(this.errorMessage('Import Missing Specifier'));
+		}
+		this.setAcceptIN(true);
+		const specifier = this.parseAssignmentExpressionCoverGrammar();
+
+		if (this.check(Token.COMMA)) {
+			if (this.check(Token.RPAREN)) {
+				// A trailing comma allowed after the specifier.
+				return new ImportExpression(specifier as Literal<string>);
+			} else {
+				const importAssertions = this.parseAssignmentExpressionCoverGrammar();
+				this.check(Token.COMMA);  // A trailing comma is allowed after the import
+				// assertions.
+				this.expect(Token.RPAREN);
+				return new ImportExpression(specifier as Literal<string>, importAssertions);
+			}
+		}
+
+		this.expect(Token.RPAREN);
+		this.restoreAcceptIN();
+		return new ImportExpression(specifier as Literal<string>);
+	}
+	protected parseVariableStatement(varContext: VariableDeclarationContext, names: string[]) {
+		// VariableStatement ::
+		//   VariableDeclarations ';'
+
+		// The scope of a var declared variable anywhere inside a function
+		// is the entire function (ECMA-262, 3rd, 10.1.3, and 12.2). Thus we can
+		// transform a source-level var declaration into a (Function) Scope
+		// declaration, and rewrite the source-level initialization into an assignment
+		// statement. We use a block to collect multiple assignments.
+		//
+		// We mark the block as initializer block because we don't want the
+		// rewriter to add a '.result' assignment to such a block (to get compliant
+		// behavior for code such as print(eval('var x = 7')), and for cosmetic
+		// reasons when pretty-printing. Also, unless an assignment (initialization)
+		// is inside an initializer block, it is ignored.
+		const declarations = this.parseVariableDeclarations(varContext);
+		this.expectSemicolon();
+		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
+		return declarations;
+	}
+	protected parseImportAssertClause(): ImportAttribute[] | undefined {
+		// AssertClause :
+		//    assert '{' '}'
+		//    assert '{' AssertEntries '}'
+
+		// AssertEntries :
+		//    IdentifierName: AssertionKey
+		//    IdentifierName: AssertionKey , AssertEntries
+
+		// AssertionKey :
+		//     IdentifierName
+		//     StringLiteral
+
+		//   auto import_assertions = zone() -> New<ImportAssertions>(zone());
+
+		// if (!FLAG_harmony_import_assertions) {
+		// 	return import_assertions;
+		// }
+
+		// Assert clause is optional, and cannot be preceded by a LineTerminator.
+		if (this.scanner.hasLineTerminatorBeforeNext() || !this.checkContextualKeyword('assert')) {
+			return undefined;
+		}
+		this.expect(Token.LBRACE);
+		const counts = {} as { [key: string]: number };
+		const importAssertions: ImportAttribute[] = [];
+		while (this.peek().isNotType(Token.RBRACE)) {
+			let attributeKey = this.checkAndGetValue(Token.STRING);
+			if (!attributeKey) {
+				attributeKey = this.parsePropertyOrPrivatePropertyName();
+			}
+			this.expect(Token.COLON);
+			const attributeValue = this.expectAndGetValue(Token.STRING);
+			importAssertions.push(new ImportAttribute(attributeKey as Identifier, attributeValue as Literal<string>));
+			counts[attributeKey.toString()] = (counts[attributeKey.toString()] ?? 0) + 1;
+			if (counts[attributeKey.toString()] > 1) {
+				// 	// It is a syntax error if two AssertEntries have the same key.
+				throw new SyntaxError(this.errorMessage('Import Assertion  Duplicate Key'));
+			}
+
+			if (this.peek().isType(Token.RBRACE)) break;
+			if (!this.check(Token.COMMA)) {
+				throw new SyntaxError('Unexpected Token');
+			}
+		}
+		this.expect(Token.RBRACE);
+		return importAssertions;
+	}
+	protected parseModuleSpecifier(): Literal<string> {
+		// ModuleSpecifier :
+		//    StringLiteral
+
+		return this.expectAndGetValue(Token.STRING) as Literal<string>;
+	}
+	protected parseExportClause() {
+		// ExportClause :
+		//   '{' '}'
+		//   '{' ExportsList '}'
+		//   '{' ExportsList ',' '}'
+		//
+		// ExportsList :
+		//   ExportSpecifier
+		//   ExportsList ',' ExportSpecifier
+		//
+		// ExportSpecifier :
+		//   IdentifierName
+		//   IdentifierName 'as' IdentifierName
+		//   IdentifierName 'as' ModuleExportName
+		//   ModuleExportName
+		//   ModuleExportName 'as' ModuleExportName
+		//
+		// ModuleExportName :
+		//   StringLiteral
+		// ZoneChunkList < ExportClauseData >* export_data = zone() -> New<ZoneChunkList<ExportClauseData>>(zone());
+
+		this.expect(Token.LBRACE);
+
+		const exportData: ExportSpecifier[] = [];
+		let nameTok = this.peek();
+		while (nameTok.isNotType(Token.RBRACE)) {
+			const localName = this.parseExportSpecifierName();
+			let exportName;
+			if (this.checkContextualKeyword('as')) {
+				exportName = this.parseExportSpecifierName();
+			} else {
+				exportName = localName;
+			}
+			exportData.push(new ExportSpecifier(exportName as Identifier, localName as Identifier));
+			if (this.peek().isType(Token.RBRACE)) break;
+			if (!this.check(Token.COMMA)) {
+				throw new SyntaxError('Unexpected Token');
+			}
+		}
+		this.expect(Token.RBRACE);
+		return exportData;
+	}
+	protected parseExportSpecifierName() {
+		const next = this.next();
+
+		// IdentifierName
+		if (next.isType(Token.IDENTIFIER) || Token.isPropertyName(next.token)) {
+			return next.getValue() as Identifier;
+		}
+
+		// ModuleExportName
+		if (next.isType(Token.STRING)) {
+			const exportName = next.getValue() as Literal<string>;
+			return exportName;
+		}
+		throw new SyntaxError(this.errorMessage('Unexpected Token'));
+	}
+	protected parseNamedImports(): ImportSpecifier[] {
+		// NamedImports :
+		//   '{' '}'
+		//   '{' ImportsList '}'
+		//   '{' ImportsList ',' '}'
+		//
+		// ImportsList :
+		//   ImportSpecifier
+		//   ImportsList ',' ImportSpecifier
+		//
+		// ImportSpecifier :
+		//   BindingIdentifier
+		//   IdentifierName 'as' BindingIdentifier
+		//   ModuleExportName 'as' BindingIdentifier
+
+		this.expect(Token.LBRACE);
+		const result: ImportSpecifier[] = [];
+
+		//   auto result = zone() -> New < ZonePtrList <const NamedImport>> (1, zone());
+		while (this.peek().isNotType(Token.RBRACE)) {
+			const importName = this.parseExportSpecifierName() as Identifier;
+			let localName = importName;
+			// In the presence of 'as', the left-side of the 'as' can
+			// be any IdentifierName. But without 'as', it must be a valid
+			// BindingIdentifier.
+			if (this.checkContextualKeyword('as')) {
+				localName = this.parsePropertyOrPrivatePropertyName() as Identifier;
+			}
+			if (!Token.isValidIdentifier(this.current().token, LanguageMode.Strict, false, isStrict(this.languageMode))) {
+				throw new SyntaxError(this.errorMessage('Unexpected Reserved Keyword'));
+			} else if (this.isEvalOrArguments(localName)) {
+				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
+			}
+
+			result.push(new ImportSpecifier(localName, importName));
+
+			// DeclareUnboundVariable(localName, VariableMode:: kConst, kNeedsInitialization, position());
+
+			// NamedImport * import = zone() -> New<NamedImport>(import_name, local_name, location);
+			// result-> Add(import, zone());
+
+			if (this.peek().isType(Token.RBRACE)) break;
+			this.expect(Token.COMMA);
+		}
+
+		this.expect(Token.RBRACE);
+		return result;
+	}
+
+	protected parseExportDefault(): ExportDefaultDeclaration {
+		//  Supports the following productions, starting after the 'default' token:
+		//    'export' 'default' HoistableDeclaration
+		//    'export' 'default' ClassDeclaration
+		//    'export' 'default' AssignmentExpression[In] ';'
+
+		this.expect(Token.DEFAULT);
+		// Scanner::Location default_loc = scanner() -> location();
+
+		// ZonePtrList <const AstRawString> localNames(1, zone());
+		const localNames: string[] = [];
+		let result: ExpressionNode;
+		switch (this.peek().token) {
+			case Token.FUNCTION:
+				result = this.parseHoistableDeclaration(localNames, true);
+				break;
+
+			case Token.CLASS:
+				this.consume(Token.CLASS);
+				result = this.parseClassDeclaration(localNames, true);
+				break;
+
+			case Token.ASYNC:
+				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
+					this.consume(Token.ASYNC);
+					result = this.parseHoistableDeclaration(localNames, true);
+					break;
+				}
+
+			default: {
+				// int pos = position();
+				// AcceptINScope scope(this, true);
+				this.setAcceptIN(true);
+				result = this.parseAssignmentExpression();
+				// SetFunctionName(value, ast_value_factory() -> default_string());
+
+				// const AstRawString* local_name = ast_value_factory() -> dot_default_string();
+				// localNames.Add(local_name, zone());
+
+				// It's fine to declare this as VariableMode::kConst because the user has
+				// no way of writing to it.
+				// VariableProxy * proxy = DeclareBoundVariable(local_name, VariableMode:: kConst, pos);
+				// proxy ->var() -> set_initializer_position(position());
+
+				// Assignment * assignment = factory() -> NewAssignment(Token.INIT, proxy, value, kNoSourcePosition);
+				// result = IgnoreCompletion( factory() -> NewExpressionStatement(assignment, kNoSourcePosition));
+
+				this.expectSemicolon();
+				this.restoreAcceptIN();
+				break;
+			}
+		}
+
+		// if (!result) {
+		// 	DCHECK_EQ(localNames.length(), 1);
+		// 	module() -> AddExport(localNames.first(), ast_value_factory() -> default_string(), default_loc, zone());
+		// }
+
+		return new ExportDefaultDeclaration(result);
+	}
+	protected parseExportStar(): ExpressionNode | undefined {
+		this.consume(Token.MUL);
+
+		if (!this.peekContextualKeyword('as')) {
+			// 'export' '*' 'from' ModuleSpecifier ';'
+			// Scanner::Location loc = scanner() -> location();
+			this.expectContextualKeyword('from');
+			// Scanner::Location specifier_loc = scanner() -> peek_location();
+			const moduleSpecifier = this.parseModuleSpecifier();
+			const importAssertions = this.parseImportAssertClause();
+			this.expectSemicolon();
+			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
+			return new ExportAllDeclaration(moduleSpecifier, undefined, importAssertions);
+		}
+
+		// 'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
+		//
+		// Desugaring:
+		//   export * as x from "...";
+		// ~>
+		//   import * as .x from "..."; export {.x as x};
+		//
+		// Note that the desugared internal namespace export name (.x above) will
+		// never conflict with a string literal export name, as literal string export
+		// names in local name positions (i.e. left of 'as' or in a clause without
+		// 'as') are disallowed without a following 'from' clause.
+
+		this.expectContextualKeyword('as');
+		const exportName = this.parseExportSpecifierName();
+		// Scanner::Location export_name_loc = scanner() -> location();
+		// const localName = this.nextInternalNamespaceExportName();
+		// Scanner::Location local_name_loc = Scanner:: Location:: invalid();
+		// DeclareUnboundVariable(local_name, VariableMode:: kConst, kCreatedInitialized,pos);
+
+		this.expectContextualKeyword('from');
+		const moduleSpecifier = this.parseModuleSpecifier();
+		const importAssertions = this.parseImportAssertClause();
+		this.expectSemicolon();
+
+		// const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];
+
+		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
+		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
+		return new ExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions);
 	}
 }

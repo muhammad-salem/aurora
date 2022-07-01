@@ -75,7 +75,7 @@ export class NodeParser {
 		}
 		if (this.stackTrace.length > 0) {
 			console.error(this.stackTrace);
-			throw new Error(`error parsing html, had ${this.stackTrace.length} element, with no closing tag`);
+			throw new Error(`error parsing html, had ${this.stackTrace.length} element, [${(this.stackTrace as DomElementNode[]).map(dom => dom.tagName).join(', ')}], with no closing tag`);
 		}
 		let stack = this.childStack;
 		this.reset();
@@ -153,7 +153,7 @@ export class NodeParser {
 			if (!isEmptyElement(this.currentNode.tagName)
 				&& this.currentNode.tagName.trim().toLowerCase() !== this.tempText.trim().toLowerCase()
 			) {
-				throw 'Wrong closed tag at char ' + this.index;
+				throw new Error(`Wrong closed tag at char ${this.index}, tag name: ${this.currentNode.tagName}`);
 			}
 			this.popElement();
 			this.tempText = '';

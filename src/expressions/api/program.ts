@@ -1,11 +1,11 @@
 import type {
 	ExpressionEventPath, ExpressionNode,
 	NodeDeserializer, VisitNodeType
-} from '../../expression.js';
-import type { Scope, ScopeContext } from '../../../scope/scope.js';
-import type { Stack } from '../../../scope/stack.js';
-import { AbstractExpressionNode } from '../../abstract.js';
-import { Deserializer } from '../../deserialize/deserialize.js';
+} from './expression.js';
+import type { Scope, ScopeContext } from '../scope/scope.js';
+import type { Stack } from '../scope/stack.js';
+import { AbstractExpressionNode } from './abstract.js';
+import { Deserializer } from './deserialize/deserialize.js';
 
 export type ProgramSourceType = 'script' | 'module';
 
@@ -26,7 +26,7 @@ export class Program extends AbstractExpressionNode {
 		throw new Error(`Program#set() has no implementation.`);
 	}
 	get(stack: Stack): any {
-		return this.body.forEach(statement => statement.get(stack));
+		return this.body.map(statement => statement.get(stack)).at(-1);
 	}
 
 	dependency(computed?: true): ExpressionNode[] {

@@ -7,20 +7,7 @@ import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier, Literal } from '../definition/values.js';
-
-export abstract class ModuleSpecifier extends AbstractExpressionNode {
-	constructor(protected local: Identifier) {
-		super();
-	}
-	getLocal() {
-		return this.local;
-	}
-	toJson(): object {
-		return {
-			local: this.local.toJSON()
-		};
-	}
-}
+import { ImportAttribute, ModuleSpecifier } from './common.js';
 
 /**
  * An imported variable binding,
@@ -89,7 +76,7 @@ export class ImportSpecifier extends ModuleSpecifier {
 }
 
 /**
- * A default import specifier, e.g., foo in import foo from "mod.js".
+ * A default import specifier, e.g., `foo` in `import foo from "mod.js";`.
  */
 @Deserializer('ImportDefaultSpecifier')
 export class ImportDefaultSpecifier extends ModuleSpecifier {
@@ -122,7 +109,7 @@ export class ImportDefaultSpecifier extends ModuleSpecifier {
 }
 
 /**
- * A namespace import specifier, e.g., * as foo in import * as foo from "mod.js".
+ * A namespace import specifier, e.g., `* as foo` in `import * as foo from "mod.js";`.
  */
 @Deserializer('ImportNamespaceSpecifier')
 export class ImportNamespaceSpecifier extends ModuleSpecifier {
@@ -177,7 +164,6 @@ export class ImportNamespaceSpecifier extends ModuleSpecifier {
  * 
  * import "module-name";
  * 
- * var promise = import("module-name");
  */
 @Deserializer('ImportDeclaration')
 export class ImportDeclaration extends AbstractExpressionNode {
@@ -185,18 +171,18 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		return new ImportDeclaration(
 			deserializer(node.source) as Literal<string>,
 			node.specifiers?.map(deserializer) as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
-			(node.assertions && deserializer(node.assertions)) || undefined,
+			node.assertions?.map(deserializer) as (ImportAttribute)[],
 		);
 	}
 	static visit(node: ImportDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.source);
 		node.specifiers?.forEach(visitNode);
-		node.assertions && (node.assertions);
+		node.assertions?.forEach(visitNode);
 	}
 	constructor(
 		private source: Literal<string>,
 		private specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
-		private assertions?: ExpressionNode) {
+		private assertions?: ImportAttribute[]) {
 		super();
 	}
 	getSource() {
@@ -215,7 +201,9 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	get(stack: Stack): void {
 		let importCallOptions: ImportCallOptions | undefined;
 		if (this.assertions) {
-			const importAssertions: ImportAssertions = this.assertions.get(stack);
+			const importAssertions: ImportAssertions = this.assertions
+				.map(assertion => assertion.get(stack))
+				.reduce((p, c) => Object.assign(p, c), {});
 			if (importAssertions) {
 				importCallOptions = { assert: importAssertions };
 			}
@@ -274,12 +262,13 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			const importSpecifiersString = importSpecifiers.map(importSpecifier => importSpecifier.toString()).join(',');
 			parts.push(`{ ${importSpecifiersString} }`);
 		}
-		return `import ${parts.join(', ')} '${this.source.toString()}'${this.assertions ? ` assert ${this.assertions.toString()}` : ''}`;
+		return `import ${parts.join(', ')} from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {
 			source: this.source.toJSON(),
 			specifiers: this.specifiers?.map(specifier => specifier.toJSON()),
+			assertions: this.assertions?.map(assertion => assertion.toJSON()),
 		};
 	}
 }
@@ -289,6 +278,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
  * `ImportExpression` node represents Dynamic Imports such as `import(source)`.
  * The `source` property is the importing source as similar to ImportDeclaration node,
  * but it can be an arbitrary expression node.
+ * var promise = import("module-name");
  */
 @Deserializer('ImportExpression')
 export class ImportExpression extends AbstractExpressionNode {

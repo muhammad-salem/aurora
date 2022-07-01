@@ -7,7 +7,7 @@ import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement } from './terminate.js';
+import { TerminateReturnType } from './terminate.js';
 import { Identifier } from '../../definition/values.js';
 
 
@@ -137,8 +137,12 @@ export class SwitchStatement extends AbstractExpressionNode {
 		const caseBlock = stack.pushBlockScope();
 		for (let index = startIndex; index < this.cases.length; index++) {
 			const returnValue = this.cases[index].get(stack);
-			if (returnValue === BreakStatement.BreakSymbol) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 		}
 		stack.clearTo(caseBlock);

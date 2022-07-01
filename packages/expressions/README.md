@@ -19,6 +19,7 @@
 Aurora expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
+ - An 100% spec compliant ES2022 JavaScript toolchain
 
 ## `Install`
 

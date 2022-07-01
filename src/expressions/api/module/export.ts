@@ -35,14 +35,14 @@
 
 import type {
 	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType, CanDeclareExpression
+	ExpressionEventPath, VisitNodeType, DeclarationExpression
 } from '../expression.js';
 import { ModuleContext, ReactiveScope, Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { Identifier, StringLiteral } from '../definition/values.js';
-import { ModuleSpecifier } from './import.js';
+import { Identifier, Literal } from '../definition/values.js';
+import { ImportAttribute, ModuleSpecifier } from './common.js';
 import { FunctionDeclaration } from '../definition/function.js';
 import { ClassDeclaration } from '../class/class.js';
 
@@ -124,19 +124,22 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportNamedDeclaration, deserializer: NodeDeserializer): ExportNamedDeclaration {
 		return new ExportNamedDeclaration(
 			node.specifiers.map(deserializer) as ExportSpecifier[],
-			node.source ? deserializer(node.source) as StringLiteral : void 0,
-			node.declaration ? deserializer(node.declaration) as CanDeclareExpression : void 0,
+			node.declaration ? deserializer(node.declaration) as DeclarationExpression : void 0,
+			node.source ? deserializer(node.source) as Literal<string> : void 0,
+			node.assertions ? node.assertions.map(deserializer) as ImportAttribute[] : void 0,
 		);
 	}
 	static visit(node: ExportNamedDeclaration, visitNode: VisitNodeType): void {
 		node.specifiers.map(visitNode);
 		node.source && visitNode(node.source);
 		node.declaration && visitNode(node.declaration);
+		node.assertions?.forEach(visitNode);
 	}
 	constructor(
 		private specifiers: ExportSpecifier[],
-		private source?: StringLiteral,
-		private declaration?: CanDeclareExpression) {
+		private declaration?: DeclarationExpression,
+		private source?: Literal<string>,
+		private assertions?: ImportAttribute[],) {
 		super();
 	}
 	getSource() {
@@ -147,6 +150,9 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	}
 	getDeclaration() {
 		return this.declaration;
+	}
+	getAssertions() {
+		return this.assertions;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
@@ -178,7 +184,16 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 		if (!this.source) {
 			return;
 		}
-		const sourceModule = stack.importModule(this.source.get());
+		let importCallOptions: ImportCallOptions | undefined;
+		if (this.assertions) {
+			const importAssertions: ImportAssertions = this.assertions
+				.map(assertion => assertion.get(stack))
+				.reduce((p, c) => Object.assign(p, c), {});
+			if (importAssertions) {
+				importCallOptions = { assert: importAssertions };
+			}
+		}
+		const sourceModule = stack.importModule(this.source.get(), importCallOptions);
 		const localModule = stack.getModule()!;
 		this.specifiers.forEach(specifier => {
 			const localName = specifier.getLocal().get(stack);
@@ -193,7 +208,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 			stack.onDestroy(() => scopeSubscription.unsubscribe());
 		});
 	}
-	private exportLocal(stack: Stack) {
+	private exportLocal(stack: Stack, importCallOptions?: ImportCallOptions) {
 		const localModule = stack.getModule()!;
 		this.specifiers.forEach(specifier => {
 			const localName = specifier.getLocal().get(stack);
@@ -229,13 +244,14 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 			return `${exportStr};`;
 		}
 		const source = this.source.toString();
-		return `${exportStr} from ${source};`;
+		return `${exportStr} from ${source}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {
 			specifiers: this.specifiers.map(specifier => specifier.toJSON()),
 			source: this.source?.toJSON(),
 			declaration: this.declaration?.toJSON(),
+			assertions: this.assertions?.map(assertion => assertion.toJSON()),
 		};
 	}
 }
@@ -292,27 +308,56 @@ export class ExportDefaultDeclaration extends AbstractExpressionNode {
 @Deserializer('ExportAllDeclaration')
 export class ExportAllDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportAllDeclaration, deserializer: NodeDeserializer): ExportAllDeclaration {
-		return new ExportAllDeclaration(deserializer(node.source) as StringLiteral);
+		return new ExportAllDeclaration(
+			deserializer(node.source) as Literal<string>,
+			node.exported ? deserializer(node.exported) as Identifier : void 0,
+			node.assertions?.map(deserializer) as ImportAttribute[],
+		);
 	}
 	static visit(node: ExportAllDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.source);
+		node.exported && visitNode(node.exported);
+		node.assertions?.forEach(visitNode);
 	}
 	constructor(
-		private source: StringLiteral) {
+		private source: Literal<string>,
+		private exported?: Identifier,
+		private assertions?: ImportAttribute[],) {
 		super();
 	}
 	getSource() {
 		return this.source;
+	}
+	getExported() {
+		return this.exported;
+	}
+	getAssertions() {
+		return this.assertions;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ExportDefaultDeclaration.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		const localModule = stack.getModule()!;
-		const sourceModule = stack.importModule(this.source.get());
-		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];
+		let importCallOptions: ImportCallOptions | undefined;
+		if (this.assertions) {
+			const importAssertions: ImportAssertions = this.assertions
+				.map(assertion => assertion.get(stack))
+				.reduce((p, c) => Object.assign(p, c), {});
+			if (importAssertions) {
+				importCallOptions = { assert: importAssertions };
+			}
+		}
+		let localModule: ReactiveScope<ModuleContext> = stack.getModule()!;
+		const sourceModule = stack.importModule(this.source.get(), importCallOptions);
 
+		if (this.exported) {
+			const exportedName = this.exported.get(stack);
+			localModule.set(exportedName, {});
+			localModule = localModule.getScope(exportedName)!;
+		}
+
+		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];
 		properties.forEach(property => {
 
 			const localValue = sourceModule.get(property);
@@ -332,11 +377,13 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 		return [];
 	}
 	toString() {
-		return `export * from ${this.source.toString()}`;
+		return `export *${this.exported ? ` as ${this.exported.toString()}` : ''} from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {
 			source: this.source.toJSON(),
+			exported: this.exported?.toJSON(),
+			assertions: this.assertions?.map(assertion => assertion.toJSON()),
 		};
 	}
 }

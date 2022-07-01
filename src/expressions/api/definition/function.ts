@@ -1,8 +1,8 @@
 import type {
-	CanDeclareExpression, ExpressionEventPath, ExpressionNode,
+	DeclarationExpression, ExpressionEventPath, ExpressionNode,
 	NodeDeserializer, VisitNodeType
 } from '../expression.js';
-import type { Stack } from '../../scope/stack.js';
+import { Stack } from '../../scope/stack.js';
 import { Scope } from '../../scope/scope.js';
 import {
 	AbstractExpressionNode, AwaitPromise, ReturnValue,
@@ -10,39 +10,15 @@ import {
 } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from './values.js';
-import { BreakStatement, ContinueStatement } from '../statement/control/terminate.js';
-
-export enum FunctionKind {
-	NORMAL = 'NORMAL',
-	ASYNC = 'ASYNC',
-	GENERATOR = 'GENERATOR',
-	ASYNC_GENERATOR = 'ASYNC_GENERATOR',
-
-	CONCISE = 'CONCISE',
-	ASYNC_CONCISE = 'ASYNC_CONCISE',
-	CONCISE_GENERATOR = 'CONCISE_GENERATOR',
-	ASYNC_CONCISE_GENERATOR = 'ASYNC_CONCISE_GENERATOR',
-
-	STATIC_CONCISE = 'STATIC_CONCISE',
-	STATIC_ASYNC_CONCISE = 'STATIC_ASYNC_CONCISE',
-	STATIC_CONCISE_GENERATOR = 'STATIC_CONCISE_GENERATOR',
-	STATIC_ASYNC_CONCISE_GENERATOR = 'STATIC_ASYNC_CONCISE_GENERATOR',
-
-	DERIVED_CONSTRUCTOR = 'DERIVED_CONSTRUCTOR',
-	BASE_CONSTRUCTOR = 'BASE_CONSTRUCTOR',
-
-}
-
-export enum ArrowFunctionType {
-	NORMAL = 'NORMAL',
-	ASYNC = 'ASYNC'
-}
+import { TerminateReturnType } from '../statement/control/terminate.js';
+import { RestElement } from '../computing/rest.js';
+import { BlockStatement } from '../statement/control/block.js';
 
 @Deserializer('Param')
 export class Param extends AbstractExpressionNode {
 	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
 		return new Param(
-			deserializer(node.identifier) as CanDeclareExpression,
+			deserializer(node.identifier) as DeclarationExpression,
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
 		);
 	}
@@ -50,7 +26,7 @@ export class Param extends AbstractExpressionNode {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
-	constructor(private identifier: CanDeclareExpression, private defaultValue?: ExpressionNode) {
+	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode) {
 		super();
 	}
 	getIdentifier() {
@@ -86,7 +62,7 @@ export class Param extends AbstractExpressionNode {
 	}
 }
 
-export abstract class FunctionBaseExpression extends AbstractExpressionNode {
+export abstract class BaseFunctionExpression extends AbstractExpressionNode {
 	private sharedVariables: Scope<any>[];
 	shareVariables(scopeList: Scope<any>[]): void {
 		this.sharedVariables = scopeList;
@@ -104,26 +80,26 @@ export abstract class FunctionBaseExpression extends AbstractExpressionNode {
 }
 
 @Deserializer('FunctionExpression')
-export class FunctionExpression extends FunctionBaseExpression {
+export class FunctionExpression extends BaseFunctionExpression {
 	static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
 		return new FunctionExpression(
 			node.params.map(deserializer),
-			node.body.map(deserializer),
-			FunctionKind[node.kind],
+			deserializer(node.body),
+			node.async,
+			node.generator,
 			node.id ? deserializer(node.id) as Identifier : void 0,
-			node.rest,
-			node.generator
 		);
 	}
 	static visit(node: FunctionExpression, visitNode: VisitNodeType): void {
 		node.id && visitNode(node.id);
 		node.params.forEach(visitNode);
-		node.body.forEach(visitNode);
+		visitNode(node.body);
 	}
 	constructor(
-		protected params: ExpressionNode[], protected body: ExpressionNode[],
-		protected kind: FunctionKind, protected id?: CanDeclareExpression,
-		protected rest?: boolean, protected generator?: boolean) {
+		protected params: ExpressionNode[], protected body: ExpressionNode,
+		protected async: boolean, protected generator: boolean,
+		protected id?: Identifier,
+	) {
 		super();
 	}
 	getParams() {
@@ -132,176 +108,193 @@ export class FunctionExpression extends FunctionBaseExpression {
 	getBody() {
 		return this.body;
 	}
-	getKind() {
-		return this.kind;
+	getGenerator() {
+		return this.generator;
 	}
 	getId() {
 		return this.id;
 	}
-	getRest() {
-		return this.rest;
+	getAsync() {
+		return this.async;
 	}
 	set(stack: Stack, value: Function) {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
 	setParameter(stack: Stack, args: any[]) {
-		const limit = this.rest ? this.params.length - 1 : this.params.length;
+		const rest = this.params[this.params.length - 1] instanceof RestElement;
+		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
 		}
-		if (this.rest) {
+		if (rest) {
 			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {
-		const self = this;
 		let func: Function;
-		switch (this.kind) {
-			case FunctionKind.ASYNC:
-				func = async function (this: any, ...args: any[]) {
-					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('this', this);
-					self.setParameter(stack, args);
-					let returnValue: any;
-					for (const statement of self.body) {
-						statement.shareVariables(innerScopes);
-						returnValue = statement.get(stack);
-						if (stack.awaitPromise.length > 0) {
-							for (const awaitRef of stack.awaitPromise) {
-								const awaitValue = await awaitRef.promise;
-								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitValue);
-								} else {
-									awaitRef.node.set(stack, awaitValue);
-								}
-							}
-							stack.awaitPromise.splice(0);
-						}
-						else if (stack.forAwaitAsyncIterable) {
-							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
-								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (ContinueStatement.ContinueSymbol === result) {
-									continue;
-								}
-								else if (BreakStatement.BreakSymbol === result) {
-									break;
-								}
-								else if (result instanceof ReturnValue) {
-									returnValue = result;
-									break;
-								}
-							}
-							stack.forAwaitAsyncIterable = undefined;
-						}
-						if (returnValue instanceof ReturnValue) {
-							returnValue = returnValue.value;
-							if (returnValue instanceof AwaitPromise) {
-								returnValue = await returnValue.promise;
-								self.clearFunctionScope(stack, innerScopes);
-								return returnValue;
-							}
+		if (this.async && this.generator) {
+			func = this.getAsyncGeneratorFunction(stack);
+		} else if (this.async) {
+			func = this.getAsyncFunction(stack);
+		} else if (this.generator) {
+			func = this.getGeneratorFunction(stack);
+		} else {
+			func = this.getFunction(stack);
+		}
+		// this.id?.declareVariable(stack, func);
+		return func;
+	}
+	private getAsyncFunction(stack: Stack) {
+		const self = this;
+		return async function (this: any, ...args: any[]) {
+			const innerScopes = self.initFunctionScope(stack);
+			stack.declareVariable('this', this);
+			self.setParameter(stack, args);
+			let returnValue: any;
+			const statements = (self.body as BlockStatement).getBody();
+			for (const statement of statements) {
+				statement.shareVariables(innerScopes);
+				returnValue = statement.get(stack);
+				if (stack.awaitPromise.length > 0) {
+					for (const awaitRef of stack.awaitPromise) {
+						const awaitValue = await awaitRef.promise;
+						if (awaitRef.declareVariable) {
+							awaitRef.node.declareVariable(stack, awaitValue);
+						} else {
+							awaitRef.node.set(stack, awaitValue);
 						}
 					}
+					stack.awaitPromise.splice(0);
+				}
+				else if (stack.forAwaitAsyncIterable) {
+					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
+						}
+						else if (result instanceof ReturnValue) {
+							returnValue = result;
+							break;
+						}
+					}
+					stack.forAwaitAsyncIterable = undefined;
+				}
+				if (returnValue instanceof ReturnValue) {
+					returnValue = returnValue.value;
+					if (returnValue instanceof AwaitPromise) {
+						returnValue = await returnValue.promise;
+						self.clearFunctionScope(stack, innerScopes);
+						return returnValue;
+					}
+				}
+			}
+			self.clearFunctionScope(stack, innerScopes);
+		};
+
+	}
+	private getGeneratorFunction(stack: Stack) {
+		const self = this;
+		return function* (this: any, ...args: any[]) {
+			const innerScopes = self.initFunctionScope(stack);
+			stack.declareVariable('this', this);
+			self.setParameter(stack, args);
+			let returnValue: any;
+			const statements = (self.body as BlockStatement).getBody();
+			for (const statement of statements) {
+				statement.shareVariables(innerScopes);
+				returnValue = statement.get(stack);
+				if (returnValue instanceof ReturnValue) {
 					self.clearFunctionScope(stack, innerScopes);
-				};
-				break;
-			case FunctionKind.GENERATOR:
-				func = function* (this: any, ...args: any[]) {
-					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('this', this);
-					self.setParameter(stack, args);
-					let returnValue: any;
-					for (const statement of self.body) {
-						statement.shareVariables(innerScopes);
-						returnValue = statement.get(stack);
-						if (returnValue instanceof ReturnValue) {
+					return returnValue.value;
+				} else if (returnValue instanceof YieldValue) {
+					yield returnValue.value;
+				} else if (returnValue instanceof YieldDelegateValue) {
+					yield* returnValue.value;
+				}
+			}
+			self.clearFunctionScope(stack, innerScopes);
+		};
+	}
+	private getAsyncGeneratorFunction(stack: Stack) {
+		const self = this;
+		return async function* (this: any, ...args: any[]) {
+			const innerScopes = self.initFunctionScope(stack);
+			stack.declareVariable('this', this);
+			self.setParameter(stack, args);
+			let returnValue: any;
+			const statements = (self.body as BlockStatement).getBody();
+			for (const statement of statements) {
+				statement.shareVariables(innerScopes);
+				returnValue = statement.get(stack);
+				if (stack.awaitPromise.length > 0) {
+					for (const awaitRef of stack.awaitPromise) {
+						const awaitValue = await awaitRef.promise;
+						if (awaitRef.declareVariable) {
+							awaitRef.node.declareVariable(stack, awaitValue);
+						} else {
+							awaitRef.node.set(stack, awaitValue);
+						}
+					}
+					stack.awaitPromise.splice(0);
+				}
+				else if (stack.forAwaitAsyncIterable) {
+					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
+						}
+						else if (result instanceof ReturnValue) {
 							self.clearFunctionScope(stack, innerScopes);
-							return returnValue.value;
-						} else if (returnValue instanceof YieldValue) {
-							yield returnValue.value;
-						} else if (returnValue instanceof YieldDelegateValue) {
-							yield* returnValue.value;
-						}
-					}
-					self.clearFunctionScope(stack, innerScopes);
-				};
-				break;
-			case FunctionKind.ASYNC_GENERATOR:
-				func = async function* (this: any, ...args: any[]) {
-					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('this', this);
-					self.setParameter(stack, args);
-					let returnValue: any;
-					for (const statement of self.body) {
-						statement.shareVariables(innerScopes);
-						returnValue = statement.get(stack);
-						if (stack.awaitPromise.length > 0) {
-							for (const awaitRef of stack.awaitPromise) {
-								const awaitValue = await awaitRef.promise;
-								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitValue);
-								} else {
-									awaitRef.node.set(stack, awaitValue);
-								}
-							}
-							stack.awaitPromise.splice(0);
-						}
-						else if (stack.forAwaitAsyncIterable) {
-							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
-								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (ContinueStatement.ContinueSymbol === result) {
-									continue;
-								}
-								else if (BreakStatement.BreakSymbol === result) {
-									break;
-								}
-								else if (result instanceof ReturnValue) {
-									self.clearFunctionScope(stack, innerScopes);
-									returnValue = returnValue.value;
-									if (returnValue instanceof AwaitPromise) {
-										return await returnValue.promise;
-									} else if (returnValue instanceof YieldValue) {
-										yield returnValue.value;
-									} else if (returnValue instanceof YieldDelegateValue) {
-										yield* returnValue.value;
-									}
-									return returnValue;
-								}
-							}
-							stack.forAwaitAsyncIterable = undefined;
-						}
-						if (returnValue instanceof ReturnValue) {
 							returnValue = returnValue.value;
 							if (returnValue instanceof AwaitPromise) {
 								return await returnValue.promise;
+							} else if (returnValue instanceof YieldValue) {
+								yield returnValue.value;
+							} else if (returnValue instanceof YieldDelegateValue) {
+								yield* returnValue.value;
 							}
 							return returnValue;
 						}
 					}
-					self.clearFunctionScope(stack, innerScopes);
-				};
-				break;
-			default:
-			case FunctionKind.NORMAL:
-				func = function (this: any, ...args: any[]) {
-					const innerScopes = self.initFunctionScope(stack);
-					stack.declareVariable('this', this);
-					self.setParameter(stack, args);
-					let returnValue: any;
-					for (const statement of self.body) {
-						statement.shareVariables(innerScopes);
-						returnValue = statement.get(stack);
-						if (returnValue instanceof ReturnValue) {
-							self.clearFunctionScope(stack, innerScopes);
-							return returnValue.value;
-						}
+					stack.forAwaitAsyncIterable = undefined;
+				}
+				if (returnValue instanceof ReturnValue) {
+					returnValue = returnValue.value;
+					if (returnValue instanceof AwaitPromise) {
+						return await returnValue.promise;
 					}
+					return returnValue;
+				}
+			}
+			self.clearFunctionScope(stack, innerScopes);
+		};
+	}
+	private getFunction(stack: Stack) {
+		const self = this;
+		return function (this: any, ...args: any[]) {
+			const innerScopes = self.initFunctionScope(stack);
+			stack.declareVariable('this', this);
+			self.setParameter(stack, args);
+			let returnValue: any;
+			const statements = (self.body as BlockStatement).getBody();
+			for (const statement of statements) {
+				statement.shareVariables(innerScopes);
+				returnValue = statement.get(stack);
+				if (returnValue instanceof ReturnValue) {
 					self.clearFunctionScope(stack, innerScopes);
-				};
-				break;
-		}
-		this.id?.declareVariable(stack, func);
-		return func;
+					return returnValue.value;
+				}
+			}
+			self.clearFunctionScope(stack, innerScopes);
+		};
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
@@ -310,76 +303,76 @@ export class FunctionExpression extends FunctionBaseExpression {
 		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
-		let declare: string;
-		switch (this.kind) {
-			case FunctionKind.ASYNC:
-				declare = 'async function'; break;
-			case FunctionKind.GENERATOR:
-				declare = 'function*'; break;
-			case FunctionKind.ASYNC_GENERATOR:
-				declare = 'async function*'; break;
-			default:
-			case FunctionKind.NORMAL:
-				declare = 'function'; break;
+		let declare: string = 'function ';
+		if (this.async && this.generator) {
+			declare = 'async function* ';
+		} else if (this.async) {
+			declare = 'async function ';
+		} else if (this.generator) {
+			declare = 'function* ';
 		}
-		return `${declare} ${this.id?.toString() || ''}(${this.params.map((param, index, array) => {
-			if (index === array.length - 1 && this.rest) {
-				return '...' + param.toString();
-			} else {
-				return param.toString();
-			}
-		}).join(', ')}) ${this.body.toString()}`;
+		return `${declare}${this.id?.toString() || ''}${this.paramsAndBodyToString()}`;
+	}
+	paramsAndBodyToString() {
+		return `(${this.params.map(param => param.toString()).join(', ')}) ${this.body.toString()}`;
 	}
 	toJson(): object {
 		return {
 			params: this.params.map(param => param.toJSON()),
-			body: this.body.map(statement => statement.toJSON()),
-			kind: this.kind,
+			body: this.body.toJSON(),
+			async: this.async,
 			id: this.id?.toJSON(),
-			rest: this.rest,
 			generator: this.generator
 		};
 	}
 }
 
 @Deserializer('FunctionDeclaration')
-export class FunctionDeclaration extends FunctionExpression {
+export class FunctionDeclaration extends FunctionExpression implements DeclarationExpression {
 	static fromJSON(node: FunctionDeclaration, deserializer: NodeDeserializer): FunctionDeclaration {
 		return new FunctionDeclaration(
 			node.params.map(deserializer),
-			node.body.map(deserializer),
-			FunctionKind[node.kind],
-			node.id ? deserializer(node.id) as CanDeclareExpression : void 0,
-			node.rest,
-			node.generator
+			deserializer(node.body),
+			node.async,
+			node.generator,
+			deserializer(node.id) as Identifier
 		);
 	}
 	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
-		node.id && visitNode(node.id);
+		visitNode(node.id);
 		node.params.forEach(visitNode);
-		node.body.forEach(visitNode);
+		visitNode(node.body);
 	}
-	declare protected id?: CanDeclareExpression;
+	declare protected id: Identifier;
 	constructor(
-		params: ExpressionNode[], body: ExpressionNode[],
-		kind: FunctionKind, id?: CanDeclareExpression,
-		rest?: boolean, generator?: boolean) {
-		super(params, body, kind, id, rest, generator);
+		params: ExpressionNode[],
+		body: ExpressionNode,
+		async: boolean,
+		generator: boolean,
+		id: Identifier) {
+		super(params, body, async, generator, id);
+	}
+	override get(stack: Stack): Function {
+		const func = super.get(stack);
+		this.declareVariable(stack, func);
+		return func;
+	}
+	declareVariable(stack: Stack, value: Function) {
+		this.id.declareVariable(stack, value);
 	}
 }
 
 
 @Deserializer('ArrowFunctionExpression')
-export class ArrowFunctionExpression extends FunctionBaseExpression {
+export class ArrowFunctionExpression extends BaseFunctionExpression {
 	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
 		return new ArrowFunctionExpression(
 			node.params.map(deserializer),
 			Array.isArray(node.body)
 				? node.body.map(deserializer)
 				: deserializer(node.body),
-			ArrowFunctionType[node.kind],
-			node.rest,
-			node.generator
+			node.expression,
+			node.async
 		);
 	}
 	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType): void {
@@ -388,8 +381,12 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 			? node.body.forEach(visitNode)
 			: visitNode(node.body);
 	}
-	constructor(private params: ExpressionNode[], private body: ExpressionNode | ExpressionNode[],
-		private kind: ArrowFunctionType, private rest?: boolean, private generator?: boolean) {
+	private generator = false;
+	constructor(
+		private params: ExpressionNode[],
+		private body: ExpressionNode | ExpressionNode[],
+		private expression: boolean,
+		private async: boolean,) {
 		super();
 	}
 	getParams() {
@@ -398,97 +395,95 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 	getBody() {
 		return this.body;
 	}
-	getRest() {
-		return this.rest;
+	getExpression() {
+		return this.expression;
 	}
 	set(stack: Stack, value: Function) {
 		throw new Error('ArrowFunctionExpression#set() has no implementation.');
 	}
 	private setParameter(stack: Stack, args: any[]) {
-		const limit = this.rest ? this.params.length - 1 : this.params.length;
+		const rest = this.params[this.params.length - 1] instanceof RestElement;
+		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
 			this.params[i].set(stack, args[i]);
 		}
-		if (this.rest) {
+		if (rest) {
 			this.params[limit].set(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {
-		let func: Function;
-		switch (this.kind) {
-			case ArrowFunctionType.ASYNC:
-				func = async (...args: any[]) => {
-					const innerScopes = this.initFunctionScope(stack);
-					this.setParameter(stack, args);
-					let returnValue: any;
-					const statements = Array.isArray(this.body) ? this.body : [this.body];
-					for (const state of statements) {
-						state.shareVariables(innerScopes);
-						returnValue = state.get(stack);
-						if (stack.awaitPromise.length > 0) {
-							for (const awaitRef of stack.awaitPromise) {
-								const awaitValue = await awaitRef.promise;
-								if (awaitRef.declareVariable) {
-									awaitRef.node.declareVariable(stack, awaitValue);
-								} else {
-									awaitRef.node.set(stack, awaitValue);
-								}
-							}
-							stack.awaitPromise.splice(0);
-						}
-						else if (stack.forAwaitAsyncIterable) {
-							for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
-								const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
-								if (ContinueStatement.ContinueSymbol === result) {
-									continue;
-								}
-								else if (BreakStatement.BreakSymbol === result) {
-									break;
-								}
-								else if (result instanceof ReturnValue) {
-									returnValue = result;
-									break;
-								}
-							}
-							stack.forAwaitAsyncIterable = undefined;
-						}
-						if (returnValue instanceof ReturnValue) {
-							returnValue = returnValue.value;
-							if (returnValue instanceof AwaitPromise) {
-								this.clearFunctionScope(stack, innerScopes);
-								return await returnValue.promise;
-							}
+		return this.async ? this.getAsyncArrowFunction(stack) : this.getArrowFunction(stack);
+	}
+	private getAsyncArrowFunction(stack: Stack) {
+		async (...args: any[]) => {
+			const innerScopes = this.initFunctionScope(stack);
+			this.setParameter(stack, args);
+			let returnValue: any;
+			const statements = Array.isArray(this.body) ? this.body : [this.body];
+			for (const state of statements) {
+				state.shareVariables(innerScopes);
+				returnValue = state.get(stack);
+				if (stack.awaitPromise.length > 0) {
+					for (const awaitRef of stack.awaitPromise) {
+						const awaitValue = await awaitRef.promise;
+						if (awaitRef.declareVariable) {
+							awaitRef.node.declareVariable(stack, awaitValue);
+						} else {
+							awaitRef.node.set(stack, awaitValue);
 						}
 					}
+					stack.awaitPromise.splice(0);
+				}
+				else if (stack.forAwaitAsyncIterable) {
+					for await (let iterator of stack.forAwaitAsyncIterable.iterable) {
+						const result = stack.forAwaitAsyncIterable.forAwaitBody(iterator);
+						if (result instanceof TerminateReturnType) {
+							if (result.type === 'continue') {
+								continue;
+							} else {
+								break;
+							}
+						}
+						else if (result instanceof ReturnValue) {
+							returnValue = result;
+							break;
+						}
+					}
+					stack.forAwaitAsyncIterable = undefined;
+				}
+				if (returnValue instanceof ReturnValue) {
+					returnValue = returnValue.value;
+					if (returnValue instanceof AwaitPromise) {
+						this.clearFunctionScope(stack, innerScopes);
+						return await returnValue.promise;
+					}
+				}
+			}
+			this.clearFunctionScope(stack, innerScopes);
+			if (this.expression) {
+				return returnValue;
+			}
+		};
+	}
+	private getArrowFunction(stack: Stack) {
+		return (...args: any[]) => {
+			const innerScopes = this.initFunctionScope(stack);
+			this.setParameter(stack, args);
+			let returnValue: any;
+			const statements = Array.isArray(this.body) ? this.body : [this.body];
+			for (const statement of statements) {
+				statement.shareVariables(innerScopes);
+				returnValue = statement.get(stack);
+				if (returnValue instanceof ReturnValue) {
 					this.clearFunctionScope(stack, innerScopes);
-					if (!Array.isArray(this.body)) {
-						return returnValue;
-					}
-				};
-				break;
-			default:
-			case ArrowFunctionType.NORMAL:
-				func = (...args: any[]) => {
-					const innerScopes = this.initFunctionScope(stack);
-					this.setParameter(stack, args);
-					let returnValue: any;
-					const statements = Array.isArray(this.body) ? this.body : [this.body];
-					for (const statement of statements) {
-						statement.shareVariables(innerScopes);
-						returnValue = statement.get(stack);
-						if (returnValue instanceof ReturnValue) {
-							this.clearFunctionScope(stack, innerScopes);
-							return returnValue.value;
-						}
-					}
-					this.clearFunctionScope(stack, innerScopes);
-					if (!Array.isArray(this.body)) {
-						return returnValue;
-					}
-				};
-				break;
-		}
-		return func;
+					return returnValue.value;
+				}
+			}
+			this.clearFunctionScope(stack, innerScopes);
+			if (this.expression) {
+				return returnValue;
+			}
+		};
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.params.flatMap(param => param.dependency());
@@ -497,21 +492,11 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 		return this.params.flatMap(param => param.dependencyPath(computed));
 	}
 	toString(): string {
-		let str = this.kind === ArrowFunctionType.ASYNC ? 'async ' : '';
-		if (this.params.length === 0) {
-			str += '()';
-		} else if (this.params.length === 1) {
+		let str = this.async ? 'async ' : '';
+		if (this.params.length === 1) {
 			str += this.params[0].toString();
 		} else {
-			str += '(';
-			str += this.params.map((param, index, array) => {
-				if (index === array.length - 1 && this.rest) {
-					return '...' + param.toString();
-				} else {
-					return param.toString();
-				}
-			}).join(', ');
-			str += ')';
+			str += `(${this.params.map(param => param.toString()).join(', ')})`;
 		}
 		str += ' => ';
 		str += this.body.toString();
@@ -522,8 +507,7 @@ export class ArrowFunctionExpression extends FunctionBaseExpression {
 			params: this.params.map(param => param.toJSON()),
 			body: Array.isArray(this.body) ? this.body.map(item => item.toJSON()) : this.body.toJSON(),
 			expression: true,
-			kind: this.kind,
-			rest: this.rest,
+			async: this.async,
 			generator: this.generator
 		};
 	}
