@@ -52,7 +52,7 @@ export interface ExpressionNode {
 	/**
 	 * get all dependencies form an expression node
 	 *
-	 * tha return from this method, is represent an answer for what identifiers this expression depends-on.
+	 * the return from this method, is represent an answer for what identifiers this expression depends-on.
 	 * 
 	 *
 	 * ex:
@@ -94,7 +94,7 @@ export interface ExpressionNode {
 	/**
 	 * get all the events form this expression
 	 * 
-	 * tha return from this method, is represent an answer for what is this expression depends-on as identifier name
+	 * the return from this method, is represent an answer for what is this expression depends-on as identifier name
 	 * 
 	 * ex: 
 	 * ```js
