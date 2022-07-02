@@ -1,0 +1,12 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"name": "Ibyar/Aurora",
+	"includeVersion": true,
+	"out": "docs",
+	"basePath": "./src",
+	"githubPages": true,
+	"entryPointStrategy": "Packages",
+	"entryPoints": [
+		"./"
+	]
+}

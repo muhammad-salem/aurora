@@ -15,6 +15,7 @@
 		"@ibyar/esmpack": "^0.1.93",
 		"progress": "^2.0.3",
 		"test262-parser-tests": "^0.0.5",
+		"typedoc": "^0.23.4",
 		"typescript": "^4.7.4"
 	},
 	"scripts": {
@@ -31,6 +32,7 @@
 		"do:publish": "npm run build && lerna publish",
 		"update:config": "./tasks/update-config",
 		"local:npm": "./tasks/run-local-npm",
-		"local:publish": "./tasks/publish-local"
+		"local:publish": "./tasks/publish-local",
+		"docs": "./node_modules/.bin/typedoc --tsconfig ./tsconfig.json"
 	}
 }
