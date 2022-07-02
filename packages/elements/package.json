@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/elements",
-	"version": "0.5.6",
+	"version": "0.5.62",
 	"description": "Aurora element, hold info about HTMLElements class, attributes and tag name",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/elements",
