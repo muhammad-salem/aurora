@@ -48,7 +48,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._modelScope = modelScope;
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
-			const elementScope = this._viewScope.getScopeOrCreat('this');
+			const elementScope = this._viewScope.getScopeOrCreate('this');
 			componentRef.inputs.forEach(input => {
 				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {

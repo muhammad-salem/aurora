@@ -53,7 +53,7 @@ export interface Scope<T = ScopeContext> {
 	 * if no scope found in the cache, will create a new one, add this one to the map, return a reference.
 	 * @param propertyKey
 	 */
-	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): Scope<V>;
+	getScopeOrCreate<V extends ScopeContext>(propertyKey: keyof T): Scope<V>;
 
 	getClass(): TypeOf<Scope<ScopeContext>>;
 }
@@ -104,7 +104,7 @@ export class Scope<T extends ScopeContext> implements Scope<T> {
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
-	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): Scope<V> {
+	getScopeOrCreate<V extends ScopeContext>(propertyKey: keyof T): Scope<V> {
 		const scopeContext = this.get(propertyKey);
 		let scope = this.scopeMap.get(propertyKey);
 		if (scope) {
@@ -272,7 +272,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		this.scopeMap.set(propertyKey, scope);
 		return scope;
 	}
-	getScopeOrCreat<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> {
+	getScopeOrCreate<V extends ScopeContext>(propertyKey: keyof T): ReactiveScope<V> {
 		const scopeContext = this.get(propertyKey) as V;
 		let scope = this.scopeMap.get(propertyKey) as ReactiveScope<any> | undefined;
 		if (scope) {

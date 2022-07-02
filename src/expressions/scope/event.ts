@@ -12,7 +12,7 @@ function visitInnerScope(eventNames: string[], events: ExpressionEventMap, scope
 		if (!nextEvents.length) {
 			return;
 		}
-		const innerScope = scope.getScopeOrCreat(eventName);
+		const innerScope = scope.getScopeOrCreate(eventName);
 		visitInnerScope(nextEvents, events[eventName], innerScope, scopeTuples);
 	});
 }
@@ -27,7 +27,7 @@ export function findScopeByEventMap(events: ExpressionEventMap, stack: Stack): [
 		if (!nextEvents.length) {
 			return;
 		}
-		const eventScope = scope.getScopeOrCreat<ScopeContext>(eventName);
+		const eventScope = scope.getScopeOrCreate<ScopeContext>(eventName);
 		visitInnerScope(nextEvents, events[eventName], eventScope, scopeTuples);
 	});
 	return scopeTuples;

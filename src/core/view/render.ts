@@ -243,7 +243,7 @@ export class ComponentRender<T extends object> {
 		const eventName = getInputEventName(element);
 		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
 		if (eventName) {
-			const inputScope = elementScope.getScopeOrCreat('this');
+			const inputScope = elementScope.getScopeOrCreate('this');
 			listener = (event) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(eventName, listener);
 		}
