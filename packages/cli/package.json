@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/pipes",
+	"name": "@ibyar/cli",
 	"version": "0.5.7",
-	"description": "Aurora pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
+	"description": "The Ibyar/Aurora CLI",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/pipes",
+	"homepage": "https://github.com/ibyar/aurora",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/pipes"
+		"directory": "packages/cli"
 	},
 	"main": "./index.js",
 	"module": "./index.js",
@@ -15,6 +15,9 @@
 	"type": "module",
 	"exports": {
 		".": "./index.js"
+	},
+	"bin": {
+		"ibyar": "./bin/cli.js"
 	},
 	"files": [
 		"*"
@@ -24,8 +27,10 @@
 	},
 	"dependencies": {
 		"@ibyar/core": "^0.5.7",
+		"@ibyar/directives": "^0.5.7",
 		"@ibyar/elements": "^0.5.7",
 		"@ibyar/expressions": "^0.5.7",
+		"@ibyar/pipes": "^0.5.7",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.4.0"
 	},
@@ -36,11 +41,31 @@
 		"build": "tsc --build --verbose"
 	},
 	"keywords": [
+		"cli",
 		"aurora",
 		"ibyar",
 		"custom-elements",
+		"dependency-injection",
+		"reflect-metadata",
+		"services",
+		"component",
+		"directive",
 		"pipes",
-		"async",
+		"forms",
+		"template-syntax",
+		"template-expression",
+		"http-client",
+		"http",
+		"html-parser",
+		"parser",
+		"jsx",
+		"jsx-factory",
+		"routers",
+		"js-parser",
+		"elements-info",
+		"element",
+		"interceptor",
+		"shadow-dom",
 		"typescript"
 	]
 }
