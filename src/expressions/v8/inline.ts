@@ -2068,8 +2068,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 				body = this.parseFunctionExpression();
 				break;
 			case Token.ASYNC:
-				this.consume(Token.ASYNC);
-				body = this.parseAsyncFunctionLiteral();
+				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorAfterNext()) {
+					this.consume(Token.ASYNC);
+					body = this.parseAsyncFunctionLiteral();
+				}
 				break;
 			default:
 				break;
