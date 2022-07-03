@@ -155,7 +155,7 @@ export class FunctionExpression extends BaseFunctionExpression {
 			for (const statement of statements) {
 				statement.shareVariables(innerScopes);
 				returnValue = statement.get(stack);
-				if (stack.awaitPromise.length > 0) {
+				if (stack.awaitPromise?.length > 0) {
 					for (const awaitRef of stack.awaitPromise) {
 						const awaitValue = await awaitRef.promise;
 						if (awaitRef.declareVariable) {
@@ -230,7 +230,7 @@ export class FunctionExpression extends BaseFunctionExpression {
 			for (const statement of statements) {
 				statement.shareVariables(innerScopes);
 				returnValue = statement.get(stack);
-				if (stack.awaitPromise.length > 0) {
+				if (stack.awaitPromise?.length > 0) {
 					for (const awaitRef of stack.awaitPromise) {
 						const awaitValue = await awaitRef.promise;
 						if (awaitRef.declareVariable) {
@@ -423,7 +423,7 @@ export class ArrowFunctionExpression extends BaseFunctionExpression {
 			for (const state of statements) {
 				state.shareVariables(innerScopes);
 				returnValue = state.get(stack);
-				if (stack.awaitPromise.length > 0) {
+				if (stack.awaitPromise?.length > 0) {
 					for (const awaitRef of stack.awaitPromise) {
 						const awaitValue = await awaitRef.promise;
 						if (awaitRef.declareVariable) {

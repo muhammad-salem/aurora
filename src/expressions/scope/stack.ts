@@ -156,7 +156,7 @@ export class Stack implements Stack {
 	static moduleScope(resolver: ModuleScopeResolver, moduleSource: string, ...globalScopes: Scope<ScopeContext>[]) {
 		return new Stack(globalScopes, resolver, moduleSource);
 	}
-	awaitPromise: AwaitPromiseInfo[];
+	awaitPromise: AwaitPromiseInfo[] = [];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
 	protected readonly stack: Array<Scope<any>>;
