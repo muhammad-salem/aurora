@@ -187,9 +187,9 @@ export class FunctionExpression extends BaseFunctionExpression {
 					returnValue = returnValue.value;
 					if (returnValue instanceof AwaitPromise) {
 						returnValue = await returnValue.promise;
-						self.clearFunctionScope(stack, innerScopes);
-						return returnValue;
 					}
+					self.clearFunctionScope(stack, innerScopes);
+					return returnValue;
 				}
 			}
 			self.clearFunctionScope(stack, innerScopes);
