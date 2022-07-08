@@ -31,6 +31,5 @@ export * from './view/view.js';
 
 
 export * from './zone/bootstrap.js';
-export * from './zone/scope.js';
-export * from './zone/stack.js';
+export * from './zone/task.js';
 export * from './zone/zone.js';
