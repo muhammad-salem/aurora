@@ -1,3 +1,4 @@
+/// <reference types='zone.js' />
 import { ReactiveScopeControl, ScopeContext, Stack } from '@ibyar/expressions';
 import { ScopeTask, StackTask } from './task.js';
 
