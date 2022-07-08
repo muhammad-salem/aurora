@@ -1,4 +1,4 @@
-import { AuroraZone, AuroraZoneType, NoopAuroraZone } from './zone.js';
+import { AuroraZone, NoopAuroraZone } from './zone.js';
 
 export type ZoneType =
 	/**
@@ -16,7 +16,8 @@ export type ZoneType =
 	| 'AURORA'
 	;
 
-export let auroraZone: AuroraZoneType;
+const noopAuroraZone = new NoopAuroraZone();
+let auroraZone: AuroraZone;
 
 /**
  * call once to init the aurora zone
@@ -28,6 +29,10 @@ export function bootstrapZone(type?: ZoneType) {
 	if ('aurora' === type?.toLowerCase()) {
 		auroraZone = new AuroraZone();
 	} else {
-		auroraZone = new NoopAuroraZone()
+		auroraZone = noopAuroraZone;
 	}
+}
+
+export function getAuroraZone() {
+	return auroraZone ?? noopAuroraZone;
 }
