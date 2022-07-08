@@ -34,12 +34,17 @@ export class HostListenerHandler implements RenderHandler {
 
 
 	private listener = (event: Event) => {
-		const method: Function | undefined = this.element._proxyModel[this.listenerRef.modelCallbackName];
-		if (typeof method === 'function') {
+		const callback: Function | undefined = this.element._model[this.listenerRef.modelCallbackName];
+		if (typeof callback === 'function') {
 			const eventScope = this.stack.pushBlockScopeFor({ $event: event });
 			const params = this.argumentsExpression.get(this.stack);
 			this.stack.clearTo(eventScope);
-			method.apply(this.element._proxyModel, params);
+			this.element._auroraZone.runAsScopeTask(
+				this.element._modelScope,
+				callback as () => void,
+				this.element._model,
+				params
+			);
 			typeof event.preventDefault === 'function' && event.preventDefault();
 		}
 	};
