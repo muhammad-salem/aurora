@@ -7,7 +7,7 @@ import {
 } from '@ibyar/elements';
 import {
 	ExpressionNode, expressionVisitor, Identifier,
-	JavaScriptParser, LanguageMode, MemberExpression, PipelineExpression
+	JavaScriptParser, MemberExpression, PipelineExpression
 } from '@ibyar/expressions';
 import {
 	BindingAssignment,
@@ -47,7 +47,7 @@ declare module '@ibyar/elements' {
 
 const ThisTextContent = JavaScriptParser.parseScript('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
-	const textExpression = JavaScriptParser.parse(text.value);
+	const textExpression = JavaScriptParser.parseScript(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
 	text.pipelineNames = getPipelineNames(textExpression);
 }
