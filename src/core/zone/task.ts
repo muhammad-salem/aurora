@@ -80,7 +80,7 @@ export class ScopeTask<T extends TaskType> extends AbstractTask<T> {
 	}
 
 	constructor(
-		private scope: ReactiveScopeControl<any>,
+		public scope: ReactiveScopeControl<any>,
 		type: T,
 		source: string,
 		callback: Function,
@@ -98,6 +98,9 @@ export class ScopeTask<T extends TaskType> extends AbstractTask<T> {
 			this.scope.reattach();
 		}
 	}
+	public toJSON() {
+		return Object.assign(super.toJSON(), { scope: this.scope });
+	}
 }
 
 export class StackTask<T extends TaskType> extends AbstractTask<T> {
@@ -113,7 +116,7 @@ export class StackTask<T extends TaskType> extends AbstractTask<T> {
 	}
 
 	constructor(
-		private stack: Stack,
+		public stack: Stack,
 		type: T,
 		source: string,
 		callback: Function,
@@ -130,5 +133,8 @@ export class StackTask<T extends TaskType> extends AbstractTask<T> {
 		} finally {
 			this.stack.reattach();
 		}
+	}
+	public toJSON() {
+		return Object.assign(super.toJSON(), { stack: this.stack });
 	}
 }
