@@ -58,9 +58,9 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		}
 		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
 		const callback: ValueChangedCallback = (newValue: any, oldValue?: any) => {
-			stack.detach();
+			stack.clone();
 			this.get(stack);
-			stack.reattach();
+			stack.detectChanges();
 		};
 		tuples.forEach(tuple => {
 			const subscription = tuple[1].subscribe(tuple[0], callback);
@@ -105,9 +105,9 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 	private actionRTL(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
-			stack.detach();
+			stack.clone();
 			this.getRTL(stack);
-			stack.reattach();
+			stack.detectChanges();
 		};
 	}
 
@@ -121,9 +121,9 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 	private actionLTR(stack: Stack): ValueChangedCallback {
 		return (newValue: any, oldValue?: any) => {
-			stack.detach();
+			stack.clone();
 			this.getLTR(stack);
-			stack.reattach();
+			stack.detectChanges();
 		};
 	}
 
