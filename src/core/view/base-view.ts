@@ -45,6 +45,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._model = model;
 
 			const modelScope = ReactiveScopeControl.for(model);
+			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
 			this._auroraZone = getAuroraZone();
 
