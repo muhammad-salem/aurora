@@ -291,8 +291,17 @@ export class Stack implements Stack {
 	reattach(): void {
 		this.getReactiveScopeControls().forEach(scope => scope.reattach());
 	}
+	clone() {
+		this.getReactiveScope().forEach(scope => scope.clone());
+	}
+	detectChanges() {
+		this.getReactiveScope().forEach(scope => scope.detectChanges());
+	}
 	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
 		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
+	}
+	private getReactiveScope(): ReactiveScope<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveScope) as ReactiveScope<any>[];
 	}
 	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
 		if (!this.resolver || !this.moduleScope) {

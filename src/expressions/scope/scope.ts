@@ -227,6 +227,8 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	static blockScope<T extends ScopeContext>(propertyKeys?: (keyof T)[]) {
 		return new ReactiveScope({} as T, propertyKeys);
 	}
+	protected _clone: T;
+	declare protected scopeMap: Map<keyof T, ReactiveScope<any>>;
 	protected observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
 	protected name?: string;
 
@@ -298,6 +300,41 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 		} else {
 			this.observer.destroy();
 		}
+	}
+	clone() {
+		const clone = Object.assign({}, this.context);
+		this._clone = clone;
+		const currentKeys = Object.keys(this._clone) as (keyof T)[];
+		currentKeys
+			.filter(key => typeof clone[key] === 'object')
+			.map(key => this.getScopeOrCreate(key))
+			.forEach(scope => scope.clone());
+	}
+	clearClone() {
+		Reflect.deleteProperty(this, '_clone');
+		this.scopeMap.forEach(scope => scope.clearClone());
+	}
+	detectChanges() {
+		const previous = this._clone;
+		this.clone();
+		const current = this._clone;
+		const previousKeys = Object.keys(previous) as (keyof T)[];
+		const currentKeys = Object.keys(current) as (keyof T)[];
+
+		const keys = new Set([...previousKeys, ...currentKeys]);
+		keys.forEach(key => {
+			if (previous[key] == current[key]) {
+				return;
+			}
+			if (this.scopeMap.has(key)) {
+				const scope = this.scopeMap.get(key)!;
+				scope.context = current[key];
+				scope.detectChanges();
+			} else {
+				this.emit(key, current[key], previous[key]);
+			}
+		});
+		this.clearClone();
 	}
 	getClass(): TypeOf<ReactiveScope<ScopeContext>> {
 		return ReactiveScope;
@@ -373,6 +410,11 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		Object.keys(latestChanges).forEach(propertyKey => {
 			super.emit(propertyKey, latestChanges[propertyKey]);
 		});
+	}
+	detectChanges() {
+		this.detach();
+		super.detectChanges();
+		this.reattach();
 	}
 	getClass(): TypeOf<ReactiveScopeControl<ScopeContext>> {
 		return ReactiveScopeControl;
