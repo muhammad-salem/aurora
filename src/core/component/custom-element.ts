@@ -21,7 +21,7 @@ export interface BaseComponent<T> extends CustomElement {
 	_modelScope: ReactiveScopeControl<T & ScopeContext>;
 
 	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
-	_auroraZone: AuroraZone;
+	_zone: AuroraZone;
 
 	getComponentRef(): ComponentRef<T>;
 

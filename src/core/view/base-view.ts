@@ -28,7 +28,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		_modelScope: ReactiveScopeControl<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
-		_auroraZone: AuroraZone;
+		_zone: AuroraZone;
 
 		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
@@ -47,9 +47,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const modelScope = ReactiveScopeControl.for(model);
 			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
-			this._auroraZone = getAuroraZone().fork();
-			const onTrySubscription = this._auroraZone.onTry.subscribe(() => this._modelScope.clone());
-			const onFinalSubscription = this._auroraZone.onFinal.subscribe(() => this._modelScope.detectChanges());
+			this._zone = getAuroraZone().fork();
+			const onTrySubscription = this._zone.onTry.subscribe(() => this._modelScope.clone());
+			const onFinalSubscription = this._zone.onFinal.subscribe(() => this._modelScope.detectChanges());
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getScopeOrCreate('this');
@@ -78,7 +78,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._auroraZone.run(this._model.doCheck, this._model);
+				this._zone.run(this._model.doCheck, this._model);
 			}
 		};
 
@@ -189,7 +189,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				return;
 			}
 			if (isOnChanges(this._model)) {
-				this._auroraZone.run(this._model.onChanges, this._model);
+				this._zone.run(this._model.onChanges, this._model);
 			}
 			this.doBlockCallback();
 		}
@@ -212,19 +212,19 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isOnChanges(this._model)) {
-				this._auroraZone.run(this._model.onChanges, this._model);
+				this._zone.run(this._model.onChanges, this._model);
 			}
 			if (isOnInit(this._model)) {
-				this._auroraZone.run(this._model.onInit, this._model);
+				this._zone.run(this._model.onInit, this._model);
 			}
 			if (isDoCheck(this._model)) {
-				this._auroraZone.run(this._model.doCheck, this._model);
+				this._zone.run(this._model.doCheck, this._model);
 			}
 			if (isAfterContentInit(this._model)) {
-				this._auroraZone.run(this._model.afterContentInit, this._model);
+				this._zone.run(this._model.afterContentInit, this._model);
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._auroraZone.run(this._model.afterContentChecked, this._model);
+				this._zone.run(this._model.afterContentChecked, this._model);
 			}
 
 			// do once
@@ -237,20 +237,20 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._auroraZone.run(this._model.afterViewInit, this._model);
+				this._zone.run(this._model.afterViewInit, this._model);
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._auroraZone.run(this._model.afterViewChecked, this._model);
+				this._zone.run(this._model.afterViewChecked, this._model);
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._auroraZone.run(this._model.doCheck, this._model);
+					this._zone.run(this._model.doCheck, this._model);
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._auroraZone.run(this._model.afterContentChecked, this._model);
+					this._zone.run(this._model.afterContentChecked, this._model);
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._auroraZone.run(this._model.afterViewChecked, this._model);
+					this._zone.run(this._model.afterViewChecked, this._model);
 				}
 			};
 		}
@@ -300,7 +300,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {
-				this._auroraZone.run(this._model.onDestroy, this._model);
+				this._zone.run(this._model.onDestroy, this._model);
 			}
 			this.subscriptions.forEach(sub => sub.unsubscribe());
 			this.subscriptions.splice(0, this.subscriptions.length);
