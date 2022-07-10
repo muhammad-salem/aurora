@@ -61,7 +61,6 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 			name: 'aurora',
 			properties: { 'aurora-zone': true },
 			onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs?, source?) => {
-				console.log('onInvoke');
 				try {
 					this.onTry.emit();
 					return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
@@ -70,7 +69,6 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 				}
 			},
 			onInvokeTask: (parentZoneDelegate, currentZone, targetZone, task, applyThis, applyArgs?) => {
-				console.log('onInvokeTask');
 				try {
 					this.onTry.emit();
 					return parentZoneDelegate.invokeTask(targetZone, task, applyThis, applyArgs);
@@ -79,7 +77,6 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 				}
 			},
 			onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
-				console.log('onHandleError');
 				parentZoneDelegate.handleError(targetZone, error);
 				self.runOutsideAurora(() => self.onCatch.emit(error));
 				return false;
