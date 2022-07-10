@@ -29,3 +29,7 @@ export * from './view/mutation.js';
 export * from './view/render.js';
 export * from './view/view.js';
 
+
+export * from './zone/bootstrap.js';
+export * from './zone/task.js';
+export * from './zone/zone.js';

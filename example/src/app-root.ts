@@ -9,6 +9,7 @@ export interface App {
 @Component({
 	selector: 'app-root',
 	template: `
+	<h3>{{appName}}</h3>
 	<div class="container-fluid w-100 h-100">
 		<nav class="nav nav-pills nav-fill">
 			<template *forOf="let app of appList">
@@ -32,8 +33,11 @@ export class AppRoot implements OnInit {
 	selectedComponent: TypeOf<object> | null = null;
 	selectedApp: App;
 
+	appName: string = '';
+
 	lazyLoad(app: App) {
 		this.selectedApp = app;
+		this.appName = app.title;
 		app.load().then(component => this.selectedComponent = app.component = component);
 	}
 
@@ -74,6 +78,9 @@ export class AppRoot implements OnInit {
 
 	onInit(): void {
 		this.lazyLoad(this.appList.at(-1)!);
+		setTimeout(() => {
+			this.appName = 'APP NAME';
+		}, 1000);
 	}
 
 }

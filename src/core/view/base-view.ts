@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScope, ReactiveScopeControl, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -8,7 +8,8 @@ import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
-import { ElementModelReactiveScope } from '../component/provider.js';
+import { getAuroraZone } from '../zone/bootstrap.js';
+import { AuroraZone } from '../zone/zone.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -19,15 +20,15 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 	}
 	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
-		_proxyModel: T;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScope<T>;
+		_modelScope: ReactiveScopeControl<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
+		_zone: AuroraZone;
 
 		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
@@ -43,9 +44,12 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const model = new modelClass(/* resolve dependency injection*/);
 			this._model = model;
 
-			const modelScope = ElementModelReactiveScope.for(model);
-			this._proxyModel = modelScope.getContextProxy();
+			const modelScope = ReactiveScopeControl.for(model);
+			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
+			this._zone = getAuroraZone().fork();
+			const onTrySubscription = this._zone.onTry.subscribe(() => this._modelScope.clone());
+			const onFinalSubscription = this._zone.onFinal.subscribe(() => this._modelScope.detectChanges());
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getScopeOrCreate('this');
@@ -74,7 +78,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._model.doCheck.call(this._proxyModel);
+				this._zone.run(this._model.doCheck, this._model);
 			}
 		};
 
@@ -185,7 +189,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				return;
 			}
 			if (isOnChanges(this._model)) {
-				this._model.onChanges.call(this._proxyModel);
+				this._zone.run(this._model.onChanges, this._model);
 			}
 			this.doBlockCallback();
 		}
@@ -208,19 +212,19 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isOnChanges(this._model)) {
-				this._model.onChanges.call(this._proxyModel);
+				this._zone.run(this._model.onChanges, this._model);
 			}
 			if (isOnInit(this._model)) {
-				this._model.onInit.call(this._proxyModel);
+				this._zone.run(this._model.onInit, this._model);
 			}
 			if (isDoCheck(this._model)) {
-				this._model.doCheck.call(this._proxyModel);
+				this._zone.run(this._model.doCheck, this._model);
 			}
 			if (isAfterContentInit(this._model)) {
-				this._model.afterContentInit.call(this._proxyModel);
+				this._zone.run(this._model.afterContentInit, this._model);
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._model.afterContentChecked.call(this._proxyModel);
+				this._zone.run(this._model.afterContentChecked, this._model);
 			}
 
 			// do once
@@ -233,20 +237,20 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._model.afterViewInit.call(this._proxyModel);
+				this._zone.run(this._model.afterViewInit, this._model);
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._model.afterViewChecked.call(this._proxyModel);
+				this._zone.run(this._model.afterViewChecked, this._model);
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._model.doCheck.call(this._proxyModel);
+					this._zone.run(this._model.doCheck, this._model);
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._model.afterContentChecked.call(this._proxyModel);
+					this._zone.run(this._model.afterContentChecked, this._model);
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._model.afterViewChecked.call(this._proxyModel);
+					this._zone.run(this._model.afterViewChecked, this._model);
 				}
 			};
 		}
@@ -296,7 +300,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {
-				this._model.onDestroy.call(this._proxyModel);
+				this._zone.run(this._model.onDestroy, this._model);
 			}
 			this.subscriptions.forEach(sub => sub.unsubscribe());
 			this.subscriptions.splice(0, this.subscriptions.length);

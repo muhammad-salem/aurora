@@ -31,6 +31,9 @@
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.4.0"
 	},
+	"peerDependencies": {
+		"zone.js": "^0.11.6"
+	},
 	"devDependencies": {
 		"typescript": "^4.7.4"
 	},

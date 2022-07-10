@@ -108,7 +108,7 @@ export class ComponentRender<T extends object> {
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
-			funcCallback.call(this.view._proxyModel, event);
+			this.view._zone.run(funcCallback as () => void, this.view._model);
 		});
 	}
 	getElementByName(name: string) {
@@ -134,7 +134,10 @@ export class ComponentRender<T extends object> {
 				host
 			);
 			templateRef.host = structural;
-			stack.pushReactiveScopeFor({ 'this': structural });
+			stack.pushReactiveScopeFor({ 'this': structural })
+			// const structuralScope = stack.pushReactiveScopeFor({ 'this': structural }).getScopeOrCreate('this');
+			// const structuralZone = this.forkZone(structuralScope);
+
 			const dSubs = this.initStructuralDirective(structural, directive, stack);
 			subscriptions.push(...dSubs);
 			if (isOnInit(structural)) {
@@ -161,11 +164,9 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		const textSubscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
+		const textSubscriptions = textNode.expression.subscribe(this.view._zone, contextStack, textNode.pipelineNames);
 		subscriptions.push(...textSubscriptions);
-		contextStack.detach();
 		textNode.expression.get(contextStack);
-		contextStack.reattach();
 		return liveText;
 	}
 	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
@@ -280,6 +281,9 @@ export class ComponentRender<T extends object> {
 				const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
 				const stack = contextStack.copyStack();
 				stack.pushReactiveScopeFor({ 'this': directive });
+				// const directiveScope = stack.pushReactiveScopeFor({ 'this': directive }).getScopeOrCreate('this');
+				// const directiveZone = this.forkZone(directiveScope);
+
 				const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 				subscriptions.push(...directiveSubscriptions);
 				if (isOnInit(directive)) {
@@ -315,20 +319,16 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		if (node.outputs?.length) {
@@ -347,9 +347,7 @@ export class ComponentRender<T extends object> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
-						stack.detach();
-						event.expression.get(stack);
-						stack.reattach();
+						this.view._zone.run(event.expression.get, event.expression, [stack]);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -360,19 +358,25 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		return subscriptions;
 	}
-
+	// private forkZone(scope: ReactiveScope<any>) {
+	// 	const zone = this.view._auroraZone.fork();
+	// 	zone.onTry.subscribe(() => scope.clone());
+	// 	// zone.onTry.subscribe(() => this.view._auroraZone.onTry.emit());
+	// 	zone.onFinal.subscribe(() => scope.detectChanges());
+	// 	// zone.onFinal.subscribe(() => this.view._auroraZone.onFinal.emit());
+	// 	return zone;
+	// }
 	initStructuralDirective(
 		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
+		// zone: AuroraZone,
 		contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
@@ -381,20 +385,16 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		if (node.outputs?.length) {
@@ -402,20 +402,17 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
-					stack.detach();
-					event.expression.get(stack);
-					stack.reattach();
+					// event.expression.get(stack);
+					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(this.view._zone, contextStack);
 				subscriptions.push(...sub);
-				contextStack.detach();
 				attr.expression.get(contextStack);
-				contextStack.reattach();
 			});
 		}
 		// TODO: 
