@@ -10,17 +10,23 @@ export interface AuroraZone {
 	readonly onCatch: EventEmitter<void>;
 	readonly onFinal: EventEmitter<void>;
 
+	fork(): AuroraZone;
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T;
 	runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	runOutsideAurora<T>(callback: (...args: any[]) => T): T;
 }
 
+let LastId = 0;
 
 abstract class AbstractAuroraZone {
 	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
 	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
+	private id: number;
+	constructor() {
+		this.id = ++LastId;
+	}
 }
 
 export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
@@ -55,6 +61,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 			name: 'aurora',
 			properties: { 'aurora-zone': true },
 			onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs?, source?) => {
+				console.log('onInvoke');
 				try {
 					this.onTry.emit();
 					return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
@@ -63,6 +70,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 				}
 			},
 			onInvokeTask: (parentZoneDelegate, currentZone, targetZone, task, applyThis, applyArgs?) => {
+				console.log('onInvokeTask');
 				try {
 					this.onTry.emit();
 					return parentZoneDelegate.invokeTask(targetZone, task, applyThis, applyArgs);
@@ -71,13 +79,16 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 				}
 			},
 			onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
+				console.log('onHandleError');
 				parentZoneDelegate.handleError(targetZone, error);
 				self.runOutsideAurora(() => self.onCatch.emit(error));
 				return false;
 			},
 		});
 	}
-
+	fork(): AuroraZone {
+		return new AuroraZone();
+	}
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[]): T {
 		return (this as any as AuroraZonePrivate)._inner.run(callback, applyThis, applyArgs);
 	}
@@ -113,6 +124,10 @@ export class NoopAuroraZone extends AbstractAuroraZone implements AuroraZone {
 	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
 	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
+
+	fork(): AuroraZone {
+		return this;
+	}
 
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
 		try {
