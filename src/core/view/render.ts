@@ -108,7 +108,7 @@ export class ComponentRender<T extends object> {
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
-			this.view._auroraZone.runAsScopeTask(this.view._modelScope, funcCallback as () => void, this.view._model);
+			this.view._auroraZone.runScopeTask(this.view._modelScope, funcCallback as () => void, this.view._model);
 		});
 	}
 	getElementByName(name: string) {

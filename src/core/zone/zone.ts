@@ -8,8 +8,8 @@ const EMPTY_PAYLOAD = {};
 export interface AuroraZone {
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T;
-	runAsScopeTask<T>(scope: ReactiveScopeControl<any>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T;
-	runAsStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T;
+	runScopeTask<T>(scope: ReactiveScopeControl<any>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T;
+	runStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T;
 	runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	runOutsideAurora<T>(callback: (...args: any[]) => T): T;
 }
@@ -109,7 +109,7 @@ export class AuroraZone implements AuroraZone {
 		}
 	}
 
-	runAsScopeTask<T>(scope: ReactiveScopeControl<any>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
+	runScopeTask<T>(scope: ReactiveScopeControl<any>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		const zone = (this as any as AuroraZonePrivate)._inner;
 		const task = zone.scheduleTask(ScopeTask.eventTask(scope, 'AuroraZoneEvent: ' + name, callback, EMPTY_PAYLOAD, noop, noop))
 		try {
@@ -119,7 +119,7 @@ export class AuroraZone implements AuroraZone {
 		}
 	}
 
-	runAsStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
+	runStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		const zone = (this as any as AuroraZonePrivate)._inner;
 		const task = zone.scheduleTask(StackTask.eventTask(stack, 'AuroraZoneEvent: ' + name, callback, EMPTY_PAYLOAD, noop, noop))
 		try {
@@ -152,7 +152,7 @@ export class NoopAuroraZone implements AuroraZone {
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T {
 		return callback.apply(applyThis, applyArgs!);
 	}
-	runAsScopeTask<T>(scope: ReactiveScopeControl<ScopeContext>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
+	runScopeTask<T>(scope: ReactiveScopeControl<ScopeContext>, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		try {
 			scope.detach()
 			return callback.apply(applyThis, applyArgs!);
@@ -161,7 +161,7 @@ export class NoopAuroraZone implements AuroraZone {
 		}
 	}
 
-	runAsStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
+	runStackTask<T>(stack: Stack, callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		try {
 			stack.detach()
 			return callback.apply(applyThis, applyArgs!);
