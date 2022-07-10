@@ -13,7 +13,7 @@ type TwoWayOperator = ':=';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
-	subscribe(stack: Stack, scope: ReactiveScope<any>, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[];
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[];
 }
 
 
@@ -33,7 +33,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		this.set(stack, rv);
 		return rv;
 	}
-	subscribe(stack: Stack, scope: ReactiveScope<any>, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 		if (pipelineNames?.length) {
 			const syncPipeScope = Scope.blockScope();
@@ -57,11 +57,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 			hasAsync && stack.pushScope(asyncPipeScope);
 		}
 		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
-		const callback: ValueChangedCallback = (newValue: any, oldValue?: any) => {
-			scope.clone();
-			this.get(stack);
-			scope.detectChanges();
-		};
+		const callback: ValueChangedCallback = () => this.get(stack);
 		tuples.forEach(tuple => {
 			const subscription = tuple[1].subscribe(tuple[0], callback);
 			subscriptions.push(subscription);
@@ -103,12 +99,8 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		this.setRTL(stack, rv);
 		return rv;
 	}
-	private actionRTL(stack: Stack, scope: ReactiveScope<any>): ValueChangedCallback {
-		return (newValue: any, oldValue?: any) => {
-			scope.clone();
-			this.getRTL(stack);
-			scope.detectChanges();
-		};
+	private actionRTL(stack: Stack): ValueChangedCallback {
+		return () => this.getRTL(stack);
 	}
 
 	private setLTR(stack: Stack, value: any) {
@@ -119,12 +111,8 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		this.setLTR(stack, lv);
 		return lv;
 	}
-	private actionLTR(stack: Stack, scope: ReactiveScope<any>): ValueChangedCallback {
-		return (newValue: any, oldValue?: any) => {
-			scope.clone();
-			this.getLTR(stack);
-			scope.detectChanges();
-		};
+	private actionLTR(stack: Stack): ValueChangedCallback {
+		return () => this.getLTR(stack);
 	}
 
 	private subscribeToEvents(stack: Stack, tuples: [string, ReactiveScope<ScopeContext>][], actionCallback: ValueChangedCallback) {
@@ -136,16 +124,16 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return subscriptions;
 	}
 
-	subscribe(stack: Stack, scope: ReactiveScope<any>): ScopeSubscription<ScopeContext>[] {
+	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
 
 		// right to left
 		const rightTuples = findReactiveScopeByEventMap(this.rightEvents, stack);
-		const rtlAction = this.actionRTL(stack, scope);
+		const rtlAction = this.actionRTL(stack);
 		const rtlSubscriptions = this.subscribeToEvents(stack, rightTuples, rtlAction);
 
 		// left to right 
 		const leftTuples = findReactiveScopeByEventMap(this.leftEvents, stack);
-		const ltrAction = this.actionLTR(stack, scope);
+		const ltrAction = this.actionLTR(stack);
 		const ltrSubscriptions = this.subscribeToEvents(stack, leftTuples, ltrAction);
 
 		return rtlSubscriptions.concat(ltrSubscriptions);

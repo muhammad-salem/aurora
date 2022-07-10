@@ -39,8 +39,7 @@ export class HostListenerHandler implements RenderHandler {
 			const eventScope = this.stack.pushBlockScopeFor({ $event: event });
 			const params = this.argumentsExpression.get(this.stack);
 			this.stack.clearTo(eventScope);
-			this.element._auroraZone.runScopeTask(
-				this.element._modelScope,
+			this.element._auroraZone.run(
 				callback as () => void,
 				this.element._model,
 				params

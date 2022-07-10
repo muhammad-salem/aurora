@@ -76,7 +76,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.doCheck, this._model);
+				this._auroraZone.run(this._model.doCheck, this._model);
 			}
 		};
 
@@ -187,7 +187,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				return;
 			}
 			if (isOnChanges(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.onChanges, this._model);
+				this._auroraZone.run(this._model.onChanges, this._model);
 			}
 			this.doBlockCallback();
 		}
@@ -210,19 +210,19 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isOnChanges(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.onChanges, this._model);
+				this._auroraZone.run(this._model.onChanges, this._model);
 			}
 			if (isOnInit(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.onInit, this._model);
+				this._auroraZone.run(this._model.onInit, this._model);
 			}
 			if (isDoCheck(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.doCheck, this._model);
+				this._auroraZone.run(this._model.doCheck, this._model);
 			}
 			if (isAfterContentInit(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.afterContentInit, this._model);
+				this._auroraZone.run(this._model.afterContentInit, this._model);
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.afterContentChecked, this._model);
+				this._auroraZone.run(this._model.afterContentChecked, this._model);
 			}
 
 			// do once
@@ -235,20 +235,20 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.afterViewInit, this._model);
+				this._auroraZone.run(this._model.afterViewInit, this._model);
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.afterViewChecked, this._model);
+				this._auroraZone.run(this._model.afterViewChecked, this._model);
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._auroraZone.runScopeTask(this._modelScope, this._model.doCheck, this._model);
+					this._auroraZone.run(this._model.doCheck, this._model);
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._auroraZone.runScopeTask(this._modelScope, this._model.afterContentChecked, this._model);
+					this._auroraZone.run(this._model.afterContentChecked, this._model);
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._auroraZone.runScopeTask(this._modelScope, this._model.afterViewChecked, this._model);
+					this._auroraZone.run(this._model.afterViewChecked, this._model);
 				}
 			};
 		}
@@ -298,7 +298,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {
-				this._auroraZone.runScopeTask(this._modelScope, this._model.onDestroy, this._model);
+				this._auroraZone.run(this._model.onDestroy, this._model);
 			}
 			this.subscriptions.forEach(sub => sub.unsubscribe());
 			this.subscriptions.splice(0, this.subscriptions.length);
