@@ -161,11 +161,11 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		const textSubscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
+		const textSubscriptions = textNode.expression.subscribe(contextStack, this.view._modelScope, textNode.pipelineNames);
 		subscriptions.push(...textSubscriptions);
-		contextStack.clone();
+		this.view._modelScope.clone();
 		textNode.expression.get(contextStack);
-		contextStack.detectChanges();
+		this.view._modelScope.detectChanges();
 		return liveText;
 	}
 	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
@@ -315,20 +315,20 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope, attr.pipelineNames);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		if (node.outputs?.length) {
@@ -347,9 +347,9 @@ export class ComponentRender<T extends object> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
-						stack.clone();
+						this.view._modelScope.clone();
 						event.expression.get(stack);
-						stack.detectChanges();
+						this.view._modelScope.detectChanges();
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -360,11 +360,11 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		return subscriptions;
@@ -381,20 +381,20 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope, attr.pipelineNames);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		if (node.outputs?.length) {
@@ -402,20 +402,20 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
-					stack.clone();
+					this.view._modelScope.clone();
 					event.expression.get(stack);
-					stack.detectChanges();
+					this.view._modelScope.detectChanges();
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(contextStack);
+				const sub = attr.expression.subscribe(contextStack, this.view._modelScope);
 				subscriptions.push(...sub);
-				contextStack.clone();
+				this.view._modelScope.clone();
 				attr.expression.get(contextStack);
-				contextStack.detectChanges();
+				this.view._modelScope.detectChanges();
 			});
 		}
 		// TODO: 
