@@ -123,7 +123,7 @@ export class NoopAuroraZone extends AbstractAuroraZone implements AuroraZone {
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
 
 	fork(): AuroraZone {
-		return this;
+		return new NoopAuroraZone();
 	}
 
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
