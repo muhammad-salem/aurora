@@ -303,6 +303,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	}
 	clone() {
 		if (this.context instanceof HTMLElement) {
+			this._clone = {} as T;
 			return;
 		}
 		const clone = Object.assign({}, this.context);
@@ -320,10 +321,9 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 	}
 	detectChanges() {
 		const previous = this._clone;
-		this.clone();
-		const current = this._clone;
+		const current = this.context;
 		if ((!!!previous && !!current) || (!!previous && !!!current)) {
-			this.parent?.emit(this.name!, this.context);
+			this.parent?.emit(this.name!, current);
 			return;
 		}
 		const previousKeys = previous ? Object.keys(previous) as (keyof T)[] : [];
@@ -331,7 +331,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 
 		const keys = new Set([...previousKeys, ...currentKeys]);
 		keys.forEach(key => {
-			if (previous[key] == current[key]) {
+			if (previous[key] == current[key] && typeof previous[key] == typeof current[key] && typeof previous[key] !== 'object') {
 				return;
 			}
 			if (this.scopeMap.has(key)) {
@@ -339,7 +339,7 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 				scope.context = current[key];
 				scope.detectChanges();
 			} else {
-				this.emit(key, this.context[key], previous[key]);
+				this.emit(key, current[key], previous[key]);
 			}
 		});
 		this.clearClone();
