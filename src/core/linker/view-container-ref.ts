@@ -193,7 +193,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._model, [component]);
 		this.insert(viewRef, options?.index);
-		return component._model;
+		return component as any as C;
 	}
 
 }
