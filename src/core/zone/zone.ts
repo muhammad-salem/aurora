@@ -53,7 +53,8 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 		Zone.assertZonePatched();
 		super();
 		const self = this as any as AuroraZonePrivate;
-		self._outer = self._inner = Zone.current;
+		self._outer = Zone.root;
+		self._inner = Zone.current;
 		if ((Zone as any)['TaskTrackingZoneSpec']) {
 			self._inner = self._inner.fork(new ((Zone as any)['TaskTrackingZoneSpec'] as any));
 		}
