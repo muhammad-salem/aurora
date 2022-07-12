@@ -2,8 +2,36 @@ import type { TypeOf } from '../utils/typeof.js';
 import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
+import { ZoneType } from '../zone/bootstrap.js';
 
-export interface DirectiveOptions {
+interface CommonOptions {
+
+	/**
+	 * use `noop` to no zone.js patch effect applied,
+	 *  and used for manual change detection for heavily process components
+	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
+	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
+	 * 
+	 * the default is the platform which is initialized using
+	 * 
+	 * ```js
+	 * bootstrapZone('noop')
+	 * bootstrapZone('aurora')
+	 * ```
+	 * 
+	 * if `bootstrapZone` never been called, then the default zone is a noop zone.
+	 */
+	zone?: ZoneType;
+}
+
+export interface DirectiveOptions extends CommonOptions {
+
+	/**
+	 * the name of the directive which is used in the template
+	 * 
+	 * a structural directive name should start with `*`,
+	 * and an attributes directive should not.
+	 */
 	selector: string;
 }
 
@@ -16,7 +44,7 @@ export interface PipeOptions {
 	asynchronous?: boolean;
 }
 
-export interface ComponentOptions<T = Function> {
+export interface ComponentOptions<T = Function> extends CommonOptions {
 	/**
 	 * a tag name for the component,
 	 * if the tag name is valid custom element name, the view class will be a custom element,
