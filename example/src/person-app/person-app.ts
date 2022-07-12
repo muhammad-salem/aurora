@@ -89,7 +89,7 @@ import { Person, PersonModel } from './person';
 		<hr>
 
 		<h1>Switch Case Directive</h1>
-		<h5>*switch="{{selectFruit}}"</h5>
+		<h5>*switch="selectFruit"</h5>
 		<ul class="list-group">
 			<li class="list-group-item row">
 				<div class="col-3" *switch="selectFruit">
@@ -158,7 +158,6 @@ export class PersonApp {
 	personUtils = {
 		x: 3,
 		getDetails(person: Person) {
-			console.log(this);
 			return `${person.name} is ${person.age} years old.`;
 		}
 	};
