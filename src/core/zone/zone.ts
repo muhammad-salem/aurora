@@ -9,6 +9,8 @@ export interface AuroraZone {
 	readonly onTry: EventEmitter<void>;
 	readonly onCatch: EventEmitter<void>;
 	readonly onFinal: EventEmitter<void>;
+	readonly onEmpty: EventEmitter<void>;
+
 
 	fork(): AuroraZone;
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
@@ -23,6 +25,7 @@ abstract class AbstractAuroraZone {
 	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
 	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
+	readonly onEmpty: EventEmitter<void> = new EventEmitter<void>();
 	protected id: number;
 	constructor() {
 		this.id = ++LastId;
@@ -53,6 +56,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 		Zone.assertZonePatched();
 		super();
 		const self = this as any as AuroraZonePrivate;
+		self._nesting = 0;
 		self._outer = Zone.root;
 		if (parent) {
 			self._parent = (parent as AuroraZonePrivate);
@@ -68,18 +72,18 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 			properties: { 'aurora-zone': true, id: self.id },
 			onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs?, source?) => {
 				try {
-					this.onTry.emit();
+					before(self);
 					return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
 				} finally {
-					this.onFinal.emit();
+					after(self);
 				}
 			},
 			onInvokeTask: (parentZoneDelegate, currentZone, targetZone, task, applyThis, applyArgs?) => {
 				try {
-					this.onTry.emit();
+					before(self);
 					return parentZoneDelegate.invokeTask(targetZone, task, applyThis, applyArgs);
 				} finally {
-					this.onFinal.emit();
+					after(self);
 				}
 			},
 			onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
@@ -105,43 +109,56 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 			zone.cancelTask(task);
 		}
 	}
-
 	runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[]): T {
 		return (this as any as AuroraZonePrivate)._inner.runGuarded(callback, applyThis, applyArgs);
 	}
-
 	runOutsideAurora<T>(callback: (...args: any[]) => T): T {
 		return (this as any as AuroraZonePrivate)._outer.run(callback);
 	}
-
 }
 
 interface AuroraZonePrivate extends AuroraZone {
 	_inner: Zone;
 	_outer: Zone;
+	_nesting: number;
 	_parent: AuroraZonePrivate;
 }
 
+function before(zone: AuroraZonePrivate) {
+	zone.onTry.emit();
+	zone._nesting++;
+}
+
+function after(zone: AuroraZonePrivate) {
+	zone._nesting--;
+	zone.onFinal.emit();
+	if (zone._nesting === 0) {
+		zone.onEmpty.emit();
+	}
+}
 
 export class NoopAuroraZone extends AbstractAuroraZone implements AuroraZone {
 
-	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
-	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
-	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
-
-	fork(): AuroraZone {
-		return new NoopAuroraZone();
+	constructor(parent?: AuroraZone) {
+		super();
+		if (parent) {
+			const self = this as any as AuroraZonePrivate;
+			self._nesting = 0;
+			self._parent = parent as AuroraZonePrivate;
+		}
 	}
-
+	fork(): AuroraZone {
+		return new NoopAuroraZone(this);
+	}
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
 		try {
-			this.onTry.emit();
+			before(this as any as AuroraZonePrivate);
 			return callback.apply(applyThis, applyArgs!);
 		} catch (error) {
 			this.onCatch.emit();
 			throw error;
 		} finally {
-			this.onFinal.emit();
+			after(this as any as AuroraZonePrivate);
 		}
 	}
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
