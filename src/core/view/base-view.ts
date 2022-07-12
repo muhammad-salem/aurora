@@ -48,8 +48,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
 			this._zone = getAuroraZone().fork();
-			const onTrySubscription = this._zone.onTry.subscribe(() => this._modelScope.clone());
-			const onFinalSubscription = this._zone.onFinal.subscribe(() => this._modelScope.detectChanges());
+			this._zone.onEmpty.subscribe(() => {
+				this._modelScope.detectChanges();
+				this._modelScope.clone();
+			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getScopeOrCreate('this');
