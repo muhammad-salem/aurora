@@ -23,7 +23,7 @@ abstract class AbstractAuroraZone {
 	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
 	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
-	private id: number;
+	protected id: number;
 	constructor() {
 		this.id = ++LastId;
 	}
@@ -46,7 +46,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 		}
 	}
 
-	constructor() {
+	constructor(parent?: AuroraZone) {
 		if (typeof Zone == 'undefined') {
 			throw new Error(`In this configuration Zone.js is  required`);
 		}
@@ -54,13 +54,18 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 		super();
 		const self = this as any as AuroraZonePrivate;
 		self._outer = Zone.root;
-		self._inner = Zone.current;
-		if ((Zone as any)['TaskTrackingZoneSpec']) {
-			self._inner = self._inner.fork(new ((Zone as any)['TaskTrackingZoneSpec'] as any));
+		if (parent) {
+			self._parent = (parent as AuroraZonePrivate);
+			self._inner = (parent as AuroraZonePrivate)._inner;
+		} else {
+			self._inner = Zone.current;
+			if ((Zone as any)['TaskTrackingZoneSpec']) {
+				self._inner = self._inner.fork(new ((Zone as any)['TaskTrackingZoneSpec'] as any));
+			}
 		}
 		self._inner = self._inner.fork({
 			name: 'aurora',
-			properties: { 'aurora-zone': true },
+			properties: { 'aurora-zone': true, id: self.id },
 			onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs?, source?) => {
 				try {
 					this.onTry.emit();
@@ -85,7 +90,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 		});
 	}
 	fork(): AuroraZone {
-		return new AuroraZone();
+		return new AuroraZone(this);
 	}
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[]): T {
 		return (this as any as AuroraZonePrivate)._inner.run(callback, applyThis, applyArgs);
@@ -114,6 +119,7 @@ export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
 interface AuroraZonePrivate extends AuroraZone {
 	_inner: Zone;
 	_outer: Zone;
+	_parent: AuroraZonePrivate;
 }
 
 
