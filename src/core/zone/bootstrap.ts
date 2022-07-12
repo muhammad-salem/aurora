@@ -1,4 +1,4 @@
-import { AuroraZone, NoopAuroraZone } from './zone.js';
+import { AuroraZone, NoopAuroraZone, ProxyAuroraZone } from './zone.js';
 
 export type ZoneType =
 	/**
@@ -14,9 +14,16 @@ export type ZoneType =
 	 */
 	| 'aurora'
 	| 'AURORA'
+
+	/***
+	 * used when zone.js is disabled, try to detection changes using ES6 proxy handler.
+	 */
+	| 'proxy'
+	| 'PROXY'
 	;
 
 const noopAuroraZone = new NoopAuroraZone();
+let proxyAuroraZone: ProxyAuroraZone;
 let auroraZone: AuroraZone;
 
 /**
@@ -28,6 +35,8 @@ export function bootstrapZone(type?: ZoneType) {
 	}
 	if ('aurora' === type?.toLowerCase()) {
 		auroraZone = new AuroraZone();
+	} else if ('proxy' === type?.toLowerCase()) {
+		auroraZone = proxyAuroraZone = new ProxyAuroraZone();
 	} else {
 		auroraZone = noopAuroraZone;
 	}
@@ -35,13 +44,13 @@ export function bootstrapZone(type?: ZoneType) {
 
 export function getAuroraZone(type?: ZoneType) {
 	if (type) {
-		switch (type) {
+		switch (type.toLowerCase()) {
 			case 'aurora':
-			case 'AURORA':
-				return auroraZone ?? (auroraZone = new AuroraZone())
+				return auroraZone ?? (auroraZone = new AuroraZone());
+			case 'proxy':
+				return proxyAuroraZone ?? (proxyAuroraZone = new ProxyAuroraZone());
 			default:
-			case 'noop':
-			case 'NOOP': return noopAuroraZone;
+			case 'noop': return noopAuroraZone;
 		}
 	}
 	return auroraZone ?? noopAuroraZone;

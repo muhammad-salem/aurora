@@ -1,5 +1,6 @@
 /// <reference types='zone.js' />
 import { EventEmitter } from '../component/events.js';
+import { createZoneProxyHandler } from './proxy.js';
 
 const noop = () => { };
 const EMPTY_PAYLOAD = {};
@@ -21,7 +22,7 @@ export interface AuroraZone {
 
 let LastId = 0;
 
-abstract class AbstractAuroraZone {
+export abstract class AbstractAuroraZone implements AuroraZone {
 	readonly onTry: EventEmitter<void> = new EventEmitter<void>();
 	readonly onCatch: EventEmitter<void> = new EventEmitter<void>();
 	readonly onFinal: EventEmitter<void> = new EventEmitter<void>();
@@ -30,9 +31,14 @@ abstract class AbstractAuroraZone {
 	constructor() {
 		this.id = ++LastId;
 	}
+	abstract fork(): AuroraZone;
+	abstract run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
+	abstract runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T;
+	abstract runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
+	abstract runOutsideAurora<T>(callback: (...args: any[]) => T): T;
 }
 
-export class AuroraZone extends AbstractAuroraZone implements AuroraZone {
+export class AuroraZone extends AbstractAuroraZone {
 	static isInAuroraZone(): boolean {
 		return typeof Zone !== 'undefined' && Zone.current.get('aurora-zone') === true;
 	}
@@ -137,7 +143,7 @@ function after(zone: AuroraZonePrivate) {
 	}
 }
 
-export class NoopAuroraZone extends AbstractAuroraZone implements AuroraZone {
+export class NoopAuroraZone extends AbstractAuroraZone {
 
 	constructor(parent?: AuroraZone) {
 		super();
@@ -154,6 +160,53 @@ export class NoopAuroraZone extends AbstractAuroraZone implements AuroraZone {
 		try {
 			before(this as any as AuroraZonePrivate);
 			return callback.apply(applyThis, applyArgs!);
+		} catch (error) {
+			this.onCatch.emit();
+			throw error;
+		} finally {
+			after(this as any as AuroraZonePrivate);
+		}
+	}
+	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
+		return this.runCallback(callback, applyThis, applyArgs);
+	}
+	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T {
+		return this.runCallback(callback, applyThis, applyArgs);
+	}
+	runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
+		return this.runCallback(callback, applyThis, applyArgs);
+	}
+	runOutsideAurora<T>(callback: (...args: any[]) => T): T {
+		return callback();
+	}
+}
+
+const ReflectInterceptors = [Reflect.defineProperty, Reflect.deleteProperty, Reflect.get, Reflect.set];
+
+export class ProxyAuroraZone extends AbstractAuroraZone {
+
+	constructor(parent?: AuroraZone) {
+		super();
+		if (parent) {
+			const self = this as any as AuroraZonePrivate;
+			self._nesting = 0;
+			self._parent = parent as AuroraZonePrivate;
+		}
+	}
+	fork(): AuroraZone {
+		return new ProxyAuroraZone(this);
+	}
+	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
+		try {
+			before(this as any as AuroraZonePrivate);
+			if (ReflectInterceptors.includes(callback)) {
+				return callback.apply(void 0, applyArgs!);
+			} else if (applyThis) {
+				const proxy = createZoneProxyHandler(applyThis, this);
+				return callback.apply(proxy, applyArgs!);
+			} else {
+				return callback.apply(applyThis, applyArgs!);
+			}
 		} catch (error) {
 			this.onCatch.emit();
 			throw error;
