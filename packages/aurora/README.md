@@ -222,10 +222,12 @@ set
 ```
 
 
-** you still can control the zone peer component while define your component by add 
+ -  you still can control the zone peer component while define your component by add 
 `zone` t one of the zone types 'AURORA', 'NOOP' and  'PROXy'.
 if `AURORA` is selected, you need to import the `Zone.js` package.
 
+ - the `zone` property in the `@Component({zone: 'noop'})` is optional
+ and will get the default value from `bootstrapZone()`
 
 ```ts
 
