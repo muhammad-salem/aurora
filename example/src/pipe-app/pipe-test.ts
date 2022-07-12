@@ -165,7 +165,6 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	subscription: Subscription;
 
-	heightPX = 10;
 
 	onInit() {
 		let index = 0;
@@ -174,7 +173,6 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 				index = 0;
 			}
 			this.currentColor = this.colors[index++];
-			this.heightPX += 10;
 		});
 	}
 
