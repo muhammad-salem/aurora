@@ -10,6 +10,7 @@ import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { getAuroraZone } from '../zone/bootstrap.js';
 import { AuroraZone } from '../zone/zone.js';
+import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -41,13 +42,17 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					delegatesFocus: componentRef.shadowDomDelegatesFocus
 				});
 			}
-			const model = new modelClass(/* resolve dependency injection*/);
+			const args = []; /* resolve dependency injection*/
+			const detector = createModelChangeDetectorRef(() => this._modelScope);
+			args.push(detector)
+			this._zone = getAuroraZone(componentRef.zone).fork();
+			args.push(this._zone);
+			const model = new modelClass(...args);
 			this._model = model;
 
 			const modelScope = ReactiveScopeControl.for(model);
 			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
-			this._zone = getAuroraZone(componentRef.zone).fork();
 			this._zone.onEmpty.subscribe(() => {
 				this._modelScope.detectChanges();
 				this._modelScope.clone();
