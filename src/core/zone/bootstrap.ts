@@ -20,7 +20,7 @@ const noopAuroraZone = new NoopAuroraZone();
 let auroraZone: AuroraZone;
 
 /**
- * call once to init the aurora zone
+ * call once to init the aurora zone, for the platform
  */
 export function bootstrapZone(type?: ZoneType) {
 	if (auroraZone) {
@@ -33,6 +33,16 @@ export function bootstrapZone(type?: ZoneType) {
 	}
 }
 
-export function getAuroraZone() {
+export function getAuroraZone(type?: ZoneType) {
+	if (type) {
+		switch (type) {
+			case 'aurora':
+			case 'AURORA':
+				return auroraZone ?? (auroraZone = new AuroraZone())
+			default:
+			case 'noop':
+			case 'NOOP': return noopAuroraZone;
+		}
+	}
 	return auroraZone ?? noopAuroraZone;
 }
