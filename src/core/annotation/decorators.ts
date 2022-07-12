@@ -11,6 +11,7 @@ interface CommonOptions {
 	 *  and used for manual change detection for heavily process components
 	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
 	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
+	 * make sure that `zone.js` is imported in the polyfills module. 
 	 * 
 	 * the default is the platform which is initialized using
 	 * 
