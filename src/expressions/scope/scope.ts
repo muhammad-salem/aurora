@@ -378,6 +378,11 @@ export interface ScopeControl<T extends ScopeContext> {
 	 * @param propertyKey 
 	 */
 	emitChanges(propertyKey?: keyof T, propertyValue?: any): void;
+
+	/**
+	 * throw error if any changes has been made
+	 */
+	checkNoChanges(): void;
 }
 
 export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<T> implements ScopeControl<T> {
@@ -423,6 +428,14 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		this.detach();
 		super.detectChanges();
 		this.reattach();
+	}
+	checkNoChanges() {
+		this.detach();
+		super.detectChanges();
+		const keys = Object.keys(this.marked);
+		if (keys.length > 0) {
+			throw new Error(`Some Changes had been detected`);
+		}
 	}
 	getClass(): TypeOf<ReactiveScopeControl<ScopeContext>> {
 		return ReactiveScopeControl;
