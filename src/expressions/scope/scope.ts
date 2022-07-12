@@ -363,9 +363,6 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 				scope.context = current[key];
 				scope.detectChanges();
 			} else {
-				if (!this.observer.hasSubscribers(key)) {
-					return;
-				}
 				this.emit(key, current[key], previous[key]);
 			}
 		});

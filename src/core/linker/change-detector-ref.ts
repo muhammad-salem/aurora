@@ -63,8 +63,7 @@ export function createModelChangeDetectorRef(resolver: () => ReactiveScopeContro
 			resolver().reattach();
 		},
 		markForCheck() {
-			resolver().detach();
-			Promise.resolve().then(() => resolver().detectChanges());
+			resolver().detectChanges()
 		},
 		detectChanges() {
 			resolver().detectChanges();
