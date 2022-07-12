@@ -191,6 +191,42 @@ yarn add @ibyar/aurora
 
 ### `HTML -- template parser example`
 
+in a polyfills.ts file
+
+ - use `AURORA` zone  for detect changes
+
+```ts
+import 'zone.js';
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('AURORA');
+```
+
+ - or use `NOOP` Zone, if you don't like to use `Zone.js`
+all the events like `rxjs` observables, setTimeout and fetch, etc..
+can't be detected.
+
+```ts
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('NOOP');
+set
+```
+
+ - or use `PROXY` Zone, if you don't like to use `Zone.js`
+ but still like to have full change detection for your application.
+ it my be hard in debugging your application.
+
+```ts
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('PROXY');
+set
+```
+
+
+** you still can control the zone peer component while define your component by add 
+`zone` t one of the zone types 'AURORA', 'NOOP' and  'PROXy'.
+if `AURORA` is selected, you need to import the `Zone.js` package.
+
+
 ```ts
 
 import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
@@ -198,6 +234,7 @@ import { interval, Subscription } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
+	zone: 'AURORA',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
 	<div *for="const color of colors">
