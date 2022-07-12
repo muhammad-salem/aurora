@@ -47,7 +47,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const modelScope = ReactiveScopeControl.for(model);
 			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
-			this._zone = getAuroraZone().fork();
+			this._zone = getAuroraZone(componentRef.zone).fork();
 			this._zone.onEmpty.subscribe(() => {
 				this._modelScope.detectChanges();
 				this._modelScope.clone();
