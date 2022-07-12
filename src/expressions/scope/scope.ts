@@ -213,6 +213,24 @@ export class ValueChangeObserver<T> {
 	}
 
 	/**
+	 * check if this Observer has any subscribers
+	 */
+	hasSubscribers(): boolean;
+
+	/**
+	 * check if there is any subscribers registered by the propertyKey.
+	 * 
+	 * @param propertyKey
+	 */
+	hasSubscribers(propertyKey: keyof T): boolean;
+	hasSubscribers(propertyKey?: keyof T): boolean {
+		if (propertyKey) {
+			return (this.subscribers.get(propertyKey)?.size ?? 0) > 0;
+		}
+		return this.subscribers.size > 0;
+	}
+
+	/**
 	 * clear subscription maps
 	 */
 	destroy() {
@@ -331,7 +349,13 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 
 		const keys = new Set([...previousKeys, ...currentKeys]);
 		keys.forEach(key => {
-			if (previous[key] == current[key] && typeof previous[key] == typeof current[key] && typeof previous[key] !== 'object') {
+			if (previous[key] == current[key]
+				&& typeof previous[key] == typeof current[key]
+				&& typeof previous[key] !== 'object') {
+				return;
+			}
+			if (!this.has(key)) {
+				// property is marked as private field (ignored)
 				return;
 			}
 			if (this.scopeMap.has(key)) {
@@ -339,6 +363,9 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 				scope.context = current[key];
 				scope.detectChanges();
 			} else {
+				if (!this.observer.hasSubscribers(key)) {
+					return;
+				}
 				this.emit(key, current[key], previous[key]);
 			}
 		});
@@ -426,6 +453,8 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 	}
 	detectChanges() {
 		this.detach();
+		// ignore Maximum call stack size exceeded
+		// need find a way to hide the private properties from detections
 		super.detectChanges();
 		this.reattach();
 	}
