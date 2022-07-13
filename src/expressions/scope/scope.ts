@@ -344,28 +344,40 @@ export class ReactiveScope<T extends ScopeContext> extends Scope<T> {
 			this.parent?.emit(this.name!, current);
 			return;
 		}
-		const previousKeys = previous ? Object.keys(previous) as (keyof T)[] : [];
-		const currentKeys = current ? Object.keys(current) as (keyof T)[] : [];
+		const allKeys: (keyof T)[] = [];
+		allKeys.push(...Object.keys(previous));
+		allKeys.push(...Object.keys(current));
+		allKeys.push(...Object.getOwnPropertySymbols(previous));
+		allKeys.push(...Object.getOwnPropertySymbols(current));
 
-		const keys = new Set([...previousKeys, ...currentKeys]);
-		keys.forEach(key => {
-			if (previous[key] == current[key]
-				&& typeof previous[key] == typeof current[key]
-				&& typeof previous[key] !== 'object') {
-				return;
-			}
-			if (!this.has(key)) {
-				// property is marked as private field (ignored)
-				return;
-			}
-			if (this.scopeMap.has(key)) {
-				const scope = this.scopeMap.get(key)!;
-				scope.context = current[key];
-				scope.detectChanges();
-			} else {
-				this.emit(key, current[key], previous[key]);
-			}
-		});
+		Array.from(new Set(allKeys))
+			.filter(key => {
+				switch (typeof key) {
+					case 'string':
+						return !key.startsWith('_');
+					case 'symbol':
+						return !key.toString().startsWith('Symbol(_');
+					default:
+						return false;
+				}
+			}).forEach(key => {
+				if (previous[key] == current[key]
+					&& typeof previous[key] == typeof current[key]
+					&& typeof previous[key] !== 'object') {
+					return;
+				}
+				if (!this.has(key)) {
+					// property is marked as private field (ignored)
+					return;
+				}
+				if (this.scopeMap.has(key)) {
+					const scope = this.scopeMap.get(key)!;
+					scope.context = current[key];
+					scope.detectChanges();
+				} else {
+					this.emit(key, current[key], previous[key]);
+				}
+			});
 		this.clearClone();
 	}
 	getClass(): TypeOf<ReactiveScope<ScopeContext>> {
