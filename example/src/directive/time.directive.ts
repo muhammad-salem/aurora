@@ -22,7 +22,7 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 	template: `<div class="alert alert-success" role="alert">
 			<ul>
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
-				<li>hh:mm:ss {{${stringLiteralFormat}}} format using regex expression ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
+				<li>hh:mm:ss {{${stringLiteralFormat}}} format using string literal ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
 				<li>Time: {{time |> toDate}}</li>
 				<li>Data: {{date}}</li>
 			</ul>
