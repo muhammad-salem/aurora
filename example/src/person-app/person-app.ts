@@ -5,8 +5,9 @@ import { Component, Input, View, HostListener } from '@ibyar/aurora';
 export * from '../directive/add-note.directive.js';
 export * from '../directive/notify-user.directive.js';
 export * from '../directive/time.directive.js';
+export * from '../person-app/person.js';
 
-import { Person, PersonModel } from './person';
+import type { Person, PersonModel } from './person.js';
 
 @Component({
 	selector: 'person-app',
