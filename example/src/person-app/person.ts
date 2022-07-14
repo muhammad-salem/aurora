@@ -27,6 +27,7 @@ export interface Person {
 				Person name is {{person.name}}
 			</p>
 			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
+			<button class="btn btn-outline-primary" (click)="addOneYear()">Add OneYear</button>
 			<div *if="person.age >= 18">
 				Can have license
 				<p>Data</p>
@@ -107,6 +108,10 @@ export class PersonModel implements OnInit {
 
 	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {
 		return [];
+	}
+
+	addOneYear() {
+		this.person.age++;
 	}
 }
 
