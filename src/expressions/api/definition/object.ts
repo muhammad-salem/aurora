@@ -4,6 +4,7 @@ import type {
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
+import type { Identifier } from './values.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
@@ -69,7 +70,7 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 		return value;
 	}
 	declareVariable(stack: Stack, objectValue: any): void {
-		const propertyName = this.key.get(stack);
+		const propertyName = this.shorthand ? (this.key as Identifier).getName() : this.key.get(stack);
 		const propertyValue = objectValue[propertyName];
 		(this.value as DeclarationExpression).declareVariable(stack, propertyValue);
 	}
