@@ -430,12 +430,12 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 	}
 
 	protected attached: boolean = true;
-	protected marked: ScopeContext = {};
+	protected marked: { [key: string]: [any, any] } = {};
 	override emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
 		if (this.attached) {
 			super.emit(propertyKey, newValue, oldValue);
 		} else {
-			this.marked[propertyKey] = newValue;
+			this.marked[propertyKey as string] = [newValue, oldValue];
 		}
 	}
 	isAttached(): boolean {
@@ -457,7 +457,7 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		const latestChanges = this.marked;
 		this.marked = {};
 		Object.keys(latestChanges).forEach(propertyKey => {
-			super.emit(propertyKey, latestChanges[propertyKey]);
+			super.emit(propertyKey, latestChanges[propertyKey][0], latestChanges[propertyKey][1]);
 		});
 	}
 	detectChanges() {
@@ -466,6 +466,8 @@ export class ReactiveScopeControl<T extends ScopeContext> extends ReactiveScope<
 		// need find a way to hide the private properties from detections
 		super.detectChanges();
 		this.reattach();
+		// clear marked
+		this.marked = {};
 	}
 	checkNoChanges() {
 		this.detach();
