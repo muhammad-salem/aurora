@@ -1,7 +1,7 @@
-import { DomNode, htmlParser } from '@ibyar/elements';
+import { DomNode } from '@ibyar/elements';
 import {
-	createProxyForContext, ExpressionNode,
-	findReactiveScopeByEventMap, ScopeContext,
+	ExpressionNode, findReactiveScopeByEventMap,
+	ReactiveScopeControl, ScopeContext,
 	ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -46,19 +46,19 @@ export class TemplateRefImpl extends TemplateRef {
 	set host(host: HTMLComponent<any> | StructuralDirective) {
 		this._host = host;
 	}
-	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
+	createEmbeddedView<C extends object>(context: C = {} as C, parentNode: Node): EmbeddedViewRef<C> {
 		const directiveStack = this.stack.copyStack();
-
-		const templateScope = directiveStack.pushReactiveScope();
+		const templateScope = ReactiveScopeControl.blockScope<C>();
+		directiveStack.pushScope(templateScope);
 
 		const sandBox = new Stack();
-		const contextScope = sandBox.pushReactiveScopeFor(context ?? {});
+		const contextScope = ReactiveScopeControl.for<C>(context);
+		sandBox.pushScope(contextScope);
 		sandBox.pushScope(templateScope);
 
 		const elements: Node[] = [];
-		const contextProxy = createProxyForContext(contextScope);
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		const embeddedViewRef = new EmbeddedViewRefImpl(contextProxy, elements, subscriptions);
+		const embeddedViewRef = new EmbeddedViewRefImpl(contextScope, elements, subscriptions);
 		const scopeSubscriptions = this.executeTemplateExpressions(sandBox);
 		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
 
@@ -66,6 +66,8 @@ export class TemplateRefImpl extends TemplateRef {
 		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions, this._host);
 
 		fragment.childNodes.forEach(item => elements.push(item));
+		// const updateSubscriptions = this.render.view._zone.onFinal.subscribe(() => contextScope.detectChanges());
+		// embeddedViewRef.onDestroy(() => updateSubscriptions.unsubscribe());
 		return embeddedViewRef;
 	}
 	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<ScopeContext>[] | undefined {
