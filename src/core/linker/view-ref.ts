@@ -1,6 +1,7 @@
-import { ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScopeControl, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ChangeDetectorRef } from './change-detector-ref.js';
 
-export abstract class ViewRef {
+export abstract class ViewRef extends ChangeDetectorRef {
 	/**
 	 * Destroys this view and all of the data structures associated with it.
 	 */
@@ -70,14 +71,14 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	private onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
-		private _context: C,
+		private _scope: ReactiveScopeControl<C>,
 		private _rootNodes: Node[],
 		private _subscriptions?: ScopeSubscription<ScopeContext>[]) {
 		super();
 	}
 
 	get context(): C {
-		return this._context;
+		return this._scope.getContext();
 	}
 
 	get rootNodes(): Node[] {
@@ -127,6 +128,18 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		for (const node of this._rootNodes) {
 			(<Element>node).remove();
 		}
+	}
+	reattach(): void {
+		this._scope.emitChanges();
+	}
+	markForCheck(): void {
+		this._scope.emitChanges();
+	}
+	detectChanges(): void {
+		this._scope.detectChanges();
+	}
+	checkNoChanges(): void {
+		this._scope.checkNoChanges();
 	}
 	onDestroy(callback: () => void): { unsubscribe(): void; } {
 		this.onDestroySubscribes.push(callback);
