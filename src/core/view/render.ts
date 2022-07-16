@@ -134,9 +134,7 @@ export class ComponentRender<T extends object> {
 				host
 			);
 			templateRef.host = structural;
-			stack.pushReactiveScopeFor({ 'this': structural })
-			// const structuralScope = stack.pushReactiveScopeFor({ 'this': structural }).getScopeOrCreate('this');
-			// const structuralZone = this.forkZone(structuralScope);
+			stack.pushReactiveScopeFor({ 'this': structural });
 
 			const dSubs = this.initStructuralDirective(structural, directive, stack);
 			subscriptions.push(...dSubs);
@@ -365,18 +363,9 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
-	// private forkZone(scope: ReactiveScope<any>) {
-	// 	const zone = this.view._auroraZone.fork();
-	// 	zone.onTry.subscribe(() => scope.clone());
-	// 	// zone.onTry.subscribe(() => this.view._auroraZone.onTry.emit());
-	// 	zone.onFinal.subscribe(() => scope.detectChanges());
-	// 	// zone.onFinal.subscribe(() => this.view._auroraZone.onFinal.emit());
-	// 	return zone;
-	// }
 	initStructuralDirective(
 		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
-		// zone: AuroraZone,
 		contextStack: Stack): ScopeSubscription<ScopeContext>[] {
 		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
 
@@ -402,7 +391,6 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
-					// event.expression.get(stack);
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);

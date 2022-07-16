@@ -43,7 +43,7 @@ export interface BaseComponent<T> extends CustomElement {
 	getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined;
 
 	triggerOutput(eventName: string, value?: any): void;
-
+	onDestroy(callback: () => void): void;
 }
 
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }

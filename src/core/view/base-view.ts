@@ -32,6 +32,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_zone: AuroraZone;
 
 		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		private onDestroyCalls: (() => void)[] = [];
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -53,10 +54,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const modelScope = ReactiveScopeControl.for(model);
 			modelScope.getContextProxy = () => model;
 			this._modelScope = modelScope;
-			this._zone.onEmpty.subscribe(() => {
-				this._modelScope.detectChanges();
-				this._modelScope.clone();
-			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getScopeOrCreate('this');
@@ -206,6 +203,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this.subscriptions.forEach(sub => sub.unsubscribe());
 			}
 			this.subscriptions.splice(0, this.subscriptions.length);
+			const cds = this._zone.onEmpty.subscribe(() => {
+				this._modelScope.detectChanges();
+				this._modelScope.clone();
+			});
+			this.onDestroy(() => cds.unsubscribe());
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];
 				if (inputDefaultValue !== null && inputDefaultValue !== undefined) {
@@ -298,7 +300,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this.setInputValue(attr.name, attr.value);
 			}
 		}
-
+		onDestroy(callback: () => void) {
+			this.onDestroyCalls.push(callback);
+		}
 		adoptedCallback() {
 			// restart the process
 			this.innerHTML = '';
@@ -311,6 +315,14 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 			this.subscriptions.forEach(sub => sub.unsubscribe());
 			this.subscriptions.splice(0, this.subscriptions.length);
+			this.onDestroyCalls.forEach(callback => {
+				try {
+					callback();
+				} catch (error) {
+					console.error(error);
+				}
+			});
+			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
 		}
 
 		// events api
