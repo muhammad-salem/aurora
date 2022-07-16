@@ -137,6 +137,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	detectChanges(): void {
 		this._scope.detectChanges();
+		this._scope.clone();
 	}
 	checkNoChanges(): void {
 		this._scope.checkNoChanges();
