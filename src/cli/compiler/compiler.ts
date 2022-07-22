@@ -2,13 +2,13 @@ import {
 	ExpressionNode,
 	isStrict,
 	JavaScriptParser, LanguageMode,
-	ModuleScopeResolver, Scope, ScopeContext, Stack
+	ModuleScopeResolver, Scope, Context, Stack
 } from '@ibyar/expressions';
 
 
 export const ModuleResolver = new ModuleScopeResolver({ allowImportExternal: false });
 
-export const BrowserGlobalScope: Scope<ScopeContext> = Scope.for(globalThis as ScopeContext);
+export const BrowserGlobalScope: Scope<Context> = Scope.for(globalThis as Context);
 
 
 export type CompileReturn = { ast: ExpressionNode, stack: Stack };
