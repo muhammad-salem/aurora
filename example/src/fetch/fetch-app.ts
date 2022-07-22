@@ -4,7 +4,7 @@ type ChangeDetectorRef = { markForCheck(propertyKey?: PropertyKey): void };
 
 @Component({
 	selector: 'fetch-app',
-	zone: 'noop',
+	zone: 'manual',
 	template: `	<div class="row gx-5">
 		<div class="col">
 			<ul class="list-group">

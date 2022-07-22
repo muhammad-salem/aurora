@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ExpressionNode, JavaScriptParser, LanguageMode, OnInit, Scope, ScopeContext, Stack, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, ExpressionNode, JavaScriptParser, LanguageMode, OnInit, Scope, Context, Stack, ViewChild } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
@@ -134,7 +134,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				},
 			};
 			mockConsole.log('run code...');
-			const context: ScopeContext = { console: mockConsole };
+			const context: Context = { console: mockConsole };
 			const stack = new Stack(Scope.for(context));
 			this.node.get(stack);
 		} catch (e: any) {
