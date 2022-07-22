@@ -1,11 +1,15 @@
-import { AuroraZone, NoopAuroraZone, ProxyAuroraZone } from './zone.js';
+import { AuroraZone, ManualAuroraZone, ProxyAuroraZone } from './zone.js';
 
 export type ZoneType =
 	/**
 	 * used when zone.js is disabled, no change detection will applied
 	 */
-	| 'noop'
-	| 'NOOP'
+	| 'manual'
+
+	/***
+	 * used when zone.js is disabled, try to detection changes using ES6 proxy handler.
+	 */
+	| 'proxy'
 
 	/***
 	 * use when zone.js is active and loaded throw a polyfills file.
@@ -13,16 +17,9 @@ export type ZoneType =
 	 * active  change detection
 	 */
 	| 'aurora'
-	| 'AURORA'
-
-	/***
-	 * used when zone.js is disabled, try to detection changes using ES6 proxy handler.
-	 */
-	| 'proxy'
-	| 'PROXY'
 	;
 
-const noopAuroraZone = new NoopAuroraZone();
+const manualAuroraZone = new ManualAuroraZone();
 let proxyAuroraZone: ProxyAuroraZone;
 let auroraZone: AuroraZone;
 
@@ -38,11 +35,11 @@ export function bootstrapZone(type?: ZoneType) {
 	} else if ('proxy' === type?.toLowerCase()) {
 		auroraZone = proxyAuroraZone = new ProxyAuroraZone();
 	} else {
-		auroraZone = noopAuroraZone;
+		auroraZone = manualAuroraZone;
 	}
 }
 
-export function getAuroraZone(type?: ZoneType) {
+export function getCurrentZone(type?: ZoneType) {
 	if (type) {
 		switch (type.toLowerCase()) {
 			case 'aurora':
@@ -50,8 +47,8 @@ export function getAuroraZone(type?: ZoneType) {
 			case 'proxy':
 				return proxyAuroraZone ?? (proxyAuroraZone = new ProxyAuroraZone());
 			default:
-			case 'noop': return noopAuroraZone;
+			case 'manual': return manualAuroraZone;
 		}
 	}
-	return auroraZone ?? noopAuroraZone;
+	return auroraZone ?? manualAuroraZone;
 }

@@ -1,4 +1,4 @@
-import type { ReactiveScope, ReactiveScopeControl, ScopeContext } from '@ibyar/expressions';
+import type { ReactiveScope, ReactiveScopeControl, Context } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
@@ -11,14 +11,14 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
-export type ModelType<T> = T & ScopeContext;
+export type ModelType<T> = T & Context;
 
 export type NodeContextType<T> = { 'this': BaseComponent<T> };
 
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
-	_modelScope: ReactiveScopeControl<T & ScopeContext>;
+	_modelScope: ReactiveScopeControl<T & Context>;
 
 	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 	_zone: AuroraZone;

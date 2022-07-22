@@ -1,4 +1,4 @@
-import { ReactiveScope, ScopeContext } from '@ibyar/expressions';
+import { ReactiveScope } from '@ibyar/expressions';
 import { TypeOf } from '@ibyar/expressions/api/utils';
 import { isOnInit } from '../component/lifecycle.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
@@ -9,7 +9,7 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 	private directiveMap: Map<string, AttributeDirective> = new Map();
 	constructor(private el: HTMLElement) {
 		super({} as ElementContext);
-		this.context.this = el;
+		this._ctx.this = el;
 	}
 	getElement() {
 		return this.el;
@@ -34,7 +34,7 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 		if (directiveRef && directiveRef.modelClass instanceof AttributeDirective) {
 			const directive = new directiveRef.modelClass(this.el) as AttributeDirective;
 			this.directiveMap.set(propertyKey as string, directive);
-			this.context[propertyKey as string] = directive;
+			this._ctx[propertyKey as string] = directive;
 			if (isOnInit(directive)) {
 				directive.onInit();
 			}
@@ -68,7 +68,7 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 		return false;
 	}
 	has(propertyKey: string): boolean {
-		if (propertyKey in this.context) {
+		if (propertyKey in this._ctx) {
 			return true;
 		}
 		if (this.directiveMap.has(propertyKey)) {

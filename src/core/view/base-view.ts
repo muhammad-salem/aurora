@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope, ReactiveScopeControl, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScope, ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -8,7 +8,7 @@ import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
-import { getAuroraZone } from '../zone/bootstrap.js';
+import { getCurrentZone } from '../zone/bootstrap.js';
 import { AuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 
@@ -31,7 +31,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 		_zone: AuroraZone;
 
-		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		private subscriptions: ScopeSubscription<Context>[] = [];
 		private onDestroyCalls: (() => void)[] = [];
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
@@ -46,7 +46,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
 			args.push(detector)
-			this._zone = getAuroraZone(componentRef.zone).fork();
+			this._zone = getCurrentZone(componentRef.zone).fork();
 			args.push(this._zone);
 			const model = new modelClass(...args);
 			this._model = model;
@@ -56,7 +56,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._modelScope = modelScope;
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
-			const elementScope = this._viewScope.getScopeOrCreate('this');
+			const elementScope = this._viewScope.getInnerScope<ReactiveScope<BaseComponent<T>>>('this')!;
 			componentRef.inputs.forEach(input => {
 				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
@@ -203,10 +203,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this.subscriptions.forEach(sub => sub.unsubscribe());
 			}
 			this.subscriptions.splice(0, this.subscriptions.length);
-			const cds = this._zone.onEmpty.subscribe(() => {
-				this._modelScope.detectChanges();
-				this._modelScope.clone();
-			});
+			const cds = this._zone.onEmpty.subscribe(() => this._modelScope.detectChanges());
 			this.onDestroy(() => cds.unsubscribe());
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];

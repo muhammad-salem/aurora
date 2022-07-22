@@ -1,4 +1,4 @@
-import { ReactiveScopeControl, ScopeContext, Stack } from '@ibyar/expressions';
+import { ReactiveScopeControl, Context, Stack } from '@ibyar/expressions';
 
 const notScheduled: 'notScheduled' = 'notScheduled',
 	scheduling: 'scheduling' = 'scheduling',

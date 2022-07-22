@@ -1,4 +1,4 @@
-import { ReactiveScopeControl, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
 import { ChangeDetectorRef } from './change-detector-ref.js';
 
 export abstract class ViewRef extends ChangeDetectorRef {
@@ -73,7 +73,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	constructor(
 		private _scope: ReactiveScopeControl<C>,
 		private _rootNodes: Node[],
-		private _subscriptions?: ScopeSubscription<ScopeContext>[]) {
+		private _subscriptions?: ScopeSubscription<Context>[]) {
 		super();
 	}
 
@@ -137,7 +137,6 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	detectChanges(): void {
 		this._scope.detectChanges();
-		this._scope.clone();
 	}
 	checkNoChanges(): void {
 		this._scope.checkNoChanges();

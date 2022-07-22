@@ -2,7 +2,7 @@
 import { EventEmitter } from '../component/events.js';
 import { createZoneProxyHandler } from './proxy.js';
 
-const noop = () => { };
+const NOOP = () => { };
 const EMPTY_PAYLOAD = {};
 
 export interface AuroraZone {
@@ -108,7 +108,7 @@ export class AuroraZone extends AbstractAuroraZone {
 
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		const zone = (this as any as AuroraZonePrivate)._inner;
-		const task = zone.scheduleEventTask('AuroraZoneEvent: ' + name ?? '', callback, EMPTY_PAYLOAD, noop, noop);
+		const task = zone.scheduleEventTask('AuroraZoneEvent: ' + name ?? '', callback, EMPTY_PAYLOAD, NOOP, NOOP);
 		try {
 			return zone.runTask(task, applyThis, applyArgs);
 		} finally {
@@ -143,7 +143,7 @@ function after(zone: AuroraZonePrivate) {
 	}
 }
 
-export class NoopAuroraZone extends AbstractAuroraZone {
+export class ManualAuroraZone extends AbstractAuroraZone {
 
 	constructor(parent?: AuroraZone) {
 		super();
@@ -154,7 +154,7 @@ export class NoopAuroraZone extends AbstractAuroraZone {
 		}
 	}
 	fork(): AuroraZone {
-		return new NoopAuroraZone(this);
+		return new ManualAuroraZone(this);
 	}
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
 		try {

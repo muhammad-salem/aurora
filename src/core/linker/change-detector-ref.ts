@@ -1,4 +1,4 @@
-import { ReactiveScopeControl, ScopeContext } from '@ibyar/expressions';
+import { ReactiveScopeControl, Context } from '@ibyar/expressions';
 
 export abstract class ChangeDetectorRef {
 
@@ -34,7 +34,7 @@ export abstract class ChangeDetectorRef {
 /**
  * create a change Detector Reference by property key.
  */
-export function createChangeDetectorRef(scope: ReactiveScopeControl<any>, propertyKey: keyof ScopeContext): ChangeDetectorRef {
+export function createChangeDetectorRef(scope: ReactiveScopeControl<any>, propertyKey: keyof Context): ChangeDetectorRef {
 	return {
 		detach() {
 			scope.detach();

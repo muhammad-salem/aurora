@@ -1,7 +1,7 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
 	Stack, findReactiveScopeByEventMap, ReactiveScope,
-	ScopeContext, ValueChangedCallback, Scope,
+	Context, ValueChangedCallback, Scope,
 	MemberExpression, Identifier, Deserializer
 } from '@ibyar/expressions';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
@@ -14,7 +14,7 @@ type TwoWayOperator = ':=';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
-	subscribe(zone: AuroraZone, stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[];
+	subscribe(zone: AuroraZone, stack: Stack, pipelineNames?: string[]): ScopeSubscription<Context>[];
 }
 
 
@@ -34,8 +34,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		this.set(stack, rv);
 		return rv;
 	}
-	subscribe(zone: AuroraZone, stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+	subscribe(zone: AuroraZone, stack: Stack, pipelineNames?: string[]): ScopeSubscription<Context>[] {
+		const subscriptions: ScopeSubscription<Context>[] = [];
 		if (pipelineNames?.length) {
 			const syncPipeScope = Scope.blockScope();
 			const asyncPipeScope = AsyncPipeScope.blockScope();
@@ -58,7 +58,8 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 			hasAsync && stack.pushScope(asyncPipeScope);
 		}
 		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
-		const callback: ValueChangedCallback = () => zone.run(this.get, this, [stack]);
+		// const callback: ValueChangedCallback = () => zone.run(this.get, this, [stack]);
+		const callback: ValueChangedCallback = () => this.get(stack);
 		tuples.forEach(tuple => {
 			const subscription = tuple[1].subscribe(tuple[0], callback);
 			subscriptions.push(subscription);
@@ -101,7 +102,8 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return rv;
 	}
 	private actionRTL(zone: AuroraZone, stack: Stack): ValueChangedCallback {
-		return () => zone.run(this.getRTL, this, [stack]);
+		// return () => zone.run(this.getRTL, this, [stack]);
+		return () => this.getRTL(stack);
 	}
 
 	private setLTR(stack: Stack, value: any) {
@@ -113,11 +115,12 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return lv;
 	}
 	private actionLTR(zone: AuroraZone, stack: Stack): ValueChangedCallback {
-		return () => zone.run(this.getLTR, this, [stack]);
+		// return () => zone.run(this.getLTR, this, [stack]);
+		return () => this.getLTR(stack);
 	}
 
-	private subscribeToEvents(stack: Stack, tuples: [string, ReactiveScope<ScopeContext>][], actionCallback: ValueChangedCallback) {
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+	private subscribeToEvents(stack: Stack, tuples: [string, ReactiveScope<Context>][], actionCallback: ValueChangedCallback) {
+		const subscriptions: ScopeSubscription<Context>[] = [];
 		tuples.forEach(tuple => {
 			const subscription = tuple[1].subscribe(tuple[0], actionCallback);
 			subscriptions.push(subscription);
@@ -125,7 +128,7 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return subscriptions;
 	}
 
-	subscribe(zone: AuroraZone, stack: Stack): ScopeSubscription<ScopeContext>[] {
+	subscribe(zone: AuroraZone, stack: Stack): ScopeSubscription<Context>[] {
 
 		// right to left
 		const rightTuples = findReactiveScopeByEventMap(this.rightEvents, stack);

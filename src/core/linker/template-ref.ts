@@ -1,7 +1,7 @@
 import { DomNode } from '@ibyar/elements';
 import {
 	ExpressionNode, findReactiveScopeByEventMap,
-	ReactiveScopeControl, ScopeContext,
+	ReactiveScopeControl, Context,
 	ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -57,7 +57,7 @@ export class TemplateRefImpl extends TemplateRef {
 		sandBox.pushScope(templateScope);
 
 		const elements: Node[] = [];
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		const subscriptions: ScopeSubscription<Context>[] = [];
 		const embeddedViewRef = new EmbeddedViewRefImpl(contextScope, elements, subscriptions);
 		const scopeSubscriptions = this.executeTemplateExpressions(sandBox);
 		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
@@ -70,7 +70,7 @@ export class TemplateRefImpl extends TemplateRef {
 		// embeddedViewRef.onDestroy(() => updateSubscriptions.unsubscribe());
 		return embeddedViewRef;
 	}
-	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<ScopeContext>[] | undefined {
+	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<Context>[] | undefined {
 		if (!this.templateExpressions?.length) {
 			return;
 		}
