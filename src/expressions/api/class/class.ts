@@ -166,7 +166,7 @@ export class PrivateIdentifier extends AbstractExpressionNode {
 	}
 	set(stack: Stack, value: any) {
 		const privateScope = stack.findScope(PRIVATE_SYMBOL);
-		privateScope.getScope(PRIVATE_SYMBOL)?.set(this.name, value);
+		privateScope.getInnerScope(PRIVATE_SYMBOL)?.set(this.name, value);
 	}
 	get(stack: Stack, thisContext?: ClassInstance | ClassConstructor) {
 		if (thisContext) {

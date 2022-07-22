@@ -1,4 +1,4 @@
-import type { Scope, ScopeContext } from '../scope/scope.js';
+import type { Scope, Context } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
 import { TypeOf } from './utils.js';
 
@@ -31,7 +31,7 @@ export interface ExpressionNode {
 	 * }
 	 * ```
 	 */
-	shareVariables(scopeList: Scope<ScopeContext>[]): void;
+	shareVariables(scopeList: Scope<Context>[]): void;
 
 	/**
 	 * assign the value to this expression in stack.
@@ -199,7 +199,7 @@ export interface CanFindScope {
 	 * try to search for scope of this expression
 	 * @param stack 
 	 */
-	findScope<T extends ScopeContext>(stack: Stack): Scope<T>;
-	findScope<T extends ScopeContext>(stack: Stack, scope: Scope<ScopeContext>): Scope<T>;
-	findScope<T extends ScopeContext>(stack: Stack, scope?: Scope<ScopeContext>): Scope<T> | undefined;
+	findScope<V extends Context>(stack: Stack): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope: Scope<Record<PropertyKey, V>>): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope?: Scope<Record<PropertyKey, V>>): Scope<V> | undefined;
 }
