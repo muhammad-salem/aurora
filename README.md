@@ -193,40 +193,40 @@ yarn add @ibyar/aurora
 
 in a polyfills.ts file
 
- - use `AURORA` zone  for detect changes
+ - use `aurora` zone  for detect changes
 
 ```ts
 import 'zone.js';
 import { bootstrapZone } from '@ibyar/aurora';
-bootstrapZone('AURORA');
+bootstrapZone('aurora');
 ```
 
- - or use `NOOP` Zone, if you don't like to use `Zone.js`
+ - or use `manual` Zone, if you don't like to use `Zone.js`
 all the events like `rxjs` observables, setTimeout and fetch, etc..
 can't be detected.
 
 ```ts
 import { bootstrapZone } from '@ibyar/aurora';
-bootstrapZone('NOOP');
+bootstrapZone('manual');
 set
 ```
 
- - or use `PROXY` Zone, if you don't like to use `Zone.js`
+ - or use `proxy` Zone, if you don't like to use `Zone.js`
  but still like to have full change detection for your application.
  it my be hard in debugging your application.
 
 ```ts
 import { bootstrapZone } from '@ibyar/aurora';
-bootstrapZone('PROXY');
+bootstrapZone('proxy');
 set
 ```
 
 
  -  you still can control the zone peer component while define your component by add 
-`zone` t one of the zone types 'AURORA', 'NOOP' and  'PROXy'.
-if `AURORA` is selected, you need to import the `Zone.js` package.
+`zone` t one of the zone types 'aurora', 'manual' and  'proxy'.
+if `aurora` is selected, you need to import the `Zone.js` package.
 
- - the `zone` property in the `@Component({zone: 'noop'})` is optional
+ - the `zone` property in the `@Component({zone: 'manual'})` is optional
  and will get the default value from `bootstrapZone()`
 
 ```ts
