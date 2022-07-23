@@ -32,17 +32,13 @@ export class EventEmitter<T> {
 				subscribe.next(value);
 			} catch (error) {
 				try {
-					if (subscribe.error) {
-						subscribe.error(error);
-					}
+					subscribe.error?.(error);
 				} catch (error) {
 					console.error('error: handling event', error);
 				}
 			} finally {
 				try {
-					if (subscribe.complete) {
-						subscribe.complete();
-					}
+					subscribe.complete?.();
 				} catch (error) {
 					console.error('error: handling event', error);
 				}
