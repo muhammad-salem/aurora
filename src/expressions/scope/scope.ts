@@ -69,11 +69,11 @@ export class Scope<T extends Context> implements Scope<T> {
 	static blockScope<T extends Context>(propertyKeys?: (keyof T)[]) {
 		return new Scope({} as T, propertyKeys);
 	}
+
 	protected _inners = new Map<keyof T, Scope<any>>();
-	protected _keys?: (keyof T)[];
+
 	constructor(context: T, propertyKeys?: (keyof T)[]);
-	constructor(protected _ctx: T, _keys?: (keyof T)[]) {
-		this._keys = _keys;
+	constructor(protected _ctx: T, protected _keys?: (keyof T)[]) {
 		if (Array.isArray(this._keys)) {
 			this.has = (key: keyof T): boolean => {
 				return this._keys!.includes(key);
@@ -105,7 +105,7 @@ export class Scope<T extends Context> implements Scope<T> {
 		if (!(ctx && typeof ctx === 'object')) {
 			return;
 		}
-		scope = new (this.getClass())(ctx);
+		scope = new (this.getClass())(ctx, undefined, key, this);
 		this._inners.set(key, scope);
 		return scope as S;
 	}
@@ -115,7 +115,7 @@ export class Scope<T extends Context> implements Scope<T> {
 			return scope;
 		}
 		const ctx = this.get(key);
-		scope = new (this.getClass())(ctx) as S;
+		scope = new (this.getClass())(ctx, undefined, key, this) as S;
 		this._inners.set(key, scope);
 		return scope;
 	}
@@ -272,13 +272,11 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 	protected _observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
 
 
-	constructor(context: T, propertyKeys?: (keyof T)[], protected _name?: string, protected _parent?: ReactiveScope<any>) {
+	constructor(context: T, propertyKeys?: (keyof T)[], protected _name?: keyof T, protected _parent?: ReactiveScope<any>) {
 		super(context, propertyKeys);
-		if (context instanceof HTMLElement) {
-			this._clone = {} as T;
+		this._clone = Object.assign({}, context);
+		if (HTMLElement && context instanceof HTMLElement) {
 			this._keys = [];
-		} else {
-			this._clone = Object.assign({}, context);
 		}
 	}
 
@@ -323,23 +321,23 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 		}
 		const keys = this._keys ?? this.getPropertyKeys(previous, current);
 		keys.forEach(key => {
-			if (previous[key] == current[key]
-				&& typeof previous[key] == typeof current[key]
-				&& typeof previous[key] !== 'object') {
-				return;
-			}
-			if (!this.has(key)) {
-				return;
-			}
-			if (this._inners.has(key)) {
-				const scope = this._inners.get(key)!;
-				scope._ctx = current[key];
-				scope.detectChanges();
-			} else {
-				this.emit(key, current[key], previous[key]);
+			const pv = previous[key];
+			const cv = current[key];
+			const pt = typeof pv;
+			const ct = typeof cv;
+			if (pt === 'object') {
+				if (ct === 'object') {
+					this._inners.get(key)?.detectChanges();
+				} else if (cv != pv) {
+					this.emit(key, cv, pv);
+				}
+			} else if (ct === 'object') {
+				this.emit(key, cv, pv);
+			} else if (pv != cv) {
+				this.emit(key, cv, pv);
 			}
 		});
-		this._clone = this._ctx instanceof HTMLElement ? {} as T : Object.assign({}, this._ctx);
+		this._clone = Object.assign({}, this._ctx);
 	}
 	protected getPropertyKeys<V extends Record<PropertyKey, any>>(...objs: V[]) {
 		let keys: (keyof V)[] = [];
@@ -436,39 +434,40 @@ export class ReactiveScopeControl<T extends Context> extends ReactiveScope<T> im
 		return rootScope;
 	}
 
-	protected attached: boolean = true;
-	protected marked: { [key: keyof Context]: [any, any] } = {};
+	protected _attached: boolean = true;
+	protected _marked: { [key: keyof Context]: [any, any] } = {};
+
 	override emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
-		if (this.attached) {
+		if (this._attached) {
 			super.emit(propertyKey, newValue, oldValue);
-		} else if (this.marked[propertyKey as string]) {
-			if (newValue == this.marked[propertyKey as string][1]) {
-				delete this.marked[propertyKey as string];
+		} else if (this._marked[propertyKey as string]) {
+			if (newValue == this._marked[propertyKey as string][1]) {
+				delete this._marked[propertyKey as string];
 			} else {
-				this.marked[propertyKey as string][0] = newValue;
+				this._marked[propertyKey as string][0] = newValue;
 			}
 		} else {
-			this.marked[propertyKey as string] = [newValue, oldValue];
+			this._marked[propertyKey as string] = [newValue, oldValue];
 		}
 	}
 	isAttached(): boolean {
-		return this.attached;
+		return this._attached;
 	}
 	detach(): void {
-		this.attached = false;
+		this._attached = false;
 	}
 	reattach(): void {
-		this.attached = true;
+		this._attached = true;
 		this.emitChanges();
 	}
 	emitChanges(propertyKey?: keyof T, propertyValue?: any): void {
 		if (propertyKey) {
 			super.emit(propertyKey, propertyValue);
-			Reflect.deleteProperty(this.marked, propertyKey);
+			Reflect.deleteProperty(this._marked, propertyKey);
 			return;
 		}
-		const latestChanges = this.marked;
-		this.marked = {};
+		const latestChanges = this._marked;
+		this._marked = {};
 		const keys = this._keys ?? this.getPropertyKeys(latestChanges);
 		keys.forEach(propertyKey => {
 			this._observer.emit(propertyKey, latestChanges[propertyKey][0], latestChanges[propertyKey][1]);
@@ -483,13 +482,13 @@ export class ReactiveScopeControl<T extends Context> extends ReactiveScope<T> im
 	checkNoChanges() {
 		this.detach();
 		super.detectChanges();
-		const keys = Object.keys(this.marked);
+		const keys = Object.keys(this._marked);
 		if (keys.length > 0) {
 			throw new Error(`Some Changes had been detected`);
 		}
 	}
-	getClass(): TypeOf<ReactiveScope<Context>> {
-		return ReactiveScope;
+	getClass(): TypeOf<ReactiveScopeControl<Context>> {
+		return ReactiveScopeControl;
 	}
 }
 
