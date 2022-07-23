@@ -15,7 +15,7 @@ import type { Scope, Context } from './scope.js';
 // 			case this.thisContext instanceof WeakMap:
 // 			case this.thisContext instanceof WeakSet:
 // 			case this.thisContext instanceof Promise:
-// 			case this.thisContext instanceof HTMLElement:
+// 			case HTMLElement && this.thisContext instanceof HTMLElement:
 // 				return this.thisContext;
 // 			default:
 // 				return targetThisArg;
