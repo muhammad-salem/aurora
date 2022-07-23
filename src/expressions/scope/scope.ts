@@ -162,17 +162,17 @@ export type ValueChangedCallback = (newValue: any, oldValue?: any) => void;
 type SubscriptionInfo = { callback: ValueChangedCallback, enable: boolean };
 
 export class ValueChangeObserver<T> {
-	private subscribers: Map<keyof T, Map<ScopeSubscription<T>, SubscriptionInfo>> = new Map();
-	private propertiesLock: (keyof T)[] = [];
+	private _subscribers: Map<keyof T, Map<ScopeSubscription<T>, SubscriptionInfo>> = new Map();
+	private _lock: (keyof T)[] = [];
 	emit(propertyKey: keyof T, newValue: any, oldValue?: any): void {
-		if (this.propertiesLock.includes(propertyKey)) {
+		if (this._lock.includes(propertyKey)) {
 			return;
 		}
-		const subscribers = this.subscribers.get(propertyKey);
+		const subscribers = this._subscribers.get(propertyKey);
 		if (!subscribers || subscribers.size == 0) {
 			return;
 		}
-		this.propertiesLock.push(propertyKey);
+		this._lock.push(propertyKey);
 		subscribers?.forEach(subscriptionInfo => {
 			if (!subscriptionInfo.enable) {
 				return;
@@ -183,16 +183,16 @@ export class ValueChangeObserver<T> {
 				console.error(e);
 			}
 		});
-		if (this.propertiesLock.pop() !== propertyKey) {
+		if (this._lock.pop() !== propertyKey) {
 			console.error('lock error');
 		};
 	}
 	subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		const subscription: ScopeSubscription<T> = new ScopeSubscription(propertyKey, this);
-		let propertySubscribers = this.subscribers.get(propertyKey);
+		let propertySubscribers = this._subscribers.get(propertyKey);
 		if (!propertySubscribers) {
 			propertySubscribers = new Map();
-			this.subscribers.set(propertyKey, propertySubscribers);
+			this._subscribers.set(propertyKey, propertySubscribers);
 		}
 		propertySubscribers.set(subscription, { callback, enable: true });
 		return subscription;
@@ -200,19 +200,19 @@ export class ValueChangeObserver<T> {
 
 	unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
 		if (subscription) {
-			this.subscribers.get(propertyKey)?.delete(subscription);
+			this._subscribers.get(propertyKey)?.delete(subscription);
 		} else {
-			this.subscribers.delete(propertyKey);
+			this._subscribers.delete(propertyKey);
 		}
 	}
 
 	pause(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
-		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		const subscriptionInfo = this._subscribers.get(propertyKey)?.get(subscription);
 		subscriptionInfo && (subscriptionInfo.enable = false);
 	}
 
 	resume(propertyKey: keyof T, subscription: ScopeSubscription<T>) {
-		const subscriptionInfo = this.subscribers.get(propertyKey)?.get(subscription);
+		const subscriptionInfo = this._subscribers.get(propertyKey)?.get(subscription);
 		subscriptionInfo && (subscriptionInfo.enable = true);
 	}
 
@@ -229,16 +229,16 @@ export class ValueChangeObserver<T> {
 	hasSubscribers(propertyKey: keyof T): boolean;
 	hasSubscribers(propertyKey?: keyof T): boolean {
 		if (propertyKey) {
-			return (this.subscribers.get(propertyKey)?.size ?? 0) > 0;
+			return (this._subscribers.get(propertyKey)?.size ?? 0) > 0;
 		}
-		return this.subscribers.size > 0;
+		return this._subscribers.size > 0;
 	}
 
 	/**
 	 * clear subscription maps
 	 */
 	destroy() {
-		this.subscribers.clear();
+		this._subscribers.clear();
 	}
 }
 
@@ -327,7 +327,7 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 			const ct = typeof cv;
 			if (pt === 'object') {
 				if (ct === 'object') {
-					this._inners.get(key)?.detectChanges();
+					this.getInnerScope<ReactiveScope<Context>>(key)?.detectChanges();
 				} else if (cv != pv) {
 					this.emit(key, cv, pv);
 				}
