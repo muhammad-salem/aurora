@@ -12,6 +12,7 @@ export * from './context/stack.js';
 export * from './linker/view-ref.js';
 export * from './linker/template-ref.js';
 export * from './linker/view-container-ref.js';
+export * from './linker/change-detector-ref.js';
 
 export * from './directive/directive.js';
 

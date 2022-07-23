@@ -1,6 +1,4 @@
-import { Component, OnInit, } from '@ibyar/aurora';
-
-type ChangeDetectorRef = { markForCheck(propertyKey?: PropertyKey): void };
+import { ChangeDetectorRef, Component, OnInit, } from '@ibyar/aurora';
 
 @Component({
 	selector: 'fetch-app',
@@ -27,13 +25,13 @@ export class FetchApp implements OnInit {
 	list: number[] = [];
 	selected: number = 1;
 
-	constructor(private cd: ChangeDetectorRef) { }
+	constructor(private _cd: ChangeDetectorRef) { }
 
 	onInit(): void {
 		fetch('https://raw.githubusercontent.com/ibyar/aurora/dev/example/src/fetch/data.json')
 			.then(response => response.json())
 			.then((list: string[]) => this.list = list.map(i => +i))
-			.then(() => this.cd.markForCheck());
+			.then(() => this._cd.markForCheck());
 	}
 
 	move(index: number, direction: number) {
