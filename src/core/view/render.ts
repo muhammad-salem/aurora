@@ -163,7 +163,7 @@ export class ComponentRender<T extends object> {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
-		const textSubscriptions = textNode.expression.subscribe(this.view._zone, contextStack, textNode.pipelineNames);
+		const textSubscriptions = textNode.expression.subscribe(contextStack, textNode.pipelineNames);
 		subscriptions.push(...textSubscriptions);
 		textNode.expression.get(contextStack);
 		return liveText;
@@ -317,14 +317,14 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack);
+				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
@@ -356,7 +356,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack);
+				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
@@ -374,14 +374,14 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack);
+				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
 		}
 		if (node.inputs?.length) {
 			node.inputs.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack, attr.pipelineNames);
+				const sub = attr.expression.subscribe(contextStack, attr.pipelineNames);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
@@ -398,7 +398,7 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.templateAttrs?.length) {
 			node.templateAttrs.forEach(attr => {
-				const sub = attr.expression.subscribe(this.view._zone, contextStack);
+				const sub = attr.expression.subscribe(contextStack);
 				subscriptions.push(...sub);
 				attr.expression.get(contextStack);
 			});
