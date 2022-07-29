@@ -1,5 +1,11 @@
-import { Directive, EmbeddedViewRef, Input, OnDestroy, StructuralDirective } from '@ibyar/core';
-import { diff, PatchArray, PatchOperation, PatchRoot, TrackBy } from '@ibyar/platform';
+import {
+	Directive, EmbeddedViewRef, Input,
+	OnDestroy, StructuralDirective, ViewRef
+} from '@ibyar/core';
+import {
+	diff, PatchArray, PatchOperation,
+	PatchRoot, TrackBy
+} from '@ibyar/platform';
 
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }
@@ -74,28 +80,30 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 			});
 		} else {
-			(patchActions as PatchArray<ForOfContext<T>>[]).forEach(action => {
-				switch (action.op) {
-					case PatchOperation.REMOVE:
-						this.viewContainerRef.remove(action.currentIndex);
-						break;
-					case PatchOperation.ADD:
-						this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
-						break;
-					default:
-					case PatchOperation.KEEP:
-					case PatchOperation.REPLACE:
-					case PatchOperation.MOVE:
-						const last = lastContext[action.nextIndex];
-						if (last) {
-							last.update(action.item);
-						} else {
-							this.viewContainerRef.createEmbeddedView(this.templateRef, { context: action.item, index: action.nextIndex });
-						}
-						break;
-				}
-			});
+			const views = (patchActions as PatchArray<ForOfContext<T>>[])
+				.map(patch => ({
+					index: patch.nextIndex,
+					view: this._getView(patch, lastContext),
+				}))
+				.filter(item => !!item.view)
+				.sort((a, b) => a.index - b.index)
+				.map(i => i.view) as ViewRef[];
+			this.viewContainerRef.updateViews(views);
 		}
+	}
+	private _getView(patch: PatchArray<ForOfContext<T>>, lastContext: ForOfContext<T>[]) {
+		if (PatchOperation.REMOVE === patch.op) {
+			return void 0;
+		}
+		if (PatchOperation.ADD === patch.op) {
+			return this.viewContainerRef.createEmbeddedView(this.templateRef, { context: patch.item, index: patch.nextIndex });
+		}
+		if (PatchOperation.KEEP === patch.op) {
+			lastContext[patch.nextIndex].update(patch.item);
+			return this.viewContainerRef.get(patch.nextIndex);
+		}
+		lastContext[patch.currentIndex].update(patch.item);
+		return this.viewContainerRef.get(patch.currentIndex);
 	}
 
 	onDestroy() {
