@@ -7,7 +7,14 @@ import { HTMLComponent } from '../component/custom-element.js';
 import { ReactiveScopeControl } from '@ibyar/expressions';
 
 interface IndexOptions {
+	/**
+	 * the index to insert the 
+	 */
 	index?: number;
+	/**
+	 * the default value is true
+	 */
+	insert?: boolean
 }
 
 export interface ViewContainerOptions<C> extends IndexOptions {
@@ -74,14 +81,14 @@ export abstract class ViewContainerRef {
 	 * @param selector the tag name for the aurora custom-element
 	 * @param options 
 	 */
-	abstract createComponent<C extends {}>(selector: string, options?: Omit<ViewContainerComponentOptions, 'selector'>): C;
+	abstract createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
 
 	/**
 	 * create component by the aurora custom-element `View` Class
 	 * @param viewClass the generated aurora view class
 	 * @param options 
 	 */
-	abstract createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: Omit<ViewContainerComponentOptions, 'selector'>): C;
+	abstract createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
 	/**
 	 * Instantiates a single component and inserts its host view into this container.
 	 *
@@ -164,53 +171,51 @@ export abstract class ViewContainerRef {
 
 export class ViewContainerRefImpl extends ViewContainerRef {
 
-	private views: EmbeddedViewRef<any>[] = [];
+	private _views: EmbeddedViewRef<any>[] = [];
 
-	constructor(
-		private parent: Element,
-		private firstComment: Comment
-	) {
+	constructor(parent: Element, firstComment: Comment);
+	constructor(private _parent: Element, private _firstComment: Comment) {
 		super();
 	}
 	override get anchorElement(): Element {
-		return this.parent;
+		return this._parent;
 	}
 	override get length(): number {
-		return this.views.length;
+		return this._views.length;
 	}
 	override clear(): void {
-		if (this.views.length > 0) {
-			for (const elm of this.views) {
+		if (this._views.length > 0) {
+			for (const elm of this._views) {
 				elm.destroy();
 			}
-			this.views.splice(0);
+			this._views.splice(0);
 		}
 	}
 	override get(index: number): ViewRef | undefined {
-		if (index >= this.views.length) {
+		if (index >= this._views.length) {
 			return undefined;
 		}
-		return this.views[index];
+		return this._views[index];
 	}
 	override detach(index?: number): ViewRef | undefined {
-		index ??= this.views.length - 1;
-		const viewRef = this.views[index];
+		index ??= this._views.length - 1;
+		const viewRef = this._views[index];
 		viewRef.detach();
-		this.views.splice(index, 1);
+		this._views.splice(index, 1);
 		return viewRef;
 	}
 	override indexOf(viewRef: EmbeddedViewRef<any>): number {
-		return this.views.indexOf(viewRef);
+		return this._views.indexOf(viewRef);
 	}
 	override remove(index?: number): void {
-		index ??= this.views.length - 1;
-		this.views[index].destroy();
-		this.views.splice(index, 1);
+		index ??= this._views.length - 1;
+		this._views[index].destroy();
+		this._views.splice(index, 1);
 	}
 	override insert(viewRef: EmbeddedViewRef<any>, index?: number): ViewRef {
-		index = ((index ??= this.views.length) > this.views.length) ? this.views.length : index;
-		const lastNode = index == 0 ? this.firstComment : this.views[index - 1].last;
-		this.views.splice(index, 0, viewRef);
+		index = ((index ??= this._views.length) > this._views.length) ? this._views.length : index;
+		const lastNode = index == 0 ? this._firstComment : this._views[index - 1].last;
+		this._views.splice(index, 0, viewRef);
 		viewRef.after(lastNode);
 		return viewRef;
 	}
@@ -225,12 +230,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		return this.insert(viewRef, newIndex);
 	}
 	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
-		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this.parent);
-		this.insert(viewRef, options?.index);
+		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this._parent);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return viewRef;
 	}
-	override createComponent<C extends {}>(selector: string, options?: Omit<ViewContainerComponentOptions, 'selector'>): C;
-	override createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: Omit<ViewContainerComponentOptions, 'selector'>): C;
+	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
+	override createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
 	override createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
 	override createComponent<C extends {}>(arg0: string | TypeOf<C> | TypeOf<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
 		let ViewClass: TypeOf<HTMLComponent<C>>;
@@ -253,7 +258,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
-		this.insert(viewRef, options?.index);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return component as any as C;
 	}
 
@@ -270,14 +275,14 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		const scope = ReactiveScopeControl.for<C>(element);
 		const viewRef = new EmbeddedViewRefImpl<C>(scope, [element]);
-		this.insert(viewRef, options?.index);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return element;
 	}
 	override createTextNode(data: string, options?: IndexOptions): Text {
 		const text = document.createTextNode(data);
 		const scope = ReactiveScopeControl.for<Text>(text);
 		const viewRef = new EmbeddedViewRefImpl<Text>(scope, [text]);
-		this.insert(viewRef, options?.index);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return text;
 	}
 
