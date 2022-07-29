@@ -73,13 +73,7 @@ export class Scope<T extends Context> implements Scope<T> {
 	protected _inners = new Map<keyof T, Scope<any>>();
 
 	constructor(context: T, propertyKeys?: (keyof T)[]);
-	constructor(protected _ctx: T, protected _keys?: (keyof T)[]) {
-		if (Array.isArray(this._keys)) {
-			this.has = (key: keyof T): boolean => {
-				return this._keys!.includes(key);
-			};
-		}
-	}
+	constructor(protected _ctx: T, protected _keys?: (keyof T)[]) { }
 	get(key: keyof T): any {
 		return Reflect.get(this._ctx, key);
 	}
@@ -87,7 +81,7 @@ export class Scope<T extends Context> implements Scope<T> {
 		return Reflect.set(this._ctx, key, value);
 	}
 	has(key: keyof T): boolean {
-		return key in this._ctx;
+		return this._keys?.includes(key) ?? key in this._ctx;
 	}
 	delete(key: keyof T): boolean {
 		return Reflect.deleteProperty(this._ctx, key);
@@ -120,6 +114,66 @@ export class Scope<T extends Context> implements Scope<T> {
 		return scope;
 	}
 	getClass(): TypeOf<Scope<Context>> {
+		return Scope;
+	}
+}
+
+/**
+ * a class scope used for class instance and private static properties 
+ */
+
+export class ClassScope<T extends Context> extends Scope<T> {
+	static for<T extends Context>(ctx: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
+		return new ClassScope(ctx, propertyKeys, privateKeys);
+	}
+	static blockScope<T extends Context>(propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
+		return new ClassScope({} as T, propertyKeys, privateKeys);
+	}
+	static readOnlyScopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
+		const thisScope = ClassScope.for(ctx, propertyKeys, privateKeys);
+		const thisCtx = {
+			'this': ctx,
+		};
+		const rootScope = ReadOnlyScope.for(thisCtx, ['this']);
+		rootScope.setInnerScope('this', thisScope);
+		return rootScope;
+	}
+	protected _private: Context = {};
+	constructor(context: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]);
+	constructor(context: T, propertyKeys?: (keyof T)[], private _pKeys?: (keyof T)[]) {
+		super(context, propertyKeys);
+	}
+	getPrivateContext(): T {
+		return this._private;
+	}
+	get(key: keyof T): any {
+		if (this.isPrivateKey(key)) {
+			return Reflect.get(this._private, key);
+		}
+		return super.get(key);
+	}
+	set(key: keyof T, value: any, receiver?: any): boolean {
+		if (this.isPrivateKey(key)) {
+			return Reflect.set(this._private, key, value);
+		}
+		return super.set(key, value, receiver);
+	}
+	has(key: keyof T): boolean {
+		if (this.isPrivateKey(key)) {
+			return this._pKeys?.includes(key) ?? key in this._private;
+		}
+		return super.has(key);
+	}
+	delete(key: keyof T): boolean {
+		if (this.isPrivateKey(key)) {
+			return Reflect.deleteProperty(this._private, key);
+		}
+		return super.delete(key);
+	}
+	protected isPrivateKey(key: keyof T) {
+		return typeof key === 'string' && key.startsWith('#');
+	}
+	getClass(): TypeOf<ReadOnlyScope<Context>> {
 		return Scope;
 	}
 }
