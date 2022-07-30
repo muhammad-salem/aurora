@@ -52,10 +52,10 @@ function parseLiveText(text: LiveTextContent) {
 	text.pipelineNames = getPipelineNames(textExpression);
 }
 
-function convertToMemberAccessStyle(source: string | string[]) {
+function convertToMemberAccessStyle(source: string | string[]): string {
 	const dashSplits = Array.isArray(source) ? source : source.split('-');
 	if (dashSplits.length === 1) {
-		return source;
+		return source as string;
 	}
 	return dashSplits[0] + dashSplits.splice(1).map(s => (s[0].toUpperCase() + s.substring(1))).join('');
 }
