@@ -33,21 +33,28 @@ export class TemplateRefImpl extends TemplateRef {
 	private _host: HTMLComponent<any> | StructuralDirective;
 
 	constructor(
-		private render: ComponentRender<any>,
-		private node: DomNode,
-		private stack: Stack,
-		private templateExpressions: ExpressionNode[],
+		render: ComponentRender<any>,
+		node: DomNode,
+		stack: Stack,
+		templateExpressions: ExpressionNode[],
+	);
+
+	constructor(
+		private _render: ComponentRender<any>,
+		private _node: DomNode,
+		private _stack: Stack,
+		private _templateExpressions: ExpressionNode[],
 	) {
 		super();
 	}
 	get astNode(): DomNode {
-		return this.node;
+		return this._node;
 	}
 	set host(host: HTMLComponent<any> | StructuralDirective) {
 		this._host = host;
 	}
 	createEmbeddedView<C extends object>(context: C = {} as C, parentNode: Node): EmbeddedViewRef<C> {
-		const directiveStack = this.stack.copyStack();
+		const directiveStack = this._stack.copyStack();
 		const templateScope = ReactiveScopeControl.blockScope<C>();
 		directiveStack.pushScope(templateScope);
 
@@ -63,7 +70,7 @@ export class TemplateRefImpl extends TemplateRef {
 		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
 
 		const fragment = document.createDocumentFragment();
-		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions, this._host);
+		this._render.appendChildToParent(fragment, this._node, directiveStack, parentNode, subscriptions, this._host);
 
 		fragment.childNodes.forEach(item => elements.push(item));
 		// const updateSubscriptions = this.render.view._zone.onFinal.subscribe(() => contextScope.detectChanges());
@@ -71,23 +78,24 @@ export class TemplateRefImpl extends TemplateRef {
 		return embeddedViewRef;
 	}
 	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<Context>[] | undefined {
-		if (!this.templateExpressions?.length) {
+		if (!this._templateExpressions?.length) {
 			return;
 		}
 		// init value
-		this.templateExpressions.forEach(expression => {
+		this._templateExpressions.forEach(expression => {
 			expression.get(sandBox);
 		});
 
 		// subscribe to changes
 		const scopeSubscriptions: ScopeSubscription<object>[] = [];
-		this.templateExpressions.forEach(expression => {
+		this._templateExpressions.forEach(expression => {
 			const events = expression.events();
 			const scopeTuples = findReactiveScopeByEventMap(events, sandBox);
 			scopeTuples.forEach(tuple => {
-				const subscription = tuple[1].subscribe(tuple[0], () => {
-					expression.get(sandBox);
-				});
+				const subscription = tuple[1].subscribe(
+					tuple[0],
+					() => expression.get(sandBox)
+				);
 				scopeSubscriptions.push(subscription);
 			});
 		});

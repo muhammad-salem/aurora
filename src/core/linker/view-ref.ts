@@ -68,7 +68,7 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 
 	private _destroyed: boolean = false;
-	private onDestroySubscribes: (() => void)[] = [];
+	private _onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
 		private _scope: ReactiveScopeControl<C>,
@@ -100,7 +100,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 			for (const node of this._rootNodes) {
 				(<Element>node).remove();
 			}
-			this.onDestroySubscribes.forEach(callback => {
+			this._onDestroySubscribes.forEach(callback => {
 				try {
 					callback();
 				} catch (error) {
@@ -128,6 +128,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		for (const node of this._rootNodes) {
 			(<Element>node).remove();
 		}
+		this._scope.detach();
 	}
 	reattach(): void {
 		this._scope.emitChanges();
@@ -142,12 +143,12 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		this._scope.checkNoChanges();
 	}
 	onDestroy(callback: () => void): { unsubscribe(): void; } {
-		this.onDestroySubscribes.push(callback);
+		this._onDestroySubscribes.push(callback);
 		return {
 			unsubscribe: () => {
-				const index = this.onDestroySubscribes.indexOf(callback);
+				const index = this._onDestroySubscribes.indexOf(callback);
 				if (index > -1) {
-					this.onDestroySubscribes.splice(index, 1);
+					this._onDestroySubscribes.splice(index, 1);
 				}
 			}
 		};
