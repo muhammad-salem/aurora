@@ -76,9 +76,10 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 		if (patchActions.length === 0) {
 			return;
 		} else if (PatchRoot === patchActions[0]) {
-			currentContext.forEach(context => {
-				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
-			});
+			const views = currentContext.map(context =>
+				this.viewContainerRef.createEmbeddedView(this.templateRef, { context, insert: false })
+			);
+			this.viewContainerRef.updateViews(views);
 		} else {
 			const views = (patchActions as PatchArray<ForOfContext<T>>[])
 				.map(patch => ({
@@ -88,6 +89,7 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 				.filter(item => !!item.view)
 				.sort((a, b) => a.index - b.index)
 				.map(i => i.view) as ViewRef[];
+			views.forEach(view => view.detectChanges());
 			this.viewContainerRef.updateViews(views);
 		}
 	}
