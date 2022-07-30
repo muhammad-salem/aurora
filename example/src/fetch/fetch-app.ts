@@ -35,38 +35,24 @@ export class FetchApp implements OnInit {
 	}
 
 	move(index: number, direction: number) {
-		return this.detectChanges(() => {
-			if (!this.list) {
-				return;
-			}
-			if (direction == -1 && index > 0) {
-				this.list.splice(index + direction, 2, this.list[index], this.list[index + direction]);
-			} else if (direction == 1 && index < this.list.length - 1) {
-				this.list.splice(index, 2, this.list[index + direction], this.list[index]);
-			}
-		});
+		if (!this.list) {
+			return;
+		}
+		if (direction == -1 && index > 0) {
+			this.list.splice(index + direction, 2, this.list[index], this.list[index + direction]);
+		} else if (direction == 1 && index < this.list.length - 1) {
+			this.list.splice(index, 2, this.list[index + direction], this.list[index]);
+		}
 	}
 	delete(index: number) {
-		return this.detectChanges(() => {
-			this.selected = this.list.at(index - 1) ?? 0;
-			return this.list.splice(index, 1)[0];
-		});
+		this.selected = this.list.at(index - 1) ?? 0;
+		return this.list.splice(index, 1)[0];
 	}
 	appendItem() {
-		this.detectChanges(() => {
-			this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
-			this.selected = this.list.length - 1;
-		});
+		this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
+		this.selected = this.list.length - 1;
 	}
 	sortItems(direction: number) {
-		this.detectChanges(() => this.list.sort((a, b) => (a - b) * direction));
-	}
-
-	private detectChanges<T>(call: () => T): T {
-		try {
-			return call();
-		} finally {
-			this._cd.markForCheck();
-		}
+		this.list.sort((a, b) => (a - b) * direction);
 	}
 }
