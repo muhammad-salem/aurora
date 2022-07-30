@@ -5,7 +5,7 @@ import { Component, Input, View, HostListener } from '@ibyar/aurora';
 export * from '../directive/add-note.directive.js';
 export * from '../directive/notify-user.directive.js';
 export * from '../directive/time.directive.js';
-export * from '../person-app/person.js';
+export * from './person.js';
 
 import type { Person, PersonModel } from './person.js';
 
@@ -35,13 +35,15 @@ import type { Person, PersonModel } from './person.js';
 
 		<person-edit #personEdit [(person)]="people[0]" (save)="printPerson($event)"></person-edit>
 
-		<progress-bar [(value)]="people[0].age" min="0" max="100"></progress-bar>
+		<progress-bar [value]="+people[0].age" min="0" max="100"></progress-bar>
 
+		
+		<h6>if(...){template ref #1} else {template ref #2} else if(....){template ref #3} else {template ref #4}</h6>
 		<template					*if="people[0].age < 20; else between_20_39"						>age is less than 20</template>
 		<template #between_20_39	*if="people[0].age > 19 && people[0].age < 40; else between_40_79"	>age is between 20 and 39</template>
 		<template #between_40_79	*if="people[0].age > 39 && people[0].age < 60; else between_80_100" >age is between 40 and 59</template>
 		<template #between_80_100	*if="people[0].age > 59 && people[0].age < 80; else showTest" 		>age is between 60 and 79</template>
-		<template #showTest																			>age is more than 80</template>
+		<template #showTest																				>age is more than 80</template>
 
 		<div class="row">
 			<div class="col-3">

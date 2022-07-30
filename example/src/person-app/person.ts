@@ -1,6 +1,6 @@
 import {
 	Component, EventEmitter, HostBinding, HostListener,
-	Input, OnInit, Optional, Output, SelfSkip, Service,
+	Input, OnChanges, OnInit, Optional, Output, SelfSkip, Service,
 	View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
@@ -27,7 +27,8 @@ export interface Person {
 				Person name is {{person.name}}
 			</p>
 			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
-			<button class="btn btn-outline-primary" (click)="addOneYear()">Add OneYear</button>
+			<button class="btn btn-outline-primary" (click)="addOneYear()">+1</button>
+			<button class="btn btn-outline-secondary" (click)="person.age--">-1</button>
 			<div *if="person.age >= 18">
 				Can have license
 				<p>Data</p>
