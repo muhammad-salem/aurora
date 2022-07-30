@@ -41,6 +41,7 @@
 		"custom-elements",
 		"pipes",
 		"async",
-		"typescript"
+		"typescript",
+		"front-end"
 	]
 }

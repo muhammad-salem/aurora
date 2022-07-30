@@ -63,6 +63,7 @@
 		"elements-info",
 		"element",
 		"interceptor",
-		"typescript"
+		"typescript",
+		"front-end"
 	]
 }

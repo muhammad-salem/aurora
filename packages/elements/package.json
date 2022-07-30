@@ -31,7 +31,11 @@
 	"keywords": [
 		"aurora",
 		"ibyar",
+		"node",
+		"elements",
 		"elements-info",
-		"typescript"
+		"typescript",
+		"a11y",
+		"front-end"
 	]
 }

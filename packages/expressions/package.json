@@ -47,6 +47,8 @@
 		"expression",
 		"js",
 		"eval",
-		"evaluation"
+		"evaluation",
+		"backend",
+		"front-end"
 	]
 }

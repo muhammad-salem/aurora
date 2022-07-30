@@ -65,6 +65,7 @@
 		"element",
 		"interceptor",
 		"shadow-dom",
-		"typescript"
+		"typescript",
+		"front-end"
 	]
 }
