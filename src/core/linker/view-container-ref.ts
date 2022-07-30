@@ -294,9 +294,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 
 	override updateViews(views: ViewRef[]): void {
 		for (let i = 0; i < views.length; i++) {
-			this.insert(views[i] as EmbeddedViewRef<any>, i);
+			this.move(views[i] as EmbeddedViewRef<any>, i);
 		}
-		while (this.length !== views.length) {
+		while (this.length > views.length) {
 			this.remove();
 		}
 	}
