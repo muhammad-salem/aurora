@@ -1,4 +1,4 @@
-import type { RevocableProxy } from '@ibyar/expressions';
+import { hasBindingHook, RevocableProxy } from '@ibyar/expressions';
 import { AuroraZone } from './zone.js';
 
 /**
@@ -14,7 +14,7 @@ export class ZoneProxyHandler<T extends object> implements ProxyHandler<T> {
 	}
 	get(target: T, p: string | symbol, receiver: any): any {
 		const value = Reflect.get(target, p, receiver);
-		if (!(value && typeof value === 'object')) {
+		if (!(value && typeof value === 'object') || hasBindingHook(value)) {
 			return value;
 		}
 		return createZoneProxyHandler(value, this._zone);

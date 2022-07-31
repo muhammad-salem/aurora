@@ -1,4 +1,5 @@
 /// <reference types='zone.js' />
+import { hasBindingHook } from '@ibyar/expressions';
 import { EventEmitter } from '../component/events.js';
 import { createZoneProxyHandler } from './proxy.js';
 
@@ -199,7 +200,7 @@ export class ProxyAuroraZone extends AbstractAuroraZone {
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
 		try {
 			before(this as any as AuroraZonePrivate);
-			if (ReflectInterceptors.includes(callback)) {
+			if (ReflectInterceptors.includes(callback) || hasBindingHook(applyThis)) {
 				return callback.apply(void 0, applyArgs!);
 			} else if (applyThis) {
 				const proxy = createZoneProxyHandler(applyThis, this);
