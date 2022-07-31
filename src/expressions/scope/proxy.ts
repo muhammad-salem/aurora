@@ -1,5 +1,21 @@
 import type { Scope, Context } from './scope.js';
 
+export function hasBindingHook<T>(ctx: T) {
+	switch (true) {
+		// exclude classes that have binding hook
+		case ctx instanceof Map:
+		case ctx instanceof Set:
+		case ctx instanceof Date:
+		case ctx instanceof WeakMap:
+		case ctx instanceof WeakSet:
+		case ctx instanceof Promise:
+		case HTMLElement && ctx instanceof HTMLElement:
+			return true;
+		default:
+			return false;
+	}
+}
+
 /**
  * crete new proxy handler object as scoped context
  */
