@@ -1937,7 +1937,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					propInfo.parsePropertyKindFromToken(this.peek().token);
 				}
 				propertyName = this.getIdentifier();
-				propInfo.name = (propertyName as PrivateIdentifier).getName();
+				propInfo.name = (propertyName as PrivateIdentifier).getName() as string;
 				if (propInfo.position == PropertyPosition.ObjectLiteral) {
 					throw new TypeError(this.errorMessage('UnexpectedToken PRIVATE_NAME'));
 				}

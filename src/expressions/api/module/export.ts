@@ -354,7 +354,7 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 		if (this.exported) {
 			const exportedName = this.exported.get(stack);
 			localModule.set(exportedName, {});
-			localModule = localModule.getScope(exportedName)!;
+			localModule = localModule.getInnerScope(exportedName)!;
 		}
 
 		const properties = Object.keys(sourceModule.getContext()) as (keyof ModuleContext)[];

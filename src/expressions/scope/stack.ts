@@ -2,7 +2,7 @@ import type { DeclarationExpression } from '../api/expression.js';
 import { finalizerRegister } from './finalizer.js';
 import {
 	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
-	ReactiveScopeControl, Scope, ScopeContext, WebModuleScope
+	ReactiveScopeControl, Scope, Context, WebModuleScope
 } from './scope.js';
 
 
@@ -69,40 +69,40 @@ export interface Stack {
 	 * if not found will return the stack local scop as a default value
 	 * @param propertyKey the property key
 	 */
-	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T>;
+	findScope<T extends Context>(propertyKey: PropertyKey): Scope<T>;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
 
 	/**
 	 * get a reference to the last scope in this stack
 	 */
-	lastScope<T extends ScopeContext>(): Scope<T>;
+	lastScope<T extends Context>(): Scope<T>;
 
 	/**
 	 * clear every thing after this scope, and even this scope
 	 * @param scope 
 	 */
-	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean;
+	clearTo<T extends Context>(scope: Scope<T>): boolean;
 
 	/**
 	 * clear every thing after this scope, but not this scope
 	 * @param scope 
 	 */
-	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean;
+	clearTill<T extends Context>(scope: Scope<T>): boolean;
 
-	popScope<T extends ScopeContext>(): Scope<T>;
+	popScope<T extends Context>(): Scope<T>;
 
-	removeScope<T extends ScopeContext>(scope: Scope<T>): void;
+	removeScope<T extends Context>(scope: Scope<T>): void;
 
-	pushScope<T extends ScopeContext>(scope: Scope<T>): void;
+	pushScope<T extends Context>(scope: Scope<T>): void;
 
-	pushBlockScope<T extends ScopeContext>(): Scope<T>;
+	pushBlockScope<T extends Context>(): Scope<T>;
 
-	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T>;
+	pushBlockScopeFor<T extends Context>(context: T): Scope<T>;
 
-	pushReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
+	pushReactiveScope<T extends Context>(): ReactiveScope<T>;
 
-	pushReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
+	pushReactiveScopeFor<T extends Context>(context: T): ReactiveScope<T>;
 
 	/**
 	 * create new stack instance with the same reference to the current scope array
@@ -141,22 +141,22 @@ export interface Stack {
 }
 
 export class Stack implements Stack {
-	static for(...contexts: Scope<ScopeContext>[]): Stack {
+	static for(...contexts: Scope<Context>[]): Stack {
 		if (contexts.length === 0) {
 			return new Stack();
 		}
-		return new Stack(contexts.map(context => new Scope<ScopeContext>(context)));
+		return new Stack(contexts.map(context => new Scope<Context>(context)));
 	}
-	static forScopes(...scopes: Scope<ScopeContext>[]): Stack {
+	static forScopes(...scopes: Scope<Context>[]): Stack {
 		if (scopes.length === 0) {
 			scopes.push(Scope.blockScope());
 		}
 		return new Stack(scopes);
 	}
-	static moduleScope(resolver: ModuleScopeResolver, moduleSource: string, ...globalScopes: Scope<ScopeContext>[]) {
+	static moduleScope(resolver: ModuleScopeResolver, moduleSource: string, ...globalScopes: Scope<Context>[]) {
 		return new Stack(globalScopes, resolver, moduleSource);
 	}
-	awaitPromise: AwaitPromiseInfo[];
+	awaitPromise: AwaitPromiseInfo[] = [];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
 	protected readonly stack: Array<Scope<any>>;
@@ -167,13 +167,13 @@ export class Stack implements Stack {
 	protected readonly onDestroyActions: (() => void)[] = [];
 
 	constructor();
-	constructor(globalScope: Scope<ScopeContext>);
-	constructor(globalScope: Scope<ScopeContext>, resolver: ModuleScopeResolver, moduleSource: string);
+	constructor(globalScope: Scope<Context>);
+	constructor(globalScope: Scope<Context>, resolver: ModuleScopeResolver, moduleSource: string);
 
-	constructor(stack: Array<Scope<ScopeContext>>);
-	constructor(stack: Array<Scope<ScopeContext>>, resolver: ModuleScopeResolver, moduleSource: string);
+	constructor(stack: Array<Scope<Context>>);
+	constructor(stack: Array<Scope<Context>>, resolver: ModuleScopeResolver, moduleSource: string);
 
-	constructor(globals?: Array<Scope<ScopeContext>> | Scope<ScopeContext>, resolver?: ModuleScopeResolver, moduleSource?: string) {
+	constructor(globals?: Array<Scope<Context>> | Scope<Context>, resolver?: ModuleScopeResolver, moduleSource?: string) {
 		if (Array.isArray(globals)) {
 			this.stack = globals;
 		} else if (typeof globals == 'object') {
@@ -212,15 +212,15 @@ export class Stack implements Stack {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
 	}
 	get(propertyKey: PropertyKey) {
-		return this.findScope<ScopeContext>(propertyKey).get(propertyKey);
+		return this.findScope<Context>(propertyKey).get(propertyKey);
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-		return this.findScope<ScopeContext>(propertyKey).set(propertyKey, value, receiver);
+		return this.findScope<Context>(propertyKey).set(propertyKey, value, receiver);
 	}
 	declareVariable(propertyKey: PropertyKey, propertyValue?: any) {
-		return this.lastScope<ScopeContext>().set(propertyKey, propertyValue);
+		return this.lastScope<Context>().set(propertyKey, propertyValue);
 	}
-	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T> {
+	findScope<T extends Context>(propertyKey: PropertyKey): Scope<T> {
 		let lastIndex = this.stack.length;
 		while (lastIndex--) {
 			const scope = this.stack[lastIndex];
@@ -233,40 +233,40 @@ export class Stack implements Stack {
 	resolveAwait(value: AwaitPromiseInfo): void {
 		this.awaitPromise.push(value);
 	}
-	popScope<T extends ScopeContext>(): Scope<T> {
+	popScope<T extends Context>(): Scope<T> {
 		return this.stack.pop()!;
 	}
-	removeScope<T extends ScopeContext>(scope: Scope<T>): void {
+	removeScope<T extends Context>(scope: Scope<T>): void {
 		const index = this.stack.lastIndexOf(scope);
 		this.stack.splice(index, 1);
 	}
-	pushScope<T extends ScopeContext>(scope: Scope<T>): void {
+	pushScope<T extends Context>(scope: Scope<T>): void {
 		this.stack.push(scope);
 	}
-	pushBlockScope<T extends ScopeContext>(): Scope<T> {
+	pushBlockScope<T extends Context>(): Scope<T> {
 		const scope = Scope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T> {
+	pushBlockScopeFor<T extends Context>(context: T): Scope<T> {
 		const scope = Scope.for<T>(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushReactiveScope<T extends ScopeContext>(): ReactiveScope<T> {
+	pushReactiveScope<T extends Context>(): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T> {
+	pushReactiveScopeFor<T extends Context>(context: T): ReactiveScope<T> {
 		const scope = ReactiveScope.for(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	lastScope<T extends ScopeContext>(): Scope<T> {
+	lastScope<T extends Context>(): Scope<T> {
 		return this.stack[this.stack.length - 1];
 	}
-	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean {
+	clearTo<T extends Context>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;
@@ -274,7 +274,7 @@ export class Stack implements Stack {
 		this.stack.splice(index);
 		return true;
 	}
-	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean {
+	clearTill<T extends Context>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;
@@ -291,8 +291,14 @@ export class Stack implements Stack {
 	reattach(): void {
 		this.getReactiveScopeControls().forEach(scope => scope.reattach());
 	}
+	detectChanges() {
+		this.getReactiveScope().forEach(scope => scope.detectChanges());
+	}
 	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
 		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
+	}
+	private getReactiveScope(): ReactiveScope<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveScope) as ReactiveScope<any>[];
 	}
 	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
 		if (!this.resolver || !this.moduleScope) {

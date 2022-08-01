@@ -13,6 +13,7 @@ import {
 	ComponentOptions, ChildOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
+import { ZoneType } from '../zone/bootstrap.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, private _viewName?: string) { }
@@ -54,6 +55,7 @@ export interface PipeRef<T> {
 }
 export interface DirectiveRef<T> {
 	selector: string;
+	zone: ZoneType;
 
 	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
 
@@ -88,6 +90,7 @@ export interface ComponentRef<T> {
 	isShadowDom: boolean;
 	shadowDomMode: ShadowRootMode;
 	shadowDomDelegatesFocus: boolean;
+	zone: ZoneType;
 }
 
 const AuroraBootstrap = Symbol.for('aurora:bootstrap');

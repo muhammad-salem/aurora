@@ -7,7 +7,7 @@ import {
 } from '@ibyar/elements';
 import {
 	ExpressionNode, expressionVisitor, Identifier,
-	JavaScriptParser, LanguageMode, MemberExpression, PipelineExpression
+	JavaScriptParser, MemberExpression, PipelineExpression
 } from '@ibyar/expressions';
 import {
 	BindingAssignment,
@@ -47,15 +47,15 @@ declare module '@ibyar/elements' {
 
 const ThisTextContent = JavaScriptParser.parseScript('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
-	const textExpression = JavaScriptParser.parse(text.value);
+	const textExpression = JavaScriptParser.parseScript(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
 	text.pipelineNames = getPipelineNames(textExpression);
 }
 
-function convertToMemberAccessStyle(source: string | string[]) {
+function convertToMemberAccessStyle(source: string | string[]): string {
 	const dashSplits = Array.isArray(source) ? source : source.split('-');
 	if (dashSplits.length === 1) {
-		return source;
+		return source as string;
 	}
 	return dashSplits[0] + dashSplits.splice(1).map(s => (s[0].toUpperCase() + s.substring(1))).join('');
 }

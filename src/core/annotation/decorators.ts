@@ -2,8 +2,17 @@ import type { TypeOf } from '../utils/typeof.js';
 import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
+import { ZoneType } from '../zone/bootstrap.js';
+
 
 export interface DirectiveOptions {
+
+	/**
+	 * the name of the directive which is used in the template
+	 * 
+	 * a structural directive name should start with `*`,
+	 * and an attributes directive should not.
+	 */
 	selector: string;
 }
 
@@ -126,6 +135,24 @@ export interface ComponentOptions<T = Function> {
 	 * default: false
 	 */
 	shadowDomDelegatesFocus?: boolean;
+
+	/**
+	 * use `noop` to no zone.js patch effect applied,
+	 *  and used for manual change detection for heavily process components
+	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
+	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
+	 * make sure that `zone.js` is imported in the polyfills module. 
+	 * 
+	 * the default is the platform which is initialized using
+	 * 
+	 * ```js
+	 * bootstrapZone('noop')
+	 * bootstrapZone('aurora')
+	 * ```
+	 * 
+	 * if `bootstrapZone` never been called, then the default zone is a noop zone.
+	 */
+	zone?: ZoneType;
 }
 
 export interface ChildOptions {

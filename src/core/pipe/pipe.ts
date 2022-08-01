@@ -30,7 +30,7 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		super({});
 	}
 	has(pipeName: string): boolean {
-		if (pipeName in this.context) {
+		if (pipeName in this._ctx) {
 			return true;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
@@ -38,14 +38,14 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 	}
 	get(pipeName: string): any {
 		let transformFunc: Function | undefined;
-		if (transformFunc = this.context[pipeName]) {
+		if (transformFunc = this._ctx[pipeName]) {
 			return transformFunc;
 		}
 		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		if (pipeRef !== undefined && !pipeRef.asynchronous) {
 			const pipe = new pipeRef.modelClass();
 			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
-			this.context[pipeRef.name] = transformFunc;
+			this._ctx[pipeRef.name] = transformFunc;
 			return transformFunc;
 		}
 		return void 0;
@@ -99,7 +99,7 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 	}
 	override unsubscribe(propertyKey: keyof T, subscription?: ScopeSubscription<T>) {
 		super.unsubscribe(propertyKey, subscription);
-		const pipe = this.context[propertyKey];
+		const pipe = this._ctx[propertyKey];
 		pipe.onDestroy();
 	}
 	getClass(): TypeOf<AsyncPipeScope<T>> {

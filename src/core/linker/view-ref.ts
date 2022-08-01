@@ -1,6 +1,7 @@
-import { ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
+import { ChangeDetectorRef } from './change-detector-ref.js';
 
-export abstract class ViewRef {
+export abstract class ViewRef extends ChangeDetectorRef {
 	/**
 	 * Destroys this view and all of the data structures associated with it.
 	 */
@@ -67,17 +68,17 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 
 	private _destroyed: boolean = false;
-	private onDestroySubscribes: (() => void)[] = [];
+	private _onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
-		private _context: C,
+		private _scope: ReactiveScopeControl<C>,
 		private _rootNodes: Node[],
-		private _subscriptions?: ScopeSubscription<ScopeContext>[]) {
+		private _subscriptions?: ScopeSubscription<Context>[]) {
 		super();
 	}
 
 	get context(): C {
-		return this._context;
+		return this._scope.getContext();
 	}
 
 	get rootNodes(): Node[] {
@@ -99,7 +100,7 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 			for (const node of this._rootNodes) {
 				(<Element>node).remove();
 			}
-			this.onDestroySubscribes.forEach(callback => {
+			this._onDestroySubscribes.forEach(callback => {
 				try {
 					callback();
 				} catch (error) {
@@ -127,14 +128,27 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 		for (const node of this._rootNodes) {
 			(<Element>node).remove();
 		}
+		this._scope.detach();
+	}
+	reattach(): void {
+		this._scope.emitChanges();
+	}
+	markForCheck(): void {
+		this._scope.emitChanges();
+	}
+	detectChanges(): void {
+		this._scope.detectChanges();
+	}
+	checkNoChanges(): void {
+		this._scope.checkNoChanges();
 	}
 	onDestroy(callback: () => void): { unsubscribe(): void; } {
-		this.onDestroySubscribes.push(callback);
+		this._onDestroySubscribes.push(callback);
 		return {
 			unsubscribe: () => {
-				const index = this.onDestroySubscribes.indexOf(callback);
+				const index = this._onDestroySubscribes.indexOf(callback);
 				if (index > -1) {
-					this.onDestroySubscribes.splice(index, 1);
+					this._onDestroySubscribes.splice(index, 1);
 				}
 			}
 		};

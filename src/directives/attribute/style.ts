@@ -1,19 +1,11 @@
-import { AttributeDirective, Directive, Input, OnInit } from '@ibyar/core';
+import { AttributeDirective, Directive, Input } from '@ibyar/core';
 
 type StyleType = string | Array<string> | { [propertyName: string]: string };
 
 @Directive({
 	selector: 'style'
 })
-export class StyleDirective extends AttributeDirective implements OnInit {
-
-	private updater: (property: string, value: string | null, priority?: string | undefined) => void = this.updateStyle;
-
-	onInit(): void {
-		this.updater = typeof requestAnimationFrame == 'function'
-			? this.requestStyleAnimationFrame
-			: this.updateStyle;
-	}
+export class StyleDirective extends AttributeDirective {
 
 	@Input()
 	set style(style: StyleType) {
@@ -53,7 +45,7 @@ export class StyleDirective extends AttributeDirective implements OnInit {
 	private _setStyle(nameAndUnit: string, value?: string | number | null, priority?: string): void {
 		const [name, unit] = nameAndUnit.split('.');
 		value = value != null && unit ? `${value}${unit}` : value;
-		this.updater(name, value as string, priority);
+		this.updateStyle(name, value as string, priority);
 	}
 
 	private updateStyle(property: string, value: string | null, priority?: string | undefined) {
@@ -62,9 +54,6 @@ export class StyleDirective extends AttributeDirective implements OnInit {
 		} else {
 			this.el.style.removeProperty(property);
 		}
-	}
-	private requestStyleAnimationFrame(property: string, value: string | null, priority?: string | undefined) {
-		requestAnimationFrame(() => this.updateStyle(property, value, priority));
 	}
 
 }

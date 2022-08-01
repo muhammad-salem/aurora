@@ -3,16 +3,32 @@ import { Components } from '../component/component.js';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
 import { getComponentView } from '../view/view.js';
+import { HTMLComponent } from '../component/custom-element.js';
+import { ReactiveScopeControl } from '@ibyar/expressions';
 
-export type ViewContainerOptions<C> = {
+interface IndexOptions {
+	/**
+	 * the index to insert the 
+	 */
 	index?: number;
+	/**
+	 * the default value is true
+	 */
+	insert?: boolean
+}
+
+export interface ViewContainerOptions<C> extends IndexOptions {
 	context?: C;
 };
 
-export type ViewContainerComponentOptions = {
-	index?: number | undefined;
+export interface ViewContainerComponentOptions extends IndexOptions {
 	selector?: string;
 };
+
+export interface HTMLElementOptions extends ElementCreationOptions, IndexOptions {
+
+}
+
 export abstract class ViewContainerRef {
 
 	/**
@@ -61,18 +77,54 @@ export abstract class ViewContainerRef {
 	abstract createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C>;
 
 	/**
-   * Instantiates a single component and inserts its host view into this container.
-   *
-   * @param componentType Component Type to use.
-   * @param options An object that contains extra parameters:
-   *  * index: the index at which to insert the new component's host view into this container.
-   *           If not specified, appends the new view as the last entry.
-   *  * selector: the tag name of the new create component that attached with this model class.
-   * 			Any Model class can have many views with different selectors. 
-   *
-   * @returns The new `HTMLComponent` which contains the component instance and the host view.
-   */
+	 * create component by tag name `selector`.
+	 * @param selector the tag name for the aurora custom-element
+	 * @param options 
+	 */
+	abstract createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
+
+	/**
+	 * create component by the aurora custom-element `View` Class
+	 * @param viewClass the generated aurora view class
+	 * @param options 
+	 */
+	abstract createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
+	/**
+	 * Instantiates a single component and inserts its host view into this container.
+	 *
+	 * @param componentType Component Type to use.
+	 * @param options An object that contains extra parameters:
+	 *  * index: the index at which to insert the new component's host view into this container.
+	 *     If not specified, appends the new view as the last entry.
+	 *  * selector: the tag name of the new create component that attached with this model class.
+	 * 		Any Model class can have many views with different selectors.
+	 *
+	 * @returns The new `HTMLComponent` which contains the component instance and the host view.
+	 */
 	abstract createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
+
+
+	/**
+	 * create an HTMLElement by tag name `selector`.
+	 * @param selector the tag name for the aurora custom-element
+	 * @param options 
+	 */
+	abstract createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
+	abstract createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementDeprecatedTagNameMap[K];
+
+	/**
+	 * create HTMLElement by View Class reference
+	 * @param viewClass the generated aurora view class
+	 * @param options 
+	 */
+	abstract createElement<C extends HTMLElement>(htmlElementClass: TypeOf<C>, options?: HTMLElementOptions): C;
+
+	/**
+	 * create a text node and insert to the view
+	 * @param data 
+	 * @param options 
+	 */
+	abstract createTextNode(data: string, options?: IndexOptions): Text;
 
 	/**
 	 * Inserts a view into this container.
@@ -114,58 +166,62 @@ export abstract class ViewContainerRef {
 	 * If not specified, the last view in the container is detached.
 	 */
 	abstract detach(index?: number): ViewRef | undefined;
+
+	/**
+	 * set the current views from this
+	 * @param views the new `ViewRef` list 
+	 */
+	abstract updateViews(views: ViewRef[]): void;
 }
 
 
 export class ViewContainerRefImpl extends ViewContainerRef {
 
-	private views: EmbeddedViewRef<any>[] = [];
+	private _views: EmbeddedViewRef<any>[] = [];
 
-	constructor(
-		private parent: Element,
-		private firstComment: Comment
-	) {
+	constructor(parent: Element, firstComment: Comment);
+	constructor(private _parent: Element, private _firstComment: Comment) {
 		super();
 	}
 	override get anchorElement(): Element {
-		return this.parent;
+		return this._parent;
 	}
 	override get length(): number {
-		return this.views.length;
+		return this._views.length;
 	}
 	override clear(): void {
-		if (this.views.length > 0) {
-			for (const elm of this.views) {
+		if (this._views.length > 0) {
+			for (const elm of this._views) {
 				elm.destroy();
 			}
-			this.views.splice(0);
+			this._views.splice(0);
 		}
 	}
 	override get(index: number): ViewRef | undefined {
-		if (index >= this.views.length) {
+		if (index >= this._views.length) {
 			return undefined;
 		}
-		return this.views[index];
+		return this._views[index];
 	}
 	override detach(index?: number): ViewRef | undefined {
-		index ??= this.views.length - 1;
-		const viewRef = this.views[index];
+		index ??= this._views.length - 1;
+		const viewRef = this._views[index];
 		viewRef.detach();
-		this.views.splice(index, 1);
+		this._views.splice(index, 1);
 		return viewRef;
 	}
 	override indexOf(viewRef: EmbeddedViewRef<any>): number {
-		return this.views.indexOf(viewRef);
+		return this._views.indexOf(viewRef);
 	}
 	override remove(index?: number): void {
-		index ??= this.views.length - 1;
-		this.views[index].destroy();
-		this.views.splice(index, 1);
+		index ??= this._views.length - 1;
+		this._views[index].destroy();
+		this._views.splice(index, 1);
 	}
 	override insert(viewRef: EmbeddedViewRef<any>, index?: number): ViewRef {
-		index = ((index ??= this.views.length) > this.views.length) ? this.views.length : index;
-		const lastNode = index == 0 ? this.firstComment : this.views[index - 1].last;
-		this.views.splice(index, 0, viewRef);
+		index = ((index ??= this._views.length) > this._views.length) ? this._views.length : index;
+		const lastNode = index == 0 ? this._firstComment : this._views[index - 1].last;
+		this._views.splice(index, 0, viewRef);
 		viewRef.after(lastNode);
 		return viewRef;
 	}
@@ -180,20 +236,69 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		return this.insert(viewRef, newIndex);
 	}
 	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
-		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this.parent);
-		this.insert(viewRef, options?.index);
+		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this._parent);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return viewRef;
 	}
-	override createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C {
-		const defaultTagName = Components.getComponentRef<C>(componentType).selector;
-		const ViewClass = getComponentView(componentType, options?.selector ?? defaultTagName);
-		if (!ViewClass) {
-			throw new Error(`Can't find View component for class ${componentType.name}`);
+	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
+	override createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
+	override createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
+	override createComponent<C extends {}>(arg0: string | TypeOf<C> | TypeOf<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
+		let ViewClass: TypeOf<HTMLComponent<C>>;
+		if (typeof arg0 === 'string') {
+			ViewClass = customElements.get(arg0) as TypeOf<HTMLComponent<C>>;
+		} else if (typeof arg0 === 'function') {
+			if (Reflect.has(arg0, 'observedAttributes')) {
+				ViewClass = arg0 as TypeOf<HTMLComponent<C>>;
+			} else {
+				const componentType = arg0 as TypeOf<C>;
+				const defaultTagName = Components.getComponentRef<C>(componentType).selector;
+				const view = getComponentView(componentType, options?.selector ?? defaultTagName);
+				if (!view) {
+					throw new Error(`Can't find View component for class ${componentType.name}`);
+				}
+				ViewClass = view;
+			}
+		} else {
+			throw new Error(`Can't find View component for args, ${arg0}, ${options}`);
 		}
 		const component = new ViewClass();
-		const viewRef = new EmbeddedViewRefImpl<C>(component._proxyModel, [component]);
-		this.insert(viewRef, options?.index);
-		return component._proxyModel;
+		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
+		return component as any as C;
+	}
+
+	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
+	override createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementDeprecatedTagNameMap[K];
+	override createElement<C extends HTMLElement>(arg0: string | TypeOf<C>, options?: HTMLElementOptions): C {
+		let element: C;
+		if (typeof arg0 === 'string') {
+			element = document.createElement(arg0, { is: options?.is }) as C;
+		} else if (typeof arg0 === 'function') {
+			element = new arg0();
+		} else {
+			throw new Error(`Can't find View component for args, ${arg0}, ${options}`);
+		}
+		const scope = ReactiveScopeControl.for<C>(element);
+		const viewRef = new EmbeddedViewRefImpl<C>(scope, [element]);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
+		return element;
+	}
+	override createTextNode(data: string, options?: IndexOptions): Text {
+		const text = document.createTextNode(data);
+		const scope = ReactiveScopeControl.for<Text>(text);
+		const viewRef = new EmbeddedViewRefImpl<Text>(scope, [text]);
+		(options?.insert != false) && this.insert(viewRef, options?.index);
+		return text;
+	}
+
+	override updateViews(views: ViewRef[]): void {
+		for (let i = 0; i < views.length; i++) {
+			this.move(views[i] as EmbeddedViewRef<any>, i);
+		}
+		while (this.length > views.length) {
+			this.remove();
+		}
 	}
 
 }

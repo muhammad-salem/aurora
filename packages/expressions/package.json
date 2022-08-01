@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/expressions",
-	"version": "0.5.62",
+	"version": "0.6.0",
 	"description": "Aurora expression, an template expression and evaluation, An 100% spec compliant ES2022 JavaScript toolchain,",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/expressions",
@@ -47,6 +47,8 @@
 		"expression",
 		"js",
 		"eval",
-		"evaluation"
+		"evaluation",
+		"backend",
+		"front-end"
 	]
 }

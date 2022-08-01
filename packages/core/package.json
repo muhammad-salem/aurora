@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/core",
-	"version": "0.5.62",
+	"version": "0.6.0",
 	"description": "Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/core",
@@ -23,10 +23,13 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/elements": "^0.5.62",
-		"@ibyar/expressions": "^0.5.62",
+		"@ibyar/elements": "^0.6.0",
+		"@ibyar/expressions": "^0.6.0",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.4.0"
+	},
+	"peerDependencies": {
+		"zone.js": "^0.11.6"
 	},
 	"devDependencies": {
 		"typescript": "^4.7.4"
@@ -60,6 +63,7 @@
 		"elements-info",
 		"element",
 		"interceptor",
-		"typescript"
+		"typescript",
+		"front-end"
 	]
 }

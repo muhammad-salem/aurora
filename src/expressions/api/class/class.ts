@@ -2,7 +2,7 @@ import type {
 	DeclarationExpression, ExpressionEventPath,
 	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import { ClassScope, Scope } from '../../scope/scope.js';
 import { __decorate } from 'tslib';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -152,48 +152,17 @@ export class MetaProperty extends MemberExpression {
  * A private identifier refers to private class elements. For a private name `#a`, its name is `a`.
  */
 @Deserializer('PrivateIdentifier')
-export class PrivateIdentifier extends AbstractExpressionNode {
+export class PrivateIdentifier extends Identifier {
 	static fromJSON(node: PrivateIdentifier): PrivateIdentifier {
 		return new PrivateIdentifier(
 			node.name as string
 		);
 	}
-	constructor(private name: string) {
-		super();
+	get(stack: Stack) {
+		return stack.get(this.toString());
 	}
-	getName() {
-		return this.name;
-	}
-	set(stack: Stack, value: any) {
-		const privateScope = stack.findScope(PRIVATE_SYMBOL);
-		privateScope.getScope(PRIVATE_SYMBOL)?.set(this.name, value);
-	}
-	get(stack: Stack, thisContext?: ClassInstance | ClassConstructor) {
-		if (thisContext) {
-			return thisContext[PRIVATE_SYMBOL][this.name];
-		}
-		// return stack.get(this.name);
-		let privateObj = stack.get('this');
-		if (privateObj) {
-			return privateObj[PRIVATE_SYMBOL][this.name];
-		}
-		privateObj = stack.get(PRIVATE_SYMBOL);
-		return privateObj[this.name];
-	}
-	dependency(computed?: true): ExpressionNode[] {
-		return [];
-	}
-	dependencyPath(computed?: true): ExpressionEventPath[] {
-		return [];
-	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	toString(): string {
 		return `#${this.name}`;
-	}
-	toJson(): { [key: string]: any; } {
-		return {
-			name: this.name
-		};
 	}
 }
 
@@ -210,7 +179,17 @@ export class StaticBlock extends BlockStatement {
 	}
 	get(stack: Stack, classConstructor?: ClassConstructor): void {
 		const constructor = classConstructor!;
-		constructor[STATIC_INITIALIZATION_BLOCK].push(() => super.get(stack));
+		constructor[STATIC_INITIALIZATION_BLOCK].push(
+			() => {
+				const scope = new ClassScope(constructor);
+				stack.pushScope(scope);
+				try {
+					super.get(stack)
+				} finally {
+					stack.clearTo(scope);
+				}
+			}
+		);
 	}
 	toString(): string {
 		return `static ${super.toString()}`;
@@ -265,9 +244,11 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	}
 	getKeyName(stack: Stack) {
 		switch (true) {
-			case this.computed: return this.key.get(stack);
+			case this.computed:
+				return this.key.get(stack);
 			case this.key instanceof Identifier:
-			case this.key instanceof PrivateIdentifier: return (this.key as Identifier | PrivateIdentifier).getName() as string;
+			case this.key instanceof PrivateIdentifier:
+				return (this.key as Identifier | PrivateIdentifier).getName() as string;
 			default: return this.key.toString();
 		}
 	}
@@ -645,8 +626,7 @@ export class Class extends AbstractExpressionNode {
 					this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], TEMP[className][INSTANCE_PRIVATE_SYMBOL]);
 					this[STACK] = stack.copyStack();
 					const instanceStack = this[STACK];
-					instanceStack.pushBlockScope();
-					instanceStack.declareVariable('this', this);
+					instanceStack.pushScope(ClassScope.readOnlyScopeForThis(this));
 					instanceStack.declareVariable(NEW_TARGET, new.target);
 					instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
 					instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());

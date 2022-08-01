@@ -1,7 +1,8 @@
-import type { ReactiveScope, ScopeContext } from '@ibyar/expressions';
+import type { ReactiveScope, ReactiveScopeControl, Context } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
 import { PropertyRef, ComponentRef } from './component.js';
+import { AuroraZone } from '../zone/zone.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -10,17 +11,17 @@ export interface CustomElement {
 	disconnectedCallback(): void;
 }
 
-export type ModelType<T> = T & ScopeContext;
+export type ModelType<T> = T & Context;
 
 export type NodeContextType<T> = { 'this': BaseComponent<T> };
 
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
-	_proxyModel: ModelType<T>;
-	_modelScope: ReactiveScope<T & ScopeContext>;
+	_modelScope: ReactiveScopeControl<T & Context>;
 
 	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
+	_zone: AuroraZone;
 
 	getComponentRef(): ComponentRef<T>;
 
@@ -42,7 +43,7 @@ export interface BaseComponent<T> extends CustomElement {
 	getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined;
 
 	triggerOutput(eventName: string, value?: any): void;
-
+	onDestroy(callback: () => void): void;
 }
 
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }

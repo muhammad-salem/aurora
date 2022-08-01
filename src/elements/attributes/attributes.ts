@@ -1,5 +1,3 @@
-import { DefaultTag } from './tags.js';
-
 export interface AttrRef {
 	readonly [attr: string]: string[];
 }

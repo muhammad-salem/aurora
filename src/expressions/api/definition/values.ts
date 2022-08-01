@@ -2,7 +2,7 @@ import type {
 	DeclarationExpression, ExpressionNode, NodeDeserializer,
 	CanFindScope, ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type { Context, Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -41,10 +41,10 @@ export class Identifier extends AbstractExpressionNode implements DeclarationExp
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined {
 		if (scope) {
-			return scope.getScope(this.name);
+			return scope.getInnerScope(this.name);
 		}
 		scope = stack.findScope(this.name);
-		return scope.getScope(this.name);
+		return scope.getInnerScope(this.name);
 	}
 	declareVariable(stack: Stack, propertyValue: any): any {
 		return stack.declareVariable(this.name, propertyValue);
@@ -116,14 +116,14 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	get(): T {
 		return this.value;
 	}
-	findScope<V extends object>(stack: Stack): Scope<V>;
-	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
-	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
+	findScope<V extends Context>(stack: Stack): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope: Scope<Record<PropertyKey, V>>): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope?: Scope<Record<PropertyKey, V>>): Scope<V> | undefined {
 		if (scope) {
-			return scope.getScope<V>(this.value as any);
+			return scope.getInnerScope(this.value as any);
 		}
-		scope = stack.findScope<V>(this.value as any);
-		return scope.getScope<V>(this.value as any);
+		scope = stack.findScope(this.value as any);
+		return scope.getInnerScope(this.value as any);
 	}
 	dependency(computed: true): ExpressionNode[] {
 		return computed ? [this] : [];

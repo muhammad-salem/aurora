@@ -19,6 +19,10 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 		this._updateUI();
 	}
 
+	get ifCondition() {
+		return this._condition;
+	}
+
 	@Input('then')
 	set thenTemplateRef(template: TemplateRef) {
 		this._thenTemplateRef = template;
@@ -27,6 +31,10 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 			this._lastCondition = null;
 		}
 		this._updateUI();
+	}
+
+	get thenTemplateRef() {
+		return this._thenTemplateRef;
 	}
 
 	@Input('else')
