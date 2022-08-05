@@ -182,9 +182,9 @@ export class ManualAuroraZone extends AbstractAuroraZone {
 	}
 }
 
-const ReflectInterceptors = [Reflect.defineProperty, Reflect.deleteProperty, Reflect.get, Reflect.set];
-
 export class ProxyAuroraZone extends AbstractAuroraZone {
+
+	private _cdPromise?: Promise<void>
 
 	constructor(parent?: AuroraZone) {
 		super();
@@ -200,14 +200,7 @@ export class ProxyAuroraZone extends AbstractAuroraZone {
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
 		try {
 			before(this as any as AuroraZonePrivate);
-			if (ReflectInterceptors.includes(callback) || hasBindingHook(applyThis)) {
-				return callback.apply(void 0, applyArgs!);
-			} else if (applyThis) {
-				const proxy = createZoneProxyHandler(applyThis, this);
-				return callback.apply(proxy, applyArgs!);
-			} else {
-				return callback.apply(applyThis, applyArgs!);
-			}
+			return callback.apply(applyThis, applyArgs!);
 		} catch (error) {
 			this.onCatch.emit();
 			throw error;
@@ -226,5 +219,13 @@ export class ProxyAuroraZone extends AbstractAuroraZone {
 	}
 	runOutsideAurora<T>(callback: (...args: any[]) => T): T {
 		return callback();
+	}
+	scheduleChangesDetection() {
+		this._cdPromise ??= Promise
+			.resolve()
+			.then(() => {
+				this.runCallback(NOOP);
+				this._cdPromise = undefined;
+			});
 	}
 }
