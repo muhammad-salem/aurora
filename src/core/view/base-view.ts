@@ -76,7 +76,21 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			});
 
-
+			componentRef.outputs.forEach(output =>
+				(model[output.modelProperty as keyof T] as any as EventEmitter<any>)
+					.subscribe((value: any) => {
+						const event = new CustomEvent(
+							output.viewAttribute,
+							{
+								detail: value,
+								cancelable: false,
+								bubbles: output.options?.bubbles,
+								composed: output.options?.bubbles,
+							},
+						);
+						this.dispatchEvent(event);
+					})
+			);
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
@@ -324,22 +338,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 			});
 			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
-		}
-
-		// events api
-		addEventListener(eventName: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-			if ('on' + eventName in this) {
-				super.addEventListener(eventName, (event: Event) => {
-					(listener as Function)(event);
-				}, options);
-				return;
-			}
-			const modelOutput = this.getEventEmitter<any>(eventName);
-			if (modelOutput) {
-				modelOutput.subscribe((data: any) => {
-					(listener as Function)(data);
-				});
-			}
 		}
 
 		triggerOutput(eventName: string, value?: any): void {

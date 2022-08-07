@@ -169,9 +169,24 @@ export function Input(name?: string): Function {
 		Components.addInput(target, propertyKey, name || propertyKey);
 	};
 }
-export function Output(name?: string): Function {
+
+export type OutputEventInit = Omit<EventInit, 'cancelable'>;
+export type OutputOptions = { name?: string } & OutputEventInit;
+
+export function Output(options?: OutputOptions): Function;
+export function Output(name?: string, options?: OutputEventInit): Function;
+export function Output(name?: string | OutputOptions, options?: OutputEventInit): Function {
+	const eventType = typeof name === 'object' ? name.name : name;
+	const eventOpts = typeof name === 'object' ? name : options;
 	return (target: Object, propertyKey: string) => {
-		Components.addOutput(target, propertyKey, name || propertyKey);
+		Components.addOutput(
+			target,
+			propertyKey, eventType || propertyKey,
+			{
+				bubbles: eventOpts?.bubbles ?? false,
+				composed: eventOpts?.composed ?? false
+			}
+		);
 	};
 }
 
