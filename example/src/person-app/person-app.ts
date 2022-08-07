@@ -45,7 +45,7 @@ import type { Person, PersonModel } from './person.js';
 		<template #between_80_100	*if="people[0].age > 59 && people[0].age < 80; else showTest" 		>age is between 60 and 79</template>
 		<template #showTest																				>age is more than 80</template>
 
-		<div class="row">
+		<div class="row" (select)="selectPersonView($event)">
 			<div class="col-3">
 				<person-view #pm1 [(person)]="people[0]" name="dddddddd" age="34" allowed="true"
 					@click="onPersonViewClick('person:clicked', people[0])"></person-view>
@@ -170,9 +170,9 @@ export class PersonApp {
 		console.log('personEdit:input', event, this.view);
 	}
 
-	@HostListener('personEdit:person', ['$event'])
-	onPerson(person: Person) {
-		console.log('personEdit:person', person, this.view);
+	@HostListener('personEdit:save', ['$event'])
+	onPerson(event: CustomEvent<Person>) {
+		console.log('personEdit:save', event.detail, this.view);
 	}
 
 	printPerson(person: PersonModel) {
@@ -181,5 +181,11 @@ export class PersonApp {
 
 	onPersonViewClick(event: string, person: PersonModel) {
 		console.log(event, person);
+	}
+
+	selectPersonView(event: CustomEvent<Person>) {
+		console.log('event', event.detail.age);
+		event.detail.age++;
+		console.log('event', event);
 	}
 }

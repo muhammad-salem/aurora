@@ -43,7 +43,7 @@ export class PersonModel implements OnInit {
 	};
 
 	@Output() open: EventEmitter<any> = new EventEmitter();
-	@Output('select') _select: EventEmitter<any> = new EventEmitter();
+	@Output('select', { bubbles: true }) _select: EventEmitter<Person> = new EventEmitter();
 
 
 	className: string = 'p1 m1';
