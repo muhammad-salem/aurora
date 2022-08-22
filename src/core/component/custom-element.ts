@@ -77,14 +77,14 @@ export function isHTMLUnknownElement(element: HTMLElement): element is HTMLEleme
  * https://html.spec.whatwg.org/multipage/custom-elements.html#the-elementinternals-interface 
  * https://docs.google.com/document/d/1JO8puctCSpW-ZYGU8lF-h4FWRIDQNDVexzHoOQ2iQmY/edit
  */
-export interface CustomFormElement extends CustomElement {
+export interface FormAssociatedCustomElement extends CustomElement {
 
 	/**
 	 * Called when the browser associates the element with a form element,
 	 * or disassociates the element from a form element.
 	 * @param form 
 	 */
-	formAssociatedCallback(form: HTMLFormElement): void;
+	formAssociatedCallback(form: HTMLFormElement | null): void;
 
 	/**
 	 * Called after the disabled state of the element changes,
@@ -110,7 +110,7 @@ export interface CustomFormElement extends CustomElement {
 	 * When the browser restores the state of the element (for example, after a navigation, or when the browser restarts).
 	 *  The mode argument is "restore" in this case.
 	 * 
-	 * When the browser's input-assist features such as form autofilling sets a value.
+	 * When the browser's input-assist features such as form auto filling sets a value.
 	 *  The mode argument is "autocomplete" in this case.
 	 * 
 	 * The type of the first argument depends on how the setFormValue() method was called.
@@ -119,8 +119,74 @@ export interface CustomFormElement extends CustomElement {
 	formStateRestoreCallback(value: any, mode: 'restore' | 'autocomplete'): void;
 }
 
-export interface BaseFormElementComponent<T extends Object> extends BaseComponent<T>, CustomFormElement { }
+export interface ValueControl<T = any> {
+	/**
+	 * reset the value of the
+	 * @param value 
+	 * @param mode 
+	 */
+	writeValue(opt: { mode: 'reset' }): void;
 
-export interface HTMLFormElementComponent<T extends Object> extends BaseFormElementComponent<T>, HTMLComponent<T> { }
+	/**
+	 * 
+	 * When the browser restores the state of the element (for example, after a navigation, or when the browser restarts).
+	 *  The mode argument is "restore" in this case.
+	 * 
+	 * When the browser's input-assist features such as form auto filling sets a value.
+	 *  The mode argument is "autocomplete" in this case.
+	 * 
+	 * @param opt:  options contain the `value` to be written and `mode` represented by `restore` or `autocomplete` or `undefined`
+	 */
+
+	writeValue(opt: { value: T | null, mode?: 'restore' | 'autocomplete' }): void;
+
+	/**
+	 * This method is called when new `ValueControl` assigned to the form associated element.
+	 * 
+	 * When implementing the registerOnChange method in your own value accessor, save the given function so your class calls it at the appropriate time.
+	 * 
+	 * ```ts
+	 * registerOnChange(fn: (_: any) => void): void {
+	 * 	this._onChange = fn;
+	 * }
+	 * ```
+	 * 
+	 * When the value changes in the UI, call the registered function to allow the forms API to update itself:
+	 * 
+	 * ```ts
+	 * 
+	 * onChange(event: Event){
+	 * 	
+	 * }
+	 * 
+	 * ```
+	 * @param fn the function to be called when a control want to change the value of a form associated element.
+	 */
+
+	registerOnChange(fn: (value?: T | null) => void): void;
+
+	/**
+	 * called when `disabled` attribute change.
+	 * @param isDisabled 
+	 */
+	setDisabledState?(isDisabled: boolean): void;
+}
+
+export function isValueControl(obj: any): obj is ValueControl {
+	return obj
+		&& typeof obj === 'object'
+		&& typeof obj.writeValue === 'function'
+		&& typeof obj.registerOnChange === 'function';
+}
+
+export interface BaseFormAssociatedComponent<T extends Object> extends BaseComponent<T>, FormAssociatedCustomElement {
+	readonly internals: ElementInternals;
+	readonly form: HTMLFormElement | null;
+	readonly valueControl?: ValueControl<T>;
+
+	registerValueControl(valueControl: ValueControl): void;
+}
+
+export interface FormAssociatedComponent<T extends Object> extends BaseFormAssociatedComponent<T>, HTMLComponent<T> { }
 
 export type HTMLFormElement = HTMLButtonElement | HTMLDataListElement | HTMLFieldSetElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
