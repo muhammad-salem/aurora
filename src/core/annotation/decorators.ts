@@ -3,6 +3,7 @@ import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 import { ZoneType } from '../zone/bootstrap.js';
+import { ValueControl } from '../component/custom-element.js';
 
 
 export interface DirectiveOptions {
@@ -135,6 +136,51 @@ export interface ComponentOptions<T = Function> {
 	 * default: false
 	 */
 	shadowDomDelegatesFocus?: boolean;
+
+	/**
+	 * Create a custom form-associated element with HTMLElement.attachInternals
+	 * default: false
+	 * 
+	 * if the value is `true` it is expected from the model class to implement `ValueControl<T>` interface
+	 * 
+	 * otherwise you can register another class that implement `ValueControl<T>`,
+	 * in case if you want split the model and the value controller.
+	 * 
+	 * #### Usage Notes:
+	 * 
+	 * ```ts
+	 * 
+	 * class CustomInputValueControl implements ValueControl<number> {
+	 * 
+	 * 	private _value: number;
+	 * 	private _disabled: boolean;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({value, mode}){
+	 * 		this._value = value;
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this._disabled = isDisabled;
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * @Component({
+	 * 	selector: 'custom-input',
+	 * 	extend: 'input',
+	 * 	formAssociated: CustomInputValueControl,
+	 * })
+	 * export class CustomInputElement {
+	 * 
+	 * }
+	 * ```
+	 */
+	formAssociated?: boolean | TypeOf<ValueControl<any>>;
 
 	/**
 	 * use `noop` to no zone.js patch effect applied,

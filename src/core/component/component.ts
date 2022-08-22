@@ -4,7 +4,7 @@ import {
 	DomNode, DomRenderNode, canAttachShadow, directiveRegistry
 } from '@ibyar/elements';
 
-import { HTMLComponent } from './custom-element.js';
+import { HTMLComponent, ValueControl } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
@@ -100,6 +100,7 @@ export interface ComponentRef<T> {
 	isShadowDom: boolean;
 	shadowDomMode: ShadowRootMode;
 	shadowDomDelegatesFocus: boolean;
+	formAssociated: boolean | TypeOf<ValueControl<any>>;
 	zone: ZoneType;
 }
 
@@ -246,6 +247,10 @@ export class Components {
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
+
+		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {
+			componentRef.formAssociated = false;
+		}
 
 		if (componentRef.isShadowDom && componentRef.extend.name) {
 			componentRef.isShadowDom = canAttachShadow(componentRef.extend.name);

@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { getAllAttributes, isFormElement } from '@ibyar/elements';
+import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';
@@ -18,12 +18,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
-	const parentClass = componentRef.extend.name
-		? (isFormElement(componentRef.extend.name)
-			? baseFormFactoryView<T>(htmlParent)
-			: baseFactoryView<T>(htmlParent)
-		)
-		: baseFactoryView<T>(HTMLElement);
+	const parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
 	viewClass = ({
 		[htmlViewClassName]: class extends parentClass { constructor() { super(componentRef, modelClass); } }
 	})[htmlViewClassName];
@@ -82,16 +77,9 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 
 	const defaultAttributes = getAllAttributes(componentRef.extend.name);
 	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
+		.concat(componentRef.outputs.map(output => ToCamelCase(output.viewAttribute)));
 	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
 	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
-	// https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
-	if (false) {
-		Object.defineProperty(viewClass, 'formAssociated', {
-			get() {
-				return true;
-			}
-		});
-	}
 	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
 	if (!Reflect.has(window, htmlViewClassName)) {
 		Reflect.set(window, htmlViewClassName, viewClass);
