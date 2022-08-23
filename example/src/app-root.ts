@@ -74,6 +74,11 @@ export class AppRoot implements OnInit {
 			title: 'Expression Editor',
 			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
 		},
+		{
+			title: 'Custom Form',
+			load: () => import('./forms/forms.js').then(module => module.CustomForm),
+		},
+
 	];
 
 	onInit(): void {
