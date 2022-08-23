@@ -119,13 +119,18 @@ export interface FormAssociatedCustomElement extends CustomElement {
 	formStateRestoreCallback(value: any, mode: 'restore' | 'autocomplete'): void;
 }
 
+export type WriteValueMode = 'restore' | 'autocomplete' | 'reset';
+
+export type WriteValueOptions<T> = { value: T | null, mode?: 'restore' | 'autocomplete' } | { value?: undefined, mode: 'reset' };
+
+
 export interface ValueControl<T = any> {
 	/**
 	 * reset the value of the
 	 * @param value 
 	 * @param mode 
 	 */
-	writeValue(opt: { mode: 'reset' }): void;
+	writeValue(opt: { value?: undefined, mode: 'reset' }): void;
 
 	/**
 	 * 
@@ -139,6 +144,10 @@ export interface ValueControl<T = any> {
 	 */
 
 	writeValue(opt: { value: T | null, mode?: 'restore' | 'autocomplete' }): void;
+
+	writeValue(opt: { value?: T | null, mode?: WriteValueMode }): void;
+
+	writeValue(opt: WriteValueOptions<T>): void;
 
 	/**
 	 * This method is called when new `ValueControl` assigned to the form associated element.
