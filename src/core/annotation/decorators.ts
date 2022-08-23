@@ -149,6 +149,7 @@ export interface ComponentOptions<T = Function> {
 	 * #### Usage Notes:
 	 * 
 	 * ```ts
+	 * 
 	 * @Component({
 	 * 	selector: 'custom-message',
 	 * 	template: `
@@ -160,12 +161,12 @@ export interface ComponentOptions<T = Function> {
 	 * })
 	 * export class CustomMessage implements ValueControl<string> {
 	 * 
-	 * 	private message: string = '';
+	 * 	private message: string | null = '';
 	 * 	private disabled: boolean = false;
 	 * 	private _onChange: (_: any) => void = () => {};
 	 * 
-	 * 	writeValue({value, mode}){
-	 * 		this.message = value;
+	 * 	writeValue({ value, mode }: WriteValueOptions<string>) {
+	 * 		this.message = mode !== 'reset' ? value : '';
 	 * 	}
 	 * 
 	 * 	registerOnChange(fn: (_: any) => void): void {
@@ -185,12 +186,12 @@ export interface ComponentOptions<T = Function> {
 	 * 
 	 * export class CustomInputValueControl implements ValueControl<number> {
 	 * 
-	 * 	private _value: number;
-	 * 	private _disabled: boolean;
+	 * 	private _value: number | null = null;
+	 * 	private _disabled: boolean = false;
 	 * 	private _onChange: (_: any) => void = () => {};
 	 * 
-	 * 	writeValue({value, mode}){
-	 * 		this._value = value;
+	 * 	writeValue({ value, mode }: WriteValueOptions<number>) {
+	 * 		this._value = mode !== 'reset' ? value : null;
 	 * 	}
 	 * 
 	 * 	registerOnChange(fn: (_: any) => void): void {
@@ -209,8 +210,14 @@ export interface ComponentOptions<T = Function> {
 	 * 	formAssociated: CustomInputValueControl,
 	 * })
 	 * export class CustomInputElement {
+	 * 	@View()
+	 * 	view: HTMLInputElement;
 	 * 
+	 * 	onInit() {
+	 * 		this.view.type = 'number';
+	 * 	}
 	 * }
+	 * 
 	 * ```
 	 */
 	formAssociated?: boolean | TypeOf<ValueControl<any>>;
