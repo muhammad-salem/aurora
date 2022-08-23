@@ -11,7 +11,7 @@ import { isValidCustomElementName } from './tags.js';
  * @returns boolean
  */
 export function isFormAssociatedCustomElementByTag(tagName: string) {
-	return !!(customElements.get(tagName) as (CustomElementConstructor & { formAssociated: boolean }) | undefined)?.formAssociated;
+	return isValidCustomElementName(tagName) && !!(customElements.get(tagName) as (CustomElementConstructor & { formAssociated: boolean }) | undefined)?.formAssociated;
 }
 
 /**
@@ -29,7 +29,7 @@ export function isFormAssociatedCustomElementByConstructor(constructor: CustomEl
  * @returns boolean
  */
 export function isFormAssociatedCustomElementByElement(el: HTMLElement) {
-	return el?.constructor && isFormAssociatedCustomElementByConstructor(el.constructor as CustomElementConstructor);
+	return el?.constructor && el instanceof HTMLElement && isFormAssociatedCustomElementByConstructor(el.constructor as CustomElementConstructor);
 }
 
 export function isFormAssociatedCustomElement(item: string | CustomElementConstructor | HTMLElement) {
