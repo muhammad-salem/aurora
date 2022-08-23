@@ -5,7 +5,7 @@ import {
 	CommentNode, DomStructuralDirectiveNode, DomStructuralDirectiveNodeUpgrade,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
-	TextContent, DomAttributeDirectiveNode
+	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
 } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
@@ -21,12 +21,13 @@ import { HostListenerHandler } from '../render/host-listener.handler.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
-function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined {
+function getChangeEventName(tagName: string): 'input' | 'change' | undefined {
 	switch (true) {
-		case element instanceof HTMLInputElement:
+		case tagName === 'input':
 			return 'input';
-		case element instanceof HTMLTextAreaElement:
-		case element instanceof HTMLSelectElement:
+		case tagName === 'textarea':
+		case tagName === 'select':
+		case isFormAssociatedCustomElementByTag(tagName):
 			return 'change';
 		default:
 			return undefined;
@@ -242,11 +243,11 @@ export class ComponentRender<T extends object> {
 		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
-		const eventName = getInputEventName(element);
-		if (eventName) {
+		const changeEventName = getChangeEventName(node.tagName);
+		if (changeEventName) {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
 			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
-			element.addEventListener(eventName, listener);
+			element.addEventListener(changeEventName, listener);
 		}
 
 		const templateRefName = node.templateRefName;

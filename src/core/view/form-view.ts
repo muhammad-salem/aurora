@@ -54,7 +54,18 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 				this.valueControl.registerOnChange(NOOP_CONTROL_CHANGE);
 			}
 			this._valueControl = valueControl;
-			this._valueControl?.registerOnChange((value: any) => this.internals.setFormValue(value));
+			this._valueControl?.registerOnChange((value: any) => {
+				this._internals.setFormValue(value);
+				const event = new CustomEvent(
+					'change',
+					{
+						detail: value,
+						cancelable: false,
+						bubbles: true,
+					},
+				);
+				this.dispatchEvent(event);
+			});
 		}
 
 		formAssociatedCallback(form: HTMLFormElement | null): void {
