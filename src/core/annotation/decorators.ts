@@ -149,8 +149,41 @@ export interface ComponentOptions<T = Function> {
 	 * #### Usage Notes:
 	 * 
 	 * ```ts
+	 * @Component({
+	 * 	selector: 'custom-message',
+	 * 	template: `
+	 * 		<label for="message">Message</label>
+	 * 		<textarea id="message" [(value)]="message" [disabled]="disabled" (change)="onMessageChange($event.target.value)"></textarea>
+	 * 	`,
+	 * 	formAssociated: true,
+	 * 	// formAssociated: CustomMessage,
+	 * })
+	 * export class CustomMessage implements ValueControl<string> {
 	 * 
-	 * class CustomInputValueControl implements ValueControl<number> {
+	 * 	private message: string = '';
+	 * 	private disabled: boolean = false;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({value, mode}){
+	 * 		this.message = value;
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this.disabled = isDisabled;
+	 * 	}
+	 * 
+	 * 	onMessageChange(message: string) {
+	 * 		this._onChange(message);
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * 
+	 * export class CustomInputValueControl implements ValueControl<number> {
 	 * 
 	 * 	private _value: number;
 	 * 	private _disabled: boolean;
