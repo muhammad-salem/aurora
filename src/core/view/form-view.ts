@@ -11,6 +11,47 @@ import { ARIAMixinAttributes, isFormElement } from '@ibyar/elements';
 
 export const NOOP_CONTROL_CHANGE = () => { };
 
+export interface NativeElementInternals extends ElementInternals {
+
+}
+
+export class NativeElementInternals implements ElementInternals {
+	private el: HTMLInputElement;
+	constructor(input: FormAssociatedComponent<any, any>) {
+		this.el = input as any as HTMLInputElement;
+	}
+
+	get form() {
+		return this.el.form;
+	}
+	get labels() {
+		return this.el.labels!;
+	}
+
+	get shadowRoot() {
+		return this.el.shadowRoot;
+	}
+
+	get willValidate() {
+		return this.el.willValidate;
+	}
+
+	setFormValue(value: any | null, state?: File | string | FormData | null): void {
+		this.el.value = value;
+	}
+
+}
+
+ARIAMixinAttributes.forEach(ariaName => {
+	Object.defineProperty(NativeElementInternals.prototype, ariaName, {
+		get: function name(this: NativeElementInternals) {
+			return (this as any).el[ariaName];
+		},
+		set: function name(this: NativeElementInternals, value: any) {
+			return (this as any).el[ariaName] = value;
+		},
+	});
+});
 
 export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<FormAssociatedComponent<T, any>> {
 	const baseViewClass = baseFactoryView<T>(htmlElementType);
@@ -30,7 +71,7 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super(componentRef, modelClass);
 			if (componentRef.extend.name && isFormElement(componentRef.extend.name)) {
-				this._internals = createNativeElementInternals(this);
+				this._internals = new NativeElementInternals(this);
 			} else {
 				this._internals = this.attachInternals();
 			}
@@ -82,31 +123,4 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 		}
 	}
 	return BaseFormView;
-}
-function createNativeElementInternals(input: FormAssociatedComponent<any, any>): ElementInternals {
-	const el = input as any as HTMLInputElement;
-	const internals = {} as ElementInternals;
-	Object.defineProperty(internals, 'form', {
-		get: () => el.form,
-	});
-	Object.defineProperty(internals, 'labels', {
-		get: () => el.labels,
-	});
-	Object.defineProperty(internals, 'shadowRoot', {
-		get: () => el.shadowRoot,
-	});
-
-	Object.defineProperty(internals, 'willValidate', {
-		get: () => el.willValidate,
-	});
-	Object.defineProperty(internals, 'setFormValue', {
-		value: (value: any) => el.value = value,
-	});
-	ARIAMixinAttributes.forEach(ariaName => {
-		Object.defineProperty(internals, ariaName, {
-			get: () => el[ariaName],
-			set: value => el[ariaName] = value,
-		});
-	});
-	return internals;
 }
