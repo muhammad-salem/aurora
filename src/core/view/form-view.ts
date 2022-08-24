@@ -7,11 +7,12 @@ import {
 	isValueControl,
 } from '../component/custom-element.js';
 import { baseFactoryView } from './base-view.js';
+import { ARIAMixinAttributes, isFormElement } from '@ibyar/elements';
 
 export const NOOP_CONTROL_CHANGE = () => { };
 
 
-export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<FormAssociatedComponent<T>> {
+export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<FormAssociatedComponent<T, any>> {
 	const baseViewClass = baseFactoryView<T>(htmlElementType);
 	class BaseFormView<T> extends baseViewClass implements FormAssociatedCustomElement {
 
@@ -20,23 +21,29 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 		 */
 		static formAssociated = true;
 
+		value: any;
+
 		private _internals: ElementInternals;
 		private _form: HTMLFormElement | null;
 		private _valueControl?: ValueControl<T>;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super(componentRef, modelClass);
-			this._internals = this.attachInternals();
+			if (componentRef.extend.name && isFormElement(componentRef.extend.name)) {
+				this._internals = createNativeElementInternals(this);
+			} else {
+				this._internals = this.attachInternals();
+			}
 			let valueControl: ValueControl<any> | undefined;
 			if (typeof componentRef.formAssociated === 'function') {
 				if (this._model instanceof componentRef.formAssociated) {
 					valueControl == this._model;
 				} else {
-					const args: any[] = []; /* resolve dependency injection*/;
+					const args: any[] = [this]; /* resolve dependency injection*/;
 					valueControl = new componentRef.formAssociated(args);
 				}
 			} else if (componentRef.formAssociated === true && isValueControl(this._model)) {
-				valueControl == this._model;
+				valueControl = this._model;
 			}
 			valueControl && this.registerValueControl(valueControl);
 		}
@@ -56,15 +63,8 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 			this._valueControl = valueControl;
 			this._valueControl?.registerOnChange((value: any) => {
 				this._internals.setFormValue(value);
-				const event = new CustomEvent(
-					'change',
-					{
-						detail: value,
-						cancelable: false,
-						bubbles: true,
-					},
-				);
-				this.dispatchEvent(event);
+				this.value = value;
+				this.dispatchEvent(new Event('change'));
 			});
 		}
 
@@ -82,4 +82,31 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 		}
 	}
 	return BaseFormView;
+}
+function createNativeElementInternals(input: FormAssociatedComponent<any, any>): ElementInternals {
+	const el = input as any as HTMLInputElement;
+	const internals = {} as ElementInternals;
+	Object.defineProperty(internals, 'form', {
+		get: () => el.form,
+	});
+	Object.defineProperty(internals, 'labels', {
+		get: () => el.labels,
+	});
+	Object.defineProperty(internals, 'shadowRoot', {
+		get: () => el.shadowRoot,
+	});
+
+	Object.defineProperty(internals, 'willValidate', {
+		get: () => el.willValidate,
+	});
+	Object.defineProperty(internals, 'setFormValue', {
+		value: (value: any) => el.value = value,
+	});
+	ARIAMixinAttributes.forEach(ariaName => {
+		Object.defineProperty(internals, ariaName, {
+			get: () => el[ariaName],
+			set: value => el[ariaName] = value,
+		});
+	});
+	return internals;
 }
