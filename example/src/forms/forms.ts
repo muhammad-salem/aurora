@@ -1,4 +1,46 @@
-import { Component, Input, OnInit, ValueControl, View, WriteValueOptions } from '@ibyar/aurora';
+import { Component, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+
+@Component({
+	selector: 'custom-textarea',
+	extend: 'textarea',
+	formAssociated: true,
+})
+export class CustomTextareaComponent implements OnInit, ValueControl<string> {
+
+	private text: string | null = '';
+	private disabled: boolean = false;
+	private _onChange: (_: any) => void = () => { };
+
+	onInit() {
+		setTimeout(() => this.updateTextarea('test textarea'), 2000);
+	}
+
+	writeValue({ value, mode }: WriteValueOptions<string>) {
+		this.text = mode !== 'reset' ? value : '';
+		console.log('textarea write value', value, 'and mode', mode);
+	}
+
+	registerOnChange(fn: (_: any) => void): void {
+		this._onChange = fn;
+	}
+
+	setDisabledState(isDisabled: boolean) {
+		this.disabled = isDisabled;
+		console.log('textarea disable change', isDisabled);
+	}
+
+	onTextareaChange(text: string) {
+		this._onChange(text);
+		console.log('textarea value change', text);
+	}
+
+	updateTextarea(text: string) {
+		this.text = text;
+		this.onTextareaChange(text);
+	}
+
+}
+
 
 @Component({
 	selector: 'custom-message',
@@ -11,13 +53,15 @@ import { Component, Input, OnInit, ValueControl, View, WriteValueOptions } from 
 				[disabled]="disabled" 
 				(change)="onMessageChange($event.target.value)">
 			</textarea>
-			<button class="btn btn-outline-primary mb-3" (click)="updateMessage()">Force Update Message</button>
+			<button class="btn btn-outline-primary m-3" (click)="updateMessage()">Update Message</button>
 	  	`,
 	formAssociated: true,
 })
 export class CustomMessage implements ValueControl<string> {
 
-	private message: string | null = '';
+
+	@Input('value')
+	message: string | null = '';
 	private disabled: boolean = false;
 	private _onChange: (_: any) => void = () => { };
 
@@ -78,13 +122,16 @@ export class CustomInputValueControl implements ValueControl<number> {
 
 @Component({
 	selector: 'custom-input',
-	template: `<input type="number" class="form-control" [id]="elId">`,
+	template: `<input type="number" class="form-control" [id]="elId" [(value)]="numberValue">`,
 	formAssociated: CustomInputValueControl,
 })
 export class CustomInputElement {
 
 	@Input()
 	elId: string;
+
+	@Input('value')
+	numberValue: number = 99;
 
 }
 
@@ -98,13 +145,18 @@ export class CustomInputElement {
 			<div class="mb-3">
 				<custom-message [(value)]="model.message"></custom-message>
 			</div>
+			<div class="mb-3">
+				<label for="custom-textarea" class="form-label">Textarea</label>
+				<custom-textarea id="custom-textarea" class="form-control" [(value)]="model.textArea"></custom-textarea>
+			</div>
 	  	`,
 })
 export class CustomForm {
 
 	model = {
 		index: 5,
-		message: '',
+		message: 'default message',
+		textArea: 'default textarea',
 	};
 
 }
