@@ -60,6 +60,7 @@ export function isFormElement(tagName: string): boolean {
 		case 'progress':
 		case 'select':
 		case 'textarea':
+			return true;
 		default:
 			break;
 	}
