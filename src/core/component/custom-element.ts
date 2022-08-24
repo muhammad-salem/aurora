@@ -196,6 +196,9 @@ export interface BaseFormAssociatedComponent<T extends Object> extends BaseCompo
 	registerValueControl(valueControl: ValueControl): void;
 }
 
-export interface FormAssociatedComponent<T extends Object> extends BaseFormAssociatedComponent<T>, HTMLComponent<T> { }
+export interface FormAssociatedComponent<T extends Object, V = any> extends BaseFormAssociatedComponent<T>, HTMLComponent<T> {
+
+	value: V | null;
+}
 
 export type HTMLFormElement = HTMLButtonElement | HTMLDataListElement | HTMLFieldSetElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
