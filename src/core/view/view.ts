@@ -78,6 +78,9 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	const defaultAttributes = getAllAttributes(componentRef.extend.name);
 	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
 		.concat(componentRef.outputs.map(output => ToCamelCase(output.viewAttribute)));
+	if (componentRef.formAssociated) {
+		observedAttributes.push('value');
+	}
 	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
 	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
 	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
