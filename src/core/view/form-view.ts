@@ -105,7 +105,7 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 			this._valueControl?.registerOnChange((value: any) => {
 				this._internals.setFormValue(value);
 				this.value = value;
-				this.dispatchEvent(new Event('change'));
+				this.dispatchEvent(new Event('change', { bubbles: true, cancelable: true, composed: true }));
 			});
 		}
 
