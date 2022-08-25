@@ -44,11 +44,11 @@ export class NativeElementInternals implements ElementInternals {
 
 ARIAMixinAttributes.forEach(ariaName => {
 	Object.defineProperty(NativeElementInternals.prototype, ariaName, {
-		get: function name(this: NativeElementInternals) {
-			return (this as any).el[ariaName];
+		get: function name(this: { el: HTMLInputElement }) {
+			return this.el[ariaName];
 		},
-		set: function name(this: NativeElementInternals, value: any) {
-			return (this as any).el[ariaName] = value;
+		set: function name(this: { el: HTMLInputElement }, value: any) {
+			return this.el[ariaName] = value;
 		},
 	});
 });
