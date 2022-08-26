@@ -44,6 +44,11 @@ export interface BaseComponent<T> extends CustomElement {
 
 	triggerOutput(eventName: string, value?: any): void;
 	onDestroy(callback: () => void): void;
+
+	/**
+	 * apply change detection
+	 */
+	detectChanges(): void;
 }
 
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }

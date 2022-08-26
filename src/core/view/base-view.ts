@@ -98,6 +98,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._render = new ComponentRender(this, this.subscriptions);
 		}
 
+		detectChanges(): void {
+			this._modelScope.detectChanges();
+		}
+
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
 				this._zone.run(this._model.doCheck, this._modelScope.getContextProxy!());
