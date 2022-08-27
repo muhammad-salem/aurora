@@ -138,6 +138,13 @@ export class NodeParser {
 			this.commentCloseCount = 0;
 			return this.parseText;
 		}
+		else if (token === '>' && this.commentCloseCount === 0) {
+			const temp = this.tempText.toLowerCase();
+			if ('doctype html' === temp) {
+				this.tempText = '';
+				return this.parseText;
+			}
+		}
 		if (this.commentCloseCount > 0) {
 			for (let i = 0; i < this.commentCloseCount; i++) {
 				this.tempText += '-';
