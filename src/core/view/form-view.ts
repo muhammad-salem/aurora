@@ -87,6 +87,15 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 				valueControl = this._model;
 			}
 			valueControl && this.registerValueControl(valueControl);
+			const valueInput = componentRef.inputs.filter(input => input.viewAttribute === 'value').at(0);
+			if (valueInput) {
+				this._modelScope.subscribe(valueInput.modelProperty as any, (newValue, oldValue) => {
+					if (newValue === oldValue) {
+						return;
+					}
+					this.onValueControlChange(newValue);
+				});
+			}
 		}
 		get internals(): ElementInternals {
 			return this._internals;
@@ -102,11 +111,12 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 				this.valueControl.registerOnChange(NOOP_CONTROL_CHANGE);
 			}
 			this._valueControl = valueControl;
-			this._valueControl?.registerOnChange((value: any) => {
-				this._internals.setFormValue(value);
-				this.value = value;
-				this.dispatchEvent(new Event('change', { bubbles: true, cancelable: true, composed: true }));
-			});
+			this._valueControl?.registerOnChange((value: any) => this.onValueControlChange(value));
+		}
+		private onValueControlChange(value: any) {
+			this._internals.setFormValue(value);
+			this.value = value;
+			this.dispatchEvent(new Event('change', { bubbles: true, cancelable: true, composed: true }));
 		}
 
 		formAssociatedCallback(form: HTMLFormElement | null): void {
