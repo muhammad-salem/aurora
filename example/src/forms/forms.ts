@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+import { Component, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'custom-textarea',
@@ -48,12 +48,13 @@ export class CustomTextareaComponent implements OnInit, ValueControl<string> {
 			<label for="message" class="form-label">Message</label>
 			<textarea class="form-control"
 				id="message"
+				name="message-textarea"
 				rows="3"
 				[(value)]="message" 
 				[disabled]="disabled" 
 				(change)="onMessageChange($event.target.value)">
 			</textarea>
-			<button class="btn btn-outline-primary m-3" (click)="updateMessage()">Update Message</button>
+			<button type="button" class="btn btn-outline-primary m-3" (click)="updateMessage()">Update Message</button>
 	  	`,
 	formAssociated: true,
 })
@@ -122,12 +123,12 @@ export class CustomInputValueControl implements ValueControl<number> {
 
 @Component({
 	selector: 'custom-input',
-	template: `<input type="number" class="form-control" [id]="elId" [(value)]="numberValue">`,
+	template: `<input type="number" class="form-control" name="custom-input" [id]="elId" [(value)]="numberValue">`,
 	formAssociated: CustomInputValueControl,
 })
 export class CustomInputElement {
 
-	@Input()
+	@Input('id')
 	elId: string;
 
 	@Input('value')
@@ -137,17 +138,21 @@ export class CustomInputElement {
 
 @Component({
 	selector: 'custom-form',
+	extend: 'form',
 	template: `
 			<div class="mb-3">
 				<label for="custom-input" class="form-label">Index</label>
-				<custom-input elId="custom-input" [(value)]="model.index"></custom-input>
+				<custom-input id="custom-input" name="index" [(value)]="model.index"></custom-input>
 			</div>
 			<div class="mb-3">
-				<custom-message [(value)]="model.message"></custom-message>
+				<custom-message name="message" [(value)]="model.message"></custom-message>
 			</div>
 			<div class="mb-3">
 				<label for="custom-textarea" class="form-label">Textarea</label>
-				<custom-textarea id="custom-textarea" class="form-control" [(value)]="model.textArea"></custom-textarea>
+				<custom-textarea id="custom-textarea" class="form-control" name="textArea" [(value)]="model.textArea"></custom-textarea>
+			</div>
+			<div class="mb-3">
+				<button type="submit" class="btn btn-outline-success m-3">Submit</button>
 			</div>
 	  	`,
 })
@@ -158,5 +163,16 @@ export class CustomForm {
 		message: 'default message',
 		textArea: 'default textarea',
 	};
+
+	@HostListener('submit', ['$event'])
+	onSubmit(event: Event) {
+		console.log('$event', event);
+		new FormData(event.target as HTMLFormElement);
+	}
+
+	@HostListener('formdata', ['$event'])
+	onFormData(event: FormDataEvent) {
+		console.log('formData', event.formData);
+	}
 
 }
