@@ -141,6 +141,10 @@ export class CustomInputElement {
 	extend: 'form',
 	template: `
 			<div class="mb-3">
+				<label for="test" class="form-label">test</label>
+				<input id="test" name="test" type="text" [(value)]="model.test" />
+			</div>
+			<div class="mb-3">
 				<label for="custom-input" class="form-label">Index</label>
 				<custom-input id="custom-input" name="index" [(value)]="model.index"></custom-input>
 			</div>
@@ -154,25 +158,36 @@ export class CustomInputElement {
 			<div class="mb-3">
 				<button type="submit" class="btn btn-outline-success m-3">Submit</button>
 			</div>
+			<div class="mb-3">
+				{{data |> json}}
+			</div>
 	  	`,
 })
 export class CustomForm {
 
 	model = {
+		test: 'test',
 		index: 5,
 		message: 'default message',
 		textArea: 'default textarea',
 	};
 
+	data = {};
+
+
 	@HostListener('submit', ['$event'])
 	onSubmit(event: Event) {
 		console.log('$event', event);
-		new FormData(event.target as HTMLFormElement);
+		const data = new FormData(event.target as HTMLFormElement);
+		const collect = {};
+		data.forEach((value, key) => Reflect.set(collect, key, value));
+		this.data = collect;
 	}
 
 	@HostListener('formdata', ['$event'])
 	onFormData(event: FormDataEvent) {
 		console.log('formData', event.formData);
+		event.formData.forEach((value, key) => console.log('key', key, 'value', value));
 	}
 
 }
