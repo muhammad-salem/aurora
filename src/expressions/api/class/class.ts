@@ -589,7 +589,7 @@ export class Class extends AbstractExpressionNode {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
-		const className = this.id?.get(stack) as string | undefined;
+		const className = this.id?.getName() as string | undefined;
 		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined ?? class { };
 		let classConstructor: ClassConstructor = this.createClass(stack, parentClass, className);
 		// build class body
@@ -607,37 +607,36 @@ export class Class extends AbstractExpressionNode {
 	}
 
 	private createClass(stack: Stack, parentClass: TypeOf<any>, className: string | symbol = TEMP_CLASS_NAME) {
-		const TEMP: { [key: typeof className]: ClassConstructor } = {
-			[className]: class extends parentClass {
-				static [GET_PARAMETERS](args: any[]): any[] {
-					return args;
-				}
-				static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
-				static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
-				static [INSTANCE_PRIVATE_SYMBOL] = {};
-				static [CONSTRUCTOR](): void { }
+		const ClassDeclaration = class extends parentClass {
+			static [GET_PARAMETERS](args: any[]): any[] {
+				return args;
+			}
+			static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
+			static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+			static [INSTANCE_PRIVATE_SYMBOL] = {};
+			static [CONSTRUCTOR](): void { }
 
-				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+			[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
 
-				[STACK]: Stack;
-				constructor(...params: any[]) {
-					const parameters = TEMP[className][GET_PARAMETERS](params);
-					super(...parameters);
-					this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], TEMP[className][INSTANCE_PRIVATE_SYMBOL]);
-					this[STACK] = stack.copyStack();
-					const instanceStack = this[STACK];
-					instanceStack.pushScope(ClassScope.readOnlyScopeForThis(this));
-					instanceStack.declareVariable(NEW_TARGET, new.target);
-					instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
-					instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
-					instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
-					instanceStack.pushReactiveScope();
-					// init fields and methods values
-					TEMP[className][CONSTRUCTOR]();
-				}
+			[STACK]: Stack;
+			constructor(...params: any[]) {
+				const parameters = ClassDeclaration[GET_PARAMETERS](params);
+				super(...parameters);
+				this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], ClassDeclaration[INSTANCE_PRIVATE_SYMBOL]);
+				this[STACK] = stack.copyStack();
+				const instanceStack = this[STACK];
+				instanceStack.pushScope(ClassScope.readOnlyScopeForThis(this));
+				instanceStack.declareVariable(NEW_TARGET, new.target);
+				instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
+				instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
+				instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
+				instanceStack.pushReactiveScope();
+				// init fields and methods values
+				ClassDeclaration[CONSTRUCTOR]();
 			}
 		};
-		return TEMP[className as string];
+		Reflect.set(ClassDeclaration, 'name', className);
+		return ClassDeclaration;
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
