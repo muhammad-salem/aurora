@@ -1,11 +1,10 @@
-export type Id = string;
+import { AriaErrorMessageElement } from './relationship.js';
 
 export type AriaAutocomplete = 'none' | 'inline' | 'list' | 'booth';
 
 export type AriaChecked = true | false | undefined | 'mixed';
 
 export type AriaDisabled = boolean;
-export type AriaErrorMessage = Id;
 
 export type AriaExpanded = boolean | undefined;
 
@@ -52,7 +51,7 @@ export interface WidgetModel {
 	ariaAutocomplete: AriaAutocomplete,
 	ariaChecked: AriaChecked,
 	ariaDisabled: AriaDisabled,
-	ariaErrorMessage: AriaErrorMessage,
+	ariaErrorMessageElement: AriaErrorMessageElement,
 	ariaExpanded: AriaExpanded,
 	ariaHasPopup: AriaHasPopup,
 	ariaHidden: AriaHidden,
@@ -102,3 +101,30 @@ export const WidgetAttributes = [
 	'aria-valuenow',
 	'aria-valuetext',
 ];
+
+export const WidgetAttributesMap = {
+	'aria-autocomplete': 'ariaAutoComplete',
+	'aria-checked': 'ariaChecked',
+	'aria-disabled': 'ariaDisabled',
+	'aria-errormessage': 'ariaErrorMessageElement',
+	'aria-expanded': 'ariaExpanded',
+	'aria-haspopup': 'ariaHasPopup',
+	'aria-hidden': 'ariaHidden',
+	'aria-invalid': 'ariaInvalid',
+	'aria-label': 'ariaLabel',
+	'aria-level': 'ariaLevel',
+	'aria-modal': 'ariaModal',
+	'aria-multiline': 'ariaMultiLine',
+	'aria-multiselectable': 'ariaMultiSelectable',
+	'aria-orientation': 'ariaOrientation',
+	'aria-placeholder': 'ariaPlaceholder',
+	'aria-pressed': 'ariaPressed',
+	'aria-readonly': 'ariaReadOnly',
+	'aria-required': 'ariaRequired',
+	'aria-selected': 'ariaSelected',
+	'aria-sort': 'ariaSort',
+	'aria-valuemax': 'ariaValueMax',
+	'aria-valuemin': 'ariaValueMin',
+	'aria-valuenow': 'ariaValueNow',
+	'aria-valuetext': 'ariaValueText',
+};

@@ -20,3 +20,10 @@ export const LiveRegionAttributes = [
 	'aria-relevant',
 	'aria-atomic',
 ];
+
+export const LiveRegionAttributesMap = {
+	'aria-busy': 'ariaBusy',
+	'aria-live': 'ariaLive',
+	'aria-relevant': 'ariaRelevant',
+	'aria-atomic': 'ariaAtomic',
+};
