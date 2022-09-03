@@ -78,6 +78,10 @@ export class AppRoot implements OnInit {
 			title: 'Custom Form',
 			load: () => import('./forms/forms.js').then(module => module.CustomForm),
 		},
+		{
+			title: 'Simple Custom Form',
+			load: () => import('./forms/simple-forms.js').then(module => module.SimpleCustomForm),
+		},
 
 	];
 
