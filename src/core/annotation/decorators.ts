@@ -256,6 +256,12 @@ export function Input(name?: string): Function {
 	};
 }
 
+export function FormValue(): Function {
+	return (target: Object, propertyKey: string) => {
+		Components.addInput(target, propertyKey, 'value');
+	};
+}
+
 export type OutputEventInit = Omit<EventInit, 'cancelable'>;
 export type OutputOptions = { name?: string } & OutputEventInit;
 
