@@ -28,6 +28,7 @@
 		"@ibyar/elements": "^0.6.1",
 		"@ibyar/expressions": "^0.6.1",
 		"@ibyar/pipes": "^0.6.1",
+		"@ibyar/jsx": "^0.6.1",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.4.0"
 	},

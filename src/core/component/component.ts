@@ -225,6 +225,8 @@ export class Components {
 				componentRef.template = htmlParser.toDomRootNode(componentRef.template);
 			}
 			buildExpressionNodes(componentRef.template);
+		} else if (typeof componentRef.template === 'object') {
+			buildExpressionNodes(componentRef.template);
 		}
 
 		if (!componentRef.template && /template/g.test(componentRef.encapsulation)) {

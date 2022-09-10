@@ -4,7 +4,6 @@ export * from './attributes/shadow.js';
 export * from './attributes/form.js';
 
 export * from './ast/dom.js';
-export * from './ast/factory.js';
 
 export * from './node/html-parser.js';
 
