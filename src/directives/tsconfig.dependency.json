@@ -5,9 +5,6 @@
 			"path": "../element/tsconfig.json"
 		},
 		{
-			"path": "../expression/tsconfig.json"
-		},
-		{
 			"path": "../platform/tsconfig.json"
 		},
 		{
