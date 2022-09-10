@@ -20,7 +20,7 @@
 		"*"
 	],
 	"publishConfig": {
-		"access": "public"
+		"access": "restricted"
 	},
 	"dependencies": {
 		"@ibyar/core": "^0.6.1",
