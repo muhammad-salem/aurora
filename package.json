@@ -8,13 +8,16 @@
 		"bundles/*"
 	],
 	"dependencies": {
-		"tslib": "^2.3.1"
+		"tslib": "^2.4.0",
+		"zone.js": "^0.11.8"
 	},
 	"devDependencies": {
+		"assert": "2.0.0",
 		"@ibyar/esmpack": "^0.1.93",
-		"progress": "^2.0.3",
-		"typedoc": "^0.22.3",
-		"typescript": "^4.5.2"
+		"progress": "2.0.3",
+		"test262-parser-tests": "0.0.5",
+		"typedoc": "0.23.11",
+		"typescript": "^4.8.2"
 	},
 	"scripts": {
 		"clean": "./tasks/clean",
@@ -23,6 +26,7 @@
 		"build:w": "npm run clean && tsc --build -v -w",
 		"build:example": "npm run clean && tsc -b -v example/",
 		"build:example:w": "npm run clean && tsc -b -v -w example/",
+		"test262": "node test/expressions/test262.mjs",
 		"do:publish-no-git": "npm run build && lerna publish --no-git-tag-version --no-push",
 		"do:publish-no-tag": "npm run build && lerna publish --no-git-tag-version",
 		"do:publish-no-push": "npm run build && lerna publish --no-push",
@@ -30,6 +34,6 @@
 		"update:config": "./tasks/update-config",
 		"local:npm": "./tasks/run-local-npm",
 		"local:publish": "./tasks/publish-local",
-		"build:doc": "node tasks/build.mjs builddoc"
+		"docs": "./node_modules/.bin/typedoc --tsconfig ./tsconfig.json"
 	}
 }

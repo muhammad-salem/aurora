@@ -1,19 +1,20 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType,
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType,
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
+import { isDeclarationExpression } from '../utils.js';
 
 @Deserializer('ExpressionStatement')
 export class ExpressionStatement extends AbstractExpressionNode {
 	static fromJSON(node: ExpressionStatement, deserializer: NodeDeserializer): ExpressionStatement {
 		return new ExpressionStatement(node.body.map(line => deserializer(line)));
 	}
-	static visit(node: ExpressionStatement, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
-		visitNodeList(node.body);
+	static visit(node: ExpressionStatement, visitNode: VisitNodeType): void {
+		node.body.forEach(visitNode);
 	}
 	constructor(private body: ExpressionNode[]) {
 		super();
@@ -39,7 +40,10 @@ export class ExpressionStatement extends AbstractExpressionNode {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
-		return this.body.map(node => node.toString()).join('; ').concat(';');
+		return this.body
+			.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
+			.map(ref => `${ref.string}${ref.insert ? ';' : ''}`)
+			.join('\n');
 	}
 	toJson(): object {
 		return { body: this.body.map(exp => exp.toJSON()) };

@@ -1,6 +1,6 @@
 import {
 	Component, EventEmitter, HostBinding, HostListener,
-	Input, OnInit, Optional, Output, SelfSkip, Service,
+	Input, OnChanges, OnInit, Optional, Output, SelfSkip, Service,
 	View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
@@ -27,17 +27,13 @@ export interface Person {
 				Person name is {{person.name}}
 			</p>
 			<p id="p-age" #ageArea>your age is: {{person.age}}, born in Year of {{yearOfBirth}}</p>
+			<button class="btn btn-outline-primary" (click)="addOneYear()">+1</button>
+			<button class="btn btn-outline-secondary" (click)="person.age--">-1</button>
 			<div *if="person.age >= 18">
-				Can have licence
+				Can have license
 				<p>Data</p>
 			</div>`
 })
-
-@Component({
-	selector: 'person-view222',
-	extend: 'div'
-})
-@Service({ provideIn: 'root' })
 export class PersonModel implements OnInit {
 
 	@Input()
@@ -47,7 +43,7 @@ export class PersonModel implements OnInit {
 	};
 
 	@Output() open: EventEmitter<any> = new EventEmitter();
-	@Output('select') _select: EventEmitter<any> = new EventEmitter();
+	@Output('select', { bubbles: true }) _select: EventEmitter<Person> = new EventEmitter();
 
 
 	className: string = 'p1 m1';
@@ -90,10 +86,9 @@ export class PersonModel implements OnInit {
 		console.log(this, e);
 	}
 
-	@HostListener('click', ['$event.target'])		// TODO: $event.target'
-	onClick(event: Event) {
-		event.preventDefault();
-		console.log('button', event, 'number of clicks:');
+	@HostListener('click', ['$event.target'])
+	onClick(target: HTMLElement) {
+		console.log('target', target);
 		this._select.emit(this.person);
 	}
 
@@ -110,11 +105,14 @@ export class PersonModel implements OnInit {
 	@Input()
 	set resize(msg: string) {
 		console.log(this, msg);
-		console.log(Reflect.metadata('component', 'dd'));
 	}
 
 	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {
 		return [];
+	}
+
+	addOneYear() {
+		this.person.age++;
 	}
 }
 

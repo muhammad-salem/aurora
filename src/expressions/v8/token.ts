@@ -1,4 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
+import { isSloppy, LanguageMode } from './enums.js';
 
 export class Token {
 
@@ -298,32 +299,32 @@ export class Token {
 	/**
 	 * (
 	 */
-	public static readonly L_PARENTHESES = new Token('(', 0);
+	public static readonly LPAREN = new Token('(', 0);
 
 	/**
 	 * )
 	 */
-	public static readonly R_PARENTHESES = new Token(')', 0);
+	public static readonly RPAREN = new Token(')', 0);
 
 	/**
 	 * [
 	 */
-	public static readonly L_BRACKETS = new Token('[', 0);
+	public static readonly LBRACK = new Token('[', 0);
 
 	/**
 	 * ]
 	 */
-	public static readonly R_BRACKETS = new Token(']', 0);
+	public static readonly RBRACK = new Token(']', 0);
 
 	/**
 	 * {
 	 */
-	public static readonly L_CURLY = new Token('{', 0);
+	public static readonly LBRACE = new Token('{', 0);
 
 	/**
 	 * }
 	 */
-	public static readonly R_CURLY = new Token('}', 0);
+	public static readonly RBRACE = new Token('}', 0);
 
 	/**
 	 * :
@@ -408,7 +409,21 @@ export class Token {
 	public static readonly BIGINT = new Token('BIGINT', 0);
 	public static readonly STRING = new Token('STRING', 0);
 	public static readonly IDENTIFIER = new Token('IDENTIFIER', 0);
-	public static readonly TEMPLATE_LITERALS = new Token('TEMPLATE_LITERALS', 0);
+	/**
+	 * TEMPLATE_SPAN ::
+	 * 
+	 * 		` LiteralChars* ${
+	 * 		| } LiteralChars* ${
+	 */
+	public static readonly TEMPLATE_SPAN = new Token('TEMPLATE_SPAN', 0);
+
+	/**
+	 * TEMPLATE_TAIL ::
+	 * 
+	 * 		` LiteralChars* `
+	 * 		| } LiteralChar* `
+	 */
+	public static readonly TEMPLATE_TAIL = new Token('TEMPLATE_TAIL', 0);
 	public static readonly ILLEGAL = new Token('ILLEGAL', 0);
 	public static readonly ESCAPED_KEYWORD = new Token('ESCAPED_KEYWORD', 0);
 	public static readonly WHITESPACE = new Token('WHITESPACE', 0);
@@ -417,12 +432,12 @@ export class Token {
 
 	public static isPair(token: Token): boolean {
 		switch (token) {
-			case Token.L_PARENTHESES:
-			case Token.L_BRACKETS:
-			case Token.L_CURLY:
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
+			case Token.LPAREN:
+			case Token.LBRACK:
+			case Token.LBRACE:
+			case Token.RBRACE:
+			case Token.RBRACK:
+			case Token.RPAREN:
 				return true;
 			default:
 				return false;
@@ -430,9 +445,9 @@ export class Token {
 	}
 	public static isOpenPair(token: Token): boolean {
 		switch (token) {
-			case Token.L_PARENTHESES:
-			case Token.L_BRACKETS:
-			case Token.L_CURLY:
+			case Token.LPAREN:
+			case Token.LBRACK:
+			case Token.LBRACE:
 				return true;
 			default:
 				return false;
@@ -440,9 +455,9 @@ export class Token {
 	}
 	public static isClosePair(token: Token): boolean {
 		switch (token) {
-			case Token.R_CURLY:
-			case Token.R_BRACKETS:
-			case Token.R_PARENTHESES:
+			case Token.RBRACE:
+			case Token.RBRACK:
+			case Token.RPAREN:
 				return true;
 			default:
 				return false;
@@ -450,23 +465,23 @@ export class Token {
 	}
 	public static openOf(token: Token): Token {
 		switch (token) {
-			case Token.R_CURLY:
-				return Token.L_CURLY;
-			case Token.R_BRACKETS:
-				return Token.L_BRACKETS;
-			case Token.R_PARENTHESES:
-				return Token.L_PARENTHESES;
+			case Token.RBRACE:
+				return Token.LBRACE;
+			case Token.RBRACK:
+				return Token.LBRACK;
+			case Token.RPAREN:
+				return Token.LPAREN;
 		}
 		return token;
 	}
 	public static closeOf(token: Token): Token {
 		switch (token) {
-			case Token.L_CURLY:
-				return Token.R_CURLY;
-			case Token.L_BRACKETS:
-				return Token.R_BRACKETS;
-			case Token.L_PARENTHESES:
-				return Token.R_PARENTHESES;
+			case Token.LBRACE:
+				return Token.RBRACE;
+			case Token.LBRACK:
+				return Token.RBRACK;
+			case Token.LPAREN:
+				return Token.RPAREN;
 		}
 		return token;
 	}
@@ -547,7 +562,7 @@ export class Token {
 	public static isAutoSemicolon(token: Token) {
 		switch (token) {
 			case Token.SEMICOLON:
-			case Token.R_CURLY:
+			case Token.RBRACE:
 			case Token.EOS:
 				return true;
 		}
@@ -555,16 +570,18 @@ export class Token {
 	}
 	public static isMember(token: Token): boolean {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 			case Token.PERIOD:
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 				return true;
 		}
 		return false;
 	}
 	public static isTemplate(token: Token): boolean {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 				return true;
 		}
 		return false;
@@ -572,8 +589,8 @@ export class Token {
 
 	public static isNextLetKeyword(token: Token) {
 		switch (token) {
-			case Token.L_CURLY:
-			case Token.L_BRACKETS:
+			case Token.LBRACE:
+			case Token.LBRACK:
 			case Token.IDENTIFIER:
 			case Token.STATIC:
 			case Token.LET:  // `let let;` is disallowed by static semantics, but the
@@ -592,13 +609,26 @@ export class Token {
 				return false;
 		}
 	}
+
+	public static isInRangeIdentifierAndAsync(token: Token) {
+		switch (token) {
+			case Token.IDENTIFIER:
+			case Token.GET:
+			case Token.SET:
+			case Token.ASYNC:
+				return true;
+			default:
+				return false;
+		}
+	}
 	public static isPropertyOrCall(token: Token) {
 		switch (token) {
-			case Token.TEMPLATE_LITERALS:
+			case Token.TEMPLATE_SPAN:
+			case Token.TEMPLATE_TAIL:
 			case Token.PERIOD:
-			case Token.L_BRACKETS:
+			case Token.LBRACK:
 			case Token.QUESTION_PERIOD:
-			case Token.L_PARENTHESES:
+			case Token.LPAREN:
 				return true;
 		}
 		return false;
@@ -608,6 +638,12 @@ export class Token {
 	}
 	private static isInRange(op: number, start: Token, end: Token) {
 		return op >= start.precedence && op <= end.precedence;
+	}
+	public static isProperty(token: number | Token) {
+		if (token instanceof Token) {
+			token = token.precedence;
+		}
+		return Token.isInRange(token, Token.PERIOD, Token.LBRACK);
 	}
 	public static isBinary(token: number | Token) {
 		if (token instanceof Token) {
@@ -747,10 +783,18 @@ export class Token {
 		return false;
 	}
 
-	public static isValidIdentifier(token: Token) {
-		if (Token.isInRange(token.precedence, Token.IDENTIFIER, Token.ASYNC)) return true;
-		if (token == Token.AWAIT || token == Token.YIELD) return false;
-		return Token.isStrictReservedWord(token) && false;
+	public static isValidIdentifier(token: Token, mode: LanguageMode, isGenerator: boolean, disallowAwait: boolean) {
+		if (Token.isInRangeIdentifierAndAsync(token)) return true;
+		if (token == Token.AWAIT) return !disallowAwait;
+		if (token == Token.YIELD) return !isGenerator;
+		return Token.isStrictReservedWord(token) && isSloppy(mode);
+	}
+
+	public static precedence(token: Token, acceptIN: boolean) {
+		if (!acceptIN && Token.IN === token) {
+			return 0;
+		}
+		return token.getPrecedence();
 	}
 
 	constructor(private name: string, private precedence: number) { }
@@ -759,6 +803,9 @@ export class Token {
 	}
 	getPrecedence() {
 		return this.precedence;
+	}
+	equal(token: Token) {
+		return this === token || this.name === token.name;
 	}
 }
 
@@ -774,8 +821,8 @@ export class TokenExpression {
 		return this.token !== type;
 	}
 
-	test(func: (token: Token) => boolean): boolean {
-		return func(this.token);
+	test(func: (token: Token, value?: ExpressionNode) => boolean): boolean {
+		return func(this.token, this.value);
 	}
 	toString(): string {
 		return JSON.stringify(this);

@@ -1,61 +1,46 @@
-import type { Scope, ScopeContext } from './scope.js';
+import type { Scope, Context } from './scope.js';
 
-export class FunctionProxyHandler<T extends Function> implements ProxyHandler<T> {
-	constructor(private thisContext: object) { }
-	apply(targetFunc: T, ignoreThisArg: any, argArray: any[]): any {
-		return targetFunc.apply(this.thisContext, argArray);
+export function hasBindingHook<T>(ctx: T) {
+	switch (true) {
+		// exclude classes that have binding hook
+		case ctx instanceof Map:
+		case ctx instanceof Set:
+		case ctx instanceof Date:
+		case ctx instanceof WeakMap:
+		case ctx instanceof WeakSet:
+		case ctx instanceof Promise:
+		case HTMLElement && ctx instanceof HTMLElement:
+			return true;
+		default:
+			return false;
 	}
 }
 
 /**
  * crete new proxy handler object as scoped context
  */
-export class ScopeProxyHandler<T extends ScopeContext> implements ProxyHandler<ScopeContext> {
-	private proxyMap = new Map<PropertyKey, T>();
-	private proxyValueMap = new WeakMap<object, object>();
-	private functionHandler: FunctionProxyHandler<Function>;
+export class ScopeProxyHandler<T extends Context> implements ProxyHandler<Context> {
+	// private functionHandler: FunctionProxyHandler<Function>;
 	constructor(private scope: Scope<T>) { }
 	has(model: T, propertyKey: PropertyKey): boolean {
 		return this.scope.has(propertyKey);
 	}
 	get(model: T, propertyKey: PropertyKey, receiver: any): any {
-		if (this.proxyMap.has(propertyKey)) {
-			return this.proxyMap.get(propertyKey);
-		}
 		const value = this.scope.get(propertyKey);
-		if (typeof value === 'object') {
-			const scope = this.scope.getScope(propertyKey);
-			if (scope) {
-				const proxy = new Proxy(value, new ScopeProxyHandler(scope));
-				this.proxyMap.set(propertyKey, proxy);
-				this.proxyValueMap.set(proxy, value);
-				return proxy;
-			}
-		} else if (typeof value === 'function') {
-			const proxy = new Proxy(value, this.functionHandler
-				?? (this.functionHandler = new FunctionProxyHandler(this.scope.getContext()))
-			);
-			this.proxyMap.set(propertyKey, proxy);
-			this.proxyValueMap.set(proxy, value);
-			return proxy;
+		if (!(value && typeof value === 'object')) {
+			return value;
 		}
-		return value;
+		const scope = this.scope.getInnerScope(propertyKey);
+		if (!scope) {
+			return value;
+		}
+		return createProxyForContext(scope);
 	}
 	set(model: T, propertyKey: PropertyKey, value: any, receiver: any): boolean {
-		if ((typeof value === 'object' || typeof value === 'function') && this.proxyValueMap.has(value)) {
-			value = this.proxyValueMap.get(value);
-		}
 		return this.scope.set(propertyKey, value);
 	}
 	deleteProperty(model: T, propertyKey: string | symbol): boolean {
-		const isDelete = Reflect.deleteProperty(model, propertyKey);
-		if (isDelete) {
-			this.scope.set(propertyKey, undefined);
-			if (this.proxyMap.has(propertyKey)) {
-				this.proxyMap.delete(propertyKey);
-			}
-		}
-		return isDelete;
+		return this.scope.delete(propertyKey);
 	}
 }
 

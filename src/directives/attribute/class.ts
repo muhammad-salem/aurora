@@ -8,21 +8,24 @@ export class ClassDirective extends AttributeDirective {
 	@Input('class')
 	set 'class'(className: string | Array<string> | { [className: string]: boolean }) {
 		if (typeof className === 'string') {
-			this.el.classList.add(...className.split(' '));
+			const add = className.split(/[ ]{1,}/);
+			this.updateClassList(add);
 		} else if (Array.isArray(className)) {
-			this.el.classList.add(...className);
+			this.updateClassList(className);
 		} else if (typeof className === 'object') {
-			for (var name in className) {
-				if (className[name]) {
-					this.el.classList.add(name);
-				} else {
-					this.el.classList.remove(name);
-				}
-			}
+			const keys = Object.keys(className);
+			const add = keys.filter(key => className[key]);
+			const remove = keys.filter(key => !className[key]);
+			this.updateClassList(add, remove);
 		}
 	}
 	get 'class'() {
 		return this.el.classList.value;
+	}
+
+	private updateClassList(add?: string[], remove?: string[]) {
+		remove && this.el.classList.remove(...remove);
+		add && this.el.classList.add(...add);
 	}
 
 }

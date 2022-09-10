@@ -4,20 +4,31 @@ import {
 	DomNode, DomRenderNode, canAttachShadow, directiveRegistry
 } from '@ibyar/elements';
 
-import { HTMLComponent } from './custom-element.js';
+import { HTMLComponent, ValueControl } from './custom-element.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
 import { buildExpressionNodes } from '../html/expression.js';
 import {
 	ComponentOptions, ChildOptions, PipeOptions,
-	ServiceOptions, DirectiveOptions
+	ServiceOptions, DirectiveOptions, OutputEventInit
 } from '../annotation/decorators.js';
+import { ZoneType } from '../zone/bootstrap.js';
 
 export class PropertyRef {
-	constructor(public modelProperty: string, private _viewName?: string) { }
+	constructor(public modelProperty: string, protected _viewName?: string) { }
 	get viewAttribute(): string {
 		return this._viewName || this.modelProperty;
+	}
+}
+
+export class InputPropertyRef extends PropertyRef {
+
+}
+
+export class OutputPropertyRef extends PropertyRef {
+	constructor(modelProperty: string, viewName?: string, public options?: OutputEventInit) {
+		super(modelProperty, viewName);
 	}
 }
 
@@ -54,6 +65,7 @@ export interface PipeRef<T> {
 }
 export interface DirectiveRef<T> {
 	selector: string;
+	zone: ZoneType;
 
 	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
 
@@ -76,8 +88,8 @@ export interface ComponentRef<T> {
 	viewClass: TypeOf<HTMLComponent<T>> & CustomElementConstructor;
 	modelClass: TypeOf<T>;
 
-	inputs: PropertyRef[];
-	outputs: PropertyRef[];
+	inputs: InputPropertyRef[];
+	outputs: OutputPropertyRef[];
 	view: string;
 	viewChild: ChildRef[];
 	ViewChildren: ChildRef[];
@@ -88,6 +100,8 @@ export interface ComponentRef<T> {
 	isShadowDom: boolean;
 	shadowDomMode: ShadowRootMode;
 	shadowDomDelegatesFocus: boolean;
+	formAssociated: boolean | TypeOf<ValueControl<any>>;
+	zone: ZoneType;
 }
 
 const AuroraBootstrap = Symbol.for('aurora:bootstrap');
@@ -122,13 +136,13 @@ export class Components {
 	static addInput(modelProperty: Object, modelName: string, viewName: string) {
 		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.inputs = bootstrap.inputs || [];
-		bootstrap.inputs.push(new PropertyRef(modelName, viewName));
+		bootstrap.inputs.push(new InputPropertyRef(modelName, viewName));
 	}
 
-	static addOutput(modelProperty: Object, modelName: string, viewName: string) {
+	static addOutput(modelProperty: Object, modelName: string, viewName: string, options: OutputEventInit) {
 		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
 		bootstrap.outputs = bootstrap.outputs || [];
-		bootstrap.outputs.push(new PropertyRef(modelName, viewName));
+		bootstrap.outputs.push(new OutputPropertyRef(modelName, viewName, options));
 	}
 
 	static setComponentView(modelProperty: Object, modelName: string) {
@@ -233,6 +247,10 @@ export class Components {
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
+
+		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {
+			componentRef.formAssociated = false;
+		}
 
 		if (componentRef.isShadowDom && componentRef.extend.name) {
 			componentRef.isShadowDom = canAttachShadow(componentRef.extend.name);

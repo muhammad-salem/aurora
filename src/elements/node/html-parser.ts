@@ -218,7 +218,7 @@ export class NodeParser extends NodeParserHelper {
 		}
 		if (this.stackTrace.length > 0) {
 			console.error(this.stackTrace);
-			throw new Error(`error parsing html, had ${this.stackTrace.length} element, with no closing tag`);
+			throw new Error(`error parsing html, had ${this.stackTrace.length} element, [${(this.stackTrace as DomElementNode[]).map(dom => dom.tagName).join(', ')}], with no closing tag`);
 		}
 		let stack = this.childStack;
 		this.reset();
@@ -281,6 +281,13 @@ export class NodeParser extends NodeParserHelper {
 			this.commentCloseCount = 0;
 			return this.parseText;
 		}
+		else if (token === '>' && this.commentCloseCount === 0) {
+			const temp = this.tempText.toLowerCase();
+			if ('doctype html' === temp) {
+				this.tempText = '';
+				return this.parseText;
+			}
+		}
 		if (this.commentCloseCount > 0) {
 			for (let i = 0; i < this.commentCloseCount; i++) {
 				this.tempText += '-';
@@ -296,7 +303,7 @@ export class NodeParser extends NodeParserHelper {
 			if (!isEmptyElement(this.currentNode.tagName)
 				&& this.currentNode.tagName.trim().toLowerCase() !== this.tempText.trim().toLowerCase()
 			) {
-				throw 'Wrong closed tag at char ' + this.index;
+				throw new Error(`Wrong closed tag at char ${this.index}, tag name: ${this.currentNode.tagName}`);
 			}
 			this.popElement();
 			this.tempText = '';
@@ -325,6 +332,7 @@ export class NodeParser extends NodeParserHelper {
 			this.propType = 'attr';
 			return this.parsePropertyName;
 		}
+		throw new SyntaxError('Error while parsing open tag');
 	}
 
 	private parsePropertyName(token: string) {

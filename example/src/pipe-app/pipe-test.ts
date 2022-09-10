@@ -10,8 +10,8 @@ import { interval, Subscription } from 'rxjs';
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
 	<div [style]="{color: 'var(' + currentColor + ')'}"> set style color by [style]="{color: 'var(' + currentColor + ')'}" </div>
 	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
-	<div *forOf="let color of colors">
-		color: {{color}} <span *if="color === currentColor"> => Current Color ='{{currentColor}}'</span>
+	<div *for="var color of colors">
+		color: {{color}} <span *if="color === currentColor" class="bs-color"> => Current Color ='{{currentColor}}'</span>
 	</div>
     <table class="table">
         <thead>
@@ -163,23 +163,21 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	currentColor = this.colors[0];
 
-	subscription: Subscription;
+	private _subscription: Subscription;
 
-	heightPX = 10;
 
 	onInit() {
 		let index = 0;
-		this.subscription = this.observable.subscribe(() => {
+		this._subscription = this.observable.subscribe(() => {
 			if (index === this.colors.length) {
 				index = 0;
 			}
 			this.currentColor = this.colors[index++];
-			this.heightPX += 10;
 		});
 	}
 
 	onDestroy() {
-		this.subscription.unsubscribe();
+		this._subscription.unsubscribe();
 	}
 
 }

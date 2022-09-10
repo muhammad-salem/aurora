@@ -1,30 +1,33 @@
 import {
-	ReactiveScope, ScopeContext, ScopeSubscription, Stack
+	ReactiveScope, Context, ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode, DomStructuralDirectiveNodeUpgrade,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
-	TextContent, DomAttributeDirectiveNode
+	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
 } from '@ibyar/elements';
-import { ComponentRef, ListenerRef } from '../component/component.js';
+import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
-import { EventEmitter } from '../component/events.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { HostListenerHandler } from '../render/host-listener.handler.js';
 
-function getInputEventName(element: HTMLElement): 'input' | 'change' | undefined {
+type ViewContext = { [element: string]: HTMLElement };
+
+function getChangeEventName(tagName: string): 'input' | 'change' | undefined {
 	switch (true) {
-		case element instanceof HTMLInputElement:
+		case tagName === 'input':
 			return 'input';
-		case element instanceof HTMLTextAreaElement:
-		case element instanceof HTMLSelectElement:
+		case tagName === 'textarea':
+		case tagName === 'select':
+		case isFormAssociatedCustomElementByTag(tagName):
 			return 'change';
 		default:
 			return undefined;
@@ -35,12 +38,13 @@ export class ComponentRender<T extends object> {
 	private template: DomNode;
 	private contextStack: Stack;
 	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
+	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
 
-	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<ScopeContext>[]) {
+	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
-		this.contextStack.pushScope<ScopeContext>(this.view._modelScope);
-		this.templateNameScope = this.contextStack.pushBlockReactiveScope();
+		this.contextStack.pushScope<Context>(this.view._modelScope);
+		this.templateNameScope = this.contextStack.pushReactiveScope();
 	}
 	initView(): void {
 		if (this.componentRef.template) {
@@ -95,65 +99,23 @@ export class ComponentRender<T extends object> {
 		}
 	}
 	initHostListener(): void {
-		this.componentRef.hostListeners?.forEach(
-			listener => this.handelHostListener(listener)
-		);
-	}
-	handelHostListener(listener: ListenerRef) {
-		let eventName: string = listener.eventName, source: HTMLElement | Window;
-		if (listener.eventName.includes(':')) {
-			const eventSource = eventName.substring(0, eventName.indexOf(':'));
-			eventName = eventName.substring(eventName.indexOf(':') + 1);
-			if ('window' === eventSource.toLowerCase()) {
-				source = window;
-				this.addNativeEventListener(source, eventName, (event: any) => {
-					(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-				});
-				return;
-			} else if (eventSource in this.view) {
-				source = Reflect.get(this.view, eventSource);
-				if (!Reflect.has(source, '_model')) {
-					this.addNativeEventListener(source, eventName, (event: any) => {
-						(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-					});
-					return;
-				}
-			} else {
-				source = this.view;
-			}
-		} else {
-			source = this.view;
-		}
-		const sourceModel = Reflect.get(source, '_model') as { [key: string]: EventEmitter<any> };
-		const output = ClassRegistryProvider.hasOutput(sourceModel, eventName);
-		if (output) {
-			sourceModel[output.modelProperty].subscribe((value: any) => {
-				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, value);
-			});
-		}
-		else if (Reflect.has(source, 'on' + eventName)) {
-			this.addNativeEventListener(source, eventName, (event: any) => {
-				(this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel, event);
-			});
-		}
-		// else if (this.componentRef.encapsulation === 'template' && !this.view.hasParentComponent()) {
-		// 	this.addNativeEventListener(this.view, eventName, eventCallback);
-		// }
-		else {
-			// listen to internal changes
-			// TODO: need to resolve parameter
-			// addChangeListener(sourceModel, eventName, () => (this.view._model[listener.modelCallbackName] as Function).call(this.view._proxyModel));
-		}
+		const handlers = this.componentRef.hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, this.view, this.viewScope));
+		handlers.forEach(handler => handler.onInit());
+		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
+			() => handler.onDestroy(),
+			() => handler.onDisconnect(),
+			() => handler.onConnect(),
+		)));
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
-			funcCallback.call(this.view._proxyModel, event);
+			this.view._zone.run(funcCallback as () => void, this.view._model);
 		});
 	}
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
 	}
-	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, subscriptions: ScopeSubscription<ScopeContext>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): void {
+	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, subscriptions: ScopeSubscription<Context>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): void {
 		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (directiveRef) {
 			const stack = directiveStack.copyStack();
@@ -173,7 +135,9 @@ export class ComponentRender<T extends object> {
 				host
 			);
 			templateRef.host = structural;
-			stack.pushBlockReactiveScopeFor({ 'this': structural });
+			const scope = ReactiveScope.readOnlyScopeForThis(structural);
+			stack.pushScope(scope);
+
 			const dSubs = this.initStructuralDirective(structural, directive, stack);
 			subscriptions.push(...dSubs);
 			if (isOnInit(structural)) {
@@ -196,7 +160,7 @@ export class ComponentRender<T extends object> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[]): Text {
+	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[]): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
@@ -205,12 +169,12 @@ export class ComponentRender<T extends object> {
 		textNode.expression.get(contextStack);
 		return liveText;
 	}
-	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
+	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
 		const fragment = document.createDocumentFragment();
 		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode, subscriptions, host));
 		return fragment;
 	}
-	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DomNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<ScopeContext>[], host: HTMLComponent<any> | StructuralDirective) {
+	appendChildToParent(fragmentParent: HTMLElement | DocumentFragment, child: DomNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective) {
 		if (child instanceof DomElementNode) {
 			if (this.isTemplateRefName(child)) {
 				const templateRefName = child.templateRefName!;
@@ -270,24 +234,26 @@ export class ComponentRender<T extends object> {
 		}
 		return element;
 	}
-	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<ScopeContext>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): HTMLElement {
+	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): HTMLElement {
 		const element = this.createElementByTagName(node);
 		const elementStack = contextStack.copyStack();
-		const elementScope = isHTMLComponent(element) ? element._viewScope : elementStack.pushBlockReactiveScopeFor({ 'this': element });
-		elementStack.pushScope<ScopeContext>(elementScope);
+		const elementScope = isHTMLComponent(element)
+			? element._viewScope
+			: ReactiveScope.readOnlyScopeForThis(element);
+		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
-		const eventName = getInputEventName(element);
-		let listener: ((event: HTMLElementEventMap['input' | 'change']) => any) | undefined;
-		if (eventName) {
-			const inputScope = elementScope.getScopeOrCreat('this');
-			listener = (event) => inputScope.emit('value', (element as HTMLInputElement).value);
-			element.addEventListener(eventName, listener);
+		const changeEventName = getChangeEventName(node.tagName);
+		if (changeEventName) {
+			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
+			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
+			element.addEventListener(changeEventName, listener);
 		}
 
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {
 			Reflect.set(this.view, templateRefName.name, element);
+			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
@@ -306,7 +272,7 @@ export class ComponentRender<T extends object> {
 	private initAttributeDirectives(
 		attributeDirectives: DomAttributeDirectiveNode[],
 		element: HTMLElement | StructuralDirective,
-		contextStack: Stack, subscriptions: ScopeSubscription<ScopeContext>[]) {
+		contextStack: Stack, subscriptions: ScopeSubscription<Context>[]) {
 		attributeDirectives?.forEach(directiveNode => {
 			const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(directiveNode.name);
 			if (directiveRef &&
@@ -315,7 +281,8 @@ export class ComponentRender<T extends object> {
 				)) {
 				const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
 				const stack = contextStack.copyStack();
-				stack.pushBlockReactiveScopeFor({ 'this': directive });
+				stack.pushReactiveScopeFor({ 'this': directive });
+
 				const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 				subscriptions.push(...directiveSubscriptions);
 				if (isOnInit(directive)) {
@@ -328,8 +295,8 @@ export class ComponentRender<T extends object> {
 		});
 	}
 
-	initAttribute(element: HTMLElement, node: DomElementNode, contextStack: Stack): ScopeSubscription<ScopeContext>[] {
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+	initAttribute(element: HTMLElement, node: DomElementNode, contextStack: Stack): ScopeSubscription<Context>[] {
+		const subscriptions: ScopeSubscription<Context>[] = [];
 		if (node.attributes?.length) {
 			node.attributes.forEach(attr => {
 				/**
@@ -379,7 +346,7 @@ export class ComponentRender<T extends object> {
 					listener = ($event: Event) => {
 						const stack = contextStack.copyStack();
 						stack.pushBlockScopeFor({ $event });
-						event.expression.get(stack, this.view._proxyModel);
+						this.view._zone.run(event.expression.get, event.expression, [stack]);
 					};
 				} else /* if (typeof event.sourceHandler === 'function')*/ {
 					// let eventName: keyof HTMLElementEventMap = event.eventName;
@@ -397,12 +364,11 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
-
 	initStructuralDirective(
 		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
-		contextStack: Stack): ScopeSubscription<ScopeContext>[] {
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		contextStack: Stack): ScopeSubscription<Context>[] {
+		const subscriptions: ScopeSubscription<Context>[] = [];
 
 		if (node.attributes?.length) {
 			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
@@ -426,7 +392,7 @@ export class ComponentRender<T extends object> {
 				const listener = ($event: Event) => {
 					const stack = contextStack.copyStack();
 					stack.pushBlockScopeFor({ $event });
-					event.expression.get(stack, this.view._proxyModel);
+					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
 				((<any>directive)[event.name] as any).subscribe(listener);
 			});

@@ -14,6 +14,9 @@
 			"path": "../core/tsconfig.json"
 		},
 		{
+			"path": "../jsx/tsconfig.json"
+		},
+		{
 			"path": "../directives/tsconfig.json"
 		},
 		{

@@ -22,7 +22,7 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 	template: `<div class="alert alert-success" role="alert">
 			<ul>
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
-				<li>hh:mm:ss {{${stringLiteralFormat}}} format using regex expression ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
+				<li>hh:mm:ss {{${stringLiteralFormat}}} format using string literal ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
 				<li>Time: {{time |> toDate}}</li>
 				<li>Data: {{date}}</li>
 			</ul>
@@ -72,17 +72,15 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		this.dateSubscription = timer(1000, 1000).pipe(
 			timestamp(),
 			map(timestamp => timestamp.timestamp),
-			map(timestamp => new Date(timestamp))
-		).subscribe(date => {
-			this.context.hh = date.getHours();
-
-			this.context.hh = date.getHours();
-			this.context.mm = date.getMinutes();
-			this.context.ss = date.getSeconds();
-
-			this.context.date = date.getDate();
-			this.context.time = date.getTime();
-		});
+			map(timestamp => new Date(timestamp)),
+			map(date => ({
+				time: date.getTime(),
+				date: date.getDate(),
+				hh: date.getHours(),
+				mm: date.getMinutes(),
+				ss: date.getSeconds(),
+			})),
+		).subscribe(context => Object.assign(this.context, context));
 	}
 
 	onDestroy() {

@@ -1,8 +1,8 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope, ScopeContext } from '../../scope/scope.js';
+import type { Scope, Context } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -15,7 +15,7 @@ export class UnaryExpression extends AbstractExpressionNode {
 	static fromJSON(node: UnaryExpression, deserializer: NodeDeserializer): UnaryExpression {
 		return new UnaryExpression(node.operator, deserializer(node.argument));
 	}
-	static visit(node: UnaryExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: UnaryExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
 	static Evaluations: { [key: string]: (value: any) => any } = {
@@ -43,15 +43,15 @@ export class UnaryExpression extends AbstractExpressionNode {
 	}
 	get(stack: Stack, thisContext?: any) {
 		switch (this.operator) {
-			case 'delete': return this.getDelete(stack, thisContext);
+			case 'delete': return this.executeDelete(stack, thisContext);
 			default:
 				const value = this.argument.get(stack);
 				return UnaryExpression.Evaluations[this.operator](value);
 		}
 	}
-	private getDelete(stack: Stack, thisContext?: any) {
+	private executeDelete(stack: Stack, thisContext?: any): boolean {
 		if (this.argument instanceof MemberExpression) {
-			const scope = this.argument.findScope<ScopeContext>(stack);
+			const scope = this.argument.findScope<Context>(stack);
 			let propertyKey: PropertyKey;
 			const right = this.argument.getProperty();
 			if (right instanceof MemberExpression) {
@@ -66,6 +66,7 @@ export class UnaryExpression extends AbstractExpressionNode {
 			}
 			return scope.delete(propertyKey);
 		}
+		return false;
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.argument.dependency(computed);

@@ -2,15 +2,17 @@
 	"references": [
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
+		{ "path": "src/platform" },
 		{ "path": "src/core" },
+		{ "path": "src/jsx" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
+		{ "path": "src/forms" },
 		{ "path": "src/aurora" },
-		{ "path": "src/jsx" }
+		{ "path": "src/cli" }
 	],
 	"compilerOptions": {
 		"composite": true
 	},
 	"files": []
 }
-

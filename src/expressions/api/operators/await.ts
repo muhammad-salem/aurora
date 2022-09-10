@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -13,7 +13,7 @@ export class AwaitExpression extends AbstractExpressionNode {
 	static fromJSON(node: AwaitExpression, serializer: NodeDeserializer): AwaitExpression {
 		return new AwaitExpression(serializer(node.argument));
 	}
-	static visit(node: AwaitExpression, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: AwaitExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
 	constructor(private argument: ExpressionNode) {

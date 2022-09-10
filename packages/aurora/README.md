@@ -15,11 +15,34 @@
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
+[npm-image-pipes]: https://img.shields.io/npm/v/@ibyar/pipes.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-pipes]: https://npmjs.org/package/@ibyar/pipes
+[npm-image-directives]: https://img.shields.io/npm/v/@ibyar/directives.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-directives]: https://npmjs.org/package/@ibyar/directives
+[npm-image-core]: https://img.shields.io/npm/v/@ibyar/core.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-core]: https://npmjs.org/package/@ibyar/core
+[npm-image-expressions]: https://img.shields.io/npm/v/@ibyar/expressions.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-expressions]: https://npmjs.org/package/@ibyar/expressions
+[npm-image-elements]: https://img.shields.io/npm/v/@ibyar/elements.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-elements]: https://npmjs.org/package/@ibyar/elements
+[npm-image-platform]: https://img.shields.io/npm/v/@ibyar/platform.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-platform]: https://npmjs.org/package/@ibyar/platform
+[npm-image-reflect-metadata]: https://img.shields.io/npm/v/reflect-metadata.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-reflect-metadata]: https://npmjs.org/package/reflect-metadata
+[npm-image-tslib]: https://img.shields.io/npm/v/tslib.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-tslib]: https://npmjs.org/package/tslib
+
 
 Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
 This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
 
+- Demo: https://ibyar.github.io/aurora-demo
+- API Doc: https://ibyar.github.io/aurora-docs
+- Ibyar Expression & Elements parser: https://ibyar.github.io/astexplorer/
+	- select: JavaScript: @ibyar/expressions
+	- select: HTML: @ibyar/elements
+- Custom Elements Everywhere for Aurora Test & Results: https://ibyar.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
 
 ## `Install`
 
@@ -30,6 +53,21 @@ npm i --save @ibyar/aurora
 ``` bash
 yarn add @ibyar/aurora
 ```
+
+## Dependencies
+
+| README | Description | NPM |
+| ---- | ----------- | --- |
+| [@ibyar/aurora](https://github.com/ibyar/aurora/tree/dev/packages/aurora) | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] |
+| [@ibyar/pipes](https://github.com/ibyar/aurora/tree/dev/packages/pipes) | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] |
+| [@ibyar/directives](https://github.com/ibyar/aurora/tree/dev/packages/directives) | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] |
+| [@ibyar/core](https://github.com/ibyar/aurora/tree/dev/packages/core) | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] |
+| [@ibyar/expressions](https://github.com/ibyar/aurora/tree/dev/packages/expressions) | a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8), and follow [ESTree](https://github.com/estree/estree/) for generate ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
+| [@ibyar/elements](https://github.com/ibyar/aurora/tree/dev/packages/elements) | parse html and extract bind expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] |
+| [@ibyar/platform](https://github.com/ibyar/aurora/tree/dev/packages/platform) | utility package for i18n and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] |
+| [reflect-metadata](https://github.com/rbuckton/reflect-metadata) | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] |
+| [tslib](https://github.com/Microsoft/tslib) | This is a runtime library for TypeScript that contains all of the TypeScript helper functions. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
+
 
 ## 'HTML Template' Features
 
@@ -159,6 +197,44 @@ yarn add @ibyar/aurora
 
 ### `HTML -- template parser example`
 
+in a polyfills.ts file
+
+ - use `aurora` zone  for detect changes
+
+```ts
+import 'zone.js';
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('aurora');
+```
+
+ - or use `manual` Zone, if you don't like to use `Zone.js`
+all the events like `rxjs` observables, setTimeout and fetch, etc..
+can't be detected.
+
+```ts
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('manual');
+set
+```
+
+ - or use `proxy` Zone, if you don't like to use `Zone.js`
+ but still like to have full change detection for your application.
+ it my be hard in debugging your application.
+
+```ts
+import { bootstrapZone } from '@ibyar/aurora';
+bootstrapZone('proxy');
+set
+```
+
+
+ -  you still can control the zone peer component while define your component by add 
+`zone` t one of the zone types 'aurora', 'manual' and  'proxy'.
+if `aurora` is selected, you need to import the `Zone.js` package.
+
+ - the `zone` property in the `@Component({zone: 'manual'})` is optional
+ and will get the default value from `bootstrapZone()`
+
 ```ts
 
 import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
@@ -166,10 +242,11 @@ import { interval, Subscription } from 'rxjs';
 
 @Component({
 	selector: 'pipe-app',
+	zone: 'AURORA',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
-	<div *for="let color of colors">
-		color: {{color}} <span *if="color === currentColor"> Current Color ='{{currentColor}}'</span>
+	<div *for="const color of colors">
+		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>
     <table class="table">
         <thead>
@@ -356,14 +433,3 @@ see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/examp
 see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
 
 see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
-
-## Dependencies
- 
- - [@ibyar/aurora](https://npmjs.org/package/@ibyar/aurora)				a central package to manage dependance only
- - [@ibyar/core](https://npmjs.org/package/@ibyar/core)					create components, render elements, bind attributes, handle events
- - [@ibyar/pipes](https://npmjs.org/package/@ibyar/pipes)				implement all supported pipes
- - [@ibyar/directives](https://npmjs.org/package/@ibyar/directives)		implement all supported directives
- - [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions)	a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8) follow, [ESTree](https://github.com/estree/estree/) for generate ast object.
- - [@ibyar/elements](https://npmjs.org/package/@ibyar/elements)			parse html and extract bind expression and structural directive
- - [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
- - [tslib](https://www.npmjs.com/package/tslib)

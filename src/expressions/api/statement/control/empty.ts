@@ -13,7 +13,7 @@ import { Deserializer } from '../../deserialize/deserialize.js';
  */
 @Deserializer('EmptyStatement')
 export class EmptyStatement extends AbstractExpressionNode {
-	static INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
+	static readonly INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
 	static fromJSON(node: EmptyStatement): EmptyStatement {
 		return EmptyStatement.INSTANCE;
 	}

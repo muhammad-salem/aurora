@@ -1,5 +1,6 @@
-import type { Scope, ScopeType } from '../scope/scope.js';
+import type { Scope, Context } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
+import { TypeOf } from './utils.js';
 
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
@@ -30,7 +31,7 @@ export interface ExpressionNode {
 	 * }
 	 * ```
 	 */
-	shareVariables(scopeList: Scope<any>[]): void;
+	shareVariables(scopeList: Scope<Context>[]): void;
 
 	/**
 	 * assign the value to this expression in stack.
@@ -51,7 +52,7 @@ export interface ExpressionNode {
 	/**
 	 * get all dependencies form an expression node
 	 *
-	 * tha return from this method, is represent an answer for what identifiers this expression depends-on.
+	 * the return from this method, is represent an answer for what identifiers this expression depends-on.
 	 * 
 	 *
 	 * ex:
@@ -93,7 +94,7 @@ export interface ExpressionNode {
 	/**
 	 * get all the events form this expression
 	 * 
-	 * tha return from this method, is represent an answer for what is this expression depends-on as identifier name
+	 * the return from this method, is represent an answer for what is this expression depends-on as identifier name
 	 * 
 	 * ex: 
 	 * ```js
@@ -137,24 +138,24 @@ export interface ExpressionNode {
 	 * from an [ESTree](https://github.com/estree/estree) json object,
 	 * with all necessary implementation to execute the code
 	 */
-	getClass(): NodeExpressionClass<ExpressionNode>;
-}
-
-interface TypeOf<T> {
-	new(...params: any[]): T;
+	getClass(): ExpressionNodConstructor<ExpressionNode>;
 }
 
 export type NodeDeserializer<N = ExpressionNode> = (node: N) => N;
 
 export type VisitNodeType = (expression: ExpressionNode) => void;
-export type VisitNodeListType = (expressions: ExpressionNode[]) => void;
 
 /**
  * this is how to:
  * describe a class with it's static functions and properties
  * in the interface add getClass method
  */
-export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N> {
+export interface ExpressionNodConstructor<N extends ExpressionNode> extends TypeOf<N> {
+
+	/**
+	 * the type of an expression
+	 */
+	type: string;
 
 	/**
 	 * build expression node from [ESTree](https://github.com/estree/estree) json object
@@ -168,18 +169,10 @@ export interface NodeExpressionClass<N extends ExpressionNode> extends TypeOf<N>
 	 * @param expression 
 	 * @param callback 
 	 */
-	visit?(node: N, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void;
+	visit?(node: N, visitNode: Object): void;
 }
 
-export interface NodeExpressionWithType<N extends ExpressionNode> extends NodeExpressionClass<N> {
-
-	/**
-	 * the type of an expression
-	 */
-	type: string;
-}
-
-export interface CanDeclareExpression extends ExpressionNode {
+export interface DeclarationExpression extends ExpressionNode {
 	/**
 	 * declare variable in the current local scope (block),
 	 * or closest function scope (global) scop,
@@ -188,7 +181,12 @@ export interface CanDeclareExpression extends ExpressionNode {
 	 * @param propertyValue the initial value of identifier
 	 * @param scope which scop to declare this identifier
 	 */
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue?: any): any;
+	declareVariable(stack: Stack, propertyValue?: any): any;
+
+	/**
+	 * get the variable declaration name
+	 */
+	getDeclarationName?(): string;
 }
 
 
@@ -201,7 +199,7 @@ export interface CanFindScope {
 	 * try to search for scope of this expression
 	 * @param stack 
 	 */
-	findScope<T extends object>(stack: Stack): Scope<T>;
-	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
-	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined;
+	findScope<V extends Context>(stack: Stack): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope: Scope<Record<PropertyKey, V>>): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope?: Scope<Record<PropertyKey, V>>): Scope<V> | undefined;
 }

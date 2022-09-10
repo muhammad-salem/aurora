@@ -1,4 +1,4 @@
-import type { ExpressionNode, NodeExpressionWithType } from '../expression.js';
+import type { ExpressionNode, ExpressionNodConstructor } from '../expression.js';
 
 
-export const expressionTypes: Map<string, NodeExpressionWithType<ExpressionNode>> = new Map();
+export const expressionTypes: Map<string, ExpressionNodConstructor<ExpressionNode>> = new Map();

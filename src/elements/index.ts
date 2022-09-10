@@ -11,3 +11,4 @@ export * from './directives/register-directive.js';
 
 export * from './template/template-parser.js';
 
+export * from './accessibility/index.js';

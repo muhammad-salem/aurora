@@ -1,13 +1,16 @@
-import type { CanDeclareExpression } from '../api/expression.js';
-import { ReactiveScope, Scope, ScopeContext, ScopeType } from './scope.js';
+import type { DeclarationExpression } from '../api/expression.js';
+import { finalizerRegister } from './finalizer.js';
+import {
+	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
+	ReactiveScopeControl, Scope, Context, WebModuleScope
+} from './scope.js';
 
 
 export interface AwaitPromiseInfo {
 	promise: Promise<any>;
-	node: CanDeclareExpression;
+	node: DeclarationExpression;
 
 	declareVariable: boolean;
-	scopeType: ScopeType;
 }
 
 export interface AsyncIterableInfo {
@@ -50,17 +53,12 @@ export interface Stack {
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean;
 
 	/**
-	 * declare variable in stack by scope type,
+	 * declare variable at last scope in the stack,
 	 * 
-	 * 'block' for the first scop ==> may be 'block' or 'function' scope
-	 * 
-	 * 'function' will search for the first scope with scope type 'function'
-	 *  then define a property key with 'initial' value in thus scope
-	 * @param scopeType  "function" | "block"
 	 * @param propertyKey the name of property mey be string | number | symbol, 
 	 * @param propertyValue if not exist will be initialize with 'undefined' value
 	 */
-	declareVariable(scopeType: ScopeType, propertyKey: PropertyKey, propertyValue?: any): any;
+	declareVariable(propertyKey: PropertyKey, propertyValue?: any): any;
 
 
 	/**
@@ -71,97 +69,158 @@ export interface Stack {
 	 * if not found will return the stack local scop as a default value
 	 * @param propertyKey the property key
 	 */
-	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T>;
+	findScope<T extends Context>(propertyKey: PropertyKey): Scope<T>;
 
 	resolveAwait(value: AwaitPromiseInfo): void;
 
 	/**
 	 * get a reference to the last scope in this stack
 	 */
-	lastScope<T extends ScopeContext>(): Scope<T>;
+	lastScope<T extends Context>(): Scope<T>;
 
 	/**
 	 * clear every thing after this scope, and even this scope
 	 * @param scope 
 	 */
-	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean;
+	clearTo<T extends Context>(scope: Scope<T>): boolean;
 
 	/**
 	 * clear every thing after this scope, but not this scope
 	 * @param scope 
 	 */
-	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean;
+	clearTill<T extends Context>(scope: Scope<T>): boolean;
 
-	popScope<T extends ScopeContext>(): Scope<T>;
+	popScope<T extends Context>(): Scope<T>;
 
-	removeScope<T extends ScopeContext>(scope: Scope<T>): void;
+	removeScope<T extends Context>(scope: Scope<T>): void;
 
-	pushScope<T extends ScopeContext>(scope: Scope<T>): void;
+	pushScope<T extends Context>(scope: Scope<T>): void;
 
-	pushBlockScope<T extends ScopeContext>(): Scope<T>;
+	pushBlockScope<T extends Context>(): Scope<T>;
 
-	pushFunctionScope<T extends ScopeContext>(): Scope<T>;
+	pushBlockScopeFor<T extends Context>(context: T): Scope<T>;
 
-	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T>;
+	pushReactiveScope<T extends Context>(): ReactiveScope<T>;
 
-	pushFunctionScopeFor<T extends ScopeContext>(context: T): Scope<T>;
+	pushReactiveScopeFor<T extends Context>(context: T): ReactiveScope<T>;
 
-
-	pushBlockReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
-
-	pushFunctionReactiveScope<T extends ScopeContext>(): ReactiveScope<T>;
-
-	pushBlockReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
-
-	pushFunctionReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T>;
-
+	/**
+	 * create new stack instance with the same reference to the current scope array
+	 */
 	copyStack(): Stack;
+
+	/**
+	 * used when want to update ui-view like, you want to replace an array with another 
+	 * without reflect changes on view until reattached again.
+	 */
+	detach(): void;
+
+	/**
+	 * apply all the not emitted changes, and continue emit in time.
+	 */
+	reattach(): void;
+
+	/**
+	 * import module scope from another stack, by the help of ModuleScopeResolver.
+	 * 
+	 * used with import statement
+	 */
+	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope;
+
+	/**
+	 * get the current module for this stack.
+	 * 
+	 * used with export statement
+	 */
+	getModule(): ModuleScope | undefined;
+
+	/**
+	 * register action to do on destroy this stack
+	 */
+	onDestroy(action: () => void): void;
 }
 
 export class Stack implements Stack {
-	static for(...contexts: Scope<any>[]): Stack {
+	static for(...contexts: Scope<Context>[]): Stack {
 		if (contexts.length === 0) {
 			return new Stack();
 		}
-		return new Stack(contexts.map(context => new Scope(context, 'global')));
+		return new Stack(contexts.map(context => new Scope<Context>(context)));
 	}
-	static forScopes(...scopes: Scope<any>[]): Stack {
+	static forScopes(...scopes: Scope<Context>[]): Stack {
 		if (scopes.length === 0) {
-			scopes.push(Scope.functionScope());
+			scopes.push(Scope.blockScope());
 		}
 		return new Stack(scopes);
 	}
-	awaitPromise: AwaitPromiseInfo[];
+	static moduleScope(resolver: ModuleScopeResolver, moduleSource: string, ...globalScopes: Scope<Context>[]) {
+		return new Stack(globalScopes, resolver, moduleSource);
+	}
+	awaitPromise: AwaitPromiseInfo[] = [];
 	forAwaitAsyncIterable?: AsyncIterableInfo | undefined;
 
 	protected readonly stack: Array<Scope<any>>;
+	protected readonly moduleScope?: ModuleScope;
+	protected readonly moduleSource?: string;
+	protected readonly resolver?: ModuleScopeResolver;
 
-	constructor(stack?: Array<Scope<any>>) {
-		this.stack = stack ?? [Scope.functionScope()];
+	protected readonly onDestroyActions: (() => void)[] = [];
+
+	constructor();
+	constructor(globalScope: Scope<Context>);
+	constructor(globalScope: Scope<Context>, resolver: ModuleScopeResolver, moduleSource: string);
+
+	constructor(stack: Array<Scope<Context>>);
+	constructor(stack: Array<Scope<Context>>, resolver: ModuleScopeResolver, moduleSource: string);
+
+	constructor(globals?: Array<Scope<Context>> | Scope<Context>, resolver?: ModuleScopeResolver, moduleSource?: string) {
+		if (Array.isArray(globals)) {
+			this.stack = globals;
+		} else if (typeof globals == 'object') {
+			this.stack = [globals];
+		} else {
+			this.stack = [];
+		}
+		if (resolver && moduleSource) {
+			this.resolver = resolver;
+			this.moduleSource = moduleSource;
+			// init module scope for import and export
+			this.moduleScope = new ModuleScope(this.initModuleContext());
+			this.pushScope(this.moduleScope);
+			// for the rest of module body
+			this.pushReactiveScope();
+		} else {
+			// not a module scope
+			this.pushBlockScope();
+		}
+		finalizerRegister(this, this.onDestroyActions, this);
+	}
+	private initModuleContext(): ModuleContext {
+		const importFunc = (path: string) => {
+			return this.importModule(path);
+		};
+		importFunc.meta = {
+			url: createRootURL(this.moduleSource!),
+			resolve: (specified: string, parent?: string | URL): Promise<string> => {
+				return Promise.resolve(this.resolver!.resolveURL(specified, parent ?? importFunc.meta.url));
+			}
+		};
+		const im: ModuleImport & ((path: string) => Promise<any>) = importFunc as any;
+		return { import: im };
 	}
 	has(propertyKey: PropertyKey): boolean {
 		return this.stack.find(context => context.has(propertyKey)) ? true : false;
 	}
 	get(propertyKey: PropertyKey) {
-		return this.findScope<ScopeContext>(propertyKey).get(propertyKey);
+		return this.findScope<Context>(propertyKey).get(propertyKey);
 	}
 	set(propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-		return this.findScope<ScopeContext>(propertyKey).set(propertyKey, value, receiver);
+		return this.findScope<Context>(propertyKey).set(propertyKey, value, receiver);
 	}
-	declareVariable(scopeType: ScopeType, propertyKey: PropertyKey, propertyValue?: any) {
-		if (scopeType === 'block') {
-			return this.lastScope<ScopeContext>().set(propertyKey, propertyValue);
-		}
-		let lastIndex = this.stack.length;
-		while (lastIndex--) {
-			const scope = this.stack[lastIndex];
-			if (scope.type === scopeType) {
-				scope.set(propertyKey, propertyValue);
-				break;
-			}
-		}
+	declareVariable(propertyKey: PropertyKey, propertyValue?: any) {
+		return this.lastScope<Context>().set(propertyKey, propertyValue);
 	}
-	findScope<T extends ScopeContext>(propertyKey: PropertyKey): Scope<T> {
+	findScope<T extends Context>(propertyKey: PropertyKey): Scope<T> {
 		let lastIndex = this.stack.length;
 		while (lastIndex--) {
 			const scope = this.stack[lastIndex];
@@ -174,120 +233,40 @@ export class Stack implements Stack {
 	resolveAwait(value: AwaitPromiseInfo): void {
 		this.awaitPromise.push(value);
 	}
-	popScope<T extends ScopeContext>(): Scope<T> {
+	popScope<T extends Context>(): Scope<T> {
 		return this.stack.pop()!;
 	}
-	removeScope<T extends ScopeContext>(scope: Scope<T>): void {
+	removeScope<T extends Context>(scope: Scope<T>): void {
 		const index = this.stack.lastIndexOf(scope);
 		this.stack.splice(index, 1);
 	}
-	pushScope<T extends ScopeContext>(scope: Scope<T>): void {
+	pushScope<T extends Context>(scope: Scope<T>): void {
 		this.stack.push(scope);
 	}
-	pushBlockScope<T extends ScopeContext>(): Scope<T> {
+	pushBlockScope<T extends Context>(): Scope<T> {
 		const scope = Scope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionScope<T extends ScopeContext>(): Scope<T> {
-		const scope = Scope.functionScope<T>();
+	pushBlockScopeFor<T extends Context>(context: T): Scope<T> {
+		const scope = Scope.for<T>(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassScope<T extends ScopeContext>(): Scope<T> {
-		const scope = Scope.classScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushModuleScope<T extends ScopeContext>(): Scope<T> {
-		const scope = Scope.moduleScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushGlobalScope<T extends ScopeContext>(): Scope<T> {
-		const scope = Scope.globalScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushBlockScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = Scope.blockScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushFunctionScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = Scope.functionScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushClassScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = Scope.classScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushModuleScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = Scope.moduleScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushGlobalScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = Scope.globalScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushBlockReactiveScope<T extends ScopeContext>(): ReactiveScope<T> {
+	pushReactiveScope<T extends Context>(): ReactiveScope<T> {
 		const scope = ReactiveScope.blockScope<T>();
 		this.stack.push(scope);
 		return scope;
 	}
-	pushFunctionReactiveScope<T extends ScopeContext>(): ReactiveScope<T> {
-		const scope = ReactiveScope.functionScope<T>();
+	pushReactiveScopeFor<T extends Context>(context: T): ReactiveScope<T> {
+		const scope = ReactiveScope.for(context);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushClassReactiveScope<T extends ScopeContext>(): Scope<T> {
-		const scope = ReactiveScope.classScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushModuleReactiveScope<T extends ScopeContext>(): Scope<T> {
-		const scope = ReactiveScope.moduleScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushGlobalReactiveScope<T extends ScopeContext>(): Scope<T> {
-		const scope = ReactiveScope.globalScope<T>();
-		this.stack.push(scope);
-		return scope;
-	}
-	pushBlockReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T> {
-		const scope = ReactiveScope.blockScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushFunctionReactiveScopeFor<T extends ScopeContext>(context: T): ReactiveScope<T> {
-		const scope = ReactiveScope.functionScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushClassReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = ReactiveScope.classScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushModuleReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = ReactiveScope.moduleScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	pushGlobalReactiveScopeFor<T extends ScopeContext>(context: T): Scope<T> {
-		const scope = ReactiveScope.globalScopeFor(context);
-		this.stack.push(scope);
-		return scope;
-	}
-	lastScope<T extends ScopeContext>(): Scope<T> {
+	lastScope<T extends Context>(): Scope<T> {
 		return this.stack[this.stack.length - 1];
 	}
-	clearTo<T extends ScopeContext>(scope: Scope<T>): boolean {
+	clearTo<T extends Context>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;
@@ -295,7 +274,7 @@ export class Stack implements Stack {
 		this.stack.splice(index);
 		return true;
 	}
-	clearTill<T extends ScopeContext>(scope: Scope<T>): boolean {
+	clearTill<T extends Context>(scope: Scope<T>): boolean {
 		const index = this.stack.lastIndexOf(scope);
 		if (index === -1) {
 			return false;
@@ -304,6 +283,126 @@ export class Stack implements Stack {
 		return true;
 	}
 	copyStack(): Stack {
-		return new Stack(this.stack.slice());
+		return new Stack(this.stack.slice(), this.resolver!, this.moduleSource!);
+	}
+	detach(): void {
+		this.getReactiveScopeControls().forEach(scope => scope.detach());
+	}
+	reattach(): void {
+		this.getReactiveScopeControls().forEach(scope => scope.reattach());
+	}
+	detectChanges() {
+		this.getReactiveScope().forEach(scope => scope.detectChanges());
+	}
+	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
+	}
+	private getReactiveScope(): ReactiveScope<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveScope) as ReactiveScope<any>[];
+	}
+	importModule(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
+		if (!this.resolver || !this.moduleScope) {
+			// should o the parse and import the module
+			throw new Error('Module Resolver is undefined');
+		}
+		return this.resolver.resolve(source, this.moduleScope, importCallOptions);
+	}
+	getModule(): ModuleScope | undefined {
+		return this.moduleScope;
+	}
+
+	onDestroy(action: () => void): void {
+		this.onDestroyActions.push(action);
+	}
+}
+
+
+export interface ModuleScopeResolver {
+	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope;
+	resolveURL(specified: string, parent: string | URL): string;
+}
+
+const ROOT_URL = 'https://root';
+export function createRootURL(source: string): URL {
+	return new URL(source, ROOT_URL);
+}
+
+
+export interface ResolverConfig {
+	/**
+	 * 
+	 */
+	allowImportExternal?: boolean;
+
+};
+export class ModuleScopeResolver implements ModuleScopeResolver {
+	protected modules: [string, ModuleScope][] = [];
+	constructor(protected config?: ResolverConfig) { }
+	register(source: string, moduleScope: ModuleScope) {
+		const stackInfo = this.modules.find(tuple => tuple[0] == source && tuple[1] == moduleScope);
+		if (stackInfo) {
+			stackInfo[1] = moduleScope;
+		} else {
+			this.modules.push([source, moduleScope]);
+		}
+	}
+	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope {
+		if (this.isValidHTTPUrl(source)) {
+			return this.resolveExternalModule(source, importCallOptions);
+		}
+		if (source.startsWith('/')) {
+			return this.findScopeBySource(source, importCallOptions);
+		}
+		const currentSource = this.findSourceByScope(moduleScope);
+		const absoluteUrl = this.resolveURL(source, currentSource);
+		return this.findScopeBySource(absoluteUrl, importCallOptions);
+	}
+	resolveURL(specified: string, parent: string | URL): string {
+		const currentUrl = parent instanceof URL ? parent.href : createRootURL(parent).href;
+		const importedUrl = new URL(specified, currentUrl).href;
+		const absoluteUrl = importedUrl.replace(ROOT_URL, '');
+		return absoluteUrl;
+	}
+	protected findScopeBySource(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
+		if (importCallOptions?.assert?.type) {
+			const type = importCallOptions.assert.type;
+			if (!source.endsWith(`.${type}`)) {
+				throw new Error(`Can't find module scope`);
+			}
+		}
+		const importedScope = this.modules.find(tuple => tuple[0] == source)?.[1];
+		if (!importedScope) {
+			throw new Error(`Can't find module scope`);
+		}
+		return importedScope;
+	}
+	protected findSourceByScope(moduleScope: ModuleScope): string {
+		const importedSource = this.modules.find(tuple => tuple[1] == moduleScope)?.[0];
+		if (!importedSource) {
+			throw new Error(`Can't resolve scope source`);
+		}
+		return importedSource;
+	}
+	protected resolveExternalModule(source: string, importCallOptions?: ImportCallOptions): WebModuleScope {
+		if (!this.config?.allowImportExternal) {
+			throw new Error(`Error: Import External Module is not allowed.`);
+		}
+		const webScope = new WebModuleScope()
+		this.modules.push([source, webScope]);
+		// active later
+		// import(source, importCallOptions)
+		import(source).then(module => {
+			webScope.updateContext(module);
+		});
+		return webScope;
+	}
+	protected readonly isValidHTTPUrl = (string: string) => {
+		let url: URL;
+		try {
+			url = new URL(string);
+		} catch (e) {
+			return false;
+		}
+		return url.protocol === 'http:' || url.protocol === 'https:';
 	}
 }

@@ -1,8 +1,8 @@
 import type {
-	CanDeclareExpression, ExpressionNode,
-	NodeDeserializer, CanFindScope, ExpressionEventPath, VisitNodeType, VisitNodeListType
+	DeclarationExpression, ExpressionNode, NodeDeserializer,
+	CanFindScope, ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope, ScopeType } from '../../scope/scope.js';
+import type { Context, Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -17,7 +17,7 @@ import { AbstractExpressionNode } from '../abstract.js';
  * but sometimes it is possible to parse strings into identifiers.
  */
 @Deserializer('Identifier')
-export class Identifier extends AbstractExpressionNode implements CanDeclareExpression, CanFindScope {
+export class Identifier extends AbstractExpressionNode implements DeclarationExpression, CanFindScope {
 	static fromJSON(node: Identifier): Identifier {
 		return new Identifier(node.name);
 	}
@@ -41,13 +41,16 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined {
 		if (scope) {
-			return scope.getScope(this.name);
+			return scope.getInnerScope(this.name);
 		}
 		scope = stack.findScope(this.name);
-		return scope.getScope(this.name);
+		return scope.getInnerScope(this.name);
 	}
-	declareVariable(stack: Stack, scopeType: ScopeType, propertyValue: any): any {
-		return stack.declareVariable(scopeType, this.name, propertyValue);
+	declareVariable(stack: Stack, propertyValue: any): any {
+		return stack.declareVariable(this.name, propertyValue);
+	}
+	getDeclarationName(): string {
+		return this.toString();
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [this];
@@ -64,22 +67,47 @@ export class Identifier extends AbstractExpressionNode implements CanDeclareExpr
 	}
 }
 
+@Deserializer('ThisExpression')
+export class ThisExpression extends Identifier {
+	static fromJSON(node: ThisExpression): ThisExpression {
+		return ThisNode;
+	}
+	constructor() {
+		super('this');
+	}
+}
+
 @Deserializer('Literal')
 export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: Literal<any>):
 		Literal<string>
 		| Literal<number>
-		| Literal<bigint>
 		| Literal<boolean>
 		| Literal<RegExp>
-		| Literal<null | undefined> {
-		return new Literal(node.value);
+		| Literal<bigint>
+		| Literal<null>
+		| Literal<undefined> {
+		if (node.bigint) {
+			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint);
+		} else if (node.regex) {
+			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex);
+		}
+		return new Literal(node.value, node.raw);
 	}
-	constructor(protected value: T) {
+	constructor(protected value: T, protected raw?: string, protected regex?: { pattern: string, flags: string }, protected bigint?: string) {
 		super();
 	}
 	getValue() {
 		return this.value;
+	}
+	getRegex() {
+		return this.regex;
+	}
+	getBigint() {
+		return this.bigint;
+	}
+	geRaw() {
+		return this.raw;
 	}
 	shareVariables(scopeList: Scope<any>[]): void { }
 	set() {
@@ -88,14 +116,14 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 	get(): T {
 		return this.value;
 	}
-	findScope<V extends object>(stack: Stack): Scope<V>;
-	findScope<V extends object>(stack: Stack, scope: Scope<any>): Scope<V>;
-	findScope<V extends object>(stack: Stack, scope?: Scope<any>): Scope<V> | undefined {
+	findScope<V extends Context>(stack: Stack): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope: Scope<Record<PropertyKey, V>>): Scope<V>;
+	findScope<V extends Context>(stack: Stack, scope?: Scope<Record<PropertyKey, V>>): Scope<V> | undefined {
 		if (scope) {
-			return scope.getScope<V>(this.value as any);
+			return scope.getInnerScope(this.value as any);
 		}
-		scope = stack.findScope<V>(this.value as any);
-		return scope.getScope<V>(this.value as any);
+		scope = stack.findScope(this.value as any);
+		return scope.getInnerScope(this.value as any);
 	}
 	dependency(computed: true): ExpressionNode[] {
 		return computed ? [this] : [];
@@ -104,43 +132,23 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		return computed ? [{ computed: false, path: this.toString() }] : [];
 	}
 	toString(): string {
-		return String(this.value);
+		return this.raw ?? String(this.value);
 	}
 	toJson(): object {
-		return { value: this.value };
-	}
-}
-
-@Deserializer('StringLiteral')
-export class StringLiteral extends Literal<string> {
-	static fromJSON(node: StringLiteral): StringLiteral {
-		return new StringLiteral(node.value, node.quote);
-	}
-	private quote: string;
-	constructor(value: string, quote?: string) {
-		super(value);
-		const firstChar = value.charAt(0);
-		if (quote) {
-			this.quote = quote;
-			this.value = value;
-		} else if (firstChar === '"' || firstChar == `'` || firstChar === '`') {
-			this.quote = firstChar;
-			this.value = `"${value.substring(1, value.length - 1)}"`;
-		} else {
-			this.quote = '';
-			this.value = value;
+		if (this.bigint) {
+			return {
+				bigint: this.bigint,
+				raw: this.raw,
+			};
+		} else if (this.regex) {
+			return {
+				regex: { pattern: this.regex?.pattern, flags: this.regex?.flags },
+				raw: this.raw,
+			};
 		}
-	}
-	getQuote() {
-		return this.quote;
-	}
-	toString(): string {
-		return `${this.quote}${this.value}${this.quote}`;
-	}
-	toJson(): object {
 		return {
 			value: this.value,
-			quote: this.quote
+			raw: this.raw,
 		};
 	}
 }
@@ -161,9 +169,9 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 			node.tag ? deserializer(node.tag) : void 0
 		);
 	}
-	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType): void {
 		node.tag && visitNode(node.tag);
-		visitNodeList(node.expressions);
+		node.expressions.forEach(visitNode);
 	}
 	constructor(protected quasis: string[], protected expressions: ExpressionNode[], protected tag?: ExpressionNode,) {
 		super();
@@ -218,7 +226,7 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('TemplateLiteral')
 export class TemplateLiteral extends TemplateLiteralExpressionNode {
-	protected tag: undefined;
+	declare protected tag: undefined;
 	constructor(quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions);
 	}
@@ -229,7 +237,7 @@ export class TemplateLiteral extends TemplateLiteralExpressionNode {
 
 @Deserializer('TaggedTemplateExpression')
 export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
-	protected tag: ExpressionNode;
+	declare protected tag: ExpressionNode;
 	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
 		super(quasis, expressions, tag);
 	}
@@ -239,103 +247,36 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 }
 
 
-@Deserializer('NumberLiteral')
-export class NumberLiteral extends Literal<number> {
-	static fromJSON(node: NumberLiteral): NumberLiteral {
-		return new NumberLiteral(node.value);
-	}
-	constructor(value: number) {
-		super(value);
-	}
-}
+// @Deserializer('BigIntLiteral')
+// export class BigIntLiteral extends Literal<bigint> {
+// 	static fromJSON(node: BigIntLiteral): BigIntLiteral {
+// 		return new BigIntLiteral(BigInt(String(node.value)));
+// 	}
+// 	toString(): string {
+// 		return `${this.value}n`;
+// 	}
+// 	toJson(): object {
+// 		return { value: this.value.toString() };
+// 	}
+// }
 
-@Deserializer('BigIntLiteral')
-export class BigIntLiteral extends Literal<bigint> {
-	static fromJSON(node: BigIntLiteral): BigIntLiteral {
-		return new BigIntLiteral(BigInt(String(node.value)));
-	}
-	toString(): string {
-		return `${this.value}n`;
-	}
-	toJson(): object {
-		return { value: this.value.toString() };
-	}
-}
-@Deserializer('RegExpLiteral')
-export class RegExpLiteral extends Literal<RegExp> {
-	static fromJSON(node: RegExpLiteral & { regex: { pattern: string, flags: string } }): RegExpLiteral {
-		return new RegExpLiteral(new RegExp(node.regex.pattern, node.regex.flags));
-	}
-	toString(): string {
-		return `${this.value}n`;
-	}
-	toJson(): object {
-		return {
-			regex: {
-				pattern: this.value.source,
-				flags: this.value.flags
-			}
-		};;
-	}
-}
 
 export const TRUE = String(true);
 export const FALSE = String(false);
-@Deserializer('BooleanLiteral')
-export class BooleanLiteral extends Literal<boolean> {
-	static fromJSON(node: BooleanLiteral): BooleanLiteral {
-		switch (String(node.value)) {
-			case TRUE: return TrueNode;
-			case FALSE:
-			default:
-				return FalseNode;
-		}
-	}
-}
 
 export const NULL = String(null);
 export const UNDEFINED = String(undefined);
 
-@Deserializer('NullishLiteral')
-export class NullishLiteral extends Literal<null | undefined> {
-	static fromJSON(node: NullishLiteral): NullishLiteral {
-		switch (String(node.value)) {
-			case NULL: return NullNode;
-			case UNDEFINED:
-			default: return UndefinedNode;
-		}
-	}
-
-	toString(): string {
-		if (typeof this.value === 'undefined') {
-			return UNDEFINED;
-		}
-		return NULL;
-	}
-	toJson(): object {
-		return { value: this.toString() };
-	}
-}
-
-@Deserializer('ThisExpression')
-export class ThisExpression extends Identifier {
-	static fromJSON(node: ThisExpression): ThisExpression {
-		return ThisNode;
-	}
-	constructor() {
-		super('this');
-	}
-}
-
-export const NullNode = Object.freeze(new NullishLiteral(null)) as NullishLiteral;
-export const UndefinedNode = Object.freeze(new NullishLiteral(undefined)) as NullishLiteral;
-export const TrueNode = Object.freeze(new BooleanLiteral(true)) as BooleanLiteral;
-export const FalseNode = Object.freeze(new BooleanLiteral(false)) as BooleanLiteral;
+export const NullNode = Object.freeze(new Literal<null>(null)) as Literal<null>;
+export const UndefinedNode = Object.freeze(new Literal<undefined>(undefined)) as Literal<undefined>;
+export const TrueNode = Object.freeze(new Literal<boolean>(true)) as Literal<boolean>;
+export const FalseNode = Object.freeze(new Literal<boolean>(false)) as Literal<boolean>;
 export const ThisNode = Object.freeze(new ThisExpression()) as ThisExpression;
 export const GlobalThisNode = Object.freeze(new Identifier('globalThis')) as Identifier;
 export const SymbolNode = Object.freeze(new Identifier('Symbol')) as Identifier;
 export const OfNode = Object.freeze(new Identifier('of')) as Identifier;
 export const AsNode = Object.freeze(new Identifier('as')) as Identifier;
+export const DefaultNode = Object.freeze(new Identifier('default')) as Identifier;
 export const GetIdentifier = Object.freeze(new Identifier('get')) as Identifier;
 export const SetIdentifier = Object.freeze(new Identifier('set')) as Identifier;
 export const AsyncIdentifier = Object.freeze(new Identifier('async')) as Identifier;
@@ -344,3 +285,6 @@ export const ConstructorIdentifier = Object.freeze(new Identifier('constructor')
 export const NameIdentifier = Object.freeze(new Identifier('name')) as Identifier;
 export const EvalIdentifier = Object.freeze(new Identifier('eval')) as Identifier;
 export const ArgumentsIdentifier = Object.freeze(new Identifier('arguments')) as Identifier;
+export const YieldIdentifier = Object.freeze(new Identifier('yield')) as Identifier;
+export const SuperIdentifier = Object.freeze(new Identifier('super')) as Identifier;
+export const LetIdentifier = Object.freeze(new Identifier('let')) as Identifier;

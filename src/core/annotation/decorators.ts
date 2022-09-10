@@ -2,8 +2,18 @@ import type { TypeOf } from '../utils/typeof.js';
 import { DomNode, DomRenderNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
+import { ZoneType } from '../zone/bootstrap.js';
+import { ValueControl } from '../component/custom-element.js';
+
 
 export interface DirectiveOptions {
+
+	/**
+	 * the name of the directive which is used in the template
+	 * 
+	 * a structural directive name should start with `*`,
+	 * and an attributes directive should not.
+	 */
 	selector: string;
 }
 
@@ -126,6 +136,109 @@ export interface ComponentOptions<T = Function> {
 	 * default: false
 	 */
 	shadowDomDelegatesFocus?: boolean;
+
+	/**
+	 * Create a custom form-associated element with HTMLElement.attachInternals
+	 * default: false
+	 * 
+	 * if the value is `true` it is expected from the model class to implement `ValueControl<T>` interface
+	 * 
+	 * otherwise you can register another class that implement `ValueControl<T>`,
+	 * in case if you want split the model and the value controller.
+	 * 
+	 * #### Usage Notes:
+	 * 
+	 * ```ts
+	 * 
+	 * @Component({
+	 * 	selector: 'custom-message',
+	 * 	template: `
+	 * 		<label for="message">Message</label>
+	 * 		<textarea id="message" [(value)]="message" [disabled]="disabled" (change)="onMessageChange($event.target.value)"></textarea>
+	 * 	`,
+	 * 	formAssociated: true,
+	 * 	// formAssociated: CustomMessage,
+	 * })
+	 * export class CustomMessage implements ValueControl<string> {
+	 * 
+	 * 	private message: string | null = '';
+	 * 	private disabled: boolean = false;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({ value, mode }: WriteValueOptions<string>) {
+	 * 		this.message = mode !== 'reset' ? value : '';
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this.disabled = isDisabled;
+	 * 	}
+	 * 
+	 * 	onMessageChange(message: string) {
+	 * 		this._onChange(message);
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * 
+	 * export class CustomInputValueControl implements ValueControl<number> {
+	 * 
+	 * 	private _value: number | null = null;
+	 * 	private _disabled: boolean = false;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({ value, mode }: WriteValueOptions<number>) {
+	 * 		this._value = mode !== 'reset' ? value : null;
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this._disabled = isDisabled;
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * @Component({
+	 * 	selector: 'custom-input',
+	 * 	extend: 'input',
+	 * 	formAssociated: CustomInputValueControl,
+	 * })
+	 * export class CustomInputElement {
+	 * 	@View()
+	 * 	view: HTMLInputElement;
+	 * 
+	 * 	onInit() {
+	 * 		this.view.type = 'number';
+	 * 	}
+	 * }
+	 * 
+	 * ```
+	 */
+	formAssociated?: boolean | TypeOf<ValueControl<any>>;
+
+	/**
+	 * use `noop` to no zone.js patch effect applied,
+	 *  and used for manual change detection for heavily process components
+	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
+	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
+	 * make sure that `zone.js` is imported in the polyfills module. 
+	 * 
+	 * the default is the platform which is initialized using
+	 * 
+	 * ```js
+	 * bootstrapZone('noop')
+	 * bootstrapZone('aurora')
+	 * ```
+	 * 
+	 * if `bootstrapZone` never been called, then the default zone is a noop zone.
+	 */
+	zone?: ZoneType;
 }
 
 export interface ChildOptions {
@@ -142,9 +255,30 @@ export function Input(name?: string): Function {
 		Components.addInput(target, propertyKey, name || propertyKey);
 	};
 }
-export function Output(name?: string): Function {
+
+export function FormValue(): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addOutput(target, propertyKey, name || propertyKey);
+		Components.addInput(target, propertyKey, 'value');
+	};
+}
+
+export type OutputEventInit = Omit<EventInit, 'cancelable'>;
+export type OutputOptions = { name?: string } & OutputEventInit;
+
+export function Output(options?: OutputOptions): Function;
+export function Output(name?: string, options?: OutputEventInit): Function;
+export function Output(name?: string | OutputOptions, options?: OutputEventInit): Function {
+	const eventType = typeof name === 'object' ? name.name : name;
+	const eventOpts = typeof name === 'object' ? name : options;
+	return (target: Object, propertyKey: string) => {
+		Components.addOutput(
+			target,
+			propertyKey, eventType || propertyKey,
+			{
+				bubbles: eventOpts?.bubbles ?? false,
+				composed: eventOpts?.composed ?? false
+			}
+		);
 	};
 }
 

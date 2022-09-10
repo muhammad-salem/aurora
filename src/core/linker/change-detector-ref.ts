@@ -1,4 +1,4 @@
-import { ReactiveScopeControl, ScopeContext } from '@ibyar/expressions';
+import { ReactiveScopeControl, Context } from '@ibyar/expressions';
 
 export abstract class ChangeDetectorRef {
 
@@ -9,7 +9,7 @@ export abstract class ChangeDetectorRef {
 	abstract detach(): void;
 
 	/**
-	 * apply all the not emitted changes, and continue emit in time.
+	 * apply all the not emitted changes, and continue emit changes now.
 	 */
 	abstract reattach(): void;
 
@@ -18,23 +18,24 @@ export abstract class ChangeDetectorRef {
 	 * will not effect the state of the detector wither if attached ot not.
 	 */
 	abstract markForCheck(): void;
+
+	/**
+	 * apply change detection
+	 */
+	abstract detectChanges(): void;
+
+
+	/**
+	 * throw error if any changes has been made
+	 */
+	abstract checkNoChanges(): void;
 }
 
-class ChangeDetectorRefImpl extends ChangeDetectorRef {
-	constructor(private changeDetectorRef: ChangeDetectorRef) { super(); }
-	detach(): void {
-		this.changeDetectorRef.detach();
-	}
-	reattach(): void {
-		this.changeDetectorRef.reattach();
-	}
-	markForCheck(): void {
-		this.changeDetectorRef.markForCheck();
-	}
-}
-
-export function createChangeDetectorRef(scope: ReactiveScopeControl<ScopeContext>, propertyKey?: keyof ScopeContext): ChangeDetectorRef {
-	return new ChangeDetectorRefImpl({
+/**
+ * create a change Detector Reference by property key.
+ */
+export function createChangeDetectorRef(scope: ReactiveScopeControl<any>, propertyKey: keyof Context): ChangeDetectorRef {
+	return {
 		detach() {
 			scope.detach();
 		},
@@ -42,7 +43,33 @@ export function createChangeDetectorRef(scope: ReactiveScopeControl<ScopeContext
 			scope.reattach();
 		},
 		markForCheck() {
-			scope.emitChanges(propertyKey);
-		}
-	} as ChangeDetectorRef);
+			scope.emitChanges(propertyKey, scope.get(propertyKey));
+		},
+		detectChanges() {
+			scope.detectChanges();
+		},
+		checkNoChanges() {
+			scope.checkNoChanges();
+		},
+	};
+}
+
+export function createModelChangeDetectorRef(resolver: () => ReactiveScopeControl<any>): ChangeDetectorRef {
+	return {
+		detach() {
+			resolver().detach();
+		},
+		reattach() {
+			resolver().reattach();
+		},
+		markForCheck() {
+			resolver().detectChanges()
+		},
+		detectChanges() {
+			resolver().detectChanges();
+		},
+		checkNoChanges() {
+			resolver().checkNoChanges();
+		},
+	};
 }

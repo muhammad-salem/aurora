@@ -1,0 +1,18 @@
+{
+	"extends": "./tsconfig.dependency.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"outDir": "../../packages/platform",
+		"rootDir": ".",
+		"composite": true,
+		"tsBuildInfoFile": "./tsBuild.info"
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.tsx"
+	],
+	"files": [
+		"index.ts"
+	],
+	"compileOnSave": true
+}

@@ -1,0 +1,72 @@
+{
+	"name": "@ibyar/cli",
+	"version": "0.6.1",
+	"description": "The Ibyar/Aurora CLI",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/cli"
+	},
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"bin": {
+		"ibyar": "./bin/cli.js"
+	},
+	"files": [
+		"*"
+	],
+	"private": true,
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"dependencies": {
+		"@ibyar/core": "^0.6.1",
+		"@ibyar/directives": "^0.6.1",
+		"@ibyar/elements": "^0.6.1",
+		"@ibyar/expressions": "^0.6.1",
+		"@ibyar/pipes": "^0.6.1",
+		"reflect-metadata": "^0.1.13",
+		"tslib": "^2.4.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.8.2"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"cli",
+		"aurora",
+		"ibyar",
+		"custom-elements",
+		"dependency-injection",
+		"reflect-metadata",
+		"services",
+		"component",
+		"directive",
+		"pipes",
+		"forms",
+		"template-syntax",
+		"template-expression",
+		"http-client",
+		"http",
+		"html-parser",
+		"parser",
+		"jsx",
+		"jsx-factory",
+		"routers",
+		"js-parser",
+		"elements-info",
+		"element",
+		"interceptor",
+		"shadow-dom",
+		"typescript"
+	]
+}

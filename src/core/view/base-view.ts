@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope, ScopeContext, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveScope, ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -8,18 +8,12 @@ import { ComponentRef, PropertyRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
-import { ElementModelReactiveScope } from '../component/provider.js';
+import { getCurrentZone } from '../zone/bootstrap.js';
+import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
+import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
+import { createZoneProxyHandler } from '../zone/proxy.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
-
-function defineInstancePropertyMap<T extends { [key: string]: any }>(instance: T, names: string[]) {
-	if (typeof instance !== 'object') {
-		return;
-	}
-	names
-		.filter(key => !Reflect.has(instance, key))
-		.forEach(key => Reflect.set(instance, key, undefined));
-}
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 
@@ -28,17 +22,18 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 	}
 	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
-		_proxyModel: T;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScope<T>;
+		_modelScope: ReactiveScopeControl<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
+		_zone: AuroraZone;
 
-		private subscriptions: ScopeSubscription<ScopeContext>[] = [];
+		private subscriptions: ScopeSubscription<Context>[] = [];
+		private onDestroyCalls: (() => void)[] = [];
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -49,20 +44,23 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					delegatesFocus: componentRef.shadowDomDelegatesFocus
 				});
 			}
-			const model = new modelClass(/* resolve dependency injection*/);
-			const modelNames = componentRef.inputs.map(input => input.modelProperty)
-				.concat(componentRef.outputs.map(output => output.modelProperty))
-				.concat(componentRef.hostBindings.map(host => host.hostPropertyName))
-				.concat(componentRef.viewChild.map(child => child.modelName));
-			defineInstancePropertyMap(model, modelNames);
+			const args = []; /* resolve dependency injection*/
+			const detector = createModelChangeDetectorRef(() => this._modelScope);
+			args.push(detector)
+			this._zone = getCurrentZone(componentRef.zone).fork();
+			args.push(this._zone);
+			const model = new modelClass(...args);
 			this._model = model;
 
-			const modelScope = ElementModelReactiveScope.blockScopeFor(model);
-			this._proxyModel = modelScope.getContextProxy();
+			const modelScope = ReactiveScopeControl.for(model);
+			const modelProxyRef = this._zone instanceof ProxyAuroraZone
+				? createZoneProxyHandler(model, this._zone)
+				: model;
+			modelScope.getContextProxy = () => modelProxyRef;
 			this._modelScope = modelScope;
 
-			this._viewScope = ReactiveScope.blockScopeFor<{ 'this': BaseComponent<T> }>({ 'this': this });
-			const elementScope = this._viewScope.getScopeOrCreat('this');
+			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
+			const elementScope = this._viewScope.getInnerScope<ReactiveScope<BaseComponent<T>>>('this')!;
 			componentRef.inputs.forEach(input => {
 				elementScope.subscribe(input.viewAttribute as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
@@ -78,7 +76,21 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			});
 
-
+			componentRef.outputs.forEach(output =>
+				(model[output.modelProperty as keyof T] as any as EventEmitter<any>)
+					.subscribe((value: any) => {
+						const event = new CustomEvent(
+							output.viewAttribute,
+							{
+								detail: value,
+								cancelable: false,
+								bubbles: output.options?.bubbles,
+								composed: output.options?.bubbles,
+							},
+						);
+						this.dispatchEvent(event);
+					})
+			);
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
@@ -86,9 +98,13 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._render = new ComponentRender(this, this.subscriptions);
 		}
 
+		detectChanges(): void {
+			this._modelScope.detectChanges();
+		}
+
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
-				this._model.doCheck.call(this._proxyModel);
+				this._zone.run(this._model.doCheck, this._modelScope.getContextProxy!());
 			}
 		};
 
@@ -146,9 +162,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		setInputValue(viewProp: PropertyKey, value: any): void {
 			const inputRef = this.getInput(viewProp as string);
 			if (inputRef) {
-				// console.log('about to change input', inputRef.modelProperty, value);
-				// Reflect.set(this._model, inputRef.modelProperty, value);
-				// this._model.emitChangeModel(inputRef.modelProperty);
 				this._modelScope.set(inputRef.modelProperty as never, value);
 			}
 		}
@@ -166,6 +179,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (outputRef) {
 				return this._model[outputRef.modelProperty] as EventEmitter<V>;
 			}
+			return;
 		}
 
 		hasProp(propName: string): boolean {
@@ -200,13 +214,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (newValue === oldValue) {
 				return;
 			}
-			// this._changeObservable.emit(name);
-			const inputRef = this.getInput(name);
-			if (inputRef) {
-				// this._model.emitChangeModel(inputRef.modelProperty);
-			}
 			if (isOnChanges(this._model)) {
-				this._model.onChanges.call(this._proxyModel);
+				this._zone.run(this._model.onChanges, this._modelScope.getContextProxy!());
 			}
 			this.doBlockCallback();
 		}
@@ -216,6 +225,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this.subscriptions.forEach(sub => sub.unsubscribe());
 			}
 			this.subscriptions.splice(0, this.subscriptions.length);
+			const cds = this._zone.onEmpty.subscribe(() => this._modelScope.detectChanges());
+			this.onDestroy(() => cds.unsubscribe());
 			this._componentRef.inputs.forEach(input => {
 				const inputDefaultValue = this._model[input.modelProperty];
 				if (inputDefaultValue !== null && inputDefaultValue !== undefined) {
@@ -223,39 +234,26 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 			});
 
-			// if (!this.hasParentComponent() && this.attributes.length > 0) {
-			// 	let oldAttrValues = Array.prototype.slice.call(this.attributes);
-			//	oldAttrValues.forEach((attr: Attr) => {
-			// 		Reflect.set(this, attr.name, attr.value);
-			// 	});
-			// }
-
 			if (!this.hasParentComponent() && this.attributes.length > 0) {
 				let attrs: Attr[] = Array.prototype.slice.call(this.attributes);
 				attrs.forEach(attr => this.initOuterAttribute(attr));
 			}
 
 			if (isOnChanges(this._model)) {
-				this._model.onChanges.call(this._proxyModel);
+				this._zone.run(this._model.onChanges, this._modelScope.getContextProxy!());
 			}
 			if (isOnInit(this._model)) {
-				this._model.onInit.call(this._proxyModel);
+				this._zone.run(this._model.onInit, this._modelScope.getContextProxy!());
 			}
 			if (isDoCheck(this._model)) {
-				this._model.doCheck.call(this._proxyModel);
+				this._zone.run(this._model.doCheck, this._modelScope.getContextProxy!());
 			}
 			if (isAfterContentInit(this._model)) {
-				this._model.afterContentInit.call(this._proxyModel);
+				this._zone.run(this._model.afterContentInit, this._modelScope.getContextProxy!());
 			}
 			if (isAfterContentChecked(this._model)) {
-				this._model.afterContentChecked.call(this._proxyModel);
+				this._zone.run(this._model.afterContentChecked, this._modelScope.getContextProxy!());
 			}
-
-			// if (!this.hasParentComponent()) {
-			// 	Array.prototype.slice.call(this.attributes).forEach((attr: Attr) => {
-			// 		this.initOuterAttribute(attr);
-			// 	});
-			// }
 
 			// do once
 			if (this.childNodes.length === 0) {
@@ -267,36 +265,24 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			if (isAfterViewInit(this._model)) {
-				this._model.afterViewInit.call(this._proxyModel);
+				this._zone.run(this._model.afterViewInit, this._modelScope.getContextProxy!());
 			}
 			if (isAfterViewChecked(this._model)) {
-				this._model.afterViewChecked.call(this._proxyModel);
+				this._zone.run(this._model.afterViewChecked, this._modelScope.getContextProxy!());
 			}
 			this.doBlockCallback = () => {
 				if (isDoCheck(this._model)) {
-					this._model.doCheck.call(this._proxyModel);
+					this._zone.run(this._model.doCheck, this._modelScope.getContextProxy!());
 				}
 				if (isAfterContentChecked(this._model)) {
-					this._model.afterContentChecked.call(this._proxyModel);
+					this._zone.run(this._model.afterContentChecked, this._modelScope.getContextProxy!());
 				}
 				if (isAfterViewChecked(this._model)) {
-					this._model.afterViewChecked.call(this._proxyModel);
+					this._zone.run(this._model.afterViewChecked, this._modelScope.getContextProxy!());
 				}
-				// this.emitRootChanges();
 			};
-			// this.emitRootChanges();
 		}
 
-		// emitRootChanges(): void {
-		// 	this.emitChanges(...Object.keys(this._model.__observable).filter(event => event !== 'destroy'));
-		// }
-
-		// emitChanges(...events: string[]): void {
-		// 	const sources: any[] = [];
-		// 	events.forEach(key => {
-		// 		this._model.emitChangeModel(key, sources);
-		// 	});
-		// }
 
 		initOuterAttribute(attr: Attr) {
 			// [window, this] scop
@@ -307,21 +293,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				if (Reflect.has(window, modelProperty)) {
 					this.setInputValue(elementAttr, Reflect.get(window, modelProperty));
 				}
-				//   else {
-				// 	let value: any;
-				// 	Object.defineProperty(window, modelProperty, {
-				// 		set: (v: any) => {
-				// 			value = v;
-				// 			if (this) {
-				// 				this.setInputValue(elementAttr, v);
-				// 				// fake connect element
-				// 				this.connectedCallback();
-				// 			}
-				// 		},
-				// 		get: (): any => value
-				// 	});
-				// }
-
 			}
 			else if (elementAttr.startsWith('(')) {
 				// (elementAttr)="modelProperty()"
@@ -348,7 +319,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this.setInputValue(attr.name, attr.value);
 			}
 		}
-
+		onDestroy(callback: () => void) {
+			this.onDestroyCalls.push(callback);
+		}
 		adoptedCallback() {
 			// restart the process
 			this.innerHTML = '';
@@ -357,30 +330,18 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {
-				this._model.onDestroy.call(this._proxyModel);
+				this._zone.run(this._model.onDestroy, this._modelScope.getContextProxy!());
 			}
 			this.subscriptions.forEach(sub => sub.unsubscribe());
 			this.subscriptions.splice(0, this.subscriptions.length);
-		}
-
-		// events api
-		addEventListener(eventName: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-			if ('on' + eventName in this) {
-				super.addEventListener(eventName, (event: Event) => {
-					(listener as Function)(event);
-				}, options);
-				return;
-			}
-			const modelOutput = this.getEventEmitter<any>(eventName);
-			if (modelOutput) {
-				// modelOutput.subscribe(listener);
-				modelOutput.subscribe((data: any) => {
-					(listener as Function)(data);
-				});
-			}
-			else {
-				this._model.subscribeModel(eventName, listener as () => void);
-			}
+			this.onDestroyCalls.forEach(callback => {
+				try {
+					callback();
+				} catch (error) {
+					console.error(error);
+				}
+			});
+			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
 		}
 
 		triggerOutput(eventName: string, value?: any): void {
@@ -394,32 +355,3 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 	FACTORY_CACHE.set(htmlElementType, CustomView);
 	return CustomView;
 }
-
-// const CustomViewTypes: WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>> = new WeakMap();
-// function createViewClass(elementType: TypeOf<HTMLElement>, isForm: boolean) {
-//     if (isForm) {
-//         let ViewClass = baseFormFactoryView(elementType);
-//         CustomViewTypes.set(elementType, ViewClass);
-//         return ViewClass;
-//     }
-//     else {
-//         let ViewClass = baseFactoryView(elementType);
-//         CustomViewTypes.set(elementType, ViewClass);
-//         return ViewClass;
-//     }
-// }
-
-// export function getBaseViewClassByHTMLElementType(elementType?: TypeOf<HTMLElement>, isFormAssociated?: boolean) {
-//     if (elementType && CustomViewTypes.has(elementType)) {
-//         return CustomViewTypes.get(elementType);
-//     }
-//     // start to created view class
-//     else if (!elementType || elementType === HTMLElement) {
-//             return createViewClass(HTMLElement, isFormAssociated || false);
-//         }
-//     if (CustomViewTypes.has(elementType)) {
-//         return CustomViewTypes.get(elementType);
-//     } else {
-
-//     }
-// }

@@ -1,7 +1,7 @@
-import type { DomNode } from '@ibyar/elements';
+import { DomNode } from '@ibyar/elements';
 import {
-	createProxyForContext, ExpressionNode,
-	findReactiveScopeByEventMap, ScopeContext,
+	ExpressionNode, findReactiveScopeByEventMap,
+	ReactiveScopeControl, Context,
 	ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -33,59 +33,69 @@ export class TemplateRefImpl extends TemplateRef {
 	private _host: HTMLComponent<any> | StructuralDirective;
 
 	constructor(
-		private render: ComponentRender<any>,
-		private node: DomNode,
-		private stack: Stack,
-		private templateExpressions: ExpressionNode[],
+		render: ComponentRender<any>,
+		node: DomNode,
+		stack: Stack,
+		templateExpressions: ExpressionNode[],
+	);
+
+	constructor(
+		private _render: ComponentRender<any>,
+		private _node: DomNode,
+		private _stack: Stack,
+		private _templateExpressions: ExpressionNode[],
 	) {
 		super();
 	}
 	get astNode(): DomNode {
-		return this.node;
+		return this._node;
 	}
 	set host(host: HTMLComponent<any> | StructuralDirective) {
 		this._host = host;
 	}
-	createEmbeddedView<C extends object>(context: C, parentNode: Node): EmbeddedViewRef<C> {
-		const directiveStack = this.stack.copyStack();
-
-		const templateScope = directiveStack.pushBlockReactiveScope();
+	createEmbeddedView<C extends object>(context: C = {} as C, parentNode: Node): EmbeddedViewRef<C> {
+		const directiveStack = this._stack.copyStack();
+		const templateScope = ReactiveScopeControl.blockScope<C>();
+		directiveStack.pushScope(templateScope);
 
 		const sandBox = new Stack();
-		const contextScope = sandBox.pushBlockReactiveScopeFor(context ?? {});
+		const contextScope = ReactiveScopeControl.for<C>(context);
+		sandBox.pushScope(contextScope);
 		sandBox.pushScope(templateScope);
 
 		const elements: Node[] = [];
-		const contextProxy = createProxyForContext(contextScope);
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		const embeddedViewRef = new EmbeddedViewRefImpl(contextProxy, elements, subscriptions);
+		const subscriptions: ScopeSubscription<Context>[] = [];
+		const embeddedViewRef = new EmbeddedViewRefImpl(contextScope, elements, subscriptions);
 		const scopeSubscriptions = this.executeTemplateExpressions(sandBox);
 		scopeSubscriptions && subscriptions.push(...scopeSubscriptions);
 
 		const fragment = document.createDocumentFragment();
-		this.render.appendChildToParent(fragment, this.node, directiveStack, parentNode, subscriptions, this._host);
+		this._render.appendChildToParent(fragment, this._node, directiveStack, parentNode, subscriptions, this._host);
 
 		fragment.childNodes.forEach(item => elements.push(item));
+		// const updateSubscriptions = this.render.view._zone.onFinal.subscribe(() => contextScope.detectChanges());
+		// embeddedViewRef.onDestroy(() => updateSubscriptions.unsubscribe());
 		return embeddedViewRef;
 	}
-	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<ScopeContext>[] | undefined {
-		if (!this.templateExpressions?.length) {
+	private executeTemplateExpressions(sandBox: Stack): ScopeSubscription<Context>[] | undefined {
+		if (!this._templateExpressions?.length) {
 			return;
 		}
 		// init value
-		this.templateExpressions.forEach(expression => {
+		this._templateExpressions.forEach(expression => {
 			expression.get(sandBox);
 		});
 
 		// subscribe to changes
 		const scopeSubscriptions: ScopeSubscription<object>[] = [];
-		this.templateExpressions.forEach(expression => {
+		this._templateExpressions.forEach(expression => {
 			const events = expression.events();
-			const scopeMap = findReactiveScopeByEventMap(events, sandBox);
-			scopeMap.forEach((scope, eventName) => {
-				const subscription = scope.subscribe(eventName, () => {
-					expression.get(sandBox);
-				});
+			const scopeTuples = findReactiveScopeByEventMap(events, sandBox);
+			scopeTuples.forEach(tuple => {
+				const subscription = tuple[1].subscribe(
+					tuple[0],
+					() => expression.get(sandBox)
+				);
 				scopeSubscriptions.push(subscription);
 			});
 		});

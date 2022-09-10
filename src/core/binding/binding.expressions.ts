@@ -1,25 +1,29 @@
 import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findScopeByEventMap, ReactiveScope,
-	ScopeContext, ValueChangedCallback, Scope,
-	MemberExpression, Identifier
+	Stack, findReactiveScopeByEventMap, ReactiveScope,
+	Context, ValueChangedCallback, Scope,
+	MemberExpression, Identifier, Deserializer
 } from '@ibyar/expressions';
+import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { isOnDestroy } from '../component/lifecycle.js';
 import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
-type OneWayOperator = ':=';
-type TwoWayOperator = ':=:';
+type OneWayOperator = '.=';
+type TwoWayOperator = ':=';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
-	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[];
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<Context>[];
 }
 
 
+@Deserializer('OneWayAssignment')
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 
+	declare protected left: MemberExpression;
 	private rightEvents = this.right.events();
 	constructor(left: MemberExpression, right: ExpressionNode) {
-		super(':=', left, right);
+		super('.=', left, right);
 	}
 	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);
@@ -29,31 +33,34 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		this.set(stack, rv);
 		return rv;
 	}
-	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<ScopeContext>[] {
+	subscribe(stack: Stack, pipelineNames?: string[]): ScopeSubscription<Context>[] {
+		const subscriptions: ScopeSubscription<Context>[] = [];
 		if (pipelineNames?.length) {
-			const pipeScope = Scope.blockScope();
+			const syncPipeScope = Scope.blockScope();
 			const asyncPipeScope = AsyncPipeScope.blockScope();
+			let hasAsync = false, hasSync = false;
 			pipelineNames.forEach(pipelineName => {
 				const scope = stack.findScope(pipelineName);
 				const pipe = scope.get(pipelineName)!;
 				if (scope instanceof AsyncPipeProvider) {
+					hasAsync = true;
 					asyncPipeScope.set(pipelineName, pipe);
+					if (isOnDestroy(pipe.prototype)) {
+						subscriptions.push(createSubscriptionDestroyer(() => asyncPipeScope.unsubscribe(pipelineName)));
+					}
 				} else if (scope instanceof PipeProvider) {
-					pipeScope.set(pipelineName, pipe);
+					hasSync = true;
+					syncPipeScope.set(pipelineName, pipe);
 				}
 			});
-			stack.pushScope(pipeScope);
-			stack.pushScope(asyncPipeScope);
+			hasSync && stack.pushScope(syncPipeScope);
+			hasAsync && stack.pushScope(asyncPipeScope);
 		}
-		const map = findScopeByEventMap(this.rightEvents, stack);
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		map.forEach((scope, eventName) => {
-			if (scope instanceof ReactiveScope) {
-				const subscription = scope.subscribe(eventName, (newValue: any, oldValue?: any) => {
-					this.get(stack);
-				});
-				subscriptions.push(subscription);
-			}
+		const tuples = findReactiveScopeByEventMap(this.rightEvents, stack);
+		const callback: ValueChangedCallback = () => this.get(stack);
+		tuples.forEach(tuple => {
+			const subscription = tuple[1].subscribe(tuple[0], callback);
+			subscriptions.push(subscription);
 		});
 		return subscriptions;
 	}
@@ -65,15 +72,16 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  * 
  * 
  */
+@Deserializer('TwoWayAssignment')
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
 
-	protected left: MemberExpression;
-	protected right: MemberExpression | Identifier;
+	declare protected left: MemberExpression;
+	declare protected right: MemberExpression | Identifier;
 
 	private rightEvents = this.right.events();
 	private leftEvents = this.left.events();
 	constructor(left: MemberExpression, right: MemberExpression | Identifier) {
-		super(':=:', left, right);
+		super(':=', left, right);
 	}
 
 	set(stack: Stack, value: any) {
@@ -92,9 +100,7 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return rv;
 	}
 	private actionRTL(stack: Stack): ValueChangedCallback {
-		return (newValue: any, oldValue?: any) => {
-			this.getRTL(stack);
-		};
+		return () => this.getRTL(stack);
 	}
 
 	private setLTR(stack: Stack, value: any) {
@@ -106,33 +112,29 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 		return lv;
 	}
 	private actionLTR(stack: Stack): ValueChangedCallback {
-		return (newValue: any, oldValue?: any) => {
-			this.getLTR(stack);
-		};
+		return () => this.getLTR(stack);
 	}
 
-	private subscribeToEvents(stack: Stack, map: Map<string, Scope<ScopeContext>>, actionCallback: ValueChangedCallback) {
-		const subscriptions: ScopeSubscription<ScopeContext>[] = [];
-		map.forEach((scope, eventName) => {
-			if (scope instanceof ReactiveScope) {
-				const subscription = scope.subscribe(eventName, actionCallback);
-				subscriptions.push(subscription);
-			}
+	private subscribeToEvents(stack: Stack, tuples: [string, ReactiveScope<Context>][], actionCallback: ValueChangedCallback) {
+		const subscriptions: ScopeSubscription<Context>[] = [];
+		tuples.forEach(tuple => {
+			const subscription = tuple[1].subscribe(tuple[0], actionCallback);
+			subscriptions.push(subscription);
 		});
 		return subscriptions;
 	}
 
-	subscribe(stack: Stack): ScopeSubscription<ScopeContext>[] {
+	subscribe(stack: Stack): ScopeSubscription<Context>[] {
 
 		// right to left
-		const rightMap = findScopeByEventMap(this.rightEvents, stack);
+		const rightTuples = findReactiveScopeByEventMap(this.rightEvents, stack);
 		const rtlAction = this.actionRTL(stack);
-		const rtlSubscriptions = this.subscribeToEvents(stack, rightMap, rtlAction);
+		const rtlSubscriptions = this.subscribeToEvents(stack, rightTuples, rtlAction);
 
 		// left to right 
-		const leftMap = findScopeByEventMap(this.leftEvents, stack);
+		const leftTuples = findReactiveScopeByEventMap(this.leftEvents, stack);
 		const ltrAction = this.actionLTR(stack);
-		const ltrSubscriptions = this.subscribeToEvents(stack, leftMap, ltrAction);
+		const ltrSubscriptions = this.subscribeToEvents(stack, leftTuples, ltrAction);
 
 		return rtlSubscriptions.concat(ltrSubscriptions);
 	}

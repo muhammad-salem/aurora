@@ -376,7 +376,7 @@ export function getTagName(classRef: TagClassRef): string | undefined {
 	return undefined;
 }
 
-export const EmptyElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+export const EmptyElements = Object.freeze(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 export function isEmptyElement(tagName: string) {
 	return EmptyElements.includes(tagName);
 }

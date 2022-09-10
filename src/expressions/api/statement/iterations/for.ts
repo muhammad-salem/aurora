@@ -1,12 +1,12 @@
 import type {
-	NodeDeserializer, ExpressionNode, ExpressionEventPath,
-	VisitNodeType, VisitNodeListType
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
 import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
-import { BreakStatement, ContinueStatement } from '../control/terminate.js';
+import { TerminateReturnType } from '../control/terminate.js';
 import { VariableDeclarationNode } from '../declarations/declares.js';
 import { ArrayPattern } from '../../definition/array.js';
 import { ObjectPattern } from '../../definition/object.js';
@@ -27,7 +27,7 @@ export class ForNode extends AbstractExpressionNode {
 			node.update && deserializer(node.update)
 		);
 	}
-	static visit(node: ForNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ForNode, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		node.init && visitNode(node.init);
 		node.test && visitNode(node.test);
@@ -67,11 +67,12 @@ export class ForNode extends AbstractExpressionNode {
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);
@@ -119,7 +120,7 @@ export class ForOfNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
-	static visit(node: ForOfNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ForOfNode, visitNode: VisitNodeType): void {
 		visitNode(node.left);
 		visitNode(node.right);
 		visitNode(node.body);
@@ -150,15 +151,16 @@ export class ForOfNode extends AbstractExpressionNode {
 		const iterable = <any[]>this.right.get(stack);
 		for (const iterator of iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			else if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			else if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);
@@ -195,7 +197,7 @@ export class ForInNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
-	static visit(node: ForInNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ForInNode, visitNode: VisitNodeType): void {
 		visitNode(node.left);
 		visitNode(node.right);
 		visitNode(node.body);
@@ -227,15 +229,16 @@ export class ForInNode extends AbstractExpressionNode {
 		const iterable = <object>this.right.get(stack);
 		for (const iterator in iterable) {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			// useless case, as it at the end of for statement
 			// an array/block statement, should return last signal
-			if (ContinueStatement.ContinueSymbol === result) {
-				continue;
-			}
-			else if (BreakStatement.BreakSymbol === result) {
-				break;
+			if (result instanceof TerminateReturnType) {
+				if (result.type === 'continue') {
+					continue;
+				} else {
+					break;
+				}
 			}
 			else if (result instanceof ReturnValue) {
 				stack.clearTo(forBlock);
@@ -272,7 +275,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			deserializer(node.body)
 		);
 	}
-	static visit(node: ForAwaitOfNode, visitNode: VisitNodeType, visitNodeList: VisitNodeListType): void {
+	static visit(node: ForAwaitOfNode, visitNode: VisitNodeType): void {
 		visitNode(node.left);
 		visitNode(node.right);
 		visitNode(node.body);
@@ -304,7 +307,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		const iterable: AsyncIterable<any> = this.right.get(stack);
 		const forAwaitBody = (iterator: any): any => {
 			const forBlock = stack.pushBlockScope();
-			this.left.declareVariable(stack, 'block', iterator);
+			this.left.declareVariable(stack, iterator);
 			const result = this.body.get(stack);
 			stack.clearTo(forBlock);
 			return result;

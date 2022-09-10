@@ -166,7 +166,7 @@ The following tables describe each portion of the structural directive grammar:
     <td colspan="3"><code>keyExp = :key ":"? :expression ("as" :local)? ";"? </code></td>
   </tr>
   <tr>
-    <td colspan="3"><code>let = "let" :local "=" :export ";"?</code></td>
+    <td colspan="3"><code>let = "let" | "const" | "var" :local "=" :export ";"?</code></td>
   </tr>
   <tr>
     <td colspan="3"><code>as = :export "as" :local ";"?</code></td>
@@ -211,20 +211,17 @@ The following table provides shorthand examples:
   </tr>
   <tr>
     <td><code>*forOf="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
-    <td><code>&lt;ng-template *forOf [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
+    <td><code>&lt;template *forOf [item]="$implicit" [of]="[1,2,3]" [items]="of" [trackBy]="myTrack" [i]="index"&gt;</code>
     </td>
   </tr>
   <tr>
     <td><code>*if="exp"</code></td>
-    <td><code>&lt;ng-template [if]="exp"&gt;</code></td>
+    <td><code>&lt;template [if]="exp"&gt;</code></td>
   </tr>
   <tr>
     <td><code>*if="exp as value"</code></td>
-    <td><code>&lt;ng-template [if]="exp" [value]="if"&gt;</code></td>
+    <td><code>&lt;template [if]="exp" [value]="if"&gt;</code></td>
   </tr>
 </table>
-
--- in *for `trackBy` not supported yet.
-
 
 <hr>
