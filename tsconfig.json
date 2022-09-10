@@ -6,6 +6,7 @@
 		{ "path": "src/core" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
+		{ "path": "src/forms" },
 		{ "path": "src/aurora" },
 		{ "path": "src/cli" }
 	],
