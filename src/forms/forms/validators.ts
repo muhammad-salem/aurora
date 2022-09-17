@@ -13,7 +13,7 @@ export type ValidationErrors = {
 	 * other than those offered by the standard HTML validation constraints.
 	 * The message is shown to the user when reporting the problem.
 	 */
-	customValidityMessage?: string;
+	customValidityMessage?: string | null;
 
 	/**
 	 * any error name that
@@ -23,10 +23,12 @@ export type ValidationErrors = {
 
 export interface Validator {
 	validate(control: AbstractControl<any>): ValidationErrors | null;
+	updateCustomValidityMessage(message?: string | null): void;
 }
 
 export interface AsyncValidator {
 	validate(control: AbstractControl<any>): Promise<ValidationErrors | null>;
+	updateCustomValidityMessage(message?: string | null): void;
 }
 
 
@@ -42,67 +44,122 @@ function hasValidLength(value: any) {
 const EMAIL_REGEXP = /^(?=.{1,254}$)(?=.{1,64}@)[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 export class RequiredValidator implements Validator {
+	constructor(private message?: string | null) { }
 	validate(control: AbstractControl<any>): ValidationErrors | null {
-		return isEmptyInputValue(control.value) ? { required: true } : null;
+		return isEmptyInputValue(control.value)
+			? {
+				required: true,
+				customValidityMessage: this.message
+			}
+			: null;
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 export class RequiredTrueValidator implements Validator {
+	constructor(private message?: string | null) { }
 	validate(control: AbstractControl<boolean>): ValidationErrors | null {
-		return control.value === true ? null : { required: true };
+		return control.value === true
+			? null
+			: {
+				required: true,
+				customValidityMessage: this.message
+			};
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 export class MinimumValidator implements Validator {
-	constructor(private min: number) { }
+	constructor(private min: number, private message?: string | null) { }
 	validate(control: AbstractControl<string>): ValidationErrors | null {
 		if (isEmptyInputValue(control.value) || isEmptyInputValue(this.min)) {
 			return null;
 		}
 		const value = parseFloat(control.value);
-		return !isNaN(value) && value < this.min ? { min: { min: this.min, actual: control.value } } : null;
+		return !isNaN(value) && value < this.min
+			? {
+				min: { min: this.min, actual: control.value },
+				customValidityMessage: this.message,
+			}
+			: null;
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 export class MaximumValidator implements Validator {
-	constructor(private max: number) { }
+	constructor(private max: number, private message?: string | null) { }
 	validate(control: AbstractControl<string>): ValidationErrors | null {
 		if (isEmptyInputValue(control.value) || isEmptyInputValue(this.max)) {
 			return null;
 		}
 		const value = parseFloat(control.value);
-		return !isNaN(value) && value > this.max ? { max: { max: this.max, actual: control.value } } : null;
+		return !isNaN(value) && value > this.max
+			? {
+				max: { max: this.max, actual: control.value },
+				customValidityMessage: this.message,
+			}
+			: null;
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 
 export class EmailValidator implements Validator {
+	constructor(private message?: string | null) { }
 	validate(control: AbstractControl<string>): ValidationErrors | null {
 		if (isEmptyInputValue(control.value)) {
 			return null;
 		}
-		return EMAIL_REGEXP.test(control.value) ? null : { 'email': true };
+		return EMAIL_REGEXP.test(control.value)
+			? null
+			: {
+				email: true,
+				customValidityMessage: this.message
+			};
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 export class MinLengthValidator implements Validator {
-	constructor(private minLength: number) { }
+	constructor(private minLength: number, private message?: string | null) { }
 	validate(control: AbstractControl<string>): ValidationErrors | null {
 		if (isEmptyInputValue(control.value) || !hasValidLength(control.value)) {
 			return null;
 		}
 		return control.value.length < this.minLength
-			? { minlength: { requiredLength: this.minLength, actualLength: control.value.length } }
+			? {
+				minlength: { requiredLength: this.minLength, actualLength: control.value.length },
+				customValidityMessage: this.message,
+			}
 			: null;
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
 
 export class MaxLengthValidator implements Validator {
-	constructor(private maxLength: number) { }
+	constructor(private maxLength: number, private message?: string | null) { }
 	validate(control: AbstractControl<string>): ValidationErrors | null {
 		return hasValidLength(control.value) && (control.value?.length ?? 0) > this.maxLength
-			? { maxlength: { requiredLength: this.maxLength, actualLength: control.value?.length ?? 0 } }
+			? {
+				maxlength: { requiredLength: this.maxLength, actualLength: control.value?.length ?? 0 },
+				customValidityMessage: this.message,
+			}
 			: null;
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.maxLength = this.maxLength;
 	}
 }
 
@@ -110,7 +167,7 @@ export class PatternValidator implements Validator {
 
 	private regex: RegExp;
 	private regexStr: string;
-	constructor(pattern: RegExp | string) {
+	constructor(pattern: RegExp | string, private message?: string | null) {
 		if (typeof pattern === 'string') {
 			this.regexStr = '';
 			if (pattern.charAt(0) !== '^')
@@ -132,45 +189,68 @@ export class PatternValidator implements Validator {
 		const value = control.value;
 		return this.regex.test(value)
 			? null
-			: { pattern: { requiredPattern: this.regexStr, actualValue: value } };
+			: {
+				pattern: { requiredPattern: this.regexStr, actualValue: value },
+				customValidityMessage: this.message,
+			};
+	}
+	updateCustomValidityMessage(message?: string | null): void {
+		this.message = message;
 	}
 }
+
+/***
+ * pre created validators with out `customValidityMessage`
+ */
+const PRE_VALIDATORS = {
+	required: new RequiredValidator(),
+	requiredTrue: new RequiredTrueValidator(),
+	email: new EmailValidator(),
+};
 
 export class Validators {
 
-	static required() {
-		return new RequiredValidator();
+	static required(customValidityMessage?: string): RequiredValidator {
+		if (customValidityMessage) {
+			return new RequiredValidator(customValidityMessage);
+		}
+		return PRE_VALIDATORS.required;
 	}
 
-	static requiredTrue() {
-		return new RequiredValidator();
+	static requiredTrue(customValidityMessage?: string): RequiredTrueValidator {
+		if (customValidityMessage) {
+			return new RequiredTrueValidator(customValidityMessage);
+		}
+		return PRE_VALIDATORS.requiredTrue;
 	}
 
-	static min(min: number) {
-		return new MinimumValidator(min);
+	static min(min: number, customValidityMessage?: string): MinimumValidator {
+		return new MinimumValidator(min, customValidityMessage);
 	}
 
-	static max(max: number) {
-		return new MaximumValidator(max);
+	static max(max: number, customValidityMessage?: string): MaximumValidator {
+		return new MaximumValidator(max, customValidityMessage);
 	}
 
-	static email() {
-		return new EmailValidator();
+	static email(customValidityMessage?: string) {
+		if (customValidityMessage) {
+
+		}
+		return PRE_VALIDATORS.email;
 	}
 
-	static minLength(minLength: number) {
-		return new MinLengthValidator(minLength);
+	static minLength(minLength: number, customValidityMessage?: string): MinLengthValidator {
+		return new MinLengthValidator(minLength, customValidityMessage);
 	}
 
-	static maxLength(maxLength: number) {
-		return new MaxLengthValidator(maxLength);
+	static maxLength(maxLength: number, customValidityMessage?: string): MaxLengthValidator {
+		return new MaxLengthValidator(maxLength, customValidityMessage);
 	}
 
-	static pattern(pattern: string | RegExp) {
+	static pattern(pattern: string | RegExp, customValidityMessage?: string): PatternValidator | null {
 		if (!pattern) {
 			return null;
 		}
-		return new PatternValidator(pattern);
+		return new PatternValidator(pattern, customValidityMessage);
 	}
 }
-
