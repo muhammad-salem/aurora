@@ -31,6 +31,9 @@ npm i --save @ibyar/expressions
 yarn add @ibyar/expressions
 ```
 
+## Try the parser
+- Ibyar Expression parser: https://ibyar.github.io/astexplorer/
+
 
 ## Example
 ```ts

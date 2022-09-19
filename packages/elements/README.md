@@ -28,6 +28,9 @@ npm i --save @ibyar/elements
 yarn add @ibyar/elements
 ```
 
+## Try the parser
+- Ibyar Elements parser: https://ibyar.github.io/astexplorer/
+
 
 ## Example
 
