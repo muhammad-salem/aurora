@@ -389,3 +389,14 @@ export function Optional(): Function {
 		metadata[index] = true;
 	};
 }
+
+export function customElement<T extends HTMLElement>(opt: { selector: string } & ElementDefinitionOptions): Function {
+	return (target: TypeOf<T>) => {
+		customElements.define(
+			opt.selector as string,
+			target,
+			Object.assign({}, opt, { selector: undefined }),
+		);
+		return target;
+	};
+}
