@@ -73,7 +73,7 @@ export interface ComponentOptions<T = Function> {
 	 * what basic element should the new component inherit from,
 	 * the tag name to inherit from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
 	 */
-	extend?: string;
+	extend?: keyof HTMLElementTagNameMap;
 
 	/**
 	 * An encapsulation policy for the template and CSS styles. One of:
