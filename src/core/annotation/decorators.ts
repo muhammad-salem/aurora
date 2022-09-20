@@ -338,21 +338,31 @@ export function Directive(opt: DirectiveOptions): Function {
 	};
 }
 
-export function Component<T extends object>(opt: ComponentOptions<T>): Function {
+function generateComponent<T extends { new(...args: any[]): {} }>(target: TypeOf<T>, opt: ComponentOptions<T>) {
+	if (opt.templateUrl) {
+		fetchHtml(opt.templateUrl)
+			.then(htmlTemplate => {
+				if (htmlTemplate) {
+					opt.template = htmlTemplate;
+					Components.defineComponent(target, opt);
+				}
+			})
+			.catch(reason => {
+				console.error(`Error @URL: ${opt.templateUrl}, for model Class: ${target.name},\n Reason: ${reason}.`);
+			});
+	} else {
+		Components.defineComponent(target, opt);
+	}
+}
+
+export function Component<T extends { new(...args: any[]): {} }>(opt: ComponentOptions<T> | ComponentOptions<T>[]): Function {
 	return (target: TypeOf<T>) => {
-		if (opt.templateUrl) {
-			fetchHtml(opt.templateUrl)
-				.then(htmlTemplate => {
-					if (htmlTemplate) {
-						opt.template = htmlTemplate;
-						Components.defineComponent(target, opt);
-					}
-				})
-				.catch(reason => {
-					console.error(`Error @URL: ${opt.templateUrl}, for model Class: ${target.name},\n Reason: ${reason}.`);
-				});
-		} else {
-			Components.defineComponent(target, opt);
+		if (Array.isArray(opt)) {
+			for (const comp of opt) {
+				generateComponent(target, comp);
+			}
+		} else if (typeof opt === 'object') {
+			generateComponent(target, opt);
 		}
 		return target;
 	};
