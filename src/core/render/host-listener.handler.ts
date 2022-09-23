@@ -1,5 +1,5 @@
 import { ArrayExpression, JavaScriptParser, ReactiveScope, ScopeSubscription, Stack } from '@ibyar/expressions';
-import { ListenerRef } from '../component/component.js';
+import { ListenerRef } from '../component/reflect.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { RenderHandler } from './render-handler.js';
 

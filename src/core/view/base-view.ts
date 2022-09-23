@@ -4,7 +4,7 @@ import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
 } from '../component/lifecycle.js';
-import { ComponentRef, PropertyRef } from '../component/component.js';
+import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
@@ -12,6 +12,7 @@ import { getCurrentZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createZoneProxyHandler } from '../zone/proxy.js';
+import { PropertyRef } from '../component/reflect.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 

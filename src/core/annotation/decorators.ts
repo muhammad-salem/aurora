@@ -1,6 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { DomNode, DomRenderNode } from '@ibyar/elements';
+import { DomNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
+import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 import { ZoneType } from '../zone/bootstrap.js';
 import { ValueControl } from '../component/custom-element.js';
@@ -252,13 +253,13 @@ export interface ViewChildOpt {
 
 export function Input(name?: string): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addInput(target, propertyKey, name || propertyKey);
+		ReflectComponents.addInput(target, propertyKey, name || propertyKey);
 	};
 }
 
 export function FormValue(): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addInput(target, propertyKey, 'value');
+		ReflectComponents.addInput(target, propertyKey, 'value');
 	};
 }
 
@@ -271,7 +272,7 @@ export function Output(name?: string | OutputOptions, options?: OutputEventInit)
 	const eventType = typeof name === 'object' ? name.name : name;
 	const eventOpts = typeof name === 'object' ? name : options;
 	return (target: Object, propertyKey: string) => {
-		Components.addOutput(
+		ReflectComponents.addOutput(
 			target,
 			propertyKey, eventType || propertyKey,
 			{
@@ -284,26 +285,26 @@ export function Output(name?: string | OutputOptions, options?: OutputEventInit)
 
 export function View(): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.setComponentView(target, propertyKey);
+		ReflectComponents.setComponentView(target, propertyKey);
 	};
 }
 
 export function ViewChild(selector: string | typeof HTMLElement | CustomElementConstructor,
 	childOptions?: ChildOptions): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addViewChild(target, propertyKey, selector, childOptions);
+		ReflectComponents.addViewChild(target, propertyKey, selector, childOptions);
 	};
 }
 
 export function ViewChildren(selector: string | typeof HTMLElement | CustomElementConstructor): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addViewChildren(target, propertyKey, selector);
+		ReflectComponents.addViewChildren(target, propertyKey, selector);
 	};
 }
 
 export function HostListener(eventName: string, args?: string[]): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addHostListener(
+		ReflectComponents.addHostListener(
 			target,
 			propertyKey,
 			eventName,
@@ -314,7 +315,7 @@ export function HostListener(eventName: string, args?: string[]): Function {
 
 export function HostBinding(hostPropertyName: string): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addHostBinding(target, propertyKey, hostPropertyName);
+		ReflectComponents.addHostBinding(target, propertyKey, hostPropertyName);
 	};
 }
 

@@ -3,6 +3,7 @@ import 'reflect-metadata';
 export * from './annotation/decorators.js';
 
 export * from './component/component.js';
+export * from './component/reflect.js';
 export * from './component/custom-element.js';
 export * from './component/events.js';
 export * from './component/lifecycle.js';

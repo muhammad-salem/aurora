@@ -3,10 +3,10 @@
 import {
 	DomChild, DomElementNode, DomStructuralDirectiveNode,
 	DomFragmentNode, NodeParserHelper, LiveTextContent,
-	TextContent, ElementAttribute, directiveRegistry, DomAttributeDirectiveNode, LiveAttribute
+	TextContent, directiveRegistry, DomAttributeDirectiveNode, LiveAttribute
 } from '@ibyar/elements';
 
-import { ComponentRef, Components } from '@ibyar/core';
+import { ComponentRef, ReflectComponents } from '@ibyar/core';
 
 export const Fragment = 'fragment';
 
@@ -37,7 +37,7 @@ export class JsxParser extends NodeParserHelper {
 				node = new DomElementNode(props.is);
 			} else {
 				// search for component selector
-				const componentRef: ComponentRef<any> = Components.getComponentRef(tagName);
+				const componentRef: ComponentRef<any> = ReflectComponents.getComponentRef(tagName);
 				node = new DomElementNode(componentRef.selector);
 			}
 		}

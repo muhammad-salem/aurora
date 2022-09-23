@@ -10,47 +10,16 @@ import { AttributeDirective, StructuralDirective } from '../directive/directive.
 import { initCustomElementView } from '../view/view.js';
 import { buildExpressionNodes } from '../html/expression.js';
 import {
-	ComponentOptions, ChildOptions, PipeOptions,
-	ServiceOptions, DirectiveOptions, OutputEventInit
+	ComponentOptions, PipeOptions,
+	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
 import { ZoneType } from '../zone/bootstrap.js';
+import {
+	BootstrapMetadata, ChildRef, HostBindingRef,
+	InputPropertyRef, ListenerRef, OutputPropertyRef,
+	PropertyRef, ReflectComponents
+} from './reflect.js';
 
-export class PropertyRef {
-	constructor(public modelProperty: string, protected _viewName?: string) { }
-	get viewAttribute(): string {
-		return this._viewName || this.modelProperty;
-	}
-}
-
-export class InputPropertyRef extends PropertyRef {
-
-}
-
-export class OutputPropertyRef extends PropertyRef {
-	constructor(modelProperty: string, viewName?: string, public options?: OutputEventInit) {
-		super(modelProperty, viewName);
-	}
-}
-
-export class ChildRef {
-	constructor(
-		public modelName: string,
-		public selector: string | { new(): HTMLElement; prototype: HTMLElement } | CustomElementConstructor,
-		public childOptions?: ChildOptions
-	) { }
-}
-
-export class ListenerRef {
-	constructor(public eventName: string, public args: string[], public modelCallbackName: string) { }
-}
-
-export class HostBindingRef {
-	constructor(public viewProperty: string, public hostPropertyName: string) { }
-}
-
-export interface BootstrapMetadata {
-	[key: string]: any;
-}
 
 export interface ServiceRef<T> {
 	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
@@ -104,80 +73,10 @@ export interface ComponentRef<T> {
 	zone: ZoneType;
 }
 
-const AuroraBootstrap = Symbol.for('aurora:bootstrap');
-const AuroraMetadata = Symbol.for('aurora:metadata');
-
 export class Components {
 
-	static getOrCreateBootstrap<T extends {}>(target: Object): T {
-		let bootstrap: T = Reflect.getMetadata(AuroraBootstrap, target);
-		if (!bootstrap) {
-			bootstrap = {} as T;
-			Reflect.defineMetadata(AuroraBootstrap, bootstrap, target);
-		}
-		return bootstrap;
-	}
-
-	static getBootstrap<T extends {}>(target: Object): T {
-		return Reflect.getMetadata(AuroraBootstrap, target);
-	}
-
-	static getComponentRef<T>(target: object): ComponentRef<T> {
-		return Reflect.getMetadata(AuroraMetadata, target);
-	}
-
-	static setComponentRef<T>(target: object, componentRef: ComponentRef<T>): void {
-		Reflect.defineMetadata(AuroraMetadata, componentRef, target);
-	}
-
-	static addOptional(modelProperty: Object) {
-	}
-
-	static addInput(modelProperty: Object, modelName: string, viewName: string) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.inputs = bootstrap.inputs || [];
-		bootstrap.inputs.push(new InputPropertyRef(modelName, viewName));
-	}
-
-	static addOutput(modelProperty: Object, modelName: string, viewName: string, options: OutputEventInit) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.outputs = bootstrap.outputs || [];
-		bootstrap.outputs.push(new OutputPropertyRef(modelName, viewName, options));
-	}
-
-	static setComponentView(modelProperty: Object, modelName: string) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.view = modelName;
-	}
-
-	static addViewChild(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.viewChild = bootstrap.viewChild || [];
-		bootstrap.viewChild.push(new ChildRef(modelName, selector, childOptions));
-	}
-
-	static addViewChildren(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.ViewChildren = bootstrap.ViewChildren || [];
-		bootstrap.ViewChildren.push(new ChildRef(modelName, selector));
-	}
-
-	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostListeners = bootstrap.hostListeners || [];
-		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
-	}
-
-	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostBinding = bootstrap.hostBinding || [];
-		bootstrap.hostBinding.push(
-			new HostBindingRef(propertyKey, hostPropertyName)
-		);
-	}
-
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -190,7 +89,7 @@ export class Components {
 	}
 
 	static definePipe(modelClass: Function, opts: PipeOptions) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -199,7 +98,7 @@ export class Components {
 	}
 
 	static defineService(modelClass: Function, opts: ServiceOptions) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -209,7 +108,7 @@ export class Components {
 	}
 
 	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
-		const bootstrap: BootstrapMetadata = Components.getOrCreateBootstrap(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 
 		var componentRef: ComponentRef<T> = opts as unknown as ComponentRef<T>;
 		for (const key in bootstrap) {
@@ -260,8 +159,8 @@ export class Components {
 
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
-		Components.setComponentRef(componentRef.modelClass, componentRef);
-		Components.setComponentRef(componentRef.viewClass, componentRef);
+		ReflectComponents.setComponentRef(componentRef.modelClass, componentRef);
+		ReflectComponents.setComponentRef(componentRef.viewClass, componentRef);
 
 		ClassRegistryProvider.registerComponent(modelClass);
 		ClassRegistryProvider.registerView(bootstrap.viewClass);

@@ -1,8 +1,9 @@
 import type { ReactiveScope, ReactiveScopeControl, Context } from '@ibyar/expressions';
 import type { TypeOf } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
-import { PropertyRef, ComponentRef } from './component.js';
+import { ComponentRef } from './component.js';
 import { AuroraZone } from '../zone/zone.js';
+import { PropertyRef } from './reflect.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;

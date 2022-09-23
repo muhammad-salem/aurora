@@ -1,8 +1,8 @@
 
-import {
-	Components, ComponentRef, DirectiveRef,
-	PipeRef, PropertyRef, ServiceRef
+import type {
+	ComponentRef, DirectiveRef, PipeRef, ServiceRef
 } from '../component/component.js';
+import { PropertyRef, ReflectComponents } from '../component/reflect.js';
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 
 export class ClassRegistry {
@@ -30,7 +30,7 @@ export class ClassRegistry {
 
 	hasComponent<T>(selector: string): boolean {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
+			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return true;
 			}
@@ -39,7 +39,7 @@ export class ClassRegistry {
 	}
 	getComponentRef<T>(selector: string): ComponentRef<T> | undefined {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
+			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return componentRef;
 			}
@@ -49,7 +49,7 @@ export class ClassRegistry {
 
 	getComponent<T>(selector: string) {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = Components.getComponentRef(modelClass);
+			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
 			if (componentRef.selector === selector) {
 				return modelClass;
 			}
@@ -90,7 +90,7 @@ export class ClassRegistry {
 
 	hasDirective<T>(selector: string): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return true;
 			}
@@ -100,7 +100,7 @@ export class ClassRegistry {
 
 	directiveHasInput<T>(input: string, directiveType: 'attributes' | 'structural' = 'attributes'): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
 			if ((directiveType === 'attributes' && !directiveRef.selector.startsWith('*'))
 				|| (directiveType === 'structural' && directiveRef.selector.startsWith('*'))) {
 				if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
@@ -113,7 +113,7 @@ export class ClassRegistry {
 
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = Components.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
 			if (directiveRef.selector === selector) {
 				return directiveRef;
 			}
@@ -124,7 +124,7 @@ export class ClassRegistry {
 
 	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
 		for (const pipeClass of this.pipeSet) {
-			const pipeRef: PipeRef<T> = Components.getBootstrap(pipeClass.prototype);
+			const pipeRef: PipeRef<T> = ReflectComponents.getBootstrap(pipeClass.prototype);
 			if (pipeRef.name === pipeName) {
 				return pipeRef;
 			}
@@ -134,7 +134,7 @@ export class ClassRegistry {
 
 	getService<T>(serviceName: string): ServiceRef<T> | undefined {
 		for (const serviceClass of this.serviceSet) {
-			const serviceRef: ServiceRef<T> = Components.getBootstrap(serviceClass.prototype);
+			const serviceRef: ServiceRef<T> = ReflectComponents.getBootstrap(serviceClass.prototype);
 			if (serviceRef.name === serviceName) {
 				return serviceRef;
 			}
