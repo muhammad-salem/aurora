@@ -282,4 +282,13 @@ export class Components {
 		);
 
 	}
+
+	static defineView<T extends HTMLElement>(viewClass: TypeOf<T>, opt: { selector: string } & ElementDefinitionOptions) {
+		ClassRegistryProvider.registerView(viewClass);
+		customElements.define(
+			opt.selector as string,
+			viewClass,
+			Object.assign({}, opt, { selector: undefined }),
+		);
+	}
 }
