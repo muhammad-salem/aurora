@@ -7,6 +7,7 @@ import { ToCamelCase } from '../utils/utils.js';
 import { Constructable } from '../providers/injector.js';
 import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
+import { isComponentModelClass } from './utils.js';
 
 /**
  * 
@@ -92,10 +93,6 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 
 export type ComponentModelClass = Constructable & { [key: string]: string } & { component: { [key: string]: string } };
 
-export function isComponentModelClass(target: Constructable): target is ComponentModelClass {
-	return Reflect.has(target, 'component');
-}
-
 export function addViewToModelClass<T extends object>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
 
@@ -113,20 +110,4 @@ export function buildViewClassNameFromSelector(selector: string) {
 		.split('-')
 		.map(name => name.replace(/^\w/, char => char.toUpperCase()))
 		.join('');
-}
-
-export function getComponentView<T extends object>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
-	if (isComponentModelClass(modelClass)) {
-		let viewClassName: string;
-		if (selector) {
-			viewClassName = modelClass.component[selector];
-			if (!viewClassName) {
-				throw new Error(`${modelClass.name} doesn't have ${selector} as view`);
-			}
-		} else {
-			viewClassName = Object.keys(modelClass.component)[0];
-		}
-		return Reflect.get(modelClass, viewClassName);
-	}
-	return;
 }

@@ -2,7 +2,7 @@ import type { TypeOf } from '../utils/typeof.js';
 import { ReflectComponents } from '../component/reflect.js';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
-import { getComponentView } from '../view/view.js';
+import { getComponentView } from '../view/utils.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { ReactiveScopeControl } from '@ibyar/expressions';
 
