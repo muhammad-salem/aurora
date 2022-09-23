@@ -45,8 +45,6 @@ import {
 	FunctionKind,
 	FunctionSyntaxKind,
 	isAccessor,
-	isStrict,
-	LanguageMode,
 	ParseFunctionFlag,
 	PropertyKind,
 	PropertyKindInfo,
@@ -54,6 +52,7 @@ import {
 	VariableDeclarationContext
 } from './enums.js';
 
+import { isStrict, LanguageMode, } from './language.js';
 
 export type ParserOptions = { mode?: LanguageMode };
 

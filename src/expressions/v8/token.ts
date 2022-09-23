@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { isSloppy, LanguageMode } from './enums.js';
+import { isSloppy, LanguageMode, } from './language.js';
 
 export class Token {
 
