@@ -4,14 +4,25 @@
  */
 export class Attribute<N, V> {
 	constructor(public name: N, public value: V) { }
+	toJSON() {
+		return Object.assign({}, this, { type: 'Attribute' });
+	}
 }
 
-export class ElementAttribute<N, V> extends Attribute<N, V> { }
+export class ElementAttribute<N, V> extends Attribute<N, V> {
+	toJSON() {
+		return Object.assign({}, this, { type: 'ElementAttribute' });
+	}
+}
 
 /**
  * an attribute with its source value for binding
  */
-export class LiveAttribute extends Attribute<string, string> { }
+export class LiveAttribute extends Attribute<string, string> {
+	toJSON() {
+		return Object.assign({}, this, { type: 'LiveAttribute' });
+	}
+}
 
 /**
  * 
@@ -31,12 +42,19 @@ export class TextContent extends Attribute<'textContent', string> {
 	constructor(text: string) {
 		super(TextContent.propName, text);
 	}
+	toJSON() {
+		return Object.assign({}, this, { type: 'TextContent' });
+	}
 }
 
 /**
  * a text that its content is binding to variable from the component model.
  */
-export class LiveTextContent extends TextContent { }
+export class LiveTextContent extends TextContent {
+	toJSON() {
+		return Object.assign({}, this, { type: 'LiveTextContent' });
+	}
+}
 
 export function isLiveTextContent(text: object): text is LiveTextContent {
 	return text instanceof LiveTextContent;
@@ -47,6 +65,9 @@ export function isLiveTextContent(text: object): text is LiveTextContent {
  */
 export class CommentNode {
 	constructor(public comment: string) { }
+	toJSON() {
+		return Object.assign({}, this, { type: 'CommentNode' });
+	}
 }
 
 
@@ -133,6 +154,10 @@ export class BaseNode {
 		}
 	}
 
+	toJSON() {
+		return Object.assign({}, this, { type: 'BaseNode' });
+	}
+
 }
 
 export class DomAttributeDirectiveNode extends BaseNode {
@@ -151,6 +176,10 @@ export class DomAttributeDirectiveNode extends BaseNode {
 	constructor(name: string) {
 		super();
 		this.name = name;
+	}
+
+	toJSON() {
+		return Object.assign({}, this, { type: 'DomAttributeDirectiveNode' });
 	}
 }
 
@@ -173,6 +202,9 @@ export class DomParentNode extends BaseNode {
 		parseTextChild(text).forEach(childText => children.push(childText));
 	}
 
+	toJSON() {
+		return Object.assign({}, this, { type: 'DomParentNode' });
+	}
 }
 
 /**
@@ -184,6 +216,9 @@ export class DomFragmentNode extends DomParentNode {
 		if (children) {
 			this.children = children;
 		}
+	}
+	toJSON() {
+		return Object.assign({}, this, { type: 'DomFragmentNode' });
 	}
 }
 export class DomElementNode extends DomParentNode {
@@ -219,6 +254,9 @@ export class DomElementNode extends DomParentNode {
 		this.templateRefName = new Attribute(name, value);
 	}
 
+	toJSON() {
+		return Object.assign({}, this, { type: 'DomElementNode' });
+	}
 }
 
 /**
@@ -246,6 +284,10 @@ export class DomStructuralDirectiveNode extends BaseNode {
 		this.name = name;
 		this.node = node;
 		this.value = value;
+	}
+
+	toJSON() {
+		return Object.assign({}, this, { type: 'DomStructuralDirectiveNode' });
 	}
 }
 

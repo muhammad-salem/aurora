@@ -3,7 +3,8 @@ import {
 	DomElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DomFragmentNode,
 	DomStructuralDirectiveNode, DomNode, DomChild,
-	ElementAttribute, Attribute, DomAttributeDirectiveNode, BaseNode
+	ElementAttribute, Attribute, DomAttributeDirectiveNode,
+	BaseNode, LiveAttribute
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
@@ -570,6 +571,78 @@ export class HTMLParser {
 			}
 		});
 		return html;
+	}
+
+	private deserializeAttributes(attribute: Attribute<any, any>) {
+		const type = (attribute as Attribute<any, any> & { type: string }).type;
+		switch (type) {
+			case 'Attribute':
+				return new Attribute(attribute.name, attribute.value);
+			case 'ElementAttribute':
+				return new ElementAttribute(attribute.name, attribute.value);
+			case 'LiveAttribute':
+				return new LiveAttribute(attribute.name, attribute.value);
+			case 'TextContent':
+				return new TextContent(attribute.value);
+			case 'LiveTextContent':
+				return new LiveTextContent(attribute.value);
+			default:
+				return attribute;
+		}
+	}
+
+	deserialize(node: DomNode): DomNode {
+		const type = (node as DomNode & { type: string }).type;
+		switch (type) {
+			case 'TextContent':
+				return new TextContent((node as TextContent).value);
+			case 'LiveTextContent':
+				return new LiveTextContent((node as LiveTextContent).value);
+			case 'CommentNode':
+				return new CommentNode((node as CommentNode).comment);
+			case 'DomFragmentNode':
+			case 'DomElementNode':
+			case 'DomAttributeDirectiveNode':
+				{
+					let result: BaseNode;
+					if (type === 'DomElementNode') {
+						const domElementNode = node as DomElementNode;
+						result = new DomElementNode(domElementNode.tagName, domElementNode.is);
+						if (domElementNode.templateRefName) {
+							(result as DomElementNode).templateRefName = this.deserializeAttributes(domElementNode.templateRefName);
+						}
+						if (domElementNode.children) {
+							(result as DomElementNode).children = domElementNode.children?.map(child => this.deserialize(child)) as DomChild[];
+						}
+					} else if (type === 'DomAttributeDirectiveNode') {
+						const directive = node as DomStructuralDirectiveNode;
+						result = new DomStructuralDirectiveNode(directive.name, directive.node && this.deserialize(directive.node), directive.value);
+					} else if (type === 'DomFragmentNode') {
+						result = new DomFragmentNode((node as DomFragmentNode).children?.map(child => this.deserialize(child)) as DomChild[]);
+					} else {
+						return node;
+					}
+					const elNode = node as BaseNode;
+					if (elNode.attributes) {
+						result.attributes = elNode.attributes.map(attr => this.deserializeAttributes(attr));
+					}
+					if (elNode.inputs) {
+						result.inputs = elNode.inputs.map(attr => this.deserializeAttributes(attr));
+					}
+					if (elNode.outputs) {
+						result.outputs = elNode.outputs.map(attr => this.deserializeAttributes(attr));
+					}
+					if (elNode.templateAttrs) {
+						result.templateAttrs = elNode.templateAttrs.map(attr => this.deserializeAttributes(attr));
+					}
+					if (elNode.attributeDirectives) {
+						result.attributeDirectives = elNode.attributeDirectives.map(attr => this.deserialize(attr as any) as DomAttributeDirectiveNode);
+					}
+					return result as DomNode;
+				}
+			default:
+				return node;
+		}
 	}
 
 }
