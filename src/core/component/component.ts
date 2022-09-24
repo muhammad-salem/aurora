@@ -19,6 +19,7 @@ import {
 	InputPropertyRef, ListenerRef, OutputPropertyRef,
 	PropertyRef, ReflectComponents
 } from './reflect.js';
+import { deserializeExpressionNodes } from '../html/deserialize.js';
 
 
 export interface ServiceRef<T> {
@@ -50,6 +51,7 @@ export interface DirectiveRef<T> {
 export interface ComponentRef<T> {
 	selector: string;
 	template: DomNode | DomRenderNode<T>;
+	compiledTemplate?: DomNode;
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
@@ -126,6 +128,11 @@ export class Components {
 			buildExpressionNodes(componentRef.template);
 		} else if (typeof componentRef.template === 'object') {
 			buildExpressionNodes(componentRef.template);
+		} else if (typeof componentRef.compiledTemplate === 'object') {
+			const serializedTemplate = htmlParser.deserialize(componentRef.compiledTemplate);
+			deserializeExpressionNodes(serializedTemplate);
+			componentRef.template = serializedTemplate;
+			componentRef.compiledTemplate = undefined;
 		}
 
 		if (!componentRef.template && /template/g.test(componentRef.encapsulation)) {

@@ -86,7 +86,7 @@ function parseLiveAttribute(attr: LiveAttribute) {
 
 }
 
-function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
+export function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
 	const pipelineNames: string[] = [];
 	expressionVisitor.visit(modelExpression, (expression, type, control) => {
 		if (type === 'PipelineExpression') {
