@@ -1,12 +1,12 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import before from '../transformer/before.js';
+import preCompileComponentOptions from '../transformer/component.js';
 
 export function compileFiles(files: readonly string[], options: ts.CompilerOptions) {
 	const host = ts.createCompilerHost(options);
 	const program = ts.createProgram(files, options, host);
 	program.emit(undefined, undefined, undefined, undefined, {
 		before: [
-			before(program),
+			preCompileComponentOptions(program),
 		],
 		after: [
 			// before(program),

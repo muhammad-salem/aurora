@@ -1,6 +1,11 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
 
-export default function before(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
+/**
+ * search for `@Component({})` and precompile the source code
+ * @param program a ts program 
+ * @returns a transformer factory of source file
+ */
+export default function preCompileComponentOptions(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
 	const typeChecker = program.getTypeChecker();
 	return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
 		const compilerOptions = context.getCompilerOptions();
