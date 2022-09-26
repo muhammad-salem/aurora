@@ -30,6 +30,7 @@
 	"scripts": {
 		"build": "npx tsc --build --verbose",
 		"ibyar": "npx ibyar --build --verbose",
+		"ibyar:watch": "npx ibyar --build --watch --verbose",
 		"esmpack:watch": "npx esmpack -w"
 	}
 }
