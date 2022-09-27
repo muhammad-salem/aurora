@@ -1,4 +1,4 @@
-import { isEmptyElement } from '../attributes/tags.js';
+import { isEmptyElement } from '../attributes/common.js';
 import {
 	DomElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DomFragmentNode,

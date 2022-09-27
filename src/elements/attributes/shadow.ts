@@ -1,4 +1,4 @@
-import { isValidCustomElementName } from './tags.js';
+import { isValidCustomElementName } from './common.js';
 
 export const ShadowElements = [
 	'article',

@@ -2,7 +2,7 @@
  * https://html.spec.whatwg.org/multipage/forms.html
  */
 
-import { isValidCustomElementName } from './tags.js';
+import { isValidCustomElementName } from './common.js';
 
 
 /**
