@@ -15,7 +15,8 @@
 	"type": "module",
 	"exports": {
 		".": "./index.js",
-		"./node": "./node.js"
+		"./node": "./node.js",
+		"./node.js": "./node.js"
 	},
 	"files": [
 		"*"

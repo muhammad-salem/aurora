@@ -14,7 +14,9 @@
 	"types": "./index.d.ts",
 	"type": "module",
 	"exports": {
-		".": "./index.js"
+		".": "./index.js",
+		"./node": "./node.js",
+		"./node.js": "./node.js"
 	},
 	"files": [
 		"*"
