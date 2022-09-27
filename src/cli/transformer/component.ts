@@ -1,6 +1,7 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-// import { buildExpressionNodes } from '@ibyar/core';
-// import { htmlParser } from '@ibyar/elements';
+import { buildExpressionNodes } from '@ibyar/core/node';
+import { htmlParser } from '@ibyar/elements/node';
+
 /**
  * search for `@Component({})` and precompile the source code
  * @param program a ts program 
@@ -63,8 +64,9 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 											? `<style>${styles}</style>${template.initializer.getText()}`
 											: template.initializer.getText();
 										console.log('html', template.name.getText(), html);
-										// const domeNode = htmlParser.toDomRootNode(html);
-										// buildExpressionNodes(domeNode);
+										const domeNode = htmlParser.toDomRootNode(html);
+										buildExpressionNodes(domeNode);
+										console.log('node', domeNode);
 									}
 
 									// options.properties.filter((prop: ts.PropertyAssignment) => {
