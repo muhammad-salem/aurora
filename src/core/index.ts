@@ -16,6 +16,7 @@ export * from './linker/view-container-ref.js';
 export * from './linker/change-detector-ref.js';
 
 export * from './directive/directive.js';
+export * from './html/expression.js';
 
 export * from './pipe/pipe.js';
 
