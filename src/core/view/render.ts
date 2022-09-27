@@ -2,11 +2,12 @@ import {
 	ReactiveScope, Context, ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import {
-	CommentNode, DomStructuralDirectiveNode, DomStructuralDirectiveNodeUpgrade,
+	CommentNode, DomStructuralDirectiveNode,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
 	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
 } from '@ibyar/elements';
+import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';

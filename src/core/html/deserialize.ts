@@ -2,8 +2,10 @@ import {
 	BaseNode, DomStructuralDirectiveNode, DomElementNode, DomNode,
 	DomFragmentNode, DomParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent,
-	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
+	DomAttributeDirectiveNode
 } from '@ibyar/elements';
+
+import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
 import { deserialize } from '@ibyar/expressions';
 import { getPipelineNames } from './expression.js';
 

@@ -4,7 +4,7 @@ import {
 	DomFragmentNode, DomParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent,
 	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
-} from '@ibyar/elements';
+} from '@ibyar/elements/node.js';
 import {
 	ExpressionNode, expressionVisitor, Identifier,
 	JavaScriptParser, MemberExpression, PipelineExpression

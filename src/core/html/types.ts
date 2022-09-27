@@ -2,7 +2,7 @@ import type { DomAttributeDirectiveNode, DomStructuralDirectiveNode } from '@iby
 import type { ExpressionNode } from '@ibyar/expressions';
 import type { BindingAssignment, OneWayAssignmentExpression } from '../binding/binding.expressions.js';
 
-declare module '@ibyar/elements' {
+declare module '@ibyar/elements/node.js' {
 	interface ElementAttribute<N, V> {
 		expression: ExpressionNode;
 	}
