@@ -72,10 +72,8 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 									const html = styles
 										? `<style>${styles}</style>${template.initializer.getText()}`
 										: template.initializer.getText();
-									console.log('html', template.name.getText(), html);
 									const domNode = htmlParser.toDomRootNode(html);
 									buildExpressionNodes(domNode);
-									console.log('node', domNode);
 									const serialized = JSON.stringify(domNode);
 									const json = JSON.parse(serialized);
 									const name = ts.factory.createIdentifier('compiledTemplate');
