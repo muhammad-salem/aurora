@@ -77,7 +77,7 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 									const serialized = JSON.stringify(domNode);
 									const json = JSON.parse(serialized);
 									const name = ts.factory.createIdentifier('compiledTemplate');
-									const initializer = ts.factory.createObjectLiteralExpression(convertToProperties(json), true);
+									const initializer = ts.factory.createObjectLiteralExpression(convertToProperties(json));
 									const update = ts.factory.updatePropertyAssignment(template, name, initializer);
 									decoratorArguments = option.properties.map(prop => {
 										if (template === prop) {
@@ -172,7 +172,7 @@ export function createInitializer(value: any): ts.Expression {
 				return ts.factory.createNull();
 			}
 			const properties = convertToProperties(value);
-			return ts.factory.createObjectLiteralExpression(properties, true);
+			return ts.factory.createObjectLiteralExpression(properties);
 		};
 	}
 	return ts.factory.createNull();
