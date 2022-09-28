@@ -573,78 +573,79 @@ export class HTMLParser {
 		return html;
 	}
 
-	private deserializeAttributes(attribute: Attribute<any, any>) {
+	deserializeAttributes(attribute: Attribute<any, any>) {
 		const type = (attribute as Attribute<any, any> & { type: string }).type;
 		switch (type) {
 			case 'Attribute':
-				return new Attribute(attribute.name, attribute.value);
+				inherit(attribute, Attribute);
+				break;
 			case 'ElementAttribute':
-				return new ElementAttribute(attribute.name, attribute.value);
+				inherit(attribute, ElementAttribute);
+				break;
 			case 'LiveAttribute':
-				return new LiveAttribute(attribute.name, attribute.value);
+				inherit(attribute, LiveAttribute);
+				break;
 			case 'TextContent':
-				return new TextContent(attribute.value);
+				inherit(attribute, TextContent);
+				break;
 			case 'LiveTextContent':
-				return new LiveTextContent(attribute.value);
+				inherit(attribute, LiveTextContent);
+				break;
 			default:
-				return attribute;
+				break;
 		}
 	}
 
-	deserialize(node: DomNode): DomNode {
+	deserializeBaseNode(node: BaseNode) {
+		node.attributes?.forEach(attr => this.deserializeAttributes(attr));
+		node.inputs?.forEach(attr => this.deserializeAttributes(attr));
+		node.outputs?.forEach(attr => this.deserializeAttributes(attr));
+		node.templateAttrs?.forEach(attr => this.deserializeAttributes(attr));
+		node.attributeDirectives?.forEach(attr => this.deserializeNode(attr as any));
+	}
+
+	deserializeNode(node: DomNode) {
 		const type = (node as DomNode & { type: string }).type;
 		switch (type) {
 			case 'TextContent':
-				return new TextContent((node as TextContent).value);
+				inherit(node, TextContent);
+				break;
 			case 'LiveTextContent':
-				return new LiveTextContent((node as LiveTextContent).value);
+				inherit(node, LiveTextContent);
+				break;
 			case 'CommentNode':
-				return new CommentNode((node as CommentNode).comment);
+				inherit(node, CommentNode);
+				break;
 			case 'DomFragmentNode':
+				inherit(node, DomFragmentNode);
+				(node as DomFragmentNode).children?.forEach(child => this.deserializeNode(child));
+				break;
 			case 'DomElementNode':
-			case 'DomAttributeDirectiveNode':
-				{
-					let result: BaseNode;
-					if (type === 'DomElementNode') {
-						const domElementNode = node as DomElementNode;
-						result = new DomElementNode(domElementNode.tagName, domElementNode.is);
-						if (domElementNode.templateRefName) {
-							(result as DomElementNode).templateRefName = this.deserializeAttributes(domElementNode.templateRefName);
-						}
-						if (domElementNode.children) {
-							(result as DomElementNode).children = domElementNode.children?.map(child => this.deserialize(child)) as DomChild[];
-						}
-					} else if (type === 'DomAttributeDirectiveNode') {
-						const directive = node as DomStructuralDirectiveNode;
-						result = new DomStructuralDirectiveNode(directive.name, directive.node && this.deserialize(directive.node), directive.value);
-					} else if (type === 'DomFragmentNode') {
-						result = new DomFragmentNode((node as DomFragmentNode).children?.map(child => this.deserialize(child)) as DomChild[]);
-					} else {
-						return node;
-					}
-					const elNode = node as BaseNode;
-					if (elNode.attributes) {
-						result.attributes = elNode.attributes.map(attr => this.deserializeAttributes(attr));
-					}
-					if (elNode.inputs) {
-						result.inputs = elNode.inputs.map(attr => this.deserializeAttributes(attr));
-					}
-					if (elNode.outputs) {
-						result.outputs = elNode.outputs.map(attr => this.deserializeAttributes(attr));
-					}
-					if (elNode.templateAttrs) {
-						result.templateAttrs = elNode.templateAttrs.map(attr => this.deserializeAttributes(attr));
-					}
-					if (elNode.attributeDirectives) {
-						result.attributeDirectives = elNode.attributeDirectives.map(attr => this.deserialize(attr as any) as DomAttributeDirectiveNode);
-					}
-					return result as DomNode;
+				inherit(node, DomElementNode);
+				if ((node as DomElementNode).templateRefName) {
+					this.deserializeAttributes((node as DomElementNode).templateRefName!);
 				}
+				this.deserializeBaseNode(node as DomElementNode);
+				(node as DomElementNode).children?.forEach(child => this.deserializeNode(child));
+				break;
+			case 'DomStructuralDirectiveNode':
+				inherit(node, DomStructuralDirectiveNode);
+				this.deserializeNode((node as DomStructuralDirectiveNode).node);
+				break;
+			case 'DomAttributeDirectiveNode':
+				inherit(node, DomAttributeDirectiveNode);
+				this.deserializeBaseNode(node as DomAttributeDirectiveNode);
+				break;
 			default:
-				return node;
+				break;
 		}
+		return node;
 	}
 
+}
+
+function inherit(object: any, type: { new(...args: any[]): {} }) {
+	object.__proto__ = type.prototype;
 }
 
 export const htmlParser = new HTMLParser();
