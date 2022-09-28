@@ -129,9 +129,9 @@ export class Components {
 		} else if (typeof componentRef.template === 'object') {
 			buildExpressionNodes(componentRef.template);
 		} else if (typeof componentRef.compiledTemplate === 'object') {
-			const serializedTemplate = htmlParser.deserialize(componentRef.compiledTemplate);
-			deserializeExpressionNodes(serializedTemplate);
-			componentRef.template = serializedTemplate;
+			htmlParser.deserializeNode(componentRef.compiledTemplate);
+			deserializeExpressionNodes(componentRef.compiledTemplate);
+			componentRef.template = componentRef.compiledTemplate;
 			componentRef.compiledTemplate = undefined;
 		}
 
