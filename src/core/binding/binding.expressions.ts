@@ -2,7 +2,8 @@ import {
 	ExpressionNode, InfixExpressionNode, ScopeSubscription,
 	Stack, findReactiveScopeByEventMap, ReactiveScope,
 	Context, ValueChangedCallback, Scope,
-	MemberExpression, Identifier, Deserializer
+	MemberExpression, Identifier, Deserializer,
+	VisitNodeType, NodeDeserializer
 } from '@ibyar/expressions';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { isOnDestroy } from '../component/lifecycle.js';
@@ -19,6 +20,16 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 
 @Deserializer('OneWayAssignment')
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
+	static fromJSON(node: OneWayAssignmentExpression, deserializer: NodeDeserializer): OneWayAssignmentExpression {
+		return new OneWayAssignmentExpression(
+			deserializer(node.left) as MemberExpression,
+			deserializer(node.right)
+		);
+	}
+	static visit(node: OneWayAssignmentExpression, visitNode: VisitNodeType): void {
+		visitNode(node.left);
+		visitNode(node.right);
+	}
 
 	declare protected left: MemberExpression;
 	private rightEvents = this.right.events();
@@ -74,6 +85,16 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
  */
 @Deserializer('TwoWayAssignment')
 export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperator> implements BindingAssignment {
+	static fromJSON(node: TwoWayAssignmentExpression, deserializer: NodeDeserializer): TwoWayAssignmentExpression {
+		return new TwoWayAssignmentExpression(
+			deserializer(node.left) as MemberExpression,
+			deserializer(node.right) as MemberExpression | Identifier
+		);
+	}
+	static visit(node: TwoWayAssignmentExpression, visitNode: VisitNodeType): void {
+		visitNode(node.left);
+		visitNode(node.right);
+	}
 
 	declare protected left: MemberExpression;
 	declare protected right: MemberExpression | Identifier;
