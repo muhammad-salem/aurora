@@ -40,47 +40,107 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 			if (!visitSourceFile) {
 				return sourceFile;
 			}
-
 			return ts.visitNode(sourceFile, (node: ts.Node) => {
-
 				return ts.visitEachChild(node, (childNode) => {
+					let decoratorArguments: ts.ObjectLiteralElementLike[] | undefined;
 					if (ts.isClassDeclaration(childNode)) {
 						const decorators = ts.getDecorators(childNode);
-						if (!decorators) {
+						if (!decorators || decorators.length === 0) {
 							return childNode;
 						}
-						for (const decorator of decorators) {
-							const decoratorCall = decorator.expression;
-							if (ts.isCallExpression(decoratorCall) && decoratorCall.expression.getText() === componentPropertyName) {
-								const options = decoratorCall.arguments[0];
-								if (ts.isArrayLiteralExpression(options)) {
-
-								} else if (ts.isObjectLiteralExpression(options)) {
-
-									const styles = options.properties.find(prop => prop.name?.getText() === 'styles')?.getText();
-									const template = options.properties.find(prop => prop.name?.getText() === 'template');
-									if (template && ts.isPropertyAssignment(template)) {
-										const html = styles
-											? `<style>${styles}</style>${template.initializer.getText()}`
-											: template.initializer.getText();
-										console.log('html', template.name.getText(), html);
-										const domeNode = htmlParser.toDomRootNode(html);
-										buildExpressionNodes(domeNode);
-										console.log('node', domeNode);
-									}
-
-									// options.properties.filter((prop: ts.PropertyAssignment) => {
-									// 	switch (prop.name.getText()) {
-									// 		case 'template':
-									// 		case 'templateUrl':
-									// 		case 'styles':
-									// 			return true;
-									// 		default: return false;
-									// 	}
-									// })
-								}
-							}
+						const isComponentDecorator = (decorator: ts.Decorator): boolean => {
+							return ts.isCallExpression(decorator.expression)
+								&& decorator.expression.expression.getText() === componentPropertyName;
+						};
+						const hasComponentDecorator = decorators.some(isComponentDecorator);
+						if (!hasComponentDecorator) {
+							return childNode;
 						}
+
+						const modifiers = childNode.modifiers?.map(modifier => {
+							if (!ts.isDecorator(modifier)) {
+								return modifier;
+							}
+							if (!isComponentDecorator(modifier)) {
+								return modifier;
+							}
+
+							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
+								const styles = option.properties.find(prop => prop.name?.getText() === 'styles')?.getText();
+								const template = option.properties.find(prop => prop.name?.getText() === 'template');
+								if (template && ts.isPropertyAssignment(template)) {
+									const html = styles
+										? `<style>${styles}</style>${template.initializer.getText()}`
+										: template.initializer.getText();
+									console.log('html', template.name.getText(), html);
+									const domNode = htmlParser.toDomRootNode(html);
+									buildExpressionNodes(domNode);
+									console.log('node', domNode);
+									const serialized = JSON.stringify(domNode);
+									const json = JSON.parse(serialized);
+									const name = ts.factory.createIdentifier('compiledTemplate');
+									const initializer = ts.factory.createObjectLiteralExpression(convertToProperties(json), true);
+									const update = ts.factory.updatePropertyAssignment(template, name, initializer);
+									decoratorArguments = option.properties.map(prop => {
+										if (template === prop) {
+											return update;
+										}
+										return prop;
+									}).filter(prop => {
+										if (prop.name?.getText(sourceFile) === 'styles') {
+											return false;
+										}
+										return true;
+									});
+									return ts.factory.updateObjectLiteralExpression(option, decoratorArguments);
+								}
+								return option;
+
+								// options.properties.filter((prop: ts.PropertyAssignment) => {
+								// 	switch (prop.name.getText()) {
+								// 		case 'template':
+								// 		case 'templateUrl':
+								// 		case 'styles':
+								// 			return true;
+								// 		default: return false;
+								// 	}
+								// })
+							};
+							const decoratorCall = modifier.expression as ts.CallExpression;
+							const options = decoratorCall.arguments[0];
+							let argumentsOption: ts.Expression | undefined;
+							if (ts.isArrayLiteralExpression(options)) {
+								const elements: ts.Expression[] = options.elements.map(element => {
+									if (ts.isObjectLiteralExpression(element)) {
+										return updateDecoratorOptions(element);
+									}
+									return element;
+								});
+								argumentsOption = ts.factory.updateArrayLiteralExpression(options, elements);
+							} else if (ts.isObjectLiteralExpression(options)) {
+								argumentsOption = updateDecoratorOptions(options);
+							}
+							if (argumentsOption) {
+								return ts.factory.updateDecorator(
+									modifier,
+									ts.factory.updateCallExpression(
+										decoratorCall,
+										decoratorCall.expression,
+										decoratorCall.typeArguments,
+										[argumentsOption]
+									)
+								);
+							}
+							return modifier;
+						});
+						return ts.factory.updateClassDeclaration(
+							childNode,
+							modifiers ? ts.factory.createNodeArray(modifiers) : void 0,
+							childNode.name,
+							childNode.typeParameters,
+							childNode.heritageClauses,
+							childNode.members
+						);
 					}
 					return childNode;
 				}, context);
@@ -89,6 +149,33 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 	};
 }
 
-function updateComponentDefinition() {
 
+export function convertToProperties(json: { [key: string]: any }): ts.ObjectLiteralElementLike[] {
+	const keys = Object.keys(json);
+	return keys.map(key => createProperty(key, json[key]));
+}
+
+export function createProperty(name: string, value: any): ts.ObjectLiteralElementLike {
+	return ts.factory.createPropertyAssignment(name, createInitializer(value));
+}
+
+export function createInitializer(value: any): ts.Expression {
+	if (Array.isArray(value)) {
+		const elements = value.map(createInitializer);
+		return ts.factory.createArrayLiteralExpression(elements);
+	}
+	switch (typeof value) {
+		case 'string': return ts.factory.createStringLiteral(value);
+		case 'number': return ts.factory.createNumericLiteral(value);
+		case 'bigint': return ts.factory.createBigIntLiteral(value.toString());
+		case 'boolean': return value ? ts.factory.createTrue() : ts.factory.createFalse();
+		case 'object': {
+			if (!value) {
+				return ts.factory.createNull();
+			}
+			const properties = convertToProperties(value);
+			return ts.factory.createObjectLiteralExpression(properties, true);
+		};
+	}
+	return ts.factory.createNull();
 }
