@@ -1,7 +1,7 @@
 {
 	"name": "@ibyar/jsx",
 	"version": "0.6.1",
-	"description": "Aurora JSX, create DomNode tree sing jsx, one way binding, two way binding.",
+	"description": "Ibyar JSX, create DomNode tree sing jsx, one way binding, two way binding.",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/jsx",
 	"repository": {

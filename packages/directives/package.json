@@ -1,7 +1,7 @@
 {
 	"name": "@ibyar/directives",
 	"version": "0.6.1",
-	"description": "Aurora directives had the built-in directives for aurora project",
+	"description": "Ibyar directives had the built-in directives for aurora project",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
 	"repository": {

@@ -1,7 +1,7 @@
 {
 	"name": "@ibyar/hast",
 	"version": "0.6.1",
-	"description": "Aurora hast, HTML parser and serializer",
+	"description": "Ibyar hast, HTML parser and serializer",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/hast",
 	"repository": {

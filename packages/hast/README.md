@@ -1,4 +1,4 @@
-# Aurora hast
+# Ibyar hast
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora hast, HTML parser and serializer.
+Ibyar hast, HTML parser and serializer.
 
 ## `Install`
 

@@ -1,4 +1,4 @@
-# Aurora Forms
+# Ibyar Forms
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora forms contain form group, form builder and native ui form group.
+Ibyar forms contain form group, form builder and native ui form group.
 
 ## `Install`
 

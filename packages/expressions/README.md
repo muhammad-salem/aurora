@@ -1,4 +1,4 @@
-# Aurora Expression
+# Ibyar Expression
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
+Ibyar expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
  - An 100% spec compliant ES2022 JavaScript toolchain

@@ -1,4 +1,4 @@
-# Aurora JSX
+# Ibyar JSX
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora JSX, create DomNode tree sing jsx, one way binding, two way binding.
+Ibyar JSX, create DomNode tree sing jsx, one way binding, two way binding.
 
 ## `Install`
 

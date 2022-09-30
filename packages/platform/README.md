@@ -1,4 +1,4 @@
-# Aurora Expression
+# Ibyar Expression
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora Platform, A utility package for Aurora.
+Ibyar Platform, A utility package for Aurora.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
 
@@ -33,7 +33,7 @@ yarn add @ibyar/platform
 
 ## Example
 ```ts
-import { diff} from '@ibyar/platform';
+import { diff } from '@ibyar/platform';
 
 
 ```

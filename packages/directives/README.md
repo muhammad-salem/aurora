@@ -1,4 +1,4 @@
-# Aurora Directives
+# Ibyar Directives
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora directive had the built-in directives for aurora project.
+Ibyar directive had the built-in directives for aurora project.
 
 ## `Install`
 

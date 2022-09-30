@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/cli
 
-The Ibyar/Aurora CLI.
+The Ibyar/Aurora CLI tool.
 
 
 ## `Install`

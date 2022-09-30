@@ -1,4 +1,4 @@
-# Aurora Pipes
+# Ibyar Pipes
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora pipes, build-in pipes for aurora lib, like json, translate, async, etc...
+Ibyar pipes, build-in pipes for aurora lib, like json, translate, async, etc...
 
 ## `Install`
 
