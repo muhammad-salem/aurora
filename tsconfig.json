@@ -1,5 +1,6 @@
 {
 	"references": [
+		{ "path": "src/hast" },
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
 		{ "path": "src/platform" },

@@ -1,0 +1,39 @@
+{
+	"name": "@ibyar/hast",
+	"version": "0.6.1",
+	"description": "Aurora hast, HTML parser and serializer",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/hast",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/hast"
+	},
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"devDependencies": {
+		"typescript": "^4.8.4"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"node",
+		"elements",
+		"hast",
+		"typescript"
+	]
+}
