@@ -16,6 +16,8 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
+		Your Mirror Dimension in the javascript world.
+
 Ibyar expression, is a JavaScript expression parsing and evaluation. and template expression evaluation, with stack and scope.
 
  - this package has no dependance, can work on both (Node.js) and any Web Browsers, that support modules and class syntax
