@@ -9,8 +9,8 @@ import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { isOnDestroy } from '../component/lifecycle.js';
 import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
-type OneWayOperator = '.=';
-type TwoWayOperator = ':=';
+type OneWayOperator = '=:';
+type TwoWayOperator = '=::';
 type BindingOperators = OneWayOperator | TwoWayOperator;
 
 export interface BindingAssignment extends InfixExpressionNode<BindingOperators> {
@@ -34,7 +34,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 	declare protected left: MemberExpression;
 	private rightEvents = this.right.events();
 	constructor(left: MemberExpression, right: ExpressionNode) {
-		super('.=', left, right);
+		super('=:', left, right);
 	}
 	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);
@@ -102,7 +102,7 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	private rightEvents = this.right.events();
 	private leftEvents = this.left.events();
 	constructor(left: MemberExpression, right: MemberExpression | Identifier) {
-		super(':=', left, right);
+		super('=::', left, right);
 	}
 
 	set(stack: Stack, value: any) {
