@@ -1,4 +1,8 @@
-export * from './compiler/index.js';
-export * from './factory/index.js';
-export * from './transformer/index.js';
-export * from './visitor/index.js';
+export * from './transformer/factory.js';
+export * from './transformer/before-component.js';
+export * from './transformer/after-declarations-component.js';
+
+
+export * from './compiler/compile.js';
+
+export * from './elements/tags.js';
