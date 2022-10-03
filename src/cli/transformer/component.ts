@@ -1,13 +1,16 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { buildExpressionNodes } from '@ibyar/core/node';
 import { htmlParser } from '@ibyar/elements/node';
+import { getExtendsTypeBySelector } from '../elements/tags.js';
+
+type ViewInfo = { selector: string, extendsType: string, viewName: string, interFaceType: ts.InterfaceDeclaration };
 
 /**
  * search for `@Component({})` and precompile the source code
  * @param program a ts program 
  * @returns a transformer factory of source file
  */
-export default function preCompileComponentOptions(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
+export function beforeCompileComponentOptions(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
 	const typeChecker = program.getTypeChecker();
 	return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
 		return sourceFile => {
@@ -40,7 +43,9 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 			if (!visitSourceFile) {
 				return sourceFile;
 			}
-			return ts.visitNode(sourceFile, (node: ts.Node) => {
+
+			const sourceViewInfos: ViewInfo[] = [];
+			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.Node) => {
 				return ts.visitEachChild(node, (childNode) => {
 					let decoratorArguments: ts.ObjectLiteralElementLike[] | undefined;
 					if (ts.isClassDeclaration(childNode)) {
@@ -57,6 +62,7 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 							return childNode;
 						}
 
+						const viewInfos: ViewInfo[] = [];
 						const modifiers = childNode.modifiers?.map(modifier => {
 							if (!ts.isDecorator(modifier)) {
 								return modifier;
@@ -66,12 +72,40 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 							}
 
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
-								const styles = option.properties.find(prop => prop.name?.getText() === 'styles')?.getText();
+								const selectorProperty = option.properties
+									.find(prop => prop.name?.getText() === 'selector') as ts.PropertyAssignment | undefined;
+
+								if (!selectorProperty) {
+									console.error(`Component missing selector name: ${childNode.name?.getText()}`);
+									return option;
+								}
+								const initializer = selectorProperty.initializer.getText();
+								const selector = initializer.substring(1, initializer.length - 1);
+								const viewName = `HTML${selector.split('-')
+									.map(name => name.replace(/^\w/, char => char.toUpperCase()))
+									.join('')}Element`;
+
+
+								const extendProperty = option.properties.find(prop => prop.name?.getText() === 'extend') as ts.PropertyAssignment | undefined;
+								const extend = extendProperty?.initializer.getText().substring(1, extendProperty?.initializer.getText().length - 1);
+								const extendsType = getExtendsTypeBySelector(extend);
+
+								viewInfos.push({
+									selector,
+									viewName,
+									extendsType,
+									interFaceType: createInterfaceType(viewName, extendsType)
+								});
+
+								const stylesProperty = option.properties.find(prop => prop.name?.getText() === 'styles') as ts.PropertyAssignment | undefined;
+								const styles = stylesProperty?.initializer.getText().substring(1, stylesProperty?.initializer.getText().length - 1);
+
 								const template = option.properties.find(prop => prop.name?.getText() === 'template');
-								if (template && ts.isPropertyAssignment(template)) {
+								if (template && ts.isPropertyAssignment(template) && ts.isStringLiteralLike(template.initializer)) {
+									const text = template?.initializer.getText().substring(1, template?.initializer.getText().length - 1);
 									const html = styles
-										? `<style>${styles}</style>${template.initializer.getText()}`
-										: template.initializer.getText();
+										? `<style>${styles}</style>${text}`
+										: text;
 									const domNode = htmlParser.toDomRootNode(html);
 									buildExpressionNodes(domNode);
 									const serialized = JSON.stringify(domNode);
@@ -131,18 +165,48 @@ export default function preCompileComponentOptions(program: ts.Program): ts.Tran
 							}
 							return modifier;
 						});
+
+						sourceViewInfos.push(...viewInfos);
+						const staticMembers = viewInfos.map(viewInfo => ts.factory.createPropertyDeclaration(
+							[
+								ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
+								ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
+							],
+							viewInfo.viewName,
+							ts.factory.createToken(ts.SyntaxKind.ExclamationToken),
+							createTypeLiteral(viewInfo.viewName),
+							undefined,
+						)).map(staticMember => ts.setTextRange(staticMember, childNode));
 						return ts.factory.updateClassDeclaration(
 							childNode,
 							modifiers ? ts.factory.createNodeArray(modifiers) : void 0,
 							childNode.name,
 							childNode.typeParameters,
 							childNode.heritageClauses,
-							childNode.members
+							childNode.members.slice().concat(...staticMembers)
 						);
 					}
 					return childNode;
 				}, context);
 			});
+			if (sourceViewInfos.length) {
+				const statements = updateSourceFile.statements?.slice() ?? [];
+				const interfaces = sourceViewInfos.map(info => {
+					return ts.setTextRange(info.interFaceType, updateSourceFile);
+				});
+				statements.push(...interfaces);
+				updateSourceFile.isDeclarationFile && console.log(statements);
+				return ts.factory.updateSourceFile(
+					sourceFile,
+					statements,
+					updateSourceFile.isDeclarationFile,
+					updateSourceFile.typeReferenceDirectives,
+					updateSourceFile.referencedFiles,
+					updateSourceFile.hasNoDefaultLib,
+					updateSourceFile.libReferenceDirectives,
+				);
+			}
+			return updateSourceFile;
 		};
 	};
 }
@@ -176,4 +240,27 @@ export function createInitializer(value: any): ts.Expression {
 		};
 	}
 	return ts.factory.createNull();
+}
+
+
+export function createInterfaceType(viewName: string, extendsType: string) {
+	const identifier = ts.factory.createIdentifier(extendsType);
+	const expressionWithTypeArguments = ts.factory.createExpressionWithTypeArguments(identifier, undefined);
+	const heritageClause = ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [expressionWithTypeArguments]);
+	const exportModifier: ts.ModifierSyntaxKind = ts.SyntaxKind.ExportKeyword;
+	const modifier = ts.factory.createModifier(exportModifier);
+	return ts.factory.createInterfaceDeclaration([modifier], viewName, undefined, [heritageClause], []);
+}
+
+export function createTypeLiteral(typeName: string) {
+	const members: ts.TypeElement[] = [
+		ts.factory.createConstructSignature(undefined, [], ts.factory.createTypeReferenceNode(typeName)),
+		ts.factory.createPropertySignature(
+			[ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+			'prototype',
+			undefined,
+			ts.factory.createTypeReferenceNode(typeName)
+		),
+	];
+	return ts.factory.createTypeLiteralNode(members);
 }
