@@ -1,20 +1,25 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import preCompileComponentOptions from '../transformer/component.js';
+import { beforeCompileComponentOptions } from '../transformer/component.js';
+
+
+export function emitProgram(program: ts.Program) {
+	program.emit(undefined, undefined, undefined, undefined, {
+		before: [
+			beforeCompileComponentOptions(program),
+		],
+		after: [
+
+		],
+		afterDeclarations: [
+			// beforeCompileComponentOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
+		],
+	});
+}
 
 export function compileFiles(files: readonly string[], options: ts.CompilerOptions) {
 	const host = ts.createCompilerHost(options);
 	const program = ts.createProgram(files, options, host);
-	program.emit(undefined, undefined, undefined, undefined, {
-		before: [
-			preCompileComponentOptions(program),
-		],
-		after: [
-			// before(program),
-		],
-		afterDeclarations: [
-
-		],
-	});
+	emitProgram(program);
 }
 
 export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLine) {
@@ -22,17 +27,7 @@ export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLi
 	const programFactory = ts.createWatchProgram(host);
 	const programBuilder = programFactory.getProgram();
 	const program = programBuilder.getProgram();
-	program.emit(undefined, undefined, undefined, undefined, {
-		before: [
-			preCompileComponentOptions(program),
-		],
-		after: [
-			// before(program),
-		],
-		afterDeclarations: [
-
-		],
-	});
+	emitProgram(program);
 }
 
 
