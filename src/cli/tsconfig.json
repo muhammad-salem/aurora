@@ -7,6 +7,9 @@
 		"composite": true,
 		"tsBuildInfoFile": "./tsBuild.info",
 		"allowSyntheticDefaultImports": true,
+		"lib": [
+			"ES2021",
+		],
 	},
 	"include": [
 		"**/*.ts",
