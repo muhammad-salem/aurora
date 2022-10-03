@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { beforeCompileComponentOptions } from '../transformer/component.js';
+import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 
 
 export function emitProgram(program: ts.Program) {
