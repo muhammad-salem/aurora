@@ -1,8 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { buildExpressionNodes } from '@ibyar/core/node';
-import { htmlParser } from '@ibyar/elements/node';
-import { getExtendsTypeBySelector } from '../elements/tags.js';
-import { convertToProperties, createInterfaceType, createTypeLiteral } from './factory.js';
+import { createTypeLiteral } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
 
@@ -77,3 +74,5 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 		};
 	};
 }
+
+export default afterDeclarationsCompileComponentOptions;

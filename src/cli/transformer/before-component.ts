@@ -168,16 +168,18 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						});
 
 						classes.push({ name: childNode.name?.getText() ?? '', views: viewInfos });
-						const staticMembers = viewInfos.map(viewInfo => ts.factory.createPropertyDeclaration(
-							[
-								ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
-								ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
-							],
-							viewInfo.viewName,
-							undefined,
-							createTypeLiteral(viewInfo.viewName),
-							undefined,
-						)).map(staticMember => ts.setTextRange(staticMember, childNode));
+						const staticMembers = viewInfos.map(
+							viewInfo => ts.factory.createPropertyDeclaration(
+								[
+									ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
+									ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
+								],
+								viewInfo.viewName,
+								undefined,
+								createTypeLiteral(viewInfo.viewName),
+								ts.factory.createNull(),
+							)
+						);
 						return ts.factory.updateClassDeclaration(
 							childNode,
 							modifiers ? ts.factory.createNodeArray(modifiers) : void 0,
@@ -212,3 +214,5 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 		};
 	};
 }
+
+export default beforeCompileComponentOptions;
