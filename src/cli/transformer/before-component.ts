@@ -3,8 +3,7 @@ import { buildExpressionNodes } from '@ibyar/core/node';
 import { htmlParser } from '@ibyar/elements/node';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import { convertToProperties, createInterfaceType, createTypeLiteral } from './factory.js';
-
-type ViewInfo = { selector: string, extendsType: string, viewName: string, interFaceType: ts.InterfaceDeclaration };
+import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 
 /**
  * search for `@Component({})` and precompile the source code
@@ -42,10 +41,11 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				}
 			}
 			if (!visitSourceFile) {
+				moduleManger.add({ path: sourceFile.fileName, skip: true });
 				return sourceFile;
 			}
 
-			const sourceViewInfos: ViewInfo[] = [];
+			const classes: ClassInfo[] = [];
 			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.Node) => {
 				return ts.visitEachChild(node, (childNode) => {
 					let decoratorArguments: ts.ObjectLiteralElementLike[] | undefined;
@@ -167,14 +167,14 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							return modifier;
 						});
 
-						sourceViewInfos.push(...viewInfos);
+						classes.push({ name: childNode.name?.getText() ?? '', views: viewInfos });
 						const staticMembers = viewInfos.map(viewInfo => ts.factory.createPropertyDeclaration(
 							[
 								ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
 								ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
 							],
 							viewInfo.viewName,
-							ts.factory.createToken(ts.SyntaxKind.ExclamationToken),
+							undefined,
 							createTypeLiteral(viewInfo.viewName),
 							undefined,
 						)).map(staticMember => ts.setTextRange(staticMember, childNode));
@@ -184,19 +184,19 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							childNode.name,
 							childNode.typeParameters,
 							childNode.heritageClauses,
-							childNode.members.slice().concat(...staticMembers)
+							[...staticMembers, ...childNode.members.slice()],
 						);
 					}
 					return childNode;
 				}, context);
 			});
-			if (sourceViewInfos.length) {
+			if (classes.length) {
+				moduleManger.add({ path: sourceFile.fileName, classes });
 				const statements = updateSourceFile.statements?.slice() ?? [];
-				const interfaces = sourceViewInfos.map(info => {
+				const interfaces = classes.flatMap(s => s.views).map(info => {
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});
 				statements.push(...interfaces);
-				updateSourceFile.isDeclarationFile && console.log(statements);
 				return ts.factory.updateSourceFile(
 					sourceFile,
 					statements,
@@ -207,6 +207,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 					updateSourceFile.libReferenceDirectives,
 				);
 			}
+			moduleManger.add({ path: sourceFile.fileName, skip: true });
 			return updateSourceFile;
 		};
 	};
