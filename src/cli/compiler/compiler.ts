@@ -1,4 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
+import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 
 
@@ -7,11 +8,9 @@ export function emitProgram(program: ts.Program) {
 		before: [
 			beforeCompileComponentOptions(program),
 		],
-		after: [
-
-		],
+		after: [],
 		afterDeclarations: [
-			// beforeCompileComponentOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
+			afterDeclarationsCompileComponentOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
 		],
 	});
 }
