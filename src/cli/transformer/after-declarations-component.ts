@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { createTypeLiteral } from './factory.js';
+import { createConstructorOfViewInterfaceDeclaration, createStaticPropertyViewType } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
 
@@ -41,7 +41,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 						],
 						viewInfo.viewName,
 						undefined,
-						createTypeLiteral(viewInfo.viewName),
+						createStaticPropertyViewType(viewInfo.viewName),
 						undefined,
 					)).map(staticMember => ts.setTextRange(staticMember, childNode));
 					return ts.factory.updateClassDeclaration(
@@ -56,6 +56,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 			});
 			if (sourceViewInfos.length) {
 				const statements = updateSourceFile.statements?.slice() ?? [];
+				statements.push(createConstructorOfViewInterfaceDeclaration());
 				const interfaces = sourceViewInfos.map(info => {
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});

@@ -2,7 +2,10 @@ import ts from 'typescript/lib/tsserverlibrary.js';
 import { buildExpressionNodes } from '@ibyar/core/node';
 import { htmlParser } from '@ibyar/elements/node';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
-import { convertToProperties, createInterfaceType, createTypeLiteral } from './factory.js';
+import {
+	convertToProperties, createConstructorOfViewInterfaceDeclaration,
+	createInterfaceType, createStaticPropertyViewType
+} from './factory.js';
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 
 /**
@@ -176,8 +179,8 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								],
 								viewInfo.viewName,
 								undefined,
-								createTypeLiteral(viewInfo.viewName),
-								ts.factory.createNull(),
+								createStaticPropertyViewType(viewInfo.viewName),
+								undefined,
 							)
 						);
 						return ts.factory.updateClassDeclaration(
@@ -195,6 +198,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 			if (classes.length) {
 				moduleManger.add({ path: sourceFile.fileName, classes });
 				const statements = updateSourceFile.statements?.slice() ?? [];
+				statements.push(createConstructorOfViewInterfaceDeclaration());
 				const interfaces = classes.flatMap(s => s.views).map(info => {
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});
