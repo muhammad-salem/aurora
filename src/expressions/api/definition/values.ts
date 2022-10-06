@@ -94,8 +94,20 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		}
 		return new Literal(node.value, node.raw);
 	}
-	constructor(protected value: T, protected raw?: string, protected regex?: { pattern: string, flags: string }, protected bigint?: string) {
+	protected regex?: { pattern: string, flags: string };
+	protected bigint?: string;
+	protected raw?: string
+	constructor(protected value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string) {
 		super();
+		if (raw) {
+			this.raw = raw;
+		}
+		if (regex) {
+			this.regex = regex;
+		}
+		if (bigint) {
+			this.bigint = bigint;
+		}
 	}
 	getValue() {
 		return this.value;
@@ -245,20 +257,6 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 		return super.getTag()!;
 	}
 }
-
-
-// @Deserializer('BigIntLiteral')
-// export class BigIntLiteral extends Literal<bigint> {
-// 	static fromJSON(node: BigIntLiteral): BigIntLiteral {
-// 		return new BigIntLiteral(BigInt(String(node.value)));
-// 	}
-// 	toString(): string {
-// 		return `${this.value}n`;
-// 	}
-// 	toJson(): object {
-// 		return { value: this.value.toString() };
-// 	}
-// }
 
 
 export const TRUE = String(true);
