@@ -83,3 +83,35 @@ export function createStaticPropertyViewType(typeName: string) {
 	const typeArgument = ts.factory.createTypeReferenceNode(typeName);
 	return ts.factory.createTypeReferenceNode('ConstructorOfView', [typeArgument]);
 }
+
+
+export function generateStatements(sourceText: string, scriptTarget = ts.ScriptTarget.ES2020, scriptKind = ts.ScriptKind.TS): ts.NodeArray<ts.Statement> {
+	return ts.createSourceFile('temp', sourceText, scriptTarget, false, scriptKind).statements;
+}
+
+export function generateNode<T = ts.Node>(sourceText: string, scriptTarget = ts.ScriptTarget.ES2020, scriptKind = ts.ScriptKind.TS): T {
+	return generateStatements(sourceText, scriptTarget, scriptKind)[0] as T;
+}
+
+export function generateInterface(name: string, addExport = false) {
+	return generateNode<ts.InterfaceDeclaration>(`${addExport ? 'export ' : ''}interface ${name} { text: string; name: string; age: number; }`);
+}
+
+/**
+ * declare global {
+	interface HTMLElementTagNameMap {
+		'user-view': HTMLUserViewElement;
+	}
+}
+ */
+
+export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, viewName: string }[]): ts.NodeArray<ts.Statement> {
+	const sourceCode = `
+		declare global {
+			interface HTMLElementTagNameMap {
+				${views.map(view => `['${view.tagName}']: ${view.viewName};`).join('\n')}
+			}
+		}`;
+	return generateStatements(sourceCode);
+}
+

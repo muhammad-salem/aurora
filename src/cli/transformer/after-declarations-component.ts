@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { createConstructorOfViewInterfaceDeclaration, createStaticPropertyViewType } from './factory.js';
+import { createConstructorOfViewInterfaceDeclaration, createStaticPropertyViewType, updateGlobalHTMLElementTagNameMap } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
 
@@ -61,6 +61,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});
 				statements.push(...interfaces);
+				statements.push(...updateGlobalHTMLElementTagNameMap(sourceViewInfos.map(v => ({ tagName: v.selector, viewName: v.viewName }))));
 				return ts.factory.updateSourceFile(
 					sourceFile,
 					statements,
