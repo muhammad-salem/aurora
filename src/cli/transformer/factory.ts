@@ -127,6 +127,7 @@ export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 			${outputs.map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
 			
 		`;
+		// need to fix @FormValue type;
 		return c.views.map(view => `
 			declare class ${view.viewName} extends ${view.extendsType} {
 				${interfaceBody.trim()}

@@ -256,7 +256,7 @@ export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.Ty
 		}
 		let inputType = member.type?.getText();
 		if (!inputType && member.initializer) {
-			inputType = checker.typeToTypeNode(checker.getTypeAtLocation(member.initializer), member.initializer, undefined)?.getText();
+			inputType = checker.typeToString(checker.getTypeAtLocation(member.initializer), member.initializer, undefined);
 		}
 		inputDecorators.forEach(input => {
 			const decoratorCall = input.expression as ts.CallExpression;
