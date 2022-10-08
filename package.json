@@ -21,7 +21,6 @@
 	},
 	"scripts": {
 		"clean": "tsc -b --clean example/",
-		"clean:build": "tsc -b example/tsconfig.json --clean",
 		"build": "npm run clean && tsc --build -v",
 		"build:w": "npm run clean && tsc --build -v -w",
 		"build:example": "npm run clean && tsc -b -v example/",
