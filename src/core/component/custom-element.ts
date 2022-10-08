@@ -208,3 +208,9 @@ export interface FormAssociatedComponent<T extends Object, V = any> extends Base
 }
 
 export type HTMLFormElement = HTMLButtonElement | HTMLDataListElement | HTMLFieldSetElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+
+export interface ConstructorOfView<T> {
+	new(): T;
+	readonly prototype: T;
+}
