@@ -19,8 +19,9 @@
 	"files": [
 		"*"
 	],
+	"private": true,
 	"publishConfig": {
-		"access": "public"
+		"access": "restricted"
 	},
 	"devDependencies": {
 		"typescript": "^4.8.4"
