@@ -124,7 +124,7 @@ export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 
 			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
 
-			${outputs.map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
+			${Object.keys(c.outputs).map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
 			
 		`;
 		// need to fix @FormValue type;
