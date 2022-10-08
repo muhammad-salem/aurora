@@ -78,7 +78,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 
 	const defaultAttributes = getAllAttributes(componentRef.extend.name);
 	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
-		.concat(componentRef.outputs.map(output => ToCamelCase(output.viewAttribute)));
+		.concat(componentRef.outputs.map(output => 'on' + ToCamelCase(output.viewAttribute)));
 	if (componentRef.formAssociated && !observedAttributes.includes('value')) {
 		observedAttributes.push('value');
 	}
