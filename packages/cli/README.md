@@ -28,3 +28,69 @@ npm i --save @ibyar/cli
 ``` bash
 yarn add @ibyar/cli
 ```
+
+
+The Ibyar CLI has a typescript transformer to generate a definitions for you component
+
+```ts
+import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
+
+
+@Component({
+	selector: 'person-edit',
+	template: `<form #form>
+					<input if="show" type="text" [(value)]="person.name" />
+					<input type="number" [(value)]="person.age" />
+					<input type="button" (click)="printPerson()" value="Save" />
+				</form>`
+})
+export class PersonEdit {
+	@Input()
+	person: Person;
+
+	@Input()
+	show = true;
+
+	@Output()
+	save = new EventEmitter<Person>();
+
+	printPerson() {
+		console.log(this.person);
+		this.save.emit(this.person);
+	}
+}
+
+```
+
+will generate the view class and add it to the definition files 
+
+```ts
+import { EventEmitter } from '@ibyar/aurora';
+
+export declare class PersonEdit {
+    static readonly HTMLPersonEditElement: ConstructorOfView<HTMLPersonEditElement>;
+    person: Person;
+    show: boolean;
+    save: EventEmitter<Person>;
+    printPerson(): void;
+}
+
+import { BaseComponent, ConstructorOfView } from "@ibyar/core";
+
+declare class HTMLPersonEditElement extends HTMLElement {
+    public static observedAttributes: "person" | "show" | "onSave"[];
+    public person: Person;
+    public show: true;
+    public onSave: EventEmitter<Person>;
+}
+
+declare interface HTMLPersonEditElement extends BaseComponent<PersonEdit> {}
+
+declare global {
+    interface HTMLElementTagNameMap {
+        ["person-edit"]: HTMLPersonEditElement;
+    }
+}
+
+
+```
