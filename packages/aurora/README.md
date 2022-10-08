@@ -33,10 +33,16 @@
 [npm-url-tslib]: https://npmjs.org/package/tslib
 
 
-Aurora is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
+Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
 This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
 
+- Demo: https://ibyar.github.io/aurora-demo
+- API Doc: https://ibyar.github.io/aurora-docs
+- Ibyar Expression & Elements parser: https://ibyar.github.io/astexplorer/
+	- select: JavaScript: @ibyar/expressions
+	- select: HTML: @ibyar/elements
+- Custom Elements Everywhere for Aurora Test & Results: https://ibyar.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
 
 ## `Install`
 

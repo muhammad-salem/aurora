@@ -5,7 +5,14 @@
 		"outDir": "../../packages/cli",
 		"rootDir": ".",
 		"composite": true,
-		"tsBuildInfoFile": "./tsBuild.info"
+		"tsBuildInfoFile": "./tsBuild.info",
+		"allowSyntheticDefaultImports": true,
+		"lib": [
+			"ES2021",
+		],
+		"types": [
+			"node"
+		]
 	},
 	"include": [
 		"**/*.ts",

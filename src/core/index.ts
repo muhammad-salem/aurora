@@ -3,6 +3,7 @@ import 'reflect-metadata';
 export * from './annotation/decorators.js';
 
 export * from './component/component.js';
+export * from './component/reflect.js';
 export * from './component/custom-element.js';
 export * from './component/events.js';
 export * from './component/lifecycle.js';
@@ -15,6 +16,7 @@ export * from './linker/view-container-ref.js';
 export * from './linker/change-detector-ref.js';
 
 export * from './directive/directive.js';
+export * from './html/expression.js';
 
 export * from './pipe/pipe.js';
 
@@ -28,6 +30,7 @@ export * from './utils/utils.js';
 
 export * from './view/mutation.js';
 export * from './view/render.js';
+export * from './view/utils.js';
 export * from './view/view.js';
 
 

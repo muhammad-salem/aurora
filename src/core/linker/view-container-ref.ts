@@ -1,8 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { Components } from '../component/component.js';
+import { ReflectComponents } from '../component/reflect.js';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
-import { getComponentView } from '../view/view.js';
+import { getComponentView } from '../view/utils.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { ReactiveScopeControl } from '@ibyar/expressions';
 
@@ -252,7 +252,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 				ViewClass = arg0 as TypeOf<HTMLComponent<C>>;
 			} else {
 				const componentType = arg0 as TypeOf<C>;
-				const defaultTagName = Components.getComponentRef<C>(componentType).selector;
+				const defaultTagName = ReflectComponents.getComponentRef<C>(componentType).selector;
 				const view = getComponentView(componentType, options?.selector ?? defaultTagName);
 				if (!view) {
 					throw new Error(`Can't find View component for class ${componentType.name}`);

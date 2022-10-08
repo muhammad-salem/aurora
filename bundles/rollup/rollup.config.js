@@ -15,7 +15,8 @@ export const config = {
 		typescript(),
 		html({ include: "**/*.html" }),
 		css({ output: 'style.css' }),
-	]
+	],
+	inlineDynamicImports: true,
 };
 
 export default config;

@@ -4,46 +4,17 @@ import {
 	DomFragmentNode, DomParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent,
 	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
-} from '@ibyar/elements';
+} from '@ibyar/elements/node.js';
 import {
 	ExpressionNode, expressionVisitor, Identifier,
 	JavaScriptParser, MemberExpression, PipelineExpression
 } from '@ibyar/expressions';
 import {
-	BindingAssignment,
 	OneWayAssignmentExpression,
 	TwoWayAssignmentExpression
 } from '../binding/binding.expressions.js';
 import { DirectiveExpressionParser } from '../directive/parser.js';
 import { ClassRegistryProvider } from '../providers/provider.js';
-
-declare module '@ibyar/elements' {
-	export interface ElementAttribute<N, V> {
-		expression: ExpressionNode;
-	}
-
-	export interface LiveAttribute {
-		expression: BindingAssignment;
-		pipelineNames?: string[];
-	}
-
-	export interface LiveTextContent {
-		expression: OneWayAssignmentExpression;
-		pipelineNames?: string[];
-	}
-	export interface DomStructuralDirectiveNodeUpgrade extends DomStructuralDirectiveNode {
-		/**
-		 * create a new scope for a template and bind the new variables to the directive scope.
-		 * 
-		 * execution for let-i="index".
-		 */
-		templateExpressions: ExpressionNode[];
-	}
-
-	export interface DomAttributeDirectiveNodeUpgrade extends DomAttributeDirectiveNode {
-
-	}
-}
 
 const ThisTextContent = JavaScriptParser.parseScript('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
@@ -86,7 +57,7 @@ function parseLiveAttribute(attr: LiveAttribute) {
 
 }
 
-function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
+export function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
 	const pipelineNames: string[] = [];
 	expressionVisitor.visit(modelExpression, (expression, type, control) => {
 		if (type === 'PipelineExpression') {

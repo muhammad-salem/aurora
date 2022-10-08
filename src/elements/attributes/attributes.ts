@@ -146,7 +146,6 @@ export const Attrs: AttrRef = {
 	var: GlobalAttributes,
 	video: [...GlobalAttributes, 'src', 'crossorigin', 'poster', 'preload', 'autoplay', 'playsinline', 'loop', 'muted', 'controls', 'width', 'height'],
 	wbr: GlobalAttributes,
-	'virtual-scroller': GlobalAttributes
 };
 
 

@@ -2,10 +2,13 @@
 	"references": [
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
+		{ "path": "src/hast" },
 		{ "path": "src/platform" },
 		{ "path": "src/core" },
+		{ "path": "src/jsx" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
+		{ "path": "src/forms" },
 		{ "path": "src/aurora" },
 		{ "path": "src/cli" }
 	],
@@ -14,4 +17,3 @@
 	},
 	"files": []
 }
-

@@ -1,7 +1,7 @@
 {
 	"name": "@ibyar/cli",
-	"version": "0.6.1",
-	"description": "The Ibyar/Aurora CLI",
+	"version": "0.8.2-dev.20221008",
+	"description": "The Ibyar/Aurora CLI tool",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
 	"repository": {
@@ -22,21 +22,18 @@
 	"files": [
 		"*"
 	],
-	"private": true,
 	"publishConfig": {
-		"access": "restricted"
+		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.6.1",
-		"@ibyar/directives": "^0.6.1",
-		"@ibyar/elements": "^0.6.1",
-		"@ibyar/expressions": "^0.6.1",
-		"@ibyar/pipes": "^0.6.1",
+		"@ibyar/core": "^0.8.2-dev.20221008",
+		"@ibyar/directives": "^0.8.2-dev.20221008",
+		"@ibyar/elements": "^0.8.2-dev.20221008",
+		"@ibyar/expressions": "^0.8.2-dev.20221008",
+		"@ibyar/pipes": "^0.8.2-dev.20221008",
 		"reflect-metadata": "^0.1.13",
-		"tslib": "^2.4.0"
-	},
-	"devDependencies": {
-		"typescript": "^4.7.4"
+		"tslib": "^2.4.0",
+		"typescript": "^4.8.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

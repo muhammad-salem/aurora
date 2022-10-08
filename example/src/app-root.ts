@@ -74,13 +74,26 @@ export class AppRoot implements OnInit {
 			title: 'Expression Editor',
 			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
 		},
+		{
+			title: 'Custom Form',
+			load: () => import('./forms/forms.js').then(module => module.CustomForm),
+		},
+		{
+			title: 'Simple Custom Form',
+			load: () => import('./forms/simple-forms.js').then(module => module.SimpleCustomForm),
+		},
+		{
+			title: 'Jsx Components',
+			load: () => import('./jsx/test.js').then(module => module.JsxComponentTest),
+		},
+
 	];
 
 	onInit(): void {
 		this.appName = 'APP NAME';
 		setTimeout(() => {
 			this.lazyLoad(this.appList.at(-1)!);
-		}, 1000);
+		}, 0);
 	}
 
 }

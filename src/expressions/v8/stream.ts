@@ -12,7 +12,7 @@ import {
 } from '../api/definition/values.js';
 import { PrivateIdentifier } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
-import { isStrict, LanguageMode } from './enums.js';
+import { isStrict, LanguageMode } from './language.js';
 
 const FORBIDDEN_CODE_POINT = ['200b', '200c', '200d', 'feff'];
 

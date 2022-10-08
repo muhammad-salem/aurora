@@ -15,24 +15,6 @@ import { Pipe, PipeTransform } from '@ibyar/core';
  *
  * When operating on a blank value, the pipe returns the blank value.
  *
- * ### List Example
- *
- * This `ngFor` example:
- *
- * {@example common/pipes/ts/slice_pipe.ts region='SlicePipe_list'}
- *
- * produces the following:
- *
- * ```html
- * <li>b</li>
- * <li>c</li>
- * ```
- *
- * ### String Examples
- *
- * {@example common/pipes/ts/slice_pipe.ts region='SlicePipe_string'}
- *
- * @publicApi
  */
 @Pipe({ name: 'slice' })
 export class SlicePipe<T> implements PipeTransform<Array<T>, Array<T>> {

@@ -5,7 +5,21 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"type": "pwa-node",
+			"type": "node",
+			"request": "launch",
+			"name": "Ibyar CLI",
+			"cwd": "${workspaceFolder}/example",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": [
+				"run-script",
+				"ibyar"
+			],
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"type": "node",
 			"request": "launch",
 			"name": "test262-parser-tests",
 			"skipFiles": [

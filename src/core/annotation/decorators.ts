@@ -1,8 +1,10 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { DomNode, DomRenderNode } from '@ibyar/elements';
+import { DomNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
+import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml, TemplateUrl } from '../utils/path.js';
 import { ZoneType } from '../zone/bootstrap.js';
+import { ValueControl } from '../component/custom-element.js';
 
 
 export interface DirectiveOptions {
@@ -63,7 +65,7 @@ export interface ComponentOptions<T = Function> {
 	 * or us aurora jsx factory 
 	 * 				
 	 */
-	template?: string | DomNode | DomRenderNode<T> | Promise<string>;
+	template?: string | DomNode;
 	/**
 	 * style for this element
 	 */
@@ -72,7 +74,7 @@ export interface ComponentOptions<T = Function> {
 	 * what basic element should the new component inherit from,
 	 * the tag name to inherit from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
 	 */
-	extend?: string;
+	extend?: keyof HTMLElementTagNameMap;
 
 	/**
 	 * An encapsulation policy for the template and CSS styles. One of:
@@ -137,6 +139,91 @@ export interface ComponentOptions<T = Function> {
 	shadowDomDelegatesFocus?: boolean;
 
 	/**
+	 * Create a custom form-associated element with HTMLElement.attachInternals
+	 * default: false
+	 * 
+	 * if the value is `true` it is expected from the model class to implement `ValueControl<T>` interface
+	 * 
+	 * otherwise you can register another class that implement `ValueControl<T>`,
+	 * in case if you want split the model and the value controller.
+	 * 
+	 * #### Usage Notes:
+	 * 
+	 * ```ts
+	 * 
+	 * @Component({
+	 * 	selector: 'custom-message',
+	 * 	template: `
+	 * 		<label for="message">Message</label>
+	 * 		<textarea id="message" [(value)]="message" [disabled]="disabled" (change)="onMessageChange($event.target.value)"></textarea>
+	 * 	`,
+	 * 	formAssociated: true,
+	 * 	// formAssociated: CustomMessage,
+	 * })
+	 * export class CustomMessage implements ValueControl<string> {
+	 * 
+	 * 	private message: string | null = '';
+	 * 	private disabled: boolean = false;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({ value, mode }: WriteValueOptions<string>) {
+	 * 		this.message = mode !== 'reset' ? value : '';
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this.disabled = isDisabled;
+	 * 	}
+	 * 
+	 * 	onMessageChange(message: string) {
+	 * 		this._onChange(message);
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * 
+	 * export class CustomInputValueControl implements ValueControl<number> {
+	 * 
+	 * 	private _value: number | null = null;
+	 * 	private _disabled: boolean = false;
+	 * 	private _onChange: (_: any) => void = () => {};
+	 * 
+	 * 	writeValue({ value, mode }: WriteValueOptions<number>) {
+	 * 		this._value = mode !== 'reset' ? value : null;
+	 * 	}
+	 * 
+	 * 	registerOnChange(fn: (_: any) => void): void {
+	 * 		this._onChange = fn;
+	 * 	}
+	 * 
+	 * 	setDisabledState(isDisabled: boolean) {
+	 * 		this._disabled = isDisabled;
+	 * 	}
+	 * 	
+	 * }
+	 * 
+	 * @Component({
+	 * 	selector: 'custom-input',
+	 * 	extend: 'input',
+	 * 	formAssociated: CustomInputValueControl,
+	 * })
+	 * export class CustomInputElement {
+	 * 	@View()
+	 * 	view: HTMLInputElement;
+	 * 
+	 * 	onInit() {
+	 * 		this.view.type = 'number';
+	 * 	}
+	 * }
+	 * 
+	 * ```
+	 */
+	formAssociated?: boolean | TypeOf<ValueControl<any>>;
+
+	/**
 	 * use `noop` to no zone.js patch effect applied,
 	 *  and used for manual change detection for heavily process components
 	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
@@ -166,37 +253,58 @@ export interface ViewChildOpt {
 
 export function Input(name?: string): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addInput(target, propertyKey, name || propertyKey);
+		ReflectComponents.addInput(target, propertyKey, name || propertyKey);
 	};
 }
-export function Output(name?: string): Function {
+
+export function FormValue(): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addOutput(target, propertyKey, name || propertyKey);
+		ReflectComponents.addInput(target, propertyKey, 'value');
+	};
+}
+
+export type OutputEventInit = Omit<EventInit, 'cancelable'>;
+export type OutputOptions = { name?: string } & OutputEventInit;
+
+export function Output(options?: OutputOptions): Function;
+export function Output(name?: string, options?: OutputEventInit): Function;
+export function Output(name?: string | OutputOptions, options?: OutputEventInit): Function {
+	const eventType = typeof name === 'object' ? name.name : name;
+	const eventOpts = typeof name === 'object' ? name : options;
+	return (target: Object, propertyKey: string) => {
+		ReflectComponents.addOutput(
+			target,
+			propertyKey, eventType || propertyKey,
+			{
+				bubbles: eventOpts?.bubbles ?? false,
+				composed: eventOpts?.composed ?? false
+			}
+		);
 	};
 }
 
 export function View(): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.setComponentView(target, propertyKey);
+		ReflectComponents.setComponentView(target, propertyKey);
 	};
 }
 
 export function ViewChild(selector: string | typeof HTMLElement | CustomElementConstructor,
 	childOptions?: ChildOptions): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addViewChild(target, propertyKey, selector, childOptions);
+		ReflectComponents.addViewChild(target, propertyKey, selector, childOptions);
 	};
 }
 
 export function ViewChildren(selector: string | typeof HTMLElement | CustomElementConstructor): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addViewChildren(target, propertyKey, selector);
+		ReflectComponents.addViewChildren(target, propertyKey, selector);
 	};
 }
 
 export function HostListener(eventName: string, args?: string[]): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addHostListener(
+		ReflectComponents.addHostListener(
 			target,
 			propertyKey,
 			eventName,
@@ -207,7 +315,7 @@ export function HostListener(eventName: string, args?: string[]): Function {
 
 export function HostBinding(hostPropertyName: string): Function {
 	return (target: Object, propertyKey: string) => {
-		Components.addHostBinding(target, propertyKey, hostPropertyName);
+		ReflectComponents.addHostBinding(target, propertyKey, hostPropertyName);
 	};
 }
 
@@ -231,21 +339,31 @@ export function Directive(opt: DirectiveOptions): Function {
 	};
 }
 
-export function Component<T extends object>(opt: ComponentOptions<T>): Function {
+function generateComponent<T extends { new(...args: any[]): {} }>(target: TypeOf<T>, opt: ComponentOptions<T>) {
+	if (opt.templateUrl) {
+		fetchHtml(opt.templateUrl)
+			.then(htmlTemplate => {
+				if (htmlTemplate) {
+					opt.template = htmlTemplate;
+					Components.defineComponent(target, opt);
+				}
+			})
+			.catch(reason => {
+				console.error(`Error @URL: ${opt.templateUrl}, for model Class: ${target.name},\n Reason: ${reason}.`);
+			});
+	} else {
+		Components.defineComponent(target, opt);
+	}
+}
+
+export function Component<T extends { new(...args: any[]): {} }>(opt: ComponentOptions<T> | ComponentOptions<T>[]): Function {
 	return (target: TypeOf<T>) => {
-		if (opt.templateUrl) {
-			fetchHtml(opt.templateUrl)
-				.then(htmlTemplate => {
-					if (htmlTemplate) {
-						opt.template = htmlTemplate;
-						Components.defineComponent(target, opt);
-					}
-				})
-				.catch(reason => {
-					console.error(`Error @URL: ${opt.templateUrl}, for model Class: ${target.name},\n Reason: ${reason}.`);
-				});
-		} else {
-			Components.defineComponent(target, opt);
+		if (Array.isArray(opt)) {
+			for (const comp of opt) {
+				generateComponent(target, comp);
+			}
+		} else if (typeof opt === 'object') {
+			generateComponent(target, opt);
 		}
 		return target;
 	};
@@ -270,5 +388,12 @@ export function Optional(): Function {
 			Reflect.defineMetadata('optional', metadata, target, propertyKey);
 		}
 		metadata[index] = true;
+	};
+}
+
+export function customElement<T extends HTMLElement>(opt: { selector: string } & ElementDefinitionOptions): Function {
+	return (target: TypeOf<T>) => {
+		Components.defineView(target, opt);
+		return target;
 	};
 }

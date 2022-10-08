@@ -4,7 +4,7 @@ import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
 } from '../component/lifecycle.js';
-import { ComponentRef, PropertyRef } from '../component/component.js';
+import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
@@ -12,6 +12,7 @@ import { getCurrentZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createZoneProxyHandler } from '../zone/proxy.js';
+import { PropertyRef } from '../component/reflect.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 
@@ -76,12 +77,30 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			});
 
-
+			componentRef.outputs.forEach(output =>
+				(model[output.modelProperty as keyof T] as any as EventEmitter<any>)
+					.subscribe((value: any) => {
+						const event = new CustomEvent(
+							output.viewAttribute,
+							{
+								detail: value,
+								cancelable: false,
+								bubbles: output.options?.bubbles,
+								composed: output.options?.bubbles,
+							},
+						);
+						this.dispatchEvent(event);
+					})
+			);
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
 			this._render = new ComponentRender(this, this.subscriptions);
+		}
+
+		detectChanges(): void {
+			this._modelScope.detectChanges();
 		}
 
 		doBlockCallback = (): void => {
@@ -324,22 +343,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 			});
 			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
-		}
-
-		// events api
-		addEventListener(eventName: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-			if ('on' + eventName in this) {
-				super.addEventListener(eventName, (event: Event) => {
-					(listener as Function)(event);
-				}, options);
-				return;
-			}
-			const modelOutput = this.getEventEmitter<any>(eventName);
-			if (modelOutput) {
-				modelOutput.subscribe((data: any) => {
-					(listener as Function)(data);
-				});
-			}
 		}
 
 		triggerOutput(eventName: string, value?: any): void {

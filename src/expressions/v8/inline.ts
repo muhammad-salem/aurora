@@ -51,13 +51,13 @@ import {
 	functionKindForImpl, FunctionSyntaxKind,
 	isAsyncFunction, isAsyncGeneratorFunction,
 	isAwaitAsIdentifierDisallowed, isClassMembersInitializerFunction,
-	isGeneratorFunction, isModule, isResumableFunction,
-	isSloppy, isStrict, LanguageMode, ParseFunctionFlag,
+	isGeneratorFunction, isModule, isResumableFunction, ParseFunctionFlag,
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 
+import { isSloppy, isStrict, LanguageMode, } from './language.js';
 
 export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean };
 

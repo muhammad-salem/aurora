@@ -1,5 +1,5 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { getAllAttributes, isFormElement } from '@ibyar/elements';
+import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
 import { EventEmitter, Subscription } from '../component/events.js';
@@ -7,6 +7,7 @@ import { ToCamelCase } from '../utils/utils.js';
 import { Constructable } from '../providers/injector.js';
 import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
+import { isComponentModelClass } from './utils.js';
 
 /**
  * 
@@ -18,12 +19,7 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
-	const parentClass = componentRef.extend.name
-		? (isFormElement(componentRef.extend.name)
-			? baseFormFactoryView<T>(htmlParent)
-			: baseFactoryView<T>(htmlParent)
-		)
-		: baseFactoryView<T>(HTMLElement);
+	const parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
 	viewClass = ({
 		[htmlViewClassName]: class extends parentClass { constructor() { super(componentRef, modelClass); } }
 	})[htmlViewClassName];
@@ -82,16 +78,12 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 
 	const defaultAttributes = getAllAttributes(componentRef.extend.name);
 	const observedAttributes = componentRef.inputs.map(input => input.viewAttribute)
+		.concat(componentRef.outputs.map(output => 'on' + ToCamelCase(output.viewAttribute)));
+	if (componentRef.formAssociated && !observedAttributes.includes('value')) {
+		observedAttributes.push('value');
+	}
 	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
 	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
-	// https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-face-example
-	if (false) {
-		Object.defineProperty(viewClass, 'formAssociated', {
-			get() {
-				return true;
-			}
-		});
-	}
 	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
 	if (!Reflect.has(window, htmlViewClassName)) {
 		Reflect.set(window, htmlViewClassName, viewClass);
@@ -100,10 +92,6 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 }
 
 export type ComponentModelClass = Constructable & { [key: string]: string } & { component: { [key: string]: string } };
-
-export function isComponentModelClass(target: Constructable): target is ComponentModelClass {
-	return Reflect.has(target, 'component');
-}
 
 export function addViewToModelClass<T extends object>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
@@ -122,20 +110,4 @@ export function buildViewClassNameFromSelector(selector: string) {
 		.split('-')
 		.map(name => name.replace(/^\w/, char => char.toUpperCase()))
 		.join('');
-}
-
-export function getComponentView<T extends object>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
-	if (isComponentModelClass(modelClass)) {
-		let viewClassName: string;
-		if (selector) {
-			viewClassName = modelClass.component[selector];
-			if (!viewClassName) {
-				throw new Error(`${modelClass.name} doesn't have ${selector} as view`);
-			}
-		} else {
-			viewClassName = Object.keys(modelClass.component)[0];
-		}
-		return Reflect.get(modelClass, viewClassName);
-	}
-	return;
 }

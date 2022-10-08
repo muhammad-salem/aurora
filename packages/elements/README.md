@@ -1,4 +1,4 @@
-# Aurora Elements
+# Ibyar Elements
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora elements, hold info about HTMLElements class, attributes and tag name.
+Ibyar elements, hold info about HTMLElements class, attributes and tag name.
 
 ## `Install`
 
@@ -27,6 +27,9 @@ npm i --save @ibyar/elements
 ``` bash
 yarn add @ibyar/elements
 ```
+
+## Try the parser
+- Ibyar Elements parser: https://ibyar.github.io/astexplorer/
 
 
 ## Example

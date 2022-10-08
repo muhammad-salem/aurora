@@ -1,4 +1,4 @@
-# Aurora Directives
+# Ibyar Directives
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Aurora directive had the built-in directives for aurora project.
+Ibyar directive had the built-in directives for aurora project.
 
 ## `Install`
 
@@ -211,16 +211,16 @@ The following table provides shorthand examples:
   </tr>
   <tr>
     <td><code>*forOf="let item of [1,2,3] as items; trackBy: myTrack; index as i"</code></td>
-    <td><code>&lt;ng-template *forOf [item]="$implicit" [of]="[1,2,3]" [items]="of" [ngForTrackBy]="myTrack" [i]="index"&gt;</code>
+    <td><code>&lt;template *forOf [item]="$implicit" [of]="[1,2,3]" [items]="of" [trackBy]="myTrack" [i]="index"&gt;</code>
     </td>
   </tr>
   <tr>
     <td><code>*if="exp"</code></td>
-    <td><code>&lt;ng-template [if]="exp"&gt;</code></td>
+    <td><code>&lt;template [if]="exp"&gt;</code></td>
   </tr>
   <tr>
     <td><code>*if="exp as value"</code></td>
-    <td><code>&lt;ng-template [if]="exp" [value]="if"&gt;</code></td>
+    <td><code>&lt;template [if]="exp" [value]="if"&gt;</code></td>
   </tr>
 </table>
 
