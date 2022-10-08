@@ -22,9 +22,8 @@
 	"files": [
 		"*"
 	],
-	"private": true,
 	"publishConfig": {
-		"access": "restricted"
+		"access": "public"
 	},
 	"dependencies": {
 		"@ibyar/core": "^0.6.1",
