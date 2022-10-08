@@ -6,7 +6,7 @@ import {
 	convertToProperties, createConstructorOfViewInterfaceDeclaration,
 	createInterfaceType, createStaticPropertyViewType
 } from './factory.js';
-import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
+import { moduleManger, ViewInfo, ClassInfo, InputOutputTypeInfo } from './modules.js';
 
 /**
  * search for `@Component({})` and precompile the source code
@@ -94,11 +94,15 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								const extend = extendProperty?.initializer.getText().substring(1, extendProperty?.initializer.getText().length - 1);
 								const extendsType = getExtendsTypeBySelector(extend);
 
+								const formAssociatedProperty = option.properties.find(prop => prop.name?.getText() === 'formAssociated') as ts.PropertyAssignment | undefined;
+								const formAssociated = formAssociatedProperty?.initializer.getText().substring(1, formAssociatedProperty?.initializer.getText().length - 1);
+
 								viewInfos.push({
 									selector,
 									viewName,
 									extendsType,
-									interFaceType: createInterfaceType(viewName, extendsType)
+									interFaceType: createInterfaceType(viewName, extendsType),
+									formAssociated: 'true' == formAssociated,
 								});
 
 								const stylesProperty = option.properties.find(prop => prop.name?.getText() === 'styles') as ts.PropertyAssignment | undefined;
@@ -170,7 +174,12 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							return modifier;
 						});
 
-						classes.push({ name: childNode.name?.getText() ?? '', views: viewInfos });
+						classes.push({
+							name: childNode.name?.getText() ?? '',
+							views: viewInfos,
+							inputs: getInputs(childNode, typeChecker),
+							outputs: getOutputs(childNode, typeChecker),
+						});
 						const staticMembers = viewInfos.map(
 							viewInfo => ts.factory.createPropertyDeclaration(
 								[
@@ -217,6 +226,55 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 			return updateSourceFile;
 		};
 	};
+}
+
+export function isInputDecorator(decorator: ts.Decorator): boolean {
+	return ts.isCallExpression(decorator.expression) && (
+		decorator.expression.expression.getText() === 'Input'
+		|| decorator.expression.expression.getText() === 'FormValue'
+	);
+}
+
+export function isOutputDecorator(decorator: ts.Decorator): boolean {
+	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === 'Output';
+}
+
+export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): InputOutputTypeInfo {
+
+	const map: InputOutputTypeInfo = {};
+	classNode.members.forEach(member => {
+		if (!ts.isPropertyDeclaration(member)) {
+			return;
+		}
+		const decorators = ts.getDecorators(member);
+		if (!decorators) {
+			return;
+		}
+		const inputDecorators = decorators.filter(decoratorFilter);
+		if (!inputDecorators.length) {
+			return;
+		}
+		let inputType = member.type?.getText();
+		if (!inputType && member.initializer) {
+			inputType = checker.typeToTypeNode(checker.getTypeAtLocation(member.initializer), member.initializer, undefined)?.getText();
+		}
+		inputDecorators.forEach(input => {
+			const decoratorCall = input.expression as ts.CallExpression;
+			const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
+			const inputName = aliasName ? aliasName.text : member.name.getText();
+			map[inputName] = inputType;
+		});
+	})
+	return map;
+}
+
+export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
+
+	return getMapByDecorator(classNode, checker, isInputDecorator);
+}
+
+export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
+	return getMapByDecorator(classNode, checker, isOutputDecorator);
 }
 
 export default beforeCompileComponentOptions;

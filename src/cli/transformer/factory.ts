@@ -1,4 +1,6 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
+import { ToCamelCase } from '@ibyar/core/node.js';
+import { ClassInfo } from './modules.js';
 
 
 export function convertToProperties(json: { [key: string]: any }): ts.ObjectLiteralElementLike[] {
@@ -93,10 +95,6 @@ export function generateNode<T = ts.Node>(sourceText: string, scriptTarget = ts.
 	return generateStatements(sourceText, scriptTarget, scriptKind)[0] as T;
 }
 
-export function generateInterface(name: string, addExport = false) {
-	return generateNode<ts.InterfaceDeclaration>(`${addExport ? 'export ' : ''}interface ${name} { text: string; name: string; age: number; }`);
-}
-
 /**
  * declare global {
 	interface HTMLElementTagNameMap {
@@ -115,3 +113,32 @@ export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, view
 	return generateStatements(sourceCode);
 }
 
+export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
+
+	const viewClassDeclarations = classes.map(c => {
+		const inputs = Object.keys(c.inputs);
+		const outputs = Object.keys(c.outputs).map(output => 'on' + ToCamelCase(output));
+		const attributes = [...inputs, ...outputs].join(', ');
+		const interfaceBody = `{
+			public static observedAttributes = [${attributes}];
+
+			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
+
+			${outputs.map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
+			
+		}`;
+		return c.views.forEach(view => `
+			interface ${view.viewName} extends ${view.formAssociated ? `BaseFormAssociatedComponent<${c.name}>, ` : ''}BaseComponent<${c.name}>, HTMLElement ${interfaceBody}
+		`);
+	});
+	const views = classes.flatMap(c => c.views.map(v => ({ tagName: v.selector, viewName: v.viewName })));
+	const sourceCode = `
+		import { BaseComponent, BaseFormAssociatedComponent, ConstructorOfView } from '@ibyar/core';
+		${viewClassDeclarations.join('\n')}
+		declare global {
+			interface HTMLElementTagNameMap {
+				${views.map(view => `['${view.tagName}']: ${view.viewName};`).join('\n')}
+			}
+		}`;
+	return generateStatements(sourceCode);
+}

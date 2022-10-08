@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { createConstructorOfViewInterfaceDeclaration, createStaticPropertyViewType, updateGlobalHTMLElementTagNameMap } from './factory.js';
+import { createStaticPropertyViewType, updateModule } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
 
@@ -56,12 +56,13 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 			});
 			if (sourceViewInfos.length) {
 				const statements = updateSourceFile.statements?.slice() ?? [];
-				statements.push(createConstructorOfViewInterfaceDeclaration());
-				const interfaces = sourceViewInfos.map(info => {
-					return ts.setTextRange(info.interFaceType, updateSourceFile);
-				});
-				statements.push(...interfaces);
-				statements.push(...updateGlobalHTMLElementTagNameMap(sourceViewInfos.map(v => ({ tagName: v.selector, viewName: v.viewName }))));
+				// statements.push(createConstructorOfViewInterfaceDeclaration());
+				// const interfaces = sourceViewInfos.map(info => {
+				// 	return ts.setTextRange(info.interFaceType, updateSourceFile);
+				// });
+				// statements.push(...interfaces);
+				// statements.push(...updateGlobalHTMLElementTagNameMap(sourceViewInfos.map(v => ({ tagName: v.selector, viewName: v.viewName }))));
+				statements.push(...updateModule(classes));
 				return ts.factory.updateSourceFile(
 					sourceFile,
 					statements,

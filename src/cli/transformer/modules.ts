@@ -1,7 +1,20 @@
 
-export type ViewInfo = { selector: string, extendsType: string, viewName: string, interFaceType: ts.InterfaceDeclaration };
+export type ViewInfo = {
+	selector: string;
+	extendsType: string;
+	viewName: string;
+	interFaceType: ts.InterfaceDeclaration;
+	formAssociated: boolean;
+};
 
-export type ClassInfo = { name: string, views: ViewInfo[] };
+export type InputOutputTypeInfo = { [name: string]: string | undefined };
+
+export type ClassInfo = {
+	name: string,
+	views: ViewInfo[];
+	inputs: InputOutputTypeInfo;
+	outputs: InputOutputTypeInfo;
+};
 
 export type ModuleInfo =
 	| { path: string; skip: true; }
