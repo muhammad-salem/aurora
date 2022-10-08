@@ -118,17 +118,20 @@ export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 	const viewClassDeclarations = classes.map(c => {
 		const inputs = Object.keys(c.inputs);
 		const outputs = Object.keys(c.outputs).map(output => 'on' + ToCamelCase(output));
-		const attributes = [...inputs, ...outputs].join(', ');
-		const interfaceBody = `{
-			public static observedAttributes = [${attributes}];
+		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
+		const interfaceBody = `
+			public static observedAttributes: ${attributes}[];
 
 			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
 
 			${outputs.map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
 			
-		}`;
-		return c.views.forEach(view => `
-			interface ${view.viewName} extends ${view.formAssociated ? `BaseFormAssociatedComponent<${c.name}>, ` : ''}BaseComponent<${c.name}>, HTMLElement ${interfaceBody}
+		`;
+		return c.views.map(view => `
+			declare class ${view.viewName} extends ${view.extendsType} {
+				${interfaceBody.trim()}
+			}
+			declare interface ${view.viewName} extends ${view.formAssociated ? `BaseFormAssociatedComponent<${c.name}>, ` : ''}BaseComponent<${c.name}> {}
 		`);
 	});
 	const views = classes.flatMap(c => c.views.map(v => ({ tagName: v.selector, viewName: v.viewName })));
