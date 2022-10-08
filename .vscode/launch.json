@@ -7,7 +7,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "CLI ",
+			"name": "Ibyar CLI",
 			"cwd": "${workspaceFolder}/example",
 			"runtimeExecutable": "npm",
 			"runtimeArgs": [
