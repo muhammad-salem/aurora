@@ -29,6 +29,24 @@ npm i --save @ibyar/cli
 yarn add @ibyar/cli
 ```
 
+# How to use
+
+ `npx ibyar --build --watch --verbose`
+
+ it load the configuration from a `tsconfig.json` file
+
+```
+Examples:
+    ibyar
+    ibyar -b
+    ibyar -b -w
+
+Options:
+    -b      --build     build the current project
+    -w      --watch     watch files changes
+```
+
+
 
 The Ibyar CLI has a typescript transformer to generate a definitions for you component
 
