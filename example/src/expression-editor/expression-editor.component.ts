@@ -1,4 +1,9 @@
-import { AfterViewInit, Component, ExpressionNode, JavaScriptParser, LanguageMode, OnInit, Scope, Context, Stack, ViewChild } from '@ibyar/aurora';
+import {
+	AfterViewInit, Component, ExpressionNode,
+	JavaScriptParser, LanguageMode, OnInit,
+	Scope, Context, Stack, ViewChild,
+	ChangeDetectorRef
+} from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
@@ -27,6 +32,7 @@ const styles = `
 
 @Component({
 	selector: 'expression-editor',
+	zone: 'manual',
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
@@ -80,6 +86,9 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	];
 	example: string;
 
+
+	constructor(private _cd: ChangeDetectorRef) { }
+
 	onInit(): void {
 		this.loadExample('IMPORT_ALL');
 	}
@@ -89,7 +98,8 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		import('./expression.spec.js')
 			.then(module => (this.error.innerText = '', module))
 			.then(module => this.loadCode(module[name]))
-			.then(code => this.editor.value = code!);
+			.then(code => this.editor.value = code!)
+			.then(() => this._cd.detectChanges());
 	}
 
 	afterViewInit(): void {
@@ -115,6 +125,8 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
+		} finally {
+			this._cd.detectChanges();
 		}
 		return code;
 	}
@@ -140,6 +152,8 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
+		} finally {
+			this._cd.detectChanges();
 		}
 	}
 
