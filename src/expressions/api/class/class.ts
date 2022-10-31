@@ -38,15 +38,15 @@ interface ClassConstructor {
 
 	[GET_PARAMETERS](args: any[]): any[];
 	[STATIC_INITIALIZATION_BLOCK]: Function[];
-	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
-	[INSTANCE_PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[PRIVATE_SYMBOL]: Record<PropertyKey, any>;
+	[INSTANCE_PRIVATE_SYMBOL]: Record<PropertyKey, any>;
 	[CONSTRUCTOR]: Function;
 	[key: string]: any;
 }
 
 declare var ClassInstance: ClassConstructor;
 interface ClassInstance {
-	[PRIVATE_SYMBOL]: { [key: PropertyKey]: any };
+	[PRIVATE_SYMBOL]: Record<PropertyKey, any>;
 	[STACK]: Stack;
 	[key: string]: any;
 }
@@ -252,7 +252,13 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 			default: return this.key.toString();
 		}
 	}
-	abstract get(stack: Stack, classConstructor: ClassConstructor): void;
+	get(stack: Stack, classConstructor: ClassConstructor): void {
+		const target = this.getTarget(classConstructor);
+		const scope = stack.pushBlockScopeFor(target);
+		this.afterClassConstruct(stack, classConstructor, target);
+		stack.clearTo(scope);
+	}
+	abstract afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void;
 	abstract toString(): string;
 	abstract toJson(): { [key: string]: any; };
 }
@@ -280,6 +286,7 @@ export class MethodDefinition extends AbstractDefinition {
 		node.decorators.forEach(visitNode);
 	}
 	declare protected value: FunctionExpression;
+	afterInstanceConstruct: any;
 	constructor(
 		private kind: MethodDefinitionKind,
 		key: ExpressionNode | PrivateIdentifier,
@@ -295,12 +302,11 @@ export class MethodDefinition extends AbstractDefinition {
 	getValue() {
 		return this.value;
 	}
-	get(stack: Stack, classConstructor: ClassConstructor): void {
+	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
 		if (this.kind === 'constructor') {
 			this.initConstructor(stack, classConstructor);
 			return;
 		}
-		const target = this.getTarget(classConstructor);
 		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
 		switch (this.kind) {
@@ -432,13 +438,20 @@ export class PropertyDefinition extends AbstractDefinition {
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
 	}
-	get(stack: Stack, classConstructor: ClassConstructor): void {
-		const target = this.getTarget(classConstructor);
+	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
 		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
-		target[name as string] = value;
+		Object.defineProperty(target, name, { writable: true, enumerable: true, configurable: true, value });
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
 		decorators.length && __decorate(decorators, target, name, null);
+	}
+	defineProperty(stack: Stack, instance: Record<string, any>): void {
+		const name: string = this.getKeyName(stack);
+		const value = this.value?.get(stack);
+		// TODO: check if reactive scope need to know about defining the class properties.
+		Object.defineProperty(instance, name, { writable: true, enumerable: true, configurable: true, value });
+		const decorators = this.decorators.map(decorator => decorator.get(stack));
+		decorators.length && __decorate(decorators, instance, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -482,28 +495,26 @@ export class AccessorProperty extends AbstractDefinition {
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
 	}
-	get(stack: Stack, classConstructor: ClassConstructor): void {
-		const target = this.getTarget(classConstructor);
+	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
 		const name = this.getKeyName(stack);
-		const value = this.value?.get(stack);
-		target[name] = value;
-		const ref = this.static ? classConstructor : classConstructor.prototype;
-		Object.defineProperty(ref, name, {
+		const initValue = this.value?.get(stack);
+		Object.defineProperty(
+			target[INSTANCE_PRIVATE_SYMBOL],
+			name,
+			{ writable: true, enumerable: true, configurable: true, value: initValue }
+		);
+		Object.defineProperty(target, name, {
 			configurable: true,
 			enumerable: false,
-			set: function (this: ClassInstance, setValue: any) {
-				this[PRIVATE_SYMBOL][name] = setValue;
+			set: function (this: ClassInstance, value: any) {
+				this[PRIVATE_SYMBOL][name] = value;
 			},
-		});
-		Object.defineProperty(ref, name, {
-			configurable: true,
-			enumerable: false,
 			get: function (this: ClassInstance) {
 				return this[PRIVATE_SYMBOL][name];
 			},
 		});
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		decorators.length && __decorate(decorators, ref, name, null);
+		decorators.length && __decorate(decorators, target, name, null);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -543,7 +554,15 @@ export class ClassBody extends AbstractExpressionNode {
 		throw new Error('Method not implemented.');
 	}
 	get(stack: Stack, classConstructor: ClassConstructor) {
-		this.body.forEach(definition => definition.get(stack, classConstructor));
+		this.body.filter(definition => !(definition instanceof PropertyDefinition))
+			.forEach(definition => definition.get(stack, classConstructor));
+
+		this.body.filter(definition => definition instanceof PropertyDefinition && definition.isStatic())
+			.forEach(definition => definition.get(stack, classConstructor));
+	}
+	afterInstanceConstruct(stack: Stack, instance: Record<string, any>) {
+		(this.body.filter(definition => definition instanceof PropertyDefinition && !definition.isStatic()) as PropertyDefinition[])
+			.forEach(definition => definition.defineProperty(stack, instance));
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
@@ -589,10 +608,17 @@ export class Class extends AbstractExpressionNode {
 		throw new Error(`Class.#set() has no implementation.`);
 	}
 	get(stack: Stack) {
+		// freeze stack
+		stack = stack.copyStack();
 		const className = this.id?.getName() as string | undefined;
 		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined ?? class { };
 		let classConstructor: ClassConstructor = this.createClass(stack, parentClass, className);
 		// build class body
+
+		stack.pushBlockScopeFor({
+			'this': classConstructor,
+			'super': parentClass
+		});
 		this.body.get(stack, classConstructor);
 
 		// apply class decorators
@@ -607,6 +633,7 @@ export class Class extends AbstractExpressionNode {
 	}
 
 	private createClass(stack: Stack, parentClass: TypeOf<any>, className: string | symbol = TEMP_CLASS_NAME) {
+		const body = this.body;
 		const ClassDeclaration = class extends parentClass {
 			static [GET_PARAMETERS](args: any[]): any[] {
 				return args;
@@ -623,15 +650,21 @@ export class Class extends AbstractExpressionNode {
 				const parameters = ClassDeclaration[GET_PARAMETERS](params);
 				super(...parameters);
 				this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], ClassDeclaration[INSTANCE_PRIVATE_SYMBOL]);
-				this[STACK] = stack.copyStack();
-				const instanceStack = this[STACK];
+				const instanceStack = stack.copyStack();
+				// instanceStack.pushBlockScopeFor({ 'new': { target : new.target} });
 				instanceStack.pushScope(ClassScope.readOnlyScopeForThis(this));
 				instanceStack.declareVariable(NEW_TARGET, new.target);
 				instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
 				instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
 				instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
 				instanceStack.pushReactiveScope();
+
+				this[STACK] = instanceStack;
+
 				// init fields and methods values
+				body.afterInstanceConstruct(instanceStack, this);
+
+				// continue class constructor execution
 				ClassDeclaration[CONSTRUCTOR]();
 			}
 		};
