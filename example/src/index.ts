@@ -1,7 +1,6 @@
 import './polyfills.js'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
-import '@popperjs/core';
 
 
 export * from './route/component-outlet.js';
