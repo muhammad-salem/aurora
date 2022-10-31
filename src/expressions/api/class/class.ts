@@ -158,8 +158,8 @@ export class PrivateIdentifier extends Identifier {
 			node.name as string
 		);
 	}
-	get(stack: Stack) {
-		return stack.get(this.toString());
+	get(stack: Stack, thisContext: ClassInstance) {
+		return thisContext[PRIVATE_SYMBOL][this.name];
 	}
 	toString(): string {
 		return `#${this.name}`;
@@ -245,7 +245,7 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	getKeyName(stack: Stack) {
 		switch (true) {
 			case this.computed:
-				return this.key.get(stack);
+				return (this.key as ExpressionNode).get(stack);
 			case this.key instanceof Identifier:
 			case this.key instanceof PrivateIdentifier:
 				return (this.key as Identifier | PrivateIdentifier).getName() as string;
@@ -445,11 +445,12 @@ export class PropertyDefinition extends AbstractDefinition {
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
 		decorators.length && __decorate(decorators, target, name, null);
 	}
-	defineProperty(stack: Stack, instance: Record<string, any>): void {
+	defineProperty(stack: Stack, instance: Record<PropertyKey, any>): void {
 		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
 		// TODO: check if reactive scope need to know about defining the class properties.
-		Object.defineProperty(instance, name, { writable: true, enumerable: true, configurable: true, value });
+		const target = this.key instanceof PrivateIdentifier ? instance[PRIVATE_SYMBOL] : instance;
+		Object.defineProperty(target, name, { writable: true, enumerable: true, configurable: true, value });
 		const decorators = this.decorators.map(decorator => decorator.get(stack));
 		decorators.length && __decorate(decorators, instance, name, null);
 	}
