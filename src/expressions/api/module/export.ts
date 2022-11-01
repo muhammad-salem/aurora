@@ -173,12 +173,13 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 		if (!this.declaration) {
 			return
 		}
-		const declaration = this.declaration.get(stack);
-		const declaredName = this.declaration.getDeclarationName!();
+		this.declaration.get(stack);
+		const declaredName = this.declaration.getDeclarationName?.();
 		if (!declaredName) {
-			throw new Error(`Name is not defined for ${declaration.toString()}`);
+			throw new Error(`Name is not defined for ${this.declaration.toString()}`);
 		}
-		stack.getModule()!.set(declaredName, declaration);
+		const value = stack.get(declaredName);
+		stack.getModule()!.set(declaredName, value);
 	}
 	private exportFromSource(stack: Stack) {
 		if (!this.source) {

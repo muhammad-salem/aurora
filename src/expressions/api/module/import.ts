@@ -213,7 +213,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			return;
 		}
 		this.specifiers.forEach(specifier => {
-			const local = specifier.getLocal().get(stack);
+			const local = specifier.getLocalName();
 			if (specifier instanceof ImportSpecifier) {
 				const imported = specifier.getImported().get(stack);
 				const importedValue = module.get(imported);
