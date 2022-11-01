@@ -574,6 +574,7 @@ export class ModuleScope extends ReactiveScope<ModuleContext> {
 		super(context, propertyKeys);
 	}
 	importModule(propertyKey: keyof ModuleContext, scope: ModuleScope): void {
+		this._ctx[propertyKey] = scope._ctx;
 		this._inners.set(propertyKey, scope);
 	}
 }
