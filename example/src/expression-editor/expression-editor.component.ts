@@ -2,7 +2,8 @@ import {
 	AfterViewInit, Component, ExpressionNode,
 	JavaScriptParser, LanguageMode, OnInit,
 	Scope, Context, Stack, ViewChild,
-	ChangeDetectorRef
+	ChangeDetectorRef,
+	ModuleScopeResolver
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
@@ -24,7 +25,7 @@ const styles = `
 		max-width: 700px;
 	}
 
-	.column > pre, textarea {
+	textarea {
 		height: 750px;
 		overflow: unset !important;
 	}
@@ -45,7 +46,10 @@ const styles = `
 							>{{name |> splitUnderscore |> titlecase}}</button>
 					</div>
 				</div>
-				<div class="column"><textarea #editor cols="40" rows="700">...</textarea></div>
+				<div>
+					<div class="column"><textarea #editor cols="40" rows="500">...</textarea></div>
+					<div class="column"><textarea #moduleA cols="40" rows="200">...</textarea></div>
+				</div>
 				<div class="column">
 					<div class="d-flex flex-column">
 						<pre class="text-success">{{str}}</pre>
@@ -69,6 +73,9 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
 	@ViewChild('editor')
 	editor: HTMLTextAreaElement;
+
+	@ViewChild('moduleA')
+	moduleA: HTMLTextAreaElement;
 
 	@ViewChild('logs')
 	logs: HTMLPreElement;
@@ -108,7 +115,18 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				map(() => this.editor.value),
 				debounceTime(400),
 				distinctUntilChanged(),
-			).subscribe(code => this.loadCode(code))
+			).subscribe(code => this.loadCode(code));
+		this.moduleA.value = `
+		export const user = {
+			name: 'alex',
+			age: 25
+		};
+		export const app = {
+			name: 'aurora',
+			lang: ['ts', 'js', 'html', 'css'],
+		};
+		export default 'defaultName';
+		`;
 	}
 
 	loadCode(code: string | null | undefined) {
@@ -146,9 +164,16 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				},
 			};
 			mockConsole.log('run code...');
+
 			const context: Context = { console: mockConsole };
-			const stack = new Stack(Scope.for(context));
-			this.node.get(stack);
+
+			const resolver = new ModuleScopeResolver({ allowImportExternal: false });
+			const stackA = new Stack(Scope.for(context), resolver, 'moduleA');
+			const moduleExpr = JavaScriptParser.parse(this.moduleA.value, { mode: LanguageMode.Strict });
+			moduleExpr.get(stackA);
+
+			const stackB = new Stack(Scope.for(context), resolver, 'moduleB');
+			this.node.get(stackB);
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
