@@ -186,6 +186,8 @@ export class Stack implements Stack {
 			this.moduleSource = moduleSource;
 			// init module scope for import and export
 			this.moduleScope = new ModuleScope(this.initModuleContext());
+			// register with absoluteUrl
+			this.resolver.register(`/${moduleSource}`, this.moduleScope);
 			this.pushScope(this.moduleScope);
 			// for the rest of module body
 			this.pushReactiveScope();
