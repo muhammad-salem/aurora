@@ -4,7 +4,7 @@ import type {
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
-import type { Identifier } from './values.js';
+import { Identifier } from './values.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { RestElement } from '../computing/rest.js';
@@ -48,7 +48,7 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 		this.value.shareVariables(scopeList);
 	}
 	get(stack: Stack, thisContext: ThisType<any>): any {
-		const name = this.key.get(stack);
+		const name = this.key instanceof Identifier ? this.key.getName() : this.key.get(stack);
 		let value: any;
 		switch (this.kind) {
 			case 'get':

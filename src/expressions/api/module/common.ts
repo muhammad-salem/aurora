@@ -12,6 +12,9 @@ export abstract class ModuleSpecifier extends AbstractExpressionNode {
 	getLocal() {
 		return this.local;
 	}
+	getLocalName() {
+		return this.local.getName();
+	}
 	toJson(): object {
 		return {
 			local: this.local.toJSON()
