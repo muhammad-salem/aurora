@@ -184,8 +184,6 @@ export class PersonApp {
 	}
 
 	selectPersonView(event: CustomEvent<Person>) {
-		console.log('event', event.detail.age);
-		event.detail.age++;
-		console.log('event', event);
+		console.log('person age', event.detail.age);
 	}
 }
