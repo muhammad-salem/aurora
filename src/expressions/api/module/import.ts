@@ -44,6 +44,9 @@ export class ImportSpecifier extends ModuleSpecifier {
 	getImported() {
 		return this.imported;
 	}
+	getImportedName() {
+		return this.imported.getName();
+	}
 	shareVariables(scopeList: Scope<any>[]): void {
 
 	}
@@ -215,7 +218,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		this.specifiers.forEach(specifier => {
 			const local = specifier.getLocalName();
 			if (specifier instanceof ImportSpecifier) {
-				const imported = specifier.getImported().get(stack);
+				const imported = specifier.getImportedName();
 				const importedValue = module.get(imported);
 				stack.getModule()?.set(local, importedValue);
 				const scopeSubscription = module.subscribe(local, (newValue, oldValue) => {
