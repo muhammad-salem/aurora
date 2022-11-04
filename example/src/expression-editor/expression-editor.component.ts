@@ -43,7 +43,7 @@ const styles = `
 							*for="let name of examples"
 							@click="loadExample(name)"
 							[class]="{'btn-outline-primary': example == name, 'btn-link': example != name}"
-							>{{name |> splitUnderscore |> titlecase}}</button>
+							>{{name |> replaceUnderscore |> titlecase}}</button>
 					</div>
 				</div>
 				<div>
@@ -183,7 +183,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		}
 	}
 
-	splitUnderscore(title: string) {
+	replaceUnderscore(title: string) {
 		return title.replace(/_/g, ' ');
 	}
 
