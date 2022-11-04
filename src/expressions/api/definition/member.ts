@@ -54,7 +54,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			if (this.optional) {
 				return;
 			}
-			throw new TypeError(`Cannot read property '${this.property.toString()}' of ${objectRef}`);
+			throw new TypeError(`Cannot read property '${this.property.toString()}' of ${objectRef}, reading [${this.toString()}]`);
 		}
 		let value;
 		if (this.computed) {
