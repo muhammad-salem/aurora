@@ -576,13 +576,26 @@ export class ModuleScope extends ReactiveScope<ModuleContext> {
 	importModule(propertyKey: keyof ModuleContext, scope: ModuleScope): void {
 		this._ctx[propertyKey] = scope._ctx;
 		this._inners.set(propertyKey, scope);
+		this.detectChanges();
 	}
 }
 export class WebModuleScope extends ModuleScope {
-	constructor() {
+
+	// private loaded = false;
+	private import: Promise<any>;
+	constructor(private source: string, private importCallOptions?: ImportCallOptions) {
 		super({} as ModuleContext);
+		this.import = import(
+			source
+			/*, { assert: importCallOptions?.assert } */ // TODO: update in future, node16, ESNEXT,ES2022, ES2023, ES2024
+		).then(module => (this.updateContext(module))).then(() => this._ctx, () => this._ctx);
 	}
-	updateContext(context: any) {
+	private updateContext(context: any) {
 		this._ctx = context;
+		this.detectChanges();
+	}
+
+	resolveImport() {
+		return this.import;
 	}
 }

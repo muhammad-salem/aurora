@@ -199,7 +199,11 @@ export class Stack implements Stack {
 	}
 	private initModuleContext(): ModuleContext {
 		const importFunc = (path: string) => {
-			return this.importModule(path);
+			const module = this.importModule(path);
+			if (module instanceof WebModuleScope) {
+				return module.resolveImport();
+			}
+			return Promise.resolve(module.getContext());
 		};
 		importFunc.meta = {
 			url: createRootURL(this.moduleSource!),
@@ -389,13 +393,8 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		if (!this.config?.allowImportExternal) {
 			throw new Error(`Error: Import External Module is not allowed.`);
 		}
-		const webScope = new WebModuleScope()
+		const webScope = new WebModuleScope(source, importCallOptions);
 		this.modules.push([source, webScope]);
-		// active later
-		// import(source, importCallOptions)
-		import(source).then(module => {
-			webScope.updateContext(module);
-		});
 		return webScope;
 	}
 	protected readonly isValidHTTPUrl = (string: string) => {
