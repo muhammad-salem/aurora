@@ -150,6 +150,9 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	}
 
 	stringify(str: any) {
+		if (typeof str !== 'object') {
+			return str;
+		}
 		return JSON.stringify(str, undefined, 2);
 	}
 
