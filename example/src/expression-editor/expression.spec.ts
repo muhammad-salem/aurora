@@ -1,7 +1,19 @@
+export const MODULE_A = `
+export const user = {
+	name: 'alex',
+	age: 25
+};
+export const app = {
+	name: 'aurora',
+	lang: ['ts', 'js', 'html', 'css'],
+};
+export default 'defaultName';
+`;
+
 
 export const IMPORT_ALL = `
 import * as foo from 'moduleA';
-console.log(foo);
+console.log('foo', foo);
 `;
 export const IMPORT_DEFAULT = `
 import defaultName from 'moduleA';

@@ -47,8 +47,14 @@ const styles = `
 					</div>
 				</div>
 				<div>
-					<div class="column"><textarea #editor cols="40" rows="500">...</textarea></div>
-					<div class="column"><textarea #moduleA cols="40" rows="200">...</textarea></div>
+					<div class="column">
+						<h5>/moduleB</h5>
+						<textarea #moduleB cols="40" rows="500">...</textarea>
+					</div>
+					<div class="column">
+						<h5>/moduleA</h5>
+						<textarea #moduleA cols="40" rows="200">...</textarea>
+					</div>
 				</div>
 				<div class="column">
 					<div class="d-flex flex-column">
@@ -71,11 +77,11 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
 	node: ExpressionNode;
 
-	@ViewChild('editor')
-	editor: HTMLTextAreaElement;
-
 	@ViewChild('moduleA')
 	moduleA: HTMLTextAreaElement;
+
+	@ViewChild('moduleB')
+	moduleB: HTMLTextAreaElement;
 
 	@ViewChild('logs')
 	logs: HTMLPreElement;
@@ -105,28 +111,18 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		import('./expression.spec.js')
 			.then(module => (this.error.innerText = '', module))
 			.then(module => this.loadCode(module[name]))
-			.then(code => this.editor.value = code!)
+			.then(code => this.moduleB.value = code!)
 			.then(() => this._cd.detectChanges());
 	}
 
 	afterViewInit(): void {
-		fromEvent(this.editor, 'change')
+		fromEvent(this.moduleB, 'change')
 			.pipe(
-				map(() => this.editor.value),
+				map(() => this.moduleB.value),
 				debounceTime(400),
 				distinctUntilChanged(),
 			).subscribe(code => this.loadCode(code));
-		this.moduleA.value = `
-		export const user = {
-			name: 'alex',
-			age: 25
-		};
-		export const app = {
-			name: 'aurora',
-			lang: ['ts', 'js', 'html', 'css'],
-		};
-		export default 'defaultName';
-		`;
+		import('./expression.spec.js').then(module => this.moduleA.value = module.MODULE_A);
 	}
 
 	loadCode(code: string | null | undefined) {
@@ -171,7 +167,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			const stack = new Stack(Scope.for(context));
 			const fileProvider: ModuleSourceProvider = {
 				'/moduleA': this.moduleA.value,
-				'/moduleB': this.editor.value,
+				'/moduleB': this.moduleB.value,
 			};
 			const resolver = new ModuleScopeResolver(stack, fileProvider, { allowImportExternal: false });
 			resolver.resolve('/moduleB');
