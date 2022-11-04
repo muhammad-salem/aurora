@@ -2,8 +2,8 @@ import {
 	AfterViewInit, Component, ExpressionNode,
 	JavaScriptParser, LanguageMode, OnInit,
 	Scope, Context, Stack, ViewChild,
-	ChangeDetectorRef,
-	ModuleScopeResolver
+	ChangeDetectorRef, ModuleScopeResolver,
+	ModuleSourceProvider
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
@@ -167,16 +167,14 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				},
 			};
 			mockConsole.log('run code...');
-
 			const context: Context = { console: mockConsole };
-
-			const resolver = new ModuleScopeResolver({ allowImportExternal: false });
-			const stackA = new Stack(Scope.for(context), resolver, 'moduleA');
-			const moduleExpr = JavaScriptParser.parse(this.moduleA.value, { mode: LanguageMode.Strict });
-			moduleExpr.get(stackA);
-
-			const stackB = new Stack(Scope.for(context), resolver, 'moduleB');
-			this.node.get(stackB);
+			const stack = new Stack(Scope.for(context));
+			const fileProvider: ModuleSourceProvider = {
+				'/moduleA': this.moduleA.value,
+				'/moduleB': this.editor.value,
+			};
+			const resolver = new ModuleScopeResolver(stack, fileProvider, { allowImportExternal: false });
+			resolver.resolve('/moduleB');
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
