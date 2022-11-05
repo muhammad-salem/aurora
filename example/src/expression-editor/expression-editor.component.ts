@@ -95,7 +95,8 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		'IMPORT_NAMED',
 		'IMPORT_NAMED_ALIAS',
 		'PLAY',
-		'CLASS_EXAMPLE'
+		'CLASS_EXAMPLE',
+		'CLASS_SUPER_EXAMPLE',
 	];
 	example: string;
 
@@ -163,7 +164,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				},
 			};
 			mockConsole.log('run code...');
-			const context: Context = { console: mockConsole };
+			const context: Context = { Object, console: mockConsole };
 			const stack = new Stack(Scope.for(context));
 			const fileProvider: ModuleSourceProvider = {
 				'/moduleA': this.moduleA.value,
