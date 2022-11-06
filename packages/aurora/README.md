@@ -27,6 +27,8 @@
 [npm-url-elements]: https://npmjs.org/package/@ibyar/elements
 [npm-image-platform]: https://img.shields.io/npm/v/@ibyar/platform.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-platform]: https://npmjs.org/package/@ibyar/platform
+[npm-image-cli]: https://img.shields.io/npm/v/@ibyar/cli.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-cli]: https://npmjs.org/package/@ibyar/cli
 [npm-image-reflect-metadata]: https://img.shields.io/npm/v/reflect-metadata.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-reflect-metadata]: https://npmjs.org/package/reflect-metadata
 [npm-image-tslib]: https://img.shields.io/npm/v/tslib.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
@@ -65,6 +67,7 @@ yarn add @ibyar/aurora
 | [@ibyar/expressions](https://github.com/ibyar/aurora/tree/dev/packages/expressions) | a JavaScript engine build by the guid of [V8 JavaScript engine](https://github.com/v8/v8), and follow [ESTree](https://github.com/estree/estree/) for generate ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
 | [@ibyar/elements](https://github.com/ibyar/aurora/tree/dev/packages/elements) | parse html and extract bind expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] |
 | [@ibyar/platform](https://github.com/ibyar/aurora/tree/dev/packages/platform) | utility package for i18n and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] |
+| [@ibyar/cli](https://github.com/ibyar/aurora/tree/dev/packages/cli) | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] |
 | [reflect-metadata](https://github.com/rbuckton/reflect-metadata) | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] |
 | [tslib](https://github.com/Microsoft/tslib) | This is a runtime library for TypeScript that contains all of the TypeScript helper functions. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
 
