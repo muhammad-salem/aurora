@@ -8,7 +8,6 @@ import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { Identifier } from '../definition/values.js';
-import { MemberExpression } from '../definition/member.js';
 import { FunctionExpression } from '../definition/function.js';
 import { BlockStatement } from '../statement/control/block.js';
 import { TypeOf } from '../utils.js';
@@ -16,14 +15,9 @@ import { Decorator } from './decorator.js';
 import { CallExpression } from '../computing/call.js';
 
 const TEMP_CLASS_NAME: unique symbol = Symbol('TempClassName');
-const SUPER: unique symbol = Symbol('Super');
-const NEW_TARGET: unique symbol = Symbol('NewTarget');
-const IMPORT_META: unique symbol = Symbol('ImportMeta');
 const STACK: unique symbol = Symbol('Stack');
 
 const GET_PARAMETERS: unique symbol = Symbol('GetParameters');
-const GET_SUPER_PROPERTY: unique symbol = Symbol('GetSuperProperty');
-const CALL_SUPER_Method: unique symbol = Symbol('CallSuperMethod');
 
 const CONSTRUCTOR: unique symbol = Symbol('Constructor');
 const PRIVATE_SYMBOL: unique symbol = Symbol('Private');
@@ -69,7 +63,7 @@ export class Super extends AbstractExpressionNode {
 		throw new Error('Super.#set() Method not implemented.');
 	}
 	get(stack: Stack, thisContext?: any) {
-		throw new Error('Super.#get() Method not implemented.');
+		return stack.get('super');
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Super.#dependency() Method not implemented.');
@@ -94,7 +88,7 @@ export class Super extends AbstractExpressionNode {
  * In the future, it will represent other meta properties as well.
  */
 @Deserializer('MetaProperty')
-export class MetaProperty extends MemberExpression {
+export class MetaProperty extends AbstractExpressionNode {
 
 	public static NewTarget = new MetaProperty(new Identifier('new'), new Identifier('target'));
 
@@ -120,22 +114,31 @@ export class MetaProperty extends MemberExpression {
 		visitNode(node.meta);
 		visitNode(node.property);
 	}
-	constructor(private meta: Identifier, property: Identifier) {
-		super(meta, property, false);
+	constructor(private meta: Identifier, private property: Identifier) {
+		super();
 	}
 	getMeta() {
 		return this.meta;
 	}
+	getProperty() {
+		return this.property;
+	}
 	shareVariables(scopeList: Scope<any>[]): void { }
-	get(stack: Stack, thisContext?: any) {
-		if (MetaProperty.getJsonName(this.meta) === 'new' && MetaProperty.getJsonName(this.property) === 'target') {
-			return stack.get(NEW_TARGET);
+	get(stack: Stack) {
+		const metaRef = this.meta.get(stack);
+		if (metaRef === undefined || metaRef === null) {
+			throw new TypeError(`Cannot read meta property '${this.property.toString()}' of ${metaRef}, reading [${this.toString()}]`);
 		}
-		else if (MetaProperty.getJsonName(this.meta) === 'import' && MetaProperty.getJsonName(this.property) === 'meta') {
-			const importObject = stack.getModule()?.get('import');
-			return importObject['meta'];
-		}
-		return super.get(stack, thisContext);
+		return this.property.get(stack, metaRef);
+	}
+	set(stack: Stack, value: any) {
+		throw new Error(`MetaProperty#set() has no implementation.`);
+	}
+	dependency(computed?: true | undefined): ExpressionNode[] {
+		return [];
+	}
+	dependencyPath(computed?: true | undefined): ExpressionEventPath[] {
+		return [];
 	}
 	toString(): string {
 		return `${this.meta.toString()}.${this.property.toString()}`;
@@ -184,7 +187,7 @@ export class StaticBlock extends BlockStatement {
 				const scope = new ClassScope(constructor);
 				stack.pushScope(scope);
 				try {
-					super.get(stack)
+					super.get(stack);
 				} finally {
 					stack.clearTo(scope);
 				}
@@ -652,14 +655,13 @@ export class Class extends AbstractExpressionNode {
 				super(...parameters);
 				this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], ClassDeclaration[INSTANCE_PRIVATE_SYMBOL]);
 				const instanceStack = stack.copyStack();
-				// instanceStack.pushBlockScopeFor({ 'new': { target : new.target} });
-				instanceStack.pushScope(ClassScope.readOnlyScopeForThis(this));
-				instanceStack.declareVariable(NEW_TARGET, new.target);
-				instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
-				instanceStack.declareVariable(CALL_SUPER_Method, (name: string) => super[name]());
-				instanceStack.declareVariable(GET_SUPER_PROPERTY, (name: string) => super[name]);
-				instanceStack.pushReactiveScope();
 
+				instanceStack.pushScope(ClassScope.scopeForThis(this));
+				instanceStack.declareVariable('super', parentClass.prototype);
+				instanceStack.declareVariable('new', { target: new.target });
+				instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
+				instanceStack.lastScope().getContextProxy = () => this;
+				instanceStack.pushReactiveScope();
 				this[STACK] = instanceStack;
 
 				// init fields and methods values

@@ -138,6 +138,15 @@ export class ClassScope<T extends Context> extends Scope<T> {
 		rootScope.setInnerScope('this', thisScope);
 		return rootScope;
 	}
+	static scopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
+		const thisScope = ClassScope.for(ctx, propertyKeys, privateKeys);
+		const thisCtx = {
+			'this': ctx,
+		};
+		const rootScope = Scope.for(thisCtx, ['this']);
+		rootScope.setInnerScope('this', thisScope);
+		return rootScope;
+	}
 	protected _private: Context = {};
 	constructor(context: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]);
 	constructor(context: T, propertyKeys?: (keyof T)[], private _pKeys?: (keyof T)[]) {
