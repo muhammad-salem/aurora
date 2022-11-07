@@ -52,12 +52,10 @@ export class BlockStatement extends AbstractExpressionNode {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
-		return `{
-			${this.body
-				.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
-				.map(ref => `${ref.string}${ref.insert ? ';' : ''}`)
-				.join('\n')}
-		}`;
+		return `{\n${this.body
+			.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
+			.map(ref => `  ${ref.string}${ref.insert ? ';' : ''}`)
+			.join('\n')}\n}`;
 	}
 	toJson(): object {
 		return { body: this.body.map(node => node.toJSON()) };
