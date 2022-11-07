@@ -25,6 +25,10 @@ const styles = `
 		max-width: 700px;
 	}
 
+	.column1 {
+		width: 200px;
+	}
+
 	textarea {
 		height: 750px;
 		overflow: unset !important;
@@ -37,7 +41,7 @@ const styles = `
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
-				<div class="column">
+				<div class="column column1">
 					<div class="h-25 d-flex flex-column d-flex justify-content-evenly">
 						<button class="btn"
 							*for="let name of examples"
@@ -90,6 +94,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	error: HTMLPreElement;
 
 	examples = [
+		'FUNCTION_SCOPES',
 		'IMPORT_ALL',
 		'IMPORT_DEFAULT',
 		'IMPORT_NAMED',
@@ -104,7 +109,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	constructor(private _cd: ChangeDetectorRef) { }
 
 	onInit(): void {
-		this.loadExample('IMPORT_ALL');
+		this.loadExample('FUNCTION_SCOPES');
 	}
 
 	loadExample(name: keyof typeof import('./expression.spec.js')) {
@@ -150,7 +155,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		if (typeof str !== 'object') {
 			return str;
 		}
-		return JSON.stringify(str, undefined, 2);
+		return JSON.stringify(str, undefined, 1);
 	}
 
 	executeCode() {
