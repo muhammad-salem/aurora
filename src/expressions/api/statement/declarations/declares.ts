@@ -3,7 +3,6 @@ import type {
 	NodeDeserializer, ExpressionNode, DeclarationExpression,
 	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
-import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -28,9 +27,6 @@ export class VariableDeclarator extends AbstractExpressionNode implements Declar
 	}
 	getInit() {
 		return this.init;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.init?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`VariableNode#set() has no implementation.`);
@@ -92,9 +88,6 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements D
 	}
 	getKind() {
 		return this.kind;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.declarations.forEach(declaration => declaration.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		if (Array.isArray(value)) {

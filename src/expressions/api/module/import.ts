@@ -2,7 +2,7 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType,
 } from '../expression.js';
-import type { ModuleScope, Scope } from '../../scope/scope.js';
+import type { ModuleScope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -47,9 +47,6 @@ export class ImportSpecifier extends ModuleSpecifier {
 	getImportedName() {
 		return this.imported.getName();
 	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
-	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -91,9 +88,6 @@ export class ImportDefaultSpecifier extends ModuleSpecifier {
 	static visit(node: ImportDefaultSpecifier, visitNode: VisitNodeType): void {
 		visitNode(node.local);
 	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
-	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -123,9 +117,6 @@ export class ImportNamespaceSpecifier extends ModuleSpecifier {
 	}
 	static visit(node: ImportNamespaceSpecifier, visitNode: VisitNodeType): void {
 		visitNode(node.local);
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -197,7 +188,6 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	getAssertions() {
 		return this.assertions;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}
@@ -301,7 +291,6 @@ export class ImportExpression extends AbstractExpressionNode {
 	getSource() {
 		return this.source;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}

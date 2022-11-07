@@ -1,4 +1,3 @@
-import { Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Identifier, Literal } from '../definition/values.js';
@@ -45,9 +44,6 @@ export class ImportAttribute extends AbstractExpressionNode {
 	}
 	getValue() {
 		return this.value;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		throw new Error('Method not implemented.');
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');

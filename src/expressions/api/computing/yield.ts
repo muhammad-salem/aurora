@@ -1,5 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	ExpressionEventPath, VisitNodeType
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, YieldDelegateValue, YieldValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -17,9 +19,6 @@ export class YieldExpression extends AbstractExpressionNode {
 	}
 	getArgument() {
 		return this.argument;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.argument?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`YieldExpression#set() has no implementation.`);

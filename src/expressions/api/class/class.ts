@@ -2,7 +2,7 @@ import type {
 	DeclarationExpression, ExpressionEventPath,
 	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
-import { ClassScope, Scope } from '../../scope/scope.js';
+import { ClassScope } from '../../scope/scope.js';
 import { __decorate } from 'tslib';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -58,7 +58,6 @@ export class Super extends AbstractExpressionNode {
 	constructor() {
 		super();
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Super.#set() Method not implemented.');
 	}
@@ -123,7 +122,6 @@ export class MetaProperty extends AbstractExpressionNode {
 	getProperty() {
 		return this.property;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	get(stack: Stack) {
 		const metaRef = this.meta.get(stack);
 		if (metaRef === undefined || metaRef === null) {
@@ -230,7 +228,6 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	getDecorators() {
 		return this.decorators;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('AbstractDefinition.#set() Method not implemented.');
 	}
@@ -553,7 +550,6 @@ export class ClassBody extends AbstractExpressionNode {
 	getBody() {
 		return this.body;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -585,7 +581,6 @@ export class ClassBody extends AbstractExpressionNode {
 }
 
 export class Class extends AbstractExpressionNode {
-	private sharedVariables?: Scope<any>[];
 	constructor(
 		protected body: ClassBody,
 		protected decorators: Decorator[],
@@ -604,9 +599,6 @@ export class Class extends AbstractExpressionNode {
 	}
 	getSuperClass() {
 		return this.superClass;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.sharedVariables = scopeList;
 	}
 	set(stack: Stack) {
 		throw new Error(`Class.#set() has no implementation.`);

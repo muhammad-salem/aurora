@@ -13,27 +13,6 @@ export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 export interface ExpressionNode {
 
 	/**
-	 * pass scope list from outer function to inner function,
-	 * 
-	 * all other end point expression should do nothing,
-	 *  if this function executed.
-	 * 
-	 * @param scopeList all outer function scopes given to the inner function,
-	 * this solution ignore the fact that some inner function has no need to
-	 * get shared variables, as its implementation never say that
-	 * ```js
-	 * function f(d) {
-	 * 		function g() {
-	 * 			const a = ({ d }) => d;
-	 * 			return a;
-	 * 		}
-	 * 		return [d, g];
-	 * }
-	 * ```
-	 */
-	shareVariables(scopeList: Scope<Context>[]): void;
-
-	/**
 	 * assign the value to this expression in stack.
 	 * 
 	 * most ExpressionNode will not implement this method, and will throw an exception.

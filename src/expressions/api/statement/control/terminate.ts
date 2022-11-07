@@ -1,5 +1,4 @@
 import type { ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../../expression.js';
-import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -29,7 +28,6 @@ abstract class TerminateStatement extends AbstractExpressionNode {
 	getLabel() {
 		this.label;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`TerminateStatement#set() has no implementation.`);
 	}
@@ -106,10 +104,6 @@ export class LabeledStatement extends AbstractExpressionNode {
 	}
 	getBody() {
 		return this.body;
-	}
-
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.body.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('LabeledStatement#set() not implemented.');

@@ -2,7 +2,6 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -48,13 +47,6 @@ export class PipelineExpression extends AbstractExpressionNode {
 	}
 	getArguments() {
 		return this.arguments;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.left.shareVariables(scopeList);
-		this.right.shareVariables(scopeList);
-		(this.arguments
-			.filter(param => typeof param !== 'string') as ExpressionNode[])
-			.forEach(param => param.shareVariables(scopeList))
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`PipelineNode#set() has no implementation.`);

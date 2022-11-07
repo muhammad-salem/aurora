@@ -2,7 +2,6 @@ import type {
 	NodeDeserializer, ExpressionNode, DeclarationExpression,
 	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -22,9 +21,6 @@ export class ArrayExpression extends AbstractExpressionNode {
 	}
 	getElements() {
 		return this.elements;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.elements.forEach(item => item?.shareVariables(scopeList));
 	}
 	set(stack: Stack) {
 		throw new Error("ArrayExpression#set() has no implementation.");
@@ -63,7 +59,6 @@ export class ArrayPattern extends AbstractExpressionNode implements DeclarationE
 	getElements() {
 		return this.elements;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, values: any) {
 		throw new Error('ArrayPattern#set() has no implementation.');
 	}
