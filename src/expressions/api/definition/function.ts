@@ -133,6 +133,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
+			stack.declareVariable('super', this?.constructor?.prototype);
 			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
@@ -183,6 +184,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
+			stack.declareVariable('super', this?.constructor?.prototype);
 			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
@@ -204,6 +206,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
+			stack.declareVariable('super', this?.constructor?.prototype);
 			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
@@ -260,6 +263,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
+			stack.declareVariable('super', this?.constructor?.prototype);
 			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
