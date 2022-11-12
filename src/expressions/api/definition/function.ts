@@ -101,7 +101,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 	set(stack: Stack, value: Function) {
 		throw new Error(`${this.constructor.name}#set() has no implementation.`);
 	}
-	setParameter(stack: Stack, args: any[]) {
+	defineFunctionArguments(stack: Stack, args: any[]) {
 		const rest = this.params[this.params.length - 1] instanceof RestElement;
 		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
@@ -133,7 +133,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
-			self.setParameter(stack, args);
+			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
 			for (const statement of statements) {
@@ -183,7 +183,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
-			self.setParameter(stack, args);
+			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
 			for (const statement of statements) {
@@ -204,7 +204,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
-			self.setParameter(stack, args);
+			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
 			for (const statement of statements) {
@@ -260,7 +260,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			const stack = gStack.copyStack();
 			stack.pushBlockScope();
 			stack.declareVariable('this', this);
-			self.setParameter(stack, args);
+			self.defineFunctionArguments(stack, args);
 			let returnValue: any;
 			const statements = (self.body as BlockStatement).getBody();
 			for (const statement of statements) {
