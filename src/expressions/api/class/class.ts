@@ -2,8 +2,6 @@ import type {
 	DeclarationExpression, ExpressionEventPath,
 	ExpressionNode, NodeDeserializer, VisitNodeType
 } from '../expression.js';
-import { ClassScope } from '../../scope/scope.js';
-import { __decorate } from 'tslib';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -15,14 +13,7 @@ import { Decorator } from './decorator.js';
 import { CallExpression } from '../computing/call.js';
 
 const TEMP_CLASS_NAME: unique symbol = Symbol('TempClassName');
-const STACK: unique symbol = Symbol('Stack');
-
-const GET_PARAMETERS: unique symbol = Symbol('GetParameters');
-
-const CONSTRUCTOR: unique symbol = Symbol('Constructor');
-const PRIVATE_SYMBOL: unique symbol = Symbol('Private');
-const INSTANCE_PRIVATE_SYMBOL: unique symbol = Symbol('InstancePrivate');
-const STATIC_INITIALIZATION_BLOCK: unique symbol = Symbol('StaticBlock');
+const PRIVATE_SYMBOL: unique symbol = Symbol('#');;
 
 interface ClassConstructor {
 	/**
@@ -30,19 +21,119 @@ interface ClassConstructor {
 	 */
 	readonly prototype: ClassInstance;
 
-	[GET_PARAMETERS](args: any[]): any[];
-	[STATIC_INITIALIZATION_BLOCK]: Function[];
+	/**
+	 * private static properties and methods
+	 */
 	[PRIVATE_SYMBOL]: Record<PropertyKey, any>;
-	[INSTANCE_PRIVATE_SYMBOL]: Record<PropertyKey, any>;
-	[CONSTRUCTOR]: Function;
-	[key: string]: any;
+
+	/**
+	 * public static class properties
+	 */
+	[key: PropertyKey]: any;
 }
 
 declare var ClassInstance: ClassConstructor;
 interface ClassInstance {
+
+	/**
+	 * private instance properties and methods
+	 */
 	[PRIVATE_SYMBOL]: Record<PropertyKey, any>;
-	[STACK]: Stack;
-	[key: string]: any;
+
+	/**
+	 * public instance properties
+	 */
+	[key: PropertyKey]: any;
+}
+
+
+type PropertyInitializer = () => { key: PropertyKey, value: any, isPrivate: boolean };
+
+class ClassInitializer {
+
+
+	/**
+	 * register class public static properties and methods
+	 */
+	private staticInitializer: Record<PropertyKey, PropertyDescriptor & ThisType<any>> = {};
+
+	/**
+	 * register class private static properties and methods
+	 */
+	private staticPrivateInitializer: Record<PropertyKey, PropertyDescriptor & ThisType<any>> = {};
+
+	/**
+	 * register static initialization block
+	 */
+	private staticInitializerBlock: (() => void)[] = [];
+
+	/**
+	 * register class constructor function
+	 */
+	private instanceConstructor?: Function;
+
+	/**
+	 * register super parameter resolver
+	 */
+	private superParameterResolver: ((params: any[]) => any[]) = (params: any[]) => params;
+
+	/**
+	 * register in class property
+	 */
+	private instanceMethod: Record<PropertyKey, PropertyDescriptor & ThisType<any>> = {};
+
+	/**
+	 * register method in instance private space
+	 */
+	private privateInstanceMethod: Record<PropertyKey, PropertyDescriptor & ThisType<any>> = {};
+
+	/**
+	 * register property in instance itself
+	 */
+	private instanceInitializer: PropertyInitializer[] = [];
+
+	addStaticInitializer(key: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) {
+		Reflect.set(this.staticInitializer, key, attributes)
+	}
+	addStaticPrivateInitializer(key: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) {
+		Reflect.set(this.staticPrivateInitializer, key, attributes)
+	}
+	addStaticInitializerBlock(block: () => void) {
+		this.staticInitializerBlock.push(block);
+	}
+	setConstructor(cstr: Function) {
+		this.instanceConstructor = cstr;
+	}
+	setParameterResolver(resolver: (params: any[]) => any[]) {
+		this.superParameterResolver = resolver;
+	}
+	addInstanceMethod(key: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) {
+		Reflect.set(this.instanceMethod, key, attributes);
+	}
+	addPrivateInstanceMethod(key: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) {
+		Reflect.set(this.privateInstanceMethod, key, attributes);
+	}
+	addInstanceInitializer(initializer: PropertyInitializer) {
+		this.instanceInitializer.push(initializer);
+	}
+	initClass(classConstructor: ClassConstructor) {
+		Object.defineProperties(classConstructor, this.staticInitializer);
+		Object.defineProperties(classConstructor[PRIVATE_SYMBOL], this.staticPrivateInitializer);
+		Object.defineProperties(classConstructor.prototype, this.instanceMethod);
+		this.staticInitializerBlock.forEach(block => block());
+	}
+	getSuperArguments(args: any[]) {
+		return this.superParameterResolver(args);
+	}
+	initInstance(instance: ClassInstance) {
+		Object.defineProperties(instance[PRIVATE_SYMBOL], this.privateInstanceMethod);
+		this.instanceInitializer.forEach(initializer => {
+			const definition = initializer();
+			const target = definition.isPrivate ? instance[PRIVATE_SYMBOL] : instance;
+			target[definition.key] = definition.value;
+		});
+		this.instanceConstructor?.apply(instance);
+	}
 }
 
 
@@ -162,6 +253,10 @@ export class PrivateIdentifier extends Identifier {
 	get(stack: Stack, thisContext: ClassInstance) {
 		return thisContext[PRIVATE_SYMBOL][this.name];
 	}
+	set(stack: Stack, value: any) {
+		const thisContext = stack.lastScope().getContext();
+		return thisContext[PRIVATE_SYMBOL][this.name] = value;
+	}
 	toString(): string {
 		return `#${this.name}`;
 	}
@@ -178,19 +273,8 @@ export class StaticBlock extends BlockStatement {
 	constructor(body: ExpressionNode[]) {
 		super(body);
 	}
-	get(stack: Stack, classConstructor?: ClassConstructor): void {
-		const constructor = classConstructor!;
-		constructor[STATIC_INITIALIZATION_BLOCK].push(
-			() => {
-				const scope = new ClassScope(constructor);
-				stack.pushScope(scope);
-				try {
-					super.get(stack);
-				} finally {
-					stack.clearTo(scope);
-				}
-			}
-		);
+	get(stack: Stack, classInitializer?: ClassInitializer): void {
+		classInitializer?.addStaticInitializerBlock(super.get(stack));
 	}
 	toString(): string {
 		return `static ${super.toString()}`;
@@ -225,6 +309,9 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	isStatic() {
 		return this.static;
 	}
+	isPrivate() {
+		return this.key instanceof PrivateIdentifier;
+	}
 	getDecorators() {
 		return this.decorators;
 	}
@@ -237,28 +324,17 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return [];
 	}
-	getTarget(classConstructor: ClassConstructor) {
-		return this.static
-			? (this.key instanceof PrivateIdentifier ? classConstructor[PRIVATE_SYMBOL] : classConstructor)
-			: (this.key instanceof PrivateIdentifier ? classConstructor[INSTANCE_PRIVATE_SYMBOL] : classConstructor.prototype);
-	}
 	getKeyName(stack: Stack) {
-		switch (true) {
-			case this.computed:
-				return (this.key as ExpressionNode).get(stack);
-			case this.key instanceof Identifier:
-			case this.key instanceof PrivateIdentifier:
-				return (this.key as Identifier | PrivateIdentifier).getName() as string;
-			default: return this.key.toString();
+		if (this.computed) {
+			// private properties can't be computed
+			return (this.key as ExpressionNode).get(stack);
 		}
+		if (this.key instanceof Identifier) {
+			return this.key.getName();
+		}
+		return this.key.toString();
 	}
-	get(stack: Stack, classConstructor: ClassConstructor): void {
-		const target = this.getTarget(classConstructor);
-		const scope = stack.pushBlockScopeFor(target);
-		this.afterClassConstruct(stack, classConstructor, target);
-		stack.clearTo(scope);
-	}
-	abstract afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void;
+	abstract get(stack: Stack, initializer?: ClassInitializer): void;
 	abstract toString(): string;
 	abstract toJson(): { [key: string]: any; };
 }
@@ -302,65 +378,71 @@ export class MethodDefinition extends AbstractDefinition {
 	getValue() {
 		return this.value;
 	}
-	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
+	get(stack: Stack, initializer: ClassInitializer): void {
 		if (this.kind === 'constructor') {
-			this.initConstructor(stack, classConstructor);
+			this.initConstructor(stack, initializer);
 			return;
 		}
 		const name: string = this.getKeyName(stack);
 		const value = this.value?.get(stack);
-		switch (this.kind) {
-			case 'method':
-				target[name] = value;
-				break;
-			case 'set':
-				Object.defineProperty(target, name, {
-					configurable: true,
-					enumerable: false,
-					set: value as (v: any) => void,
-				});
-				break;
-			case 'get':
-				Object.defineProperty(target, name, {
-					configurable: true,
-					enumerable: false,
-					get: value as () => any,
-				});
-				break;
-			default:
-				break;
+		const attributes = this.getPropertyAttributes(value);
+		if (this.isStatic() && this.isPrivate()) {
+			initializer.addStaticPrivateInitializer(name, attributes);
+		} else if (this.isStatic()) {
+			initializer.addStaticInitializer(name, attributes);
+		} else if (this.isPrivate()) {
+			initializer.addPrivateInstanceMethod(name, attributes);
+		} else {
+			initializer.addInstanceMethod(name, attributes);
 		}
-		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		decorators.length && __decorate(decorators, target, name, null);
 	}
-	private initConstructor(stack: Stack, classConstructor: ClassConstructor) {
+
+	private getPropertyAttributes(value: any): PropertyDescriptor & ThisType<any> {
+		switch (this.kind) {
+			case 'set': return {
+				writable: true,
+				configurable: true,
+				enumerable: false,
+				set: value,
+			};
+			case 'get': return {
+				writable: true,
+				configurable: true,
+				enumerable: false,
+				get: value,
+			};
+			default:
+			case 'method': return {
+				writable: true,
+				configurable: true,
+				enumerable: false,
+				value: value
+			};
+		}
+	}
+	private initConstructor(stack: Stack, initializer: ClassInitializer) {
 		const body = (this.value.getBody() as BlockStatement).getBody();
 		let superIndex = body
-			.findIndex(call => call instanceof CallExpression && Super.INSTANCE === call.getCallee());
-		if (superIndex === -1) {
-			superIndex = body.length;
-		}
-		const superCall = body[superIndex] as CallExpression | undefined;
-
-		const blockBeforeSuper = new BlockStatement(body.slice(0, superIndex));
+			.findIndex(call => call instanceof CallExpression && call.getCallee() instanceof Super);
 		const blockAfterSuper = new BlockStatement(body.slice(superIndex + 1));
-
-		if (superCall) {
-			classConstructor[GET_PARAMETERS] = function (this: ClassConstructor, params: any[]) {
+		initializer.setConstructor(function (this: ClassInstance, params: any[]) {
+			const scope = stack.pushBlockScope();
+			blockAfterSuper.get(stack);
+			stack.clearTo(scope);
+		});
+		if (superIndex >= 0) {
+			const blockBeforeSuper = new BlockStatement(body.slice(0, superIndex));
+			const superCall = body[superIndex] as CallExpression;
+			const cstrExpr = this;
+			initializer.setParameterResolver(function (params: any[]) {
 				const scope = stack.pushBlockScope();
-				this.value.setParameter(stack, params);
+				cstrExpr.value.defineFunctionArguments(stack, params);
 				blockBeforeSuper.get(stack);
 				const parameters = superCall.getCallParameters(stack);
 				stack.clearTo(scope);
 				return parameters;
-			};
+			});
 		}
-
-		classConstructor[CONSTRUCTOR] = function (this: ClassInstance, params: any[]) {
-			const scope = this[STACK].pushBlockScope();
-			blockAfterSuper.get(this[STACK]);
-			stack.clearTo(scope);
-		};
 	}
 	toString(): string {
 		let str = this.decorators.map(decorator => decorator.toString()).join(' ');
@@ -410,8 +492,6 @@ export class MethodDefinition extends AbstractDefinition {
 	}
 }
 
-
-
 /**
  * - When key is a PrivateIdentifier, computed must be false.
  */
@@ -438,21 +518,19 @@ export class PropertyDefinition extends AbstractDefinition {
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
 	}
-	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
+	get(stack: Stack, initializer: ClassInitializer): void {
 		const name: string = this.getKeyName(stack);
+		if (!this.isStatic()) {
+			initializer.addInstanceInitializer(() => ({ isPrivate: this.isPrivate(), key: name, value: this.value?.get(stack) }));
+			return;
+		}
 		const value = this.value?.get(stack);
-		Object.defineProperty(target, name, { writable: true, enumerable: true, configurable: true, value });
-		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		decorators.length && __decorate(decorators, target, name, null);
-	}
-	defineProperty(stack: Stack, instance: Record<PropertyKey, any>): void {
-		const name: string = this.getKeyName(stack);
-		const value = this.value?.get(stack);
-		// TODO: check if reactive scope need to know about defining the class properties.
-		const target = this.key instanceof PrivateIdentifier ? instance[PRIVATE_SYMBOL] : instance;
-		Object.defineProperty(target, name, { writable: true, enumerable: true, configurable: true, value });
-		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		decorators.length && __decorate(decorators, instance, name, null);
+		const attributes = { writable: true, configurable: true, enumerable: true, value };
+		if (this.isPrivate()) {
+			initializer.addStaticPrivateInitializer(name, attributes);
+		} else {
+			initializer.addStaticInitializer(name, attributes);
+		}
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -496,15 +574,10 @@ export class AccessorProperty extends AbstractDefinition {
 		value?: ExpressionNode) {
 		super(key, decorators, computed, isStatic, value);
 	}
-	afterClassConstruct(stack: Stack, classConstructor: ClassConstructor, target: Record<PropertyKey, any>): void {
-		const name = this.getKeyName(stack);
-		const initValue = this.value?.get(stack);
-		Object.defineProperty(
-			target[INSTANCE_PRIVATE_SYMBOL],
-			name,
-			{ writable: true, enumerable: true, configurable: true, value: initValue }
-		);
-		Object.defineProperty(target, name, {
+	get(stack: Stack, initializer: ClassInitializer): void {
+		const name: string = this.getKeyName(stack);
+		const accessorAttributes = {
+			writable: false,
 			configurable: true,
 			enumerable: false,
 			set: function (this: ClassInstance, value: any) {
@@ -513,9 +586,16 @@ export class AccessorProperty extends AbstractDefinition {
 			get: function (this: ClassInstance) {
 				return this[PRIVATE_SYMBOL][name];
 			},
-		});
-		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		decorators.length && __decorate(decorators, target, name, null);
+		};
+		if (!this.isStatic()) {
+			initializer.addInstanceInitializer(() => ({ isPrivate: true, key: name, value: this.value?.get(stack) }));
+			initializer.addInstanceMethod(name, accessorAttributes);
+			return;
+		}
+		const value = this.value?.get(stack);
+		const valueAttribute = { writable: true, configurable: true, enumerable: true, value };
+		initializer.addStaticInitializer(name, accessorAttributes);
+		initializer.addStaticPrivateInitializer(name, valueAttribute);
 	}
 	toString(): string {
 		const decorators = this.decorators.map(decorator => decorator.toString()).join('\n');
@@ -553,16 +633,8 @@ export class ClassBody extends AbstractExpressionNode {
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
-	get(stack: Stack, classConstructor: ClassConstructor) {
-		this.body.filter(definition => !(definition instanceof PropertyDefinition))
-			.forEach(definition => definition.get(stack, classConstructor));
-
-		this.body.filter(definition => definition instanceof PropertyDefinition && definition.isStatic())
-			.forEach(definition => definition.get(stack, classConstructor));
-	}
-	afterInstanceConstruct(stack: Stack, instance: Record<string, any>) {
-		(this.body.filter(definition => definition instanceof PropertyDefinition && !definition.isStatic()) as PropertyDefinition[])
-			.forEach(definition => definition.defineProperty(stack, instance));
+	get(stack: Stack, initializer: ClassInitializer) {
+		this.body.forEach(definition => definition.get(stack, initializer));
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
@@ -606,65 +678,35 @@ export class Class extends AbstractExpressionNode {
 	get(stack: Stack) {
 		// freeze stack
 		stack = stack.copyStack();
-		const className = this.id?.getName() as string | undefined;
-		const parentClass = this.superClass?.get(stack) as TypeOf<any> | undefined ?? class { };
-		let classConstructor: ClassConstructor = this.createClass(stack, parentClass, className);
+		const className = this.id?.getName() as string ?? TEMP_CLASS_NAME;
+		const SuperClass = this.superClass?.get(stack) as TypeOf<any> | undefined ?? class { };
+		const initializer = new ClassInitializer();
+		const ClassConstructor: ClassConstructor = this.createClass(SuperClass, className, initializer);
+
 		// build class body
-
 		stack.pushBlockScopeFor({
-			'this': classConstructor,
-			'super': parentClass
+			'this': ClassConstructor,
+			'super': SuperClass,
 		});
-		this.body.get(stack, classConstructor);
-
-		// apply class decorators
-		const decorators = this.decorators.map(decorator => decorator.get(stack));
-		classConstructor = __decorate(decorators, classConstructor);
-
-		// run static initialization block
-		classConstructor[STATIC_INITIALIZATION_BLOCK].forEach(block => block());
-		Reflect.deleteProperty(classConstructor, STATIC_INITIALIZATION_BLOCK);
-
-		return classConstructor;
+		this.body.get(stack, initializer);
+		initializer.initClass(ClassConstructor);
+		return ClassConstructor;
 	}
 
-	private createClass(stack: Stack, parentClass: TypeOf<any>, className: string | symbol = TEMP_CLASS_NAME) {
-		const body = this.body;
-		const ClassDeclaration = class extends parentClass {
-			static [GET_PARAMETERS](args: any[]): any[] {
-				return args;
-			}
-			static [STATIC_INITIALIZATION_BLOCK]: Function[] = [];
-			static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
-			static [INSTANCE_PRIVATE_SYMBOL] = {};
-			static [CONSTRUCTOR](): void { }
-
-			[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
-
-			[STACK]: Stack;
-			constructor(...params: any[]) {
-				const parameters = ClassDeclaration[GET_PARAMETERS](params);
-				super(...parameters);
-				this[PRIVATE_SYMBOL] = Object.assign(this[PRIVATE_SYMBOL], ClassDeclaration[INSTANCE_PRIVATE_SYMBOL]);
-				const instanceStack = stack.copyStack();
-
-				instanceStack.pushScope(ClassScope.scopeForThis(this));
-				instanceStack.declareVariable('super', parentClass.prototype);
-				instanceStack.declareVariable('new', { target: new.target });
-				instanceStack.declareVariable(PRIVATE_SYMBOL, this[PRIVATE_SYMBOL]);
-				instanceStack.lastScope().getContextProxy = () => this;
-				instanceStack.pushReactiveScope();
-				this[STACK] = instanceStack;
-
-				// init fields and methods values
-				body.afterInstanceConstruct(instanceStack, this);
-
-				// continue class constructor execution
-				ClassDeclaration[CONSTRUCTOR]();
+	private createClass(parentClass: TypeOf<any>, className: string | symbol, initializer: ClassInitializer) {
+		const nameClassDeclaration: Record<PropertyKey, ClassConstructor> = {
+			[className]: class extends parentClass {
+				static [Symbol.toStringTag] = className;
+				static [PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+				[PRIVATE_SYMBOL]: { [key: string | number | symbol]: any } = {};
+				constructor(...params: any[]) {
+					const parameters = initializer.getSuperArguments(params);
+					super(...parameters);
+					initializer.initInstance(this);
+				}
 			}
 		};
-		Reflect.set(ClassDeclaration, 'name', className);
-		return ClassDeclaration;
+		return nameClassDeclaration[className];
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		throw new Error('Method not implemented.');
