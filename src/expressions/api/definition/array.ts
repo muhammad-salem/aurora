@@ -35,7 +35,7 @@ export class ArrayExpression extends AbstractExpressionNode {
 		return this.elements.filter(item => item).flatMap(item => item!.dependencyPath(computed));
 	}
 	toString() {
-		return this.elements.map(item => item?.toString()).toString();
+		return `[ ${this.elements.map(item => item?.toString()).toString()} ]`;
 	}
 	toJson(): object {
 		return {
@@ -119,7 +119,7 @@ export class ArrayPattern extends AbstractExpressionNode implements DeclarationE
 		return this.elements.filter(item => item).flatMap(item => item!.dependencyPath(computed));
 	}
 	toString() {
-		return this.elements.map(item => item?.toString()).toString();
+		return `[ ${this.elements.map(item => item?.toString()).toString()} ]`;
 	}
 	toJson(): object {
 		return {
