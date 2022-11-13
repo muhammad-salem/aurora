@@ -120,7 +120,7 @@ export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 		const outputs = Object.keys(c.outputs).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
 		const interfaceBody = `
-			public static observedAttributes: (${attributes})[];
+			public static observedAttributes: [${attributes}];
 
 			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
 
