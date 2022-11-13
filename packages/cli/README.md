@@ -10,11 +10,11 @@
 [npm-url]: https://npmjs.org/package/@ibyar/cli
 [downloads-image]: https://img.shields.io/npm/dt/@ibyar/cli
 [downloads-url]: https://npmjs.org/package/@ibyar/cli
-[license-img]: https://img.shields.io/github/license/ibyar/cli
-[license-url]: https://github.com/ibyar/cli/blob/master/LICENSE
+[license-img]: https://img.shields.io/github/license/ibyar/aurora
+[license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
-[contributors]: https://img.shields.io/github/contributors/ibyar/cli
+[contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
 The Ibyar/Aurora CLI tool.
 
