@@ -37,7 +37,7 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType, DeclarationExpression
 } from '../expression.js';
-import { ModuleContext, ReactiveScope, Scope } from '../../scope/scope.js';
+import { ModuleContext, ReactiveScope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -78,9 +78,6 @@ export class ExportSpecifier extends ModuleSpecifier {
 	}
 	getExported() {
 		return this.exported;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -154,7 +151,6 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 	getAssertions() {
 		return this.assertions;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ExportNamedDeclaration.#set() has no implementation.`);
 	}
@@ -173,12 +169,13 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 		if (!this.declaration) {
 			return
 		}
-		const declaration = this.declaration.get(stack);
-		const declaredName = this.declaration.getDeclarationName!();
+		this.declaration.get(stack);
+		const declaredName = this.declaration.getDeclarationName?.();
 		if (!declaredName) {
-			throw new Error(`Name is not defined for ${declaration.toString()}`);
+			throw new Error(`Name is not defined for ${this.declaration.toString()}`);
 		}
-		stack.getModule()!.set(declaredName, declaration);
+		const value = stack.get(declaredName);
+		stack.getModule()!.set(declaredName, value);
 	}
 	private exportFromSource(stack: Stack) {
 		if (!this.source) {
@@ -277,7 +274,6 @@ export class ExportDefaultDeclaration extends AbstractExpressionNode {
 	getDeclaration() {
 		return this.declaration;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ExportDefaultDeclaration.#set() has no implementation.`);
 	}
@@ -334,7 +330,6 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 	getAssertions() {
 		return this.assertions;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ExportDefaultDeclaration.#set() has no implementation.`);
 	}

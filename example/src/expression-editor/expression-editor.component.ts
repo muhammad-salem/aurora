@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, ExpressionNode, JavaScriptParser, LanguageMode, OnInit, Scope, Context, Stack, ViewChild } from '@ibyar/aurora';
+import {
+	AfterViewInit, Component, ExpressionNode,
+	JavaScriptParser, LanguageMode, OnInit,
+	Scope, Context, Stack, ViewChild,
+	ChangeDetectorRef, ModuleScopeResolver,
+	ModuleSourceProvider
+} from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
 const styles = `
@@ -19,7 +25,11 @@ const styles = `
 		max-width: 700px;
 	}
 
-	.column > pre, textarea {
+	.column1 {
+		width: 200px;
+	}
+
+	textarea {
 		height: 750px;
 		overflow: unset !important;
 	}
@@ -27,19 +37,29 @@ const styles = `
 
 @Component({
 	selector: 'expression-editor',
+	zone: 'manual',
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
-				<div class="column">
+				<div class="column column1">
 					<div class="h-25 d-flex flex-column d-flex justify-content-evenly">
 						<button class="btn"
 							*for="let name of examples"
 							@click="loadExample(name)"
 							[class]="{'btn-outline-primary': example == name, 'btn-link': example != name}"
-							>{{name |> splitUnderscore |> titlecase}}</button>
+							>{{name |> replaceUnderscore |> titlecase}}</button>
 					</div>
 				</div>
-				<div class="column"><textarea #editor cols="40" rows="700">...</textarea></div>
+				<div>
+					<div class="column">
+						<h5>/moduleB</h5>
+						<textarea #moduleB cols="40" rows="500">...</textarea>
+					</div>
+					<div class="column">
+						<h5>/moduleA</h5>
+						<textarea #moduleA cols="40" rows="200">...</textarea>
+					</div>
+				</div>
 				<div class="column">
 					<div class="d-flex flex-column">
 						<pre class="text-success">{{str}}</pre>
@@ -61,8 +81,11 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
 	node: ExpressionNode;
 
-	@ViewChild('editor')
-	editor: HTMLTextAreaElement;
+	@ViewChild('moduleA')
+	moduleA: HTMLTextAreaElement;
+
+	@ViewChild('moduleB')
+	moduleB: HTMLTextAreaElement;
 
 	@ViewChild('logs')
 	logs: HTMLPreElement;
@@ -71,17 +94,22 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	error: HTMLPreElement;
 
 	examples = [
+		'FUNCTION_SCOPES',
 		'IMPORT_ALL',
 		'IMPORT_DEFAULT',
 		'IMPORT_NAMED',
 		'IMPORT_NAMED_ALIAS',
 		'PLAY',
-		'CLASS_EXAMPLE'
+		'CLASS_EXAMPLE',
+		'CLASS_SUPER_EXAMPLE',
 	];
 	example: string;
 
+
+	constructor(private _cd: ChangeDetectorRef) { }
+
 	onInit(): void {
-		this.loadExample('IMPORT_ALL');
+		this.loadExample('FUNCTION_SCOPES');
 	}
 
 	loadExample(name: keyof typeof import('./expression.spec.js')) {
@@ -89,16 +117,18 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		import('./expression.spec.js')
 			.then(module => (this.error.innerText = '', module))
 			.then(module => this.loadCode(module[name]))
-			.then(code => this.editor.value = code!);
+			.then(code => this.moduleB.value = code!)
+			.then(() => this._cd.detectChanges());
 	}
 
 	afterViewInit(): void {
-		fromEvent(this.editor, 'change')
+		fromEvent(this.moduleB, 'change')
 			.pipe(
-				map(() => this.editor.value),
+				map(() => this.moduleB.value),
 				debounceTime(400),
 				distinctUntilChanged(),
-			).subscribe(code => this.loadCode(code))
+			).subscribe(code => this.loadCode(code));
+		import('./expression.spec.js').then(module => this.moduleA.value = module.MODULE_A);
 	}
 
 	loadCode(code: string | null | undefined) {
@@ -115,12 +145,17 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
+		} finally {
+			this._cd.detectChanges();
 		}
 		return code;
 	}
 
 	stringify(str: any) {
-		return JSON.stringify(str, undefined, 2);
+		if (typeof str !== 'object') {
+			return str;
+		}
+		return JSON.stringify(str, undefined, 1);
 	}
 
 	executeCode() {
@@ -134,16 +169,23 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 				},
 			};
 			mockConsole.log('run code...');
-			const context: Context = { console: mockConsole };
+			const context: Context = { Object, console: mockConsole };
 			const stack = new Stack(Scope.for(context));
-			this.node.get(stack);
+			const fileProvider: ModuleSourceProvider = {
+				'/moduleA': this.moduleA.value,
+				'/moduleB': this.moduleB.value,
+			};
+			const resolver = new ModuleScopeResolver(stack, fileProvider, { allowImportExternal: false });
+			resolver.resolve('/moduleB');
 		} catch (e: any) {
 			this.error.innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
+		} finally {
+			this._cd.detectChanges();
 		}
 	}
 
-	splitUnderscore(title: string) {
+	replaceUnderscore(title: string) {
 		return title.replace(/_/g, ' ');
 	}
 

@@ -2,7 +2,6 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType
 } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -32,11 +31,6 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	}
 	getConsequent() {
 		return this.consequent;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.test.shareVariables(scopeList);
-		this.alternate.shareVariables(scopeList);
-		this.consequent.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`ConditionalExpression#set() has no implementation.`);

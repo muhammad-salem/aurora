@@ -1,4 +1,3 @@
-import { Scope } from '../../scope/scope.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -17,9 +16,6 @@ export class Decorator extends AbstractExpressionNode {
 	}
 	getExpression() {
 		return this.expression;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.expression.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Decorator#set() Method not implemented.');

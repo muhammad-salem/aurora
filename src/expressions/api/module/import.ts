@@ -2,7 +2,7 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType,
 } from '../expression.js';
-import type { ModuleScope, Scope } from '../../scope/scope.js';
+import type { ModuleScope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -44,8 +44,8 @@ export class ImportSpecifier extends ModuleSpecifier {
 	getImported() {
 		return this.imported;
 	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
+	getImportedName() {
+		return this.imported.getName();
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -88,9 +88,6 @@ export class ImportDefaultSpecifier extends ModuleSpecifier {
 	static visit(node: ImportDefaultSpecifier, visitNode: VisitNodeType): void {
 		visitNode(node.local);
 	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
-	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
 	}
@@ -120,9 +117,6 @@ export class ImportNamespaceSpecifier extends ModuleSpecifier {
 	}
 	static visit(node: ImportNamespaceSpecifier, visitNode: VisitNodeType): void {
 		visitNode(node.local);
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Method not implemented.');
@@ -194,7 +188,6 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	getAssertions() {
 		return this.assertions;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}
@@ -213,9 +206,9 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			return;
 		}
 		this.specifiers.forEach(specifier => {
-			const local = specifier.getLocal().get(stack);
+			const local = specifier.getLocalName();
 			if (specifier instanceof ImportSpecifier) {
-				const imported = specifier.getImported().get(stack);
+				const imported = specifier.getImportedName();
 				const importedValue = module.get(imported);
 				stack.getModule()?.set(local, importedValue);
 				const scopeSubscription = module.subscribe(local, (newValue, oldValue) => {
@@ -298,7 +291,6 @@ export class ImportExpression extends AbstractExpressionNode {
 	getSource() {
 		return this.source;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}

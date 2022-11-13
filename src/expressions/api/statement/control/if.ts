@@ -2,7 +2,6 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
-import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -37,11 +36,6 @@ export class IfStatement extends AbstractExpressionNode {
 	}
 	getAlternate() {
 		return this.alternate;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.test.shareVariables(scopeList);
-		this.consequent.shareVariables(scopeList);
-		this.alternate?.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`IfStatement#set() has no implementation.`);

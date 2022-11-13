@@ -1,4 +1,3 @@
-import type { Scope } from '../scope/scope.js';
 import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
@@ -47,7 +46,6 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 		}
 		return eventMap;
 	}
-	abstract shareVariables(scopeList: Scope<any>[]): void;
 	abstract set(stack: Stack, value: any): any;
 	abstract get(stack: Stack, thisContext?: any): any;
 	abstract dependency(computed?: true): ExpressionNode[];
@@ -71,10 +69,6 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 	}
 	getRight() {
 		return this.right;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.left.shareVariables(scopeList);
-		this.right.shareVariables(scopeList);
 	}
 	set(context: object, value: any) {
 		throw new Error(`${this.constructor.name}#set() of operator: '${this.operator}' has no implementation.`);

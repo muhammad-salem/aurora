@@ -34,7 +34,6 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	getProperty() {
 		return this.property;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope<Context>(stack);
 		let propertyKey: PropertyKey;
@@ -54,7 +53,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			if (this.optional) {
 				return;
 			}
-			throw new TypeError(`Cannot read property '${this.property.toString()}' of ${objectRef}`);
+			throw new TypeError(`Cannot read property '${this.property.toString()}' of ${objectRef}, reading [${this.toString()}]`);
 		}
 		let value;
 		if (this.computed) {

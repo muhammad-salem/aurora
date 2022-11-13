@@ -1,5 +1,4 @@
 import type { DeclarationExpression, ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../expression.js';
-import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -17,9 +16,6 @@ export class RestElement extends AbstractExpressionNode implements DeclarationEx
 	}
 	getArgument() {
 		return this.argument;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.argument.shareVariables(scopeList);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('RestElement#set() Method has no implementation.');

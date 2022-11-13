@@ -21,7 +21,6 @@ export class ChainExpression extends AbstractExpressionNode implements CanFindSc
 	getExpression() {
 		return this.expression;
 	}
-	shareVariables(scopeList: Scope<any>[]): void { }
 	set(stack: Stack, value: any) {
 		throw new Error(`ChainExpression.#set() has no implementation.`)
 	}

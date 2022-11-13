@@ -118,66 +118,6 @@ export class Scope<T extends Context> implements Scope<T> {
 	}
 }
 
-/**
- * a class scope used for class instance and private static properties 
- */
-
-export class ClassScope<T extends Context> extends Scope<T> {
-	static for<T extends Context>(ctx: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
-		return new ClassScope(ctx, propertyKeys, privateKeys);
-	}
-	static blockScope<T extends Context>(propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
-		return new ClassScope({} as T, propertyKeys, privateKeys);
-	}
-	static readOnlyScopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]) {
-		const thisScope = ClassScope.for(ctx, propertyKeys, privateKeys);
-		const thisCtx = {
-			'this': ctx,
-		};
-		const rootScope = ReadOnlyScope.for(thisCtx, ['this']);
-		rootScope.setInnerScope('this', thisScope);
-		return rootScope;
-	}
-	protected _private: Context = {};
-	constructor(context: T, propertyKeys?: (keyof T)[], privateKeys?: (keyof T)[]);
-	constructor(context: T, propertyKeys?: (keyof T)[], private _pKeys?: (keyof T)[]) {
-		super(context, propertyKeys);
-	}
-	getPrivateContext(): T {
-		return this._private;
-	}
-	get(key: keyof T): any {
-		if (this.isPrivateKey(key)) {
-			return Reflect.get(this._private, key);
-		}
-		return super.get(key);
-	}
-	set(key: keyof T, value: any, receiver?: any): boolean {
-		if (this.isPrivateKey(key)) {
-			return Reflect.set(this._private, key, value);
-		}
-		return super.set(key, value, receiver);
-	}
-	has(key: keyof T): boolean {
-		if (this.isPrivateKey(key)) {
-			return this._pKeys?.includes(key) ?? key in this._private;
-		}
-		return super.has(key);
-	}
-	delete(key: keyof T): boolean {
-		if (this.isPrivateKey(key)) {
-			return Reflect.deleteProperty(this._private, key);
-		}
-		return super.delete(key);
-	}
-	protected isPrivateKey(key: keyof T) {
-		return typeof key === 'string' && key.startsWith('#');
-	}
-	getClass(): TypeOf<ReadOnlyScope<Context>> {
-		return Scope;
-	}
-}
-
 export class ReadOnlyScope<T extends Context> extends Scope<T> {
 	static for<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
 		return new ReadOnlyScope(ctx, propertyKeys);
@@ -574,14 +514,28 @@ export class ModuleScope extends ReactiveScope<ModuleContext> {
 		super(context, propertyKeys);
 	}
 	importModule(propertyKey: keyof ModuleContext, scope: ModuleScope): void {
+		this._ctx[propertyKey] = scope._ctx;
 		this._inners.set(propertyKey, scope);
+		this.detectChanges();
 	}
 }
 export class WebModuleScope extends ModuleScope {
-	constructor() {
+
+	// private loaded = false;
+	private import: Promise<any>;
+	constructor(private source: string, private importCallOptions?: ImportCallOptions) {
 		super({} as ModuleContext);
+		this.import = import(
+			source
+			/*, { assert: importCallOptions?.assert } */ // TODO: update in future, node16, ESNEXT,ES2022, ES2023, ES2024
+		).then(module => (this.updateContext(module))).then(() => this._ctx, () => this._ctx);
 	}
-	updateContext(context: any) {
+	private updateContext(context: any) {
 		this._ctx = context;
+		this.detectChanges();
+	}
+
+	resolveImport() {
+		return this.import;
 	}
 }

@@ -1,4 +1,6 @@
 import type { DeclarationExpression } from '../api/expression.js';
+import { LanguageMode } from '../v8/language.js';
+import { JavaScriptParser } from '../v8/parser.js';
 import { finalizerRegister } from './finalizer.js';
 import {
 	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
@@ -173,9 +175,14 @@ export class Stack implements Stack {
 	constructor(stack: Array<Scope<Context>>);
 	constructor(stack: Array<Scope<Context>>, resolver: ModuleScopeResolver, moduleSource: string);
 
-	constructor(globals?: Array<Scope<Context>> | Scope<Context>, resolver?: ModuleScopeResolver, moduleSource?: string) {
+	constructor(stack: Stack);
+	constructor(stack: Stack, resolver: ModuleScopeResolver, moduleSource: string);
+
+	constructor(globals?: Stack | Array<Scope<Context>> | Scope<Context>, resolver?: ModuleScopeResolver, moduleSource?: string) {
 		if (Array.isArray(globals)) {
-			this.stack = globals;
+			this.stack = globals.slice();
+		} else if (globals instanceof Stack) {
+			this.stack = globals.stack.slice();
 		} else if (typeof globals == 'object') {
 			this.stack = [globals];
 		} else {
@@ -197,7 +204,11 @@ export class Stack implements Stack {
 	}
 	private initModuleContext(): ModuleContext {
 		const importFunc = (path: string) => {
-			return this.importModule(path);
+			const module = this.importModule(path);
+			if (module instanceof WebModuleScope) {
+				return module.resolveImport();
+			}
+			return Promise.resolve(module.getContext());
 		};
 		importFunc.meta = {
 			url: createRootURL(this.moduleSource!),
@@ -330,15 +341,24 @@ export function createRootURL(source: string): URL {
 
 export interface ResolverConfig {
 	/**
-	 * 
+	 * allow import modules from external http(s) module
 	 */
 	allowImportExternal?: boolean;
 
 };
+
+/**
+ * file system provider
+ */
+export interface ModuleSourceProvider {
+	[url: string]: string;
+}
+
 export class ModuleScopeResolver implements ModuleScopeResolver {
 	protected modules: [string, ModuleScope][] = [];
-	constructor(protected config?: ResolverConfig) { }
-	register(source: string, moduleScope: ModuleScope) {
+
+	constructor(protected globalStack: Stack, protected provider: ModuleSourceProvider, protected config?: ResolverConfig) { }
+	private register(source: string, moduleScope: ModuleScope) {
 		const stackInfo = this.modules.find(tuple => tuple[0] == source && tuple[1] == moduleScope);
 		if (stackInfo) {
 			stackInfo[1] = moduleScope;
@@ -346,14 +366,16 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 			this.modules.push([source, moduleScope]);
 		}
 	}
-	resolve(source: string, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope {
+	resolve(source: keyof ModuleSourceProvider): ModuleScope;
+	resolve(source: keyof ModuleSourceProvider, moduleScope: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope;
+	resolve(source: string, moduleScope?: ModuleScope, importCallOptions?: ImportCallOptions): ModuleScope {
 		if (this.isValidHTTPUrl(source)) {
 			return this.resolveExternalModule(source, importCallOptions);
 		}
 		if (source.startsWith('/')) {
 			return this.findScopeBySource(source, importCallOptions);
 		}
-		const currentSource = this.findSourceByScope(moduleScope);
+		const currentSource = this.findSourceByScope(moduleScope!);
 		const absoluteUrl = this.resolveURL(source, currentSource);
 		return this.findScopeBySource(absoluteUrl, importCallOptions);
 	}
@@ -372,6 +394,17 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		}
 		const importedScope = this.modules.find(tuple => tuple[0] == source)?.[1];
 		if (!importedScope) {
+			// search in the file system provider
+			const javascriptSource = this.provider[source];
+			if (javascriptSource || javascriptSource == '') {
+				// module exists
+				const moduleProgram = JavaScriptParser.parse(javascriptSource, { mode: LanguageMode.Strict });
+				const stack = new Stack(this.globalStack, this, source);
+				// register with absoluteUrl
+				this.register(source, stack.getModule()!);
+				moduleProgram.get(stack);
+				return stack.getModule()!;
+			}
 			throw new Error(`Can't find module scope`);
 		}
 		return importedScope;
@@ -387,13 +420,8 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		if (!this.config?.allowImportExternal) {
 			throw new Error(`Error: Import External Module is not allowed.`);
 		}
-		const webScope = new WebModuleScope()
+		const webScope = new WebModuleScope(source, importCallOptions);
 		this.modules.push([source, webScope]);
-		// active later
-		// import(source, importCallOptions)
-		import(source).then(module => {
-			webScope.updateContext(module);
-		});
 		return webScope;
 	}
 	protected readonly isValidHTTPUrl = (string: string) => {

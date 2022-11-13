@@ -2,7 +2,6 @@ import type {
 	NodeDeserializer, ExpressionNode,
 	ExpressionEventPath, VisitNodeType
 } from '../../expression.js';
-import type { Scope } from '../../../scope/scope.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -26,9 +25,6 @@ export class BlockStatement extends AbstractExpressionNode {
 	}
 	getBody() {
 		return this.body;
-	}
-	shareVariables(scopeList: Scope<any>[]): void {
-		this.body.forEach(statement => statement.shareVariables(scopeList));
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`BlockStatement#set() has no implementation.`);
@@ -56,12 +52,10 @@ export class BlockStatement extends AbstractExpressionNode {
 		return this.body.flatMap(node => node.dependencyPath(computed));
 	}
 	toString(): string {
-		return `{
-			${this.body
-				.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
-				.map(ref => `${ref.string}${ref.insert ? ';' : ''}`)
-				.join('\n')}
-		}`;
+		return `{\n${this.body
+			.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
+			.map(ref => `  ${ref.string}${ref.insert ? ';' : ''}`)
+			.join('\n')}\n}`;
 	}
 	toJson(): object {
 		return { body: this.body.map(node => node.toJSON()) };

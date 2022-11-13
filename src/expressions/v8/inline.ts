@@ -1271,7 +1271,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// FormalParameter[Yield,GeneratorParameter] :
 		//   BindingElement[?Yield, ?GeneratorParameter]
 		functionInfo.rest = this.check(Token.ELLIPSIS);
-		let pattern = this.parseBindingPattern(true);
+		const pattern = this.parseBindingPattern(true);
 		let initializer: Param;
 		if (this.check(Token.ASSIGN)) {
 			if (functionInfo.rest) {
@@ -1280,9 +1280,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.setAcceptIN(true);
 			const value = this.parseAssignmentExpression();
 			this.restoreAcceptIN();
-			initializer = new Param(pattern as DeclarationExpression, value);
+			initializer = new Param(this.checkParamType(pattern as DeclarationExpression), value);
 		} else {
-			initializer = new Param(pattern as DeclarationExpression);
+			initializer = new Param(this.checkParamType(pattern as DeclarationExpression));
 		}
 		return initializer;
 	}
@@ -1643,18 +1643,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.setFunctionKind(kind);
 			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions().map(expr => new Param(expr as DeclarationExpression));
-				const last = params.at(-1)?.getIdentifier();
-				if (last instanceof SpreadElement) {
-					const arg = last.getArgument() as DeclarationExpression;
-					let param = arg;
-					if (arg instanceof ArrayExpression) {
-						param = new ArrayPattern(arg.getElements() as DeclarationExpression[]);
-					} else if (arg instanceof ObjectExpression) {
-						param = new ObjectPattern(arg.getProperties());
-					}
-					params[params.length - 1] = new Param(new RestElement(param));
-				}
+				const params = expression.getExpressions()
+					.map(expr => new Param(expr as DeclarationExpression));
 				arrow = this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
 			} else if (expression instanceof GroupingExpression) {
 				arrow = this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
@@ -1695,7 +1685,32 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
-	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], kind: FunctionKind): ExpressionNode {
+	private checkParamType(identifier: DeclarationExpression) {
+		if (identifier instanceof ArrayExpression) {
+			return new ArrayPattern(identifier.getElements() as DeclarationExpression[]);
+		} else if (identifier instanceof ObjectExpression) {
+			return new ObjectPattern(identifier.getProperties());
+		}
+		else if (identifier instanceof SpreadElement) {
+			let arg = identifier.getArgument() as DeclarationExpression;
+			// let param = arg;
+			if (arg instanceof ArrayExpression) {
+				arg = new ArrayPattern(arg.getElements() as DeclarationExpression[]);
+			} else if (arg instanceof ObjectExpression) {
+				arg = new ObjectPattern(arg.getProperties());
+			}
+			return new RestElement(arg);
+		}
+		return identifier;
+	}
+	private mapParams(parameters: Param[]) {
+		return parameters.map(param => new Param(
+			this.checkParamType(param.getIdentifier()),
+			param.getDefaultValue()
+		));
+	}
+	protected parseArrowFunctionLiteral(parameters: Param[], kind: FunctionKind): ExpressionNode {
+		parameters = this.mapParams(parameters);
 		if (this.peek().isNotType(Token.ARROW)) {
 			throw new SyntaxError(this.errorMessage('SyntaxError Expecting Arrow Token'));
 		}
