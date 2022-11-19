@@ -1,7 +1,5 @@
 /// <reference types='zone.js' />
-import { hasBindingHook } from '@ibyar/expressions';
 import { EventEmitter } from '../component/events.js';
-import { createProxyZone } from './proxy.js';
 
 const NOOP = () => { };
 const EMPTY_PAYLOAD = {};
