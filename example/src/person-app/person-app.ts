@@ -35,7 +35,7 @@ import type { Person, PersonModel } from './person.js';
 
 		<person-edit #personEdit [(person)]="people[0]" (save)="printPerson($event)"></person-edit>
 
-		<progress-bar [value]="+people[0].age" min="0" max="100"></progress-bar>
+		<progress-bar [value]="+people[0].age" max="100"></progress-bar>
 
 		
 		<h6>if(...){template ref #1} else {template ref #2} else if(....){template ref #3} else {template ref #4}</h6>

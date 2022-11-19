@@ -1,4 +1,5 @@
 import {
+	ChangeDetectorRef,
 	Component, EventEmitter, HostBinding, HostListener,
 	Input, OnChanges, OnInit, Optional, Output, SelfSkip, Service,
 	View, ViewChild, ViewChildren
@@ -143,12 +144,9 @@ export class PersonEdit {
 
 @Component({
 	selector: 'progress-bar',
-	template: '<progress [min]="min" [max]="max" [value]="value" ></progress>'
+	template: '<progress [max]="max" [value]="value"></progress>'
 })
 export class ProgressBar {
-
-	@Input()
-	min: number;
 
 	@Input()
 	max: number;
