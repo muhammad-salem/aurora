@@ -11,7 +11,7 @@ import { ComponentRender } from './render.js';
 import { getCurrentZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
-import { createZoneProxyHandler } from '../zone/proxy.js';
+import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
@@ -55,7 +55,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
-				? createZoneProxyHandler(model, this._zone)
+				? createProxyZone(model, this._zone)
 				: model;
 			modelScope.getContextProxy = () => modelProxyRef;
 			this._modelScope = modelScope;

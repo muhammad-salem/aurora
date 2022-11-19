@@ -1,12 +1,16 @@
 import { hasBindingHook, RevocableProxy } from '@ibyar/expressions';
 import { ProxyAuroraZone } from './zone.js';
 
-const ProxyCache = new WeakMap<any, ZoneProxyHandler<any>>();
+const ProxyCache = new WeakMap<any, any>();
 
 /**
  * crete new proxy handler for object
  */
 export class ZoneProxyHandler<T extends object> implements ProxyHandler<T> {
+
+	static of<M extends object>(zone: ProxyAuroraZone): ZoneProxyHandler<M> {
+		return new ZoneProxyHandler(zone);
+	}
 	constructor(private _zone: ProxyAuroraZone) { }
 	defineProperty(target: T, p: string | symbol, attributes: PropertyDescriptor): boolean {
 		this._zone.scheduleChangesDetection();
@@ -24,7 +28,7 @@ export class ZoneProxyHandler<T extends object> implements ProxyHandler<T> {
 		if (!(value && typeof value === 'object') || hasBindingHook(value)) {
 			return value;
 		}
-		const proxy = createZoneProxyHandler(value, this._zone);
+		const proxy = createProxyZone(value, this._zone);
 		ProxyCache.set(value, proxy);
 		return proxy;
 	}
@@ -34,10 +38,10 @@ export class ZoneProxyHandler<T extends object> implements ProxyHandler<T> {
 	}
 }
 
-export function createRevocableZoneProxyHandler<T extends object>(model: T, zone: ProxyAuroraZone): RevocableProxy<T> {
+export function createRevocableProxyZone<T extends object>(model: T, zone: ProxyAuroraZone): RevocableProxy<T> {
 	return Proxy.revocable<T>(model, new ZoneProxyHandler(zone));
 }
 
-export function createZoneProxyHandler<T extends object>(model: T, zone: ProxyAuroraZone): T {
+export function createProxyZone<T extends object>(model: T, zone: ProxyAuroraZone): T {
 	return new Proxy<T>(model, new ZoneProxyHandler(zone));
 }
