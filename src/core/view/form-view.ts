@@ -44,7 +44,6 @@ export class NativeElementInternals implements ElementInternals {
 
 ARIAMixinAttributes.forEach(ariaName => {
 	Object.defineProperty(NativeElementInternals.prototype, ariaName, {
-		writable: false,
 		enumerable: true,
 		configurable: true,
 		get: function name(this: { el: HTMLInputElement }) {
