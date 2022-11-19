@@ -60,6 +60,10 @@ export class SimpleCustomMessage {
 		this.message = 'test message';
 	}
 
+	onMessageChange(text: string) {
+		console.log('onMessageChange', text);
+	}
+
 }
 
 @Component({
