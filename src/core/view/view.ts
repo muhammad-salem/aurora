@@ -91,7 +91,11 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	return viewClass;
 }
 
-export type ComponentModelClass = Constructable & { [key: string]: string } & { component: { [key: string]: string } };
+export type ComponentModelClass =
+	Constructable
+	& { [key: string]: string }
+	& { component: { [key: string]: string } }
+	& { [key: string]: TypeOf<HTMLComponent<any>> };
 
 export function addViewToModelClass<T extends object>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
