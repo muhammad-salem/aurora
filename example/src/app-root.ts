@@ -75,12 +75,12 @@ export class AppRoot implements OnInit {
 			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
 		},
 		{
-			title: 'Custom Form',
-			load: () => import('./forms/forms.js').then(module => module.CustomForm),
+			title: 'Custom Advanced Form',
+			load: () => import('./forms/advanced-form.js').then(module => module.AdvancedForm),
 		},
 		{
-			title: 'Simple Custom Form',
-			load: () => import('./forms/simple-forms.js').then(module => module.SimpleCustomForm),
+			title: 'Custom Simple Form',
+			load: () => import('./forms/simple-form.js').then(module => module.SimpleForm),
 		},
 		{
 			title: 'Jsx Components',
@@ -92,7 +92,7 @@ export class AppRoot implements OnInit {
 	onInit(): void {
 		this.appName = 'APP NAME';
 		setTimeout(() => {
-			this.lazyLoad(this.appList.at(-1)!);
+			this.lazyLoad(this.appList.at(-2)!);
 		}, 0);
 	}
 

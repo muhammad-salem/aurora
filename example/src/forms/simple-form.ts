@@ -110,7 +110,7 @@ export class SimpleCustomInputElement implements OnInit {
 			</div>
 	  	`,
 })
-export class SimpleCustomForm {
+export class SimpleForm {
 
 	model = {
 		test: 'test',

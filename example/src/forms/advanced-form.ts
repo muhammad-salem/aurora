@@ -163,7 +163,7 @@ export class CustomInputElement {
 			</div>
 	  	`,
 })
-export class CustomForm {
+export class AdvancedForm {
 
 	model = {
 		test: 'test',
