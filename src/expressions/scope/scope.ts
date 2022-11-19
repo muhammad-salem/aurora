@@ -269,9 +269,6 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 	constructor(context: T, propertyKeys?: (keyof T)[], protected _name?: keyof T, protected _parent?: ReactiveScope<any>) {
 		super(context, propertyKeys);
 		this._clone = Object.assign({}, context);
-		if (HTMLElement && context instanceof HTMLElement) {
-			this._keys = [];
-		}
 	}
 
 	set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
