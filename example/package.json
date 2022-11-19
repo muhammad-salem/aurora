@@ -19,8 +19,8 @@
 		"@ibyar/aurora": "^0.8.3",
 		"@ibyar/forms": "^0.8.3",
 		"@ibyar/jsx": "^0.8.3",
-		"bootstrap": "^5.2.1",
-		"rxjs": "^7.5.6",
+		"bootstrap": "^5.2.2",
+		"rxjs": "^7.5.7",
 		"tslib": "^2.4.1"
 	},
 	"devDependencies": {
