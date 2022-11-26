@@ -5,7 +5,7 @@ import { AsyncValidator, Validator } from '../forms/validators.js';
 
 export type ControlOptions = { validators?: Validator | Validator[], asyncValidators?: AsyncValidator | AsyncValidator[] }
 
-export type ControlValue<T> = { value?: T | null, disabled: boolean };
+export type ControlValue<T = any> = { value?: T | null, disabled: boolean };
 
 export function isControlValue<T>(ref: any): ref is ControlValue<T> {
 	return ref.value || ref.disabled;
@@ -22,7 +22,7 @@ export class FormBuilder {
 		return formControl;
 	}
 
-	public group<T>(group: Record<keyof T, T[keyof T] | ControlValue<T[keyof T]> | FormControl<T[keyof T]>>, options?: ControlOptions): FormGroup<T> {
+	public group<T extends { [K in keyof T]: AbstractControl<any>; } = any>(group: Record<keyof T, T[keyof T] | ControlValue<T[keyof T]> | FormControl<T[keyof T]>>, options?: ControlOptions): FormGroup<T> {
 		const formGroup = new FormGroup<T>();
 		this.initValidators(formGroup, options);
 		(Object.keys(group) as (keyof T & string)[]).forEach(key => {
@@ -31,10 +31,10 @@ export class FormBuilder {
 		return formGroup;
 	}
 
-	public array<T>(array: AbstractControl<T[keyof T]>[], options?: ControlOptions): FormArray<T> {
-		const controls: AbstractControl<T[keyof T]>[] = array.map(item => this.createControl(item));
-		const formArray = new FormArray<T>(controls);
+	public array<T extends AbstractControl<any> = any>(array: AbstractControl<T[keyof T]>[], options?: ControlOptions): FormArray<T> {
+		const formArray = new FormArray<T>();
 		this.initValidators(formArray, options);
+		array.forEach(control => formArray.push(this.createControl(control)));
 		return formArray;
 	}
 
