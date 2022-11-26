@@ -86,13 +86,17 @@ export class AppRoot implements OnInit {
 			title: 'Jsx Components',
 			load: () => import('./jsx/test.js').then(module => module.JsxComponentTest),
 		},
+		{
+			title: 'Form Group Component',
+			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
+		}
 
 	];
 
 	onInit(): void {
 		this.appName = 'APP NAME';
 		setTimeout(() => {
-			this.lazyLoad(this.appList.at(-2)!);
+			this.lazyLoad(this.appList.at(-1)!);
 		}, 0);
 	}
 
