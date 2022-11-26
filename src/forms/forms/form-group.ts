@@ -2,8 +2,8 @@ import { AttributeDirective, Directive, Input, OnInit } from '@ibyar/core';
 import { ControlValue, isControlValue } from '../builder/form-builder.js';
 import { AbstractControl, FormControl } from './form-control.js';
 
-export abstract class AbstractFormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any> extends AbstractControl<T> {
-	controls: Record<keyof T, AbstractControl<T[keyof T]>>;
+export abstract class AbstractFormGroup<T extends Record<string | number, any> = any> extends AbstractControl<T> {
+	controls: Record<string | number, AbstractControl<any>> = {};
 	abstract get<C extends AbstractControl<any>>(key: string): C;
 
 	abstract addControl<K extends string & keyof T>(name: K, control: T[K]): AbstractControl<T[K]>;
@@ -14,7 +14,7 @@ export abstract class AbstractFormGroup<T extends { [K in keyof T]: AbstractCont
 	abstract removeControl<K extends string & keyof T>(name: K): void;
 }
 
-export class FormGroup<T> extends AbstractFormGroup<T> {
+export class FormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any> extends AbstractFormGroup<T> {
 	get valid(): boolean {
 		throw new Error('Method not implemented.');
 	}
@@ -74,6 +74,12 @@ export class FormGroupDirective extends AttributeDirective implements OnInit {
 	onInit(): void {
 		console.log('el', this.el);
 		console.log('formGroup', this.formGroup);
+		const elements = this.el.elements;
+		const length = elements.length;
+		for (let i = 0; i < length; i++) {
+			const element = elements.item(i) as HTMLInputElement;
+			element.value = this.formGroup.controls[element.name].value;
+		}
 	}
 
 }
