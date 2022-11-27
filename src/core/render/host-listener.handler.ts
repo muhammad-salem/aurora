@@ -1,19 +1,22 @@
 import { ArrayExpression, JavaScriptParser, ReactiveScope, ScopeSubscription, Stack } from '@ibyar/expressions';
-import { ListenerRef } from '../component/reflect.js';
-import { HTMLComponent } from '../component/custom-element.js';
-import { RenderHandler } from './render-handler.js';
+import type { ListenerRef } from '../component/reflect.js';
+import type { RenderHandler } from './render-handler.js';
+import type { AuroraZone } from '../zone/zone.js';
 
-type ElementScope = { [element: string]: HTMLElement };
+type ElementScope = { [templateName: string]: HTMLElement };
+export type HostHandlerOptions<T = any> = { host: HTMLElement, model: T, zone: AuroraZone, templateScope: ReactiveScope<ElementScope> };
 
 /**
  * ```ts
- * class View {
+ * @Component({selector: 'tag-name'})
+ * class ComponentModelOrAttributeDirectiveModel {
  * 
  *	@HostListener('window:load', ['$event.target', '"load"'])
  * 	@HostListener('click', ['$event.target', '"click"'])
  * 	public onClick(target: any, type: string){
  * 		console.log(target, type);
  * 	}
+ * 
  * }
  * ```
  * 
@@ -34,22 +37,23 @@ export class HostListenerHandler implements RenderHandler {
 
 
 	private listener = (event: Event) => {
-		const callback: Function | undefined = this.element._model[this.listenerRef.modelCallbackName];
-		if (typeof callback === 'function') {
-			const eventScope = this.stack.pushBlockScopeFor({ $event: event });
-			const params = this.argumentsExpression.get(this.stack);
-			this.stack.clearTo(eventScope);
-			this.element._zone.run(
-				callback as () => void,
-				this.element._model,
-				params
-			);
-			typeof event.preventDefault === 'function' && event.preventDefault();
+		const callback: Function | undefined = this.options.model[this.listenerRef.modelCallbackName];
+		if (typeof callback !== 'function') {
+			return
 		}
+		const eventScope = this.stack.pushBlockScopeFor({ $event: event });
+		const params = this.argumentsExpression.get(this.stack);
+		this.stack.clearTo(eventScope);
+		this.options.zone.run(
+			callback as () => void,
+			this.options.model,
+			params
+		);
+		typeof event.preventDefault === 'function' && event.preventDefault();
 	};
 
-	constructor(private listenerRef: ListenerRef, private element: HTMLComponent<any>, private elementScope: ReactiveScope<ElementScope>) {
-		this.stack = new Stack(elementScope);
+	constructor(private listenerRef: ListenerRef, private options: HostHandlerOptions) {
+		this.stack = new Stack(this.options.templateScope);
 	}
 	onInit(): void {
 		const args = this.listenerRef.args ?? [];
@@ -61,8 +65,8 @@ export class HostListenerHandler implements RenderHandler {
 			if ('window' === eventSource.toLowerCase()) {
 				this.source = window;
 			} else {
-				let source = this.elementScope.get(eventSource) as HTMLElement;
-				this.scopeSubscription = this.elementScope.subscribe(eventSource, (newValue: HTMLElement) => {
+				let source = this.options.templateScope.get(eventSource) as HTMLElement;
+				this.scopeSubscription = this.options.templateScope.subscribe(eventSource, (newValue: HTMLElement) => {
 					if (source !== newValue) {
 						if (source) {
 							this.removeEventListener();
@@ -77,7 +81,7 @@ export class HostListenerHandler implements RenderHandler {
 			}
 		} else {
 			this.eventName = this.listenerRef.eventName;
-			this.source = this.element;
+			this.source = this.options.host;
 		}
 		this.addEventListener();
 	}

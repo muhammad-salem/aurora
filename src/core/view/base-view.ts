@@ -262,7 +262,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this._render.initView();
 
 				// init Host Listener events
-				this._render.initHostListener();
+				this._render.initHostListeners(this._componentRef.hostListeners, { host: this, model: this._model, zone: this._zone });
 			}
 
 			if (isAfterViewInit(this._model)) {

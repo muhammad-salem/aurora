@@ -8,6 +8,7 @@ import {
 	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
 } from '@ibyar/elements';
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
+import type { ListenerRef } from '../component/reflect.js';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
@@ -18,7 +19,7 @@ import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
-import { HostListenerHandler } from '../render/host-listener.handler.js';
+import { HostHandlerOptions, HostListenerHandler } from '../render/host-listener.handler.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -99,8 +100,9 @@ export class ComponentRender<T extends object> {
 			}
 		}
 	}
-	initHostListener(): void {
-		const handlers = this.componentRef.hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, this.view, this.viewScope));
+	initHostListeners(hostListeners: ListenerRef[], options: Omit<HostHandlerOptions, 'templateScope'>): void {
+		const hostOptions: HostHandlerOptions = { ...options, templateScope: this.viewScope };
+		const handlers = hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, hostOptions));
 		handlers.forEach(handler => handler.onInit());
 		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
 			() => handler.onDestroy(),
@@ -291,6 +293,9 @@ export class ComponentRender<T extends object> {
 				}
 				if (isOnDestroy(directive)) {
 					subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
+				}
+				if (directiveRef.hostListeners && element instanceof HTMLElement) {
+					this.initHostListeners(directiveRef.hostListeners, { host: element, model: directive, zone: this.view._zone });
 				}
 			}
 		});
