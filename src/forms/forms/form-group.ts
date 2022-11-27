@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Input, OnInit } from '@ibyar/core';
+import { AttributeDirective, Directive, HostListener, Input, OnInit } from '@ibyar/core';
 import { ControlValue, isControlValue } from '../builder/form-builder.js';
 import { AbstractControl, FormControl } from './form-control.js';
 
@@ -72,14 +72,28 @@ export class FormGroupDirective extends AttributeDirective implements OnInit {
 	formGroup: FormGroup<any>;
 
 	onInit(): void {
+		this.el.noValidate = true;
 		console.log('el', this.el);
 		console.log('formGroup', this.formGroup);
 		const elements = this.el.elements;
 		const length = elements.length;
 		for (let i = 0; i < length; i++) {
 			const element = elements.item(i) as HTMLInputElement;
+			if (element.type === 'submit' || element.type === 'hidden') {
+				continue;
+			}
 			element.value = this.formGroup.controls[element.name].value;
 		}
+	}
+
+	@HostListener('submit', ['$event'])
+	onSubmit(event: Event) {
+		console.log('directive host listener works');
+		console.log('$event', event);
+		const formData = new FormData(event.target as HTMLFormElement);
+		const collect = {};
+		formData.forEach((value, key) => Reflect.set(collect, key, value));
+		console.log('collect', collect);
 	}
 
 }
