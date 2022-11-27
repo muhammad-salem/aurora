@@ -11,6 +11,9 @@ type User = { name: string, age: number };
 
 		<label for="age">User age:</label>
 		<input id="age" name="age" type="number"/>
+
+
+		<button id="submit" type="submit">Submit</button>
 	</form>`,
 })
 export class FormGroupComponent implements OnInit {
