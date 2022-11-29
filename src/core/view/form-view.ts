@@ -57,7 +57,7 @@ ARIAMixinAttributes.forEach(ariaName => {
 
 export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<FormAssociatedComponent<T, any>> {
 	const baseViewClass = baseFactoryView<T>(htmlElementType);
-	class BaseFormView<T> extends baseViewClass implements FormAssociatedCustomElement {
+	return class BaseFormView<T> extends baseViewClass implements FormAssociatedCustomElement {
 
 		/**
 		 * Identify the element as a form-associated custom element
@@ -134,5 +134,4 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 			this._valueControl?.writeValue({ value, mode });
 		}
 	}
-	return BaseFormView;
 }

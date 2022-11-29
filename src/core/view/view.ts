@@ -9,6 +9,8 @@ import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
 import { isComponentModelClass } from './utils.js';
 
+const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
+
 /**
  * 
  * @param modelClass 
@@ -19,7 +21,14 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
-	const parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
+
+	let parentClass: TypeOf<HTMLComponent<T>>;
+	if (FACTORY_CACHE.has(htmlParent)) {
+		parentClass = FACTORY_CACHE.get(htmlParent) as TypeOf<HTMLComponent<T>>;
+	} else {
+		parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
+		FACTORY_CACHE.set(htmlParent, parentClass);
+	}
 	viewClass = ({
 		[htmlViewClassName]: class extends parentClass { constructor() { super(componentRef, modelClass); } }
 	})[htmlViewClassName];

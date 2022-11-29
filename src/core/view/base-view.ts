@@ -14,14 +14,8 @@ import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 
-const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
-
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
-
-	if (FACTORY_CACHE.has(htmlElementType)) {
-		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
-	}
-	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
+	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
@@ -353,6 +347,4 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 		}
 	};
-	FACTORY_CACHE.set(htmlElementType, CustomView);
-	return CustomView;
 }
