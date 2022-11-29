@@ -9,6 +9,16 @@
 		"url": "https://github.com/ibyar/aurora.git",
 		"directory": "packages/forms"
 	},
+	"bugs": {
+		"url": "https://github.com/ibyar/aurora/issues"
+	},
+	"author": "The Ibyar Authors (https://github.com/ibyar/aurora/graphs/contributors)",
+	"contributors": [
+		{
+			"name": "Muhammad Salem",
+			"email": "salem.ebo@gmail.com"
+		}
+	],
 	"main": "./index.js",
 	"module": "./index.js",
 	"types": "./index.d.ts",
