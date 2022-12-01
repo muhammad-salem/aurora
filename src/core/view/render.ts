@@ -1,6 +1,4 @@
-import {
-	ReactiveScope, Context, ScopeSubscription, Stack
-} from '@ibyar/expressions';
+import { ReactiveScope, Context, ScopeSubscription, Stack } from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
@@ -100,9 +98,20 @@ export class ComponentRender<T extends object> {
 			}
 		}
 	}
-	initHostListeners(hostListeners: ListenerRef[], options: Omit<HostHandlerOptions, 'templateScope'>): void {
-		const hostOptions: HostHandlerOptions = { ...options, templateScope: this.viewScope };
-		const handlers = hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, hostOptions));
+
+	initViewHostListeners() {
+		if (!this.componentRef.hostListeners?.length) {
+			return;
+		}
+		this.initHostListeners(this.componentRef.hostListeners, {
+			host: this.view,
+			model: this.view._model,
+			zone: this.view._zone,
+			templateScope: this.viewScope
+		});
+	}
+	initHostListeners(hostListeners: ListenerRef[], options: HostHandlerOptions): void {
+		const handlers = hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, options));
 		handlers.forEach(handler => handler.onInit());
 		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
 			() => handler.onDestroy(),
@@ -284,7 +293,8 @@ export class ComponentRender<T extends object> {
 				)) {
 				const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
 				const stack = contextStack.copyStack();
-				stack.pushReactiveScopeFor({ 'this': directive });
+				const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
+				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
 
 				const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 				subscriptions.push(...directiveSubscriptions);
@@ -295,7 +305,12 @@ export class ComponentRender<T extends object> {
 					subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
 				}
 				if (directiveRef.hostListeners && element instanceof HTMLElement) {
-					this.initHostListeners(directiveRef.hostListeners, { host: element, model: directive, zone: this.view._zone });
+					this.initHostListeners(directiveRef.hostListeners, {
+						host: element,
+						model: directive,
+						zone: this.view._zone,
+						templateScope: directiveScope
+					});
 				}
 			}
 		});
