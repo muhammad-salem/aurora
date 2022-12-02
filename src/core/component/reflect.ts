@@ -31,7 +31,7 @@ export class ListenerRef {
 }
 
 export class HostBindingRef {
-	constructor(public viewProperty: string, public hostPropertyName: string) { }
+	constructor(public modelPropertyName: string, public hostPropertyName: string) { }
 }
 
 export interface BootstrapMetadata {
@@ -106,8 +106,6 @@ export class ReflectComponents {
 	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
 		bootstrap.hostBinding = bootstrap.hostBinding || [];
-		bootstrap.hostBinding.push(
-			new HostBindingRef(propertyKey, hostPropertyName)
-		);
+		bootstrap.hostBinding.push(new HostBindingRef(propertyKey, hostPropertyName));
 	}
 }
