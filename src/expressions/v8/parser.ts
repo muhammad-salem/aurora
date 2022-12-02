@@ -62,7 +62,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}): Program {
 		mode ??= LanguageMode.Strict;
 		const stream = (typeof source === 'string') || Array.isArray(source)
 			? TokenStream.getTokenStream(source, mode) : source;
@@ -73,11 +73,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
 	 * parse inline code like that used in html 2 or 1 way binding
 	 */
-	static parseScript(source: string | TokenExpression[] | TokenStream, options?: InlineParserOptions) {
-		return JavaScriptInlineParser.parse(source, options);
+	static parseScript<T extends ExpressionNode>(source: string | TokenExpression[] | TokenStream, options?: InlineParserOptions): T {
+		return JavaScriptInlineParser.parse(source, options) as T;
 	}
 
-	override scan(): ExpressionNode {
+	override scan(): Program {
 		const isModule = isStrict(this.languageMode);
 		if (isModule) {
 			this.setFunctionKind(FunctionKind.Module);
