@@ -4,7 +4,7 @@ import type { RenderHandler } from './render-handler.js';
 import type { AuroraZone } from '../zone/zone.js';
 
 type ElementScope = { [templateName: string]: HTMLElement };
-export type HostHandlerOptions<T = any> = { host: HTMLElement, model: T, zone: AuroraZone, templateScope: ReactiveScope<ElementScope> };
+export type HostListenerOptions<T = any> = { host: HTMLElement, model: T, zone: AuroraZone, templateScope: ReactiveScope<ElementScope> };
 
 /**
  * ```ts
@@ -52,7 +52,7 @@ export class HostListenerHandler implements RenderHandler {
 		typeof event.preventDefault === 'function' && event.preventDefault();
 	};
 
-	constructor(private listenerRef: ListenerRef, private options: HostHandlerOptions) {
+	constructor(private listenerRef: ListenerRef, private options: HostListenerOptions) {
 		this.stack = new Stack(this.options.templateScope);
 	}
 	onInit(): void {
