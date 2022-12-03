@@ -45,7 +45,7 @@ export class HostBindingHandler implements RenderHandler {
 	onInit(): void {
 		const binding = `this.${this.hostBindingRef.hostPropertyName} = ${this.hostBindingRef.modelPropertyName}`;
 		this.assignment = JavaScriptParser.parseScript<AssignmentExpression>(binding);
-		this.subscription = this.zone.onFinal.subscribe(() => this.assignment.get(this.contextStack));
+		this.subscription = this.zone.onFinal.subscribe(() => this.assignment.get(this.contextStack), console.error);
 	}
 
 	onConnect() {
