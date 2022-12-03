@@ -89,7 +89,12 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Form Group Component',
 			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
+		},
+		{
+			title: 'Host Color Picker',
+			load: () => import('./color/host-color.component.js').then(module => module.HostColorPickerComponent),
 		}
+
 
 	];
 
