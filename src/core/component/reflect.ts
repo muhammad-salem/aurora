@@ -70,13 +70,13 @@ export class ReflectComponents {
 
 	static addInput(modelProperty: Object, modelName: string, viewName: string) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.inputs = bootstrap.inputs || [];
+		bootstrap.inputs ??= [];
 		bootstrap.inputs.push(new InputPropertyRef(modelName, viewName));
 	}
 
 	static addOutput(modelProperty: Object, modelName: string, viewName: string, options: OutputEventInit) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.outputs = bootstrap.outputs || [];
+		bootstrap.outputs ??= [];
 		bootstrap.outputs.push(new OutputPropertyRef(modelName, viewName, options));
 	}
 
@@ -87,25 +87,25 @@ export class ReflectComponents {
 
 	static addViewChild(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.viewChild = bootstrap.viewChild || [];
+		bootstrap.viewChild ??= [];
 		bootstrap.viewChild.push(new ChildRef(modelName, selector, childOptions));
 	}
 
 	static addViewChildren(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.ViewChildren = bootstrap.ViewChildren || [];
+		bootstrap.ViewChildren ??= [];
 		bootstrap.ViewChildren.push(new ChildRef(modelName, selector));
 	}
 
 	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostListeners = bootstrap.hostListeners || [];
+		bootstrap.hostListeners ??= [];
 		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
 	}
 
 	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostBinding = bootstrap.hostBinding || [];
-		bootstrap.hostBinding.push(new HostBindingRef(propertyKey, hostPropertyName));
+		bootstrap.hostBindings ??= [];
+		bootstrap.hostBindings.push(new HostBindingRef(propertyKey, hostPropertyName));
 	}
 }
