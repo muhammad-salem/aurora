@@ -302,8 +302,9 @@ export function ViewChildren(selector: string | typeof HTMLElement | CustomEleme
 	};
 }
 
-export function HostListener(eventName: string, args?: string[]): Function {
+export function HostListener(eventName: string, args?: string | string[]): Function {
 	return (target: Object, propertyKey: string) => {
+		args = typeof args === 'string' ? [args] : args;
 		ReflectComponents.addHostListener(
 			target,
 			propertyKey,
