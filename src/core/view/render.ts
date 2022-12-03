@@ -324,13 +324,19 @@ export class ComponentRender<T extends object> {
 				if (isOnDestroy(directive)) {
 					subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
 				}
-				if (directiveRef.hostListeners && element instanceof HTMLElement) {
+				if (!(element instanceof HTMLElement)) {
+					return;
+				}
+				if (directiveRef.hostListeners) {
 					this.initHostListeners(directiveRef.hostListeners, {
 						host: element,
 						model: directive,
 						zone: this.view._zone,
 						templateScope: directiveScope
 					});
+				}
+				if (directiveRef.hostBindings) {
+					this.initHostBinding(directiveRef.hostBindings, stack, this.view._zone);
 				}
 			}
 		});
