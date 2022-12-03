@@ -19,6 +19,7 @@ import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { HostListenerOptions, HostListenerHandler } from '../render/host-listener.handler.js';
 import { HostBindingHandler } from '../render/host-binding.handler.js';
+import { AuroraZone } from '../zone/zone.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -126,10 +127,10 @@ export class ComponentRender<T extends object> {
 		const stack = new Stack();
 		stack.pushScope(this.view._modelScope);
 		stack.pushBlockScopeFor({ 'this': this.view });
-		this.initHostBinding(this.componentRef.hostBindings, stack);
+		this.initHostBinding(this.componentRef.hostBindings, stack, this.view._zone);
 	}
-	initHostBinding(hostBindings: HostBindingRef[], stack: Stack) {
-		const handlers = hostBindings.map(hostBinding => new HostBindingHandler(hostBinding, stack));
+	initHostBinding(hostBindings: HostBindingRef[], stack: Stack, zone: AuroraZone) {
+		const handlers = hostBindings.map(hostBinding => new HostBindingHandler(hostBinding, stack, zone));
 		handlers.forEach(handler => handler.onInit());
 		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
 			() => handler.onDestroy(),

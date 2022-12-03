@@ -1,9 +1,9 @@
-import type { AssignmentExpression, Context, MemberExpression, ScopeSubscription, Stack } from '@ibyar/expressions';
+import type { AssignmentExpression, Stack } from '@ibyar/expressions';
 import type { HostBindingRef } from '../component/reflect.js';
 import type { RenderHandler } from './render-handler.js';
+import type { AuroraZone } from '../zone/zone.js';
+import type { Subscription } from '../component/events.js';
 import { JavaScriptParser } from '@ibyar/expressions';
-import { OneWayAssignmentExpression } from '../binding/binding.expressions.js';
-import { AuroraZone } from '../zone/zone.js';
 
 /**
  * ```ts
@@ -36,30 +36,35 @@ import { AuroraZone } from '../zone/zone.js';
  * 
  */
 export class HostBindingHandler implements RenderHandler {
-	private subscriptions: ScopeSubscription<Context>[];
+	private assignment: AssignmentExpression;
+	private subscription?: Subscription<any>;
 
-	constructor(private hostBindingRef: HostBindingRef, private contextStack: Stack/*, private zone: AuroraZone*/) { }
+
+	constructor(private hostBindingRef: HostBindingRef, private contextStack: Stack, private zone: AuroraZone) { }
 
 	onInit(): void {
 		const binding = `this.${this.hostBindingRef.hostPropertyName} = ${this.hostBindingRef.modelPropertyName}`;
-		console.log('binding', binding);
-		const assignment = JavaScriptParser.parseScript<AssignmentExpression>(binding);
-		const expression = new OneWayAssignmentExpression(assignment.getLeft() as MemberExpression, assignment.getRight());
-		this.subscriptions = expression.subscribe(this.contextStack);
-		expression.get(this.contextStack);
-		// const s = this.zone.onFinal.subscribe(() => assignment.get(this.contextStack));
+		this.assignment = JavaScriptParser.parseScript<AssignmentExpression>(binding);
+		this.subscription = this.zone.onFinal.subscribe(() => this.assignment.get(this.contextStack));
 	}
 
 	onConnect() {
-		this.subscriptions.forEach(subscription => subscription.resume());
+		if (this.subscription) {
+			return;
+		}
+		this.onInit();
 	}
 
 	onDisconnect() {
-		this.subscriptions.forEach(subscription => subscription.pause());
+		if (!this.subscription) {
+			return;
+		}
+		this.onDestroy();
 	}
 
 	onDestroy(): void {
-		this.subscriptions.forEach(subscription => subscription.unsubscribe());
+		this.subscription?.unsubscribe();
+		delete this.subscription;
 	}
 
 }
