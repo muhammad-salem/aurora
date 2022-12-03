@@ -21,6 +21,27 @@ export interface Person {
 	age: number;
 }
 
+const style = `
+
+.valid {
+	display: inline-block;
+    width: 5rem;
+    height: 5rem;
+    margin: 0.25rem;
+    background-color: #f5f5f5;
+	border-color: #198754
+}
+
+.invalid {
+	display: inline-block;
+    width: 5rem;
+    height: 5rem;
+    margin: 0.25rem;
+    background-color: #f5f5f5;
+	border-color: #dc3545
+}
+`;
+
 @Component({
 	selector: 'person-view',
 	template: `
@@ -33,7 +54,8 @@ export interface Person {
 			<div *if="person.age >= 18">
 				Can have license
 				<p>Data</p>
-			</div>`
+			</div>`,
+	styles: style,
 })
 export class PersonModel implements OnInit {
 
@@ -91,6 +113,9 @@ export class PersonModel implements OnInit {
 	onClick(target: HTMLElement) {
 		console.log('target', target);
 		this._select.emit(this.person);
+
+		this.valid = !this.valid;
+		this.invalid = !this.invalid;
 	}
 
 	@HostListener('select')
