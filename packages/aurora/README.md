@@ -64,12 +64,12 @@ yarn add @ibyar/aurora
 | [@ibyar/pipes](https://github.com/ibyar/aurora/tree/dev/packages/pipes) | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] |
 | [@ibyar/directives](https://github.com/ibyar/aurora/tree/dev/packages/directives) | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] |
 | [@ibyar/core](https://github.com/ibyar/aurora/tree/dev/packages/core) | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] |
-| [@ibyar/expressions](https://github.com/ibyar/aurora/tree/dev/packages/expressions) | a JavaScript engine parser and evaluator build by the guid of [V8 JavaScript engine](https://github.com/v8/v8). Introduce a reactive scope concept to detect changes for scope variables, subscriptions based on a `wave effect` like concept (simple what is subscribed will only be reevaluated again). Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
+| [@ibyar/expressions](https://github.com/ibyar/aurora/tree/dev/packages/expressions) | a JavaScript engine parser and evaluator build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
 | [@ibyar/elements](https://github.com/ibyar/aurora/tree/dev/packages/elements) | parse html and extract nd expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] |
 | [@ibyar/platform](https://github.com/ibyar/aurora/tree/dev/packages/platform) | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] |
 | [@ibyar/cli](https://github.com/ibyar/aurora/tree/dev/packages/cli) | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] |
 | [reflect-metadata](https://github.com/rbuckton/reflect-metadata) | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] |
-| [tslib](https://github.com/Microsoft/tslib) | This is a runtime library for TypeScript that contains all of the TypeScript helper functions. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
+| [tslib](https://github.com/Microsoft/tslib) | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
 
 
 ## 'HTML Template' Features
@@ -102,8 +102,8 @@ yarn add @ibyar/aurora
 - [x] @Output
 - [x] @View
 - [x] @HostListener [Supported by Component and Attribute directive].
+- [x] @HostBinding [Supported by Component and Attribute directive].
 - [x] @ViewChild
-- [ ] @HostBinding
 - [ ] @ViewChildren
 - [ ] @SelfSkip
 - [ ] @Optional
@@ -125,8 +125,8 @@ yarn add @ibyar/aurora
  -- see `directive syntax` [structural-directive-syntax-reference](https://github.com/ibyar/aurora/blob/dev/packages/directives/README.md#structural-directive-syntax-reference)
 
 #### Attributes Directives
-- [x] class
-- [x] style
+- [x] class [support `Single class binding`, `Multi-class binding`].
+- [x] style [support `Single style binding`, `Multi-style binding`]. the `Single style binding with units` not yet supported.
 
 ## Built-in Pipes ( Pipeline operator '|>' )
 
