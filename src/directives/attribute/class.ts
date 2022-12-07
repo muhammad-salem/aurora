@@ -1,9 +1,31 @@
 import { AttributeDirective, Directive, Input } from '@ibyar/core';
 
+
+class DOMTokenListProxyHandler implements ProxyHandler<DOMTokenList> {
+
+	get(target: DOMTokenList, className: string) {
+		return target.contains(className);
+	}
+
+	set(target: DOMTokenList, className: string, newValue: boolean): boolean {
+		if (newValue) {
+			target.add(className);
+		} else {
+			target.remove(className);
+		}
+		return true;
+	}
+
+}
+
+const handler = new DOMTokenListProxyHandler();
+
 @Directive({
 	selector: 'class'
 })
 export class ClassDirective extends AttributeDirective {
+
+	private proxy?: DOMTokenList;
 
 	@Input('class')
 	set 'class'(className: string | Array<string> | { [className: string]: boolean }) {
@@ -20,7 +42,7 @@ export class ClassDirective extends AttributeDirective {
 		}
 	}
 	get 'class'() {
-		return this.el.classList.value;
+		return (this.proxy ??= new Proxy(this.el.classList, handler)) as any;
 	}
 
 	private updateClassList(add?: string[], remove?: string[]) {
