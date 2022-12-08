@@ -37,7 +37,7 @@ export class HostColorPickerComponent {
 	@HostListener('click', '$event')
 	onHostClick(event: Event) {
 		const element = event.target as HTMLDivElement & { dataColor: string };
-		this.selectedColor = element['dataColor'] || '';
+		this.selectedColor = element.dataset.color || '';
 	}
 
 

@@ -347,7 +347,7 @@ export class ComponentRender<T extends object> {
 		if (node.attributes?.length) {
 			node.attributes.forEach(attr => {
 				/**
-				 * <input id="23" name="person-name" />
+				 * <input id="23" name="person-name" data-id="1234567890" data-user="carinaanand" data-date-of-birth />
 				 */
 				const isAttr = hasAttr(element, attr.name);
 				if (isAttr) {

@@ -95,7 +95,9 @@ export function getPipelineNames(modelExpression: ExpressionNode): string[] | un
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
-	const elementSource = `this${escapeMemberExpression(attr.name)}`;
+	const elementSource = attr.name.startsWith('data-')
+		? `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`
+		: `this${escapeMemberExpression(attr.name)}`;
 	const elementExpression = JavaScriptParser.parseScript(elementSource);
 	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
 	if (elementExpression instanceof MemberExpression) {

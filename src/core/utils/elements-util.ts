@@ -20,6 +20,13 @@ export function hasAttrCustomElement(element: HTMLElement, attr: string): boolea
 	return false;
 }
 
+export function isDataAttributes(attr: string) {
+	return attr.startsWith('data-');
+}
+
 export function hasAttr(element: HTMLElement, attr: string): boolean {
-	return hasNativeAttr(element, attr) || hasAttrCustomElement(element, attr) || hasComponentAttr(element, attr);
+	return hasNativeAttr(element, attr)
+		|| hasAttrCustomElement(element, attr)
+		|| hasComponentAttr(element, attr)
+		|| isDataAttributes(attr);
 }
