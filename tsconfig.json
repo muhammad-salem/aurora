@@ -2,7 +2,6 @@
 	"references": [
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
-		{ "path": "src/hast" },
 		{ "path": "src/platform" },
 		{ "path": "src/core" },
 		{ "path": "src/jsx" },
