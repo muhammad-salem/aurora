@@ -1,4 +1,4 @@
-# Ibyar Expression
+# Ibyar Platform
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
