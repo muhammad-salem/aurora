@@ -177,7 +177,7 @@ export class NodeParserHelper {
 		if (node.outputs?.length) {
 			names.push(...this.getAttributeDirectives(node.outputs));
 		}
-		return names;
+		return [...new Set(names)];
 	}
 	protected getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
 		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name.split('.')[0]));
