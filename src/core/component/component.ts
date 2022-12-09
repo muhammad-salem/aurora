@@ -1,7 +1,9 @@
 import type { TypeOf } from '../utils/typeof.js';
+import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
-	DomNode, DomRenderNode, canAttachShadow, directiveRegistry
+	DomNode, DomRenderNode, canAttachShadow,
+	directiveRegistry, DomElementNode
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
@@ -13,7 +15,6 @@ import {
 	ComponentOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
 } from '../annotation/decorators.js';
-import { ZoneType } from '../zone/bootstrap.js';
 import {
 	BootstrapMetadata, ChildRef, HostBindingRef,
 	InputPropertyRef, ListenerRef, OutputPropertyRef,
@@ -46,6 +47,7 @@ export interface DirectiveRef<T> {
 	ViewChildren: ChildRef[];
 	hostListeners: ListenerRef[];
 	hostBindings: HostBindingRef[];
+	viewBindings?: DomElementNode;
 }
 
 export interface ComponentRef<T> {
@@ -66,6 +68,7 @@ export interface ComponentRef<T> {
 	ViewChildren: ChildRef[];
 	hostBindings: HostBindingRef[];
 	hostListeners: ListenerRef[];
+	viewBindings?: DomElementNode;
 
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
 	isShadowDom: boolean;
@@ -75,12 +78,47 @@ export interface ComponentRef<T> {
 	zone: ZoneType;
 }
 
+type ViewBindingOption = {
+	prototype: Record<PropertyKey, any>;
+	hostBindings?: HostBindingRef[];
+	hostListeners?: ListenerRef[];
+	selector?: string;
+};
+
 export class Components {
+
+	private static EMPTY_LIST = Object.freeze<any>([]);
+	private static emptyList<T>(): T[] {
+		return Components.EMPTY_LIST as T[];
+	}
+
+	private static parseHostBinding(option: ViewBindingOption): DomElementNode {
+		const inputs = option.hostBindings?.map(binding => {
+			const descriptor = Object.getOwnPropertyDescriptor(option.prototype, binding.modelPropertyName);
+			if (typeof descriptor?.value === 'function') {
+				return `[${binding.hostPropertyName}]="${binding.modelPropertyName}()"`
+			}
+			return `[${binding.hostPropertyName}]="${binding.modelPropertyName}"`;
+		}) ?? [];
+		const outputs = option.hostListeners?.map(
+			listener => `(${listener.eventName})="${listener.modelCallbackName}(${listener.args.join(', ')})"`
+		) ?? [];
+		option.selector ??= 'div';
+		const template = `<${option.selector} ${inputs.join(' ')} ${outputs.join(' ')}></${option.selector}>`;
+		const viewBindings = htmlParser.toDomRootNode(template) as DomElementNode;
+		buildExpressionNodes(viewBindings);
+		return viewBindings;
+	}
 
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-		for (const key in opts) {
-			bootstrap[key] = Reflect.get(opts, key);
+		Object.assign(bootstrap, opts);
+		if (bootstrap.hostListeners?.length || bootstrap.hostBindings?.length) {
+			bootstrap.viewBindings = Components.parseHostBinding({
+				prototype: modelClass.prototype,
+				hostBindings: bootstrap.hostBindings,
+				hostListeners: bootstrap.hostListeners,
+			});
 		}
 		bootstrap.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
@@ -111,11 +149,7 @@ export class Components {
 
 	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-
-		var componentRef: ComponentRef<T> = opts as unknown as ComponentRef<T>;
-		for (const key in bootstrap) {
-			Reflect.set(componentRef, key, bootstrap[key]);
-		}
+		const componentRef = Object.assign({}, opts, bootstrap) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 
 		if (typeof componentRef.template === 'string') {
@@ -145,16 +179,25 @@ export class Components {
 			}
 		}
 
-		componentRef.inputs ||= [];
-		componentRef.outputs ||= [];
-		componentRef.viewChild ||= [];
-		componentRef.ViewChildren ||= [];
-		componentRef.hostBindings ||= [];
-		componentRef.hostListeners ||= [];
+		componentRef.inputs ||= Components.emptyList();
+		componentRef.outputs ||= Components.emptyList();
+		componentRef.viewChild ||= Components.emptyList();
+		componentRef.ViewChildren ||= Components.emptyList();
+		componentRef.hostBindings ||= Components.emptyList();
+		componentRef.hostListeners ||= Components.emptyList();
 		componentRef.encapsulation ||= 'custom';
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
+
+		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
+			componentRef.viewBindings = Components.parseHostBinding({
+				prototype: modelClass.prototype,
+				selector: componentRef.selector,
+				hostBindings: componentRef.hostBindings,
+				hostListeners: componentRef.hostListeners,
+			});
+		}
 
 		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {
 			componentRef.formAssociated = false;

@@ -6,7 +6,6 @@ import {
 	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
 } from '@ibyar/elements';
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
-import type { HostBindingRef, ListenerRef } from '../component/reflect.js';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
@@ -17,9 +16,6 @@ import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
-import { HostListenerOptions, HostListenerHandler } from '../render/host-listener.handler.js';
-import { HostBindingHandler } from '../render/host-binding.handler.js';
-import { AuroraZone } from '../zone/zone.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -100,43 +96,11 @@ export class ComponentRender<T extends object> {
 			}
 		}
 	}
-	initViewHostListeners() {
-		if (!this.componentRef.hostListeners?.length) {
+	initViewBinding() {
+		if (!this.componentRef.viewBindings) {
 			return;
 		}
-		this.initHostListeners(this.componentRef.hostListeners, {
-			host: this.view,
-			model: this.view._model,
-			zone: this.view._zone,
-			templateScope: this.viewScope
-		});
-	}
-	initHostListeners(hostListeners: ListenerRef[], options: HostListenerOptions): void {
-		const handlers = hostListeners.map(listenerRef => new HostListenerHandler(listenerRef, options));
-		handlers.forEach(handler => handler.onInit());
-		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
-			() => handler.onDestroy(),
-			() => handler.onDisconnect(),
-			() => handler.onConnect(),
-		)));
-	}
-	initViewHostBinding() {
-		if (!this.componentRef.hostBindings?.length) {
-			return;
-		}
-		const stack = new Stack();
-		stack.pushScope(this.view._modelScope);
-		stack.pushBlockScopeFor({ 'this': this.view });
-		this.initHostBinding(this.componentRef.hostBindings, stack, this.view._zone);
-	}
-	initHostBinding(hostBindings: HostBindingRef[], stack: Stack, zone: AuroraZone) {
-		const handlers = hostBindings.map(hostBinding => new HostBindingHandler(hostBinding, stack, zone));
-		handlers.forEach(handler => handler.onInit());
-		handlers.forEach(handler => this.subscriptions.push(createSubscriptionDestroyer(
-			() => handler.onDestroy(),
-			() => handler.onDisconnect(),
-			() => handler.onConnect(),
-		)));
+		this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
@@ -192,7 +156,7 @@ export class ComponentRender<T extends object> {
 	createText(node: TextContent): Text {
 		return new Text(node.value);
 	}
-	createLiveText(textNode: LiveTextContent, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[]): Text {
+	createLiveText(textNode: LiveTextContent, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): Text {
 		const liveText = new Text('');
 		contextStack = contextStack.copyStack();
 		contextStack.pushBlockScopeFor({ this: liveText });
@@ -224,7 +188,7 @@ export class ComponentRender<T extends object> {
 				this.templateNameScope.set(templateRefName.name, templateRef);
 				return;
 			}
-			fragmentParent.append(this.createElement(child, contextStack, subscriptions, parentNode, host));
+			fragmentParent.append(this.createElement(child, contextStack, subscriptions, host));
 		} else if (child instanceof DomStructuralDirectiveNode) {
 			const commentText = child.name + (typeof child.value == 'string' ? (' = ' + child.value) : '');
 			const comment = document.createComment(`start ${commentText}`);
@@ -233,7 +197,7 @@ export class ComponentRender<T extends object> {
 			comment.after(lastComment);
 			this.createStructuralDirective(child, comment, contextStack, subscriptions, parentNode, host);
 		} else if (isLiveTextContent(child)) {
-			fragmentParent.append(this.createLiveText(child, contextStack, parentNode, subscriptions));
+			fragmentParent.append(this.createLiveText(child, contextStack, subscriptions));
 		} else if (child instanceof TextContent) {
 			fragmentParent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {
@@ -266,8 +230,31 @@ export class ComponentRender<T extends object> {
 		}
 		return element;
 	}
-	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): HTMLElement {
+	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): HTMLElement {
 		const element = this.createElementByTagName(node);
+		this.initHtmlElement(element, node, contextStack, subscriptions, host);
+		return element;
+	}
+
+	/**
+	 * use for init host bindings
+	 * @param element 
+	 * @param node 
+	 * @param contextStack 
+	 * @param subscriptions 
+	 */
+	initHtmlElement(element: HTMLElement, node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): void;
+
+	/**
+	 * use to init a new create html element
+	 * @param element 
+	 * @param node 
+	 * @param contextStack 
+	 * @param subscriptions 
+	 * @param host is the direct html element `this.view` or a sub `structural directive` like `*if` or `*for`, etc...
+	 */
+	initHtmlElement(element: HTMLElement, node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): void;
+	initHtmlElement(element: HTMLElement, node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], host?: HTMLComponent<any> | StructuralDirective): void {
 		const elementStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element)
 			? element._viewScope
@@ -293,51 +280,49 @@ export class ComponentRender<T extends object> {
 		}
 		if (node.children) {
 			for (const child of node.children) {
-				this.appendChildToParent(element, child, elementStack, element, subscriptions, host);
+				this.appendChildToParent(element, child, elementStack, element, subscriptions, host!);
 			}
 		}
 		if (node.attributeDirectives?.length) {
 			this.initAttributeDirectives(node.attributeDirectives, element, contextStack, subscriptions);
 		}
-		return element;
 	}
 	private initAttributeDirectives(
 		attributeDirectives: DomAttributeDirectiveNode[],
 		element: HTMLElement | StructuralDirective,
-		contextStack: Stack, subscriptions: ScopeSubscription<Context>[]) {
+		contextStack: Stack,
+		subscriptions: ScopeSubscription<Context>[]) {
 		attributeDirectives?.forEach(directiveNode => {
 			const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(directiveNode.name);
-			if (directiveRef &&
-				(directiveRef.modelClass.prototype instanceof AttributeDirective
-					|| directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective
-				)) {
-				const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
-				const stack = contextStack.copyStack();
-				const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
-				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
+			if (!directiveRef
+				|| !((directiveRef.modelClass.prototype instanceof AttributeDirective)
+					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
+				return;
+			}
+			const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
+			const stack = contextStack.copyStack();
+			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
 
-				const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
-				subscriptions.push(...directiveSubscriptions);
-				if (isOnInit(directive)) {
-					directive.onInit();
-				}
-				if (isOnDestroy(directive)) {
-					subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
-				}
-				if (!(element instanceof HTMLElement)) {
-					return;
-				}
-				if (directiveRef.hostListeners) {
-					this.initHostListeners(directiveRef.hostListeners, {
-						host: element,
-						model: directive,
-						zone: this.view._zone,
-						templateScope: directiveScope
-					});
-				}
-				if (directiveRef.hostBindings) {
-					this.initHostBinding(directiveRef.hostBindings, stack, this.view._zone);
-				}
+			const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
+			subscriptions.push(...directiveSubscriptions);
+			if (isOnInit(directive)) {
+				directive.onInit();
+			}
+			if (isOnDestroy(directive)) {
+				subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
+			}
+			if (!(element instanceof HTMLElement)) {
+				return;
+			}
+			const attributeName = directiveRef.selector.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+			if (!element.hasAttribute(attributeName)) {
+				element.setAttribute(attributeName, '');
+			}
+			if (directiveRef.viewBindings) {
+				const directiveStack = stack.copyStack();
+				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
+				directiveStack.pushScope(directiveScope);
+				this.initHtmlElement(element, directiveRef.viewBindings, directiveStack, subscriptions);
 			}
 		});
 	}

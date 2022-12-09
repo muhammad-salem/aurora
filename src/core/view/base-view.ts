@@ -255,11 +255,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				// setup ui view
 				this._render.initView();
 
-				// init Host Listener events
-				this._render.initViewHostListeners();
-
-				// init host binding
-				this._render.initViewHostBinding();
+				// init view binding
+				this._render.initViewBinding();
 			}
 
 			if (isAfterViewInit(this._model)) {
