@@ -177,6 +177,7 @@ export class AdvancedForm {
 
 	@HostListener('submit', ['$event'])
 	onSubmit(event: Event) {
+		event.preventDefault();
 		console.log('$event', event);
 		const formData = new FormData(event.target as HTMLFormElement);
 		const collect = {};
