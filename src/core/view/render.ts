@@ -126,13 +126,20 @@ export class ComponentRender<T extends object> {
 		);
 		const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
+		this.view._zone.onEmpty.subscribe(() => {
+			const length = viewContainerRef.length;
+			for (let index = 0; index < length; index++) {
+				viewContainerRef.get(index)?.detectChanges();
+			}
+		});
+
 		// structural directive selector
 		const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
-		const structural = new StructuralDirectiveClass(
+		const structural = this.view._zone.run(() => new StructuralDirectiveClass(
 			templateRef,
 			viewContainerRef,
 			host
-		);
+		));
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		stack.pushScope(scope);
@@ -140,7 +147,7 @@ export class ComponentRender<T extends object> {
 		const dSubs = this.initStructuralDirective(structural, directive, stack);
 		subscriptions.push(...dSubs);
 		if (isOnInit(structural)) {
-			structural.onInit();
+			this.view._zone.run(structural.onInit, structural);
 		}
 		if (directive.attributeDirectives?.length) {
 			this.initAttributeDirectives(directive.attributeDirectives, structural, stack, subscriptions);
