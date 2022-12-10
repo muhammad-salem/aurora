@@ -306,14 +306,14 @@ export class ComponentRender<T extends object> {
 					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
 				return;
 			}
-			const directive = new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective;
+			const directive = this.view._zone.run(() => new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective);
 			const stack = contextStack.copyStack();
 			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
 
 			const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
-				directive.onInit();
+				this.view._zone.run(directive.onInit, directive);
 			}
 			if (isOnDestroy(directive)) {
 				subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
