@@ -6,14 +6,14 @@ type User = { name: string, age: number };
 @Component({
 	selector: 'form-group-component',
 	template: `<form [formGroup]="group">
-		<label for="name">User name:</label>
-		<input id="name" name="name" type="text"/>
+		<label for="name" class="form-label">User name:</label>
+		<input id="name" name="name" type="text" class="form-control"/>
 
-		<label for="age">User age:</label>
-		<input id="age" name="age" type="number"/>
+		<label for="age" class="form-label">User age:</label>
+		<input id="age" name="age" type="number" class="form-control"/>
 
 
-		<button id="submit" type="submit">Submit</button>
+		<button id="submit" class="btn btn-outline-secondary mt-2" type="submit">Submit</button>
 	</form>`,
 })
 export class FormGroupComponent implements OnInit {
