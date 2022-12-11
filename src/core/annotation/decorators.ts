@@ -16,6 +16,23 @@ export interface DirectiveOptions {
 	 * and an attributes directive should not.
 	 */
 	selector: string;
+
+	/**
+	 * - use `manual` for no zone.js patch effect applied,
+	 *  and used for manual change detection for heavily process components.
+	 * 
+	 * - use `proxy` zone for automatic detect changes without use of `zone.js`
+	 * 
+	 * - use `aurora` for detection events like `rxjs` observables, `setTimeout`,
+	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
+	 * make sure that `zone.js` is imported in the polyfills module. 
+	 * 
+	 * if no value specified, the value will be initialized by the custom element `web component` zone,
+	 *  - if the web component zone is `manual`, the directive zone also will be `manual`, expect weird behavior.
+	 *  - if the web component zone is `proxy`, the directive zone also will be `proxy`.
+	 *  - if the web component zone is `aurora`, the directive zone also will be `aurora` and will get the benefit of `zone.js`.
+	 */
+	zone?: ZoneType;
 }
 
 export interface ServiceOptions {
@@ -224,20 +241,24 @@ export interface ComponentOptions<T = Function> {
 	formAssociated?: boolean | TypeOf<ValueControl<any>>;
 
 	/**
-	 * use `noop` to no zone.js patch effect applied,
-	 *  and used for manual change detection for heavily process components
-	 * use `aurora` for detection events like `rxjs` observables, `setTimeout`,
+	 * - use `manual` for no zone.js patch effect applied,
+	 *  and used for manual change detection for heavily process components.
+	 * 
+	 * - use `proxy` zone for automatic detect changes without use of `zone.js`
+	 * 
+	 * - use `aurora` for detection events like `rxjs` observables, `setTimeout`,
 	 *  `setInterval` and `fetch` and `XMLHttpRequest`, etc...
 	 * make sure that `zone.js` is imported in the polyfills module. 
 	 * 
-	 * the default is the platform which is initialized using
+	 * the default value is the platform zone type which can be changed by:
 	 * 
 	 * ```js
-	 * bootstrapZone('noop')
+	 * bootstrapZone('manual')
+	 * bootstrapZone('proxy')
 	 * bootstrapZone('aurora')
 	 * ```
 	 * 
-	 * if `bootstrapZone` never been called, then the default zone is a noop zone.
+	 * if `bootstrapZone` never been called, then the default zone is a `manual`.
 	 */
 	zone?: ZoneType;
 }

@@ -36,7 +36,7 @@ export interface PipeRef<T> {
 }
 export interface DirectiveRef<T> {
 	selector: string;
-	zone: ZoneType;
+	zone?: ZoneType;
 
 	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
 
@@ -75,7 +75,7 @@ export interface ComponentRef<T> {
 	shadowDomMode: ShadowRootMode;
 	shadowDomDelegatesFocus: boolean;
 	formAssociated: boolean | TypeOf<ValueControl<any>>;
-	zone: ZoneType;
+	zone?: ZoneType;
 }
 
 type ViewBindingOption = {
