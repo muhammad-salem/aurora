@@ -39,16 +39,6 @@ export function bootstrapZone(type?: ZoneType) {
 	}
 }
 
-export function getCurrentZone(type?: ZoneType) {
-	if (type) {
-		switch (type.toLowerCase()) {
-			case 'aurora':
-				return auroraZone ?? (auroraZone = new AuroraZone());
-			case 'proxy':
-				return proxyAuroraZone ?? (proxyAuroraZone = new ProxyAuroraZone());
-			default:
-			case 'manual': return manualAuroraZone;
-		}
-	}
+export function getRootZone() {
 	return auroraZone ?? manualAuroraZone;
 }

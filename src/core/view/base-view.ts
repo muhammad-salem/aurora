@@ -8,7 +8,7 @@ import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
-import { getCurrentZone } from '../zone/bootstrap.js';
+import { getRootZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
@@ -42,7 +42,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
 			args.push(detector)
-			this._zone = getCurrentZone(componentRef.zone).fork();
+			this._zone = getRootZone().fork(componentRef.zone);
 			args.push(this._zone);
 			const model = new modelClass(...args);
 			this._model = model;
