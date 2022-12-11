@@ -57,7 +57,7 @@ const style = `
 			</div>`,
 	styles: style,
 })
-export class PersonModel implements OnInit {
+export class PersonView implements OnInit {
 
 	@Input()
 	person: Person = {

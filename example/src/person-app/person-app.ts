@@ -1,16 +1,18 @@
 import { Component, Input, View, HostListener } from '@ibyar/aurora';
-
-// import structural directives first
-// so it can register itself with the html parser as a node
-export * from '../directive/add-note.directive.js';
-export * from '../directive/notify-user.directive.js';
-export * from '../directive/time.directive.js';
-export * from './person.js';
-
-import type { Person, PersonModel } from './person.js';
+import { AddNoteDirective } from '../directive/add-note.directive.js';
+import { NotifyUserDirective } from '../directive/notify-user.directive.js';
+import { TimeDirective } from '../directive/time.directive.js';
+import { Person, PersonEdit, PersonView } from './person.js';
 
 @Component({
 	selector: 'person-app',
+	imports: [
+		AddNoteDirective,
+		NotifyUserDirective,
+		TimeDirective,
+		PersonView,
+		PersonEdit,
+	],
 	template: `
 		<div *time></div>
 		<template *time let-HH="hh" let-MM="mm" let-SS="ss">{{HH}}:{{MM}}:{{SS}}</template>
@@ -175,11 +177,11 @@ export class PersonApp {
 		console.log('personEdit:save', event.detail, this.view);
 	}
 
-	printPerson(person: PersonModel) {
+	printPerson(person: PersonView) {
 		console.log('printPerson', person);
 	}
 
-	onPersonViewClick(event: string, person: PersonModel) {
+	onPersonViewClick(event: string, person: PersonView) {
 		console.log(event, person);
 	}
 

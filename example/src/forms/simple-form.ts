@@ -113,6 +113,11 @@ export class SimpleCustomInputElement implements OnInit {
 				{{data |> json}}
 			</div>
 	  	`,
+	imports: [
+		SimpleCustomTextareaComponent,
+		SimpleCustomMessage,
+		SimpleCustomInputElement
+	]
 })
 export class SimpleForm {
 

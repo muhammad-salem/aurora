@@ -1,4 +1,5 @@
 import { Component, OnInit, TypeOf } from '@ibyar/aurora';
+import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
 	title: string;
@@ -26,7 +27,10 @@ export interface App {
 				<component-outlet [component]="selectedComponent"></component-outlet>
 			</div>
 		</div>
-	</div>`
+	</div>`,
+	imports: [
+		ComponentOutlet,
+	]
 })
 export class AppRoot implements OnInit {
 

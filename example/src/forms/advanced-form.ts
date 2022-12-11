@@ -162,6 +162,11 @@ export class CustomInputElement {
 				{{data |> json}}
 			</div>
 	  	`,
+	imports: [
+		CustomTextareaComponent,
+		CustomMessage,
+		CustomInputElement
+	]
 })
 export class AdvancedForm {
 
