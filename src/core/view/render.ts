@@ -124,21 +124,22 @@ export class ComponentRender<T extends object> {
 			stack,
 			(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? [],
 		);
+		const directiveZone = this.view._zone.fork(directiveRef.zone);
 		const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
-		this.view._zone.onEmpty.subscribe(() => {
+		directiveZone.onEmpty.subscribe(() => {
 			const length = viewContainerRef.length;
 			for (let index = 0; index < length; index++) {
 				viewContainerRef.get(index)?.detectChanges();
 			}
 		});
 
-		// structural directive selector
 		const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
-		const structural = this.view._zone.run(() => new StructuralDirectiveClass(
+		const structural = directiveZone.run(() => new StructuralDirectiveClass(
 			templateRef,
 			viewContainerRef,
-			host
+			host,
+			directiveZone,
 		));
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
@@ -147,7 +148,7 @@ export class ComponentRender<T extends object> {
 		const dSubs = this.initStructuralDirective(structural, directive, stack);
 		subscriptions.push(...dSubs);
 		if (isOnInit(structural)) {
-			this.view._zone.run(structural.onInit, structural);
+			directiveZone.run(structural.onInit, structural);
 		}
 		if (directive.attributeDirectives?.length) {
 			this.initAttributeDirectives(directive.attributeDirectives, structural, stack, subscriptions);
@@ -306,14 +307,15 @@ export class ComponentRender<T extends object> {
 					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
 				return;
 			}
-			const directive = this.view._zone.run(() => new directiveRef.modelClass(element) as AttributeDirective | AttributeOnStructuralDirective);
+			const directiveZone = this.view._zone.fork(directiveRef.zone);
+			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
 			const stack = contextStack.copyStack();
 			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
 
 			const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
-				this.view._zone.run(directive.onInit, directive);
+				directiveZone.run(directive.onInit, directive);
 			}
 			if (isOnDestroy(directive)) {
 				subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
