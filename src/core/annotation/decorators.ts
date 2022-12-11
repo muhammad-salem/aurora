@@ -261,6 +261,11 @@ export interface ComponentOptions<T = Function> {
 	 * if `bootstrapZone` never been called, then the default zone is a `manual`.
 	 */
 	zone?: ZoneType;
+
+	/**
+	 * The imports property specifies the component's template dependencies — those directives, components, and pipes that can be used within its template.
+	 */
+	imports?: (TypeOf<any> | ReadonlyArray<any>)[];
 }
 
 export interface ChildOptions {
