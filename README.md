@@ -94,7 +94,7 @@ yarn add @ibyar/aurora
 - [ ] JavaScript API
 - [ ] Dependency Injection
 - [x] Component
-- [x] Directives
+- [x] Directives (Attribute and Structural Directives)
 - [x] Pipes
 - [ ] Services
 - [x] Lifecycle
@@ -217,7 +217,6 @@ can't be detected.
 ```ts
 import { bootstrapZone } from '@ibyar/aurora';
 bootstrapZone('manual');
-set
 ```
 
  - or use `proxy` Zone, if you don't like to use `Zone.js`
@@ -227,7 +226,6 @@ set
 ```ts
 import { bootstrapZone } from '@ibyar/aurora';
 bootstrapZone('proxy');
-set
 ```
 
 
