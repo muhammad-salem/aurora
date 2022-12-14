@@ -39,7 +39,9 @@ function convertToMemberAccessStyle(source: string | string[]): string {
 
 function getAccessNotation(property: string) {
 	if (property.includes('-')) {
-		return ['["', property, '"]']
+		return [`['`, property, `']`];
+	} else if (!Number.isNaN(property)) {
+		return ['[', property, ']'];
 	}
 	return ['.', property];
 }
