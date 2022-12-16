@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType,
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation,
 } from '../expression.js';
 import type { ModuleScope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -31,15 +31,16 @@ export class ImportSpecifier extends ModuleSpecifier {
 	static fromJSON(node: ImportSpecifier, deserializer: NodeDeserializer): ImportSpecifier {
 		return new ImportSpecifier(
 			deserializer(node.local) as Identifier,
-			deserializer(node.imported) as Identifier
+			deserializer(node.imported) as Identifier,
+			node.loc
 		);
 	}
 	static visit(node: ImportSpecifier, visitNode: VisitNodeType): void {
 		visitNode(node.local);
 		visitNode(node.imported);
 	}
-	constructor(local: Identifier, private imported: Identifier) {
-		super(local);
+	constructor(local: Identifier, private imported: Identifier, loc?: SourceLocation) {
+		super(local, loc);
 	}
 	getImported() {
 		return this.imported;
@@ -82,7 +83,8 @@ export class ImportSpecifier extends ModuleSpecifier {
 export class ImportDefaultSpecifier extends ModuleSpecifier {
 	static fromJSON(node: ImportDefaultSpecifier, deserializer: NodeDeserializer): ImportDefaultSpecifier {
 		return new ImportDefaultSpecifier(
-			deserializer(node.local) as Identifier
+			deserializer(node.local) as Identifier,
+			node.loc
 		);
 	}
 	static visit(node: ImportDefaultSpecifier, visitNode: VisitNodeType): void {
@@ -112,7 +114,8 @@ export class ImportDefaultSpecifier extends ModuleSpecifier {
 export class ImportNamespaceSpecifier extends ModuleSpecifier {
 	static fromJSON(node: ImportNamespaceSpecifier, deserializer: NodeDeserializer): ImportNamespaceSpecifier {
 		return new ImportNamespaceSpecifier(
-			deserializer(node.local) as Identifier
+			deserializer(node.local) as Identifier,
+			node.loc
 		);
 	}
 	static visit(node: ImportNamespaceSpecifier, visitNode: VisitNodeType): void {
@@ -166,6 +169,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			deserializer(node.source) as Literal<string>,
 			node.specifiers?.map(deserializer) as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
 			node.assertions?.map(deserializer) as (ImportAttribute)[],
+			node.loc
 		);
 	}
 	static visit(node: ImportDeclaration, visitNode: VisitNodeType): void {
@@ -176,8 +180,9 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	constructor(
 		private source: Literal<string>,
 		private specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
-		private assertions?: ImportAttribute[]) {
-		super();
+		private assertions?: ImportAttribute[],
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getSource() {
 		return this.source;
@@ -278,15 +283,16 @@ export class ImportExpression extends AbstractExpressionNode {
 	static fromJSON(node: ImportExpression, deserializer: NodeDeserializer): ImportExpression {
 		return new ImportExpression(
 			deserializer(node.source) as Literal<string>,
-			(node.attributes && deserializer(node.attributes)) || undefined
+			(node.attributes && deserializer(node.attributes)) || undefined,
+			node.loc
 		);
 	}
 	static visit(node: ImportExpression, visitNode: VisitNodeType): void {
 		visitNode(node.source);
 		node.attributes && visitNode(node.attributes);
 	}
-	constructor(private source: Literal<string>, private attributes?: ExpressionNode) {
-		super();
+	constructor(private source: Literal<string>, private attributes?: ExpressionNode, loc?: SourceLocation) {
+		super(loc);
 	}
 	getSource() {
 		return this.source;

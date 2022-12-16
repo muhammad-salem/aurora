@@ -91,7 +91,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (target.toString() !== 'target') {
 			throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
 		}
-		return MetaProperty.NewTarget;
+		return new MetaProperty(new Identifier('new'), new Identifier('target'));
 	}
 	protected override parseClassExpression(): ClassExpression {
 		this.consume(Token.CLASS);
@@ -481,7 +481,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				this.consume(Token.QUESTION_PERIOD);
 				throw new Error(this.errorMessage('Optional Chaining No Super'));
 			}
-			return Super.INSTANCE;
+			return new Super();
 		}
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
@@ -778,7 +778,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		this.consume(Token.IMPORT);
 		if (this.check(Token.PERIOD)) {
 			this.expectContextualKeyword('meta');
-			return MetaProperty.ImportMeta;
+			return new MetaProperty(new Identifier('import'), new Identifier('meta'));
 		}
 
 		if (this.peek().isNotType(Token.LPAREN)) {

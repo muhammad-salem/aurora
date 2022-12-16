@@ -1,4 +1,4 @@
-import type { ExpressionEventPath, ExpressionNode } from '../../expression.js';
+import type { ExpressionEventPath, ExpressionNode, SourceLocation } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -14,11 +14,11 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 export class EmptyStatement extends AbstractExpressionNode {
 	static readonly INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
 	static fromJSON(node: EmptyStatement): EmptyStatement {
-		return EmptyStatement.INSTANCE;
+		return new EmptyStatement(node.loc);
 	}
 	private semicolon = ';';
-	constructor() {
-		super();
+	constructor(loc?: SourceLocation) {
+		super(loc);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`EmptyStatement#set() has no implementation.`);

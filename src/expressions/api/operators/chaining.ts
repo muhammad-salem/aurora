@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanFindScope,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -10,13 +10,13 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('ChainExpression')
 export class ChainExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: ChainExpression, deserializer: NodeDeserializer): ChainExpression {
-		return new ChainExpression(deserializer(node.expression));
+		return new ChainExpression(deserializer(node.expression), node.loc);
 	}
 	static visit(node: ChainExpression, visitNode: VisitNodeType): void {
 		visitNode(node.expression);
 	}
-	constructor(private expression: ExpressionNode) {
-		super();
+	constructor(private expression: ExpressionNode, loc?: SourceLocation) {
+		super(loc);
 	}
 	getExpression() {
 		return this.expression;

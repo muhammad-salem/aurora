@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -16,13 +16,13 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('GroupingExpression')
 export class GroupingExpression extends AbstractExpressionNode {
 	static fromJSON(node: GroupingExpression, deserializer: NodeDeserializer): GroupingExpression {
-		return new GroupingExpression(deserializer(node.node as any));
+		return new GroupingExpression(deserializer(node.node), node.loc);
 	}
 	static visit(node: GroupingExpression, visitNode: VisitNodeType): void {
 		visitNode(node.node);
 	}
-	constructor(private node: ExpressionNode) {
-		super();
+	constructor(private node: ExpressionNode, loc?: SourceLocation) {
+		super(loc);
 	}
 	getNode() {
 		return this.node;

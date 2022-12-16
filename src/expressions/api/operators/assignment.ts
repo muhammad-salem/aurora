@@ -1,5 +1,8 @@
 import type { EvaluateNode, EvaluateType } from './types.js';
-import type { NodeDeserializer, ExpressionNode, VisitNodeType } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode,
+	VisitNodeType, SourceLocation
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { InfixExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -17,7 +20,8 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 		return new AssignmentExpression(
 			node.operator,
 			deserializer(node.left),
-			deserializer(node.right)
+			deserializer(node.right),
+			node.loc
 		);
 	}
 	static visit(node: AssignmentExpression, visitNode: VisitNodeType): void {
@@ -81,8 +85,8 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 
 	};
 
-	constructor(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode) {
-		super(operator, left, right);
+	constructor(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, loc?: SourceLocation) {
+		super(operator, left, right, loc);
 	}
 	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);

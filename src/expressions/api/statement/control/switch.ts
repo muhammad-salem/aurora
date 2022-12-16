@@ -1,7 +1,7 @@
 
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
@@ -15,15 +15,19 @@ export class SwitchCase extends AbstractExpressionNode {
 	static fromJSON(node: SwitchCase, deserializer: NodeDeserializer): SwitchCase {
 		return new SwitchCase(
 			deserializer(node.test),
-			deserializer(node.consequent)
+			deserializer(node.consequent),
+			node.loc
 		);
 	}
 	static visit(node: SwitchCase, visitNode: VisitNodeType): void {
 		visitNode(node.test);
 		visitNode(node.consequent);
 	}
-	constructor(protected test: ExpressionNode, protected consequent: ExpressionNode) {
-		super();
+	constructor(
+		protected test: ExpressionNode,
+		protected consequent: ExpressionNode,
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getTest() {
 		return this.test;
@@ -56,15 +60,14 @@ export class SwitchCase extends AbstractExpressionNode {
 
 @Deserializer('default')
 export class DefaultExpression extends SwitchCase {
-	static DefaultNode = Object.freeze(new Identifier('default')) as Identifier;
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
-		return new DefaultExpression(deserializer(node.consequent));
+		return new DefaultExpression(deserializer(node.consequent), node.loc);
 	}
 	static visit(node: DefaultExpression, visitNode: VisitNodeType): void {
 		visitNode(node.consequent);
 	}
-	constructor(block: ExpressionNode) {
-		super(DefaultExpression.DefaultNode, block);
+	constructor(block: ExpressionNode, loc?: SourceLocation) {
+		super(new Identifier('default'), block, loc);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.consequent.dependency(computed);
@@ -93,15 +96,16 @@ export class SwitchStatement extends AbstractExpressionNode {
 	static fromJSON(node: SwitchStatement, deserializer: NodeDeserializer): SwitchStatement {
 		return new SwitchStatement(
 			deserializer(node.discriminant),
-			node.cases.map(deserializer) as SwitchCase[]
+			node.cases.map(deserializer) as SwitchCase[],
+			node.loc
 		);
 	}
 	static visit(node: SwitchStatement, visitNode: VisitNodeType): void {
 		visitNode(node.discriminant);
 		node.cases.forEach(visitNode);
 	}
-	constructor(private discriminant: ExpressionNode, private cases: SwitchCase[]) {
-		super();
+	constructor(private discriminant: ExpressionNode, private cases: SwitchCase[], loc?: SourceLocation) {
+		super(loc);
 	}
 	getDiscriminant() {
 		return this.discriminant;

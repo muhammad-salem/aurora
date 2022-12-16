@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanFindScope,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Scope, Context } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -15,7 +15,8 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			deserializer(node.object),
 			deserializer(node.property),
 			node.computed,
-			node.optional
+			node.optional,
+			node.loc
 		);
 	}
 	static visit(node: MemberExpression, visitNode: VisitNodeType): void {
@@ -26,8 +27,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		protected object: ExpressionNode,
 		protected property: ExpressionNode,
 		private computed: boolean,
-		private optional: boolean = false) {
-		super();
+		private optional: boolean = false,
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getObject() {
 		return this.object;

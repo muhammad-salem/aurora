@@ -1,12 +1,10 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import {
-	GlobalThisNode, OfNode, Identifier,
-	SymbolNode, AsNode, Literal,
-	ThisNode, NullNode, UndefinedNode,
-	TrueNode, FalseNode, DefaultNode,
-	YieldIdentifier, ConstructorIdentifier,
-	ArgumentsIdentifier, NameIdentifier,
+	GlobalThisNode, OfNode, Identifier, SymbolNode,
+	AsNode, Literal, ThisNode, NullNode, UndefinedNode,
+	TrueNode, FalseNode, DefaultNode, YieldIdentifier,
+	ConstructorIdentifier, ArgumentsIdentifier, NameIdentifier,
 	EvalIdentifier, SuperIdentifier, LetIdentifier,
 	SetIdentifier, GetIdentifier, AwaitIdentifier, AsyncIdentifier
 } from '../api/definition/values.js';
@@ -719,7 +717,7 @@ export class TokenStreamImpl extends TokenStream {
 				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, ArgumentsIdentifier); break;
 				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
 				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
-				case 'debugger': this.current = this.newToken(Token.DEBUGGER, DebuggerStatement.INSTANCE); break;
+				case 'debugger': this.current = this.newToken(Token.DEBUGGER, new DebuggerStatement()); break;
 				case 'class': this.current = this.newToken(Token.CLASS); break;
 				case 'await': this.current = this.newToken(Token.AWAIT, AwaitIdentifier); break;
 				case 'async': this.current = this.newToken(Token.ASYNC, AsyncIdentifier); break;

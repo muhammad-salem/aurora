@@ -1,12 +1,15 @@
+import type {
+	ExpressionEventPath, ExpressionNode, NodeDeserializer,
+	SourceLocation, VisitNodeType
+} from '../expression.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Identifier, Literal } from '../definition/values.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../expression.js';
 
 export abstract class ModuleSpecifier extends AbstractExpressionNode {
-	constructor(protected local: Identifier) {
-		super();
+	constructor(protected local: Identifier, loc?: SourceLocation) {
+		super(loc);
 	}
 	getLocal() {
 		return this.local;
@@ -28,7 +31,8 @@ export class ImportAttribute extends AbstractExpressionNode {
 	static fromJSON(node: ImportAttribute, deserializer: NodeDeserializer): ImportAttribute {
 		return new ImportAttribute(
 			deserializer(node.key) as Identifier,
-			deserializer(node.value) as Literal<string>
+			deserializer(node.value) as Literal<string>,
+			node.loc
 		);
 	}
 	static visit(node: ImportAttribute, visitNode: VisitNodeType): void {
@@ -36,8 +40,8 @@ export class ImportAttribute extends AbstractExpressionNode {
 		visitNode(node.value);
 	}
 
-	constructor(private key: Identifier | Literal<string>, private value: Literal<string>) {
-		super();
+	constructor(private key: Identifier | Literal<string>, private value: Literal<string>, loc?: SourceLocation) {
+		super(loc);
 	}
 	getKey() {
 		return this.key;

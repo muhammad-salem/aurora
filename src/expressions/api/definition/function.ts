@@ -1,6 +1,6 @@
 import type {
 	DeclarationExpression, ExpressionEventPath, ExpressionNode,
-	NodeDeserializer, VisitNodeType
+	NodeDeserializer, SourceLocation, VisitNodeType
 } from '../expression.js';
 import { Stack } from '../../scope/stack.js';
 import {
@@ -18,15 +18,16 @@ export class Param extends AbstractExpressionNode {
 	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
 		return new Param(
 			deserializer(node.identifier) as DeclarationExpression,
-			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
+			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0,
+			node.loc
 		);
 	}
 	static visit(node: Param, visitNode: VisitNodeType): void {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
-	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode) {
-		super();
+	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode, loc?: SourceLocation) {
+		super(loc);
 	}
 	getIdentifier() {
 		return this.identifier;
@@ -68,6 +69,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			node.async,
 			node.generator,
 			node.id ? deserializer(node.id) as Identifier : void 0,
+			node.loc
 		);
 	}
 	static visit(node: FunctionExpression, visitNode: VisitNodeType): void {
@@ -80,8 +82,9 @@ export class FunctionExpression extends AbstractExpressionNode {
 		protected body: ExpressionNode,
 		protected async: boolean,
 		protected generator: boolean,
-		protected id?: Identifier) {
-		super();
+		protected id?: Identifier,
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getParams() {
 		return this.params;
@@ -314,7 +317,8 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 			deserializer(node.body),
 			node.async,
 			node.generator,
-			deserializer(node.id) as Identifier
+			deserializer(node.id) as Identifier,
+			node.loc
 		);
 	}
 	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
@@ -328,8 +332,9 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 		body: ExpressionNode,
 		async: boolean,
 		generator: boolean,
-		id: Identifier) {
-		super(params, body, async, generator, id);
+		id: Identifier,
+		loc?: SourceLocation) {
+		super(params, body, async, generator, id, loc);
 	}
 	override get(stack: Stack): Function {
 		const func = super.get(stack);
@@ -351,7 +356,8 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 				? node.body.map(deserializer)
 				: deserializer(node.body),
 			node.expression,
-			node.async
+			node.async,
+			node.loc
 		);
 	}
 	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType): void {
@@ -365,8 +371,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		private params: ExpressionNode[],
 		private body: ExpressionNode | ExpressionNode[],
 		private expression: boolean,
-		private async: boolean) {
-		super();
+		private async: boolean,
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getParams() {
 		return this.params;

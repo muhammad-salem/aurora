@@ -1,4 +1,7 @@
-import type { ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../../expression.js';
+import type {
+	ExpressionEventPath, ExpressionNode, NodeDeserializer,
+	SourceLocation, VisitNodeType
+} from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode } from '../../abstract.js';
 import { Deserializer } from '../../deserialize/deserialize.js';
@@ -22,8 +25,8 @@ export class TerminateReturnType {
  */
 abstract class TerminateStatement extends AbstractExpressionNode {
 
-	constructor(protected label?: Identifier) {
-		super();
+	constructor(protected label?: Identifier, loc?: SourceLocation) {
+		super(loc);
 	}
 	getLabel() {
 		this.label;
@@ -54,9 +57,10 @@ abstract class TerminateStatement extends AbstractExpressionNode {
 export class BreakStatement extends TerminateStatement {
 	static readonly BREAK_INSTANCE = Object.freeze(new BreakStatement()) as BreakStatement;
 	static fromJSON(node: BreakStatement, deserializer: NodeDeserializer): BreakStatement {
-		return node.label
-			? new BreakStatement(deserializer(node.label) as Identifier)
-			: BreakStatement.BREAK_INSTANCE;
+		return new BreakStatement(
+			node.label ? deserializer(node.label) as Identifier : void 0,
+			node.loc
+		);
 	}
 	static visit(node: BreakStatement, visitNode: VisitNodeType): void {
 		node.label && visitNode(node.label);

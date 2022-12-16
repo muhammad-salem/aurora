@@ -1,6 +1,6 @@
 import type {
 	DeclarationExpression, ExpressionNode, NodeDeserializer,
-	CanFindScope, ExpressionEventPath, VisitNodeType
+	CanFindScope, ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Context, Scope } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -19,10 +19,10 @@ import { AbstractExpressionNode } from '../abstract.js';
 @Deserializer('Identifier')
 export class Identifier extends AbstractExpressionNode implements DeclarationExpression, CanFindScope {
 	static fromJSON(node: Identifier): Identifier {
-		return new Identifier(node.name);
+		return new Identifier(node.name, node.loc);
 	}
-	constructor(protected name: string | number) {
-		super();
+	constructor(protected name: string | number, loc?: SourceLocation) {
+		super(loc);
 	}
 	getName() {
 		return this.name;
@@ -69,10 +69,10 @@ export class Identifier extends AbstractExpressionNode implements DeclarationExp
 @Deserializer('ThisExpression')
 export class ThisExpression extends Identifier {
 	static fromJSON(node: ThisExpression): ThisExpression {
-		return ThisNode;
+		return new ThisExpression(node.loc);
 	}
-	constructor() {
-		super('this');
+	constructor(loc?: SourceLocation) {
+		super('this', loc);
 	}
 }
 
@@ -87,26 +87,20 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		| Literal<null>
 		| Literal<undefined> {
 		if (node.bigint) {
-			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint);
+			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint, node.loc);
 		} else if (node.regex) {
-			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex);
+			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex, undefined, node.loc);
 		}
-		return new Literal(node.value, node.raw);
+		return new Literal(node.value, node.raw, undefined, undefined, node.loc);
 	}
 	protected regex?: { pattern: string, flags: string };
 	protected bigint?: string;
 	protected raw?: string
-	constructor(protected value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string) {
-		super();
-		if (raw) {
-			this.raw = raw;
-		}
-		if (regex) {
-			this.regex = regex;
-		}
-		if (bigint) {
-			this.bigint = bigint;
-		}
+	constructor(protected value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string, loc?: SourceLocation) {
+		super(loc);
+		raw && (this.raw = raw);
+		regex && (this.regex = regex);
+		bigint && (this.bigint = bigint);
 	}
 	getValue() {
 		return this.value;
@@ -172,19 +166,16 @@ class TemplateArray extends Array<string> implements TemplateStringsArray {
 }
 
 export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
-	static fromJSON(node: TemplateLiteralExpressionNode, deserializer: NodeDeserializer): TemplateLiteralExpressionNode {
-		return new TemplateLiteralExpressionNode(
-			node.quasis,
-			node.expressions.map(deserializer),
-			node.tag ? deserializer(node.tag) : void 0
-		);
-	}
 	static visit(node: TemplateLiteralExpressionNode, visitNode: VisitNodeType): void {
 		node.tag && visitNode(node.tag);
 		node.expressions.forEach(visitNode);
 	}
-	constructor(protected quasis: string[], protected expressions: ExpressionNode[], protected tag?: ExpressionNode,) {
-		super();
+	constructor(
+		protected quasis: string[],
+		protected expressions: ExpressionNode[],
+		protected tag?: ExpressionNode,
+		loc?: SourceLocation) {
+		super(loc);
 	}
 	getTag() {
 		return this.tag;
@@ -233,9 +224,16 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 
 @Deserializer('TemplateLiteral')
 export class TemplateLiteral extends TemplateLiteralExpressionNode {
+	static fromJSON(node: TemplateLiteral, deserializer: NodeDeserializer): TemplateLiteralExpressionNode {
+		return new TemplateLiteral(
+			node.quasis,
+			node.expressions.map(deserializer),
+			node.loc
+		);
+	}
 	declare protected tag: undefined;
-	constructor(quasis: string[], expressions: ExpressionNode[]) {
-		super(quasis, expressions);
+	constructor(quasis: string[], expressions: ExpressionNode[], loc?: SourceLocation) {
+		super(quasis, expressions, undefined, loc);
 	}
 	override getTag(): undefined {
 		return undefined;
@@ -244,21 +242,22 @@ export class TemplateLiteral extends TemplateLiteralExpressionNode {
 
 @Deserializer('TaggedTemplateExpression')
 export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
+	static fromJSON(node: TaggedTemplateExpression, deserializer: NodeDeserializer): TemplateLiteralExpressionNode {
+		return new TaggedTemplateExpression(
+			deserializer(node.tag),
+			node.quasis,
+			node.expressions.map(deserializer),
+			node.loc
+		);
+	}
 	declare protected tag: ExpressionNode;
-	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[]) {
-		super(quasis, expressions, tag);
+	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], loc?: SourceLocation) {
+		super(quasis, expressions, tag, loc);
 	}
 	override getTag(): ExpressionNode {
 		return super.getTag()!;
 	}
 }
-
-
-export const TRUE = String(true);
-export const FALSE = String(false);
-
-export const NULL = String(null);
-export const UNDEFINED = String(undefined);
 
 export const NullNode = Object.freeze(new Literal<null>(null)) as Literal<null>;
 export const UndefinedNode = Object.freeze(new Literal<undefined>(undefined)) as Literal<undefined>;

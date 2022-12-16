@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, DeclarationExpression,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -11,13 +11,13 @@ import { SpreadElement } from '../computing/spread.js';
 @Deserializer('ArrayExpression')
 export class ArrayExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
-		return new ArrayExpression(node.elements.map(element => element ? deserializer(element) : null));
+		return new ArrayExpression(node.elements.map(element => element ? deserializer(element) : null), node.loc);
 	}
 	static visit(node: ArrayExpression, visitNode: VisitNodeType): void {
 		node.elements.forEach(element => element && visitNode(element));
 	}
-	constructor(private elements: (ExpressionNode | SpreadElement | null)[]) {
-		super();
+	constructor(private elements: (ExpressionNode | SpreadElement | null)[], loc?: SourceLocation) {
+		super(loc);
 	}
 	getElements() {
 		return this.elements;
@@ -48,13 +48,16 @@ export class ArrayExpression extends AbstractExpressionNode {
 @Deserializer('ArrayPattern')
 export class ArrayPattern extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
-		return new ArrayPattern(node.elements.map(expression => expression ? deserializer(expression) : null) as DeclarationExpression[]);
+		return new ArrayPattern(
+			node.elements.map(expression => expression ? deserializer(expression) : null) as DeclarationExpression[],
+			node.loc
+		);
 	}
 	static visit(node: ArrayPattern, visitNode: VisitNodeType): void {
 		node.elements.forEach(expression => expression && visitNode(expression));
 	}
-	constructor(private elements: (DeclarationExpression | null)[]) {
-		super();
+	constructor(private elements: (DeclarationExpression | null)[], loc?: SourceLocation) {
+		super(loc);
 	}
 	getElements() {
 		return this.elements;

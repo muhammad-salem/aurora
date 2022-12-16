@@ -19,7 +19,8 @@ export class BinaryExpression extends InfixExpressionNode<BinaryOperator> {
 		return new BinaryExpression(
 			node.operator,
 			deserializer(node.left),
-			deserializer(node.right)
+			deserializer(node.right),
+			node.loc
 		);
 	}
 	static visit(node: BinaryExpression, visitNode: VisitNodeType): void {

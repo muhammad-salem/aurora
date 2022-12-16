@@ -382,7 +382,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseBlock();
 			case Token.SEMICOLON:
 				this.consume(Token.SEMICOLON);
-				return EmptyStatement.INSTANCE;
+				return new EmptyStatement();
 			case Token.IF:
 				return this.parseIfStatement();
 			case Token.DO:
@@ -423,7 +423,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseDebuggerStatement() {
 		this.consume(Token.DEBUGGER);
 		this.expectSemicolon();
-		return DebuggerStatement.INSTANCE;
+		return new DebuggerStatement();
 	}
 	protected parseTryStatement(): ExpressionNode {
 		// TryStatement ::
@@ -951,7 +951,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			label = this.parseIdentifier();
 		}
 		this.expectSemicolon();
-		return label ? new BreakStatement(label) : BreakStatement.BREAK_INSTANCE;
+		return new BreakStatement(label);
 	}
 	protected parseReturnStatement(): ExpressionNode {
 		// ReturnStatement ::
