@@ -2,7 +2,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
 	NodeJsonType, DeclarationExpression, ExpressionEventMap,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from './expression.js';
 
 function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
@@ -25,20 +25,23 @@ function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: Expr
 		}
 	}
 }
+
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
 	}
 	type: string;
-	constructor() {
+	loc?: SourceLocation;
+	constructor(loc?: SourceLocation) {
 		this.type = this.getClass().type;
+		loc && (this.loc = loc);
 	}
 	getClass(): ExpressionNodConstructor<ExpressionNode> {
 		return this.constructor as ExpressionNodConstructor<ExpressionNode>;
 	}
 	toJSON(key?: string): NodeJsonType {
 		const json = this.toJson(key);
-		return { type: this.type, ...json };
+		return Object.assign({ type: this.type }, json, this.loc ? { loc: this.loc } : undefined);
 	}
 	events(): ExpressionEventMap {
 		const dependencyNodes = this.dependency();
@@ -56,13 +59,14 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
+
 export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 	static visit(node: InfixExpressionNode<any>, visitNode: VisitNodeType): void {
 		visitNode(node.getLeft());
 		visitNode(node.getRight())
 	}
-	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode) {
-		super();
+	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode, loc?: SourceLocation) {
+		super(loc);
 	}
 	getOperator() {
 		return this.operator;
