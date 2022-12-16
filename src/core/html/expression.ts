@@ -40,7 +40,7 @@ function convertToMemberAccessStyle(source: string | string[]): string {
 function getAccessNotation(property: string) {
 	if (property.includes('-')) {
 		return [`['`, property, `']`];
-	} else if (!Number.isNaN(property)) {
+	} else if (Number.isInteger(property.at(0))) {
 		return ['[', property, ']'];
 	}
 	return ['.', property];
