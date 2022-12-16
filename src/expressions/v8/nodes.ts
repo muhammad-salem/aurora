@@ -6,7 +6,7 @@ import { LogicalExpression } from '../api/operators/logical.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import { Literal, TrueNode, FalseNode, NullNode, UndefinedNode } from '../api/definition/values.js';
+import { Literal } from '../api/definition/values.js';
 import { AwaitExpression } from '../api/operators/await.js';
 import { UpdateExpression } from '../api/operators/update.js';
 import { BinaryExpression } from '../api/operators/binary.js';
@@ -97,15 +97,15 @@ export function shortcutNumericLiteralBinaryExpression(x: ExpressionNode, y: Exp
 }
 export function coverValue(value: any) {
 	switch (typeof value) {
-		case 'undefined': return UndefinedNode;
-		case 'boolean': return value ? TrueNode : FalseNode;
+		case 'undefined': return new Literal<undefined>(undefined);
+		case 'boolean': return new Literal<boolean>(value ? true : false);
 		case 'number':
 		case 'bigint':
 		case 'string':
 			return new Literal<number | string | bigint>(value);
 		case 'object':
 			if (value === null) {
-				return NullNode;
+				return new Literal<null>(null);
 			}
 		// never reach
 		case 'function':
@@ -156,10 +156,10 @@ export function expressionFromLiteral(te: TokenExpression) {
 		case Token.IDENTIFIER:
 			return te.getValue();
 
-		case Token.NULL_LITERAL: return NullNode;
-		case Token.TRUE_LITERAL: return TrueNode;
-		case Token.FALSE_LITERAL: return FalseNode;
+		case Token.NULL_LITERAL: return new Literal<null>(null);
+		case Token.TRUE_LITERAL: return new Literal<boolean>(true);
+		case Token.FALSE_LITERAL: return new Literal<boolean>(false);
 		default:
-		case Token.UNDEFINED_LITERAL: return UndefinedNode;
+		case Token.UNDEFINED_LITERAL: return new Literal<undefined>(undefined);
 	}
 }

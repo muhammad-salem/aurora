@@ -1,14 +1,7 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { TemplateStringLiteral, TokenStream } from './stream.js';
-import {
-	OfNode, Identifier, ThisNode,
-	GetIdentifier, SetIdentifier, AsyncIdentifier,
-	NullNode, AwaitIdentifier,
-	ConstructorIdentifier, NameIdentifier,
-	EvalIdentifier, ArgumentsIdentifier,
-	TaggedTemplateExpression, TemplateLiteral, Literal, SuperIdentifier
-} from '../api/definition/values.js';
+import { Identifier, TaggedTemplateExpression, TemplateLiteral, Literal, ThisExpression } from '../api/definition/values.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import {
@@ -44,7 +37,7 @@ import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
 } from './nodes.js';
-import { ClassDeclaration, ClassExpression, PrivateIdentifier } from '../api/class/class.js';
+import { ClassDeclaration, ClassExpression, PrivateIdentifier, Super } from '../api/class/class.js';
 import {
 	AllowLabelledFunctionStatement,
 	FunctionBodyType, FunctionInfo, FunctionKind,
@@ -170,18 +163,17 @@ export abstract class AbstractParser {
 		return current.getValue();
 	}
 	protected checkInOrOf(): 'IN' | 'OF' | false {
-		if (this.check(Token.IN)) {
-			return 'IN';
-		} else if (this.checkValue(OfNode)) {
-			return 'OF';
+		const result = this.peekInOrOf();
+		if (result) {
+			this.scanner.next();
 		}
-		return false;
+		return result;
 	}
 	protected peekInOrOf(): 'IN' | 'OF' | false {
 		var next = this.peek();
 		if (next.isType(Token.IN)) {
 			return 'IN';
-		} else if (next.value === OfNode) {
+		} else if (next.value instanceof Identifier && next.value.getName() === 'of') {
 			return 'OF';
 		}
 		return false;
@@ -1125,9 +1117,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const current = this.current();
 		switch (current.token) {
 			case Token.AWAIT:
-				return AwaitIdentifier;
+				return new Identifier('await');
 			case Token.ASYNC:
-				return AsyncIdentifier;
+				return new Identifier('async');
 			case Token.IDENTIFIER:
 			case Token.PRIVATE_NAME:
 				return current.getValue();
@@ -1136,16 +1128,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		const name = current.getValue().toString();
 		if (name == 'constructor') {
-			return ConstructorIdentifier;
+			return new Identifier('constructor');
 		}
 		if (name == 'name') {
-			return NameIdentifier;
+			return new Identifier('name');
 		}
 		if (name == 'eval') {
-			return EvalIdentifier;
+			return new Identifier('eval');
 		}
 		else if (name == 'arguments') {
-			return ArgumentsIdentifier;
+			return new Identifier('arguments');
 		}
 		return current.getValue();
 	}
@@ -1419,7 +1411,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseMemberWithPresentNewPrefixesExpression();
 			case Token.THIS:
 				this.consume(Token.THIS);
-				return ThisNode;
+				return new ThisExpression();
 			case Token.DIV:
 			case Token.DIV_ASSIGN:
 				// case Token.REGEXP_LITERAL:
@@ -1566,7 +1558,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return this.parseMemberExpressionContinuation(result);
 		} else {
 			result = this.parseMemberExpression();
-			if (result === SuperIdentifier) {
+			if (result instanceof Super) {
 				// new super() is never allowed
 				throw new SyntaxError(this.errorMessage(`Unexpected Super, new super() is never allowed`));
 			}
@@ -1907,7 +1899,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			case PropertyKind.ClassField:
 			case PropertyKind.NotSet:
-				return NullNode;
+				return new Literal<null>(null);
 		}
 	}
 	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
@@ -1918,7 +1910,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (nextToken.isNotType(Token.MUL)
 				&& propInfo.parsePropertyKindFromToken(nextToken.token)
 				|| this.scanner.hasLineTerminatorBeforeNext()) {
-				return AsyncIdentifier;
+				return new Identifier('async');
 			}
 			propInfo.kind = PropertyKind.Method;
 			propInfo.funcFlag = ParseFunctionFlag.IsAsync;
@@ -1934,7 +1926,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
 			const token = this.next();
 			if (propInfo.parsePropertyKindFromToken(this.peek().token)) {
-				return nextToken.isType(Token.GET) ? GetIdentifier : SetIdentifier;
+				return new Identifier(nextToken.isType(Token.GET) ? 'get' : 'set');
 			}
 			if (token.isType(Token.GET)) {
 				propInfo.kind = PropertyKind.AccessorGetter;

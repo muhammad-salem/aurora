@@ -1,14 +1,7 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import {
-	GlobalThisNode, OfNode, Identifier, SymbolNode,
-	AsNode, Literal, ThisNode, NullNode, UndefinedNode,
-	TrueNode, FalseNode, DefaultNode, YieldIdentifier,
-	ConstructorIdentifier, ArgumentsIdentifier, NameIdentifier,
-	EvalIdentifier, SuperIdentifier, LetIdentifier,
-	SetIdentifier, GetIdentifier, AwaitIdentifier, AsyncIdentifier
-} from '../api/definition/values.js';
-import { PrivateIdentifier } from '../api/class/class.js';
+import { Identifier, Literal } from '../api/definition/values.js';
+import { PrivateIdentifier, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { isStrict, LanguageMode } from './language.js';
 
@@ -701,26 +694,26 @@ export class TokenStreamImpl extends TokenStream {
 			this.current = this.newToken(Token.PRIVATE_NAME, node);
 		} else {
 			switch (identifierName) {
-				case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
-				case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
-				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
-				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
-				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
+				case 'this': this.current = this.newToken(Token.THIS); break;
+				case 'null': this.current = this.newToken(Token.NULL_LITERAL, new Literal<null>(null)); break;
+				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, new Literal<undefined>(undefined)); break;
+				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, new Literal<boolean>(true)); break;
+				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, new Literal<boolean>(false)); break;
 
-				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
-				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
-				case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
-				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
-				case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
-				case 'yield': this.current = this.newToken(Token.YIELD, YieldIdentifier); break;
-				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, ConstructorIdentifier); break;
-				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, ArgumentsIdentifier); break;
-				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
-				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
+				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, new Identifier('globalThis')); break;
+				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, new Identifier('Symbol')); break;
+				case 'of': this.current = this.newToken(Token.IDENTIFIER, new Identifier('of')); break;
+				case 'as': this.current = this.newToken(Token.IDENTIFIER, new Identifier('as')); break;
+				case 'default': this.current = this.newToken(Token.DEFAULT, new Identifier('default')); break;
+				case 'yield': this.current = this.newToken(Token.YIELD, new Identifier('yield')); break;
+				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, new Identifier('constructor')); break;
+				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, new Identifier('arguments')); break;
+				case 'name': this.current = this.newToken(Token.IDENTIFIER, new Identifier('name')); break;
+				case 'eval': this.current = this.newToken(Token.IDENTIFIER, new Identifier('eval')); break;
 				case 'debugger': this.current = this.newToken(Token.DEBUGGER, new DebuggerStatement()); break;
 				case 'class': this.current = this.newToken(Token.CLASS); break;
-				case 'await': this.current = this.newToken(Token.AWAIT, AwaitIdentifier); break;
-				case 'async': this.current = this.newToken(Token.ASYNC, AsyncIdentifier); break;
+				case 'await': this.current = this.newToken(Token.AWAIT, new Identifier('await')); break;
+				case 'async': this.current = this.newToken(Token.ASYNC, new Identifier('async')); break;
 
 				default:
 					node = new Identifier(identifierName);
@@ -1380,12 +1373,12 @@ export class TokenStreamImpl extends TokenStream {
 				return true;
 			case 'a':
 				if (/async\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.ASYNC, AsyncIdentifier);
+					this.current = this.newToken(Token.ASYNC, new Identifier('async'));
 					this.pos += 5;
 					return true;
 				}
 				if (/await\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.AWAIT, AwaitIdentifier);
+					this.current = this.newToken(Token.AWAIT, new Identifier('await'));
 					this.pos += 5;
 					return true;
 				}
@@ -1396,7 +1389,7 @@ export class TokenStreamImpl extends TokenStream {
 						this.current = this.newToken(Token.INSTANCEOF);
 						this.pos += 11;
 						return true;
-					} else if (/\s/.test(this.expression.charAt(this.pos + 2))) {
+					} else if (/n\s/.test(this.expression.charAt(this.pos + 2))) {
 						this.current = this.newToken(Token.IN);
 						this.pos += 3;
 						return true;
@@ -1508,7 +1501,7 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'g':
 				if (/get\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.GET, GetIdentifier);
+					this.current = this.newToken(Token.GET, new Identifier('get'));
 					this.pos += 4;
 					return true;
 				}
@@ -1548,7 +1541,7 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.LET, LetIdentifier);
+					this.current = this.newToken(Token.LET, new Identifier('let'));
 					this.pos += 4;
 					return true;
 				}
@@ -1591,12 +1584,12 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.SET, SetIdentifier);
+					this.current = this.newToken(Token.SET, new Identifier('set'));
 					this.pos += 4;
 					return true;
 				}
 				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.SUPER, SuperIdentifier);
+					this.current = this.newToken(Token.SUPER, new Super());
 					this.pos += 5;
 					return true;
 				}

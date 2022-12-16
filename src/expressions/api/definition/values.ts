@@ -258,25 +258,3 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 		return super.getTag()!;
 	}
 }
-
-export const NullNode = Object.freeze(new Literal<null>(null)) as Literal<null>;
-export const UndefinedNode = Object.freeze(new Literal<undefined>(undefined)) as Literal<undefined>;
-export const TrueNode = Object.freeze(new Literal<boolean>(true)) as Literal<boolean>;
-export const FalseNode = Object.freeze(new Literal<boolean>(false)) as Literal<boolean>;
-export const ThisNode = Object.freeze(new ThisExpression()) as ThisExpression;
-export const GlobalThisNode = Object.freeze(new Identifier('globalThis')) as Identifier;
-export const SymbolNode = Object.freeze(new Identifier('Symbol')) as Identifier;
-export const OfNode = Object.freeze(new Identifier('of')) as Identifier;
-export const AsNode = Object.freeze(new Identifier('as')) as Identifier;
-export const DefaultNode = Object.freeze(new Identifier('default')) as Identifier;
-export const GetIdentifier = Object.freeze(new Identifier('get')) as Identifier;
-export const SetIdentifier = Object.freeze(new Identifier('set')) as Identifier;
-export const AsyncIdentifier = Object.freeze(new Identifier('async')) as Identifier;
-export const AwaitIdentifier = Object.freeze(new Identifier('await')) as Identifier;
-export const ConstructorIdentifier = Object.freeze(new Identifier('constructor')) as Identifier;
-export const NameIdentifier = Object.freeze(new Identifier('name')) as Identifier;
-export const EvalIdentifier = Object.freeze(new Identifier('eval')) as Identifier;
-export const ArgumentsIdentifier = Object.freeze(new Identifier('arguments')) as Identifier;
-export const YieldIdentifier = Object.freeze(new Identifier('yield')) as Identifier;
-export const SuperIdentifier = Object.freeze(new Identifier('super')) as Identifier;
-export const LetIdentifier = Object.freeze(new Identifier('let')) as Identifier;

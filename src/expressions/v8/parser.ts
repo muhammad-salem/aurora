@@ -14,7 +14,7 @@ import {
 	Super
 } from '../api/class/class.js';
 import { FunctionExpression } from '../api/definition/function.js';
-import { Identifier, Literal, NullNode } from '../api/definition/values.js';
+import { Identifier, Literal } from '../api/definition/values.js';
 import { AssignmentExpression } from '../api/operators/assignment.js';
 import {
 	VariableDeclarationNode,
@@ -382,7 +382,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case PropertyKind.Shorthand:
 			case PropertyKind.Spread:
 				// throw new Error(this.errorMessage('Report Unexpected Token'));
-				return NullNode;
+				return new Literal<null>(null);
 		}
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
