@@ -29,13 +29,16 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
 	}
+	type: string;
+	constructor() {
+		this.type = this.getClass().type;
+	}
 	getClass(): ExpressionNodConstructor<ExpressionNode> {
 		return this.constructor as ExpressionNodConstructor<ExpressionNode>;
 	}
 	toJSON(key?: string): NodeJsonType {
-		const type = this.getClass().type;
 		const json = this.toJson(key);
-		return { type, ...json };
+		return { type: this.type, ...json };
 	}
 	events(): ExpressionEventMap {
 		const dependencyNodes = this.dependency();

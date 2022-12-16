@@ -12,6 +12,8 @@ export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 
 export interface ExpressionNode {
 
+	type: string;
+
 	/**
 	 * assign the value to this expression in stack.
 	 * 
