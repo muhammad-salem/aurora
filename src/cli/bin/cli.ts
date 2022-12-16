@@ -17,15 +17,12 @@ if (showHelp) {
 	const help =
 		`
 Version ${CLI_VERSION}
-Usage: esmpack [config path] [options]
-
-if no config file in the commend will try to search for file names
-'esmpack.config.js', 'esmpack.config.mjs' and 'esmpack.config.json'.
+Usage: ibyar [options]
 
 Examples:
     ibyar
-    ibyar esmpack.config.js.js
-    ibyar esmpack.config.json -w -d
+    ibyar -b
+    ibyar -gt
     ibyar -v
     ibyar --help
 
