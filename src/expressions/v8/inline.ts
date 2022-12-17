@@ -20,7 +20,6 @@ import { ObjectExpression, Property, ObjectPattern } from '../api/definition/obj
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
@@ -32,7 +31,6 @@ import { PipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { ChainExpression } from '../api/operators/chaining.js';
-import { ExpressionStatement } from '../api/definition/statement.js';
 import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
@@ -48,11 +46,14 @@ import {
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
-import { DebuggerStatement } from '../api/computing/debugger.js';
 
 import { isSloppy, isStrict, LanguageMode, } from './language.js';
+import type { NodeFactory } from './node.js';
+import { ExpressionNodeFactory } from './factory.js';
 
-export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean };
+
+
+export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, factory?: NodeFactory };
 
 export abstract class AbstractParser {
 
@@ -69,7 +70,7 @@ export abstract class AbstractParser {
 		this.scanner.setLanguageMode(mode);
 	}
 
-	constructor(protected scanner: TokenStream, acceptIN?: boolean) {
+	constructor(protected scanner: TokenStream, protected factory: NodeFactory, acceptIN?: boolean) {
 		this.previousAcceptIN.push(this.acceptIN = acceptIN ?? false);
 		this.previousFunctionKind.push(this.functionKind = FunctionKind.NormalFunction);
 	}
@@ -121,9 +122,11 @@ export abstract class AbstractParser {
 		return this.scanner.peekPosition();
 	}
 	protected consume(token: Token) {
-		if (this.scanner.next().isNotType(token)) {
+		const next = this.scanner.next();
+		if (next.isNotType(token)) {
 			throw new Error(this.errorMessage(`Parsing ${JSON.stringify(token)}`));
 		}
+		return next;
 	}
 	protected check(token: Token): boolean {
 		const next = this.scanner.peek();
@@ -328,24 +331,25 @@ export abstract class AbstractParser {
 }
 
 export class JavaScriptInlineParser extends AbstractParser {
-	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN }: InlineParserOptions = {}) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN, factory }: InlineParserOptions = {}) {
 		mode ??= LanguageMode.Strict;
 		const stream = (typeof source === 'string')
 			? TokenStream.getTokenStream(source, mode)
 			: Array.isArray(source) ? TokenStream.getTokenStream(source) : source;
 		acceptIN ??= false;
-		const parser = new JavaScriptInlineParser(stream, acceptIN);
+		factory ??= new ExpressionNodeFactory();
+		const parser = new JavaScriptInlineParser(stream, factory, acceptIN);
 		return parser.scan();
 	}
-	constructor(scanner: TokenStream, acceptIN?: boolean) {
-		super(scanner, acceptIN);
+	constructor(scanner: TokenStream, factory: NodeFactory, acceptIN?: boolean) {
+		super(scanner, factory, acceptIN);
 	}
 	scan(): ExpressionNode {
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
 		if (list.length === 1) {
 			return list[0];
 		}
-		return new ExpressionStatement(list);
+		return this.factory.createExpressionStatement(list);
 	}
 
 	/**
@@ -374,7 +378,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseBlock();
 			case Token.SEMICOLON:
 				this.consume(Token.SEMICOLON);
-				return new EmptyStatement();
+				return this.factory.createEmptyStatement();
 			case Token.IF:
 				return this.parseIfStatement();
 			case Token.DO:
@@ -413,9 +417,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 	}
 	protected parseDebuggerStatement() {
-		this.consume(Token.DEBUGGER);
+		const token = this.consume(Token.DEBUGGER);
 		this.expectSemicolon();
-		return new DebuggerStatement();
+		return this.factory.createDebuggerStatement(token.range);
 	}
 	protected parseTryStatement(): ExpressionNode {
 		// TryStatement ::
@@ -429,8 +433,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// Finally ::
 		//   'finally' Block
 
-		this.consume(Token.TRY);
+		const tryToken = this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
+		const range: [number, number] = [tryToken.range[0], tryBlock.range?.[1] ?? -1];
 		let peek = this.peek();
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
@@ -448,13 +453,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.expect(Token.RPAREN);
 			}
 			const block = this.parseBlock();
-			catchBlock = new CatchClauseNode(block, identifier);
+			catchBlock = this.factory.createCatchClause(block, identifier, block.range && [peek.range[0], block.range[1]]);
+			range[1] = block.range?.[1] ?? -1;
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
+			range[1] = finallyBlock.range?.[1] ?? -1;
 		}
-		return new TryCatchNode(tryBlock, catchBlock, finallyBlock);
+		return this.factory.createTryStatement(tryBlock, catchBlock, finallyBlock, range[1] === -1 ? undefined : range);
 	}
 	protected parseNonRestrictedIdentifier() {
 		const result = this.parseIdentifier();
@@ -591,13 +598,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseThrowStatement(): ExpressionNode {
 		// ThrowStatement ::
 		//   'throw' Expression ';'
-		this.consume(Token.THROW);
+		const throwToken = this.consume(Token.THROW);
 		if (this.scanner.hasLineTerminatorBeforeNext()) {
 			throw new Error(this.scanner.createError(`New line After Throw`));
 		}
 		const exception = this.parseExpression();
 		this.expectSemicolon();
-		return new ThrowStatement(exception);
+		const range: [number, number] | undefined = exception.range?.[1]
+			? [throwToken.range[0], exception.range[1]]
+			: undefined;
+		return this.factory.createThrowStatement(exception, range);
 	}
 	protected parseSwitchStatement(): ExpressionNode {
 		// SwitchStatement ::
@@ -929,7 +939,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			label = this.parseIdentifier();
 		}
 		this.expectSemicolon();
-		return label ? new ContinueStatement(label) : ContinueStatement.CONTINUE_INSTANCE;
+		return new ContinueStatement(label);
 	}
 	protected parseBreakStatement(): ExpressionNode {
 		// BreakStatement ::

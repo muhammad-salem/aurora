@@ -53,8 +53,10 @@ import {
 } from './enums.js';
 
 import { isStrict, LanguageMode, } from './language.js';
+import type { NodeFactory } from './node.js';
+import { ExpressionNodeFactory } from './factory.js';
 
-export type ParserOptions = { mode?: LanguageMode };
+export type ParserOptions = { mode?: LanguageMode, factory?: NodeFactory };
 
 export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
@@ -62,11 +64,12 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream, { mode }: ParserOptions = {}): Program {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode, factory }: ParserOptions = {}): Program {
 		mode ??= LanguageMode.Strict;
 		const stream = (typeof source === 'string') || Array.isArray(source)
 			? TokenStream.getTokenStream(source, mode) : source;
-		const parser = new JavaScriptParser(stream);
+		factory ??= new ExpressionNodeFactory();
+		const parser = new JavaScriptParser(stream, factory, false);
 		return parser.scan();
 	}
 
