@@ -16,7 +16,7 @@ export interface Position {
 }
 
 export interface SourceLocation {
-	source: string | null;
+	source?: string | null;
 	start: Position;
 	end: Position;
 }
