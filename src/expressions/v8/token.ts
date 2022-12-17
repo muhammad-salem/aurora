@@ -810,7 +810,7 @@ export class Token {
 }
 
 export class TokenExpression {
-	constructor(public token: Token, public value?: ExpressionNode) { }
+	constructor(public token: Token, public range: [number, number], public value?: ExpressionNode) { }
 	getValue<T extends ExpressionNode>(): T {
 		return this.value! as T;
 	}
