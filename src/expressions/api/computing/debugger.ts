@@ -6,7 +6,7 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('DebuggerStatement')
 export class DebuggerStatement extends AbstractExpressionNode {
 	static fromJSON(node: DebuggerStatement): DebuggerStatement {
-		return new DebuggerStatement(node.loc);
+		return new DebuggerStatement(node.range, node.loc);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`DebuggerStatement#set() has no implementation.`);

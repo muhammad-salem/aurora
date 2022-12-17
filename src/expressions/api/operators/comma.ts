@@ -9,13 +9,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('SequenceExpression')
 export class SequenceExpression extends AbstractExpressionNode {
 	static fromJSON(node: SequenceExpression, deserializer: NodeDeserializer): SequenceExpression {
-		return new SequenceExpression(node.expressions.map(deserializer), node.loc);
+		return new SequenceExpression(
+			node.expressions.map(deserializer),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: SequenceExpression, visitNode: VisitNodeType): void {
 		node.expressions.forEach(visitNode);
 	}
-	constructor(private expressions: ExpressionNode[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private expressions: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getExpressions() {
 		return this.expressions;

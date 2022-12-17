@@ -10,15 +10,24 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('NewExpression')
 export class NewExpression extends AbstractExpressionNode {
 	static fromJSON(node: NewExpression, deserializer: NodeDeserializer): NewExpression {
-		return new NewExpression(deserializer(node.className), node.arguments?.map(deserializer), node.loc);
+		return new NewExpression(
+			deserializer(node.className),
+			node.arguments?.map(deserializer),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: NewExpression, visitNode: VisitNodeType): void {
 		visitNode(node.className);
 		node.arguments?.forEach(visitNode);
 	}
 	private arguments?: ExpressionNode[];
-	constructor(private className: ExpressionNode, parameters?: ExpressionNode[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private className: ExpressionNode,
+		parameters?: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		this.arguments = parameters;
 	}
 	getClassName() {

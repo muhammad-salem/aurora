@@ -11,13 +11,20 @@ import { SpreadElement } from '../computing/spread.js';
 @Deserializer('ArrayExpression')
 export class ArrayExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrayExpression, deserializer: NodeDeserializer): ArrayExpression {
-		return new ArrayExpression(node.elements.map(element => element ? deserializer(element) : null), node.loc);
+		return new ArrayExpression(
+			node.elements.map(element => element ? deserializer(element) : null),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ArrayExpression, visitNode: VisitNodeType): void {
 		node.elements.forEach(element => element && visitNode(element));
 	}
-	constructor(private elements: (ExpressionNode | SpreadElement | null)[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private elements: (ExpressionNode | SpreadElement | null)[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getElements() {
 		return this.elements;
@@ -50,14 +57,18 @@ export class ArrayPattern extends AbstractExpressionNode implements DeclarationE
 	static fromJSON(node: ArrayPattern, deserializer: NodeDeserializer): ArrayPattern {
 		return new ArrayPattern(
 			node.elements.map(expression => expression ? deserializer(expression) : null) as DeclarationExpression[],
+			node.range,
 			node.loc
 		);
 	}
 	static visit(node: ArrayPattern, visitNode: VisitNodeType): void {
 		node.elements.forEach(expression => expression && visitNode(expression));
 	}
-	constructor(private elements: (DeclarationExpression | null)[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private elements: (DeclarationExpression | null)[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getElements() {
 		return this.elements;

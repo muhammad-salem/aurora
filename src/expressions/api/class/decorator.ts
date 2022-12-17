@@ -9,13 +9,13 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('Decorator')
 export class Decorator extends AbstractExpressionNode {
 	static fromJSON(node: Decorator, deserializer: NodeDeserializer<any>): Decorator {
-		return new Decorator(deserializer(node.expression), node.loc);
+		return new Decorator(deserializer(node.expression), node.range, node.loc);
 	}
 	static visit(node: Decorator, visitNode: VisitNodeType): void {
 		visitNode(node.expression);
 	}
-	constructor(private expression: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(private expression: ExpressionNode, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getExpression() {
 		return this.expression;

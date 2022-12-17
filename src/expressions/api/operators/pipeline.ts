@@ -27,6 +27,7 @@ export class PipelineExpression extends AbstractExpressionNode {
 			deserializer(node.left),
 			deserializer(node.right),
 			node.arguments.map(arg => typeof arg === 'string' ? arg : deserializer(arg)),
+			node.range,
 			node.loc
 		);
 	}
@@ -40,8 +41,9 @@ export class PipelineExpression extends AbstractExpressionNode {
 		private left: ExpressionNode,
 		private right: ExpressionNode,
 		params: (ExpressionNode | '?' | '...?')[] = [],
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 		this.arguments = params;
 	}
 	getLeft() {

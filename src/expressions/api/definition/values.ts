@@ -19,10 +19,10 @@ import { AbstractExpressionNode } from '../abstract.js';
 @Deserializer('Identifier')
 export class Identifier extends AbstractExpressionNode implements DeclarationExpression, CanFindScope {
 	static fromJSON(node: Identifier): Identifier {
-		return new Identifier(node.name, node.loc);
+		return new Identifier(node.name, node.range, node.loc);
 	}
-	constructor(protected name: string | number, loc?: SourceLocation) {
-		super(loc);
+	constructor(protected name: string | number, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getName() {
 		return this.name;
@@ -69,10 +69,12 @@ export class Identifier extends AbstractExpressionNode implements DeclarationExp
 @Deserializer('ThisExpression')
 export class ThisExpression extends Identifier {
 	static fromJSON(node: ThisExpression): ThisExpression {
-		return new ThisExpression(node.loc);
+		return new ThisExpression(node.range, node.loc);
 	}
-	constructor(loc?: SourceLocation) {
-		super('this', loc);
+	constructor(
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super('this', range, loc);
 	}
 	toJson(): object {
 		return {};
@@ -90,18 +92,24 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		| Literal<null>
 		| Literal<undefined> {
 		if (node.bigint) {
-			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint, node.loc);
+			return new Literal(BigInt(node.bigint), node.raw, undefined, node.bigint, node.range, node.loc);
 		} else if (node.regex) {
-			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex, undefined, node.loc);
+			return new Literal(RegExp(node.regex.pattern, node.regex.flags), node.raw, node.regex, undefined, node.range, node.loc);
 		}
-		return new Literal(node.value, node.raw, undefined, undefined, node.loc);
+		return new Literal(node.value, node.raw, undefined, undefined, node.range, node.loc);
 	}
 	type: 'Literal';
 	regex?: { pattern: string, flags: string };
 	bigint?: string;
 	raw?: string
-	constructor(public value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		public value: T,
+		raw?: string,
+		regex?: { pattern: string, flags: string },
+		bigint?: string,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		raw && (this.raw = raw);
 		regex && (this.regex = regex);
 		bigint && (this.bigint = bigint);
@@ -178,8 +186,9 @@ export class TemplateLiteralExpressionNode extends AbstractExpressionNode {
 		protected quasis: string[],
 		protected expressions: ExpressionNode[],
 		protected tag?: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getTag() {
 		return this.tag;
@@ -232,12 +241,17 @@ export class TemplateLiteral extends TemplateLiteralExpressionNode {
 		return new TemplateLiteral(
 			node.quasis,
 			node.expressions.map(deserializer),
+			node.range,
 			node.loc
 		);
 	}
 	declare protected tag: undefined;
-	constructor(quasis: string[], expressions: ExpressionNode[], loc?: SourceLocation) {
-		super(quasis, expressions, undefined, loc);
+	constructor(
+		quasis: string[],
+		expressions: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(quasis, expressions, undefined, range, loc);
 	}
 	override getTag(): undefined {
 		return undefined;
@@ -251,12 +265,18 @@ export class TaggedTemplateExpression extends TemplateLiteralExpressionNode {
 			deserializer(node.tag),
 			node.quasis,
 			node.expressions.map(deserializer),
+			node.range,
 			node.loc
 		);
 	}
 	declare protected tag: ExpressionNode;
-	constructor(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], loc?: SourceLocation) {
-		super(quasis, expressions, tag, loc);
+	constructor(
+		tag: ExpressionNode,
+		quasis: string[],
+		expressions: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(quasis, expressions, tag, range, loc);
 	}
 	override getTag(): ExpressionNode {
 		return super.getTag()!;

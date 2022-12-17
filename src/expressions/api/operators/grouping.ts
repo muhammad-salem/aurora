@@ -16,13 +16,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('GroupingExpression')
 export class GroupingExpression extends AbstractExpressionNode {
 	static fromJSON(node: GroupingExpression, deserializer: NodeDeserializer): GroupingExpression {
-		return new GroupingExpression(deserializer(node.node), node.loc);
+		return new GroupingExpression(
+			deserializer(node.node),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: GroupingExpression, visitNode: VisitNodeType): void {
 		visitNode(node.node);
 	}
-	constructor(private node: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private node: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getNode() {
 		return this.node;

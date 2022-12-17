@@ -25,8 +25,11 @@ export class TerminateReturnType {
  */
 abstract class TerminateStatement extends AbstractExpressionNode {
 
-	constructor(protected label?: Identifier, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		protected label?: Identifier,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getLabel() {
 		this.label;
@@ -59,6 +62,7 @@ export class BreakStatement extends TerminateStatement {
 	static fromJSON(node: BreakStatement, deserializer: NodeDeserializer): BreakStatement {
 		return new BreakStatement(
 			node.label ? deserializer(node.label) as Identifier : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -74,10 +78,11 @@ export class BreakStatement extends TerminateStatement {
 export class ContinueStatement extends TerminateStatement {
 	static readonly CONTINUE_INSTANCE = Object.freeze(new ContinueStatement()) as ContinueStatement;
 	static fromJSON(node: ContinueStatement, deserializer: NodeDeserializer): ContinueStatement {
-
-		return node.label
-			? new ContinueStatement(deserializer(node.label) as Identifier)
-			: ContinueStatement.CONTINUE_INSTANCE;
+		return new ContinueStatement(
+			node.label && deserializer(node.label) as Identifier,
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ContinueStatement, visitNode: VisitNodeType): void {
 		node.label && visitNode(node.label);
@@ -93,14 +98,20 @@ export class LabeledStatement extends AbstractExpressionNode {
 		return new LabeledStatement(
 			deserializer(node.label) as Identifier,
 			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: LabeledStatement, visitNode: VisitNodeType): void {
 		visitNode(node.label);
 		visitNode(node.body);
 	}
-	constructor(private label: Identifier, private body: ExpressionNode) {
-		super();
+	constructor(
+		private label: Identifier,
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 
 	getLabel() {

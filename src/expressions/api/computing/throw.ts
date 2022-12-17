@@ -13,13 +13,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('ThrowStatement')
 export class ThrowStatement extends AbstractExpressionNode {
 	static fromJSON(node: ThrowStatement, deserializer: NodeDeserializer): ThrowStatement {
-		return new ThrowStatement(deserializer(node.argument), node.loc);
+		return new ThrowStatement(
+			deserializer(node.argument),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ThrowStatement, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
-	constructor(private argument: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private argument: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getArgument() {
 		return this.argument;
@@ -51,11 +58,16 @@ export class CatchClauseNode extends AbstractExpressionNode {
 		return new CatchClauseNode(
 			deserializer(node.body),
 			node.param ? deserializer(node.param) : void 0,
+			node.range,
 			node.loc
 		);
 	}
-	constructor(private body: ExpressionNode, private param?: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private body: ExpressionNode,
+		private param?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getParam() {
 		return this.param;
@@ -94,14 +106,16 @@ export class TryCatchNode extends AbstractExpressionNode {
 			deserializer(node.block),
 			node.handler ? deserializer(node.handler) : void 0,
 			node.finalizer ? deserializer(node.finalizer) : void 0,
+			node.range,
 			node.loc
 		);
 	}
 	constructor(private block: ExpressionNode,
 		private handler?: ExpressionNode,
 		private finalizer?: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getBlock() {
 		return this.block;

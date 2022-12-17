@@ -7,12 +7,10 @@ import { TypeOf } from './utils.js';
  * Each Position object consists of 
  * a line number (1-indexed) 
  * and a column number (0-indexed)
- * and a offset number (0-indexed)
  */
 export interface Position {
 	line: number; // >= 1
 	column: number; // >= 0
-	offset: number; //  >= 0
 }
 
 export interface SourceLocation {
@@ -48,6 +46,11 @@ export interface ExpressionNode {
 	 * and offset index (the position of the first character) 
 	 */
 	loc?: SourceLocation;
+
+	/**
+	 * start and end position offset
+	 */
+	range?: [number, number];
 
 	/**
 	 * assign the value to this expression in stack.

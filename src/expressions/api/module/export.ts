@@ -67,6 +67,7 @@ export class ExportSpecifier extends ModuleSpecifier {
 		return new ExportSpecifier(
 			deserializer(node.local) as Identifier,
 			deserializer(node.exported) as Identifier,
+			node.range,
 			node.loc
 		);
 	}
@@ -74,8 +75,12 @@ export class ExportSpecifier extends ModuleSpecifier {
 		visitNode(node.local);
 		visitNode(node.exported);
 	}
-	constructor(local: Identifier, private exported: Identifier, loc?: SourceLocation) {
-		super(local, loc);
+	constructor(
+		local: Identifier,
+		private exported: Identifier,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(local, range, loc);
 	}
 	getExported() {
 		return this.exported;
@@ -125,6 +130,7 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 			node.declaration ? deserializer(node.declaration) as DeclarationExpression : void 0,
 			node.source ? deserializer(node.source) as Literal<string> : void 0,
 			node.assertions ? node.assertions.map(deserializer) as ImportAttribute[] : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -139,8 +145,9 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 		private declaration?: DeclarationExpression,
 		private source?: Literal<string>,
 		private assertions?: ImportAttribute[],
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getSource() {
 		return this.source;
@@ -265,15 +272,20 @@ export class ExportNamedDeclaration extends AbstractExpressionNode {
 @Deserializer('ExportDefaultDeclaration')
 export class ExportDefaultDeclaration extends AbstractExpressionNode {
 	static fromJSON(node: ExportDefaultDeclaration, deserializer: NodeDeserializer): ExportDefaultDeclaration {
-		return new ExportDefaultDeclaration(deserializer(node.declaration), node.loc);
+		return new ExportDefaultDeclaration(
+			deserializer(node.declaration),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ExportDefaultDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.declaration);
 	}
 	constructor(
 		private declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getDeclaration() {
 		return this.declaration;
@@ -312,6 +324,7 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 			deserializer(node.source) as Literal<string>,
 			node.exported ? deserializer(node.exported) as Identifier : void 0,
 			node.assertions?.map(deserializer) as ImportAttribute[],
+			node.range,
 			node.loc
 		);
 	}
@@ -324,8 +337,9 @@ export class ExportAllDeclaration extends AbstractExpressionNode {
 		private source: Literal<string>,
 		private exported?: Identifier,
 		private assertions?: ImportAttribute[],
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getSource() {
 		return this.source;

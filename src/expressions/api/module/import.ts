@@ -32,6 +32,7 @@ export class ImportSpecifier extends ModuleSpecifier {
 		return new ImportSpecifier(
 			deserializer(node.local) as Identifier,
 			deserializer(node.imported) as Identifier,
+			node.range,
 			node.loc
 		);
 	}
@@ -39,8 +40,12 @@ export class ImportSpecifier extends ModuleSpecifier {
 		visitNode(node.local);
 		visitNode(node.imported);
 	}
-	constructor(local: Identifier, private imported: Identifier, loc?: SourceLocation) {
-		super(local, loc);
+	constructor(
+		local: Identifier,
+		private imported: Identifier,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(local, range, loc);
 	}
 	getImported() {
 		return this.imported;
@@ -84,6 +89,7 @@ export class ImportDefaultSpecifier extends ModuleSpecifier {
 	static fromJSON(node: ImportDefaultSpecifier, deserializer: NodeDeserializer): ImportDefaultSpecifier {
 		return new ImportDefaultSpecifier(
 			deserializer(node.local) as Identifier,
+			node.range,
 			node.loc
 		);
 	}
@@ -115,6 +121,7 @@ export class ImportNamespaceSpecifier extends ModuleSpecifier {
 	static fromJSON(node: ImportNamespaceSpecifier, deserializer: NodeDeserializer): ImportNamespaceSpecifier {
 		return new ImportNamespaceSpecifier(
 			deserializer(node.local) as Identifier,
+			node.range,
 			node.loc
 		);
 	}
@@ -169,6 +176,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			deserializer(node.source) as Literal<string>,
 			node.specifiers?.map(deserializer) as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
 			node.assertions?.map(deserializer) as (ImportAttribute)[],
+			node.range,
 			node.loc
 		);
 	}
@@ -181,8 +189,9 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		private source: Literal<string>,
 		private specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
 		private assertions?: ImportAttribute[],
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getSource() {
 		return this.source;
@@ -284,6 +293,7 @@ export class ImportExpression extends AbstractExpressionNode {
 		return new ImportExpression(
 			deserializer(node.source) as Literal<string>,
 			(node.attributes && deserializer(node.attributes)) || undefined,
+			node.range,
 			node.loc
 		);
 	}
@@ -291,8 +301,12 @@ export class ImportExpression extends AbstractExpressionNode {
 		visitNode(node.source);
 		node.attributes && visitNode(node.attributes);
 	}
-	constructor(private source: Literal<string>, private attributes?: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private source: Literal<string>,
+		private attributes?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getSource() {
 		return this.source;

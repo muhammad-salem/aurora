@@ -18,6 +18,7 @@ export class IfStatement extends AbstractExpressionNode {
 			deserializer(node.test),
 			deserializer(node.consequent),
 			node.alternate ? deserializer(node.alternate) : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -30,8 +31,9 @@ export class IfStatement extends AbstractExpressionNode {
 		private test: ExpressionNode,
 		private consequent: ExpressionNode,
 		private alternate?: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;

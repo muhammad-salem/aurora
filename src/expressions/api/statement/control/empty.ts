@@ -14,10 +14,15 @@ import { Deserializer } from '../../deserialize/deserialize.js';
 export class EmptyStatement extends AbstractExpressionNode {
 	static readonly INSTANCE = Object.freeze(new EmptyStatement()) as EmptyStatement;
 	static fromJSON(node: EmptyStatement): EmptyStatement {
-		return new EmptyStatement(node.loc);
+		return new EmptyStatement(
+			node.range,
+			node.loc
+		);
 	}
-	constructor(loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error(`EmptyStatement#set() has no implementation.`);

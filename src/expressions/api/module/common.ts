@@ -8,8 +8,8 @@ import { Identifier, Literal } from '../definition/values.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 export abstract class ModuleSpecifier extends AbstractExpressionNode {
-	constructor(protected local: Identifier, loc?: SourceLocation) {
-		super(loc);
+	constructor(protected local: Identifier, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getLocal() {
 		return this.local;
@@ -32,6 +32,7 @@ export class ImportAttribute extends AbstractExpressionNode {
 		return new ImportAttribute(
 			deserializer(node.key) as Identifier,
 			deserializer(node.value) as Literal<string>,
+			node.range,
 			node.loc
 		);
 	}
@@ -40,8 +41,12 @@ export class ImportAttribute extends AbstractExpressionNode {
 		visitNode(node.value);
 	}
 
-	constructor(private key: Identifier | Literal<string>, private value: Literal<string>, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private key: Identifier | Literal<string>,
+		private value: Literal<string>,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getKey() {
 		return this.key;

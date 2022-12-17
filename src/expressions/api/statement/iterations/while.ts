@@ -19,6 +19,7 @@ export class WhileNode extends AbstractExpressionNode {
 		return new WhileNode(
 			deserializer(node.test),
 			deserializer(node.body),
+			node.range,
 			node.loc
 		);
 	}
@@ -26,8 +27,12 @@ export class WhileNode extends AbstractExpressionNode {
 		visitNode(node.body);
 		visitNode(node.test);
 	}
-	constructor(private test: ExpressionNode, private body: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private test: ExpressionNode,
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;
@@ -83,6 +88,7 @@ export class DoWhileNode extends AbstractExpressionNode {
 		return new DoWhileNode(
 			deserializer(node.test),
 			deserializer(node.body),
+			node.range,
 			node.loc
 		);
 	}
@@ -90,8 +96,12 @@ export class DoWhileNode extends AbstractExpressionNode {
 		visitNode(node.test);
 		visitNode(node.body);
 	}
-	constructor(private test: ExpressionNode, private body: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private test: ExpressionNode,
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;

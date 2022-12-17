@@ -11,7 +11,13 @@ export type UpdateOperator = '++' | '--';
 @Deserializer('UpdateExpression')
 export class UpdateExpression extends AbstractExpressionNode {
 	static fromJSON(node: UpdateExpression, deserializer: NodeDeserializer): UpdateExpression {
-		return new UpdateExpression(node.operator, deserializer(node.argument), node.prefix, node.loc);
+		return new UpdateExpression(
+			node.operator,
+			deserializer(node.argument),
+			node.prefix,
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: UpdateExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
@@ -31,8 +37,9 @@ export class UpdateExpression extends AbstractExpressionNode {
 		private operator: UpdateOperator,
 		private argument: ExpressionNode,
 		private prefix: boolean,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getOperator() {
 		return this.operator;

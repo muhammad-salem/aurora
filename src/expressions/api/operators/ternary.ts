@@ -13,6 +13,7 @@ export class ConditionalExpression extends AbstractExpressionNode {
 			deserializer(node.test),
 			deserializer(node.alternate),
 			deserializer(node.consequent),
+			node.range,
 			node.loc
 		);
 	}
@@ -25,8 +26,9 @@ export class ConditionalExpression extends AbstractExpressionNode {
 		private test: ExpressionNode,
 		private alternate: ExpressionNode,
 		private consequent: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;

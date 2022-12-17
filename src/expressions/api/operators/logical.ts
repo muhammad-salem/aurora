@@ -11,6 +11,7 @@ export class LogicalExpression extends InfixExpressionNode<LogicalOperator> {
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right),
+			node.range,
 			node.loc
 		);
 	}

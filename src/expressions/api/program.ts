@@ -12,13 +12,21 @@ export type ProgramSourceType = 'script' | 'module';
 export class Program extends AbstractExpressionNode {
 
 	static fromJSON(node: Program, deserializer: NodeDeserializer): Program {
-		return new Program(node.sourceType, node.body.map(deserializer), node.loc);
+		return new Program(
+			node.sourceType,
+			node.body.map(deserializer),
+			node.range, node.loc
+		);
 	}
 	static visit(node: Program, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private sourceType: ProgramSourceType, private body: ExpressionNode[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private sourceType: ProgramSourceType,
+		private body: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	set(stack: Stack, value: any): any {
 		throw new Error(`Program#set() has no implementation.`);

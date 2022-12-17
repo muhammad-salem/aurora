@@ -10,13 +10,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('ChainExpression')
 export class ChainExpression extends AbstractExpressionNode implements CanFindScope {
 	static fromJSON(node: ChainExpression, deserializer: NodeDeserializer): ChainExpression {
-		return new ChainExpression(deserializer(node.expression), node.loc);
+		return new ChainExpression(
+			deserializer(node.expression),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ChainExpression, visitNode: VisitNodeType): void {
 		visitNode(node.expression);
 	}
-	constructor(private expression: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private expression: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getExpression() {
 		return this.expression;

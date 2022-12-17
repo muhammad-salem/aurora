@@ -24,6 +24,7 @@ export class ForNode extends AbstractExpressionNode {
 			node.init && deserializer(node.init),
 			node.test && deserializer(node.test),
 			node.update && deserializer(node.update),
+			node.range,
 			node.loc
 		);
 	}
@@ -38,8 +39,9 @@ export class ForNode extends AbstractExpressionNode {
 		private init?: ExpressionNode,
 		private test?: ExpressionNode,
 		private update?: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getBody() {
 		return this.body;
@@ -113,6 +115,7 @@ export class ForOfNode extends AbstractExpressionNode {
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body),
+			node.range,
 			node.loc
 		);
 	}
@@ -125,8 +128,9 @@ export class ForOfNode extends AbstractExpressionNode {
 		private left: ForDeclaration,
 		private right: ExpressionNode,
 		private body: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;
@@ -188,6 +192,7 @@ export class ForInNode extends AbstractExpressionNode {
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body),
+			node.range,
 			node.loc
 		);
 	}
@@ -201,8 +206,9 @@ export class ForInNode extends AbstractExpressionNode {
 		private left: VariableDeclarationNode | ObjectPattern | ArrayPattern,
 		private right: ExpressionNode,
 		private body: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;
@@ -264,6 +270,7 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
 			deserializer(node.body),
+			node.range,
 			node.loc
 		);
 	}
@@ -277,8 +284,9 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		private left: ForDeclaration,
 		private right: ExpressionNode,
 		private body: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;

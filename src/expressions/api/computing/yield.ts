@@ -12,14 +12,19 @@ export class YieldExpression extends AbstractExpressionNode {
 		return new YieldExpression(
 			node.delegate,
 			node.argument ? deserializer(node.argument) : void 0,
+			node.range,
 			node.loc
 		);
 	}
 	static visit(node: YieldExpression, visitNode: VisitNodeType): void {
 		node.argument && visitNode(node.argument);
 	}
-	constructor(private delegate: boolean, private argument?: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private delegate: boolean,
+		private argument?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getArgument() {
 		return this.argument;

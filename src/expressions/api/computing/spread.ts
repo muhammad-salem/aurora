@@ -9,13 +9,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('SpreadElement')
 export class SpreadElement extends AbstractExpressionNode {
 	static fromJSON(node: SpreadElement, deserializer: NodeDeserializer): SpreadElement {
-		return new SpreadElement(deserializer(node.argument), node.loc);
+		return new SpreadElement(
+			deserializer(node.argument),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: SpreadElement, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
-	constructor(private argument: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private argument: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getArgument() {
 		return this.argument;

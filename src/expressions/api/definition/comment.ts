@@ -6,10 +6,10 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('CommentExpression')
 export class CommentExpression extends AbstractExpressionNode {
 	static fromJSON(node: CommentExpression): CommentExpression {
-		return new CommentExpression(node.comment, node.loc);
+		return new CommentExpression(node.comment, node.range, node.loc);
 	}
-	constructor(private comment: string, loc?: SourceLocation) {
-		super(loc);
+	constructor(private comment: string, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getComment() {
 		return this.comment;

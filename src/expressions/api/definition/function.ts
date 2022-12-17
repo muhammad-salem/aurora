@@ -19,6 +19,7 @@ export class Param extends AbstractExpressionNode {
 		return new Param(
 			deserializer(node.identifier) as DeclarationExpression,
 			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -26,8 +27,12 @@ export class Param extends AbstractExpressionNode {
 		visitNode(node.identifier);
 		node.defaultValue && visitNode(node.defaultValue);
 	}
-	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private identifier: DeclarationExpression,
+		private defaultValue?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getIdentifier() {
 		return this.identifier;
@@ -69,6 +74,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 			node.async,
 			node.generator,
 			node.id ? deserializer(node.id) as Identifier : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -83,8 +89,9 @@ export class FunctionExpression extends AbstractExpressionNode {
 		protected async: boolean,
 		protected generator: boolean,
 		protected id?: Identifier,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getParams() {
 		return this.params;
@@ -318,6 +325,7 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 			node.async,
 			node.generator,
 			deserializer(node.id) as Identifier,
+			node.range,
 			node.loc
 		);
 	}
@@ -333,8 +341,9 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 		async: boolean,
 		generator: boolean,
 		id: Identifier,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(params, body, async, generator, id, loc);
+		super(params, body, async, generator, id, range, loc);
 	}
 	override get(stack: Stack): Function {
 		const func = super.get(stack);
@@ -357,6 +366,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 				: deserializer(node.body),
 			node.expression,
 			node.async,
+			node.range,
 			node.loc
 		);
 	}
@@ -372,8 +382,9 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		private body: ExpressionNode | ExpressionNode[],
 		private expression: boolean,
 		private async: boolean,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getParams() {
 		return this.params;

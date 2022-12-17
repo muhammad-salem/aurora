@@ -13,6 +13,7 @@ export class VariableDeclarator extends AbstractExpressionNode implements Declar
 		return new VariableDeclarator(
 			deserializer(node.id) as DeclarationExpression,
 			node.init ? deserializer(node.init) : void 0,
+			node.range,
 			node.loc
 		);
 	}
@@ -20,8 +21,12 @@ export class VariableDeclarator extends AbstractExpressionNode implements Declar
 		visitNode(node.id);
 		node.init && visitNode(node.init);
 	}
-	constructor(public id: DeclarationExpression, public init?: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		public id: DeclarationExpression,
+		public init?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getId() {
 		return this.id;
@@ -76,6 +81,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements D
 		return new VariableDeclarationNode(
 			node.declarations.map(deserializer) as VariableDeclarator[],
 			node.kind,
+			node.range,
 			node.loc
 		);
 	}
@@ -85,8 +91,9 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements D
 	constructor(
 		protected declarations: VariableDeclarator[],
 		protected kind: 'var' | 'let' | 'const',
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getDeclarations() {
 		return this.declarations;

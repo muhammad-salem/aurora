@@ -20,6 +20,7 @@ export class BinaryExpression extends InfixExpressionNode<BinaryOperator> {
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right),
+			node.range,
 			node.loc
 		);
 	}

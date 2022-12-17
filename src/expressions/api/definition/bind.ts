@@ -21,6 +21,7 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 			deserializer(node.property),
 			node.computed,
 			node.optional,
+			node.range,
 			node.loc
 		);
 	}
@@ -33,8 +34,9 @@ export class BindExpression extends AbstractExpressionNode implements CanFindSco
 		protected property: ExpressionNode,
 		private computed: boolean,
 		private optional: boolean = false,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getObject() {
 		return this.object;

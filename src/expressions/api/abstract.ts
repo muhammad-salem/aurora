@@ -32,8 +32,10 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	}
 	type: string;
 	loc?: SourceLocation;
-	constructor(loc?: SourceLocation) {
+	range?: [number, number];
+	constructor(range?: [number, number], loc?: SourceLocation) {
 		this.type = this.getClass().type;
+		range && (this.range = range);
 		loc && (this.loc = loc);
 	}
 	getClass(): ExpressionNodConstructor<ExpressionNode> {
@@ -41,7 +43,10 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	}
 	toJSON(key?: string): NodeJsonType {
 		const json = this.toJson(key);
-		return Object.assign({ type: this.type }, json, this.loc ? { loc: this.loc } : undefined);
+		const index: { range?: [number, number], loc?: SourceLocation } = {};
+		this.range && (index.range = this.range);
+		this.loc && (index.loc = this.loc);
+		return Object.assign({ type: this.type }, json, index);
 	}
 	events(): ExpressionEventMap {
 		const dependencyNodes = this.dependency();
@@ -65,8 +70,8 @@ export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 		visitNode(node.getLeft());
 		visitNode(node.getRight())
 	}
-	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode, loc?: SourceLocation) {
-		super(loc);
+	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getOperator() {
 		return this.operator;

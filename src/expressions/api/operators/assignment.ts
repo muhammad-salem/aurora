@@ -21,6 +21,7 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 			node.operator,
 			deserializer(node.left),
 			deserializer(node.right),
+			node.range,
 			node.loc
 		);
 	}
@@ -85,8 +86,13 @@ export class AssignmentExpression extends InfixExpressionNode<AssignmentOperator
 
 	};
 
-	constructor(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, loc?: SourceLocation) {
-		super(operator, left, right, loc);
+	constructor(
+		operator: AssignmentOperator,
+		left: ExpressionNode,
+		right: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(operator, left, right, range, loc);
 	}
 	set(stack: Stack, value: any) {
 		return this.left.set(stack, value);

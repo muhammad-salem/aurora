@@ -16,6 +16,7 @@ export class CallExpression extends AbstractExpressionNode {
 			deserializer(node.callee),
 			node.arguments.map(param => deserializer(param)),
 			node.optional,
+			node.range,
 			node.loc
 		);
 	}
@@ -28,8 +29,9 @@ export class CallExpression extends AbstractExpressionNode {
 		private callee: ExpressionNode,
 		params: ExpressionNode[],
 		private optional: boolean = false,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 		this.arguments = params;
 	}
 	getCallee() {

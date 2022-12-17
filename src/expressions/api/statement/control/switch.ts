@@ -16,6 +16,7 @@ export class SwitchCase extends AbstractExpressionNode {
 		return new SwitchCase(
 			deserializer(node.test),
 			deserializer(node.consequent),
+			node.range,
 			node.loc
 		);
 	}
@@ -26,8 +27,9 @@ export class SwitchCase extends AbstractExpressionNode {
 	constructor(
 		protected test: ExpressionNode,
 		protected consequent: ExpressionNode,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;
@@ -61,13 +63,20 @@ export class SwitchCase extends AbstractExpressionNode {
 @Deserializer('default')
 export class DefaultExpression extends SwitchCase {
 	static fromJSON(node: DefaultExpression, deserializer: NodeDeserializer): DefaultExpression {
-		return new DefaultExpression(deserializer(node.consequent), node.loc);
+		return new DefaultExpression(
+			deserializer(node.consequent),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: DefaultExpression, visitNode: VisitNodeType): void {
 		visitNode(node.consequent);
 	}
-	constructor(block: ExpressionNode, loc?: SourceLocation) {
-		super(new Identifier('default'), block, loc);
+	constructor(
+		block: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(new Identifier('default'), block, range, loc);
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return this.consequent.dependency(computed);
@@ -97,6 +106,7 @@ export class SwitchStatement extends AbstractExpressionNode {
 		return new SwitchStatement(
 			deserializer(node.discriminant),
 			node.cases.map(deserializer) as SwitchCase[],
+			node.range,
 			node.loc
 		);
 	}
@@ -104,8 +114,12 @@ export class SwitchStatement extends AbstractExpressionNode {
 		visitNode(node.discriminant);
 		node.cases.forEach(visitNode);
 	}
-	constructor(private discriminant: ExpressionNode, private cases: SwitchCase[], loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private discriminant: ExpressionNode,
+		private cases: SwitchCase[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getDiscriminant() {
 		return this.discriminant;

@@ -9,13 +9,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('RestElement')
 export class RestElement extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: RestElement, deserializer: NodeDeserializer): RestElement {
-		return new RestElement(deserializer(node.argument) as DeclarationExpression, node.loc);
+		return new RestElement(
+			deserializer(node.argument) as DeclarationExpression,
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: RestElement, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
 	}
-	constructor(private argument: DeclarationExpression, loc?: SourceLocation) {
-		super(loc);
+	constructor(
+		private argument: DeclarationExpression,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getArgument() {
 		return this.argument;

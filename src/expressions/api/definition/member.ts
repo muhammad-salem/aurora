@@ -16,6 +16,7 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			deserializer(node.property),
 			node.computed,
 			node.optional,
+			node.range,
 			node.loc
 		);
 	}
@@ -28,8 +29,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		protected property: ExpressionNode,
 		private computed: boolean,
 		private optional: boolean = false,
+		range?: [number, number],
 		loc?: SourceLocation) {
-		super(loc);
+		super(range, loc);
 	}
 	getObject() {
 		return this.object;
