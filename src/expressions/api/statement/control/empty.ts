@@ -16,7 +16,6 @@ export class EmptyStatement extends AbstractExpressionNode {
 	static fromJSON(node: EmptyStatement): EmptyStatement {
 		return new EmptyStatement(node.loc);
 	}
-	private semicolon = ';';
 	constructor(loc?: SourceLocation) {
 		super(loc);
 	}
@@ -33,7 +32,7 @@ export class EmptyStatement extends AbstractExpressionNode {
 		return [];
 	}
 	toString(): string {
-		return this.semicolon;
+		return ';';
 	}
 	toJson(): object {
 		return {};
