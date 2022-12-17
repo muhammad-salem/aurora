@@ -74,6 +74,9 @@ export class ThisExpression extends Identifier {
 	constructor(loc?: SourceLocation) {
 		super('this', loc);
 	}
+	toJson(): object {
+		return {};
+	}
 }
 
 @Deserializer('Literal')
@@ -93,10 +96,11 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		}
 		return new Literal(node.value, node.raw, undefined, undefined, node.loc);
 	}
-	protected regex?: { pattern: string, flags: string };
-	protected bigint?: string;
-	protected raw?: string
-	constructor(protected value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string, loc?: SourceLocation) {
+	type: 'Literal';
+	regex?: { pattern: string, flags: string };
+	bigint?: string;
+	raw?: string
+	constructor(public value: T, raw?: string, regex?: { pattern: string, flags: string }, bigint?: string, loc?: SourceLocation) {
 		super(loc);
 		raw && (this.raw = raw);
 		regex && (this.regex = regex);
