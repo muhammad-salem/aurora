@@ -6,11 +6,11 @@ export type DirectiveExpressionType = {
 };
 
 class TokenConstant {
-	static LET = new TokenExpression(Token.LET);
-	static COMMA = new TokenExpression(Token.COMMA);
-	static ASSIGN = new TokenExpression(Token.ASSIGN);
-	static IMPLICIT = new TokenExpression(Token.IDENTIFIER, new Identifier('$implicit'));
-	static EOS = new TokenExpression(Token.EOS);
+	static LET = new TokenExpression(Token.LET, [-1, -1]);
+	static COMMA = new TokenExpression(Token.COMMA, [-1, -1]);
+	static ASSIGN = new TokenExpression(Token.ASSIGN, [-1, -1]);
+	static IMPLICIT = new TokenExpression(Token.IDENTIFIER, [-1, -1], new Identifier('$implicit'));
+	static EOS = new TokenExpression(Token.EOS, [-1, -1]);
 }
 
 export class DirectiveExpressionParser {
@@ -164,7 +164,7 @@ export class DirectiveExpressionParser {
 		} else {
 			inputToken = this.stream.next();
 			const identifierName = inputToken.token.getName();
-			inputToken = new TokenExpression(Token.IDENTIFIER, new Identifier(identifierName));
+			inputToken = new TokenExpression(Token.IDENTIFIER, [-1, -1], new Identifier(identifierName));
 		}
 
 		// only template input
