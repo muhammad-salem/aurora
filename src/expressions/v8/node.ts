@@ -27,4 +27,5 @@ export interface NodeFactory {
 	createCatchClause(block: BlockStatement, identifier?: ExpressionNode, range?: [number, number]): CatchClauseNode;
 	createTryStatement(tryBlock: BlockStatement, catchBlock?: ExpressionNode, finallyBlock?: ExpressionNode, range?: [number, number]): TryCatchNode;
 	createThrowStatement(exception: ExpressionNode, range?: [number, number]): ThrowStatement;
+	createBlock(statements: ExpressionNode[], range?: [number, number]): BlockStatement;
 }

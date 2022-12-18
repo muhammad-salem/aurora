@@ -157,6 +157,7 @@ export abstract class AbstractParser {
 		if (current.isNotType(token)) {
 			throw new Error(this.errorMessage(`Unexpected Token: ${JSON.stringify(token)}, current is ${JSON.stringify(current)}`));
 		}
+		return current;
 	}
 	protected expectAndGetValue(token: Token) {
 		const current = this.scanner.next();
@@ -471,9 +472,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return result;
 	}
 	protected parseBlock(): BlockStatement {
-		this.expect(Token.LBRACE);
+		const start = this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const block = new BlockStatement(statements);
+		const range: [number, number] = [start.range[0], -1];
+		const block = this.factory.createBlock(statements, range);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
@@ -483,7 +485,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 			statements.push(stat);
 		}
-		this.expect(Token.RBRACE);
+		const end = this.expect(Token.RBRACE);
+		range[1] = end.range[1];
 		return block;
 	}
 	/**

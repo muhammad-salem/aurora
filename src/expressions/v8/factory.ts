@@ -105,4 +105,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		return new ThrowStatement(exception, range, loc);
 	}
 
+	createBlock(statements: ExpressionNode[], range?: [number, number]): BlockStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new BlockStatement(statements, range, loc);
+	}
+
 }
