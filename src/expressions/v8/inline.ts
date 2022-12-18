@@ -58,6 +58,8 @@ export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, fac
 type Range = [number, number];
 type RangeOrVoid = Range | undefined;
 
+type RangeMarker = { range?: Range };
+
 export abstract class AbstractParser {
 
 	protected acceptIN: boolean;
@@ -123,6 +125,12 @@ export abstract class AbstractParser {
 	}
 	protected peekPosition() {
 		return this.scanner.peekPosition();
+	}
+	protected createRange(start?: RangeMarker, end?: RangeMarker): RangeOrVoid {
+		if (!start?.range?.[0] || !end?.range?.[1]) {
+			return;
+		}
+		return [start.range[0], end.range[1]];
 	}
 	protected consume(token: Token) {
 		const next = this.scanner.next();
@@ -353,7 +361,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (list.length === 1) {
 			return list[0];
 		}
-		return this.factory.createExpressionStatement(list);
+		return this.factory.createExpressionStatement(list, this.createRange(list.at(0), list.at(-1)));
 	}
 
 	/**
@@ -381,8 +389,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.LBRACE:
 				return this.parseBlock();
 			case Token.SEMICOLON:
-				this.consume(Token.SEMICOLON);
-				return this.factory.createEmptyStatement();
+				const semicolon = this.consume(Token.SEMICOLON);
+				return this.factory.createEmptyStatement(semicolon.range);
 			case Token.IF:
 				return this.parseIfStatement();
 			case Token.DO:
@@ -439,7 +447,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		const tryToken = this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
-		const range: Range = [tryToken.range[0], tryBlock.range?.[1] ?? -1];
+		let range: RangeOrVoid;
 		let peek = this.peek();
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
@@ -457,15 +465,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.expect(Token.RPAREN);
 			}
 			const block = this.parseBlock();
-			catchBlock = this.factory.createCatchClause(block, identifier, block.range && [peek.range[0], block.range[1]]);
-			range[1] = block.range?.[1] ?? -1;
+			catchBlock = this.factory.createCatchClause(block, identifier, this.createRange(peek, block));
+			range = this.createRange(tryBlock, block);
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
-			range[1] = finallyBlock.range?.[1] ?? -1;
+			range = this.createRange(tryBlock, finallyBlock);
 		}
-		return this.factory.createTryStatement(tryBlock, catchBlock, finallyBlock, range[1] === -1 ? undefined : range);
+		return this.factory.createTryStatement(tryBlock, catchBlock, finallyBlock, range);
 	}
 	protected parseNonRestrictedIdentifier() {
 		const result = this.parseIdentifier();
@@ -477,7 +485,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseBlock(): BlockStatement {
 		const start = this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const range: Range = [start.range[0], -1];
+		const range = this.createRange(start, start)!;
 		const block = this.factory.createBlock(statements, range);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
@@ -565,12 +573,14 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.consume(Token.RPAREN);
 		const thenStatement = this.parseScopedStatement();
-		let range: RangeOrVoid = thenStatement.range?.[1] ? [ifToken.range[0], thenStatement.range?.[1]] : undefined;
+		let range: RangeOrVoid;
 		let elseStatement: ExpressionNode | undefined;
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
 			elseStatement = this.parseScopedStatement();
-			range = elseStatement.range?.[1] ? [ifToken.range[0], elseStatement.range?.[1]] : undefined;
+			range = this.createRange(ifToken, elseStatement);
+		} else {
+			range = this.createRange(ifToken, thenStatement);
 		}
 		return this.factory.createIfStatement(condition, thenStatement, elseStatement, range);
 	}
@@ -591,12 +601,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const condition = this.parseExpression();
 		const end = this.expect(Token.RPAREN);
 		this.check(Token.SEMICOLON);
-		return this.factory.createDoStatement(condition, body, [start.range[0], end.range[1]] as Range);
+		return this.factory.createDoStatement(condition, body, this.createRange(start, end));
 	}
 	protected parseWhileStatement(): ExpressionNode {
 		// WhileStatement ::
 		//   'while' '(' Expression ')' Statement
-		this.consume(Token.WHILE);
+		const start = this.consume(Token.WHILE);
 		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
 		this.expect(Token.RPAREN);
@@ -612,10 +622,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		const exception = this.parseExpression();
 		this.expectSemicolon();
-		const range: RangeOrVoid = exception.range?.[1]
-			? [throwToken.range[0], exception.range[1]]
-			: undefined;
-		return this.factory.createThrowStatement(exception, range);
+		return this.factory.createThrowStatement(exception, this.createRange(throwToken, exception));
 	}
 	protected parseSwitchStatement(): ExpressionNode {
 		// SwitchStatement ::

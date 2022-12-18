@@ -12,8 +12,6 @@ import { DoWhileNode } from '../api/statement/iterations/while.js';
 
 export interface SourcePositionFactory {
 	createSourcePosition(range?: [number, number]): SourceLocation | undefined;
-	rangeOfExpressionStatement(list: ExpressionNode[]): [number, number] | undefined;
-
 }
 
 export interface NodeFactory {
@@ -25,7 +23,7 @@ export interface NodeFactory {
 	createFalse(range?: [number, number]): Literal<false>;
 	createVoidZero(argument: ExpressionNode, range?: [number, number]): UnaryExpression;
 	createEmptyStatement(range?: [number, number]): EmptyStatement;
-	createExpressionStatement(list: ExpressionNode[]): ExpressionNode;
+	createExpressionStatement(list: ExpressionNode[], range?: [number, number]): ExpressionNode;
 	createCatchClause(block: BlockStatement, identifier?: ExpressionNode, range?: [number, number]): CatchClauseNode;
 	createTryStatement(tryBlock: BlockStatement, catchBlock?: ExpressionNode, finallyBlock?: ExpressionNode, range?: [number, number]): TryCatchNode;
 	createThrowStatement(exception: ExpressionNode, range?: [number, number]): ThrowStatement;

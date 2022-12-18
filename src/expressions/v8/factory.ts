@@ -43,13 +43,6 @@ export class ExpressionNodeSourcePosition implements SourcePositionFactory {
 		};
 	}
 
-	rangeOfExpressionStatement(list: ExpressionNode[]): [number, number] | undefined {
-		const start = list.at(0)!.range?.[0];
-		const end = list.at(-1)!.range?.[1];
-		const range: [number, number] | undefined = (!!start && !!end) ? [start, end] : undefined;
-		return range;
-	}
-
 }
 
 export class ExpressionNodeFactory implements NodeFactory {
@@ -89,8 +82,7 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new EmptyStatement(range, loc);
 	}
-	createExpressionStatement(list: ExpressionNode[]): ExpressionNode {
-		const range = this.rangeFactory?.rangeOfExpressionStatement(list);
+	createExpressionStatement(list: ExpressionNode[], range?: [number, number]): ExpressionNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ExpressionStatement(list, range, loc);
 	}
