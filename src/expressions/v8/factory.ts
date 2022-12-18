@@ -8,6 +8,7 @@ import { EmptyStatement } from '../api/statement/control/empty.js';
 import { ExpressionStatement } from '../api/definition/statement.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
+import { IfStatement } from '../api/statement/control/if.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -108,6 +109,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createBlock(statements: ExpressionNode[], range?: [number, number]): BlockStatement {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new BlockStatement(statements, range, loc);
+	}
+	createIfStatement(condition: ExpressionNode, thenStatement: ExpressionNode, elseStatement?: ExpressionNode, range?: [number, number]): IfStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new IfStatement(condition, thenStatement, elseStatement, range, loc);
 	}
 
 }

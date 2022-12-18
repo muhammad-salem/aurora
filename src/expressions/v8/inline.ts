@@ -560,17 +560,19 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 	}
 	protected parseIfStatement(): ExpressionNode {
-		this.consume(Token.IF);
+		const ifToken = this.consume(Token.IF);
 		this.consume(Token.LPAREN);
 		const condition = this.parseExpression();
 		this.consume(Token.RPAREN);
 		const thenStatement = this.parseScopedStatement();
+		let range: RangeOrVoid = thenStatement.range?.[1] ? [ifToken.range[0], thenStatement.range?.[1]] : undefined;
 		let elseStatement: ExpressionNode | undefined;
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
 			elseStatement = this.parseScopedStatement();
+			range = elseStatement.range?.[1] ? [ifToken.range[0], elseStatement.range?.[1]] : undefined;
 		}
-		return new IfStatement(condition, thenStatement, elseStatement);
+		return this.factory.createIfStatement(condition, thenStatement, elseStatement, range);
 	}
 	protected parseScopedStatement(): ExpressionNode {
 		if (isStrict(this.languageMode) || this.peek().isNotType(Token.FUNCTION)) {
