@@ -9,6 +9,7 @@ import { ExpressionStatement } from '../api/definition/statement.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { IfStatement } from '../api/statement/control/if.js';
+import { DoWhileNode } from '../api/statement/iterations/while.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -113,6 +114,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createIfStatement(condition: ExpressionNode, thenStatement: ExpressionNode, elseStatement?: ExpressionNode, range?: [number, number]): IfStatement {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new IfStatement(condition, thenStatement, elseStatement, range, loc);
+	}
+
+	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): DoWhileNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new DoWhileNode(condition, body, range, loc);
 	}
 
 }

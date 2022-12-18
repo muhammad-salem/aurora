@@ -584,14 +584,14 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseDoWhileStatement(): ExpressionNode {
 		// DoStatement ::
 		//   'do' Statement 'while' '(' Expression ')' ';'
-		this.consume(Token.DO);
+		const start = this.consume(Token.DO);
 		const body = this.parseStatement();
 		this.expect(Token.WHILE);
 		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
-		this.expect(Token.RPAREN);
+		const end = this.expect(Token.RPAREN);
 		this.check(Token.SEMICOLON);
-		return new DoWhileNode(condition, body);
+		return this.factory.createDoStatement(condition, body, [start.range[0], end.range[1]] as Range);
 	}
 	protected parseWhileStatement(): ExpressionNode {
 		// WhileStatement ::

@@ -7,6 +7,7 @@ import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { IfStatement } from '../api/statement/control/if.js';
+import { DoWhileNode } from '../api/statement/iterations/while.js';
 
 
 export interface SourcePositionFactory {
@@ -30,5 +31,6 @@ export interface NodeFactory {
 	createThrowStatement(exception: ExpressionNode, range?: [number, number]): ThrowStatement;
 	createBlock(statements: ExpressionNode[], range?: [number, number]): BlockStatement;
 	createIfStatement(condition: ExpressionNode, thenStatement: ExpressionNode, elseStatement?: ExpressionNode, range?: [number, number]): IfStatement;
+	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number]): DoWhileNode;
 
 }
