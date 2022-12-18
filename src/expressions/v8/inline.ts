@@ -127,10 +127,10 @@ export abstract class AbstractParser {
 		return this.scanner.peekPosition();
 	}
 	protected createRange(start?: RangeMarker, end?: RangeMarker): RangeOrVoid {
-		if (!start?.range?.[0] || !end?.range?.[1]) {
+		if (Number.isNaN(start?.range?.[0]) || Number.isNaN(end?.range?.[1])) {
 			return;
 		}
-		return [start.range[0], end.range[1]];
+		return [start!.range![0], end!.range![1]];
 	}
 	protected consume(token: Token) {
 		const next = this.scanner.next();
