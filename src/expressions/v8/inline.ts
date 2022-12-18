@@ -55,6 +55,9 @@ import { ExpressionNodeFactory } from './factory.js';
 
 export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, factory?: NodeFactory };
 
+type Range = [number, number];
+type RangeOrVoid = Range | undefined;
+
 export abstract class AbstractParser {
 
 	protected acceptIN: boolean;
@@ -436,7 +439,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		const tryToken = this.consume(Token.TRY);
 		const tryBlock = this.parseBlock();
-		const range: [number, number] = [tryToken.range[0], tryBlock.range?.[1] ?? -1];
+		const range: Range = [tryToken.range[0], tryBlock.range?.[1] ?? -1];
 		let peek = this.peek();
 		if (peek.isNotType(Token.CATCH) && peek.isNotType(Token.FINALLY)) {
 			throw new Error(this.errorMessage(`Uncaught SyntaxError: Missing catch or finally after try`));
@@ -474,7 +477,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseBlock(): BlockStatement {
 		const start = this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const range: [number, number] = [start.range[0], -1];
+		const range: Range = [start.range[0], -1];
 		const block = this.factory.createBlock(statements, range);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
@@ -607,7 +610,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		const exception = this.parseExpression();
 		this.expectSemicolon();
-		const range: [number, number] | undefined = exception.range?.[1]
+		const range: RangeOrVoid = exception.range?.[1]
 			? [throwToken.range[0], exception.range[1]]
 			: undefined;
 		return this.factory.createThrowStatement(exception, range);
