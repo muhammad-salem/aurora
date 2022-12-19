@@ -11,7 +11,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { RangeOrVoid } from './inline.js';
+import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -109,15 +109,21 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new IfStatement(condition, thenStatement, elseStatement, range, loc);
 	}
-
 	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): DoWhileNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new DoWhileNode(condition, body, range, loc);
 	}
-
 	createClassDeclaration(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassDeclaration {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ClassDeclaration(body, decorators, id, superClass, range, loc);
+	}
+	createFunctionDeclaration(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new FunctionDeclaration(formals, bodyBlock, isAsync, isGenerator, name, range, loc);
+	}
+	createFunctionExpression(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new FunctionExpression(formals, bodyBlock, isAsync, isGenerator, undefined, range, loc);
 	}
 
 }

@@ -58,7 +58,7 @@ export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, fac
 export type Range = [number, number];
 export type RangeOrVoid = Range | undefined;
 
-export type RangeMarker = { range?: Range };
+export type StartPosition = { range?: Range };
 
 export abstract class AbstractParser {
 
@@ -126,7 +126,7 @@ export abstract class AbstractParser {
 	protected peekPosition() {
 		return this.scanner.peekPosition();
 	}
-	protected createRange(start?: RangeMarker, end?: RangeMarker): RangeOrVoid {
+	protected createRange(start?: StartPosition, end?: StartPosition): RangeOrVoid {
 		if (Number.isNaN(start?.range?.[0]) || Number.isNaN(end?.range?.[1])) {
 			return;
 		}
@@ -521,7 +521,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseStatementListItem(): ExpressionNode | undefined {
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-				return this.parseHoistableDeclaration(undefined, false);
+				return this.parseHoistableDeclaration(undefined, false, this.peek());
 			case Token.CLASS:
 				const classToken = this.consume(Token.CLASS);
 				return this.parseClassDeclaration(undefined, false, classToken);
@@ -535,8 +535,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				break;
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorAfterNext()) {
-					this.consume(Token.ASYNC);
-					return this.parseAsyncFunctionDeclaration(undefined, false);
+					const start = this.consume(Token.ASYNC);
+					return this.parseAsyncFunctionDeclaration(undefined, false, start);
 				}
 				break;
 			default:
@@ -545,7 +545,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.parseStatement(AllowLabelledFunctionStatement.AllowLabelledFunctionStatement);
 	}
 	protected parseFunctionExpression() {
-		this.consume(Token.FUNCTION);
+		const start = this.consume(Token.FUNCTION);
 		const functionKind = this.check(Token.MUL) ? FunctionKind.GeneratorFunction : FunctionKind.NormalFunction;
 		let name: Identifier | undefined;
 		let functionSyntaxKind = FunctionSyntaxKind.AnonymousExpression;
@@ -554,9 +554,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			name = this.parseIdentifier(this.getLastFunctionKind());
 			functionSyntaxKind = FunctionSyntaxKind.NamedExpression;
 		}
-		return this.parseFunctionLiteral(functionKind, functionSyntaxKind, name);
+		return this.parseFunctionLiteral(functionKind, functionSyntaxKind, name, start);
 	}
-	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean): FunctionDeclaration {
+	protected parseAsyncFunctionDeclaration(names: string[] | undefined, defaultExport: boolean, start: StartPosition): FunctionDeclaration {
 		// AsyncFunctionDeclaration ::
 		//   async [no LineTerminator here] function BindingIdentifier[Await]
 		//       ( FormalParameters[Await] ) { AsyncFunctionBody }
@@ -564,7 +564,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new SyntaxError(this.errorMessage('Line Terminator Before `function` parsing `async function`.'));
 		}
 		this.consume(Token.FUNCTION);
-		return this.parseHoistableDeclaration01(FunctionKind.AsyncFunction, names, defaultExport) as FunctionDeclaration;
+		return this.parseHoistableDeclaration01(FunctionKind.AsyncFunction, names, defaultExport, start) as FunctionDeclaration;
 
 	}
 	protected parseIfStatement(): ExpressionNode {
@@ -1056,11 +1056,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return result;
 	}
 	protected parseFunctionDeclaration(): FunctionDeclaration {
-		this.consume(Token.FUNCTION);
+		const start = this.consume(Token.FUNCTION);
 		if (this.check(Token.MUL)) {
 			throw new Error(this.errorMessage(`Error Generator In Single Statement Context`));
 		}
-		return this.parseHoistableDeclaration01(FunctionKind.NormalFunction, undefined, false) as FunctionDeclaration;
+		return this.parseHoistableDeclaration01(FunctionKind.NormalFunction, undefined, false, start) as FunctionDeclaration;
 	}
 
 	protected parseAsyncFunctionLiteral() {
@@ -1073,7 +1073,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.current().isNotType(Token.ASYNC)) {
 			throw new SyntaxError(this.errorMessage('invalid token'));
 		}
-		this.consume(Token.FUNCTION);
+		const start = this.consume(Token.FUNCTION);
 		let name: Identifier | undefined;
 		let syntaxKind = FunctionSyntaxKind.AnonymousExpression;
 		let flags = FunctionKind.AsyncFunction;
@@ -1084,18 +1084,18 @@ export class JavaScriptInlineParser extends AbstractParser {
 			syntaxKind = FunctionSyntaxKind.NamedExpression;
 			name = this.parseIdentifier(this.getLastFunctionKind());
 		}
-		return this.parseFunctionLiteral(flags, syntaxKind, name);
+		return this.parseFunctionLiteral(flags, syntaxKind, name, start);
 	}
-	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean) {
+	protected parseHoistableDeclaration(names: string[] | undefined, defaultExport: boolean, start: StartPosition) {
 		this.consume(Token.FUNCTION);
 		let flags = FunctionKind.NormalFunction;
 		if (this.check(Token.MUL)) {
 			flags = FunctionKind.GeneratorFunction;
 		}
-		return this.parseHoistableDeclaration01(flags, names, defaultExport);
+		return this.parseHoistableDeclaration01(flags, names, defaultExport, start);
 	}
 
-	protected parseHoistableDeclaration01(flag: FunctionKind, names: string[] | undefined, defaultExport: boolean) {
+	protected parseHoistableDeclaration01(flag: FunctionKind, names: string[] | undefined, defaultExport: boolean, start: StartPosition) {
 		// FunctionDeclaration ::
 		//   'function' Identifier '(' FormalParameters ')' '{' FunctionBody '}'
 		//   'function' '(' FormalParameters ')' '{' FunctionBody '}'
@@ -1125,7 +1125,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			name = this.parseIdentifier(this.getLastFunctionKind());
 		}
 		names?.push(name.toString());
-		return this.parseFunctionLiteral(flag, FunctionSyntaxKind.Declaration, name);
+		return this.parseFunctionLiteral(flag, FunctionSyntaxKind.Declaration, name, start);
 	}
 	protected parseIdentifier(kind?: FunctionKind): Identifier {
 		kind ??= this.functionKind;
@@ -1166,7 +1166,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return current.getValue();
 	}
-	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name?: Identifier): FunctionDeclaration | FunctionExpression {
+	protected parseFunctionLiteral(flag: FunctionKind, functionSyntaxKind: FunctionSyntaxKind, name: Identifier | undefined, start: StartPosition): FunctionDeclaration | FunctionExpression {
 		// Function ::
 		//   '(' FormalParameterList? ')' '{' FunctionBody '}'
 
@@ -1175,16 +1175,19 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.expect(Token.LPAREN);
 		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.RPAREN);
-		this.expect(Token.LBRACE);
+		const bodyStart = this.expect(Token.LBRACE);
 		this.setAcceptIN(true);
 		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
 		this.restoreAcceptIN();
 		this.restoreFunctionKind();
-		const bodyBlock = new BlockStatement(body);
+		const endPos = this.scanner.getPos();
+		const end: StartPosition = { range: [endPos - 1, endPos] };
+		const bodyBlock = this.factory.createBlock(body, this.createRange(bodyStart, end));
+		const range = this.createRange(start, end);
 		if (name) {
-			return new FunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name);
+			return this.factory.createFunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name, range);
 		}
-		return new FunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag));
+		return this.factory.createFunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), range);
 	}
 	protected parseFunctionBody(
 		kind: FunctionKind,
@@ -1891,7 +1894,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Identifier(propInfo.name) : undefined
+					propInfo.name ? new Identifier(propInfo.name) : undefined,
+					propInfo.rangeStart
 				);
 				return new Property(
 					nameExpression,
@@ -1910,7 +1914,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Identifier(propInfo.name) : undefined
+					propInfo.name ? new Identifier(propInfo.name) : undefined,
+					propInfo.rangeStart
 				);
 				return new Property(
 					nameExpression,
@@ -1930,6 +1935,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
 		let nextToken = this.peek();
 		if (this.check(Token.ASYNC)) {
+			propInfo.rangeStart = nextToken;
 			// async
 			nextToken = this.peek();
 			if (nextToken.isNotType(Token.MUL)
@@ -1941,15 +1947,18 @@ export class JavaScriptInlineParser extends AbstractParser {
 			propInfo.funcFlag = ParseFunctionFlag.IsAsync;
 		}
 
+		nextToken = this.peek();
 		if (this.check(Token.MUL)) {
 			// async*
 			propInfo.kind = PropertyKind.Method;
 			propInfo.funcFlag = ParseFunctionFlag.IsGenerator;
+			propInfo.rangeStart ??= nextToken;
 		}
 
 		nextToken = this.peek();
 		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
 			const token = this.next();
+			propInfo.rangeStart ??= token;
 			if (propInfo.parsePropertyKindFromToken(this.peek().token)) {
 				return new Identifier(nextToken.isType(Token.GET) ? 'get' : 'set');
 			}
@@ -1961,6 +1970,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			nextToken = this.peek();
 		}
 		let propertyName: ExpressionNode;
+		propInfo.rangeStart ??= nextToken;
 		switch (nextToken.token) {
 			case Token.PRIVATE_NAME:
 				propInfo.isPrivate = true;
@@ -2525,7 +2535,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseClassExpression(): ClassExpression {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
-	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: RangeMarker): ClassDeclaration {
+	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: StartPosition): ClassDeclaration {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
 	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {

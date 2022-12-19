@@ -10,6 +10,7 @@ import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode } from '../api/statement/iterations/while.js';
 import { RangeOrVoid } from './inline.js';
 import { Decorator } from '../api/class/decorator.js';
+import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 
 
 export interface SourcePositionFactory {
@@ -33,6 +34,8 @@ export interface NodeFactory {
 	createIfStatement(condition: ExpressionNode, thenStatement: ExpressionNode, elseStatement?: ExpressionNode, range?: [number, number]): IfStatement;
 	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number]): DoWhileNode;
 	createClassDeclaration(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassDeclaration;
+	createFunctionDeclaration(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration;
+	createFunctionExpression(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression;
 
 
 }

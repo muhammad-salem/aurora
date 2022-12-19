@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { InlineParserOptions, JavaScriptInlineParser, RangeMarker } from './inline.js';
+import { InlineParserOptions, JavaScriptInlineParser, StartPosition } from './inline.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty,
@@ -107,7 +107,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
 		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
 	}
-	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: RangeMarker): ClassDeclaration {
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: StartPosition): ClassDeclaration {
 		// ClassDeclaration ::
 		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
 		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'
@@ -343,7 +343,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					kind = hasExtends ? FunctionKind.DerivedConstructor : FunctionKind.BaseConstructor;
 				}
 
-				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier, propInfo.rangeStart);
 
 				const result = this.newClassLiteralProperty(
 					nameExpression, value, ClassLiteralProperty.Kind.METHOD,
@@ -377,7 +377,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 						: FunctionKind.SetterFunction;
 				}
 
-				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier);
+				const value = this.parseFunctionLiteral(kind, FunctionSyntaxKind.AccessorOrMethod, nameExpression as Identifier, propInfo.rangeStart);
 
 				const propertyKind: ClassLiteralPropertyKind = isGet ? ClassLiteralProperty.Kind.GETTER : ClassLiteralProperty.Kind.SETTER;
 				const result = this.newClassLiteralProperty(
@@ -670,9 +670,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				break;
 
 			case Token.ASYNC:
-				this.consume(Token.ASYNC);
+				const asyncToken = this.consume(Token.ASYNC);
 				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
-					const declaration = this.parseAsyncFunctionDeclaration(names, false);
+					const declaration = this.parseAsyncFunctionDeclaration(names, false, asyncToken);
 					const identifier = declaration.getId()!;
 					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 					break;
@@ -1013,7 +1013,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		let result: ExpressionNode;
 		switch (this.peek().token) {
 			case Token.FUNCTION:
-				result = this.parseHoistableDeclaration(localNames, true);
+				result = this.parseHoistableDeclaration(localNames, true, this.peek());
 				break;
 
 			case Token.CLASS:
@@ -1023,8 +1023,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 			case Token.ASYNC:
 				if (this.peekAhead().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
-					this.consume(Token.ASYNC);
-					result = this.parseHoistableDeclaration(localNames, true);
+					const asyncStart = this.consume(Token.ASYNC);
+					result = this.parseHoistableDeclaration(localNames, true, asyncStart);
 					break;
 				}
 
