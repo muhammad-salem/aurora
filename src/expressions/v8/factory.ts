@@ -1,7 +1,7 @@
 import type { NodeFactory, SourcePositionFactory } from './node.js';
-import { Super } from '../api/class/class.js';
+import { ClassBody, ClassDeclaration, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
-import { Literal, ThisExpression } from '../api/definition/values.js';
+import { Identifier, Literal, ThisExpression } from '../api/definition/values.js';
 import { ExpressionNode, SourceLocation } from '../api/expression.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
@@ -10,6 +10,8 @@ import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode } from '../api/statement/iterations/while.js';
+import { Decorator } from '../api/class/decorator.js';
+import { RangeOrVoid } from './inline.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -111,6 +113,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): DoWhileNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new DoWhileNode(condition, body, range, loc);
+	}
+
+	createClassDeclaration(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassDeclaration {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ClassDeclaration(body, decorators, id, superClass, range, loc);
 	}
 
 }

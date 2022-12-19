@@ -55,10 +55,10 @@ import { ExpressionNodeFactory } from './factory.js';
 
 export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, factory?: NodeFactory };
 
-type Range = [number, number];
-type RangeOrVoid = Range | undefined;
+export type Range = [number, number];
+export type RangeOrVoid = Range | undefined;
 
-type RangeMarker = { range?: Range };
+export type RangeMarker = { range?: Range };
 
 export abstract class AbstractParser {
 
@@ -523,8 +523,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.FUNCTION:
 				return this.parseHoistableDeclaration(undefined, false);
 			case Token.CLASS:
-				this.consume(Token.CLASS);
-				return this.parseClassDeclaration(undefined, false);
+				const classToken = this.consume(Token.CLASS);
+				return this.parseClassDeclaration(undefined, false, classToken);
 			case Token.VAR:
 			case Token.CONST:
 				return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
@@ -2525,7 +2525,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseClassExpression(): ClassExpression {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
-	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ClassDeclaration {
+	protected parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: RangeMarker): ClassDeclaration {
 		throw new Error(this.errorMessage(`Expression (class) not supported.`));
 	}
 	protected parseClassLiteral(name: ExpressionNode | undefined, isStrictReserved: boolean): ExpressionNode {

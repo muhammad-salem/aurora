@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { InlineParserOptions, JavaScriptInlineParser } from './inline.js';
+import { InlineParserOptions, JavaScriptInlineParser, RangeMarker } from './inline.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty,
@@ -107,7 +107,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
 		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
 	}
-	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean): ClassDeclaration {
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: RangeMarker): ClassDeclaration {
 		// ClassDeclaration ::
 		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
 		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'
@@ -139,7 +139,14 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			name = identifier;
 		}
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
-		return new ClassDeclaration(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
+		const range = this.createRange(start, classLiteral.getBody());
+		return this.factory.createClassDeclaration(
+			classLiteral.getBody(),
+			classLiteral.getDecorators(),
+			classLiteral.getId()!,
+			classLiteral.getSuperClass(),
+			range
+		);
 	}
 	protected override parseClassLiteral(name: ExpressionNode | undefined, nameIsStrictReserved: boolean): Class {
 		const isAnonymous = !!!name;
@@ -646,8 +653,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			}
 
 			case Token.CLASS: {
-				this.consume(Token.CLASS);
-				const declaration = this.parseClassDeclaration(names, false);
+				const classToken = this.consume(Token.CLASS);
+				const declaration = this.parseClassDeclaration(names, false, classToken);
 				const identifier = declaration.getId()!;
 				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
 				break;
@@ -1010,8 +1017,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				break;
 
 			case Token.CLASS:
-				this.consume(Token.CLASS);
-				result = this.parseClassDeclaration(localNames, true);
+				const classToken = this.consume(Token.CLASS);
+				result = this.parseClassDeclaration(localNames, true, classToken);
 				break;
 
 			case Token.ASYNC:
