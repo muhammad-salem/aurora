@@ -466,12 +466,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 			const block = this.parseBlock();
 			catchBlock = this.factory.createCatchClause(block, identifier, this.createRange(peek, block));
-			range = this.createRange(tryBlock, block);
+			range = this.createRange(tryToken, block);
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
-			range = this.createRange(tryBlock, finallyBlock);
+			range = this.createRange(tryToken, finallyBlock);
 		}
 		return this.factory.createTryStatement(tryBlock, catchBlock, finallyBlock, range);
 	}
