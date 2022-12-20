@@ -933,9 +933,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return this.parseArrayLiteral(isPattern);
 		} else if (token == Token.LBRACE) {
 			return this.parseObjectLiteral(isPattern);
-		} else {
-			throw new Error(this.errorMessage(`Unexpected Token: ${this.next().getValue()}`));
 		}
+		throw new Error(this.errorMessage(`Unexpected Token: ${this.next().getValue()}`));
 	}
 	protected parseAndClassifyIdentifier(next: TokenExpression): ExpressionNode {
 		// Updates made here must be reflected on ClassifyPropertyIdentifier.
@@ -962,29 +961,33 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   'continue' ';'
 		// Identifier? is not supported
 
-		this.consume(Token.CONTINUE);
+		const start = this.consume(Token.CONTINUE);
 		let label: Identifier | undefined;
 		if (!this.scanner.hasLineTerminatorBeforeNext() &&
 			!Token.isAutoSemicolon(this.peek().token)) {
 			// ECMA allows "eval" or "arguments" as labels even in strict mode.
 			label = this.parseIdentifier();
 		}
+		const range = this.createRange(start);
 		this.expectSemicolon();
-		return new ContinueStatement(label);
+		return this.factory.createContinueStatement(label, range);
+
 	}
 	protected parseBreakStatement(): ExpressionNode {
 		// BreakStatement ::
 		//   'break' ';'
 		// Identifier? is not supported
 
-		this.consume(Token.BREAK); let label: Identifier | undefined;
+		const start = this.consume(Token.BREAK);
+		let label: Identifier | undefined;
 		if (!this.scanner.hasLineTerminatorBeforeNext() &&
 			!Token.isAutoSemicolon(this.peek().token)) {
 			// ECMA allows "eval" or "arguments" as labels even in strict mode.
 			label = this.parseIdentifier();
 		}
+		const range = this.createRange(start);
 		this.expectSemicolon();
-		return new BreakStatement(label);
+		return this.factory.createBreakStatement(label, range);
 	}
 	protected parseReturnStatement(): ExpressionNode {
 		// ReturnStatement ::
@@ -1529,8 +1532,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// single TEMPLATE_SPAN and no expressions.
 		if (next.isType(Token.TEMPLATE_TAIL)) {
 			this.consume(Token.TEMPLATE_TAIL);
+			const template = next.getValue<TemplateStringLiteral>();
 			const string = next.getValue<TemplateStringLiteral>().string;
-			return this.createTemplateLiteralExpressionNode([string], [], tag);
+			return this.createTemplateLiteralExpressionNode([template.string], [], tag, template.range);
 		}
 		this.consume(Token.TEMPLATE_SPAN);
 		const expressions: ExpressionNode[] = [];
@@ -1560,12 +1564,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// Once we've reached a TEMPLATE_TAIL, we can close the TemplateLiteral.
 		return this.createTemplateLiteralExpressionNode(strings, expressions, tag);
 	}
-	protected createTemplateLiteralExpressionNode(strings: string[], expressions: ExpressionNode[], tag?: ExpressionNode): TaggedTemplateExpression | TemplateLiteral {
+	protected createTemplateLiteralExpressionNode(strings: string[], expressions: ExpressionNode[], tag?: ExpressionNode, range?: RangeOrVoid): TaggedTemplateExpression | TemplateLiteral {
 		if (tag) {
-			return new TaggedTemplateExpression(tag, strings, expressions);
-		} else {
-			return new TemplateLiteral(strings, expressions);
+			return new TaggedTemplateExpression(tag, strings, expressions, range);
 		}
+		return new TemplateLiteral(strings, expressions, range);
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
 		// NewExpression ::

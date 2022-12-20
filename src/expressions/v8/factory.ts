@@ -15,7 +15,8 @@ import { FunctionDeclaration, FunctionExpression } from '../api/definition/funct
 import { WithStatement } from '../api/statement/control/with.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
-import { VariableDeclarator, VariableDeclarationNode } from '../api/index.js';
+import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
+import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -168,6 +169,14 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new VariableDeclarationNode(variables, kind, range, loc);
+	}
+	createContinueStatement(label?: Identifier, range?: [number, number]): ContinueStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ContinueStatement(label, range, loc);
+	}
+	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new BreakStatement(label, range, loc);
 	}
 
 }

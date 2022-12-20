@@ -20,7 +20,7 @@ export class PreTemplateLiteral {
 
 export interface TemplateStringLiteral extends ExpressionNode { };
 export class TemplateStringLiteral {
-	constructor(public string: string) { }
+	constructor(public string: string, public range: [number, number]) { }
 }
 
 export abstract class TokenStream {
@@ -339,8 +339,9 @@ export class TokenStreamImpl extends TokenStream {
 					const end = this.pos;
 					const string = literal.join('');
 					const rawString = this.expression.substring(start, end);
-					const stringNode = new Literal<string>(string, rawString);
-					this.current = this.newToken(Token.STRING, [start, end], stringNode);
+					const range: [number, number] = [start, end];
+					const stringNode = new Literal<string>(string, rawString, undefined, undefined, range);
+					this.current = this.newToken(Token.STRING, range, stringNode);
 					return true;
 				}
 				if (c0 == '' || this.pos >= this.expression.length) {
@@ -434,7 +435,8 @@ export class TokenStreamImpl extends TokenStream {
 				addLiteralChar(c);
 			}
 		}
-		return this.newToken(result, [start, this.pos], new TemplateStringLiteral(literal.join('')));
+		const range: [number, number] = [start, this.pos];
+		return this.newToken(result, range, new TemplateStringLiteral(literal.join(''), range));
 	}
 	public scanTemplateContinuation(): TokenExpression {
 		if (this.current.isNotType(Token.RBRACE)) {
@@ -681,34 +683,35 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		let node: ExpressionNode;
 		if (isPrivate) {
-			node = new PrivateIdentifier(identifierName);
-			this.current = this.newToken(Token.PRIVATE_NAME, [startPos - 1, this.pos], node);
+			const range: [number, number] = [startPos - 1, this.pos];
+			node = new PrivateIdentifier(identifierName, range);
+			this.current = this.newToken(Token.PRIVATE_NAME, range, node);
 		} else {
 			const range: [number, number] = [startPos, this.pos];
 			switch (identifierName) {
 				case 'this': this.current = this.newToken(Token.THIS, range); break;
-				case 'null': this.current = this.newToken(Token.NULL_LITERAL, range, new Literal<null>(null)); break;
-				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, range, new Literal<undefined>(undefined)); break;
-				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, range, new Literal<boolean>(true)); break;
-				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, range, new Literal<boolean>(false)); break;
+				case 'null': this.current = this.newToken(Token.NULL_LITERAL, range, new Literal<null>(null, undefined, undefined, undefined, range)); break;
+				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, range, new Literal<undefined>(undefined, undefined, undefined, undefined, range)); break;
+				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, range, new Literal<boolean>(true, undefined, undefined, undefined, range)); break;
+				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, range, new Literal<boolean>(false, undefined, undefined, undefined, range)); break;
 
-				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('globalThis')); break;
-				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('Symbol')); break;
-				case 'of': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('of')); break;
-				case 'as': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('as')); break;
-				case 'default': this.current = this.newToken(Token.DEFAULT, range, new Identifier('default')); break;
-				case 'yield': this.current = this.newToken(Token.YIELD, range, new Identifier('yield')); break;
-				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('constructor')); break;
-				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('arguments')); break;
-				case 'name': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('name')); break;
-				case 'eval': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('eval')); break;
-				case 'debugger': this.current = this.newToken(Token.DEBUGGER, range, new DebuggerStatement()); break;
+				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('globalThis', range)); break;
+				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('Symbol', range)); break;
+				case 'of': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('of', range)); break;
+				case 'as': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('as', range)); break;
+				case 'default': this.current = this.newToken(Token.DEFAULT, range, new Identifier('default', range)); break;
+				case 'yield': this.current = this.newToken(Token.YIELD, range, new Identifier('yield', range)); break;
+				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('constructor', range)); break;
+				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('arguments', range)); break;
+				case 'name': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('name', range)); break;
+				case 'eval': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('eval', range)); break;
+				case 'debugger': this.current = this.newToken(Token.DEBUGGER, range, new DebuggerStatement(range)); break;
 				case 'class': this.current = this.newToken(Token.CLASS, range); break;
-				case 'await': this.current = this.newToken(Token.AWAIT, range, new Identifier('await')); break;
-				case 'async': this.current = this.newToken(Token.ASYNC, range, new Identifier('async')); break;
+				case 'await': this.current = this.newToken(Token.AWAIT, range, new Identifier('await', range)); break;
+				case 'async': this.current = this.newToken(Token.ASYNC, range, new Identifier('async', range)); break;
 
 				default:
-					node = new Identifier(identifierName);
+					node = new Identifier(identifierName, range);
 					this.current = this.newToken(Token.IDENTIFIER, range, node);
 					break;
 			}
@@ -869,8 +872,9 @@ export class TokenStreamImpl extends TokenStream {
 				currentPos++;
 			}
 		}
-		const regexNode = new Literal<RegExp>(new RegExp(pattern, flags), `/${pattern}/${flags}`, { pattern, flags });
-		this.current = this.newToken(Token.REGEXP_LITERAL, [start, currentPos], regexNode);
+		const range: [number, number] = [start, currentPos];
+		const regexNode = new Literal<RegExp>(new RegExp(pattern, flags), `/${pattern}/${flags}`, { pattern, flags }, undefined, range);
+		this.current = this.newToken(Token.REGEXP_LITERAL, range, regexNode);
 		this.pos = currentPos;
 		return true;
 	}
@@ -1019,8 +1023,9 @@ export class TokenStreamImpl extends TokenStream {
 		if (valid) {
 			const string = this.expression.substring(startPos, pos);
 			const rawString = this.expression.substring(this.pos, pos);
-			const numNode = new Literal<number>(parseInt(string, radix), rawString);
-			this.current = this.newToken(Token.NUMBER, [this.pos, pos], numNode);
+			const range: [number, number] = [this.pos, pos];
+			const numNode = new Literal<number>(parseInt(string, radix), rawString, undefined, undefined, range);
+			this.current = this.newToken(Token.NUMBER, range, numNode);
 			this.pos = pos;
 		}
 		return valid;
@@ -1086,22 +1091,24 @@ export class TokenStreamImpl extends TokenStream {
 		if (valid) {
 			const rawString = this.expression.substring(startPos, pos);
 			if (this.expression.charAt(pos) === 'n') {
-				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString);
 				pos++;
-				this.current = this.newToken(Token.BIGINT, [startPos, pos], bigintNode);
+				const range: [number, number] = [startPos, this.pos];
+				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString, range);
+				this.current = this.newToken(Token.BIGINT, range, bigintNode);
 			} else {
 				let numNode: Literal<number>;
+				const range: [number, number] = [startPos, this.pos];
 				if (isOctal) {
 					const octal = rawString.substring(2);
 					if (TokenStreamImpl.OctalPattern.test(octal)) {
-						numNode = new Literal<number>(parseInt(octal, 8), rawString);
+						numNode = new Literal<number>(parseInt(octal, 8), rawString, undefined, undefined, range);
 					} else {
 						return false;
 					}
 				} else {
-					numNode = new Literal<number>(parseFloat(rawString), rawString);
+					numNode = new Literal<number>(parseFloat(rawString), rawString, undefined, undefined, range);
 				}
-				this.current = this.newToken(Token.NUMBER, [startPos, pos], numNode);
+				this.current = this.newToken(Token.NUMBER, range, numNode);
 			}
 			this.pos = pos;
 		} else {
@@ -1306,11 +1313,13 @@ export class TokenStreamImpl extends TokenStream {
 				return true;
 			case 'a':
 				if (/async\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.ASYNC, [this.pos, (this.pos += 5)], new Identifier('async'));
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.ASYNC, range, new Identifier('async', range));
 					return true;
 				}
 				if (/await\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.AWAIT, [this.pos, (this.pos += 5)], new Identifier('await'));
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.AWAIT, range, new Identifier('await', range));
 					return true;
 				}
 				return false;
@@ -1409,7 +1418,8 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'g':
 				if (/get\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.GET, [this.pos, (this.pos += 4)], new Identifier('get'));
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.GET, range, new Identifier('get', range));
 					return true;
 				}
 				return false;
@@ -1442,7 +1452,8 @@ export class TokenStreamImpl extends TokenStream {
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.LET, [this.pos, (this.pos += 4)], new Identifier('let'));
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.LET, range, new Identifier('let', range));
 					return true;
 				}
 				return false;
@@ -1478,11 +1489,13 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.SET, [this.pos, (this.pos += 4)], new Identifier('set'));
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.SET, range, new Identifier('set', range));
 					return true;
 				}
 				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.SUPER, [this.pos, (this.pos += 5)], new Super());
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.SUPER, range, new Super(range));
 					return true;
 				}
 				return false;
