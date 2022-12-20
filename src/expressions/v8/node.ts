@@ -16,6 +16,7 @@ import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '.
 import { RangeOrVoid } from './inline.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { ReturnStatement } from '../api/index.js';
 
 
 export interface SourcePositionFactory {
@@ -53,5 +54,6 @@ export interface NodeFactory {
 	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode;
 	createContinueStatement(label?: Identifier, range?: [number, number]): ContinueStatement;
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement;
+	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;
 
 }

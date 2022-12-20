@@ -996,7 +996,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// Consume the return token. It is necessary to do that before
 		// reporting any errors on it, because of the way errors are
 		// reported (underlining).
-		this.consume(Token.RETURN);
+		const start = this.consume(Token.RETURN);
 		const tokenExp = this.peek();
 		let returnValue: ExpressionNode | undefined;
 		// ExpressionT return_value = impl() -> NullExpression();
@@ -1008,8 +1008,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		} else {
 			returnValue = this.parseExpression();
 		}
-		this.expectSemicolon()
-		return new ReturnStatement(returnValue);
+		const range = this.createRange(start);
+		this.expectSemicolon();
+		return this.factory.createReturnStatement(returnValue, range);
 	}
 	protected parseExpressionOrLabelledStatement(allowFunction: AllowLabelledFunctionStatement): ExpressionNode {
 		// ExpressionStatement | LabelledStatement ::

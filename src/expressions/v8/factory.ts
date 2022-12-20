@@ -17,6 +17,7 @@ import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { ReturnStatement } from '../api/index.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -177,6 +178,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new BreakStatement(label, range, loc);
+	}
+	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ReturnStatement(argument, range, loc);
 	}
 
 }
