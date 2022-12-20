@@ -41,6 +41,7 @@ export * from './statement/control/empty.js';
 export * from './statement/control/if.js';
 export * from './statement/control/switch.js';
 export * from './statement/control/terminate.js';
+export * from './statement/control/with.js';
 
 export * from './statement/declarations/declares.js';
 
