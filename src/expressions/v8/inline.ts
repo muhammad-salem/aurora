@@ -126,11 +126,11 @@ export abstract class AbstractParser {
 	protected peekPosition() {
 		return this.scanner.peekPosition();
 	}
-	protected createRange(start?: StartPosition, end?: StartPosition): RangeOrVoid {
-		if (Number.isNaN(start?.range?.[0]) || Number.isNaN(end?.range?.[1])) {
+	protected createRange(start?: StartPosition): RangeOrVoid {
+		if (Number.isNaN(start?.range?.[0])) {
 			return;
 		}
-		return [start!.range![0], end!.range![1]];
+		return [start!.range![0], this.scanner.getPos()];
 	}
 	protected consume(token: Token) {
 		const next = this.scanner.next();
@@ -357,11 +357,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 		super(scanner, factory, acceptIN);
 	}
 	scan(): ExpressionNode {
+		const start = this.scanner.getPos();
 		const list: ExpressionNode[] = this.parseStatementList(Token.EOS);
 		if (list.length === 1) {
 			return list[0];
 		}
-		return this.factory.createExpressionStatement(list, this.createRange(list.at(0), list.at(-1)));
+		return this.factory.createExpressionStatement(list, [start, this.scanner.getPos()]);
 	}
 
 	/**
@@ -465,13 +466,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.expect(Token.RPAREN);
 			}
 			const block = this.parseBlock();
-			catchBlock = this.factory.createCatchClause(block, identifier, this.createRange(peek, block));
-			range = this.createRange(tryToken, block);
+			catchBlock = this.factory.createCatchClause(block, identifier, this.createRange(peek));
+			range = this.createRange(tryToken);
 		}
 		let finallyBlock: ExpressionNode | undefined;
 		if (this.check(Token.FINALLY)) {
 			finallyBlock = this.parseBlock();
-			range = this.createRange(tryToken, finallyBlock);
+			range = this.createRange(tryToken);
 		}
 		return this.factory.createTryStatement(tryBlock, catchBlock, finallyBlock, range);
 	}
@@ -485,7 +486,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseBlock(): BlockStatement {
 		const start = this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const range = this.createRange(start, start)!;
+		const range = this.createRange(start)!;
 		const block = this.factory.createBlock(statements, range);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
@@ -578,9 +579,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
 			elseStatement = this.parseScopedStatement();
-			range = this.createRange(ifToken, elseStatement);
+			range = this.createRange(ifToken);
 		} else {
-			range = this.createRange(ifToken, thenStatement);
+			range = this.createRange(ifToken);
 		}
 		return this.factory.createIfStatement(condition, thenStatement, elseStatement, range);
 	}
@@ -599,11 +600,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.expect(Token.WHILE);
 		this.expect(Token.LPAREN);
 		const condition = this.parseExpression();
-		const end = this.expect(Token.RPAREN);
+		this.expect(Token.RPAREN);
 		this.check(Token.SEMICOLON);
-		return this.factory.createDoStatement(condition, body, this.createRange(start, end));
+		return this.factory.createDoStatement(condition, body, this.createRange(start));
 	}
-	protected parseWhileStatement(): ExpressionNode {
+	protected parseWhileStatement(): WhileNode {
 		// WhileStatement ::
 		//   'while' '(' Expression ')' Statement
 		const start = this.consume(Token.WHILE);
@@ -611,7 +612,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const condition = this.parseExpression();
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
-		return new WhileNode(condition, body);
+		return this.factory.createWhileStatement(condition, body, this.createRange(start));
 	}
 	protected parseThrowStatement(): ExpressionNode {
 		// ThrowStatement ::
@@ -621,8 +622,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new Error(this.scanner.createError(`New line After Throw`));
 		}
 		const exception = this.parseExpression();
+		const range = this.createRange(throwToken);
 		this.expectSemicolon();
-		return this.factory.createThrowStatement(exception, this.createRange(throwToken, exception));
+		return this.factory.createThrowStatement(exception, range);
 	}
 	protected parseSwitchStatement(): ExpressionNode {
 		// SwitchStatement ::
@@ -1180,14 +1182,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const body = this.parseFunctionBody(flag, FunctionBodyType.BLOCK, functionSyntaxKind);
 		this.restoreAcceptIN();
 		this.restoreFunctionKind();
-		const endPos = this.scanner.getPos();
-		const end: StartPosition = { range: [endPos - 1, endPos] };
-		const bodyBlock = this.factory.createBlock(body, this.createRange(bodyStart, end));
-		const range = this.createRange(start, end);
+		const bodyRange = this.createRange(bodyStart);
+		const funcRange = this.createRange(start);
+		const bodyBlock = this.factory.createBlock(body, bodyRange);
 		if (name) {
-			return this.factory.createFunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name, range);
+			return this.factory.createFunctionDeclaration(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), name, funcRange);
 		}
-		return this.factory.createFunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), range);
+		return this.factory.createFunctionExpression(formals, bodyBlock, isAsyncFunction(flag), isGeneratorFunction(flag), funcRange);
 	}
 	protected parseFunctionBody(
 		kind: FunctionKind,

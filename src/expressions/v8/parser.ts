@@ -139,7 +139,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			name = identifier;
 		}
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
-		const range = this.createRange(start, classLiteral.getBody());
+		const range = this.createRange(start);
 		return this.factory.createClassDeclaration(
 			classLiteral.getBody(),
 			classLiteral.getDecorators(),

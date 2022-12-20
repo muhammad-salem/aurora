@@ -9,7 +9,7 @@ import { ExpressionStatement } from '../api/definition/statement.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
 import { IfStatement } from '../api/statement/control/if.js';
-import { DoWhileNode } from '../api/statement/iterations/while.js';
+import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 
@@ -124,6 +124,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createFunctionExpression(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new FunctionExpression(formals, bodyBlock, isAsync, isGenerator, undefined, range, loc);
+	}
+	createWhileStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): WhileNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new WhileNode(condition, body, range, loc);
 	}
 
 }
