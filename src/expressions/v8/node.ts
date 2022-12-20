@@ -12,6 +12,7 @@ import { Decorator } from '../api/class/decorator.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
+import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 
 
 export interface SourcePositionFactory {
@@ -42,6 +43,10 @@ export interface NodeFactory {
 	createCaseBlock(test: ExpressionNode, block: BlockStatement, range?: [number, number]): SwitchCase;
 	createDefaultClause(block: BlockStatement, range?: [number, number]): DefaultExpression;
 	createWithStatement(object: ExpressionNode, body: ExpressionNode, range?: [number, number]): WithStatement;
+	createForStatement(body: ExpressionNode, initializer: ExpressionNode, cond: ExpressionNode, next: ExpressionNode, range?: [number, number]): ForNode;
+	createForOfStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForOfNode;
+	createForAwaitOfStatement(left: ForDeclaration, right: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForAwaitOfNode;
+	createForInStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForInNode;
 
 
 }

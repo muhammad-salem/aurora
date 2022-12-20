@@ -12,8 +12,9 @@ import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
-import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/index.js';
 import { WithStatement } from '../api/statement/control/with.js';
+import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
+import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -143,10 +144,25 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new DefaultExpression(block, range, loc);
 	}
-
 	createWithStatement(object: ExpressionNode, body: ExpressionNode, range?: [number, number]): WithStatement {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new WithStatement(object, body, range, loc);
+	}
+	createForStatement(body: ExpressionNode, initializer: ExpressionNode, cond: ExpressionNode, next: ExpressionNode, range?: [number, number] | undefined): ForNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ForNode(body, initializer, cond, next, range, loc);
+	}
+	createForOfStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): ForOfNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ForOfNode(initializer, enumerable, body, range, loc);
+	}
+	createForAwaitOfStatement(left: ForDeclaration, right: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): ForAwaitOfNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ForAwaitOfNode(left, right, body, range, loc);
+	}
+	createForInStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForInNode {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ForInNode(initializer, enumerable, body, range, loc);
 	}
 
 }

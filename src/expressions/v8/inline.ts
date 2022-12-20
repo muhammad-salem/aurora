@@ -8,7 +8,6 @@ import {
 	ArrowFunctionExpression, Param,
 	FunctionExpression, FunctionDeclaration
 } from '../api/definition/function.js';
-import { IfStatement } from '../api/statement/control/if.js';
 import { NewExpression } from '../api/computing/new.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { RestElement } from '../api/computing/rest.js';
@@ -19,13 +18,12 @@ import { BindExpression } from '../api/definition/bind.js';
 import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
-import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
-import { SwitchCase, DefaultExpression, SwitchStatement } from '../api/statement/control/switch.js';
+import { SwitchCase } from '../api/statement/control/switch.js';
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForNode, ForOfNode, ForInNode, ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
+import { ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
@@ -588,10 +586,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isType(Token.ELSE)) {
 			this.consume(Token.ELSE);
 			elseStatement = this.parseScopedStatement();
-			range = this.createRange(ifToken);
-		} else {
-			range = this.createRange(ifToken);
 		}
+		range = this.createRange(ifToken);
 		return this.factory.createIfStatement(condition, thenStatement, elseStatement, range);
 	}
 	protected parseScopedStatement(): ExpressionNode {
@@ -613,7 +609,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.check(Token.SEMICOLON);
 		return this.factory.createDoStatement(condition, body, this.createRange(start));
 	}
-	protected parseWhileStatement(): WhileNode {
+	protected parseWhileStatement() {
 		// WhileStatement ::
 		//   'while' '(' Expression ')' Statement
 		const start = this.consume(Token.WHILE);
@@ -698,7 +694,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// expression/declaration before we know if this is a for or a for-each.
 		//   typename FunctionState::LoopScope loop_scope(function_state_);
 
-		this.consume(Token.FOR);
+		const start = this.consume(Token.FOR);
 		this.expect(Token.LPAREN);
 		const peek = this.peek();
 		const starts_with_let = peek.isType(Token.LET);
@@ -715,7 +711,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			const forMode = this.checkInOrOf();
 			if (forMode) {
-				return this.parseForEachStatementWithDeclarations(initializer, forMode);
+				return this.parseForEachStatementWithDeclarations(initializer, forMode, start);
 			}
 
 			this.expect(Token.SEMICOLON);
@@ -723,7 +719,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// Parse the remaining code in the inner block scope since the declaration
 			// above was parsed there. We'll finalize the unnecessary outer block scope
 			// after parsing the rest of the loop.
-			return this.parseStandardForLoopWithLexicalDeclarations(initializer);
+			return this.parseStandardForLoopWithLexicalDeclarations(initializer, start);
 		}
 
 		let initializer: ExpressionNode;
@@ -734,7 +730,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// for_info.position = scanner() -> location().beg_pos;
 			const forMode = this.checkInOrOf();
 			if (forMode) {
-				return this.parseForEachStatementWithDeclarations(initializer as VariableDeclarationNode, forMode);
+				return this.parseForEachStatementWithDeclarations(initializer as VariableDeclarationNode, forMode, start);
 			}
 			// init = impl() -> BuildInitializationBlock(& for_info.parsing_result);
 		} else if (this.peek().isNotType(Token.SEMICOLON)) {
@@ -753,26 +749,26 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (forMode === 'OF' && starts_with_let || expression_is_async) {
 					throw new SyntaxError(this.errorMessage(starts_with_let ? 'For Of Let' : 'For Of Async'));
 				}
-				return this.parseForEachStatementWithoutDeclarations(initializer, forMode)
+				return this.parseForEachStatementWithoutDeclarations(initializer, forMode, start);
 			}
 		}
 
 		this.expect(Token.SEMICOLON);
-		return this.parseStandardForLoop(initializer!);
+		return this.parseStandardForLoop(initializer!, start);
 	}
-	protected parseStandardForLoopWithLexicalDeclarations(initializer: VariableDeclarationNode) {
+	protected parseStandardForLoopWithLexicalDeclarations(initializer: VariableDeclarationNode, start: StartPosition) {
 		// The condition and the next statement of the for loop must be parsed
 		// in a new scope.
-		return this.parseStandardForLoop(initializer);
+		return this.parseStandardForLoop(initializer, start);
 	}
-	protected parseForEachStatementWithDeclarations(initializer: VariableDeclarationNode, forMode: 'IN' | 'OF') {
+	protected parseForEachStatementWithDeclarations(initializer: VariableDeclarationNode, forMode: 'IN' | 'OF', start: StartPosition) {
 		// Just one declaration followed by in/of.
 		if (initializer.getDeclarations().length != 1) {
 			throw new SyntaxError(this.errorMessage('For In/Of loop Multi Bindings'));
 		}
-		return this.parseForEachStatementWithoutDeclarations(initializer, forMode);
+		return this.parseForEachStatementWithoutDeclarations(initializer, forMode, start);
 	}
-	protected parseForEachStatementWithoutDeclarations(initializer: ExpressionNode, forMode: 'IN' | 'OF') {
+	protected parseForEachStatementWithoutDeclarations(initializer: ExpressionNode, forMode: 'IN' | 'OF', start: StartPosition) {
 		let enumerable: ExpressionNode;
 		if (forMode == 'OF') {
 			this.setAcceptIN(true);
@@ -783,32 +779,32 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
+		const range = this.createRange(start);
 		if (forMode === 'OF') {
-			return new ForOfNode(initializer as ForDeclaration, enumerable, body);
+			return this.factory.createForOfStatement(initializer as ForDeclaration, enumerable, body, range);
 		} else if (forMode === 'IN') {
-			return new ForInNode(initializer as ForDeclaration, enumerable, body);
-		} else {
-			throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
+			return this.factory.createForInStatement(initializer as ForDeclaration, enumerable, body, range);
 		}
+		throw new Error(this.errorMessage(`parsing for loop: ${this.position()}`));
 	}
-	protected parseStandardForLoop(initializer: ExpressionNode) {
+	protected parseStandardForLoop(initializer: ExpressionNode, start: StartPosition) {
 		// CheckStackOverflow();
 		//   ForStatementT loop = factory() -> NewForStatement(stmt_pos);
 		//   Target target(this, loop, labels, own_labels, Target:: TARGET_FOR_ANONYMOUS);
 
-		let cond: ExpressionNode = new EmptyStatement();
+		let cond: ExpressionNode = this.factory.createEmptyStatement();
 		if (this.peek().isNotType(Token.SEMICOLON)) {
 			cond = this.parseExpression();
 		}
 		this.expect(Token.SEMICOLON);
 
-		let next: ExpressionNode = new EmptyStatement();
+		let next: ExpressionNode = this.factory.createEmptyStatement();
 		if (this.peek().isNotType(Token.RPAREN)) {
 			next = this.parseExpression();
 		}
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
-		return new ForNode(body, initializer, cond, next);
+		return this.factory.createForStatement(body, initializer, cond, next, this.createRange(start));
 	}
 	protected parseForAwaitStatement() {
 		// for await '(' ForDeclaration of AssignmentExpression ')'
@@ -818,7 +814,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (!this.isAwaitAllowed()) {
 			throw new SyntaxError(this.errorMessage('"await" is not allowed'));
 		}
-		this.expect(Token.FOR);
+		const start = this.expect(Token.FOR);
 		this.expect(Token.AWAIT);
 		this.expect(Token.LPAREN);
 
@@ -857,7 +853,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.restoreAcceptIN();
 		this.expect(Token.RPAREN);
 		const body = this.parseStatement();
-		return new ForAwaitOfNode(eachVariable as ForDeclaration, iterable, body);
+		const range = this.createRange(start);
+		return this.factory.createForAwaitOfStatement(eachVariable as ForDeclaration, iterable, body, range);
 	}
 	protected parseVariableDeclarations(varContext: VariableDeclarationContext): VariableDeclarationNode {
 		// VariableDeclarations ::
