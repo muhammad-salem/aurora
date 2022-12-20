@@ -862,7 +862,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// var converted into ==> 'let' by parser
 
 		let mode: 'const' | 'let' | 'var';
-		const token = this.peek().token;
+		const start = this.peek();
+		const token = start.token;
 		switch (token) {
 			case Token.CONST:
 				this.consume(token);
@@ -911,7 +912,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 			variables.push(new VariableDeclarator(name as DeclarationExpression, value));
 		} while (this.check(Token.COMMA));
-		return new VariableDeclarationNode(variables, mode);
+		const range = this.createRange(start);
+		return this.factory.createVariableStatement(variables, mode, range);
 	}
 	protected parseBindingPattern(isPattern: boolean): ExpressionNode {
 		// Pattern ::

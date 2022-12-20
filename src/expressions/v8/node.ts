@@ -13,6 +13,8 @@ import { FunctionDeclaration, FunctionExpression } from '../api/definition/funct
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
+import { RangeOrVoid } from './inline.js';
+import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 
 
 export interface SourcePositionFactory {
@@ -47,6 +49,7 @@ export interface NodeFactory {
 	createForOfStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForOfNode;
 	createForAwaitOfStatement(left: ForDeclaration, right: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForAwaitOfNode;
 	createForInStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForInNode;
+	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode;
 
 
 }
