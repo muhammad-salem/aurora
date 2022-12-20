@@ -12,6 +12,7 @@ import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
+import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/index.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -128,6 +129,18 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createWhileStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number] | undefined): WhileNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new WhileNode(condition, body, range, loc);
+	}
+	createSwitchStatement(tag: ExpressionNode, cases: SwitchCase[], range?: [number, number] | undefined): SwitchStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new SwitchStatement(tag, cases, range, loc);
+	}
+	createCaseBlock(test: ExpressionNode, block: BlockStatement, range?: [number, number] | undefined): SwitchCase {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new SwitchCase(test, block, range, loc);
+	}
+	createDefaultClause(block: BlockStatement, range?: [number, number] | undefined): DefaultExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new DefaultExpression(block, range, loc);
 	}
 
 }

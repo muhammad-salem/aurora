@@ -132,6 +132,13 @@ export abstract class AbstractParser {
 		}
 		return [start!.range![0], this.scanner.getPos()];
 	}
+	protected createRangeByStart(start: Required<StartPosition>): Range {
+		return [start!.range![0], this.scanner.getPos()];
+	}
+
+	protected updateRangeEnd(range: Range): void {
+		range[1] = this.scanner.getPos();
+	}
 	protected consume(token: Token) {
 		const next = this.scanner.next();
 		if (next.isNotType(token)) {
@@ -486,7 +493,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseBlock(): BlockStatement {
 		const start = this.expect(Token.LBRACE);
 		const statements: ExpressionNode[] = [];
-		const range = this.createRange(start)!;
+		const range = this.createRangeByStart(start);
 		const block = this.factory.createBlock(statements, range);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const stat = this.parseStatementListItem();
@@ -497,8 +504,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 			statements.push(stat);
 		}
-		const end = this.expect(Token.RBRACE);
-		range[1] = end.range[1];
+		this.expect(Token.RBRACE);
+		this.updateRangeEnd(range);
 		return block;
 	}
 	/**
@@ -633,21 +640,23 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   'case' Expression ':' StatementList
 		//   'default' ':' StatementList
 
-		this.consume(Token.SWITCH);
+		const start = this.consume(Token.SWITCH);
+		const range = this.createRangeByStart(start);
 		this.expect(Token.LPAREN);
 		const tag = this.parseExpression();
 		this.expect(Token.RPAREN);
 
 		const cases: SwitchCase[] = [];
-		const switchStatement = new SwitchStatement(tag, cases);
+		const switchStatement = this.factory.createSwitchStatement(tag, cases, range);
 
 		let defaultSeen = false;
 		this.expect(Token.LBRACE);
 		while (this.peek().isNotType(Token.RBRACE)) {
 			const statements: ExpressionNode[] = [];
-			let label: ExpressionNode;
+			let test: ExpressionNode;
+			const caseStart = this.scanner.peek();
 			if (this.check(Token.CASE)) {
-				label = this.parseExpression();
+				test = this.parseExpression();
 			} else {
 				this.expect(Token.DEFAULT);
 				if (defaultSeen) {
@@ -655,7 +664,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				}
 				defaultSeen = true;
 			}
-			this.expect(Token.COLON);
+			const blockStart = this.expect(Token.COLON);
 			while (this.peek().isNotType(Token.CASE)
 				&& this.peek().isNotType(Token.DEFAULT)
 				&& this.peek().isNotType(Token.RBRACE)) {
@@ -665,11 +674,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				}
 				statements.push(statement);
 			}
-			const block = new BlockStatement(statements);
-			const clause = defaultSeen ? new DefaultExpression(block) : new SwitchCase(label!, block);
+			const block = this.factory.createBlock(statements, this.createRange(blockStart));
+			const caseRange = this.createRange(caseStart);
+			const clause = defaultSeen
+				? this.factory.createDefaultClause(block, caseRange)
+				: this.factory.createCaseBlock(test!, block, caseRange);
 			cases.push(clause);
 		}
 		this.expect(Token.RBRACE);
+		this.updateRangeEnd(range);
 		return switchStatement;
 	}
 	protected parseForStatement() {
