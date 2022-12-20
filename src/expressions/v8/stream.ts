@@ -1490,6 +1490,9 @@ export class TokenStreamImpl extends TokenStream {
 				if (/while(\s|\()/.test(this.expression.substring(this.pos, this.pos + 6))) {
 					this.current = this.newToken(Token.WHILE, [this.pos, (this.pos += 5)]);
 					return true;
+				} else if (/with(\s|\()/.test(this.expression.substring(this.pos, this.pos + 5))) {
+					this.current = this.newToken(Token.WITH, [this.pos, (this.pos += 4)]);
+					return true;
 				}
 				return false;
 			case 'v':

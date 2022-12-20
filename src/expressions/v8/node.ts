@@ -10,8 +10,8 @@ import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
-import { RangeOrVoid } from './inline.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
+import { WithStatement } from '../api/statement/control/with.js';
 
 
 export interface SourcePositionFactory {
@@ -41,6 +41,7 @@ export interface NodeFactory {
 	createSwitchStatement(tag: ExpressionNode, cases: SwitchCase[], range?: [number, number]): SwitchStatement;
 	createCaseBlock(test: ExpressionNode, block: BlockStatement, range?: [number, number]): SwitchCase;
 	createDefaultClause(block: BlockStatement, range?: [number, number]): DefaultExpression;
+	createWithStatement(object: ExpressionNode, body: ExpressionNode, range?: [number, number]): WithStatement;
 
 
 }

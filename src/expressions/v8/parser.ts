@@ -55,6 +55,7 @@ import {
 import { isStrict, LanguageMode, } from './language.js';
 import type { NodeFactory } from './node.js';
 import { ExpressionNodeFactory } from './factory.js';
+import { WithStatement } from '../api/statement/control/with.js';
 
 export type ParserOptions = { mode?: LanguageMode, factory?: NodeFactory };
 
@@ -1103,5 +1104,21 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
 		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
 		return new ExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions);
+	}
+
+	protected parseWithStatement(): WithStatement {
+		// WithStatement ::
+		//   'with' '(' Expression ')' Statement
+
+		const start = this.consume(Token.WITH);
+		if (isStrict(this.languageMode)) {
+			throw new SyntaxError(this.errorMessage('With is not allowed in Strict mode.'));
+		}
+		this.expect(Token.LPAREN);
+		const object = this.parseExpression();
+		this.expect(Token.RPAREN);
+		const body = this.parseStatement();
+		const range = this.createRange(start);
+		return this.factory.createWithStatement(object, body, range);
 	}
 }

@@ -404,6 +404,7 @@ export class Token {
 	public static readonly VAR = new Token('var', 0);
 	public static readonly VOID = new Token('void', 0);
 	public static readonly WHILE = new Token('while', 0);
+	public static readonly WITH = new Token('with', 0);
 	public static readonly YIELD = new Token('yield', 0);
 	public static readonly NUMBER = new Token('NUMBER', 0);
 	public static readonly BIGINT = new Token('BIGINT', 0);

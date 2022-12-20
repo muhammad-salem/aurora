@@ -422,6 +422,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseTryStatement();
 			case Token.SWITCH:
 				return this.parseSwitchStatement();
+			case Token.WITH:
+				return this.parseWithStatement();
 			case Token.FUNCTION:
 				throw new SyntaxError(this.errorMessage(`FunctionDeclaration only allowed as a StatementListItem not in an arbitrary Statement position.`));
 			case Token.DEBUGGER:
@@ -2560,5 +2562,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (import) not supported.'));
+	}
+	protected parseWithStatement(): ExpressionNode {
+		throw new Error(this.errorMessage('Expression (with) not supported.'));
 	}
 }
