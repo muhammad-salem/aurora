@@ -1167,9 +1167,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const current = this.current();
 		switch (current.token) {
 			case Token.AWAIT:
-				return new Identifier('await');
+				return new Identifier('await', current.range);
 			case Token.ASYNC:
-				return new Identifier('async');
+				return new Identifier('async', current.range);
 			case Token.IDENTIFIER:
 			case Token.PRIVATE_NAME:
 				return current.getValue();
@@ -1178,16 +1178,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		const name = current.getValue().toString();
 		if (name == 'constructor') {
-			return new Identifier('constructor');
+			return new Identifier('constructor', current.range);
 		}
 		if (name == 'name') {
-			return new Identifier('name');
+			return new Identifier('name', current.range);
 		}
 		if (name == 'eval') {
-			return new Identifier('eval');
+			return new Identifier('eval', current.range);
 		}
 		else if (name == 'arguments') {
-			return new Identifier('arguments');
+			return new Identifier('arguments', current.range);
 		}
 		return current.getValue();
 	}
