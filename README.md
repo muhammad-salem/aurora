@@ -54,6 +54,8 @@
 [package-cli]: https://github.com/ibyar/aurora/tree/dev/packages/cli
 [source-cli]: https://github.com/ibyar/aurora/tree/dev/src/cli
 
+[tslib]: https://github.com/Microsoft/tslib
+[metadata]: https://github.com/rbuckton/reflect-metadata
 
 Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
@@ -77,23 +79,20 @@ yarn add @ibyar/aurora
 ```
 
 
-[![SRC][directory]][source-aurora]
-[![PKG][package]][package-aurora]
-
 ## Dependencies
 
-| README | SRC | PKG | Description | NPM |
-| ------ | --- | --- | ----------- | --- |
-| @ibyar/aurora | [![SRC][directory]][source-aurora] | [![PKG][package]][package-aurora] | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] |
-| @ibyar/pipes | [![SRC][directory]][source-pipes] | [![PKG][package]][package-pipes] | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] |
-| @ibyar/directives | [![SRC][directory]][source-directives] | [![PKG][package]][package-directives] | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] |
-| @ibyar/core | [![SRC][directory]][source-core] | [![PKG][package]][package-core] | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] |
-| @ibyar/expressions | [![SRC][directory]][source-expressions] | [![PKG][package]][package-expressions] | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] |
-| @ibyar/elements | [![SRC][directory]][source-elements] | [![PKG][package]][package-elements] | parse html and extract nd expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] |
-| @ibyar/platform | [![SRC][directory]][source-platform] | [![PKG][package]][package-platform] | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] |
-| @ibyar/cli | [![SRC][directory]][source-cli] | [![PKG][package]][package-cli] | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] |
-| [reflect-metadata](https://github.com/rbuckton/reflect-metadata)| | | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] |
-| [tslib](https://github.com/Microsoft/tslib) | | | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] |
+| README | Description | NPM |
+| ------ | ----------- | --- |
+| @ibyar/aurora | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] [![PKG][package]][package-aurora] [![SRC][directory]][source-aurora] |
+| @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
+| @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
+| @ibyar/core | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
+| @ibyar/expressions | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] [![PKG][package]][package-expressions] [![SRC][directory]][source-expressions] |
+| @ibyar/elements | parse html and extract nd expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] [![PKG][package]][package-elements] [![SRC][directory]][source-elements] |
+| @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform]  [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
+| @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
+| reflect-metadata | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] [![PKG][package]][npm-url-reflect-metadata] [![SRC][directory]][metadata] |
+| tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
 
 
 ## 'HTML Template' Features
@@ -133,8 +132,6 @@ yarn add @ibyar/aurora
 - [ ] @Optional
 - [x] [Annotation/Decorators reflect-metadata][metadata]
 - [ ] XSS (cross-site-scripting)
-
-[metadata]: https://github.com/rbuckton/reflect-metadata
 
 ## Built-in Directive
 
