@@ -1406,12 +1406,24 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected toParamNode(expression: ExpressionNode): Param {
 		if (expression instanceof AssignmentExpression) {
-			return new Param(expression.getLeft() as DeclarationExpression, expression.getRight());
+			return this.factory.createParameterDeclaration(
+				expression.getLeft() as DeclarationExpression,
+				expression.getRight(),
+				expression.range
+			);
 		}
 		if (expression instanceof GroupingExpression) {
-			return new Param(expression.getNode() as DeclarationExpression);
+			return this.factory.createParameterDeclaration(
+				expression.getNode() as DeclarationExpression,
+				undefined,
+				expression.range
+			);
 		}
-		return new Param(expression as DeclarationExpression);
+		return this.factory.createParameterDeclaration(
+			expression as DeclarationExpression,
+			undefined,
+			expression.range
+		);
 	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
