@@ -1383,7 +1383,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			first.getExpressions().push(...list.slice(1));
 			return first;
 		}
-		return new SequenceExpression(list);
+		const range = this.createRange(list.at(0));
+		range && this.updateRangeEnd(range);
+		return this.factory.createCommaListExpression(list, range);
 	}
 	protected parseMemberExpression(): ExpressionNode {
 		// MemberExpression ::

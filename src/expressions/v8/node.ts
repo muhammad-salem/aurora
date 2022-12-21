@@ -18,6 +18,7 @@ import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/stat
 import { ReturnStatement } from '../api/computing/return.js';
 import { DeclarationExpression } from '../api/expression.js';
 import { SpreadElement } from '../api/computing/spread.js';
+import { SequenceExpression } from '../api/operators/comma.js';
 
 
 export interface SourcePositionFactory {
@@ -59,5 +60,6 @@ export interface NodeFactory {
 	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement;
 	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param;
 	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement;
+	createCommaListExpression(expressions: ExpressionNode[], range?: [number, number]): SequenceExpression;
 
 }
