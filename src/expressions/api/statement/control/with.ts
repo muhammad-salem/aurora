@@ -42,6 +42,7 @@ export class WithStatement extends AbstractExpressionNode {
 	get(stack: Stack) {
 		const object = this.object.get(stack);
 		const objectScope = stack.pushBlockScopeFor(object);
+		objectScope.getContextProxy = () => object;
 		const value = this.body.get(stack);
 		stack.clearTo(objectScope);
 		return value;
