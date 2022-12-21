@@ -16,7 +16,7 @@ import { WithStatement } from '../api/statement/control/with.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/index.js';
 
 
@@ -182,6 +182,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ReturnStatement(argument, range, loc);
+	}
+	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new LabeledStatement(expression, result, range, loc);
 	}
 
 }

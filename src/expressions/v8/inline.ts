@@ -133,7 +133,9 @@ export abstract class AbstractParser {
 	protected createRangeByStart(start: Required<StartPosition>): Range {
 		return [start!.range![0], this.scanner.getPos()];
 	}
-
+	protected createStartPosition(): Range {
+		return [this.scanner.getPos(), -1];
+	}
 	protected updateRangeEnd(range: Range): void {
 		range[1] = this.scanner.getPos();
 	}
@@ -1040,6 +1042,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			default:
 				break;
 		}
+		const range = this.createStartPosition();
 		const startsWithIdentifier = Token.isAnyIdentifier(this.peek().token);
 		this.setAcceptIN(true);
 		const expression: ExpressionNode = this.parseExpressionCoverGrammar();
@@ -1058,11 +1061,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 				&& allowFunction == AllowLabelledFunctionStatement.AllowLabelledFunctionStatement) {
 				const result = this.parseFunctionDeclaration();
 				this.restoreAcceptIN();
-				return new LabeledStatement(expression, result);
+				this.updateRangeEnd(range);
+				return this.factory.createLabeledStatement(expression, result, range);
 			}
 			const result = this.parseStatement(allowFunction);
 			this.restoreAcceptIN();
-			return new LabeledStatement(expression, result);
+			this.updateRangeEnd(range);
+			return this.factory.createLabeledStatement(expression, result, range);
 		}
 		this.restoreAcceptIN();
 		// Parsed expression statement, followed by semicolon.

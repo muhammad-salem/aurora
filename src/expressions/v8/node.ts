@@ -13,9 +13,8 @@ import { FunctionDeclaration, FunctionExpression } from '../api/definition/funct
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
-import { RangeOrVoid } from './inline.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
-import { BreakStatement, ContinueStatement } from '../api/statement/control/terminate.js';
+import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/index.js';
 
 
@@ -55,5 +54,6 @@ export interface NodeFactory {
 	createContinueStatement(label?: Identifier, range?: [number, number]): ContinueStatement;
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement;
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;
+	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement;
 
 }
