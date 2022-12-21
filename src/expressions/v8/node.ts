@@ -9,13 +9,14 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
+import { FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
-import { ReturnStatement } from '../api/index.js';
+import { ReturnStatement } from '../api/computing/return.js';
+import { DeclarationExpression } from '../api/expression.js';
 
 
 export interface SourcePositionFactory {
@@ -55,5 +56,6 @@ export interface NodeFactory {
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement;
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;
 	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement;
+	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param;
 
 }

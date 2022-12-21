@@ -1314,6 +1314,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseFormalParameter(functionInfo: FunctionInfo): ExpressionNode {
 		// FormalParameter[Yield,GeneratorParameter] :
 		//   BindingElement[?Yield, ?GeneratorParameter]
+		const range = this.createStartPosition();
 		functionInfo.rest = this.check(Token.ELLIPSIS);
 		const pattern = this.parseBindingPattern(true);
 		let initializer: Param;
@@ -1324,9 +1325,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.setAcceptIN(true);
 			const value = this.parseAssignmentExpression();
 			this.restoreAcceptIN();
-			initializer = new Param(this.checkParamType(pattern as DeclarationExpression), value);
+			this.updateRangeEnd(range);
+			initializer = this.factory.createParameterDeclaration(this.checkParamType(pattern as DeclarationExpression), value, range);
 		} else {
-			initializer = new Param(this.checkParamType(pattern as DeclarationExpression));
+			this.updateRangeEnd(range);
+			initializer = this.factory.createParameterDeclaration(this.checkParamType(pattern as DeclarationExpression), undefined, range);
 		}
 		return initializer;
 	}
