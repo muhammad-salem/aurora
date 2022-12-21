@@ -17,6 +17,7 @@ import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/de
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
 import { ReturnStatement } from '../api/computing/return.js';
 import { DeclarationExpression } from '../api/expression.js';
+import { SpreadElement } from '../api/computing/spread.js';
 
 
 export interface SourcePositionFactory {
@@ -57,5 +58,6 @@ export interface NodeFactory {
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;
 	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement;
 	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param;
+	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement;
 
 }

@@ -1358,8 +1358,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.expressionListToExpression(list);
 	}
 	protected parseArrowParametersWithRest(list: ExpressionNode[]): ExpressionNode {
-		this.consume(Token.ELLIPSIS);
+		const start = this.consume(Token.ELLIPSIS);
 		const pattern: ExpressionNode = this.parseBindingPattern(true);
+		const range = this.createRange(start);
 		if (this.peek().isType(Token.ASSIGN)) {
 			throw new Error(this.errorMessage(`Error A rest parameter cannot have an initializer`));
 		}
@@ -1372,7 +1373,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isNotType(Token.RPAREN) || this.peekAhead().isNotType(Token.ARROW)) {
 			throw new Error(this.errorMessage(`Error Unexpected Token At ${this.position()}`));
 		}
-		list.push(new SpreadElement(pattern));
+		list.push(this.factory.createSpreadElement(pattern, range));
 		return this.expressionListToExpression(list);
 	}
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {

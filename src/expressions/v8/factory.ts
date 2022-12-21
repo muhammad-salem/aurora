@@ -17,7 +17,7 @@ import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
-import { DeclarationExpression, ReturnStatement } from '../api/index.js';
+import { DeclarationExpression, ReturnStatement, SpreadElement } from '../api/index.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -190,6 +190,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new Param(identifier, defaultValue, range, loc);
+	}
+	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new SpreadElement(argument, range, loc);
 	}
 
 }
