@@ -41,11 +41,14 @@ export class WithStatement extends AbstractExpressionNode {
 	}
 	get(stack: Stack) {
 		const object = this.object.get(stack);
-		const propertyKeys = object[Symbol.unscopables]
-			? Object.entries(object[Symbol.unscopables])
+		let propertyKeys: PropertyKey[] | undefined;
+		if (object[Symbol.unscopables]) {
+			const allKeys: PropertyKey[] = [...Object.keys(object), ...Object.getOwnPropertySymbols(object)];
+			const unscopablesKeys = Object.entries<Record<PropertyKey, boolean>>(object[Symbol.unscopables])
 				.filter(entry => entry[1])
-				.map(entry => entry[0])
-			: undefined;
+				.map(entry => entry[0]) as PropertyKey[];
+			propertyKeys = allKeys.filter(key => !unscopablesKeys.includes(key));
+		}
 		const objectScope = stack.pushBlockScopeFor(object, propertyKeys);
 		objectScope.getContextProxy = () => object;
 		const value = this.body.get(stack);
