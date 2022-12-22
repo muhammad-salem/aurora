@@ -19,6 +19,7 @@ import { ReturnStatement } from '../api/computing/return.js';
 import { DeclarationExpression } from '../api/expression.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { SequenceExpression } from '../api/operators/comma.js';
+import { NewExpression } from '../api/computing/new.js';
 
 
 export interface SourcePositionFactory {
@@ -63,5 +64,6 @@ export interface NodeFactory {
 	createCommaListExpression(expressions: ExpressionNode[], range?: [number, number]): SequenceExpression;
 	createTemplateExpression(quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TemplateLiteral;
 	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression;
+	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression;
 
 }

@@ -1614,7 +1614,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// new new foo() means new (new foo())
 		// new new foo().bar().baz means (new (new foo()).bar()).baz
 		// new super.x means new (super.x)
-		this.consume(Token.NEW);
+		const start = this.consume(Token.NEW);
 
 		let result: ExpressionNode;
 
@@ -1635,7 +1635,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isType(Token.LPAREN)) {
 			// NewExpression with arguments.
 			const args = this.parseArguments();
-			result = new NewExpression(result, args);
+			result = this.factory.createNewExpression(result, args, this.createRange(start));
 			// The expression can still continue with . or [ after the arguments.
 			return this.parseMemberExpressionContinuation(result);
 		}
@@ -1643,7 +1643,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isType(Token.QUESTION_PERIOD)) {
 			throw new SyntaxError(this.errorMessage(`Optional Chaining with New not allowed,  new x?.y()`));
 		}
-		return new NewExpression(result);
+		return this.factory.createNewExpression(result, undefined, this.createRange(start));
 	}
 	protected parseArguments(maybeArrow?: ParsingArrowHeadFlag): ExpressionNode[] {
 		// Arguments ::

@@ -2,7 +2,7 @@ import type { NodeFactory, SourcePositionFactory } from './node.js';
 import { ClassBody, ClassDeclaration, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
-import { ExpressionNode, SourceLocation } from '../api/expression.js';
+import { DeclarationExpression, ExpressionNode, SourceLocation } from '../api/expression.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { ExpressionStatement } from '../api/definition/statement.js';
@@ -17,7 +17,10 @@ import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
 import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
 import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
-import { DeclarationExpression, ReturnStatement, SequenceExpression, SpreadElement } from '../api/index.js';
+import { ReturnStatement } from '../api/computing/return.js';
+import { SpreadElement } from '../api/computing/spread.js';
+import { SequenceExpression } from '../api/operators/comma.js';
+import { NewExpression } from '../api/computing/new.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -206,6 +209,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new TaggedTemplateExpression(tag, quasis, expressions, range, loc);
+	}
+	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new NewExpression(className, parameters, range, loc);
 	}
 
 
