@@ -81,7 +81,7 @@ yarn add @ibyar/aurora
 
 ## Dependencies
 
-| README | Description | NPM, SRC, PKG |
+| README | Description | NPM, PKG, SRC |
 | ------ | ----------- | ------------- |
 | @ibyar/aurora | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] [![PKG][package]][package-aurora] [![SRC][directory]][source-aurora] |
 | @ibyar/core | create components, render elements<br /> bind attributes and handling events | [![NPM Version][npm-image-core]][npm-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
