@@ -20,6 +20,9 @@ import { DeclarationExpression } from '../api/expression.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { NewExpression } from '../api/computing/new.js';
+import { ObjectPattern, Property } from '../api/definition/object.js';
+import { RestElement } from '../api/computing/rest.js';
+import { ArrayPattern } from '../api/definition/array.js';
 
 
 export interface SourcePositionFactory {
@@ -65,5 +68,7 @@ export interface NodeFactory {
 	createTemplateExpression(quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TemplateLiteral;
 	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression;
 	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression;
+	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number]): ObjectPattern;
+	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
 
 }

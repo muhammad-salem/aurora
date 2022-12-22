@@ -1652,6 +1652,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.consume(Token.LPAREN);
 		const args: ExpressionNode[] = [];
 		while (this.peek().isNotType(Token.RPAREN)) {
+			const range = this.createStartPosition();
 			const isSpread = this.check(Token.ELLIPSIS);
 			this.setAcceptIN(true);
 			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
@@ -1668,7 +1669,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				}
 			}
 			if (isSpread) {
-				argument = new SpreadElement(argument);
+				this.updateRangeEnd(range);
+				argument = this.factory.createSpreadElement(argument, range);
 			}
 			args.push(argument);
 			this.restoreAcceptIN();
@@ -1686,6 +1688,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   YieldExpression
 		//   LeftHandSideExpression AssignmentOperator AssignmentExpression
 
+		const range = this.createStartPosition();
 		if (this.peek().isType(Token.YIELD) && isGeneratorFunction(this.functionKind)) {
 			return this.parseYieldExpression();
 		}
@@ -1705,7 +1708,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
 				const params = expression.getExpressions()
-					.map(expr => new Param(expr as DeclarationExpression));
+					.map(expr => this.factory.createParameterDeclaration(expr as DeclarationExpression, undefined, expr.range));
 				arrow = this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction);
 			} else if (expression instanceof GroupingExpression) {
 				arrow = this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction);
@@ -1721,9 +1724,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
 			expression = expression instanceof ObjectExpression
-				? new ObjectPattern(expression.getProperties())
-				: new ArrayPattern(expression.getElements() as DeclarationExpression[]);
-			// expression_scope() -> ValidateAsPattern(expression, lhs_beg_pos, end_position());
+				? this.factory.createObjectBindingPattern(expression.getProperties(), expression.range)
+				: this.factory.createArrayBindingPattern(expression.getElements() as DeclarationExpression[], expression.range);
 		} else {
 			if (!this.isValidReferenceExpression(expression)) {
 				throw new Error(this.errorMessage(`Invalid Reference Expression`));
@@ -1741,7 +1743,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (!Token.isAssignment(op)) {
 			throw new Error(this.errorMessage(`Invalid Destructuring Target`));
 		}
-		return new AssignmentExpression(op.getName() as AssignmentOperator, expression, right);
+		this.updateRangeEnd(range)
+		return new AssignmentExpression(op.getName() as AssignmentOperator, expression, right, range);
 	}
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
