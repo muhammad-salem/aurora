@@ -81,14 +81,14 @@ yarn add @ibyar/aurora
 
 ## Dependencies
 
-| README | Description | NPM |
-| ------ | ----------- | --- |
+| README | Description | NPM, SRC, PKG |
+| ------ | ----------- | ------------- |
 | @ibyar/aurora | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] [![PKG][package]][package-aurora] [![SRC][directory]][source-aurora] |
+| @ibyar/core | create components, render elements<br /> bind attributes and handling events | [![NPM Version][npm-image-core]][npm-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
+| @ibyar/expressions | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to<br />  detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] [![PKG][package]][package-expressions] [![SRC][directory]][source-expressions] |
+| @ibyar/elements | parse `HTML Template`,<br /> has `tag` names, properties for each `tag` | [![NPM Version][npm-image-elements]][npm-url-elements] [![PKG][package]][package-elements] [![SRC][directory]][source-elements] |
 | @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
 | @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
-| @ibyar/core | create components, render elements, bind attributes, handle events | [![NPM Version][npm-image-core]][npm-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
-| @ibyar/expressions | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] [![PKG][package]][package-expressions] [![SRC][directory]][source-expressions] |
-| @ibyar/elements | parse html and extract nd expression and structural directive | [![NPM Version][npm-image-elements]][npm-url-elements] [![PKG][package]][package-elements] [![SRC][directory]][source-elements] |
 | @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform]  [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
 | @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
 | reflect-metadata | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] [![PKG][package]][npm-url-reflect-metadata] [![SRC][directory]][metadata] |
