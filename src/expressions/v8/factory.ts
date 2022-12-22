@@ -1,7 +1,7 @@
 import type { NodeFactory, SourcePositionFactory } from './node.js';
 import { ClassBody, ClassDeclaration, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
-import { Identifier, Literal, ThisExpression } from '../api/definition/values.js';
+import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { ExpressionNode, SourceLocation } from '../api/expression.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
@@ -199,5 +199,14 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new SequenceExpression(expressions, range, loc);
 	}
+	createTemplateExpression(quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TemplateLiteral {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new TemplateLiteral(quasis, expressions, range, loc);
+	}
+	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new TaggedTemplateExpression(tag, quasis, expressions, range, loc);
+	}
+
 
 }

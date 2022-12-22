@@ -1481,7 +1481,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseMemberWithPresentNewPrefixesExpression();
 			case Token.THIS:
 				this.consume(Token.THIS);
-				return new ThisExpression();
+				return this.factory.createThis(token.range);
 			case Token.DIV:
 			case Token.DIV_ASSIGN:
 				// case Token.REGEXP_LITERAL:
@@ -1511,7 +1511,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					if (!this.peek().isType(Token.ARROW)) {
 						throw new Error(this.errorMessage(`Unexpected Token: ${Token.RPAREN.getName()}`));
 					}
-					const result = new SequenceExpression([]);
+					const result = this.factory.createCommaListExpression([], this.createRange(token));
 					this.markParenthesized(result);
 					return result;
 				}
@@ -1557,7 +1557,6 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (next.isType(Token.TEMPLATE_TAIL)) {
 			this.consume(Token.TEMPLATE_TAIL);
 			const template = next.getValue<TemplateStringLiteral>();
-			const string = next.getValue<TemplateStringLiteral>().string;
 			return this.createTemplateLiteralExpressionNode([template.string], [], tag, template.range);
 		}
 		this.consume(Token.TEMPLATE_SPAN);
@@ -1590,9 +1589,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected createTemplateLiteralExpressionNode(strings: string[], expressions: ExpressionNode[], tag?: ExpressionNode, range?: RangeOrVoid): TaggedTemplateExpression | TemplateLiteral {
 		if (tag) {
-			return new TaggedTemplateExpression(tag, strings, expressions, range);
+			return this.factory.createTaggedTemplateExpression(tag, strings, expressions, range);
 		}
-		return new TemplateLiteral(strings, expressions, range);
+		return this.factory.createTemplateExpression(strings, expressions, range);
 	}
 	protected parseMemberWithPresentNewPrefixesExpression(): ExpressionNode {
 		// NewExpression ::

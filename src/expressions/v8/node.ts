@@ -1,7 +1,7 @@
 import type { ExpressionNode, SourceLocation } from '../api/expression.js';
 import { ClassBody, ClassDeclaration, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
-import { Identifier, Literal, ThisExpression } from '../api/definition/values.js';
+import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { UnaryExpression } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
@@ -61,5 +61,7 @@ export interface NodeFactory {
 	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param;
 	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement;
 	createCommaListExpression(expressions: ExpressionNode[], range?: [number, number]): SequenceExpression;
+	createTemplateExpression(quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TemplateLiteral;
+	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression;
 
 }
