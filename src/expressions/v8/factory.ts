@@ -24,6 +24,7 @@ import { NewExpression } from '../api/computing/new.js';
 import { ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
 import { ArrayPattern } from '../api/definition/array.js';
+import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -225,6 +226,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ArrayPattern(elements, range, loc);
 	}
-
+	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new AssignmentExpression(operator, left, right, range, loc);
+	}
 
 }

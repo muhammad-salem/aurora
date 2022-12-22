@@ -23,6 +23,7 @@ import { NewExpression } from '../api/computing/new.js';
 import { ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
 import { ArrayPattern } from '../api/definition/array.js';
+import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 
 
 export interface SourcePositionFactory {
@@ -70,5 +71,6 @@ export interface NodeFactory {
 	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression;
 	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number]): ObjectPattern;
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
+	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
 
 }

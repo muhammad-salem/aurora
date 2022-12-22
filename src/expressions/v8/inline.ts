@@ -1744,7 +1744,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new Error(this.errorMessage(`Invalid Destructuring Target`));
 		}
 		this.updateRangeEnd(range)
-		return new AssignmentExpression(op.getName() as AssignmentOperator, expression, right, range);
+		return this.factory.createAssignment(op.getName() as AssignmentOperator, expression, right, range);
 	}
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
