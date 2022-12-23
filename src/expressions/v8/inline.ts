@@ -1751,19 +1751,19 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	private checkParamType(identifier: DeclarationExpression) {
 		if (identifier instanceof ArrayExpression) {
-			return new ArrayPattern(identifier.getElements() as DeclarationExpression[]);
+			return this.factory.createArrayBindingPattern(identifier.getElements() as DeclarationExpression[], identifier.range);
 		} else if (identifier instanceof ObjectExpression) {
-			return new ObjectPattern(identifier.getProperties());
+			return this.factory.createObjectBindingPattern(identifier.getProperties(), identifier.range);
 		}
 		else if (identifier instanceof SpreadElement) {
 			let arg = identifier.getArgument() as DeclarationExpression;
 			// let param = arg;
 			if (arg instanceof ArrayExpression) {
-				arg = new ArrayPattern(arg.getElements() as DeclarationExpression[]);
+				arg = this.factory.createArrayBindingPattern(arg.getElements() as DeclarationExpression[], arg.range);
 			} else if (arg instanceof ObjectExpression) {
-				arg = new ObjectPattern(arg.getProperties());
+				arg = this.factory.createObjectBindingPattern(arg.getProperties(), arg.range);
 			}
-			return new RestElement(arg);
+			return this.factory.createRestElement(arg, identifier.range);
 		}
 		return identifier;
 	}

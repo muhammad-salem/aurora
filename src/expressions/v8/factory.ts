@@ -230,5 +230,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new AssignmentExpression(operator, left, right, range, loc);
 	}
+	createRestElement(argument: DeclarationExpression, range?: [number, number]): RestElement {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new RestElement(argument, range, loc);
+	}
 
 }

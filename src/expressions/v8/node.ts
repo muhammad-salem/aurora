@@ -72,5 +72,6 @@ export interface NodeFactory {
 	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number]): ObjectPattern;
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
+	createRestElement(argument: DeclarationExpression, range?: [number, number]): RestElement;
 
 }
