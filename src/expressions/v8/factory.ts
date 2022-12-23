@@ -11,7 +11,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
+import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
@@ -234,5 +234,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new RestElement(argument, range, loc);
 	}
+	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ArrowFunctionExpression(params, body, expression, async, range, loc);
+	}
+
 
 }

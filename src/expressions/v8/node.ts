@@ -9,7 +9,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
+import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
@@ -73,5 +73,6 @@ export interface NodeFactory {
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
 	createRestElement(argument: DeclarationExpression, range?: [number, number]): RestElement;
+	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression;
 
 }

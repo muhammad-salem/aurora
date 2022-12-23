@@ -1,5 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { InlineParserOptions, JavaScriptInlineParser, StartPosition } from './inline.js';
+import { InlineParserOptions, JavaScriptInlineParser, PositionMark } from './inline.js';
 import { Token, TokenExpression } from './token.js';
 import {
 	AccessorProperty,
@@ -108,7 +108,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
 		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
 	}
-	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: StartPosition): ClassDeclaration {
+	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: PositionMark): ClassDeclaration {
 		// ClassDeclaration ::
 		//   'class' Identifier ('extends' LeftHandExpression)? '{' ClassBody '}'
 		//   'class' ('extends' LeftHandExpression)? '{' ClassBody '}'

@@ -1,7 +1,7 @@
 import { AccessorProperty, MethodDefinition, PropertyDefinition, StaticBlock } from '../api/class/class.js';
 import { ExpressionNode } from '../api/expression.js';
 import { VariableDeclarator } from '../api/statement/declarations/declares.js';
-import { StartPosition } from './inline.js';
+import { PositionMark } from './inline.js';
 import { Token } from './token.js';
 
 export function isInRange(num: number, start: number, end: number) {
@@ -33,7 +33,7 @@ export class PropertyKindInfo {
 	isStatic = false;
 	isRest = false;
 
-	rangeStart: StartPosition;
+	rangeStart: PositionMark;
 
 	parsePropertyKindFromToken(token: Token): boolean {
 		// This returns true, setting the property kind, iff the given token is
