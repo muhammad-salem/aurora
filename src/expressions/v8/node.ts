@@ -22,7 +22,7 @@ import { SequenceExpression } from '../api/operators/comma.js';
 import { NewExpression } from '../api/computing/new.js';
 import { ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
-import { ArrayPattern } from '../api/definition/array.js';
+import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 
 
@@ -71,6 +71,7 @@ export interface NodeFactory {
 	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression;
 	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number]): ObjectPattern;
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
+	createArrayLiteralExpression(elements: (ExpressionNode | SpreadElement | null)[], range?: [number, number]): ArrayExpression;
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
 	createRestElement(argument: DeclarationExpression, range?: [number, number]): RestElement;
 	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression;

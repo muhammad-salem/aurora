@@ -23,7 +23,7 @@ import { SequenceExpression } from '../api/operators/comma.js';
 import { NewExpression } from '../api/computing/new.js';
 import { ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
-import { ArrayPattern } from '../api/definition/array.js';
+import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 
 
@@ -225,6 +225,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ArrayPattern(elements, range, loc);
+	}
+	createArrayLiteralExpression(elements: (ExpressionNode | SpreadElement | null)[], range?: [number, number]): ArrayExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ArrayExpression(elements, range, loc);
 	}
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);

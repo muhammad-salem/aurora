@@ -1811,19 +1811,20 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// ArrayLiteral ::
 		//   '[' Expression? (',' Expression?)* ']'
 
-		this.consume(Token.LBRACK);
+		const start = this.consume(Token.LBRACK);
 		let first_spread_index = -1;
 		const values: (ExpressionNode | null)[] = [];
 
 		while (!this.check(Token.RBRACK)) {
 			let elem: ExpressionNode | null;
-			if (this.peek().isType(Token.COMMA)) {
+			const peek = this.peek();
+			if (peek.isType(Token.COMMA)) {
 				elem = null;
 			} else if (this.check(Token.ELLIPSIS)) {
 				this.setAcceptIN(true);
 				const argument = this.parsePossibleDestructuringSubPattern();
 				this.restoreAcceptIN();
-				elem = new SpreadElement(argument);
+				elem = this.factory.createSpreadElement(argument, this.createRange(peek));
 				if (first_spread_index < 0) {
 					first_spread_index = values.length;
 				}
@@ -1843,7 +1844,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.expect(Token.COMMA);
 			}
 		}
-		return new (isPattern ? ArrayPattern : ArrayExpression)(values as DeclarationExpression[]);
+		const range = this.createRange(start);
+		if (isPattern) {
+			return this.factory.createArrayBindingPattern(values as DeclarationExpression[], range);
+		}
+		return this.factory.createArrayLiteralExpression(values, range);
 	}
 	protected parsePossibleDestructuringSubPattern(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
