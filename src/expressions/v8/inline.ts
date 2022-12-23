@@ -1857,7 +1857,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		// ObjectLiteral ::
 		// '{' (PropertyDefinition (',' PropertyDefinition)* ','? )? '}'
 
-		this.consume(Token.LBRACE);
+		const start = this.consume(Token.LBRACE);
 		const properties: ExpressionNode[] = [];
 		while (!this.check(Token.RBRACE)) {
 			const property: ExpressionNode = this.parseObjectPropertyDefinition(isPattern);
@@ -1866,10 +1866,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.expect(Token.COMMA);
 			}
 		}
+		const range = this.createRange(start)
 		if (isPattern) {
-			return new ObjectPattern(properties as (Property | RestElement)[]);
+			return this.factory.createObjectBindingPattern(properties as (Property | RestElement)[], range);
 		}
-		return new ObjectExpression(properties as Property[]);
+		return this.factory.createObjectLiteralExpression(properties as Property[], range);
 	}
 	protected parseObjectPropertyDefinition(isPattern: boolean): ExpressionNode {
 		const propInfo = new PropertyKindInfo();

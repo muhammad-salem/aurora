@@ -21,7 +21,7 @@ import { ReturnStatement } from '../api/computing/return.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { NewExpression } from '../api/computing/new.js';
-import { ObjectPattern, Property } from '../api/definition/object.js';
+import { ObjectExpression, ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
@@ -221,6 +221,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number] | undefined): ObjectPattern {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ObjectPattern(properties, range, loc);
+	}
+	createObjectLiteralExpression(properties: Property[], range?: [number, number]): ObjectExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ObjectExpression(properties, range, loc);
 	}
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern {
 		const loc = this.rangeFactory?.createSourcePosition(range);

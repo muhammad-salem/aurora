@@ -20,7 +20,7 @@ import { DeclarationExpression } from '../api/expression.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { SequenceExpression } from '../api/operators/comma.js';
 import { NewExpression } from '../api/computing/new.js';
-import { ObjectPattern, Property } from '../api/definition/object.js';
+import { ObjectExpression, ObjectPattern, Property } from '../api/definition/object.js';
 import { RestElement } from '../api/computing/rest.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
@@ -70,6 +70,7 @@ export interface NodeFactory {
 	createTaggedTemplateExpression(tag: ExpressionNode, quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TaggedTemplateExpression;
 	createNewExpression(className: ExpressionNode, parameters?: ExpressionNode[], range?: [number, number]): NewExpression;
 	createObjectBindingPattern(properties: (Property | RestElement)[], range?: [number, number]): ObjectPattern;
+	createObjectLiteralExpression(properties: Property[], range?: [number, number]): ObjectExpression;
 	createArrayBindingPattern(elements: (DeclarationExpression | null)[], range?: [number, number]): ArrayPattern;
 	createArrayLiteralExpression(elements: (ExpressionNode | SpreadElement | null)[], range?: [number, number]): ArrayExpression;
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
