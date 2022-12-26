@@ -1880,7 +1880,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case PropertyKind.Spread:
 				let value: SpreadElement | RestElement = nameExpression as SpreadElement;
 				if (isPattern) {
-					value = new RestElement(value.getArgument() as DeclarationExpression);
+					value = this.factory.createRestElement(value.getArgument() as DeclarationExpression, value.range);
 				}
 				return new Property(
 					value.getArgument(),
