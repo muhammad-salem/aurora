@@ -250,6 +250,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ArrowFunctionExpression(params, body, expression, async, range, loc);
 	}
+	createPropertyDeclaration(key: ExpressionNode, value: DeclarationExpression | ExpressionNode, kind: 'init' | 'get' | 'set', method: boolean, shorthand: boolean, computed: boolean, range?: [number, number]): Property {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new Property(key, value, kind, method, shorthand, computed, range, loc);
+	}
+
 
 
 }

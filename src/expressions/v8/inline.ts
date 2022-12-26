@@ -1884,7 +1884,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (isPattern) {
 					value = this.factory.createRestElement(value.getArgument() as DeclarationExpression, value.range);
 				}
-				return new Property(
+				return this.factory.createPropertyDeclaration(
 					value.getArgument(),
 					value,
 					'init',
@@ -1898,7 +1898,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.setAcceptIN(true);
 				const value = this.parsePossibleDestructuringSubPattern();
 				this.restoreAcceptIN();
-				return new Property(
+				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
@@ -1932,7 +1932,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				} else {
 					value = lhs;
 				}
-				return new Property(
+				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
@@ -1954,7 +1954,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					propInfo.name ? new Identifier(propInfo.name) : undefined,
 					propInfo.rangeStart
 				);
-				return new Property(
+				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
@@ -1974,7 +1974,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					propInfo.name ? new Identifier(propInfo.name) : undefined,
 					propInfo.rangeStart
 				);
-				return new Property(
+				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					isGet ? 'get' : 'set',
