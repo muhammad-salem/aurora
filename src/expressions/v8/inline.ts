@@ -889,6 +889,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			let name: ExpressionNode;
 			let value: ExpressionNode | undefined;
+			const range = this.createStartPosition();
 			// Check for an identifier first, so that we can elide the pattern in cases
 			// where there is no initializer (and so no proxy needs to be created).
 			if (Token.isAnyIdentifier(this.peek().token)) {
@@ -915,7 +916,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 				}
 				// value = undefined;
 			}
-			variables.push(new VariableDeclarator(name as DeclarationExpression, value));
+			this.updateRangeEnd(range);
+			variables.push(this.factory.createVariableDeclaration(name as DeclarationExpression, value, range));
 		} while (this.check(Token.COMMA));
 		const range = this.createRange(start);
 		return this.factory.createVariableStatement(variables, mode, range);

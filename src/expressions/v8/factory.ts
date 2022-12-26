@@ -174,6 +174,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ForInNode(initializer, enumerable, body, range, loc);
 	}
+	createVariableDeclaration(id: DeclarationExpression, init?: ExpressionNode, range?: [number, number]): VariableDeclarator {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new VariableDeclarator(id, init, range, loc);
+	}
 	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new VariableDeclarationNode(variables, kind, range, loc);
