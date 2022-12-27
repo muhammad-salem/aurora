@@ -25,6 +25,7 @@ import { RestElement } from '../api/computing/rest.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { MemberExpression } from '../api/definition/member.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
 
 
 export interface SourcePositionFactory {
@@ -81,5 +82,6 @@ export interface NodeFactory {
 	createPropertyDeclaration(key: ExpressionNode, value: DeclarationExpression | ExpressionNode, kind: 'init' | 'get' | 'set', method: boolean, shorthand: boolean, computed: boolean, range?: [number, number]): Property;
 	createIdentifier(name: string, range?: [number, number]): Identifier;
 	createPropertyAssignment(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): MemberExpression;
+	createPipelineExpression(left: ExpressionNode, right: ExpressionNode, params?: (ExpressionNode | '?' | '...?')[], range?: [number, number]): PipelineExpression;
 
 }

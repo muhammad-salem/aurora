@@ -26,6 +26,7 @@ import { RestElement } from '../api/computing/rest.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { MemberExpression } from '../api/definition/member.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -263,6 +264,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new MemberExpression(object, property, computed, optional, range, loc);
 	}
+	createPipelineExpression(left: ExpressionNode, right: ExpressionNode, params?: (ExpressionNode | '?' | '...?')[], range?: [number, number]): PipelineExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new PipelineExpression(left, right, params, range, loc);
+	}
+
 
 
 

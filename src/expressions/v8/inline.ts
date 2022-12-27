@@ -2188,13 +2188,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 				break;
 		}
 		if (body) {
-			return new PipelineExpression(lhs, body);
+			return this.factory.createPipelineExpression(lhs, body, undefined, this.createRange(lhs));
 		}
 		if (token.isType(Token.LPAREN)) {
 			// parse arrow function
 			// x |> ( y => y+1 )
 			body = this.parsePrimaryExpression();
-			return new PipelineExpression(lhs, body);
+			return this.factory.createPipelineExpression(lhs, body, undefined, this.createRange(lhs));
 		}
 
 		// parse angular-like and f# and partial operator syntax
@@ -2254,13 +2254,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (!indexed) {
 					// z |> method(x, y) === method(x, y)(z)
 					body = new CallExpression(func, args as ExpressionNode[]);
-					return new PipelineExpression(lhs, body);
+					return this.factory.createPipelineExpression(lhs, body, undefined, this.createRange(lhs));
 				}
 				break;
 			default:
 				break;
 		}
-		return new PipelineExpression(lhs, func, args);
+		return this.factory.createPipelineExpression(lhs, func, args, this.createRange(lhs));
 	}
 	protected parseConditionalExpression(): ExpressionNode {
 		// ConditionalExpression ::
