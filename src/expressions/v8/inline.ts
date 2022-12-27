@@ -1147,7 +1147,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		let name: Identifier | undefined;
 		if (this.peek().isType(Token.LPAREN)) {
 			if (defaultExport) {
-				name = new Identifier('default');
+				name = this.factory.createIdentifier('default', this.createRange(start));
 			} else {
 				throw new SyntaxError(this.errorMessage('Missing Function Name'));
 			}
@@ -1172,9 +1172,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const current = this.current();
 		switch (current.token) {
 			case Token.AWAIT:
-				return new Identifier('await', current.range);
+				return this.factory.createIdentifier('await', current.range);
 			case Token.ASYNC:
-				return new Identifier('async', current.range);
+				return this.factory.createIdentifier('async', current.range);
 			case Token.IDENTIFIER:
 			case Token.PRIVATE_NAME:
 				return current.getValue();
@@ -1183,16 +1183,16 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		const name = current.getValue().toString();
 		if (name == 'constructor') {
-			return new Identifier('constructor', current.range);
+			return this.factory.createIdentifier('constructor', current.range);
 		}
 		if (name == 'name') {
-			return new Identifier('name', current.range);
+			return this.factory.createIdentifier('name', current.range);
 		}
 		if (name == 'eval') {
-			return new Identifier('eval', current.range);
+			return this.factory.createIdentifier('eval', current.range);
 		}
 		else if (name == 'arguments') {
-			return new Identifier('arguments', current.range);
+			return this.factory.createIdentifier('arguments', current.range);
 		}
 		return current.getValue();
 	}
@@ -1922,7 +1922,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// CoverInitializedName
 				//    IdentifierReference Initializer?
 
-				const lhs = new Identifier(propInfo.name);
+				const lhs = this.factory.createIdentifier(propInfo.name, this.createRange(propInfo.rangeStart));
 				if (!this.isAssignableIdentifier(lhs)) {
 					throw new Error(this.errorMessage('Strict Eval Arguments'));
 				}
@@ -1932,7 +1932,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 					this.setAcceptIN(true);
 					const rhs = this.parseAssignmentExpression();
 					this.restoreAcceptIN();
-					value = new AssignmentExpression(Token.ASSIGN.getName() as AssignmentOperator, lhs, rhs);
+					value = this.factory.createAssignment(
+						Token.ASSIGN.getName() as AssignmentOperator,
+						lhs,
+						rhs,
+						this.createRange(propInfo.rangeStart)
+					);
 				} else {
 					value = lhs;
 				}
@@ -1957,7 +1962,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Identifier(propInfo.name) : undefined,
+					propInfo.name ? this.factory.createIdentifier(propInfo.name,) : undefined,
 					propInfo.rangeStart
 				);
 				const range = this.createRange(propInfo.rangeStart);
@@ -1979,7 +1984,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				const value = this.parseFunctionLiteral(
 					kind,
 					FunctionSyntaxKind.AccessorOrMethod,
-					propInfo.name ? new Identifier(propInfo.name) : undefined,
+					propInfo.name ? this.factory.createIdentifier(propInfo.name, this.createRange(propInfo.rangeStart)) : undefined,
 					propInfo.rangeStart
 				);
 				const range = this.createRange(propInfo.rangeStart);
@@ -1996,7 +2001,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 			case PropertyKind.ClassField:
 			case PropertyKind.NotSet:
-				return new Literal<null>(null);
+				return this.factory.createNull(this.createRange(propInfo.rangeStart));
 		}
 	}
 	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
@@ -2008,7 +2013,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (nextToken.isNotType(Token.MUL)
 				&& propInfo.parsePropertyKindFromToken(nextToken.token)
 				|| this.scanner.hasLineTerminatorBeforeNext()) {
-				return new Identifier('async');
+				return this.factory.createIdentifier('async', this.createRange(propInfo.rangeStart));
 			}
 			propInfo.kind = PropertyKind.Method;
 			propInfo.funcFlag = ParseFunctionFlag.IsAsync;
@@ -2025,7 +2030,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
 			const token = this.next();
 			if (propInfo.parsePropertyKindFromToken(this.peek().token)) {
-				return new Identifier(nextToken.isType(Token.GET) ? 'get' : 'set');
+				return this.factory.createIdentifier(nextToken.isType(Token.GET) ? 'get' : 'set', this.createRange(propInfo.rangeStart));
 			}
 			if (token.isType(Token.GET)) {
 				propInfo.kind = PropertyKind.AccessorGetter;
@@ -2142,7 +2147,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		// check keyword as identifier
 		if (Token.isPropertyName(next.token) && next.isNotType(Token.EOS)) {
-			return new Identifier(next.token.getName());
+			return this.factory.createIdentifier(next.token.getName(), next.range);
 		}
 		throw new SyntaxError(this.errorMessage(`Parsing property expression: Unexpected Token`));
 	}

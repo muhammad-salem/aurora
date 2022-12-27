@@ -254,6 +254,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new Property(key, value, kind, method, shorthand, computed, range, loc);
 	}
+	createIdentifier(name: string, range?: [number, number]): Identifier {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new Identifier(name, range, loc);
+	}
 
 
 
