@@ -2253,7 +2253,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// should be indexed, has partial operator
 				if (!indexed) {
 					// z |> method(x, y) === method(x, y)(z)
-					body = new CallExpression(func, args as ExpressionNode[]);
+					body = this.factory.createCallExpression(func, args as ExpressionNode[], false, this.createRange(func));
 					return this.factory.createPipelineExpression(lhs, body, undefined, this.createRange(lhs));
 				}
 				break;
@@ -2432,7 +2432,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// async ( Arguments ) => ...
 				return this.expressionListToExpression(args);
 			}
-			result = new CallExpression(result, args);
+			result = this.factory.createCallExpression(result, args, false, this.createRange(result));
 			if (!Token.isPropertyOrCall(this.peek().token)) return result;
 		}
 
@@ -2479,7 +2479,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				/* Call */
 				case Token.LPAREN: {
 					const args = this.parseArguments();
-					result = new CallExpression(result, args, isOptional);
+					result = this.factory.createCallExpression(result, args, isOptional, this.createRange(result));
 					break;
 				}
 

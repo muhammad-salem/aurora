@@ -26,6 +26,7 @@ import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { MemberExpression } from '../api/definition/member.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
+import { CallExpression } from '../api/computing/call.js';
 
 
 export interface SourcePositionFactory {
@@ -83,5 +84,6 @@ export interface NodeFactory {
 	createIdentifier(name: string, range?: [number, number]): Identifier;
 	createPropertyAssignment(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): MemberExpression;
 	createPipelineExpression(left: ExpressionNode, right: ExpressionNode, params?: (ExpressionNode | '?' | '...?')[], range?: [number, number]): PipelineExpression;
+	createCallExpression(callee: ExpressionNode, params: ExpressionNode[], optional?: boolean, range?: [number, number]): CallExpression;
 
 }
