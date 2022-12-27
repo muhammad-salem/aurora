@@ -1884,13 +1884,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (isPattern) {
 					value = this.factory.createRestElement(value.getArgument() as DeclarationExpression, value.range);
 				}
+				const range = this.createRange(propInfo.rangeStart);
 				return this.factory.createPropertyDeclaration(
 					value.getArgument(),
 					value,
 					'init',
 					false,
 					false,
-					propInfo.isComputedName
+					propInfo.isComputedName,
+					range
 				);
 
 			case PropertyKind.Value: {
@@ -1898,13 +1900,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.setAcceptIN(true);
 				const value = this.parsePossibleDestructuringSubPattern();
 				this.restoreAcceptIN();
+				const range = this.createRange(propInfo.rangeStart);
 				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
 					false,
 					false,
-					propInfo.isComputedName
+					propInfo.isComputedName,
+					range
 				);
 			}
 
@@ -1932,13 +1936,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 				} else {
 					value = lhs;
 				}
+				const range = this.createRange(propInfo.rangeStart);
 				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
 					false,
 					propInfo.kind !== PropertyKind.Assign,
-					propInfo.isComputedName
+					propInfo.isComputedName,
+					range
 				);
 			}
 
@@ -1954,13 +1960,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 					propInfo.name ? new Identifier(propInfo.name) : undefined,
 					propInfo.rangeStart
 				);
+				const range = this.createRange(propInfo.rangeStart);
 				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					'init',
 					true,
 					false,
-					propInfo.isComputedName
+					propInfo.isComputedName,
+					range
 				);
 			}
 
@@ -1974,13 +1982,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 					propInfo.name ? new Identifier(propInfo.name) : undefined,
 					propInfo.rangeStart
 				);
+				const range = this.createRange(propInfo.rangeStart);
 				return this.factory.createPropertyDeclaration(
 					nameExpression,
 					value,
 					isGet ? 'get' : 'set',
 					false,
 					false,
-					propInfo.isComputedName
+					propInfo.isComputedName,
+					range
 				);
 			}
 
@@ -1991,8 +2001,8 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseProperty(propInfo: PropertyKindInfo): ExpressionNode {
 		let nextToken = this.peek();
+		propInfo.rangeStart = nextToken;
 		if (this.check(Token.ASYNC)) {
-			propInfo.rangeStart = nextToken;
 			// async
 			nextToken = this.peek();
 			if (nextToken.isNotType(Token.MUL)
@@ -2009,13 +2019,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			// async*
 			propInfo.kind = PropertyKind.Method;
 			propInfo.funcFlag = ParseFunctionFlag.IsGenerator;
-			propInfo.rangeStart ??= nextToken;
 		}
 
 		nextToken = this.peek();
 		if (propInfo.kind == PropertyKind.NotSet && nextToken.isType(Token.GET) || nextToken.isType(Token.SET)) {
 			const token = this.next();
-			propInfo.rangeStart ??= token;
 			if (propInfo.parsePropertyKindFromToken(this.peek().token)) {
 				return new Identifier(nextToken.isType(Token.GET) ? 'get' : 'set');
 			}
@@ -2027,7 +2035,6 @@ export class JavaScriptInlineParser extends AbstractParser {
 			nextToken = this.peek();
 		}
 		let propertyName: ExpressionNode;
-		propInfo.rangeStart ??= nextToken;
 		switch (nextToken.token) {
 			case Token.PRIVATE_NAME:
 				propInfo.isPrivate = true;
