@@ -2118,7 +2118,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					this.consume(Token.LBRACK);
 					this.setAcceptIN(true);
 					const index = this.parseExpressionCoverGrammar();
-					expression = new MemberExpression(expression, index, true);
+					expression = this.factory.createPropertyAssignment(expression, index, true, false, this.createRange(expression));
 					this.expect(Token.RBRACK);
 					this.restoreAcceptIN();
 					break;
@@ -2126,7 +2126,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				case Token.PERIOD: {
 					this.consume(Token.PERIOD);
 					const key: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
-					expression = new MemberExpression(expression, key, false);
+					expression = this.factory.createPropertyAssignment(expression, key, false, false, this.createRange(expression));
 					break;
 				}
 				case Token.TEMPLATE_SPAN:
@@ -2450,7 +2450,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					optionalChaining = true;
 					if (Token.isPropertyOrCall(this.peek().token)) continue;
 					const key = this.parsePropertyOrPrivatePropertyName();
-					result = new MemberExpression(result, key, false, isOptional);
+					result = this.factory.createPropertyAssignment(result, key, false, isOptional, this.createRange(result));
 					break;
 				}
 
@@ -2460,7 +2460,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					this.setAcceptIN(true);
 					const index = this.parseExpressionCoverGrammar();
 					this.restoreAcceptIN();
-					result = new MemberExpression(result, index, true, isOptional);
+					result = this.factory.createPropertyAssignment(result, index, true, isOptional, this.createRange(result));
 					this.expect(Token.RBRACK);
 					break;
 				}
@@ -2472,7 +2472,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					}
 					this.consume(Token.PERIOD);
 					const key = this.parsePropertyOrPrivatePropertyName();
-					result = new MemberExpression(result, key, false, isOptional);
+					result = this.factory.createPropertyAssignment(result, key, false, isOptional, this.createRange(result));
 					break;
 				}
 

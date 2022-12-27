@@ -24,6 +24,7 @@ import { ObjectExpression, ObjectPattern, Property } from '../api/definition/obj
 import { RestElement } from '../api/computing/rest.js';
 import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
+import { MemberExpression } from '../api/definition/member.js';
 
 
 export interface SourcePositionFactory {
@@ -79,5 +80,6 @@ export interface NodeFactory {
 	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression;
 	createPropertyDeclaration(key: ExpressionNode, value: DeclarationExpression | ExpressionNode, kind: 'init' | 'get' | 'set', method: boolean, shorthand: boolean, computed: boolean, range?: [number, number]): Property;
 	createIdentifier(name: string, range?: [number, number]): Identifier;
+	createPropertyAssignment(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): MemberExpression;
 
 }
