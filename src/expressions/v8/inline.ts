@@ -2090,7 +2090,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					}
 					propInfo.name = propertyName.toString();
 					this.restoreAcceptIN();
-					return new SpreadElement(propertyName);
+					return this.factory.createSpreadElement(propertyName, this.createRange(nextToken));
 				}
 			default:
 				propertyName = this.parsePropertyOrPrivatePropertyName();
@@ -2205,6 +2205,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				// support angular pipeline syntax
 				do {
 					this.consume(Token.COLON);
+					const peek = this.peek();
 					const isSpread = this.check(Token.ELLIPSIS);
 					if (this.peek().isType(Token.CONDITIONAL)) {
 						this.consume(Token.CONDITIONAL);
@@ -2216,7 +2217,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					} else {
 						const arg = this.parseAssignmentExpressionCoverGrammar();
 						if (isSpread) {
-							args.push(new SpreadElement(arg));
+							args.push(this.factory.createSpreadElement(arg, this.createRange(peek)));
 						} else {
 							args.push(arg);
 						}
@@ -2228,6 +2229,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.consume(Token.LPAREN);
 				let indexed = false;
 				while (this.peek().isNotType(Token.RPAREN)) {
+					const peek = this.peek();
 					const isSpread = this.check(Token.ELLIPSIS);
 					if (this.peek().isType(Token.CONDITIONAL)) {
 						this.consume(Token.CONDITIONAL);
@@ -2240,7 +2242,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					} else {
 						const arg = this.parseAssignmentExpressionCoverGrammar();
 						if (isSpread) {
-							args.push(new SpreadElement(arg));
+							args.push(this.factory.createSpreadElement(arg, this.createRange(peek)));
 						} else {
 							args.push(arg);
 						}
