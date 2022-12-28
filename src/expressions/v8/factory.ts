@@ -1,5 +1,5 @@
 import type { NodeFactory, SourcePositionFactory } from './node.js';
-import { ClassBody, ClassDeclaration, Super } from '../api/class/class.js';
+import { ClassBody, ClassDeclaration, MetaProperty, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { DeclarationExpression, ExpressionNode, SourceLocation } from '../api/expression.js';
@@ -298,5 +298,8 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new YieldExpression(delegate, argument, range, loc);
 	}
-
+	createMetaProperty(meta: Identifier, property: Identifier, range?: [number, number]): MetaProperty {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new MetaProperty(meta, property, range, loc);
+	}
 }

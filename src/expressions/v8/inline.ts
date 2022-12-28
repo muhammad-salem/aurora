@@ -1621,7 +1621,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (this.peek().isType(Token.IMPORT) && this.peekAhead().isType(Token.LPAREN)) {
 			throw new SyntaxError(this.errorMessage(`Import Call Not New Expression`));
 		} else if (this.peek().isType(Token.PERIOD)) {
-			result = this.parseNewTargetExpression();
+			result = this.parseNewTargetExpression(start);
 			return this.parseMemberExpressionContinuation(result);
 		} else {
 			result = this.parseMemberExpression();
@@ -2593,7 +2593,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return this.factory.createYieldExpression(delegating, expression);
 	}
-	protected parseNewTargetExpression(): ExpressionNode {
+	protected parseNewTargetExpression(start?: PositionMark): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));
 	}
 	protected parseClassExpression(): ClassExpression {

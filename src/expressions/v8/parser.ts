@@ -89,13 +89,17 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const body = isModule ? this.parseModuleItemList() : this.parseStatementList(Token.EOS);
 		return new Program(isModule ? 'module' : 'script', body);
 	}
-	protected override parseNewTargetExpression(): ExpressionNode {
+	protected override parseNewTargetExpression(start?: PositionMark): ExpressionNode {
 		this.consume(Token.PERIOD);
 		const target: ExpressionNode = this.parsePropertyOrPrivatePropertyName();
 		if (target.toString() !== 'target') {
 			throw new Error(this.errorMessage(`Expression (new.${target.toString()}) not supported.`));
 		}
-		return new MetaProperty(new Identifier('new'), new Identifier('target'));
+		return this.factory.createMetaProperty(
+			this.factory.createIdentifier('new', start?.range),
+			this.factory.createIdentifier('target', target.range),
+			this.createRange(start)
+		);
 	}
 	protected override parseClassExpression(): ClassExpression {
 		this.consume(Token.CLASS);
@@ -786,10 +790,15 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		return new ImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions);
 	}
 	protected parseImportExpressions(): ExpressionNode {
-		this.consume(Token.IMPORT);
+		const start = this.consume(Token.IMPORT);
 		if (this.check(Token.PERIOD)) {
+			const peek = this.peek();
 			this.expectContextualKeyword('meta');
-			return new MetaProperty(new Identifier('import'), new Identifier('meta'));
+			return this.factory.createMetaProperty(
+				this.factory.createIdentifier('import', start.range),
+				this.factory.createIdentifier('meta', peek.range),
+				this.createRange(start)
+			);
 		}
 
 		if (this.peek().isNotType(Token.LPAREN)) {
