@@ -2598,7 +2598,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					break;
 			}
 		}
-		return new YieldExpression(delegating, expression);
+		return this.factory.createYieldExpression(delegating, expression);
 	}
 	protected parseNewTargetExpression(): ExpressionNode {
 		throw new Error(this.errorMessage('Expression (new.target) not supported.'));

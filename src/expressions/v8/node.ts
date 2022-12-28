@@ -31,6 +31,7 @@ import { BindExpression } from '../api/definition/bind.js';
 import { ChainExpression } from '../api/operators/chaining.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
+import { YieldExpression } from '../api/computing/yield.js';
 
 
 export interface SourcePositionFactory {
@@ -93,4 +94,5 @@ export interface NodeFactory {
 	createChainExpression(expression: ExpressionNode, range?: [number, number]): ChainExpression;
 	createLogicalExpression(operator: LogicalOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number],): LogicalExpression;
 	createConditionalExpression(test: ExpressionNode, alternate: ExpressionNode, consequent: ExpressionNode, range?: [number, number]): ConditionalExpression;
+	createYieldExpression(delegate: boolean, argument?: ExpressionNode, range?: [number, number]): YieldExpression;
 }
