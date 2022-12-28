@@ -1,11 +1,11 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
 import { TemplateStringLiteral, TokenStream } from './stream.js';
-import { Identifier, TaggedTemplateExpression, TemplateLiteral, Literal, ThisExpression } from '../api/definition/values.js';
+import { Identifier, TaggedTemplateExpression, TemplateLiteral, Literal } from '../api/definition/values.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import {
-	ArrowFunctionExpression, Param,
+	Param,
 	FunctionExpression, FunctionDeclaration
 } from '../api/definition/function.js';
 import { NewExpression } from '../api/computing/new.js';
@@ -14,21 +14,14 @@ import { RestElement } from '../api/computing/rest.js';
 import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
 import { GroupingExpression } from '../api/operators/grouping.js';
 import { MemberExpression } from '../api/definition/member.js';
-import { BindExpression } from '../api/definition/bind.js';
-import { ObjectExpression, Property, ObjectPattern } from '../api/definition/object.js';
-import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
+import { ObjectExpression, Property } from '../api/definition/object.js';
+import { ArrayExpression } from '../api/definition/array.js';
 import { CallExpression } from '../api/computing/call.js';
 import { SwitchCase } from '../api/statement/control/switch.js';
-import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
-import { ReturnStatement } from '../api/computing/return.js';
-import { YieldExpression } from '../api/computing/yield.js';
 import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForAwaitOfNode, ForDeclaration } from '../api/statement/iterations/for.js';
-import { ConditionalExpression } from '../api/operators/ternary.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
-import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
+import { ForDeclaration } from '../api/statement/iterations/for.js';
+import { LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import { ChainExpression } from '../api/operators/chaining.js';
 import {
 	buildPostfixExpression, buildUnaryExpression,
 	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
