@@ -30,6 +30,7 @@ import { PipelineExpression } from '../api/operators/pipeline.js';
 import { CallExpression } from '../api/computing/call.js';
 import { BindExpression } from '../api/definition/bind.js';
 import { ChainExpression } from '../api/operators/chaining.js';
+import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -283,8 +284,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ChainExpression(expression, range, loc);
 	}
-
-
+	createLogicalExpression(operator: LogicalOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number],): LogicalExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new LogicalExpression(operator, left, right, range, loc);
+	}
 
 
 }

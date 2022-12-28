@@ -29,6 +29,7 @@ import { PipelineExpression } from '../api/operators/pipeline.js';
 import { CallExpression } from '../api/computing/call.js';
 import { BindExpression } from '../api/definition/bind.js';
 import { ChainExpression } from '../api/operators/chaining.js';
+import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 
 
 export interface SourcePositionFactory {
@@ -89,4 +90,5 @@ export interface NodeFactory {
 	createCallExpression(callee: ExpressionNode, params: ExpressionNode[], optional?: boolean, range?: [number, number]): CallExpression;
 	createBindExpression(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): BindExpression;
 	createChainExpression(expression: ExpressionNode, range?: [number, number]): ChainExpression;
+	createLogicalExpression(operator: LogicalOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number],): LogicalExpression;
 }

@@ -2554,7 +2554,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		expression = list.pop()!;
 		expression = list.reverse()
-			.reduce((previous, current) => new LogicalExpression(Token.NULLISH.getName() as LogicalOperator, current, previous), expression);
+			.reduce((previous, current) => this.factory.createLogicalExpression(Token.NULLISH.getName() as LogicalOperator, current, previous), expression);
 		return expression;
 	}
 	protected parseConditionalContinuation(expression: ExpressionNode): ExpressionNode {
