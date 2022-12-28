@@ -1,5 +1,5 @@
 import type { NodeFactory, SourcePositionFactory } from './node.js';
-import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, Super } from '../api/class/class.js';
+import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, StaticBlock, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { DeclarationExpression, ExpressionNode, SourceLocation } from '../api/expression.js';
@@ -310,6 +310,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createClassExpression(body: ClassBody, decorators: Decorator[], id?: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ClassExpression(body, decorators, id, superClass, range, loc);
+	}
+	createClassStaticBlockDeclaration(body: ExpressionNode[], range?: [number, number]): StaticBlock {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new StaticBlock(body, range, loc);
 	}
 
 }

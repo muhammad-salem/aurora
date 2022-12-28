@@ -399,7 +399,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case PropertyKind.Shorthand:
 			case PropertyKind.Spread:
 				// throw new Error(this.errorMessage('Report Unexpected Token'));
-				return new Literal<null>(null);
+				return this.factory.createNull(propInfo.rangeStart?.range);
 		}
 		throw new Error(this.errorMessage('UNREACHABLE'));
 	}
@@ -434,12 +434,12 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const block = this.parseBlock();
 		this.restoreStatue();
 		classInfo.hasStaticElements = true;
-		return new StaticBlock(block.getBody());
+		return this.factory.createClassStaticBlockDeclaration(block.getBody(), block.range);
 	}
 	protected declareClass(variableName: string, value: ExpressionNode, names: string[] | undefined): ExpressionNode {
 		names?.push(variableName);
 		const proxy = this.declareVariable(variableName, 'let');
-		return new AssignmentExpression('=', proxy, value);
+		return this.factory.createAssignment('=', proxy, value);
 	}
 	protected declareVariable(name: string, mode: 'let' | 'const' | 'var') {
 		return new VariableDeclarationNode([new VariableDeclarator(new Identifier(name))], mode);
