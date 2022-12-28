@@ -436,14 +436,6 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		classInfo.hasStaticElements = true;
 		return this.factory.createClassStaticBlockDeclaration(block.getBody(), block.range);
 	}
-	protected declareClass(variableName: string, value: ExpressionNode, names: string[] | undefined): ExpressionNode {
-		names?.push(variableName);
-		const proxy = this.declareVariable(variableName, 'let');
-		return this.factory.createAssignment('=', proxy, value);
-	}
-	protected declareVariable(name: string, mode: 'let' | 'const' | 'var') {
-		return new VariableDeclarationNode([new VariableDeclarator(new Identifier(name))], mode);
-	}
 	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode | undefined, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
 		switch (kind) {
 			case ClassLiteralPropertyKind.METHOD:
