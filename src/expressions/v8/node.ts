@@ -30,6 +30,7 @@ import { CallExpression } from '../api/computing/call.js';
 import { BindExpression } from '../api/definition/bind.js';
 import { ChainExpression } from '../api/operators/chaining.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
+import { ConditionalExpression } from '../api/operators/ternary.js';
 
 
 export interface SourcePositionFactory {
@@ -91,4 +92,5 @@ export interface NodeFactory {
 	createBindExpression(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): BindExpression;
 	createChainExpression(expression: ExpressionNode, range?: [number, number]): ChainExpression;
 	createLogicalExpression(operator: LogicalOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number],): LogicalExpression;
+	createConditionalExpression(test: ExpressionNode, alternate: ExpressionNode, consequent: ExpressionNode, range?: [number, number]): ConditionalExpression;
 }

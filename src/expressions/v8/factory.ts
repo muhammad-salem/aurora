@@ -31,6 +31,7 @@ import { CallExpression } from '../api/computing/call.js';
 import { BindExpression } from '../api/definition/bind.js';
 import { ChainExpression } from '../api/operators/chaining.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
+import { ConditionalExpression } from '../api/operators/ternary.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -288,6 +289,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new LogicalExpression(operator, left, right, range, loc);
 	}
-
+	createConditionalExpression(test: ExpressionNode, alternate: ExpressionNode, consequent: ExpressionNode, range?: [number, number]): ConditionalExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ConditionalExpression(test, alternate, consequent, range, loc);
+	}
 
 }

@@ -2564,7 +2564,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.restoreAcceptIN();
 		this.expect(Token.COLON);
 		const right = this.parseAssignmentExpression();
-		return new ConditionalExpression(expression, left, right);
+		return this.factory.createConditionalExpression(expression, left, right);
 	}
 	protected parseYieldExpression(): ExpressionNode {
 		// YieldExpression ::
