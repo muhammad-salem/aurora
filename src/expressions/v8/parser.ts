@@ -112,7 +112,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			isStrictReserved = Token.isStrictReservedWord(this.current().token);
 		}
 		const classLiteral = this.parseClassLiteral(name, isStrictReserved);
-		return new ClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
+		return this.factory.createClassExpression(classLiteral.getBody(), classLiteral.getDecorators(), classLiteral.getId()!, classLiteral.getSuperClass());
 	}
 	protected override parseClassDeclaration(names: string[] | undefined, defaultExport: boolean, start: PositionMark): ClassDeclaration {
 		// ClassDeclaration ::

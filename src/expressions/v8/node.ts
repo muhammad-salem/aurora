@@ -1,5 +1,5 @@
 import type { ExpressionNode, SourceLocation } from '../api/expression.js';
-import { ClassBody, ClassDeclaration, MetaProperty, Super } from '../api/class/class.js';
+import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { UnaryExpression } from '../api/operators/unary.js';
@@ -98,4 +98,5 @@ export interface NodeFactory {
 	createYieldExpression(delegate: boolean, argument?: ExpressionNode, range?: [number, number]): YieldExpression;
 	createMetaProperty(meta: Identifier, property: Identifier, range?: [number, number]): MetaProperty;
 	createProgram(sourceType: ProgramSourceType, body: ExpressionNode[], range?: [number, number]): Program;
+	createClassExpression(body: ClassBody, decorators: Decorator[], id?: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassExpression;
 }
