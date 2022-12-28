@@ -33,6 +33,7 @@ import { ChainExpression } from '../api/operators/chaining.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
+import { Program, ProgramSourceType } from '../api/program.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -301,5 +302,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createMetaProperty(meta: Identifier, property: Identifier, range?: [number, number]): MetaProperty {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new MetaProperty(meta, property, range, loc);
+	}
+	createProgram(sourceType: ProgramSourceType, body: ExpressionNode[], range?: [number, number]): Program {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new Program(sourceType, body, range, loc);
 	}
 }

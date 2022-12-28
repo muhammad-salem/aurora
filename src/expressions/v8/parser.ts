@@ -82,12 +82,14 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	}
 
 	override scan(): Program {
+		const range = this.createStartPosition();
 		const isModule = isStrict(this.languageMode);
 		if (isModule) {
 			this.setFunctionKind(FunctionKind.Module);
 		}
 		const body = isModule ? this.parseModuleItemList() : this.parseStatementList(Token.EOS);
-		return new Program(isModule ? 'module' : 'script', body);
+		this.updateRangeEnd(range);
+		return this.factory.createProgram(isModule ? 'module' : 'script', body, range);
 	}
 	protected override parseNewTargetExpression(start?: PositionMark): ExpressionNode {
 		this.consume(Token.PERIOD);
