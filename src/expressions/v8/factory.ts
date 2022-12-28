@@ -28,6 +28,7 @@ import { AssignmentExpression, AssignmentOperator } from '../api/operators/assig
 import { MemberExpression } from '../api/definition/member.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
 import { CallExpression } from '../api/computing/call.js';
+import { BindExpression } from '../api/definition/bind.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -272,6 +273,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createCallExpression(callee: ExpressionNode, params: ExpressionNode[], optional?: boolean, range?: [number, number]): CallExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new CallExpression(callee, params, optional, range, loc);
+	}
+	createBindExpression(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): BindExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new BindExpression(object, property, computed, optional, range, loc);
 	}
 
 

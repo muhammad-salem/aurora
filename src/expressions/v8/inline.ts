@@ -2490,7 +2490,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					}
 					this.consume(Token.BIND);
 					const key = this.parsePropertyOrPrivatePropertyName();
-					result = new BindExpression(result, key, false, isOptional);
+					result = this.factory.createBindExpression(result, key, false, isOptional, this.createRange(result));
 					break;
 				}
 
@@ -2503,7 +2503,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					isOptional = true;
 					optionalChaining = true;
 					const key = this.parsePropertyOrPrivatePropertyName();
-					result = new BindExpression(result, key, true, isOptional);
+					result = this.factory.createBindExpression(result, key, true, isOptional, this.createRange(result));
 					break;
 				}
 
