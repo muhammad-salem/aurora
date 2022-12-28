@@ -481,7 +481,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// the ClassExpression* handle this
 	}
 	protected parseSuperExpression(): ExpressionNode {
-		this.consume(Token.SUPER);
+		const superToken = this.consume(Token.SUPER);
 		if (Token.isProperty(this.peek().token)) {
 			if (this.peek().isType(Token.PERIOD) && this.peekAhead().isType(Token.PRIVATE_NAME)) {
 				this.consume(Token.PERIOD);
@@ -492,7 +492,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				this.consume(Token.QUESTION_PERIOD);
 				throw new Error(this.errorMessage('Optional Chaining No Super'));
 			}
-			return new Super();
+			return this.factory.createSuper(superToken.range);
 		}
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
