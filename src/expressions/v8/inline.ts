@@ -2521,7 +2521,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			}
 		} while (Token.isPropertyOrCall(this.peek().token));
 		if (optionalChaining) {
-			result = new ChainExpression(result);
+			result = this.factory.createChainExpression(result, this.createRange(result));
 		}
 		return result;
 	}

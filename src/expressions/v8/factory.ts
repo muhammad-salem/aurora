@@ -29,6 +29,7 @@ import { MemberExpression } from '../api/definition/member.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
 import { CallExpression } from '../api/computing/call.js';
 import { BindExpression } from '../api/definition/bind.js';
+import { ChainExpression } from '../api/operators/chaining.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -278,6 +279,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new BindExpression(object, property, computed, optional, range, loc);
 	}
+	createChainExpression(expression: ExpressionNode, range?: [number, number]): ChainExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ChainExpression(expression, range, loc);
+	}
+
 
 
 
