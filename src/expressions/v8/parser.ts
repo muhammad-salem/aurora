@@ -1,6 +1,5 @@
 import type { ExpressionNode } from '../api/expression.js';
-import { InlineParserOptions, JavaScriptInlineParser, PositionMark } from './inline.js';
-import { Token, TokenExpression } from './token.js';
+import type { NodeFactory } from './node.js';
 import {
 	AccessorProperty,
 	Class,
@@ -13,11 +12,10 @@ import {
 } from '../api/class/class.js';
 import { FunctionExpression } from '../api/definition/function.js';
 import { Identifier, Literal } from '../api/definition/values.js';
-import { TokenStream } from './stream.js';
-import { Program } from '../api/program.js';
+import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
 import { ExportDefaultDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportSpecifier } from '../api/module/import.js';
-import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
+import { Program } from '../api/program.js';
 import {
 	ClassInfo,
 	ClassLiteralProperty,
@@ -33,11 +31,13 @@ import {
 	PropertyPosition,
 	VariableDeclarationContext
 } from './enums.js';
+import { InlineParserOptions, JavaScriptInlineParser, PositionMark } from './inline.js';
+import { TokenStream } from './stream.js';
+import { Token, TokenExpression } from './token.js';
 
-import { isStrict, LanguageMode, } from './language.js';
-import type { NodeFactory } from './node.js';
-import { ExpressionNodeFactory } from './factory.js';
 import { WithStatement } from '../api/statement/control/with.js';
+import { ExpressionNodeFactory } from './factory.js';
+import { isStrict, LanguageMode } from './language.js';
 
 export type ParserOptions = { mode?: LanguageMode, factory?: NodeFactory };
 

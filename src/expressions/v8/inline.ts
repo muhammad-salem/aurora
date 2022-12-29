@@ -1,25 +1,30 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
-import { Token, TokenExpression } from './token.js';
-import { TemplateStringLiteral, TokenStream } from './stream.js';
-import { Identifier, TaggedTemplateExpression, TemplateLiteral, Literal } from '../api/definition/values.js';
-import { EmptyStatement } from '../api/statement/control/empty.js';
-import { BlockStatement } from '../api/statement/control/block.js';
-import { FunctionExpression, FunctionDeclaration } from '../api/definition/function.js';
+import type { NodeFactory } from './node.js';
+import {
+	ClassDeclaration, ClassExpression, PrivateIdentifier, Super
+} from '../api/class/class.js';
+import { CallExpression } from '../api/computing/call.js';
 import { NewExpression } from '../api/computing/new.js';
-import { SpreadElement } from '../api/computing/spread.js';
 import { RestElement } from '../api/computing/rest.js';
-import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
-import { GroupingExpression } from '../api/operators/grouping.js';
+import { SpreadElement } from '../api/computing/spread.js';
+import { ArrayExpression } from '../api/definition/array.js';
+import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 import { MemberExpression } from '../api/definition/member.js';
 import { ObjectExpression, Property } from '../api/definition/object.js';
-import { ArrayExpression } from '../api/definition/array.js';
-import { CallExpression } from '../api/computing/call.js';
-import { SwitchCase } from '../api/statement/control/switch.js';
-import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/declarations/declares.js';
-import { ForDeclaration } from '../api/statement/iterations/for.js';
-import { LogicalOperator } from '../api/operators/logical.js';
+import {
+	Identifier, Literal, TaggedTemplateExpression, TemplateLiteral
+} from '../api/definition/values.js';
+import {
+	AssignmentExpression, AssignmentOperator
+} from '../api/operators/assignment.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import { ClassDeclaration, ClassExpression, PrivateIdentifier, Super } from '../api/class/class.js';
+import { GroupingExpression } from '../api/operators/grouping.js';
+import { LogicalOperator } from '../api/operators/logical.js';
+import { BlockStatement } from '../api/statement/control/block.js';
+import { EmptyStatement } from '../api/statement/control/empty.js';
+import { SwitchCase } from '../api/statement/control/switch.js';
+import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
+import { ForDeclaration } from '../api/statement/iterations/for.js';
 import {
 	AllowLabelledFunctionStatement,
 	FunctionBodyType, FunctionInfo, FunctionKind,
@@ -30,13 +35,14 @@ import {
 	ParsingArrowHeadFlag, PropertyKind, PropertyKindInfo,
 	PropertyPosition, SubFunctionKind, VariableDeclarationContext
 } from './enums.js';
+import { TemplateStringLiteral, TokenStream } from './stream.js';
+import { Token, TokenExpression } from './token.js';
 
-import { isSloppy, isStrict, LanguageMode, } from './language.js';
-import type { NodeFactory } from './node.js';
-import { ExpressionNodeFactory } from './factory.js';
-import { UpdateOperator } from '../api/operators/update.js';
-import { UnaryOperator } from '../api/operators/unary.js';
 import { BinaryOperator } from '../api/operators/binary.js';
+import { UnaryOperator } from '../api/operators/unary.js';
+import { UpdateOperator } from '../api/operators/update.js';
+import { ExpressionNodeFactory } from './factory.js';
+import { isSloppy, isStrict, LanguageMode } from './language.js';
 
 
 

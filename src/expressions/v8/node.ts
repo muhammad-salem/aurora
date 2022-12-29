@@ -1,54 +1,72 @@
-import type { ExpressionNode, SourceLocation } from '../api/expression.js';
 import {
 	AccessorProperty, ClassBody, ClassDeclaration, ClassExpression,
 	MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier,
 	PropertyDefinition, StaticBlock, Super
 } from '../api/class/class.js';
-import { DebuggerStatement } from '../api/computing/debugger.js';
-import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
-import { UnaryExpression, UnaryOperator } from '../api/operators/unary.js';
-import { EmptyStatement } from '../api/statement/control/empty.js';
-import { BlockStatement } from '../api/statement/control/block.js';
-import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
-import { IfStatement } from '../api/statement/control/if.js';
-import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { ArrowFunctionExpression, AssignmentPattern, FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
-import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
-import { WithStatement } from '../api/statement/control/with.js';
-import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
-import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
-import { BreakStatement, ContinueStatement, LabeledStatement } from '../api/statement/control/terminate.js';
-import { ReturnStatement } from '../api/computing/return.js';
-import { DeclarationExpression } from '../api/expression.js';
-import { SpreadElement } from '../api/computing/spread.js';
-import { SequenceExpression } from '../api/operators/comma.js';
-import { NewExpression } from '../api/computing/new.js';
-import { ObjectExpression, ObjectPattern, Property } from '../api/definition/object.js';
-import { RestElement } from '../api/computing/rest.js';
-import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
-import { AssignmentExpression, AssignmentOperator } from '../api/operators/assignment.js';
-import { MemberExpression } from '../api/definition/member.js';
-import { PipelineExpression } from '../api/operators/pipeline.js';
 import { CallExpression } from '../api/computing/call.js';
-import { BindExpression } from '../api/definition/bind.js';
-import { ChainExpression } from '../api/operators/chaining.js';
-import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
-import { ConditionalExpression } from '../api/operators/ternary.js';
+import { DebuggerStatement } from '../api/computing/debugger.js';
+import { NewExpression } from '../api/computing/new.js';
+import { RestElement } from '../api/computing/rest.js';
+import { ReturnStatement } from '../api/computing/return.js';
+import { SpreadElement } from '../api/computing/spread.js';
+import {
+	CatchClauseNode, ThrowStatement, TryCatchNode
+} from '../api/computing/throw.js';
 import { YieldExpression } from '../api/computing/yield.js';
-import { Program, ProgramSourceType } from '../api/program.js';
+import { ArrayExpression, ArrayPattern } from '../api/definition/array.js';
+import { BindExpression } from '../api/definition/bind.js';
+import {
+	ArrowFunctionExpression, AssignmentPattern, FunctionDeclaration, FunctionExpression
+} from '../api/definition/function.js';
+import { MemberExpression } from '../api/definition/member.js';
+import {
+	ObjectExpression, ObjectPattern, Property
+} from '../api/definition/object.js';
+import {
+	Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression
+} from '../api/definition/values.js';
+import type { ExpressionNode, SourceLocation } from '../api/expression.js';
+import { DeclarationExpression } from '../api/expression.js';
+import { ImportAttribute } from '../api/module/common.js';
 import {
 	ExportAllDeclaration, ExportDefaultDeclaration,
 	ExportNamedDeclaration, ExportSpecifier
 } from '../api/module/export.js';
-import { ImportAttribute } from '../api/module/common.js';
 import {
 	ImportDeclaration, ImportDefaultSpecifier, ImportExpression,
 	ImportNamespaceSpecifier, ImportSpecifier
 } from '../api/module/import.js';
-import { BinaryExpression, BinaryOperator } from '../api/operators/binary.js';
-import { UpdateExpression, UpdateOperator } from '../api/operators/update.js';
+import {
+	AssignmentExpression, AssignmentOperator
+} from '../api/operators/assignment.js';
 import { AwaitExpression } from '../api/operators/await.js';
+import { BinaryExpression, BinaryOperator } from '../api/operators/binary.js';
+import { ChainExpression } from '../api/operators/chaining.js';
+import { SequenceExpression } from '../api/operators/comma.js';
+import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
+import { PipelineExpression } from '../api/operators/pipeline.js';
+import { ConditionalExpression } from '../api/operators/ternary.js';
+import { UnaryExpression, UnaryOperator } from '../api/operators/unary.js';
+import { UpdateExpression, UpdateOperator } from '../api/operators/update.js';
+import { Program, ProgramSourceType } from '../api/program.js';
+import { BlockStatement } from '../api/statement/control/block.js';
+import { EmptyStatement } from '../api/statement/control/empty.js';
+import { IfStatement } from '../api/statement/control/if.js';
+import {
+	DefaultExpression, SwitchCase, SwitchStatement
+} from '../api/statement/control/switch.js';
+import {
+	BreakStatement, ContinueStatement, LabeledStatement
+} from '../api/statement/control/terminate.js';
+import { WithStatement } from '../api/statement/control/with.js';
+import {
+	VariableDeclarationNode, VariableDeclarator
+} from '../api/statement/declarations/declares.js';
+import {
+	ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode
+} from '../api/statement/iterations/for.js';
+import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 
 
 export interface SourcePositionFactory {
