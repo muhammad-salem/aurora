@@ -14,7 +14,7 @@ import { RestElement } from '../computing/rest.js';
 import { BlockStatement } from '../statement/control/block.js';
 
 @Deserializer('AssignmentPattern')
-export class AssignmentPattern extends AbstractExpressionNode {
+export class AssignmentPattern extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: AssignmentPattern, deserializer: NodeDeserializer): AssignmentPattern {
 		return new AssignmentPattern(
 			deserializer(node.left) as DeclarationExpression,
@@ -41,13 +41,16 @@ export class AssignmentPattern extends AbstractExpressionNode {
 		return this.right;
 	}
 	set(stack: Stack, value?: Function) {
+		throw new Error('AssignmentPattern#set() has no implementation.');
+	}
+	get(stack: Stack) {
+		throw new Error('AssignmentPattern#get() has no implementation.');
+	}
+	declareVariable(stack: Stack, value?: any) {
 		if (value === undefined) {
 			value = this.right.get(stack);
 		}
 		this.left.declareVariable(stack, value);
-	}
-	get(stack: Stack) {
-		throw new Error('AssignmentPattern#get() has no implementation.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
 		return [this.right];
@@ -70,7 +73,7 @@ export class AssignmentPattern extends AbstractExpressionNode {
 export class FunctionExpression extends AbstractExpressionNode {
 	static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
 		return new FunctionExpression(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			deserializer(node.body),
 			node.async,
 			node.generator,
@@ -85,7 +88,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 		visitNode(node.body);
 	}
 	constructor(
-		protected params: ExpressionNode[],
+		protected params: DeclarationExpression[],
 		protected body: ExpressionNode,
 		protected async: boolean,
 		protected generator: boolean,
@@ -116,10 +119,10 @@ export class FunctionExpression extends AbstractExpressionNode {
 		const rest = this.params[this.params.length - 1] instanceof RestElement;
 		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.params[i].set(stack, args[i]);
+			this.params[i].declareVariable(stack, args[i]);
 		}
 		if (rest) {
-			this.params[limit].set(stack, args.slice(limit));
+			this.params[limit].declareVariable(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {
@@ -321,7 +324,7 @@ export class FunctionExpression extends AbstractExpressionNode {
 export class FunctionDeclaration extends FunctionExpression implements DeclarationExpression {
 	static fromJSON(node: FunctionDeclaration, deserializer: NodeDeserializer): FunctionDeclaration {
 		return new FunctionDeclaration(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			deserializer(node.body),
 			node.async,
 			node.generator,
@@ -337,7 +340,7 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 	}
 	declare protected id: Identifier;
 	constructor(
-		params: ExpressionNode[],
+		params: DeclarationExpression[],
 		body: ExpressionNode,
 		async: boolean,
 		generator: boolean,
@@ -361,7 +364,7 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 export class ArrowFunctionExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
 		return new ArrowFunctionExpression(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			Array.isArray(node.body)
 				? node.body.map(deserializer)
 				: deserializer(node.body),
@@ -379,7 +382,7 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 	}
 	private generator = false;
 	constructor(
-		private params: ExpressionNode[],
+		private params: DeclarationExpression[],
 		private body: ExpressionNode | ExpressionNode[],
 		private expression: boolean,
 		private async: boolean,
@@ -403,10 +406,10 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		const rest = this.params[this.params.length - 1] instanceof RestElement;
 		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.params[i].set(stack, args[i]);
+			this.params[i].declareVariable(stack, args[i]);
 		}
 		if (rest) {
-			this.params[limit].set(stack, args.slice(limit));
+			this.params[limit].declareVariable(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {
