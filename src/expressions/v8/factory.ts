@@ -333,5 +333,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ExportNamedDeclaration(specifiers, declaration, source, assertions, range, loc);
 	}
+	createExportSpecifier(local: Identifier, exported: Identifier, range?: [number, number]): ExportSpecifier {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ExportSpecifier(local, exported, range, loc);
+	}
 
 }

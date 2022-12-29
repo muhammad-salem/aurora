@@ -658,7 +658,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case Token.FUNCTION: {
 				const declaration = this.parseFunctionDeclaration();
 				const identifier = declaration.getId()!;
-				result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
+				const specifier = this.factory.createExportSpecifier(identifier, identifier, identifier.range);
+				result = this.factory.createNamespaceExportDeclaration([specifier], declaration, undefined, undefined, this.createRange(start));
 				break;
 			}
 
@@ -666,7 +667,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				const classToken = this.consume(Token.CLASS);
 				const declaration = this.parseClassDeclaration(names, false, classToken);
 				const identifier = declaration.getId()!;
-				result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
+				const specifier = this.factory.createExportSpecifier(identifier, identifier, identifier.range);
+				result = this.factory.createNamespaceExportDeclaration([specifier], declaration, undefined, undefined, this.createRange(start));
 				break;
 			}
 
@@ -675,7 +677,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			case Token.CONST:
 				const declaration = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
 				const specifiers = declaration.getDeclarations()
-					.map(node => new ExportSpecifier(node.getId() as Identifier, node.getId() as Identifier));
+					.map(node => this.factory.createExportSpecifier(node.getId() as Identifier, node.getId() as Identifier, node.getId().range));
 				result = this.factory.createNamespaceExportDeclaration(specifiers, declaration, undefined, undefined, this.createRange(start));
 				break;
 
@@ -684,7 +686,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
 					const declaration = this.parseAsyncFunctionDeclaration(names, false, asyncToken);
 					const identifier = declaration.getId()!;
-					result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
+					const specifier = this.factory.createExportSpecifier(identifier, identifier, identifier.range);
+					result = this.factory.createNamespaceExportDeclaration([specifier], declaration, undefined, undefined, this.createRange(start));
 					break;
 				}
 
