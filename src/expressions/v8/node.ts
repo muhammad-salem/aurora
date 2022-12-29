@@ -1,5 +1,9 @@
 import type { ExpressionNode, SourceLocation } from '../api/expression.js';
-import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
+import {
+	AccessorProperty, ClassBody, ClassDeclaration, ClassExpression,
+	MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier,
+	PropertyDefinition, StaticBlock, Super
+} from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { UnaryExpression } from '../api/operators/unary.js';
@@ -33,9 +37,15 @@ import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js'
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
-import { ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import {
+	ExportAllDeclaration, ExportDefaultDeclaration,
+	ExportNamedDeclaration, ExportSpecifier
+} from '../api/module/export.js';
 import { ImportAttribute } from '../api/module/common.js';
-import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
+import {
+	ImportDeclaration, ImportDefaultSpecifier, ImportExpression,
+	ImportNamespaceSpecifier, ImportSpecifier
+} from '../api/module/import.js';
 
 
 export interface SourcePositionFactory {
@@ -115,4 +125,5 @@ export interface NodeFactory {
 	createImportExpression(source: Literal<string>, attributes?: ExpressionNode, range?: [number, number]): ImportExpression;
 	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute;
 	createExportDefault(declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode, range?: [number, number],): ExportDefaultDeclaration;
+	createExportAllDeclaration(source: Literal<string>, exported?: Identifier, assertions?: ImportAttribute[], range?: [number, number]): ExportAllDeclaration;
 }

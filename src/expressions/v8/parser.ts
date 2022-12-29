@@ -593,7 +593,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				return this.parseExportDefault(start);
 
 			case Token.MUL:
-				return this.parseExportStar();
+				return this.parseExportStar(start);
 
 			case Token.LBRACE: {
 				// There are two cases here:
@@ -1077,7 +1077,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 		return this.factory.createExportDefault(result, this.createRange(start));
 	}
-	protected parseExportStar(): ExpressionNode | undefined {
+	protected parseExportStar(start: PositionMark): ExpressionNode | undefined {
 		this.consume(Token.MUL);
 
 		if (!this.peekContextualKeyword('as')) {
@@ -1089,7 +1089,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			const importAssertions = this.parseImportAssertClause();
 			this.expectSemicolon();
 			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
-			return new ExportAllDeclaration(moduleSpecifier, undefined, importAssertions);
+			return this.factory.createExportAllDeclaration(moduleSpecifier, undefined, importAssertions, this.createRange(start));
 		}
 
 		// 'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
@@ -1120,7 +1120,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
 		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
-		return new ExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions);
+		return this.factory.createExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions, this.createRange(start));
 	}
 
 	protected parseWithStatement(): WithStatement {
