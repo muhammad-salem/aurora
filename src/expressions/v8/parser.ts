@@ -7,34 +7,16 @@ import {
 	ClassBody,
 	ClassDeclaration,
 	ClassExpression,
-	MetaProperty,
 	MethodDefinition,
 	PropertyDefinition,
-	StaticBlock,
-	Super
+	StaticBlock
 } from '../api/class/class.js';
 import { FunctionExpression } from '../api/definition/function.js';
 import { Identifier, Literal } from '../api/definition/values.js';
-import { AssignmentExpression } from '../api/operators/assignment.js';
-import {
-	VariableDeclarationNode,
-	VariableDeclarator
-} from '../api/statement/declarations/declares.js';
 import { TokenStream } from './stream.js';
 import { Program } from '../api/program.js';
-import {
-	ExportAllDeclaration,
-	ExportDefaultDeclaration,
-	ExportNamedDeclaration,
-	ExportSpecifier
-} from '../api/module/export.js';
-import {
-	ImportDeclaration,
-	ImportDefaultSpecifier,
-	ImportExpression,
-	ImportNamespaceSpecifier,
-	ImportSpecifier
-} from '../api/module/import.js';
+import { ExportDefaultDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ImportSpecifier } from '../api/module/import.js';
 import { ImportAttribute, ModuleSpecifier } from '../api/module/common.js';
 import {
 	ClassInfo,
