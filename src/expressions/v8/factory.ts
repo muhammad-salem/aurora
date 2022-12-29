@@ -1,5 +1,5 @@
 import type { NodeFactory, SourcePositionFactory } from './node.js';
-import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, StaticBlock, Super } from '../api/class/class.js';
+import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { DeclarationExpression, ExpressionNode, SourceLocation } from '../api/expression.js';
@@ -314,6 +314,14 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createClassStaticBlockDeclaration(body: ExpressionNode[], range?: [number, number]): StaticBlock {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new StaticBlock(body, range, loc);
+	}
+	createMethodSignature(kind: MethodDefinitionKind, key: ExpressionNode | PrivateIdentifier, value: FunctionExpression, decorators: Decorator[], computed: boolean, isStatic: boolean, range?: [number, number]): MethodDefinition {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new MethodDefinition(kind, key, value, decorators, computed, isStatic, range, loc);
+	}
+	createPropertySignature(key: ExpressionNode | PrivateIdentifier, decorators: Decorator[], computed: boolean, isStatic: boolean, value?: ExpressionNode, range?: [number, number]): PropertyDefinition {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new PropertyDefinition(key, decorators, computed, isStatic, value, range, loc);
 	}
 
 }

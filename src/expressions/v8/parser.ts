@@ -325,7 +325,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					ClassLiteralPropertyKind.FIELD,
 					propInfo.isStatic,
 					propInfo.isComputedName,
-					propInfo.isPrivate
+					propInfo.isPrivate,
+					propInfo.rangeStart
 				);
 				this.setFunctionNameFromPropertyName(result, propInfo.name);
 				return result;
@@ -355,7 +356,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				const result = this.newClassLiteralProperty(
 					nameExpression, value, ClassLiteralProperty.Kind.METHOD,
 					propInfo.isStatic, propInfo.isComputedName,
-					propInfo.isPrivate);
+					propInfo.isPrivate,
+					propInfo.rangeStart
+				);
 				this.setFunctionNameFromPropertyName(result, propInfo.name);
 				return result;
 			}
@@ -390,7 +393,9 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				const result = this.newClassLiteralProperty(
 					nameExpression, value, propertyKind,
 					propInfo.isStatic, propInfo.isComputedName,
-					propInfo.isPrivate);
+					propInfo.isPrivate,
+					propInfo.rangeStart
+				);
 				const prefix = isGet ? 'get ' : 'set ';
 				this.setFunctionNameFromPropertyName(result, propInfo.name, prefix);
 				return result;
@@ -436,19 +441,27 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		classInfo.hasStaticElements = true;
 		return this.factory.createClassStaticBlockDeclaration(block.getBody(), block.range);
 	}
-	protected newClassLiteralProperty(nameExpression: ExpressionNode, initializer: ExpressionNode | undefined, kind: ClassLiteralPropertyKind, isStatic: boolean, isComputedName: boolean, isPrivate: boolean) {
+	protected newClassLiteralProperty(
+		nameExpression: ExpressionNode,
+		initializer: ExpressionNode | undefined,
+		kind: ClassLiteralPropertyKind,
+		isStatic: boolean,
+		isComputedName: boolean,
+		isPrivate: boolean,
+		start: PositionMark) {
+		const range = this.createRange(start);
 		switch (kind) {
 			case ClassLiteralPropertyKind.METHOD:
 				if (nameExpression.toString() === 'constructor') {
-					return new MethodDefinition('constructor', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+					return this.factory.createMethodSignature('constructor', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic, range);
 				}
-				return new MethodDefinition('method', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+				return this.factory.createMethodSignature('method', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic, range);
 			case ClassLiteralPropertyKind.GETTER:
-				return new MethodDefinition('get', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+				return this.factory.createMethodSignature('get', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic, range);
 			case ClassLiteralPropertyKind.SETTER:
-				return new MethodDefinition('set', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic);
+				return this.factory.createMethodSignature('set', nameExpression, initializer as FunctionExpression, [], isComputedName, isStatic, range);
 			case ClassLiteralPropertyKind.FIELD:
-				return new PropertyDefinition(nameExpression, [], isComputedName, isStatic, initializer);
+				return this.factory.createPropertySignature(nameExpression, [], isComputedName, isStatic, initializer, range);
 			default:
 				break;
 		}
