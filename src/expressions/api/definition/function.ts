@@ -13,57 +13,58 @@ import { TerminateReturnType } from '../statement/control/terminate.js';
 import { RestElement } from '../computing/rest.js';
 import { BlockStatement } from '../statement/control/block.js';
 
-@Deserializer('Param')
-export class Param extends AbstractExpressionNode {
-	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
-		return new Param(
-			deserializer(node.identifier) as DeclarationExpression,
-			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0,
+@Deserializer('AssignmentPattern')
+export class AssignmentPattern extends AbstractExpressionNode {
+	static fromJSON(node: AssignmentPattern, deserializer: NodeDeserializer): AssignmentPattern {
+		return new AssignmentPattern(
+			deserializer(node.left) as DeclarationExpression,
+			deserializer(node.right),
 			node.range,
 			node.loc
 		);
 	}
-	static visit(node: Param, visitNode: VisitNodeType): void {
-		visitNode(node.identifier);
-		node.defaultValue && visitNode(node.defaultValue);
+	static visit(node: AssignmentPattern, visitNode: VisitNodeType): void {
+		visitNode(node.left);
+		visitNode(node.right);
 	}
 	constructor(
-		private identifier: DeclarationExpression,
-		private defaultValue?: ExpressionNode,
+		private left: DeclarationExpression,
+		private right: ExpressionNode,
 		range?: [number, number],
 		loc?: SourceLocation) {
 		super(range, loc);
 	}
-	getIdentifier() {
-		return this.identifier;
+	getLeft() {
+		return this.left;
 	}
-	getDefaultValue() {
-		return this.defaultValue;
+	getRight() {
+		return this.right;
 	}
-	set(stack: Stack, value: Function) {
-		this.identifier.declareVariable?.(stack, value);
+	set(stack: Stack, value?: Function) {
+		if (value === undefined) {
+			value = this.right.get(stack);
+		}
+		this.left.declareVariable(stack, value);
 	}
 	get(stack: Stack) {
-		throw new Error('Param#get() has no implementation.');
+		throw new Error('AssignmentPattern#get() has no implementation.');
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		return this.defaultValue ? [this.defaultValue] : [];
+		return [this.right];
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		return this.defaultValue?.dependencyPath(computed) || [];
+		return this.right.dependencyPath(computed) || [];
 	}
 	toString(): string {
-		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
-		return this.identifier.toString() + init;
+		return `${this.left.toString()} = ${this.right.toString()}`;
 	}
 	toJson(): object {
 		return {
-			identifier: this.identifier.toJSON(),
-			defaultValue: this.defaultValue?.toJSON()
+			left: this.left.toJSON(),
+			right: this.right.toJSON()
 		};
 	}
 }
-
 
 @Deserializer('FunctionExpression')
 export class FunctionExpression extends AbstractExpressionNode {
