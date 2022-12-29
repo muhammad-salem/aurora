@@ -1,5 +1,5 @@
 import type { ExpressionNode, SourceLocation } from '../api/expression.js';
-import { ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
+import { AccessorProperty, ClassBody, ClassDeclaration, ClassExpression, MetaProperty, MethodDefinition, MethodDefinitionKind, PrivateIdentifier, PropertyDefinition, StaticBlock, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { UnaryExpression } from '../api/operators/unary.js';
@@ -102,4 +102,5 @@ export interface NodeFactory {
 	createClassStaticBlockDeclaration(body: ExpressionNode[], range?: [number, number]): StaticBlock;
 	createMethodSignature(kind: MethodDefinitionKind, key: ExpressionNode | PrivateIdentifier, value: FunctionExpression, decorators: Decorator[], computed: boolean, isStatic: boolean, range?: [number, number]): MethodDefinition;
 	createPropertySignature(key: ExpressionNode | PrivateIdentifier, decorators: Decorator[], computed: boolean, isStatic: boolean, value?: ExpressionNode, range?: [number, number]): PropertyDefinition;
+	createClassBody(body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[], range?: [number, number]): ClassBody;
 }

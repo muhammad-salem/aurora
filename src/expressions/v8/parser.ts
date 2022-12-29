@@ -175,7 +175,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			classInfo.extends = this.parseLeftHandSideExpression();
 		}
 
-		this.expect(Token.LBRACE);
+		const bodyStart = this.expect(Token.LBRACE);
 
 		const hasExtends = !!classInfo.extends;
 
@@ -232,8 +232,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			this.declarePublicClassMethod(name, property as MethodDefinition, isConstructor, classInfo);
 		}
 
-		this.expect(Token.RBRACE);
-		const classBody = this.rewriteClassLiteral(classInfo, name);
+		const bodyEnd = this.expect(Token.RBRACE);
+		const classBody = this.rewriteClassLiteral(classInfo, name, [bodyStart.range[0], bodyEnd.range[1]]);
 		return new Class(classBody, [], name as Identifier, classInfo.extends);
 	}
 	protected declarePublicClassMethod(name: ExpressionNode | undefined, property: MethodDefinition, isConstructor: boolean, classInfo: ClassInfo): void {
@@ -471,8 +471,6 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		const kind = isStatic
 			? FunctionKind.ClassStaticInitializerFunction
 			: FunctionKind.ClassMembersInitializerFunction;
-
-
 		let initializer: ExpressionNode | undefined = undefined;
 		if (this.check(Token.ASSIGN)) {
 			this.setStatue(true, kind);
@@ -507,7 +505,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		}
 		throw new Error(this.errorMessage('Unexpected Super'));
 	}
-	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode): ClassBody {
+	protected rewriteClassLiteral(classInfo: ClassInfo, name?: ExpressionNode, range?: [number, number]): ClassBody {
 		const body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[] = [];
 		if (classInfo.hasSeenConstructor) {
 			body.push(classInfo.constructor as MethodDefinition);
@@ -516,7 +514,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		body.push(...classInfo.instanceFields);
 		body.push(...classInfo.publicMembers);
 		body.push(...classInfo.privateMembers);
-		return new ClassBody(body);
+		return this.factory.createClassBody(body, range);
 	}
 	protected parseModuleItemList(): ExpressionNode[] {
 		// ecma262/#prod-Module
