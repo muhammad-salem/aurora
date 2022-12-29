@@ -890,7 +890,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			}
 			this.expect(Token.COLON);
 			const attributeValue = this.expectAndGetValue(Token.STRING);
-			importAssertions.push(new ImportAttribute(attributeKey as Identifier, attributeValue as Literal<string>));
+			importAssertions.push(this.factory.createAssertEntry(attributeKey as Identifier, attributeValue as Literal<string>, this.createRange(attributeKey)));
 			counts[attributeKey.toString()] = (counts[attributeKey.toString()] ?? 0) + 1;
 			if (counts[attributeKey.toString()] > 1) {
 				// 	// It is a syntax error if two AssertEntries have the same key.

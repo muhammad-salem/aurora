@@ -354,5 +354,8 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportExpression(source, attributes, range, loc);
 	}
-
+	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ImportAttribute(key, value, range, loc);
+	}
 }

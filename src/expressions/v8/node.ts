@@ -112,4 +112,5 @@ export interface NodeFactory {
 	createImportNamespaceSpecifier(local: Identifier, range?: [number, number]): ImportNamespaceSpecifier;
 	createImportDefaultSpecifier(local: Identifier, range?: [number, number]): ImportDefaultSpecifier;
 	createImportExpression(source: Literal<string>, attributes?: ExpressionNode, range?: [number, number]): ImportExpression;
+	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute;
 }
