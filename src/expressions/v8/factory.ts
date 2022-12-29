@@ -152,11 +152,11 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ClassDeclaration(body, decorators, id, superClass, range, loc);
 	}
-	createFunctionDeclaration(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration {
+	createFunctionDeclaration(formals: DeclarationExpression[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new FunctionDeclaration(formals, bodyBlock, isAsync, isGenerator, name, range, loc);
 	}
-	createFunctionExpression(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression {
+	createFunctionExpression(formals: DeclarationExpression[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new FunctionExpression(formals, bodyBlock, isAsync, isGenerator, undefined, range, loc);
 	}
@@ -268,7 +268,7 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new RestElement(argument, range, loc);
 	}
-	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression {
+	createArrowFunction(params: DeclarationExpression[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ArrowFunctionExpression(params, body, expression, async, range, loc);
 	}

@@ -69,8 +69,8 @@ export interface NodeFactory {
 	createIfStatement(condition: ExpressionNode, thenStatement: ExpressionNode, elseStatement?: ExpressionNode, range?: [number, number]): IfStatement;
 	createDoStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number]): DoWhileNode;
 	createClassDeclaration(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode, range?: [number, number]): ClassDeclaration;
-	createFunctionDeclaration(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration;
-	createFunctionExpression(formals: ExpressionNode[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression;
+	createFunctionDeclaration(formals: DeclarationExpression[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, name: Identifier, range?: [number, number]): FunctionDeclaration;
+	createFunctionExpression(formals: DeclarationExpression[], bodyBlock: BlockStatement, isAsync: boolean, isGenerator: boolean, range?: [number, number]): FunctionExpression;
 	createWhileStatement(condition: ExpressionNode, body: ExpressionNode, range?: [number, number]): WhileNode;
 	createSwitchStatement(tag: ExpressionNode, cases: SwitchCase[], range?: [number, number]): SwitchStatement;
 	createCaseBlock(test: ExpressionNode, block: BlockStatement, range?: [number, number]): SwitchCase;
@@ -98,7 +98,7 @@ export interface NodeFactory {
 	createArrayLiteralExpression(elements: (ExpressionNode | SpreadElement | null)[], range?: [number, number]): ArrayExpression;
 	createAssignment(operator: AssignmentOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression;
 	createRestElement(argument: DeclarationExpression, range?: [number, number]): RestElement;
-	createArrowFunction(params: ExpressionNode[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression;
+	createArrowFunction(params: DeclarationExpression[], body: ExpressionNode | ExpressionNode[], expression: boolean, async: boolean, range?: [number, number]): ArrowFunctionExpression;
 	createPropertyDeclaration(key: ExpressionNode, value: DeclarationExpression | ExpressionNode, kind: 'init' | 'get' | 'set', method: boolean, shorthand: boolean, computed: boolean, range?: [number, number]): Property;
 	createIdentifier(name: string, range?: [number, number]): Identifier;
 	createPropertyAssignment(object: ExpressionNode, property: ExpressionNode, computed: boolean, optional?: boolean, range?: [number, number]): MemberExpression;

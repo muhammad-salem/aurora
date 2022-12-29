@@ -1193,7 +1193,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.setFunctionKind(flag);
 		const functionInfo: FunctionInfo = {};
 		this.expect(Token.LPAREN);
-		const formals: ExpressionNode[] = this.parseFormalParameterList(functionInfo);
+		const formals = this.parseFormalParameterList(functionInfo);
 		this.expect(Token.RPAREN);
 		const bodyStart = this.expect(Token.LBRACE);
 		this.setAcceptIN(true);
@@ -1274,7 +1274,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return list;
 	}
-	protected parseFormalParameterList(functionInfo: FunctionInfo): ExpressionNode[] {
+	protected parseFormalParameterList(functionInfo: FunctionInfo): DeclarationExpression[] {
 		// FormalParameters[Yield] :
 		//   [empty]
 		//   FunctionRestParameter[?Yield]
@@ -1286,10 +1286,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   FormalParameter[?Yield]
 		//   FormalParameterList[?Yield] , FormalParameter[?Yield]
 
-		const parameters: ExpressionNode[] = [];
+		const parameters: DeclarationExpression[] = [];
 		if (this.peek().isNotType(Token.RPAREN)) {
 			while (true) {
-				const param: ExpressionNode = this.parseFormalParameter(functionInfo);
+				const param = this.parseFormalParameter(functionInfo);
 				parameters.push(param);
 				if (functionInfo.rest) {
 					if (this.peek().isType(Token.COMMA)) {
@@ -1306,13 +1306,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return parameters;
 	}
-	protected parseFormalParameter(functionInfo: FunctionInfo): ExpressionNode {
+	protected parseFormalParameter(functionInfo: FunctionInfo): DeclarationExpression {
 		// FormalParameter[Yield,GeneratorParameter] :
 		//   BindingElement[?Yield, ?GeneratorParameter]
 		const range = this.createStartPosition();
 		functionInfo.rest = this.check(Token.ELLIPSIS);
 		const pattern = this.parseBindingPattern(true);
-		let initializer: ExpressionNode;
+		let initializer: DeclarationExpression;
 		if (this.check(Token.ASSIGN)) {
 			if (functionInfo.rest) {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
@@ -1321,11 +1321,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			const right = this.parseAssignmentExpression();
 			this.restoreAcceptIN();
 			this.updateRangeEnd(range);
-			const left = this.checkParamType(pattern) as DeclarationExpression;
+			const left = this.checkParamType(pattern as DeclarationExpression);
 			initializer = this.factory.createAssignmentPattern(left, right, range);
 		} else {
 			this.updateRangeEnd(range);
-			const param = this.checkParamType(pattern) as DeclarationExpression;
+			const param = this.checkParamType(pattern as DeclarationExpression);
 			initializer = functionInfo.rest ? this.factory.createRestElement(param, param.range && [range[0], param.range[1]]) : param;
 		}
 		return initializer;
@@ -1436,7 +1436,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				this.setFunctionKind(kind);
 				const name = this.parseAndClassifyIdentifier(token);
 				const params = name instanceof SequenceExpression ? name.getExpressions() : [name];
-				const arrow = this.parseArrowFunctionLiteral(params, kind, this.createRange(token));
+				const arrow = this.parseArrowFunctionLiteral(params as DeclarationExpression[], kind, this.createRange(token));
 				this.restoreFunctionKind();
 				return arrow;
 			}
@@ -1678,12 +1678,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.setFunctionKind(kind);
 			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
-				arrow = this.parseArrowFunctionLiteral(expression.getExpressions(), FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral(expression.getExpressions() as DeclarationExpression[], FunctionKind.NormalFunction, range);
 			} else if (expression instanceof GroupingExpression) {
-				arrow = this.parseArrowFunctionLiteral([expression.getNode()], FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral([expression.getNode() as DeclarationExpression], FunctionKind.NormalFunction, range);
 			} else {
 				this.clearParenthesized(expression);
-				arrow = this.parseArrowFunctionLiteral([expression], FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral([expression as DeclarationExpression], FunctionKind.NormalFunction, range);
 			}
 			this.restoreFunctionKind();
 			return arrow;
@@ -1718,7 +1718,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
-	private checkParamType(node: ExpressionNode) {
+	private checkParamType(node: DeclarationExpression) {
 		if (node instanceof ArrayExpression) {
 			return this.factory.createArrayBindingPattern(node.getElements() as DeclarationExpression[], node.range);
 		} else if (node instanceof ObjectExpression) {
@@ -1736,7 +1736,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 		return node;
 	}
-	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], kind: FunctionKind, range: Range): ExpressionNode {
+	protected parseArrowFunctionLiteral(parameters: DeclarationExpression[], kind: FunctionKind, range: Range): ExpressionNode {
 		parameters = parameters.map(node => this.checkParamType(node));
 		if (this.peek().isNotType(Token.ARROW)) {
 			throw new SyntaxError(this.errorMessage('SyntaxError Expecting Arrow Token'));
