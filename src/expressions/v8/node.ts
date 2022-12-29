@@ -33,6 +33,8 @@ import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js'
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
+import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ImportAttribute } from '../api/module/common.js';
 
 
 export interface SourcePositionFactory {
@@ -103,4 +105,5 @@ export interface NodeFactory {
 	createMethodSignature(kind: MethodDefinitionKind, key: ExpressionNode | PrivateIdentifier, value: FunctionExpression, decorators: Decorator[], computed: boolean, isStatic: boolean, range?: [number, number]): MethodDefinition;
 	createPropertySignature(key: ExpressionNode | PrivateIdentifier, decorators: Decorator[], computed: boolean, isStatic: boolean, value?: ExpressionNode, range?: [number, number]): PropertyDefinition;
 	createClassBody(body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[], range?: [number, number]): ClassBody;
+	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, assertions?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration;
 }

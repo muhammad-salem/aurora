@@ -581,7 +581,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// ModuleExportName :
 		//   StringLiteral
 
-		this.expect(Token.EXPORT);
+		const start = this.expect(Token.EXPORT);
 		let result: ExpressionNode | undefined;
 		const names: string[] = [];
 
@@ -651,14 +651,14 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					// 		zone());
 					// }
 				}
-				return new ExportNamedDeclaration(exportData, undefined, moduleSpecifier, importAssertions);
+				return this.factory.createNamespaceExportDeclaration(exportData, undefined, moduleSpecifier, importAssertions, this.createRange(start));
 				// return factory() -> EmptyStatement();
 			}
 
 			case Token.FUNCTION: {
 				const declaration = this.parseFunctionDeclaration();
 				const identifier = declaration.getId()!;
-				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
+				result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
 				break;
 			}
 
@@ -666,7 +666,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				const classToken = this.consume(Token.CLASS);
 				const declaration = this.parseClassDeclaration(names, false, classToken);
 				const identifier = declaration.getId()!;
-				result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
+				result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
 				break;
 			}
 
@@ -676,7 +676,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				const declaration = this.parseVariableStatement(VariableDeclarationContext.StatementListItem, names);
 				const specifiers = declaration.getDeclarations()
 					.map(node => new ExportSpecifier(node.getId() as Identifier, node.getId() as Identifier));
-				result = new ExportNamedDeclaration(specifiers, declaration);
+				result = this.factory.createNamespaceExportDeclaration(specifiers, declaration, undefined, undefined, this.createRange(start));
 				break;
 
 			case Token.ASYNC:
@@ -684,7 +684,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				if (this.peek().isType(Token.FUNCTION) && !this.scanner.hasLineTerminatorBeforeNext()) {
 					const declaration = this.parseAsyncFunctionDeclaration(names, false, asyncToken);
 					const identifier = declaration.getId()!;
-					result = new ExportNamedDeclaration([new ExportSpecifier(identifier, identifier)], declaration);
+					result = this.factory.createNamespaceExportDeclaration([new ExportSpecifier(identifier, identifier)], declaration, undefined, undefined, this.createRange(start));
 					break;
 				}
 

@@ -34,6 +34,8 @@ import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js'
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
+import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ImportAttribute } from '../api/module/common.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -326,6 +328,10 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createClassBody(body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[], range?: [number, number]): ClassBody {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ClassBody(body, range, loc);
+	}
+	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, assertions?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ExportNamedDeclaration(specifiers, declaration, source, assertions, range, loc);
 	}
 
 }
