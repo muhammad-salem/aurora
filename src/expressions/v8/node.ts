@@ -35,6 +35,7 @@ import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
 import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportAttribute } from '../api/module/common.js';
+import { ImportDeclaration, ImportDefaultSpecifier, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
 
 
 export interface SourcePositionFactory {
@@ -107,4 +108,5 @@ export interface NodeFactory {
 	createClassBody(body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[], range?: [number, number]): ClassBody;
 	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, assertions?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration;
 	createExportSpecifier(local: Identifier, exported: Identifier, range?: [number, number]): ExportSpecifier;
+	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], assertions?: ImportAttribute[], range?: [number, number]): ImportDeclaration;
 }

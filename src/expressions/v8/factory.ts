@@ -36,6 +36,7 @@ import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
 import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportAttribute } from '../api/module/common.js';
+import { ImportDeclaration, ImportDefaultSpecifier, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -337,5 +338,8 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ExportSpecifier(local, exported, range, loc);
 	}
-
+	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], assertions?: ImportAttribute[], range?: [number, number]): ImportDeclaration {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ImportDeclaration(source, specifiers, assertions, range, loc);
+	}
 }

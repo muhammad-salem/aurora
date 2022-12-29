@@ -721,7 +721,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// NameSpaceImport :
 		//   '*' 'as' ImportedBinding
 
-		this.expect(Token.IMPORT);
+		const start = this.expect(Token.IMPORT);
 
 		const tok = this.peek();
 
@@ -733,7 +733,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			this.expectSemicolon();
 
 			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
-			return new ImportDeclaration(moduleSpecifier, undefined, importAssertions);
+			return this.factory.createImportDeclaration(moduleSpecifier, undefined, importAssertions, this.createRange(start));
 		}
 
 		// Parse ImportedDefaultBinding if present.
@@ -795,7 +795,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (namedImports?.length) {
 			specifiers.push(...namedImports);
 		}
-		return new ImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions);
+		return this.factory.createImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions, this.createRange(start));
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		const start = this.consume(Token.IMPORT);
