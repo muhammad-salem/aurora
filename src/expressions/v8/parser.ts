@@ -823,19 +823,19 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (this.check(Token.COMMA)) {
 			if (this.check(Token.RPAREN)) {
 				// A trailing comma allowed after the specifier.
-				return new ImportExpression(specifier as Literal<string>);
+				return this.factory.createImportExpression(specifier as Literal<string>, undefined, this.createRange(start));
 			} else {
 				const importAssertions = this.parseAssignmentExpressionCoverGrammar();
 				this.check(Token.COMMA);  // A trailing comma is allowed after the import
 				// assertions.
 				this.expect(Token.RPAREN);
-				return new ImportExpression(specifier as Literal<string>, importAssertions);
+				return this.factory.createImportExpression(specifier as Literal<string>, importAssertions, this.createRange(start));
 			}
 		}
 
 		this.expect(Token.RPAREN);
 		this.restoreAcceptIN();
-		return new ImportExpression(specifier as Literal<string>);
+		return this.factory.createImportExpression(specifier as Literal<string>, undefined, this.createRange(start));
 	}
 	protected parseVariableStatement(varContext: VariableDeclarationContext, names: string[]) {
 		// VariableStatement ::
