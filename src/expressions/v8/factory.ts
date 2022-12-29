@@ -15,7 +15,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
+import { ArrowFunctionExpression, AssignmentPattern, FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
@@ -220,9 +220,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new LabeledStatement(expression, result, range, loc);
 	}
-	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param {
+	createAssignmentPattern(left: DeclarationExpression, right: ExpressionNode, range?: [number, number]): AssignmentPattern {
 		const loc = this.rangeFactory?.createSourcePosition(range);
-		return new Param(identifier, defaultValue, range, loc);
+		return new AssignmentPattern(left, right, range, loc);
 	}
 	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement {
 		const loc = this.rangeFactory?.createSourcePosition(range);

@@ -4,10 +4,7 @@ import { TemplateStringLiteral, TokenStream } from './stream.js';
 import { Identifier, TaggedTemplateExpression, TemplateLiteral, Literal } from '../api/definition/values.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
-import {
-	Param,
-	FunctionExpression, FunctionDeclaration
-} from '../api/definition/function.js';
+import { FunctionExpression, FunctionDeclaration } from '../api/definition/function.js';
 import { NewExpression } from '../api/computing/new.js';
 import { SpreadElement } from '../api/computing/spread.js';
 import { RestElement } from '../api/computing/rest.js';
@@ -1315,21 +1312,21 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const range = this.createStartPosition();
 		functionInfo.rest = this.check(Token.ELLIPSIS);
 		const pattern = this.parseBindingPattern(true);
-		let initializer: Param;
+		let initializer: ExpressionNode;
 		if (this.check(Token.ASSIGN)) {
 			if (functionInfo.rest) {
 				throw new Error(this.errorMessage(`Rest Default Initializer`));
 			}
 			this.setAcceptIN(true);
-			const value = this.parseAssignmentExpression();
+			const right = this.parseAssignmentExpression();
 			this.restoreAcceptIN();
 			this.updateRangeEnd(range);
-			initializer = this.factory.createParameterDeclaration(this.checkParamType(pattern as DeclarationExpression), value, range);
+			const left = this.checkParamType(pattern) as DeclarationExpression;
+			initializer = this.factory.createAssignmentPattern(left, right, range);
 		} else {
 			this.updateRangeEnd(range);
-			let param = this.checkParamType(pattern as DeclarationExpression);
-			param = functionInfo.rest ? this.factory.createRestElement(param, param.range && [range[0], param.range[1]]) : param;
-			initializer = this.factory.createParameterDeclaration(param, undefined, range);
+			const param = this.checkParamType(pattern) as DeclarationExpression;
+			initializer = functionInfo.rest ? this.factory.createRestElement(param, param.range && [range[0], param.range[1]]) : param;
 		}
 		return initializer;
 	}
@@ -1404,27 +1401,6 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const result = this.parsePrimaryExpression();
 		return this.parseMemberExpressionContinuation(result);
 	}
-	protected toParamNode(expression: ExpressionNode): Param {
-		if (expression instanceof AssignmentExpression) {
-			return this.factory.createParameterDeclaration(
-				expression.getLeft() as DeclarationExpression,
-				expression.getRight(),
-				expression.range
-			);
-		}
-		if (expression instanceof GroupingExpression) {
-			return this.factory.createParameterDeclaration(
-				expression.getNode() as DeclarationExpression,
-				undefined,
-				expression.range
-			);
-		}
-		return this.factory.createParameterDeclaration(
-			expression as DeclarationExpression,
-			undefined,
-			expression.range
-		);
-	}
 	protected parsePrimaryExpression(): ExpressionNode {
 		// PrimaryExpression ::
 		//   'this'
@@ -1459,12 +1435,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (this.peek().isType(Token.ARROW)) {
 				this.setFunctionKind(kind);
 				const name = this.parseAndClassifyIdentifier(token);
-				const params: Param[] = [];
-				if (name instanceof SequenceExpression) {
-					params.push(...name.getExpressions().map(this.toParamNode));
-				} else {
-					params.push(this.toParamNode(name));
-				}
+				const params = name instanceof SequenceExpression ? name.getExpressions() : [name];
 				const arrow = this.parseArrowFunctionLiteral(params, kind, this.createRange(token));
 				this.restoreFunctionKind();
 				return arrow;
@@ -1707,14 +1678,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 			this.setFunctionKind(kind);
 			let arrow: ExpressionNode;
 			if (expression instanceof SequenceExpression) {
-				const params = expression.getExpressions()
-					.map(expr => this.factory.createParameterDeclaration(expr as DeclarationExpression, undefined, expr.range));
-				arrow = this.parseArrowFunctionLiteral(params, FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral(expression.getExpressions(), FunctionKind.NormalFunction, range);
 			} else if (expression instanceof GroupingExpression) {
-				arrow = this.parseArrowFunctionLiteral([new Param(expression.getNode() as DeclarationExpression)], FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral([expression.getNode()], FunctionKind.NormalFunction, range);
 			} else {
 				this.clearParenthesized(expression);
-				arrow = this.parseArrowFunctionLiteral([new Param(expression as DeclarationExpression)], FunctionKind.NormalFunction, range);
+				arrow = this.parseArrowFunctionLiteral([expression], FunctionKind.NormalFunction, range);
 			}
 			this.restoreFunctionKind();
 			return arrow;
@@ -1749,33 +1718,26 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected parseAssignmentExpression(): ExpressionNode {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
-	private checkParamType(identifier: DeclarationExpression) {
-		if (identifier instanceof ArrayExpression) {
-			return this.factory.createArrayBindingPattern(identifier.getElements() as DeclarationExpression[], identifier.range);
-		} else if (identifier instanceof ObjectExpression) {
-			return this.factory.createObjectBindingPattern(identifier.getProperties(), identifier.range);
+	private checkParamType(node: ExpressionNode) {
+		if (node instanceof ArrayExpression) {
+			return this.factory.createArrayBindingPattern(node.getElements() as DeclarationExpression[], node.range);
+		} else if (node instanceof ObjectExpression) {
+			return this.factory.createObjectBindingPattern(node.getProperties(), node.range);
 		}
-		else if (identifier instanceof SpreadElement) {
-			let arg = identifier.getArgument() as DeclarationExpression;
+		else if (node instanceof SpreadElement) {
+			let arg = node.getArgument() as DeclarationExpression;
 			// let param = arg;
 			if (arg instanceof ArrayExpression) {
 				arg = this.factory.createArrayBindingPattern(arg.getElements() as DeclarationExpression[], arg.range);
 			} else if (arg instanceof ObjectExpression) {
 				arg = this.factory.createObjectBindingPattern(arg.getProperties(), arg.range);
 			}
-			return this.factory.createRestElement(arg, identifier.range);
+			return this.factory.createRestElement(arg, node.range);
 		}
-		return identifier;
+		return node;
 	}
-	private mapParams(parameters: Param[]) {
-		return parameters.map(param => this.factory.createParameterDeclaration(
-			this.checkParamType(param.getIdentifier()),
-			param.getDefaultValue(),
-			param.range,
-		));
-	}
-	protected parseArrowFunctionLiteral(parameters: Param[], kind: FunctionKind, range: Range): ExpressionNode {
-		parameters = this.mapParams(parameters);
+	protected parseArrowFunctionLiteral(parameters: ExpressionNode[], kind: FunctionKind, range: Range): ExpressionNode {
+		parameters = parameters.map(node => this.checkParamType(node));
 		if (this.peek().isNotType(Token.ARROW)) {
 			throw new SyntaxError(this.errorMessage('SyntaxError Expecting Arrow Token'));
 		}

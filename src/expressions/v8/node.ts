@@ -13,7 +13,7 @@ import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/
 import { IfStatement } from '../api/statement/control/if.js';
 import { DoWhileNode, WhileNode } from '../api/statement/iterations/while.js';
 import { Decorator } from '../api/class/decorator.js';
-import { ArrowFunctionExpression, FunctionDeclaration, FunctionExpression, Param } from '../api/definition/function.js';
+import { ArrowFunctionExpression, AssignmentPattern, FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
 import { DefaultExpression, SwitchCase, SwitchStatement } from '../api/statement/control/switch.js';
 import { WithStatement } from '../api/statement/control/with.js';
 import { ForAwaitOfNode, ForDeclaration, ForInNode, ForNode, ForOfNode } from '../api/statement/iterations/for.js';
@@ -86,7 +86,7 @@ export interface NodeFactory {
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement;
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;
 	createLabeledStatement(expression: Identifier, result: ExpressionNode, range?: [number, number]): LabeledStatement;
-	createParameterDeclaration(identifier: DeclarationExpression, defaultValue?: ExpressionNode, range?: [number, number]): Param;
+	createAssignmentPattern(left: DeclarationExpression, right: ExpressionNode, range?: [number, number]): AssignmentPattern;
 	createSpreadElement(argument: ExpressionNode, range?: [number, number]): SpreadElement;
 	createCommaListExpression(expressions: ExpressionNode[], range?: [number, number]): SequenceExpression;
 	createTemplateExpression(quasis: string[], expressions: ExpressionNode[], range?: [number, number]): TemplateLiteral;
