@@ -46,6 +46,7 @@ import { AwaitExpression } from '../api/operators/await.js';
 import { BinaryExpression, BinaryOperator } from '../api/operators/binary.js';
 import { ChainExpression } from '../api/operators/chaining.js';
 import { SequenceExpression } from '../api/operators/comma.js';
+import { GroupingExpression } from '../api/operators/grouping.js';
 import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js';
 import { PipelineExpression } from '../api/operators/pipeline.js';
 import { ConditionalExpression } from '../api/operators/ternary.js';
@@ -483,6 +484,57 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createAwaitExpression(argument: ExpressionNode, range?: [number, number]): AwaitExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new AwaitExpression(argument, range, loc);
+	}
+	isIdentifier(node?: ExpressionNode): node is Identifier {
+		return node instanceof Identifier || node?.type === 'Identifier';
+	}
+	isObjectExpression(node?: ExpressionNode): node is ObjectExpression {
+		return node instanceof ObjectExpression || node?.type === 'ObjectExpression';
+	}
+	isArrayExpression(node?: ExpressionNode): node is ArrayExpression {
+		return node instanceof ArrayExpression || node?.type === 'ArrayExpression';
+	}
+	isObjectPattern(node?: ExpressionNode): node is ObjectPattern {
+		return node instanceof ObjectPattern || node?.type === 'ObjectPattern';
+	}
+	isArrayPattern(node?: ExpressionNode): node is ArrayPattern {
+		return node instanceof ArrayPattern || node?.type === 'ArrayPattern';
+	}
+	isAssignmentPattern(node?: ExpressionNode): node is AssignmentPattern {
+		return node instanceof AssignmentPattern || node?.type === 'AssignmentPattern';
+	}
+	isPattern(node?: ExpressionNode): boolean {
+		return this.isObjectPattern(node) || this.isArrayPattern(node) || this.isAssignmentPattern(node);
+	}
+	canBePattern(node?: ExpressionNode): node is (ObjectExpression | ArrayExpression) {
+		return this.isObjectExpression(node) || this.isArrayExpression(node);
+	}
+	isProperty(node?: ExpressionNode): node is Property {
+		return node instanceof Property || node?.type === 'Property';
+	}
+	isMemberExpression(node?: ExpressionNode): node is MemberExpression {
+		return node instanceof MemberExpression || node?.type === 'MemberExpression';
+	}
+	isPropertyOrMemberExpression(node?: ExpressionNode): node is (Property | MemberExpression) {
+		return this.isProperty(node) || this.isMemberExpression(node);
+	}
+	isEmptyStatement(node: ExpressionNode): node is EmptyStatement {
+		return node instanceof EmptyStatement || node?.type === 'EmptyStatement';
+	}
+	isSequenceExpression(node: ExpressionNode): node is SequenceExpression {
+		return node instanceof SequenceExpression || node?.type === 'SequenceExpression';
+	}
+	isSuper(node: ExpressionNode): node is Super {
+		return node instanceof Super || node?.type === 'Super';
+	}
+	isAssignmentExpression(node: ExpressionNode): node is AssignmentExpression {
+		return node instanceof AssignmentExpression || node?.type === 'AssignmentExpression';
+	}
+	isGroupingExpression(node: ExpressionNode): node is GroupingExpression {
+		return node instanceof GroupingExpression || node?.type === 'GroupingExpression';
+	}
+	isSpreadElement(node: ExpressionNode): node is SpreadElement {
+		return node instanceof SpreadElement || node?.type === 'SpreadElement';
 	}
 
 }

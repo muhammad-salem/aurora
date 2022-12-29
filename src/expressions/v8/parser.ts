@@ -512,7 +512,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			if (!stat) {
 				break;
 			}
-			if (this.isEmptyStatement(stat)) {
+			if (this.factory.isEmptyStatement(stat)) {
 				continue;
 			}
 			body.push(stat);

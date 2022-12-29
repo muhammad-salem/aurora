@@ -1,29 +1,25 @@
 import type { DeclarationExpression, ExpressionNode } from '../api/expression.js';
 import type { NodeFactory } from './node.js';
 import {
-	ClassDeclaration, ClassExpression, PrivateIdentifier, Super
+	ClassDeclaration, ClassExpression, PrivateIdentifier
 } from '../api/class/class.js';
-import { CallExpression } from '../api/computing/call.js';
-import { NewExpression } from '../api/computing/new.js';
 import { RestElement } from '../api/computing/rest.js';
 import { SpreadElement } from '../api/computing/spread.js';
-import { ArrayExpression } from '../api/definition/array.js';
 import { FunctionDeclaration, FunctionExpression } from '../api/definition/function.js';
-import { MemberExpression } from '../api/definition/member.js';
-import { ObjectExpression, Property } from '../api/definition/object.js';
+import { Property } from '../api/definition/object.js';
 import {
 	Identifier, Literal, TaggedTemplateExpression, TemplateLiteral
 } from '../api/definition/values.js';
 import {
-	AssignmentExpression, AssignmentOperator
+	AssignmentOperator
 } from '../api/operators/assignment.js';
-import { SequenceExpression } from '../api/operators/comma.js';
-import { GroupingExpression } from '../api/operators/grouping.js';
 import { LogicalOperator } from '../api/operators/logical.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { SwitchCase } from '../api/statement/control/switch.js';
-import { VariableDeclarationNode, VariableDeclarator } from '../api/statement/declarations/declares.js';
+import {
+	VariableDeclarationNode, VariableDeclarator
+} from '../api/statement/declarations/declares.js';
 import { ForDeclaration } from '../api/statement/iterations/for.js';
 import {
 	AllowLabelledFunctionStatement,
@@ -193,19 +189,20 @@ export abstract class AbstractParser {
 		var next = this.peek();
 		if (next.isType(Token.IN)) {
 			return 'IN';
-		} else if (next.value instanceof Identifier && next.value.getName() === 'of') {
+		} else if (this.factory.isIdentifier(next.value) && next.value.getName() === 'of') {
 			return 'OF';
 		}
 		return false;
 	}
-	protected isArguments(name: ExpressionNode): boolean {
-		return name instanceof Identifier && name.getName() === 'arguments';
+	protected isArguments(node: ExpressionNode): boolean {
+		return this.factory.isIdentifier(node) && node.getName() === 'arguments';
 	}
-	protected isEval(name: ExpressionNode): boolean {
-		return name instanceof Identifier && name.getName() === 'eval';
+	protected isEval(node: ExpressionNode): boolean {
+
+		return this.factory.isIdentifier(node) && node.getName() === 'eval';
 	}
-	protected isEvalOrArguments(name: ExpressionNode): boolean {
-		return name instanceof Identifier && (name.getName() === 'eval' || name.getName() === 'arguments');
+	protected isEvalOrArguments(node: ExpressionNode): boolean {
+		return this.factory.isIdentifier(node) && (node.getName() === 'eval' || node.getName() === 'arguments');
 	}
 	protected isNextLetKeyword() {
 		if (this.peek().isNotType(Token.LET)) {
@@ -232,9 +229,6 @@ export abstract class AbstractParser {
 				return false;
 		}
 	}
-	protected isIdentifier(expression: ExpressionNode): expression is Identifier {
-		return expression instanceof Identifier;
-	}
 	protected markParenthesized(expression: ExpressionNode) {
 		Reflect.set(expression, 'parenthesized', true);
 	}
@@ -246,7 +240,7 @@ export abstract class AbstractParser {
 	}
 	protected isAssignableIdentifier(expression: ExpressionNode): boolean {
 		// return expression instanceof AssignmentNode;
-		if (!(expression instanceof Identifier)) {
+		if (!(this.factory.isIdentifier(expression))) {
 			return false;
 		}
 		if (isStrict(this.languageMode) && this.isEvalOrArguments(expression)) {
@@ -254,23 +248,8 @@ export abstract class AbstractParser {
 		}
 		return true;
 	}
-	protected isPattern(expression: ExpressionNode): expression is (ObjectExpression | ArrayExpression) {
-		return expression instanceof ObjectExpression || expression instanceof ArrayExpression;
-	}
-	protected isProperty(expression: ExpressionNode): expression is Property | MemberExpression {
-		return expression instanceof Property || expression instanceof MemberExpression;
-	}
-	protected isCallNew(expression: ExpressionNode): expression is NewExpression {
-		return expression instanceof NewExpression;
-	}
-	protected isCall(expression: ExpressionNode): expression is CallExpression {
-		return expression instanceof CallExpression;
-	}
-	protected isEmptyStatement(expression: ExpressionNode): expression is EmptyStatement {
-		return expression instanceof EmptyStatement;
-	}
 	protected isValidReferenceExpression(expression: ExpressionNode): boolean {
-		return this.isAssignableIdentifier(expression) || this.isProperty(expression);
+		return this.isAssignableIdentifier(expression) || this.factory.isPropertyOrMemberExpression(expression);
 	}
 	protected expectSemicolon() {
 		const tok = this.peek();
@@ -499,7 +478,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			const stat = this.parseStatementListItem();
 			if (!stat) {
 				return block;
-			} else if (stat instanceof EmptyStatement) {
+			} else if (this.factory.isEmptyStatement(stat)) {
 				continue;
 			}
 			statements.push(stat);
@@ -667,7 +646,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				&& this.peek().isNotType(Token.DEFAULT)
 				&& this.peek().isNotType(Token.RBRACE)) {
 				const statement = this.parseStatementListItem();
-				if (!statement || this.isEmptyStatement(statement)) {
+				if (!statement || this.factory.isEmptyStatement(statement)) {
 					continue;
 				}
 				statements.push(statement);
@@ -1046,7 +1025,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const startsWithIdentifier = Token.isAnyIdentifier(this.peek().token);
 		this.setAcceptIN(true);
 		const expression: ExpressionNode = this.parseExpressionCoverGrammar();
-		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.isIdentifier(expression)) {
+		if (this.peek().isType(Token.COLON) && startsWithIdentifier && this.factory.isIdentifier(expression)) {
 			// The whole expression was a single identifier, and not, e.g.,
 			// something starting with an identifier or a parenthesized identifier.
 
@@ -1272,7 +1251,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (!stat) {
 				break;
 			}
-			if (this.isEmptyStatement(stat)) {
+			if (this.factory.isEmptyStatement(stat)) {
 				continue;
 			}
 			list.push(stat);
@@ -1381,7 +1360,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	protected expressionListToExpression(list: ExpressionNode[]): ExpressionNode {
 		const first = list[0];
 		if (list.length === 1) { return first; }
-		if (first instanceof SequenceExpression) {
+		if (this.factory.isSequenceExpression(first)) {
 			first.getExpressions().push(...list.slice(1));
 			return first;
 		}
@@ -1440,7 +1419,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			if (this.peek().isType(Token.ARROW)) {
 				this.setFunctionKind(kind);
 				const name = this.parseAndClassifyIdentifier(token);
-				const params = name instanceof SequenceExpression ? name.getExpressions() : [name];
+				const params = this.factory.isSequenceExpression(name) ? name.getExpressions() : [name];
 				const arrow = this.parseArrowFunctionLiteral(params as DeclarationExpression[], kind, this.createRange(token));
 				this.restoreFunctionKind();
 				return arrow;
@@ -1603,7 +1582,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return this.parseMemberExpressionContinuation(result);
 		} else {
 			result = this.parseMemberExpression();
-			if (result instanceof Super) {
+			if (this.factory.isSuper(result)) {
 				// new super() is never allowed
 				throw new SyntaxError(this.errorMessage(`Unexpected Super, new super() is never allowed`));
 			}
@@ -1634,7 +1613,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			let argument: ExpressionNode = this.parseAssignmentExpressionCoverGrammar();
 			if (ParsingArrowHeadFlag.MaybeArrowHead === maybeArrow) {
 				if (isSpread) {
-					if (argument instanceof AssignmentExpression) {
+					if (this.factory.isAssignmentExpression(argument)) {
 						this.restoreAcceptIN();
 						throw new Error(this.errorMessage(` Rest parameter may not have a default initializer'`));
 					}
@@ -1676,15 +1655,15 @@ export class JavaScriptInlineParser extends AbstractParser {
 		};
 		// Arrow functions.
 		if (op === Token.ARROW) {
-			if (!this.isIdentifier(expression) && !this.isParenthesized(expression)) {
+			if (!this.factory.isIdentifier(expression) && !this.isParenthesized(expression)) {
 				throw new Error(this.errorMessage(`Malformed Arrow Fun Param List`));
 			}
 			const kind = FunctionKind.NormalFunction;
 			this.setFunctionKind(kind);
 			let arrow: ExpressionNode;
-			if (expression instanceof SequenceExpression) {
+			if (this.factory.isSequenceExpression(expression)) {
 				arrow = this.parseArrowFunctionLiteral(expression.getExpressions() as DeclarationExpression[], FunctionKind.NormalFunction, range);
-			} else if (expression instanceof GroupingExpression) {
+			} else if (this.factory.isGroupingExpression(expression)) {
 				arrow = this.parseArrowFunctionLiteral([expression.getNode() as DeclarationExpression], FunctionKind.NormalFunction, range);
 			} else {
 				this.clearParenthesized(expression);
@@ -1694,10 +1673,10 @@ export class JavaScriptInlineParser extends AbstractParser {
 			return arrow;
 		}
 		if (this.isAssignableIdentifier(expression)) {
-		} else if (this.isProperty(expression)) {
-		} else if (this.isPattern(expression) && Token.isAssignment(op)) {
+		} else if (this.factory.isPropertyOrMemberExpression(expression)) {
+		} else if (this.factory.canBePattern(expression) && Token.isAssignment(op)) {
 			// Destructuring assignment.
-			expression = expression instanceof ObjectExpression
+			expression = this.factory.isObjectExpression(expression)
 				? this.factory.createObjectBindingPattern(expression.getProperties(), expression.range)
 				: this.factory.createArrayBindingPattern(expression.getElements() as DeclarationExpression[], expression.range);
 		} else {
@@ -1724,17 +1703,17 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return this.parseAssignmentExpressionCoverGrammar();
 	}
 	private checkParamType(node: DeclarationExpression) {
-		if (node instanceof ArrayExpression) {
+		if (this.factory.isArrayExpression(node)) {
 			return this.factory.createArrayBindingPattern(node.getElements() as DeclarationExpression[], node.range);
-		} else if (node instanceof ObjectExpression) {
+		} else if (this.factory.isObjectExpression(node)) {
 			return this.factory.createObjectBindingPattern(node.getProperties(), node.range);
 		}
-		else if (node instanceof SpreadElement) {
+		else if (this.factory.isSpreadElement(node)) {
 			let arg = node.getArgument() as DeclarationExpression;
 			// let param = arg;
-			if (arg instanceof ArrayExpression) {
+			if (this.factory.isArrayExpression(arg)) {
 				arg = this.factory.createArrayBindingPattern(arg.getElements() as DeclarationExpression[], arg.range);
-			} else if (arg instanceof ObjectExpression) {
+			} else if (this.factory.isObjectExpression(arg)) {
 				arg = this.factory.createObjectBindingPattern(arg.getProperties(), arg.range);
 			}
 			return this.factory.createRestElement(arg, node.range);
@@ -1792,7 +1771,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				if (first_spread_index < 0) {
 					first_spread_index = values.length;
 				}
-				if (argument instanceof AssignmentExpression && isPattern) {
+				if (this.factory.isAssignmentExpression(argument) && isPattern) {
 					throw new SyntaxError(this.errorMessage('Invalid Destructuring Target'));
 				}
 				if (this.peek().isType(Token.COMMA)) {
@@ -2338,11 +2317,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 		const expression = this.parseUnaryExpression();
 		if (Token.isUnary(op.token)) {
 			if (op.isType(Token.DELETE)) {
-				if (this.isIdentifier(expression) && isStrict(this.languageMode)) {
+				if (this.factory.isIdentifier(expression) && isStrict(this.languageMode)) {
 					// "delete identifier" is a syntax error in strict mode.
 					throw new Error(this.errorMessage(`"delete identifier" is a syntax error in strict mode`));
 				}
-				if (expression instanceof MemberExpression && expression.getProperty().toString().startsWith('#')) {
+				if (this.factory.isMemberExpression(expression) && expression.getProperty().toString().startsWith('#')) {
 					throw new Error(this.errorMessage(`"Delete Private Field" is a syntax error`));
 				}
 			}
@@ -2384,7 +2363,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 	}
 	protected parseLeftHandSideContinuation(result: ExpressionNode): ExpressionNode {
 		if (this.peek().isType(Token.LPAREN)
-			&& this.isIdentifier(result)
+			&& this.factory.isIdentifier(result)
 			&& this.scanner.currentToken().isType(Token.ASYNC)
 			&& !this.scanner.hasLineTerminatorBeforeNext()) {
 			const args = this.parseArguments(ParsingArrowHeadFlag.AsyncArrowFunction);
