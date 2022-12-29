@@ -28,7 +28,7 @@ export class RestElement extends AbstractExpressionNode implements DeclarationEx
 		return this.argument;
 	}
 	set(stack: Stack, value: any) {
-		throw new Error('RestElement#set() Method has no implementation.');
+		this.argument.set(stack, value);
 	}
 	get(stack: Stack): void {
 		throw new Error('RestElement#get() Method has no implementation.');
