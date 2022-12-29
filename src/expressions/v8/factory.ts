@@ -346,4 +346,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportNamespaceSpecifier(local, range, loc);
 	}
+	createImportDefaultSpecifier(local: Identifier, range?: [number, number]): ImportDefaultSpecifier {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ImportDefaultSpecifier(local, range, loc);
+	}
+
 }

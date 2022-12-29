@@ -110,4 +110,5 @@ export interface NodeFactory {
 	createExportSpecifier(local: Identifier, exported: Identifier, range?: [number, number]): ExportSpecifier;
 	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], assertions?: ImportAttribute[], range?: [number, number]): ImportDeclaration;
 	createImportNamespaceSpecifier(local: Identifier, range?: [number, number]): ImportNamespaceSpecifier;
+	createImportDefaultSpecifier(local: Identifier, range?: [number, number]): ImportDefaultSpecifier;
 }

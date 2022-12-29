@@ -790,7 +790,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			specifiers.push(this.factory.createImportNamespaceSpecifier(moduleNamespaceBinding, moduleNamespaceBinding.range));
 		}
 		if (importDefaultBinding) {
-			specifiers.push(new ImportDefaultSpecifier(importDefaultBinding));
+			specifiers.push(this.factory.createImportDefaultSpecifier(importDefaultBinding, importDefaultBinding.range));
 		}
 		if (namedImports?.length) {
 			specifiers.push(...namedImports);
