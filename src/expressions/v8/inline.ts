@@ -37,12 +37,17 @@ import { Token, TokenExpression } from './token.js';
 import { BinaryOperator } from '../api/operators/binary.js';
 import { UnaryOperator } from '../api/operators/unary.js';
 import { UpdateOperator } from '../api/operators/update.js';
-import { ExpressionNodeFactory } from './factory.js';
+import { ExpressionNodeFactory, ExpressionNodeSourcePosition } from './factory.js';
 import { isSloppy, isStrict, LanguageMode } from './language.js';
 
 
 
-export type InlineParserOptions = { mode?: LanguageMode, acceptIN?: boolean, factory?: NodeFactory };
+export type InlineParserOptions = {
+	mode?: LanguageMode,
+	acceptIN?: boolean,
+	factory?: NodeFactory,
+	addLocation?: boolean
+};
 
 export type Range = [number, number];
 export type RangeOrVoid = Range | undefined;
@@ -327,13 +332,16 @@ export abstract class AbstractParser {
 }
 
 export class JavaScriptInlineParser extends AbstractParser {
-	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN, factory }: InlineParserOptions = {}) {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode, acceptIN, factory, addLocation }: InlineParserOptions = {}) {
 		mode ??= LanguageMode.Strict;
 		const stream = (typeof source === 'string')
 			? TokenStream.getTokenStream(source, mode)
 			: Array.isArray(source) ? TokenStream.getTokenStream(source) : source;
 		acceptIN ??= false;
-		factory ??= new ExpressionNodeFactory();
+		if (factory == undefined) {
+			const sourcePositionFactory = addLocation && typeof source === 'string' ? new ExpressionNodeSourcePosition(source) : undefined;
+			factory = new ExpressionNodeFactory(sourcePositionFactory);
+		}
 		const parser = new JavaScriptInlineParser(stream, factory, acceptIN);
 		return parser.scan();
 	}

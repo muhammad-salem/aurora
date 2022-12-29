@@ -36,10 +36,10 @@ import { TokenStream } from './stream.js';
 import { Token, TokenExpression } from './token.js';
 
 import { WithStatement } from '../api/statement/control/with.js';
-import { ExpressionNodeFactory } from './factory.js';
+import { ExpressionNodeFactory, ExpressionNodeSourcePosition } from './factory.js';
 import { isStrict, LanguageMode } from './language.js';
 
-export type ParserOptions = { mode?: LanguageMode, factory?: NodeFactory };
+export type ParserOptions = { mode?: LanguageMode, factory?: NodeFactory, addLocation?: boolean };
 
 export class JavaScriptParser extends JavaScriptInlineParser {
 	/**
@@ -47,11 +47,14 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 	 * @param source 
 	 * @returns 
 	 */
-	static parse(source: string | TokenExpression[] | TokenStream, { mode, factory }: ParserOptions = {}): Program {
+	static parse(source: string | TokenExpression[] | TokenStream, { mode, factory, addLocation }: ParserOptions = {}): Program {
 		mode ??= LanguageMode.Strict;
 		const stream = (typeof source === 'string') || Array.isArray(source)
 			? TokenStream.getTokenStream(source, mode) : source;
-		factory ??= new ExpressionNodeFactory();
+		if (factory == undefined) {
+			const sourcePositionFactory = addLocation && typeof source === 'string' ? new ExpressionNodeSourcePosition(source) : undefined;
+			factory = new ExpressionNodeFactory(sourcePositionFactory);
+		}
 		const parser = new JavaScriptParser(stream, factory, false);
 		return parser.scan();
 	}
