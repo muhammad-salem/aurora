@@ -117,9 +117,6 @@ console.log(
 
  - [V8 JavaScript engine](https://github.com/v8/v8) to parse js source code.
  - for now this parser does not provide any info about `SourceLocation`
-
-## Future Feature
-
  - class expression
  - Import/Export module
  - Custom Factory Builder to convert the code to ESTree directly or to executable expression node
