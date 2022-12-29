@@ -787,7 +787,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 		const specifiers: ModuleSpecifier[] = [];
 		if (moduleNamespaceBinding) {
-			specifiers.push(new ImportNamespaceSpecifier(moduleNamespaceBinding));
+			specifiers.push(this.factory.createImportNamespaceSpecifier(moduleNamespaceBinding, moduleNamespaceBinding.range));
 		}
 		if (importDefaultBinding) {
 			specifiers.push(new ImportDefaultSpecifier(importDefaultBinding));
