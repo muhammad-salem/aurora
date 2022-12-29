@@ -19,10 +19,6 @@ import { VariableDeclarator, VariableDeclarationNode } from '../api/statement/de
 import { ForDeclaration } from '../api/statement/iterations/for.js';
 import { LogicalOperator } from '../api/operators/logical.js';
 import { SequenceExpression } from '../api/operators/comma.js';
-import {
-	buildPostfixExpression, buildUnaryExpression,
-	expressionFromLiteral, shortcutNumericLiteralBinaryExpression
-} from './nodes.js';
 import { ClassDeclaration, ClassExpression, PrivateIdentifier, Super } from '../api/class/class.js';
 import {
 	AllowLabelledFunctionStatement,
@@ -38,6 +34,9 @@ import {
 import { isSloppy, isStrict, LanguageMode, } from './language.js';
 import type { NodeFactory } from './node.js';
 import { ExpressionNodeFactory } from './factory.js';
+import { UpdateOperator } from '../api/operators/update.js';
+import { UnaryOperator } from '../api/operators/unary.js';
+import { BinaryOperator } from '../api/operators/binary.js';
 
 
 
@@ -1444,7 +1443,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		}
 
 		if (Token.isLiteral(token.token)) {
-			return expressionFromLiteral(this.next());
+			return this.next().getValue();
 		}
 
 		switch (token.token) {
@@ -2255,9 +2254,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 				let y: ExpressionNode;
 				let op = this.next();
 
-				const is_right_associative = op.isType(Token.EXP);
-				const next_prec = is_right_associative ? prec1 : prec1 + 1;
-				y = this.parseBinaryExpression(next_prec);
+				const isRightAssociative = op.isType(Token.EXP);
+				const nextPrecedence = isRightAssociative ? prec1 : prec1 + 1;
+				y = this.parseBinaryExpression(nextPrecedence);
 
 
 				// For now we distinguish between comparisons and other binary
@@ -2272,13 +2271,13 @@ export class JavaScriptInlineParser extends AbstractParser {
 						case Token.NE_STRICT: cmp = Token.EQ_STRICT; break;
 						default: break;
 					}
-					x = shortcutNumericLiteralBinaryExpression(x, y, cmp);
+					x = this.factory.createInfixExpression(cmp.getName() as AssignmentOperator | LogicalOperator | BinaryOperator, x, y, this.createRange(x));
 					if (op.isNotType(cmp)) {
 						// The comparison was negated - add a NOT.
-						x = buildUnaryExpression(x, Token.NOT);
+						x = this.factory.createUnaryExpression(Token.NOT.getName() as UnaryOperator, x, this.createRange(x));
 					}
 				} else {
-					x = shortcutNumericLiteralBinaryExpression(x, y, op.token);
+					x = this.factory.createInfixExpression(op.token.getName() as AssignmentOperator | LogicalOperator | BinaryOperator, x, y, this.createRange(x));
 				}
 			}
 			--prec1;
@@ -2349,7 +2348,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		if (Token.isCount(op.token) || Token.isUnary(op.token)) {
 			// Allow the parser to rewrite the expression.
-			return buildUnaryExpression(expression, op.token);
+			return this.factory.createUnaryExpression(op.token.getName() as UpdateOperator | UnaryOperator, expression, op.range);
 		}
 		throw new Error(this.errorMessage(`while rewrite unary operation`));
 	}
@@ -2368,7 +2367,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			throw new Error(this.errorMessage(`Invalid LHS In Postfix Op.`));
 		}
 		const op = this.next();
-		return buildPostfixExpression(expression, op.token);
+		return this.factory.createUpdateExpression(op.token.getName() as UpdateOperator, expression, false, this.createRange(expression));
 	}
 	protected parseLeftHandSideExpression(): ExpressionNode {
 		// LeftHandSideExpression ::
@@ -2483,12 +2482,12 @@ export class JavaScriptInlineParser extends AbstractParser {
 		return result;
 	}
 	protected parseAwaitExpression(): ExpressionNode {
-		this.consume(Token.AWAIT);
+		const start = this.consume(Token.AWAIT);
 		const value = this.parseUnaryExpression();
 		if (this.peek().isType(Token.EXP)) {
 			throw new Error(this.scanner.createError(`Unexpected Token Unary Exponentiation`));
 		}
-		return buildUnaryExpression(value, Token.AWAIT);
+		return this.factory.createAwaitExpression(value, this.createRange(start));
 	}
 	protected parseNullishExpression(expression: ExpressionNode): ExpressionNode {
 		// CoalesceExpression ::

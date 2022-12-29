@@ -6,7 +6,7 @@ import {
 } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
-import { UnaryExpression } from '../api/operators/unary.js';
+import { UnaryExpression, UnaryOperator } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { BlockStatement } from '../api/statement/control/block.js';
 import { CatchClauseNode, ThrowStatement, TryCatchNode } from '../api/computing/throw.js';
@@ -46,6 +46,9 @@ import {
 	ImportDeclaration, ImportDefaultSpecifier, ImportExpression,
 	ImportNamespaceSpecifier, ImportSpecifier
 } from '../api/module/import.js';
+import { BinaryExpression, BinaryOperator } from '../api/operators/binary.js';
+import { UpdateExpression, UpdateOperator } from '../api/operators/update.js';
+import { AwaitExpression } from '../api/operators/await.js';
 
 
 export interface SourcePositionFactory {
@@ -126,4 +129,8 @@ export interface NodeFactory {
 	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute;
 	createExportDefault(declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode, range?: [number, number],): ExportDefaultDeclaration;
 	createExportAllDeclaration(source: Literal<string>, exported?: Identifier, assertions?: ImportAttribute[], range?: [number, number]): ExportAllDeclaration;
+	createInfixExpression(operator: AssignmentOperator | LogicalOperator | BinaryOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression | LogicalExpression | BinaryExpression;
+	createUnaryExpression(operator: UpdateOperator | UnaryOperator | 'await', expression: ExpressionNode, range?: [number, number]): UpdateExpression | UnaryExpression | AwaitExpression;
+	createUpdateExpression(operator: UpdateOperator, argument: ExpressionNode, prefix: boolean, range?: [number, number]): UpdateExpression;
+	createAwaitExpression(argument: ExpressionNode, range?: [number, number]): AwaitExpression;
 }

@@ -7,7 +7,7 @@ import {
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { Identifier, Literal, TaggedTemplateExpression, TemplateLiteral, ThisExpression } from '../api/definition/values.js';
 import { DeclarationExpression, ExpressionNode, SourceLocation } from '../api/expression.js';
-import { UnaryExpression } from '../api/operators/unary.js';
+import { UnaryExpression, UnaryOperator } from '../api/operators/unary.js';
 import { EmptyStatement } from '../api/statement/control/empty.js';
 import { ExpressionStatement } from '../api/definition/statement.js';
 import { BlockStatement } from '../api/statement/control/block.js';
@@ -47,6 +47,9 @@ import {
 	ImportDeclaration, ImportDefaultSpecifier, ImportExpression,
 	ImportNamespaceSpecifier, ImportSpecifier
 } from '../api/module/import.js';
+import { BinaryExpression, BinaryOperator } from '../api/operators/binary.js';
+import { UpdateExpression, UpdateOperator } from '../api/operators/update.js';
+import { AwaitExpression } from '../api/operators/await.js';
 
 
 export class ExpressionNodeSourcePosition implements SourcePositionFactory {
@@ -380,4 +383,86 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ExportAllDeclaration(source, exported, assertions, range, loc);
 	}
+	createInfixExpression(op: AssignmentOperator | LogicalOperator | BinaryOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression | LogicalExpression | BinaryExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		switch (op) {
+			case '=':
+			case '+=':
+			case '-=':
+			case '**=':
+			case '/=':
+			case '%=':
+			case '<<=':
+			case '>>=':
+			case '>>>=':
+			case '&=':
+			case '^=':
+			case '|=':
+			case '&&=':
+			case '||=':
+			case '??=':
+				return new AssignmentExpression(op, left, right, range, loc);
+			case '&&':
+			case '||':
+			case '??':
+				return new LogicalExpression(op, left, right, range, loc);
+			case '**':
+			case '*':
+			case '/':
+			case '%':
+			case '+':
+			case '-':
+			case '<':
+			case '<=':
+			case '>':
+			case '>=':
+			case 'in':
+			case 'instanceof':
+			case '==':
+			case '!=':
+			case '===':
+			case '!==':
+			case '<<':
+			case '>>':
+			case '>>>':
+			case '&':
+			case '^':
+			case '|':
+			case '>?':
+			case '<?':
+			case '<=>':
+				return new BinaryExpression(op, left, right, range, loc);
+			default:
+				throw new Error(`Not Supported Operator: ${op}`);
+		}
+	}
+	createUnaryExpression(operator: UpdateOperator | UnaryOperator | 'await', expression: ExpressionNode, range?: [number, number]): UpdateExpression | UnaryExpression | AwaitExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		switch (operator) {
+			case '++':
+			case '--':
+				return new UpdateExpression(operator, expression, true);
+			case '+':
+			case '-':
+			case '!':
+			case '~':
+			case 'typeof':
+			case 'void':
+			case 'delete':
+				return new UnaryExpression(operator, expression);
+			case 'await':
+				return new AwaitExpression(expression);
+			default:
+				throw new Error(`${operator} is not prefix operator`);
+		}
+	}
+	createUpdateExpression(operator: UpdateOperator, argument: ExpressionNode, prefix: boolean, range?: [number, number]): UpdateExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new UpdateExpression(operator, argument, prefix, range, loc);
+	}
+	createAwaitExpression(argument: ExpressionNode, range?: [number, number]): AwaitExpression {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new AwaitExpression(argument, range, loc);
+	}
+
 }
