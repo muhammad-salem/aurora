@@ -1327,7 +1327,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 			initializer = this.factory.createParameterDeclaration(this.checkParamType(pattern as DeclarationExpression), value, range);
 		} else {
 			this.updateRangeEnd(range);
-			initializer = this.factory.createParameterDeclaration(this.checkParamType(pattern as DeclarationExpression), undefined, range);
+			let param = this.checkParamType(pattern as DeclarationExpression);
+			param = functionInfo.rest ? this.factory.createRestElement(param, param.range && [range[0], param.range[1]]) : param;
+			initializer = this.factory.createParameterDeclaration(param, undefined, range);
 		}
 		return initializer;
 	}
