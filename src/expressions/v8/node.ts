@@ -108,6 +108,7 @@ export interface NodeFactory {
 	createClassBody(body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[], range?: [number, number]): ClassBody;
 	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, assertions?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration;
 	createExportSpecifier(local: Identifier, exported: Identifier, range?: [number, number]): ExportSpecifier;
+	createImportSpecifier(local: Identifier, imported: Identifier, range?: [number, number]): ImportSpecifier;
 	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], assertions?: ImportAttribute[], range?: [number, number]): ImportDeclaration;
 	createImportNamespaceSpecifier(local: Identifier, range?: [number, number]): ImportNamespaceSpecifier;
 	createImportDefaultSpecifier(local: Identifier, range?: [number, number]): ImportDefaultSpecifier;

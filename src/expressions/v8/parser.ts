@@ -944,7 +944,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			} else {
 				exportName = localName;
 			}
-			exportData.push(new ExportSpecifier(exportName as Identifier, localName as Identifier));
+			exportData.push(this.factory.createExportSpecifier(exportName as Identifier, localName as Identifier));
 			if (this.peek().isType(Token.RBRACE)) break;
 			if (!this.check(Token.COMMA)) {
 				throw new SyntaxError('Unexpected Token');
@@ -1002,7 +1002,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				throw new SyntaxError(this.errorMessage('Strict Eval Arguments'));
 			}
 
-			result.push(new ImportSpecifier(localName, importName));
+			result.push(this.factory.createImportSpecifier(localName, importName, this.createRange(importName)));
 
 			// DeclareUnboundVariable(localName, VariableMode:: kConst, kNeedsInitialization, position());
 
