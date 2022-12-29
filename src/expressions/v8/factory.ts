@@ -34,7 +34,7 @@ import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js'
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
-import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportAttribute } from '../api/module/common.js';
 import {
 	ImportDeclaration, ImportDefaultSpecifier, ImportExpression,
@@ -364,5 +364,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportAttribute(key, value, range, loc);
+	}
+	createExportDefault(declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode, range?: [number, number],): ExportDefaultDeclaration {
+		const loc = this.rangeFactory?.createSourcePosition(range);
+		return new ExportDefaultDeclaration(declaration, range, loc);
 	}
 }

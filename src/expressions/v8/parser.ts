@@ -590,7 +590,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// Scanner::Location loc = scanner() -> peek_location();
 		switch (this.peek().token) {
 			case Token.DEFAULT:
-				return this.parseExportDefault();
+				return this.parseExportDefault(start);
 
 			case Token.MUL:
 				return this.parseExportStar();
@@ -1017,7 +1017,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		return result;
 	}
 
-	protected parseExportDefault(): ExportDefaultDeclaration {
+	protected parseExportDefault(start: PositionMark): ExportDefaultDeclaration {
 		//  Supports the following productions, starting after the 'default' token:
 		//    'export' 'default' HoistableDeclaration
 		//    'export' 'default' ClassDeclaration
@@ -1075,7 +1075,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// 	module() -> AddExport(localNames.first(), ast_value_factory() -> default_string(), default_loc, zone());
 		// }
 
-		return new ExportDefaultDeclaration(result);
+		return this.factory.createExportDefault(result, this.createRange(start));
 	}
 	protected parseExportStar(): ExpressionNode | undefined {
 		this.consume(Token.MUL);

@@ -33,7 +33,7 @@ import { LogicalExpression, LogicalOperator } from '../api/operators/logical.js'
 import { ConditionalExpression } from '../api/operators/ternary.js';
 import { YieldExpression } from '../api/computing/yield.js';
 import { Program, ProgramSourceType } from '../api/program.js';
-import { ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
+import { ExportDefaultDeclaration, ExportNamedDeclaration, ExportSpecifier } from '../api/module/export.js';
 import { ImportAttribute } from '../api/module/common.js';
 import { ImportDeclaration, ImportDefaultSpecifier, ImportExpression, ImportNamespaceSpecifier, ImportSpecifier } from '../api/module/import.js';
 
@@ -114,4 +114,5 @@ export interface NodeFactory {
 	createImportDefaultSpecifier(local: Identifier, range?: [number, number]): ImportDefaultSpecifier;
 	createImportExpression(source: Literal<string>, attributes?: ExpressionNode, range?: [number, number]): ImportExpression;
 	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute;
+	createExportDefault(declaration: FunctionDeclaration | ClassDeclaration | ExpressionNode, range?: [number, number],): ExportDefaultDeclaration;
 }
