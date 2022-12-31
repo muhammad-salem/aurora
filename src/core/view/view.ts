@@ -9,6 +9,8 @@ import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
 import { isComponentModelClass } from './utils.js';
 
+const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
+
 /**
  * 
  * @param modelClass 
@@ -19,7 +21,14 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
-	const parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
+
+	let parentClass: TypeOf<HTMLComponent<T>>;
+	if (FACTORY_CACHE.has(htmlParent)) {
+		parentClass = FACTORY_CACHE.get(htmlParent) as TypeOf<HTMLComponent<T>>;
+	} else {
+		parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
+		FACTORY_CACHE.set(htmlParent, parentClass);
+	}
 	viewClass = ({
 		[htmlViewClassName]: class extends parentClass { constructor() { super(componentRef, modelClass); } }
 	})[htmlViewClassName];
@@ -91,7 +100,11 @@ export function initCustomElementView<T extends Object>(modelClass: TypeOf<T>, c
 	return viewClass;
 }
 
-export type ComponentModelClass = Constructable & { [key: string]: string } & { component: { [key: string]: string } };
+export type ComponentModelClass =
+	Constructable
+	& { [key: string]: string }
+	& { component: { [key: string]: string } }
+	& { [key: string]: TypeOf<HTMLComponent<any>> };
 
 export function addViewToModelClass<T extends object>(modelClass: TypeOf<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });

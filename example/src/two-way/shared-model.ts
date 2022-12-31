@@ -17,7 +17,8 @@ export class Editor {
 	<div>{{ model |> json }}</div>
 	<text-editor id="editor_0" [(text)]="model.text" ></text-editor>
 	<text-editor id="editor_1" [(text)]="model.text" *if="+model.text > 30"></text-editor>
-	`
+	`,
+	imports: [Editor]
 })
 export class EditorApp {
 

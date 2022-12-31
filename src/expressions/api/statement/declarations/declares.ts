@@ -1,7 +1,7 @@
 
 import type {
 	NodeDeserializer, ExpressionNode, DeclarationExpression,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, AwaitPromise } from '../../abstract.js';
@@ -12,15 +12,21 @@ export class VariableDeclarator extends AbstractExpressionNode implements Declar
 	static fromJSON(node: VariableDeclarator, deserializer: NodeDeserializer): VariableDeclarator {
 		return new VariableDeclarator(
 			deserializer(node.id) as DeclarationExpression,
-			node.init ? deserializer(node.init) : void 0
+			node.init ? deserializer(node.init) : void 0,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: VariableDeclarator, visitNode: VisitNodeType): void {
 		visitNode(node.id);
 		node.init && visitNode(node.init);
 	}
-	constructor(public id: DeclarationExpression, public init?: ExpressionNode) {
-		super();
+	constructor(
+		public id: DeclarationExpression,
+		public init?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getId() {
 		return this.id;
@@ -74,14 +80,20 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements D
 	static fromJSON(node: VariableDeclarationNode, deserializer: NodeDeserializer): VariableDeclarationNode {
 		return new VariableDeclarationNode(
 			node.declarations.map(deserializer) as VariableDeclarator[],
-			node.kind
+			node.kind,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: VariableDeclarationNode, visitNode: VisitNodeType): void {
 		node.declarations.forEach(visitNode);
 	}
-	constructor(protected declarations: VariableDeclarator[], protected kind: 'var' | 'let' | 'const') {
-		super();
+	constructor(
+		protected declarations: VariableDeclarator[],
+		protected kind: 'var' | 'let' | 'const',
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getDeclarations() {
 		return this.declarations;

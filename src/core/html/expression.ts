@@ -23,12 +23,38 @@ function parseLiveText(text: LiveTextContent) {
 	text.pipelineNames = getPipelineNames(textExpression);
 }
 
+/**
+ * user-name ==> userName
+ * 
+ * @param source 
+ * @returns 
+ */
 function convertToMemberAccessStyle(source: string | string[]): string {
 	const dashSplits = Array.isArray(source) ? source : source.split('-');
 	if (dashSplits.length === 1) {
 		return source as string;
 	}
 	return dashSplits[0] + dashSplits.splice(1).map(s => (s[0].toUpperCase() + s.substring(1))).join('');
+}
+
+function getAccessNotation(property: string) {
+	if (property.includes('-')) {
+		return [`['`, property, `']`];
+	} else if (Number.isInteger(property.at(0))) {
+		return ['[', property, ']'];
+	}
+	return ['.', property];
+}
+
+/**
+ * user.tel-number ==> user['tel-number']
+ * 
+ * @param source 
+ * @returns 
+ */
+function escapeMemberExpression(source: string | string[]): string {
+	const dashSplits = Array.isArray(source) ? source : source.split('.');
+	return dashSplits.flatMap(property => getAccessNotation(property)).join('');
 }
 
 /**
@@ -45,7 +71,7 @@ function checkAndValidateObjectSyntax(source: string) {
 	return source;
 }
 function parseLiveAttribute(attr: LiveAttribute) {
-	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
+	const elementSource = `this${escapeMemberExpression(attr.name)}`;
 	const elementExpression = JavaScriptParser.parseScript(elementSource);
 	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
 	if (elementExpression instanceof MemberExpression
@@ -71,7 +97,9 @@ export function getPipelineNames(modelExpression: ExpressionNode): string[] | un
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
-	const elementSource = `this.${convertToMemberAccessStyle(attr.name)}`;
+	const elementSource = attr.name.startsWith('data-')
+		? `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`
+		: `this${escapeMemberExpression(attr.name)}`;
 	const elementExpression = JavaScriptParser.parseScript(elementSource);
 	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
 	if (elementExpression instanceof MemberExpression) {

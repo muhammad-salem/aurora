@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/webpack",
-	"version": "0.8.2-dev.20221008",
+	"version": "0.8.4",
 	"description": "A web pack demo to work with @ibyar/aurora package to build web components",
 	"license": "MIT",
 	"private": true,
@@ -10,19 +10,19 @@
 		"build:prod": "webpack --config ./webpack.prod.js"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^0.8.2-dev.20221008",
-		"@ibyar/example": "^0.8.2-dev.20221008"
+		"@ibyar/aurora": "^0.8.4",
+		"@ibyar/example": "^0.8.4"
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",
-		"css-loader": "^6.7.1",
+		"css-loader": "^6.7.2",
 		"html-loader": "^4.2.0",
 		"html-webpack-plugin": "^5.5.0",
-		"mini-css-extract-plugin": "^2.6.1",
+		"mini-css-extract-plugin": "^2.7.0",
 		"ts-loader": "^9.4.1",
-		"typescript": "^4.8.4",
-		"webpack": "^5.74.0",
-		"webpack-cli": "^4.10.0",
+		"typescript": "^4.9.4",
+		"webpack": "^5.75.0",
+		"webpack-cli": "^5.0.0",
 		"webpack-dev-server": "^4.11.1"
 	},
 	"keywords": [

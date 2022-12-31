@@ -1,7 +1,6 @@
 /// <reference types='zone.js' />
-import { hasBindingHook } from '@ibyar/expressions';
 import { EventEmitter } from '../component/events.js';
-import { createZoneProxyHandler } from './proxy.js';
+import { ZoneType } from './bootstrap.js';
 
 const NOOP = () => { };
 const EMPTY_PAYLOAD = {};
@@ -14,7 +13,7 @@ export interface AuroraZone {
 	readonly onEmpty: EventEmitter<void>;
 
 
-	fork(): AuroraZone;
+	fork(type?: ZoneType): AuroraZone;
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T;
 	runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
@@ -32,7 +31,8 @@ export abstract class AbstractAuroraZone implements AuroraZone {
 	constructor() {
 		this.id = ++LastId;
 	}
-	abstract fork(): AuroraZone;
+	abstract fork(type?: ZoneType): AuroraZone;
+
 	abstract run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
 	abstract runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined, name?: string | undefined): T;
 	abstract runGuarded<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T;
@@ -100,7 +100,12 @@ export class AuroraZone extends AbstractAuroraZone {
 			},
 		});
 	}
-	fork(): AuroraZone {
+	fork(type?: ZoneType): AuroraZone {
+		if (type === 'manual') {
+			return new ManualAuroraZone(this);
+		} else if (type === 'proxy') {
+			return new ProxyAuroraZone(this);
+		}
 		return new AuroraZone(this);
 	}
 	run<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[]): T {
@@ -154,7 +159,12 @@ export class ManualAuroraZone extends AbstractAuroraZone {
 			self._parent = parent as AuroraZonePrivate;
 		}
 	}
-	fork(): AuroraZone {
+	fork(type?: ZoneType): AuroraZone {
+		if (type === 'proxy') {
+			return new ProxyAuroraZone(this);
+		} else if (type === 'aurora') {
+			return new AuroraZone(this);
+		}
 		return new ManualAuroraZone(this);
 	}
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {
@@ -194,7 +204,12 @@ export class ProxyAuroraZone extends AbstractAuroraZone {
 			self._parent = parent as AuroraZonePrivate;
 		}
 	}
-	fork(): AuroraZone {
+	fork(type?: ZoneType): AuroraZone {
+		if (type === 'manual') {
+			return new ManualAuroraZone(this);
+		} else if (type === 'aurora') {
+			return new AuroraZone(this);
+		}
 		return new ProxyAuroraZone(this);
 	}
 	private runCallback<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[] | undefined): T {

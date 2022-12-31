@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode, DeclarationExpression,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { Identifier } from './values.js';
@@ -19,6 +19,8 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 			node.method,
 			node.shorthand,
 			node.computed,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: Property, visitNode: VisitNodeType): void {
@@ -31,8 +33,10 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 		protected kind: 'init' | 'get' | 'set',
 		protected method: boolean,
 		protected shorthand: boolean,
-		protected computed: boolean,) {
-		super();
+		protected computed: boolean,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getKey() {
 		return this.key;
@@ -117,13 +121,20 @@ export class Property extends AbstractExpressionNode implements DeclarationExpre
 @Deserializer('ObjectExpression')
 export class ObjectExpression extends AbstractExpressionNode {
 	static fromJSON(node: ObjectExpression, deserializer: NodeDeserializer): ObjectExpression {
-		return new ObjectExpression(node.properties.map(deserializer) as Property[]);
+		return new ObjectExpression(
+			node.properties.map(deserializer) as Property[],
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ObjectExpression, visitNode: VisitNodeType): void {
 		node.properties.forEach(visitNode);
 	}
-	constructor(private properties: Property[]) {
-		super();
+	constructor(
+		private properties: Property[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getProperties() {
 		return this.properties;
@@ -157,13 +168,20 @@ export class ObjectExpression extends AbstractExpressionNode {
 @Deserializer('ObjectPattern')
 export class ObjectPattern extends AbstractExpressionNode implements DeclarationExpression {
 	static fromJSON(node: ObjectPattern, deserializer: NodeDeserializer): ObjectPattern {
-		return new ObjectPattern(node.properties.map(deserializer) as (Property | RestElement)[]);
+		return new ObjectPattern(
+			node.properties.map(deserializer) as (Property | RestElement)[],
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ObjectPattern, visitNode: VisitNodeType): void {
 		node.properties.forEach(visitNode);
 	}
-	constructor(private properties: (Property | RestElement)[]) {
-		super();
+	constructor(
+		private properties: (Property | RestElement)[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getProperties() {
 		return this.properties;

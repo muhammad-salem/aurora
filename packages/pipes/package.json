@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/pipes",
-	"version": "0.8.2-dev.20221008",
+	"version": "0.8.4",
 	"description": "Ibyar pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/pipes",
@@ -9,6 +9,16 @@
 		"url": "https://github.com/ibyar/aurora.git",
 		"directory": "packages/pipes"
 	},
+	"bugs": {
+		"url": "https://github.com/ibyar/aurora/issues"
+	},
+	"author": "The Ibyar Authors (https://github.com/ibyar/aurora/graphs/contributors)",
+	"contributors": [
+		{
+			"name": "Muhammad Salem",
+			"email": "salem.ebo@gmail.com"
+		}
+	],
 	"main": "./index.js",
 	"module": "./index.js",
 	"types": "./index.d.ts",
@@ -23,14 +33,14 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.8.2-dev.20221008",
-		"@ibyar/elements": "^0.8.2-dev.20221008",
-		"@ibyar/expressions": "^0.8.2-dev.20221008",
+		"@ibyar/core": "^0.8.4",
+		"@ibyar/elements": "^0.8.4",
+		"@ibyar/expressions": "^0.8.4",
 		"reflect-metadata": "^0.1.13",
-		"tslib": "^2.4.0"
+		"tslib": "^2.4.1"
 	},
 	"devDependencies": {
-		"typescript": "^4.8.4"
+		"typescript": "^4.9.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

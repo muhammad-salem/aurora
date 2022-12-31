@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadElement } from './spread.js';
@@ -7,15 +10,24 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('NewExpression')
 export class NewExpression extends AbstractExpressionNode {
 	static fromJSON(node: NewExpression, deserializer: NodeDeserializer): NewExpression {
-		return new NewExpression(deserializer(node.className), node.arguments?.map(deserializer));
+		return new NewExpression(
+			deserializer(node.className),
+			node.arguments?.map(deserializer),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: NewExpression, visitNode: VisitNodeType): void {
 		visitNode(node.className);
 		node.arguments?.forEach(visitNode);
 	}
 	private arguments?: ExpressionNode[];
-	constructor(private className: ExpressionNode, parameters?: ExpressionNode[]) {
-		super();
+	constructor(
+		private className: ExpressionNode,
+		parameters?: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		this.arguments = parameters;
 	}
 	getClassName() {

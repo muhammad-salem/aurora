@@ -1,6 +1,6 @@
 import type {
-	DeclarationExpression, ExpressionEventPath,
-	ExpressionNode, NodeDeserializer, VisitNodeType
+	DeclarationExpression, ExpressionEventPath, ExpressionNode,
+	NodeDeserializer, SourceLocation, VisitNodeType
 } from '../expression.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -50,7 +50,6 @@ interface ClassInstance {
 type PropertyInitializer = () => { key: PropertyKey, value: any, isPrivate: boolean };
 
 class ClassInitializer {
-
 
 	/**
 	 * register class public static properties and methods
@@ -142,12 +141,11 @@ class ClassInitializer {
  */
 @Deserializer('Super')
 export class Super extends AbstractExpressionNode {
-	static INSTANCE = new Super();
 	static fromJSON(node: Super): Super {
-		return Super.INSTANCE;
+		return new Super(node.range, node.loc);
 	}
-	constructor() {
-		super();
+	constructor(range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	set(stack: Stack, value: any) {
 		throw new Error('Super.#set() Method not implemented.');
@@ -161,7 +159,6 @@ export class Super extends AbstractExpressionNode {
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		throw new Error('Super.#dependencyPath() Method not implemented.');
 	}
-
 	toString(): string {
 		return `super`;
 	}
@@ -179,33 +176,20 @@ export class Super extends AbstractExpressionNode {
  */
 @Deserializer('MetaProperty')
 export class MetaProperty extends AbstractExpressionNode {
-
-	public static NewTarget = new MetaProperty(new Identifier('new'), new Identifier('target'));
-
-	public static ImportMeta = new MetaProperty(new Identifier('import'), new Identifier('meta'));
-
-	private static getJsonName(identifier: ExpressionNode): string {
-		return Reflect.get(identifier, 'name');
-	}
-
 	static fromJSON(node: MetaProperty, deserializer: NodeDeserializer<any>): MetaProperty {
-		if (MetaProperty.getJsonName(node.meta) === 'new' && MetaProperty.getJsonName(node.property) === 'target') {
-			return MetaProperty.NewTarget;
-		}
-		else if (MetaProperty.getJsonName(node.meta) === 'import' && MetaProperty.getJsonName(node.property) === 'meta') {
-			return MetaProperty.ImportMeta;
-		}
 		return new MetaProperty(
 			deserializer(node.meta),
-			deserializer(node.property)
+			deserializer(node.property),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: MetaProperty, visitNode: VisitNodeType): void {
 		visitNode(node.meta);
 		visitNode(node.property);
 	}
-	constructor(private meta: Identifier, private property: Identifier) {
-		super();
+	constructor(private meta: Identifier, private property: Identifier, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getMeta() {
 		return this.meta;
@@ -247,7 +231,9 @@ export class MetaProperty extends AbstractExpressionNode {
 export class PrivateIdentifier extends Identifier {
 	static fromJSON(node: PrivateIdentifier): PrivateIdentifier {
 		return new PrivateIdentifier(
-			node.name as string
+			node.name as string,
+			node.range,
+			node.loc
 		);
 	}
 	get(stack: Stack, thisContext: ClassInstance) {
@@ -268,10 +254,7 @@ export class PrivateIdentifier extends Identifier {
 @Deserializer('StaticBlock')
 export class StaticBlock extends BlockStatement {
 	static fromJSON(node: StaticBlock, deserializer: NodeDeserializer<any>): StaticBlock {
-		return new StaticBlock(deserializer(node.body));
-	}
-	constructor(body: ExpressionNode[]) {
-		super(body);
+		return new StaticBlock(deserializer(node.body), node.range, node.loc);
 	}
 	get(stack: Stack, classInitializer?: ClassInitializer): void {
 		classInitializer?.addStaticInitializerBlock(super.get(stack));
@@ -293,8 +276,10 @@ export abstract class AbstractDefinition extends AbstractExpressionNode {
 		protected decorators: Decorator[],
 		protected computed: boolean,
 		isStatic: boolean,
-		protected value?: ExpressionNode,) {
-		super();
+		protected value?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		this.static = isStatic;
 	}
 	getKey() {
@@ -353,7 +338,9 @@ export class MethodDefinition extends AbstractDefinition {
 			deserializer(node.value),
 			node.decorators.map(deserializer),
 			node.computed,
-			node.static
+			node.static,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: MethodDefinition, visitNode: VisitNodeType): void {
@@ -361,7 +348,7 @@ export class MethodDefinition extends AbstractDefinition {
 		visitNode(node.value);
 		node.decorators.forEach(visitNode);
 	}
-	declare protected value: FunctionExpression;
+	declare protected 'static': boolean; value: FunctionExpression;
 	afterInstanceConstruct: any;
 	constructor(
 		private kind: MethodDefinitionKind,
@@ -369,8 +356,10 @@ export class MethodDefinition extends AbstractDefinition {
 		value: FunctionExpression,
 		decorators: Decorator[],
 		computed: boolean,
-		isStatic: boolean) {
-		super(key, decorators, computed, isStatic, value);
+		isStatic: boolean,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(key, decorators, computed, isStatic, value, range, loc);
 	}
 	getKind() {
 		return this.kind;
@@ -503,7 +492,9 @@ export class PropertyDefinition extends AbstractDefinition {
 			node.decorators.map(deserializer),
 			node.computed,
 			node.static,
-			node.value && deserializer(node.value)
+			node.value && deserializer(node.value),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: PropertyDefinition, visitNode: VisitNodeType): void {
@@ -515,8 +506,10 @@ export class PropertyDefinition extends AbstractDefinition {
 		decorators: Decorator[],
 		computed: boolean,
 		isStatic: boolean,
-		value?: ExpressionNode) {
-		super(key, decorators, computed, isStatic, value);
+		value?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(key, decorators, computed, isStatic, value, range, loc);
 	}
 	get(stack: Stack, initializer: ClassInitializer): void {
 		const name: string = this.getKeyName(stack);
@@ -558,7 +551,9 @@ export class AccessorProperty extends AbstractDefinition {
 			node.decorators.map(deserializer) as Decorator[],
 			node.computed,
 			node.static,
-			node.value ? deserializer(node.value) : void 0
+			node.value ? deserializer(node.value) : void 0,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: AccessorProperty, visitNode: VisitNodeType): void {
@@ -571,8 +566,10 @@ export class AccessorProperty extends AbstractDefinition {
 		decorators: Decorator[],
 		computed: boolean,
 		isStatic: boolean,
-		value?: ExpressionNode) {
-		super(key, decorators, computed, isStatic, value);
+		value?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(key, decorators, computed, isStatic, value, range, loc);
 	}
 	get(stack: Stack, initializer: ClassInitializer): void {
 		const name: string = this.getKeyName(stack);
@@ -618,14 +615,19 @@ export class AccessorProperty extends AbstractDefinition {
 export class ClassBody extends AbstractExpressionNode {
 	static fromJSON(node: ClassBody, deserializer: NodeDeserializer<any>): ClassBody {
 		return new ClassBody(
-			node.body.map(deserializer)
+			node.body.map(deserializer),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ClassBody, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[]) {
-		super();
+	constructor(
+		private body: (MethodDefinition | PropertyDefinition | AccessorProperty | StaticBlock)[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getBody() {
 		return this.body;
@@ -657,8 +659,10 @@ export class Class extends AbstractExpressionNode {
 		protected body: ClassBody,
 		protected decorators: Decorator[],
 		protected id?: Identifier,
-		protected superClass?: ExpressionNode) {
-		super();
+		protected superClass?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getBody() {
 		return this.body;
@@ -740,8 +744,11 @@ export class ClassDeclaration extends Class implements DeclarationExpression {
 	static fromJSON(node: ClassDeclaration, deserializer: NodeDeserializer<any>): ClassDeclaration {
 		return new ClassDeclaration(
 			deserializer(node.body),
+			node.decorators.map(deserializer),
 			deserializer(node.id),
-			node.superClass && deserializer(node.superClass)
+			node.superClass && deserializer(node.superClass),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ClassDeclaration, visitNode: VisitNodeType): void {
@@ -751,8 +758,14 @@ export class ClassDeclaration extends Class implements DeclarationExpression {
 		node.superClass && visitNode(node.superClass);
 	}
 	declare protected id: Identifier;
-	constructor(body: ClassBody, decorators: Decorator[], id: Identifier, superClass?: ExpressionNode) {
-		super(body, decorators, id, superClass);
+	constructor(
+		body: ClassBody,
+		decorators: Decorator[],
+		id: Identifier,
+		superClass?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(body, decorators, id, superClass, range, loc);
 	}
 	declareVariable(stack: Stack, propertyValue?: any) {
 		stack.declareVariable(this.id.getName(), propertyValue);
@@ -773,7 +786,11 @@ export class ClassExpression extends Class {
 	static fromJSON(node: ClassExpression, deserializer: NodeDeserializer<any>): ClassExpression {
 		return new ClassExpression(
 			deserializer(node.body),
-			node.superClass && deserializer(node.superClass)
+			node.decorators.map(deserializer),
+			node.id && deserializer(node.id),
+			node.superClass && deserializer(node.superClass),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ClassExpression, visitNode: VisitNodeType): void {
@@ -781,6 +798,16 @@ export class ClassExpression extends Class {
 		node.decorators.forEach(visitNode);
 		node.id && visitNode(node.id);
 		node.superClass && visitNode(node.superClass);
+	}
+
+	constructor(
+		body: ClassBody,
+		decorators: Decorator[],
+		id?: Identifier,
+		superClass?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(body, decorators, id, superClass, range, loc);
 	}
 
 }

@@ -1,13 +1,17 @@
 import { AttributeDirective, Directive } from '@ibyar/core';
 import { AbstractControl } from './form-control.js';
-import { Validator, AsyncValidator } from './validators.js';
 
 
-export abstract class AbstractFormArray<T> extends AbstractControl<T> {
-	controls: AbstractControl<any>[];
+export abstract class AbstractFormArray<T = any> extends AbstractControl<T> {
+
+	protected controls: AbstractControl<T[keyof T]>[] = [];
+
+	abstract at<C extends AbstractControl<T[keyof T]>>(index: number): C;
+	abstract push<C extends AbstractControl<T[keyof T]>>(control: C): C;
 }
 
-export class FormArray<T> extends AbstractFormArray<T> {
+export class FormArray<T = any> extends AbstractFormArray<T> {
+
 	get valid(): boolean {
 		throw new Error('Method not implemented.');
 	}
@@ -26,19 +30,14 @@ export class FormArray<T> extends AbstractFormArray<T> {
 	get untouched(): boolean {
 		throw new Error('Method not implemented.');
 	}
+	at<C extends AbstractControl<T[keyof T]>>(index: number): C {
+		return this.controls.at(index) as C;
+	}
+	push<C extends AbstractControl<T[keyof T]>>(control: C): C {
+		this.controls.push(control);
+		return control;
+	}
 	updateValue(value: T | null): void {
-		throw new Error('Method not implemented.');
-	}
-	addValidator(validator: Validator): void {
-		throw new Error('Method not implemented.');
-	}
-	removeValidator(validator: Validator): void {
-		throw new Error('Method not implemented.');
-	}
-	addAsyncValidator(validator: AsyncValidator): void {
-		throw new Error('Method not implemented.');
-	}
-	removeAsyncValidator(validator: AsyncValidator): void {
 		throw new Error('Method not implemented.');
 	}
 	updateValidity(): void {

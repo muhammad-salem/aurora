@@ -254,23 +254,23 @@ export class Stack implements Stack {
 	pushScope<T extends Context>(scope: Scope<T>): void {
 		this.stack.push(scope);
 	}
-	pushBlockScope<T extends Context>(): Scope<T> {
-		const scope = Scope.blockScope<T>();
+	pushBlockScope<T extends Context>(propertyKeys?: (keyof T)[]): Scope<T> {
+		const scope = Scope.blockScope<T>(propertyKeys);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushBlockScopeFor<T extends Context>(context: T): Scope<T> {
-		const scope = Scope.for<T>(context);
+	pushBlockScopeFor<T extends Context>(context: T, propertyKeys?: (keyof T)[]): Scope<T> {
+		const scope = Scope.for<T>(context, propertyKeys);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushReactiveScope<T extends Context>(): ReactiveScope<T> {
-		const scope = ReactiveScope.blockScope<T>();
+	pushReactiveScope<T extends Context>(propertyKeys?: (keyof T)[]): ReactiveScope<T> {
+		const scope = ReactiveScope.blockScope<T>(propertyKeys);
 		this.stack.push(scope);
 		return scope;
 	}
-	pushReactiveScopeFor<T extends Context>(context: T): ReactiveScope<T> {
-		const scope = ReactiveScope.for(context);
+	pushReactiveScopeFor<T extends Context>(context: T, propertyKeys?: (keyof T)[]): ReactiveScope<T> {
+		const scope = ReactiveScope.for(context, propertyKeys);
 		this.stack.push(scope);
 		return scope;
 	}

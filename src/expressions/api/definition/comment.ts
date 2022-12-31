@@ -1,15 +1,15 @@
-import type { ExpressionEventPath, ExpressionNode } from '../expression.js';
+import type { ExpressionEventPath, ExpressionNode, SourceLocation } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 
 @Deserializer('CommentExpression')
 export class CommentExpression extends AbstractExpressionNode {
-	static fromJSON(nodeExp: CommentExpression): CommentExpression {
-		return new CommentExpression(nodeExp.comment);
+	static fromJSON(node: CommentExpression): CommentExpression {
+		return new CommentExpression(node.comment, node.range, node.loc);
 	}
-	constructor(private comment: string) {
-		super();
+	constructor(private comment: string, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getComment() {
 		return this.comment;

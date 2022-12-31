@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -18,15 +18,21 @@ export class WhileNode extends AbstractExpressionNode {
 	static fromJSON(node: WhileNode, deserializer: NodeDeserializer): WhileNode {
 		return new WhileNode(
 			deserializer(node.test),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: WhileNode, visitNode: VisitNodeType): void {
 		visitNode(node.body);
 		visitNode(node.test);
 	}
-	constructor(private test: ExpressionNode, private body: ExpressionNode) {
-		super();
+	constructor(
+		private test: ExpressionNode,
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;
@@ -81,15 +87,21 @@ export class DoWhileNode extends AbstractExpressionNode {
 	static fromJSON(node: DoWhileNode, deserializer: NodeDeserializer): DoWhileNode {
 		return new DoWhileNode(
 			deserializer(node.test),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: DoWhileNode, visitNode: VisitNodeType): void {
 		visitNode(node.test);
 		visitNode(node.body);
 	}
-	constructor(private test: ExpressionNode, private body: ExpressionNode) {
-		super();
+	constructor(
+		private test: ExpressionNode,
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getTest() {
 		return this.test;

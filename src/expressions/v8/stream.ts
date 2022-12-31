@@ -1,16 +1,7 @@
 import { ExpressionNode } from '../api/expression.js';
 import { Token, TokenExpression } from './token.js';
-import {
-	GlobalThisNode, OfNode, Identifier,
-	SymbolNode, AsNode, Literal,
-	ThisNode, NullNode, UndefinedNode,
-	TrueNode, FalseNode, DefaultNode,
-	YieldIdentifier, ConstructorIdentifier,
-	ArgumentsIdentifier, NameIdentifier,
-	EvalIdentifier, SuperIdentifier, LetIdentifier,
-	SetIdentifier, GetIdentifier, AwaitIdentifier, AsyncIdentifier
-} from '../api/definition/values.js';
-import { PrivateIdentifier } from '../api/class/class.js';
+import { Identifier, Literal } from '../api/definition/values.js';
+import { PrivateIdentifier, Super } from '../api/class/class.js';
 import { DebuggerStatement } from '../api/computing/debugger.js';
 import { isStrict, LanguageMode } from './language.js';
 
@@ -22,8 +13,6 @@ export const IdentifierStartRegex = /[_$a-zA-Z\xA0-\uFFFF]/;
 
 export const IdentifierPartRegex = /[_$a-zA-Z0-9\xA0-\uFFFF]/;
 
-const EOFToken = Object.freeze(new TokenExpression(Token.EOS)) as TokenExpression;
-
 export interface PreTemplateLiteral extends ExpressionNode { };
 export class PreTemplateLiteral {
 	constructor(public strings: string[], public expressions: string[]) { }
@@ -31,7 +20,7 @@ export class PreTemplateLiteral {
 
 export interface TemplateStringLiteral extends ExpressionNode { };
 export class TemplateStringLiteral {
-	constructor(public string: string) { }
+	constructor(public string: string, public range: [number, number]) { }
 }
 
 export abstract class TokenStream {
@@ -229,7 +218,7 @@ export class TokenStreamer extends TokenStream {
 	}
 	next(): TokenExpression {
 		if (this.pos === this.tokens.length) {
-			return EOFToken;
+			return new TokenExpression(Token.EOS, [-1, -1]);
 		}
 		this.last = this.current;
 		return this.current = this.tokens[this.pos++];
@@ -258,12 +247,12 @@ export class TokenStreamImpl extends TokenStream {
 	constructor(private expression: string, mode?: LanguageMode) {
 		super(mode);
 	}
-	private newToken(type: Token, value?: ExpressionNode): TokenExpression {
-		return new TokenExpression(type, value);
+	private newToken(type: Token, range: [number, number], value?: ExpressionNode): TokenExpression {
+		return new TokenExpression(type, range, value);
 	}
 	next(): TokenExpression {
 		if (this.pos >= this.expression.length) {
-			return this.current = EOFToken;
+			return this.current = this.newToken(Token.EOS, [this.expression.length, this.expression.length]);
 		}
 		this.last = this.current;
 		if (this.isWhitespace() || this.isComment()) {
@@ -284,7 +273,7 @@ export class TokenStreamImpl extends TokenStream {
 			|| this.isProperty()) {
 			return this.current;
 		} else if (this.pos >= this.expression.length) {
-			return this.current = EOFToken;
+			return this.current = this.newToken(Token.EOS, [this.expression.length, this.expression.length]);
 		} else {
 			throw new Error(this.createError('Unknown character "' + this.expression.charAt(this.pos) + '"'));
 		}
@@ -350,8 +339,9 @@ export class TokenStreamImpl extends TokenStream {
 					const end = this.pos;
 					const string = literal.join('');
 					const rawString = this.expression.substring(start, end);
-					const stringNode = new Literal<string>(string, rawString);
-					this.current = this.newToken(Token.STRING, stringNode);
+					const range: [number, number] = [start, end];
+					const stringNode = new Literal<string>(string, rawString, undefined, undefined, range);
+					this.current = this.newToken(Token.STRING, range, stringNode);
 					return true;
 				}
 				if (c0 == '' || this.pos >= this.expression.length) {
@@ -390,6 +380,7 @@ export class TokenStreamImpl extends TokenStream {
 		// can specially treat invalid escape sequences in templates (which are
 		// handled by the parser).
 
+		const start = this.pos;
 		let result = Token.TEMPLATE_SPAN;
 		let literal: string[] = [],
 			c0: string = this.expression.charAt(this.pos);
@@ -444,7 +435,8 @@ export class TokenStreamImpl extends TokenStream {
 				addLiteralChar(c);
 			}
 		}
-		return this.newToken(result, new TemplateStringLiteral(literal.join('')));
+		const range: [number, number] = [start, this.pos];
+		return this.newToken(result, range, new TemplateStringLiteral(literal.join(''), range));
 	}
 	public scanTemplateContinuation(): TokenExpression {
 		if (this.current.isNotType(Token.RBRACE)) {
@@ -586,12 +578,10 @@ export class TokenStreamImpl extends TokenStream {
 	private isParentheses() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '(') {
-			this.current = this.newToken(Token.LPAREN);
-			this.pos++;
+			this.current = this.newToken(Token.LPAREN, [this.pos, ++this.pos]);
 			return true;
 		} else if (char === ')') {
-			this.current = this.newToken(Token.RPAREN);
-			this.pos++;
+			this.current = this.newToken(Token.RPAREN, [this.pos, ++this.pos]);
 			return true;
 		}
 		return false;
@@ -599,12 +589,10 @@ export class TokenStreamImpl extends TokenStream {
 	private isBracket() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '[') {
-			this.current = this.newToken(Token.LBRACK);
-			this.pos++;
+			this.current = this.newToken(Token.LBRACK, [this.pos, ++this.pos]);
 			return true;
 		} else if (char === ']') {
-			this.current = this.newToken(Token.RBRACK);
-			this.pos++;
+			this.current = this.newToken(Token.RBRACK, [this.pos, ++this.pos]);
 			return true;
 		}
 		return false;
@@ -612,12 +600,10 @@ export class TokenStreamImpl extends TokenStream {
 	private isCurlY() {
 		const char = this.expression.charAt(this.pos);
 		if (char === '{') {
-			this.current = this.newToken(Token.LBRACE);
-			this.pos++;
+			this.current = this.newToken(Token.LBRACE, [this.pos, ++this.pos]);
 			return true;
 		} else if (char === '}') {
-			this.current = this.newToken(Token.RBRACE);
-			this.pos++;
+			this.current = this.newToken(Token.RBRACE, [this.pos, ++this.pos]);
 			return true;
 		}
 		return false;
@@ -625,8 +611,7 @@ export class TokenStreamImpl extends TokenStream {
 	private isComma() {
 		const char = this.expression.charAt(this.pos);
 		if (char === ',') {
-			this.current = this.newToken(Token.COMMA);
-			this.pos++;
+			this.current = this.newToken(Token.COMMA, [this.pos, ++this.pos]);
 			return true;
 		}
 		return false;
@@ -635,8 +620,7 @@ export class TokenStreamImpl extends TokenStream {
 	private isSemicolon() {
 		const char = this.expression.charAt(this.pos);
 		if (char === ';') {
-			this.current = this.newToken(Token.SEMICOLON);
-			this.pos++;
+			this.current = this.newToken(Token.SEMICOLON, [this.pos, ++this.pos]);
 			return true;
 		}
 		return false;
@@ -699,34 +683,36 @@ export class TokenStreamImpl extends TokenStream {
 		}
 		let node: ExpressionNode;
 		if (isPrivate) {
-			node = new PrivateIdentifier(identifierName);
-			this.current = this.newToken(Token.PRIVATE_NAME, node);
+			const range: [number, number] = [startPos - 1, this.pos];
+			node = new PrivateIdentifier(identifierName, range);
+			this.current = this.newToken(Token.PRIVATE_NAME, range, node);
 		} else {
+			const range: [number, number] = [startPos, this.pos];
 			switch (identifierName) {
-				case 'this': this.current = this.newToken(Token.THIS, ThisNode); break;
-				case 'null': this.current = this.newToken(Token.NULL_LITERAL, NullNode); break;
-				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, UndefinedNode); break;
-				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, TrueNode); break;
-				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, FalseNode); break;
+				case 'this': this.current = this.newToken(Token.THIS, range); break;
+				case 'null': this.current = this.newToken(Token.NULL_LITERAL, range, new Literal<null>(null, undefined, undefined, undefined, range)); break;
+				case 'undefined': this.current = this.newToken(Token.UNDEFINED_LITERAL, range, new Literal<undefined>(undefined, undefined, undefined, undefined, range)); break;
+				case 'true': this.current = this.newToken(Token.TRUE_LITERAL, range, new Literal<boolean>(true, undefined, undefined, undefined, range)); break;
+				case 'false': this.current = this.newToken(Token.FALSE_LITERAL, range, new Literal<boolean>(false, undefined, undefined, undefined, range)); break;
 
-				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, GlobalThisNode); break;
-				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, SymbolNode); break;
-				case 'of': this.current = this.newToken(Token.IDENTIFIER, OfNode); break;
-				case 'as': this.current = this.newToken(Token.IDENTIFIER, AsNode); break;
-				case 'default': this.current = this.newToken(Token.DEFAULT, DefaultNode); break;
-				case 'yield': this.current = this.newToken(Token.YIELD, YieldIdentifier); break;
-				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, ConstructorIdentifier); break;
-				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, ArgumentsIdentifier); break;
-				case 'name': this.current = this.newToken(Token.IDENTIFIER, NameIdentifier); break;
-				case 'eval': this.current = this.newToken(Token.IDENTIFIER, EvalIdentifier); break;
-				case 'debugger': this.current = this.newToken(Token.DEBUGGER, DebuggerStatement.INSTANCE); break;
-				case 'class': this.current = this.newToken(Token.CLASS); break;
-				case 'await': this.current = this.newToken(Token.AWAIT, AwaitIdentifier); break;
-				case 'async': this.current = this.newToken(Token.ASYNC, AsyncIdentifier); break;
+				case 'globalThis': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('globalThis', range)); break;
+				case 'Symbol': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('Symbol', range)); break;
+				case 'of': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('of', range)); break;
+				case 'as': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('as', range)); break;
+				case 'default': this.current = this.newToken(Token.DEFAULT, range, new Identifier('default', range)); break;
+				case 'yield': this.current = this.newToken(Token.YIELD, range, new Identifier('yield', range)); break;
+				case 'constructor': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('constructor', range)); break;
+				case 'arguments': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('arguments', range)); break;
+				case 'name': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('name', range)); break;
+				case 'eval': this.current = this.newToken(Token.IDENTIFIER, range, new Identifier('eval', range)); break;
+				case 'debugger': this.current = this.newToken(Token.DEBUGGER, range, new DebuggerStatement(range)); break;
+				case 'class': this.current = this.newToken(Token.CLASS, range); break;
+				case 'await': this.current = this.newToken(Token.AWAIT, range, new Identifier('await', range)); break;
+				case 'async': this.current = this.newToken(Token.ASYNC, range, new Identifier('async', range)); break;
 
 				default:
-					node = new Identifier(identifierName);
-					this.current = this.newToken(Token.IDENTIFIER, node);
+					node = new Identifier(identifierName, range);
+					this.current = this.newToken(Token.IDENTIFIER, range, node);
 					break;
 			}
 		}
@@ -836,60 +822,61 @@ export class TokenStreamImpl extends TokenStream {
 	}
 	public scanRegExpPattern() {
 		const peek = this.peek();
-		if (peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN)) {
-			this.next();
-			let pattern = peek.isType(Token.DIV_ASSIGN) ? '=' : '';
-			let currentPos = this.pos;
-			let inCharacterClass = false;
-			let c = this.expression.charAt(currentPos);
-			while (c !== '/' || inCharacterClass) {
+		if (!(peek.isType(Token.DIV) || peek.isType(Token.DIV_ASSIGN))) {
+			return false;
+		}
+		const start = this.pos;
+		this.next();
+		let pattern = peek.isType(Token.DIV_ASSIGN) ? '=' : '';
+		let currentPos = this.pos;
+		let inCharacterClass = false;
+		let c = this.expression.charAt(currentPos);
+		while (c !== '/' || inCharacterClass) {
+			if (c == '' || this.isLineTerminator(c)) {
+				return false;
+			}
+			if (c === '\\') {  // Escape sequence.
+				pattern += c;
+				c = this.expression.charAt(++currentPos);
 				if (c == '' || this.isLineTerminator(c)) {
 					return false;
 				}
-				if (c === '\\') {  // Escape sequence.
-					pattern += c;
-					c = this.expression.charAt(++currentPos);
-					if (c == '' || this.isLineTerminator(c)) {
-						return false;
-					}
-					pattern += c;
-					c = this.expression.charAt(++currentPos);
-				} else {
-					if (c == '[') inCharacterClass = true;
-					if (c == ']') inCharacterClass = false;
-					pattern += c;
-					c = this.expression.charAt(++currentPos);
-				}
+				pattern += c;
+				c = this.expression.charAt(++currentPos);
+			} else {
+				if (c == '[') inCharacterClass = true;
+				if (c == ']') inCharacterClass = false;
+				pattern += c;
+				c = this.expression.charAt(++currentPos);
 			}
-			currentPos++;   // consume '/'
-
-			let flags = '';
-			const remainFlags = TokenStreamImpl.REGEXP_FLAGS.slice();
-			while (true) {
-				const code = this.expression.charCodeAt(currentPos);
-				const nextChar = this.expression.charAt(currentPos);
-				if (/[\.\s]/.test(nextChar) || Number.isNaN(code) /* || FORBIDDEN_CODE_POINT.includes(code.toString(16))*/) {
-					break;
-				}
-				const nextCharIndex = remainFlags.indexOf(nextChar);
-				if (nextCharIndex === -1) {
-					if (flags.includes(nextChar)) {
-						throw new Error(this.createError('Invalid regular expression flags'));
-					}
-					break;
-				} else {
-					flags += nextChar;
-					remainFlags.splice(nextCharIndex, 1);
-					currentPos++;
-				}
-			}
-			const regexNode = new Literal<RegExp>(new RegExp(pattern, flags), `/${pattern}/${flags}`, { pattern, flags });
-			this.current = this.newToken(Token.REGEXP_LITERAL, regexNode);
-			this.pos = currentPos;
-			return true;
-
 		}
-		return false;
+		currentPos++;   // consume '/'
+
+		let flags = '';
+		const remainFlags = TokenStreamImpl.REGEXP_FLAGS.slice();
+		while (true) {
+			const code = this.expression.charCodeAt(currentPos);
+			const nextChar = this.expression.charAt(currentPos);
+			if (/[\.\s]/.test(nextChar) || Number.isNaN(code) /* || FORBIDDEN_CODE_POINT.includes(code.toString(16))*/) {
+				break;
+			}
+			const nextCharIndex = remainFlags.indexOf(nextChar);
+			if (nextCharIndex === -1) {
+				if (flags.includes(nextChar)) {
+					throw new Error(this.createError('Invalid regular expression flags'));
+				}
+				break;
+			} else {
+				flags += nextChar;
+				remainFlags.splice(nextCharIndex, 1);
+				currentPos++;
+			}
+		}
+		const range: [number, number] = [start, currentPos];
+		const regexNode = new Literal<RegExp>(new RegExp(pattern, flags), `/${pattern}/${flags}`, { pattern, flags }, undefined, range);
+		this.current = this.newToken(Token.REGEXP_LITERAL, range, regexNode);
+		this.pos = currentPos;
+		return true;
 	}
 	private unescape(v: string) {
 		let index = v.indexOf('\\');
@@ -1036,16 +1023,17 @@ export class TokenStreamImpl extends TokenStream {
 		if (valid) {
 			const string = this.expression.substring(startPos, pos);
 			const rawString = this.expression.substring(this.pos, pos);
-			const numNode = new Literal<number>(parseInt(string, radix), rawString);
-			this.current = this.newToken(Token.NUMBER, numNode);
+			const range: [number, number] = [this.pos, pos];
+			const numNode = new Literal<number>(parseInt(string, radix), rawString, undefined, undefined, range);
+			this.current = this.newToken(Token.NUMBER, range, numNode);
 			this.pos = pos;
 		}
 		return valid;
 	}
 	private isNumber() {
+		const startPos = this.pos;
 		let valid = false;
 		let pos = this.pos;
-		let startPos = pos;
 		let resetPos = pos;
 		let foundDot = false;
 		let foundDigits = false;
@@ -1103,22 +1091,24 @@ export class TokenStreamImpl extends TokenStream {
 		if (valid) {
 			const rawString = this.expression.substring(startPos, pos);
 			if (this.expression.charAt(pos) === 'n') {
-				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString);
-				this.current = this.newToken(Token.BIGINT, bigintNode);
 				pos++;
+				const range: [number, number] = [startPos, this.pos];
+				const bigintNode = new Literal<BigInt>(BigInt(rawString), rawString + 'n', undefined, rawString, range);
+				this.current = this.newToken(Token.BIGINT, range, bigintNode);
 			} else {
 				let numNode: Literal<number>;
+				const range: [number, number] = [startPos, this.pos];
 				if (isOctal) {
 					const octal = rawString.substring(2);
 					if (TokenStreamImpl.OctalPattern.test(octal)) {
-						numNode = new Literal<number>(parseInt(octal, 8), rawString);
+						numNode = new Literal<number>(parseInt(octal, 8), rawString, undefined, undefined, range);
 					} else {
 						return false;
 					}
 				} else {
-					numNode = new Literal<number>(parseFloat(rawString), rawString);
+					numNode = new Literal<number>(parseFloat(rawString), rawString, undefined, undefined, range);
 				}
-				this.current = this.newToken(Token.NUMBER, numNode);
+				this.current = this.newToken(Token.NUMBER, range, numNode);
 			}
 			this.pos = pos;
 		} else {
@@ -1131,312 +1121,240 @@ export class TokenStreamImpl extends TokenStream {
 		switch (char) {
 			case '+':
 				if (this.expression.charAt(this.pos + 1) === '+') {
-					this.current = this.newToken(Token.INC);
-					this.pos += 2;
+					this.current = this.newToken(Token.INC, [this.pos, (this.pos += 2)]);
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.ADD_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.ADD_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.ADD);
-					this.pos++;
+					this.current = this.newToken(Token.ADD, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '-':
 				if (this.expression.charAt(this.pos + 1) === '-') {
-					this.current = this.newToken(Token.DEC);
-					this.pos += 2;
+					this.current = this.newToken(Token.DEC, [this.pos, (this.pos += 2)]);
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.SUB_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.SUB_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.SUB);
-					this.pos++;
+					this.current = this.newToken(Token.SUB, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '=':
 				if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.EQ_STRICT);
-						this.pos += 3;
+						this.current = this.newToken(Token.EQ_STRICT, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.EQ);
-						this.pos += 2;
+						this.current = this.newToken(Token.EQ, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '>') {
-					this.current = this.newToken(Token.ARROW);
-					this.pos += 2;
+					this.current = this.newToken(Token.ARROW, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.ASSIGN);
-					this.pos++;
+					this.current = this.newToken(Token.ASSIGN, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '*':
 				if (this.expression.charAt(this.pos + 1) === '*') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.EXP_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.EXP_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.EXP);
-						this.pos += 2;
+						this.current = this.newToken(Token.EXP, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.MUL_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.MUL_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.MUL);
-					this.pos++;
+					this.current = this.newToken(Token.MUL, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '/':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.DIV_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.DIV_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.DIV);
-					this.pos++;
+					this.current = this.newToken(Token.DIV, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '%':
 				if (this.expression.charAt(this.pos + 1) === '%') {
 					if (this.expression.charAt(this.pos + 1) === '=') {
-						this.current = this.newToken(Token.MODULO_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.MODULO_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.MODULO);
-						this.pos += 2;
+						this.current = this.newToken(Token.MODULO, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.MOD_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.MOD_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.MOD);
-					this.pos++;
+					this.current = this.newToken(Token.MOD, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '^':
 				if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.BIT_XOR_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.BIT_XOR_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.BIT_XOR);
-					this.pos++;
+					this.current = this.newToken(Token.BIT_XOR, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '>':
 				if (this.expression.charAt(this.pos + 1) === '>') {
 					if (this.expression.charAt(this.pos + 2) === '>') {
 						if (this.expression.charAt(this.pos + 3) === '=') {
-							this.current = this.newToken(Token.SHR_ASSIGN);
-							this.pos += 4;
+							this.current = this.newToken(Token.SHR_ASSIGN, [this.pos, (this.pos += 4)]);
 						} else {
-							this.current = this.newToken(Token.SHR);
-							this.pos += 3;
+							this.current = this.newToken(Token.SHR, [this.pos, (this.pos += 3)]);
 						}
 					} else if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.SAR_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.SAR_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.SAR);
-						this.pos += 2;
+						this.current = this.newToken(Token.SAR, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.GTE);
-					this.pos += 2;
+					this.current = this.newToken(Token.GTE, [this.pos, (this.pos += 2)]);
 				} else if (this.expression.charAt(this.pos + 1) === '?') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.LARGER_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.LARGER_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.LARGER);
-						this.pos += 2;
+						this.current = this.newToken(Token.LARGER, [this.pos, (this.pos += 2)]);
 					}
 				} else {
-					this.current = this.newToken(Token.GT);
-					this.pos++;
+					this.current = this.newToken(Token.GT, [this.pos, (this.pos += 2)]);
 				}
 				return true;
 			case '<':
 				if (this.expression.charAt(this.pos + 1) === '<') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.SHL_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.SHL_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.SHL);
-						this.pos += 2;
+						this.current = this.newToken(Token.SHL, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '>') {
-						this.current = this.newToken(Token.SPACESHIP);
-						this.pos += 3;
+						this.current = this.newToken(Token.SPACESHIP, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.LTE);
-						this.pos += 2;
+						this.current = this.newToken(Token.LTE, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '?') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.SMALLER_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.SMALLER_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.SMALLER);
-						this.pos += 2;
+						this.current = this.newToken(Token.SMALLER, [this.pos, (this.pos += 2)]);
 					}
 				} else {
-					this.current = this.newToken(Token.LT);
-					this.pos++;
+					this.current = this.newToken(Token.LT, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '|':
 				if (this.expression.charAt(this.pos + 1) === '|') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.OR_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.OR_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.OR);
-						this.pos += 2;
+						this.current = this.newToken(Token.OR, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.BIT_OR_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.BIT_OR_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else if (this.expression.charAt(this.pos + 1) === '>') {
-					this.current = this.newToken(Token.PIPELINE);
-					this.pos += 2;
+					this.current = this.newToken(Token.PIPELINE, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.BIT_OR);
-					this.pos++;
+					this.current = this.newToken(Token.BIT_OR, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '&':
 				if (this.expression.charAt(this.pos + 1) === '&') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.AND_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.AND_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.AND);
-						this.pos += 2;
+						this.current = this.newToken(Token.AND, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.charAt(this.pos + 1) === '=') {
-					this.current = this.newToken(Token.BIT_AND_ASSIGN);
-					this.pos += 2;
+					this.current = this.newToken(Token.BIT_AND_ASSIGN, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.BIT_AND);
-					this.pos++;
+					this.current = this.newToken(Token.BIT_AND, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '?':
 				if (this.expression.charAt(this.pos + 1) === '?') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.NULLISH_ASSIGN);
-						this.pos += 3;
+						this.current = this.newToken(Token.NULLISH_ASSIGN, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.NULLISH);
-						this.pos += 2;
+						this.current = this.newToken(Token.NULLISH, [this.pos, (this.pos += 2)]);
 					}
 				} else if (this.expression.substring(this.pos + 1, this.pos + 3) == '::') {
-					this.current = this.newToken(Token.QUESTION_BIND);
-					this.pos += 3;
+					this.current = this.newToken(Token.QUESTION_BIND, [this.pos, (this.pos += 3)]);
 				} else if (this.expression.charAt(this.pos + 1) === '.') {
-					this.current = this.newToken(Token.QUESTION_PERIOD);
-					this.pos += 2;
+					this.current = this.newToken(Token.QUESTION_PERIOD, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.CONDITIONAL);
-					this.pos++;
+					this.current = this.newToken(Token.CONDITIONAL, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '!':
 				if (this.expression.charAt(this.pos + 1) === '=') {
 					if (this.expression.charAt(this.pos + 2) === '=') {
-						this.current = this.newToken(Token.NE_STRICT);
-						this.pos += 3;
+						this.current = this.newToken(Token.NE_STRICT, [this.pos, (this.pos += 3)]);
 					} else {
-						this.current = this.newToken(Token.NE);
-						this.pos += 2;
+						this.current = this.newToken(Token.NE, [this.pos, (this.pos += 2)]);
 					}
 				} else {
-					this.current = this.newToken(Token.NOT);
-					this.pos++;
+					this.current = this.newToken(Token.NOT, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '.':
 				if (/\.\.\./.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(Token.ELLIPSIS);
-					this.pos += 3;
+					this.current = this.newToken(Token.ELLIPSIS, [this.pos, (this.pos += 3)]);
 					return true;
 				} else {
-					this.current = this.newToken(Token.PERIOD);
-					this.pos++;
+					this.current = this.newToken(Token.PERIOD, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			// no break
 			case ':':
 				if (this.expression.charAt(this.pos + 1) === ':') {
-					this.current = this.newToken(Token.QUESTION_BIND);
-					this.pos += 2;
+					this.current = this.newToken(Token.QUESTION_BIND, [this.pos, (this.pos += 2)]);
 				} else {
-					this.current = this.newToken(Token.COLON);
-					this.pos++;
+					this.current = this.newToken(Token.COLON, [this.pos, (this.pos += 1)]);
 				}
 				return true;
 			case '~':
-				this.current = this.newToken(Token.BIT_NOT);
-				this.pos++;
+				this.current = this.newToken(Token.BIT_NOT, [this.pos, (this.pos += 1)]);
 				return true;
 			case 'a':
 				if (/async\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.ASYNC, AsyncIdentifier);
-					this.pos += 5;
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.ASYNC, range, new Identifier('async', range));
 					return true;
 				}
 				if (/await\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.AWAIT, AwaitIdentifier);
-					this.pos += 5;
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.AWAIT, range, new Identifier('await', range));
 					return true;
 				}
 				return false;
 			case 'i':			// in, instanceof
 				if (this.expression.charAt(this.pos + 1) === 'n') {
 					if (/instanceof\s/.test(this.expression.substring(this.pos, this.pos + 11))) {
-						this.current = this.newToken(Token.INSTANCEOF);
-						this.pos += 11;
+						this.current = this.newToken(Token.INSTANCEOF, [this.pos, (this.pos += 11)]);
 						return true;
-					} else if (/\s/.test(this.expression.charAt(this.pos + 2))) {
-						this.current = this.newToken(Token.IN);
-						this.pos += 3;
+					} else if (/n\s/.test(this.expression.charAt(this.pos + 2))) {
+						this.current = this.newToken(Token.IN, [this.pos, (this.pos += 3)]);
 						return true;
 					}
 				}
 				return false;
 			case 't':			// typeof
 				if (/typeof\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.TYPEOF);
-					this.pos += 7;
+					this.current = this.newToken(Token.TYPEOF, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				return false;
 			case 'v':			// void
 				if (/void\s/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(Token.VOID);
-					this.pos += 5;
+					this.current = this.newToken(Token.VOID, [this.pos, (this.pos += 5)]);
 					return true;
 				}
 				return false;
 			case 'd':			// delete
 				if (/delete\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.DELETE);
-					this.pos += 7;
+					this.current = this.newToken(Token.DELETE, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				return false;
 			case 'n':			// new
 				if (/new\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.NEW);
-					this.pos += 4;
-					return true;
-				}
-				return false;
-			case 'n':			// new
-				if (/new\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.NEW);
-					this.pos += 4;
+					this.current = this.newToken(Token.NEW, [this.pos, (this.pos += 4)]);
 					return true;
 				}
 				return false;
@@ -1456,164 +1374,143 @@ export class TokenStreamImpl extends TokenStream {
 			// return false;
 			case 'b':
 				if (/break\s?;?/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.BREAK);
-					this.pos += 5;
+					this.current = this.newToken(Token.BREAK, [this.pos, (this.pos += 5)]);
 					return true;
 				}
 				return false;
 			case 'c':
 				if (/case[\s~!+-\/\('"`]/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(Token.CASE);
-					this.pos += 4;
+					this.current = this.newToken(Token.CASE, [this.pos, (this.pos += 4)]);
 					return true;
 				} else if (/const\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.CONST);
-					this.pos += 6;
+					this.current = this.newToken(Token.CONST, [this.pos, (this.pos += 6)]);
 					return true;
 				} else if (/catch[\s\{\(]/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.CATCH);
-					this.pos += 5;
+					this.current = this.newToken(Token.CATCH, [this.pos, (this.pos += 5)]);
 					return true;
 				} else if (/class\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.CLASS);
-					this.pos += 6;
+					this.current = this.newToken(Token.CLASS, [this.pos, (this.pos += 6)]);
 					return true;
 				} else if (/continue[\s;]/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(Token.CONTINUE);
-					this.pos += 8;
+					this.current = this.newToken(Token.CONTINUE, [this.pos, (this.pos += 8)]);
 					return true;
 				}
 				return false;
 			case 'd':
 				if (/do[\s|\{]/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(Token.DO);
-					this.pos += 2;
+					this.current = this.newToken(Token.DO, [this.pos, (this.pos += 2)]);
 					return true;
 				}
 				return false;
 			case 'e':
 				if (/else[\s|\{]/.test(this.expression.substring(this.pos, this.pos + 5))) {
-					this.current = this.newToken(Token.ELSE);
-					this.pos += 4;
+					this.current = this.newToken(Token.ELSE, [this.pos, (this.pos += 4)]);
 					return true;
 				}
 				if (/export\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.EXPORT);
-					this.pos += 7;
+					this.current = this.newToken(Token.EXPORT, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				if (/extends\s/.test(this.expression.substring(this.pos, this.pos + 8))) {
-					this.current = this.newToken(Token.EXTENDS);
-					this.pos += 8;
+					this.current = this.newToken(Token.EXTENDS, [this.pos, (this.pos += 8)]);
 					return true;
 				}
 				return false;
 			case 'g':
 				if (/get\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.GET, GetIdentifier);
-					this.pos += 4;
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.GET, range, new Identifier('get', range));
 					return true;
 				}
 				return false;
 			case 'f':
 				if (/for[\s\(]/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.FOR);
-					this.pos += 3;
+					this.current = this.newToken(Token.FOR, [this.pos, (this.pos += 3)]);
 					return true;
 				}
 				if (/finally[\s\{]/.test(this.expression.substring(this.pos, this.pos + 8))) {
-					this.current = this.newToken(Token.FINALLY);
-					this.pos += 7;
+					this.current = this.newToken(Token.FINALLY, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				if (/function[\s\*\(]/.test(this.expression.substring(this.pos, this.pos + 9))) {
-					this.current = this.newToken(Token.FUNCTION);
-					this.pos += 8;
+					this.current = this.newToken(Token.FUNCTION, [this.pos, (this.pos += 8)]);
 					return true;
 				}
 				return false;
 			case 'i':
 				if (/if[\s|\(]/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(Token.IF);
-					this.pos += 2;
+					this.current = this.newToken(Token.IF, [this.pos, (this.pos += 2)]);
 					return true;
 				} else if (/in\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-					this.current = this.newToken(Token.IN);
-					this.pos += 3;
+					this.current = this.newToken(Token.IN, [this.pos, (this.pos += 3)]);
 					return true;
 				}
 				else if (/import\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.IMPORT);
-					this.pos += 7;
+					this.current = this.newToken(Token.IMPORT, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				return false;
 			case 'l':
 				if (/let\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.LET, LetIdentifier);
-					this.pos += 4;
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.LET, range, new Identifier('let', range));
 					return true;
 				}
 				return false;
 			case 't':
 				if (/try[\s\{]/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.TRY);
-					this.pos += 3;
+					this.current = this.newToken(Token.TRY, [this.pos, (this.pos += 3)]);
 					return true;
 				}
 				if (/throw\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.THROW);
-					this.pos += 6;
+					this.current = this.newToken(Token.THROW, [this.pos, (this.pos += 6)]);
 					return true;
 				}
 				return false;
 			case 'r':
 				if (/return[\s~!+-\/\('"`]/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.RETURN);
-					this.pos += 6;
+					this.current = this.newToken(Token.RETURN, [this.pos, (this.pos += 6)]);
 					return true;
 				}
 				return false;
 			// case 'of':
 			// 	if (/of\s/.test(this.expression.substring(this.pos, this.pos + 3))) {
-			// 		this.current = this.newToken(Token.OF);
-			// 		this.pos += 3;
+			// 		this.current = this.newToken(Token.OF, [this.pos, (this.pos += 3)]);
 			// 		return true;
 			// 	}
 			// 	return false;
 			case 's':
 				if (/switch(\s|\()/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.SWITCH);
-					this.pos += 6;
+					this.current = this.newToken(Token.SWITCH, [this.pos, (this.pos += 6)]);
 					return true;
 				}
 				if (/static\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.STATIC);
-					this.pos += 7;
+					this.current = this.newToken(Token.STATIC, [this.pos, (this.pos += 7)]);
 					return true;
 				}
 				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.SET, SetIdentifier);
-					this.pos += 4;
+					const range: [number, number] = [this.pos, (this.pos += 4)];
+					this.current = this.newToken(Token.SET, range, new Identifier('set', range));
 					return true;
 				}
 				if (/super[\.\(]?/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.SUPER, SuperIdentifier);
-					this.pos += 5;
+					const range: [number, number] = [this.pos, (this.pos += 5)];
+					this.current = this.newToken(Token.SUPER, range, new Super(range));
 					return true;
 				}
 				return false;
 			case 'w':
 				if (/while(\s|\()/.test(this.expression.substring(this.pos, this.pos + 6))) {
-					this.current = this.newToken(Token.WHILE);
-					this.pos += 5;
+					this.current = this.newToken(Token.WHILE, [this.pos, (this.pos += 5)]);
+					return true;
+				} else if (/with(\s|\()/.test(this.expression.substring(this.pos, this.pos + 5))) {
+					this.current = this.newToken(Token.WITH, [this.pos, (this.pos += 4)]);
 					return true;
 				}
 				return false;
 			case 'v':
 				if (/var\s/.test(this.expression.substring(this.pos, this.pos + 4))) {
-					this.current = this.newToken(Token.VAR);
-					this.pos += 4;
+					this.current = this.newToken(Token.VAR, [this.pos, (this.pos += 4)]);
 					return true;
 				}
 				return false;

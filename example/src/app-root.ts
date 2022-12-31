@@ -1,4 +1,5 @@
 import { Component, OnInit, TypeOf } from '@ibyar/aurora';
+import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
 	title: string;
@@ -26,7 +27,10 @@ export interface App {
 				<component-outlet [component]="selectedComponent"></component-outlet>
 			</div>
 		</div>
-	</div>`
+	</div>`,
+	imports: [
+		ComponentOutlet,
+	]
 })
 export class AppRoot implements OnInit {
 
@@ -75,17 +79,26 @@ export class AppRoot implements OnInit {
 			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
 		},
 		{
-			title: 'Custom Form',
-			load: () => import('./forms/forms.js').then(module => module.CustomForm),
+			title: 'Custom Advanced Form',
+			load: () => import('./forms/advanced-form.js').then(module => module.AdvancedForm),
 		},
 		{
-			title: 'Simple Custom Form',
-			load: () => import('./forms/simple-forms.js').then(module => module.SimpleCustomForm),
+			title: 'Custom Simple Form',
+			load: () => import('./forms/simple-form.js').then(module => module.SimpleForm),
 		},
 		{
 			title: 'Jsx Components',
 			load: () => import('./jsx/test.js').then(module => module.JsxComponentTest),
 		},
+		{
+			title: 'Form Group Component',
+			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
+		},
+		{
+			title: 'Host Color Picker',
+			load: () => import('./color/host-color.component.js').then(module => module.HostColorPickerComponent),
+		}
+
 
 	];
 

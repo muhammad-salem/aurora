@@ -8,8 +8,6 @@ export * from './component/custom-element.js';
 export * from './component/events.js';
 export * from './component/lifecycle.js';
 
-export * from './context/stack.js';
-
 export * from './linker/view-ref.js';
 export * from './linker/template-ref.js';
 export * from './linker/view-container-ref.js';

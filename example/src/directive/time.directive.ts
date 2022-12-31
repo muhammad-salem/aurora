@@ -1,6 +1,7 @@
 import {
 	Directive, DomParentNode, OnDestroy, OnInit,
-	StructuralDirective, PipeTransform, Pipe, Component, Input
+	StructuralDirective, PipeTransform, Pipe,
+	Component, Input
 } from '@ibyar/aurora';
 import { map, Subscription, timer, timestamp } from 'rxjs';
 
@@ -49,7 +50,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		} else {
 			this.initDefaultView();
 		}
-		this.updateTime();
+		this.startTimer();
 	}
 
 	private initUserView() {
@@ -68,7 +69,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		this.context = this.viewContainerRef.createComponent(ShowTimeComponent);
 	}
 
-	private updateTime() {
+	private startTimer() {
 		this.dateSubscription = timer(1000, 1000).pipe(
 			timestamp(),
 			map(timestamp => timestamp.timestamp),

@@ -1,11 +1,12 @@
 import type {
 	NodeDeserializer, ExpressionNode, CanFindScope,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Scope, Context } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
 import { Deserializer } from '../deserialize/deserialize.js';
 import { AbstractExpressionNode } from '../abstract.js';
+import { Identifier } from './values.js';
 
 @Deserializer('MemberExpression')
 export class MemberExpression extends AbstractExpressionNode implements CanFindScope {
@@ -14,7 +15,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 			deserializer(node.object),
 			deserializer(node.property),
 			node.computed,
-			node.optional
+			node.optional,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: MemberExpression, visitNode: VisitNodeType): void {
@@ -25,8 +28,10 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		protected object: ExpressionNode,
 		protected property: ExpressionNode,
 		private computed: boolean,
-		private optional: boolean = false) {
-		super();
+		private optional: boolean = false,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getObject() {
 		return this.object;
@@ -40,6 +45,8 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 		if (this.computed) {
 			propertyKey = this.property.get(stack);
 			objectScope.set(propertyKey, value);
+		} else if (this.property instanceof Identifier) {
+			objectScope.set(this.property.getName(), value);
 		} else {
 			stack.pushScope(objectScope);
 			this.property.set(stack, value);

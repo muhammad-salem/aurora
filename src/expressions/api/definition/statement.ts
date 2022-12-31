@@ -1,6 +1,6 @@
 import type {
 	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType,
+	ExpressionEventPath, VisitNodeType, SourceLocation,
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -10,13 +10,20 @@ import { isDeclarationExpression } from '../utils.js';
 @Deserializer('ExpressionStatement')
 export class ExpressionStatement extends AbstractExpressionNode {
 	static fromJSON(node: ExpressionStatement, deserializer: NodeDeserializer): ExpressionStatement {
-		return new ExpressionStatement(node.body.map(line => deserializer(line)));
+		return new ExpressionStatement(
+			node.body.map(deserializer),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ExpressionStatement, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private body: ExpressionNode[]) {
-		super();
+	constructor(
+		private body: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getBody() {
 		return this.body;

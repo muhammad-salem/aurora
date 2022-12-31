@@ -170,11 +170,13 @@ export class PatternValidator implements Validator {
 	constructor(pattern: RegExp | string, private message?: string | null) {
 		if (typeof pattern === 'string') {
 			this.regexStr = '';
-			if (pattern.charAt(0) !== '^')
+			if (pattern.charAt(0) !== '^') {
 				this.regexStr += '^';
+			}
 			this.regexStr += pattern;
-			if (pattern.charAt(pattern.length - 1) !== '$')
+			if (pattern.charAt(pattern.length - 1) !== '$') {
 				this.regexStr += '$';
+			}
 			this.regex = new RegExp(this.regexStr);
 		}
 		else {
@@ -199,29 +201,15 @@ export class PatternValidator implements Validator {
 	}
 }
 
-/***
- * pre created validators with out `customValidityMessage`
- */
-const PRE_VALIDATORS = {
-	required: new RequiredValidator(),
-	requiredTrue: new RequiredTrueValidator(),
-	email: new EmailValidator(),
-};
 
 export class Validators {
 
 	static required(customValidityMessage?: string): RequiredValidator {
-		if (customValidityMessage) {
-			return new RequiredValidator(customValidityMessage);
-		}
-		return PRE_VALIDATORS.required;
+		return new RequiredValidator(customValidityMessage);
 	}
 
 	static requiredTrue(customValidityMessage?: string): RequiredTrueValidator {
-		if (customValidityMessage) {
-			return new RequiredTrueValidator(customValidityMessage);
-		}
-		return PRE_VALIDATORS.requiredTrue;
+		return new RequiredTrueValidator(customValidityMessage);
 	}
 
 	static min(min: number, customValidityMessage?: string): MinimumValidator {
@@ -233,10 +221,7 @@ export class Validators {
 	}
 
 	static email(customValidityMessage?: string) {
-		if (customValidityMessage) {
-
-		}
-		return PRE_VALIDATORS.email;
+		return new EmailValidator(customValidityMessage);
 	}
 
 	static minLength(minLength: number, customValidityMessage?: string): MinLengthValidator {

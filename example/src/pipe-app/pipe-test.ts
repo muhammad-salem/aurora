@@ -9,7 +9,7 @@ import { interval, Subscription } from 'rxjs';
 	<div [style]="'color: var(' + currentColor + ');'"> set style color by [style]="'color: var(' + currentColor + ');'" </div>
 	<div [style.color]="'var(' + currentColor + ')'"> set style color by [style.color]="'var(' + currentColor + ')'" </div>
 	<div [style]="{color: 'var(' + currentColor + ')'}"> set style color by [style]="{color: 'var(' + currentColor + ')'}" </div>
-	<!-- <div [class.bsColor]="currentColor === '--bs-red' "> set style color by [style.color]="'var(' + currentColor + ')'" </div> -->
+	<div [class.bs-color]="currentColor === '--bs-red' "> set style color by [class.bs-color]="currentColor === '--bs-red' " </div>
 	<div *for="var color of colors">
 		color: {{color}} <span *if="color === currentColor" class="bs-color"> => Current Color ='{{currentColor}}'</span>
 	</div>

@@ -1,6 +1,6 @@
 import type {
-	ExpressionEventPath, ExpressionNode,
-	NodeDeserializer, VisitNodeType
+	ExpressionEventPath, ExpressionNode, NodeDeserializer,
+	SourceLocation, VisitNodeType
 } from './expression.js';
 import type { Stack } from '../scope/stack.js';
 import { AbstractExpressionNode } from './abstract.js';
@@ -12,13 +12,21 @@ export type ProgramSourceType = 'script' | 'module';
 export class Program extends AbstractExpressionNode {
 
 	static fromJSON(node: Program, deserializer: NodeDeserializer): Program {
-		return new Program(node.sourceType, node.body.map(deserializer));
+		return new Program(
+			node.sourceType,
+			node.body.map(deserializer),
+			node.range, node.loc
+		);
 	}
 	static visit(node: Program, visitNode: VisitNodeType): void {
 		node.body.forEach(visitNode);
 	}
-	constructor(private sourceType: ProgramSourceType, private body: ExpressionNode[]) {
-		super();
+	constructor(
+		private sourceType: ProgramSourceType,
+		private body: ExpressionNode[],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	set(stack: Stack, value: any): any {
 		throw new Error(`Program#set() has no implementation.`);

@@ -28,7 +28,8 @@ export class VideoPlayer implements OnInit {
 		<source [src]="file" type="video/mp4" />
 	</video-player>
 	<template #noMedia>No Video Source Found</template>
-	`
+	`,
+	imports: [VideoPlayer]
 })
 export class VideoPlayList {
 

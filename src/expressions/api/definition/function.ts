@@ -1,6 +1,6 @@
 import type {
 	DeclarationExpression, ExpressionEventPath, ExpressionNode,
-	NodeDeserializer, VisitNodeType
+	NodeDeserializer, SourceLocation, VisitNodeType
 } from '../expression.js';
 import { Stack } from '../../scope/stack.js';
 import {
@@ -13,61 +13,73 @@ import { TerminateReturnType } from '../statement/control/terminate.js';
 import { RestElement } from '../computing/rest.js';
 import { BlockStatement } from '../statement/control/block.js';
 
-@Deserializer('Param')
-export class Param extends AbstractExpressionNode {
-	static fromJSON(node: Param, deserializer: NodeDeserializer): Param {
-		return new Param(
-			deserializer(node.identifier) as DeclarationExpression,
-			node.defaultValue ? deserializer(node.defaultValue) as Identifier : void 0
+@Deserializer('AssignmentPattern')
+export class AssignmentPattern extends AbstractExpressionNode implements DeclarationExpression {
+	static fromJSON(node: AssignmentPattern, deserializer: NodeDeserializer): AssignmentPattern {
+		return new AssignmentPattern(
+			deserializer(node.left) as DeclarationExpression,
+			deserializer(node.right),
+			node.range,
+			node.loc
 		);
 	}
-	static visit(node: Param, visitNode: VisitNodeType): void {
-		visitNode(node.identifier);
-		node.defaultValue && visitNode(node.defaultValue);
+	static visit(node: AssignmentPattern, visitNode: VisitNodeType): void {
+		visitNode(node.left);
+		visitNode(node.right);
 	}
-	constructor(private identifier: DeclarationExpression, private defaultValue?: ExpressionNode) {
-		super();
+	constructor(
+		private left: DeclarationExpression,
+		private right: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
-	getIdentifier() {
-		return this.identifier;
+	getLeft() {
+		return this.left;
 	}
-	getDefaultValue() {
-		return this.defaultValue;
+	getRight() {
+		return this.right;
 	}
-	set(stack: Stack, value: Function) {
-		this.identifier.declareVariable?.(stack, value);
+	set(stack: Stack, value?: Function) {
+		throw new Error('AssignmentPattern#set() has no implementation.');
 	}
 	get(stack: Stack) {
-		throw new Error('Param#get() has no implementation.');
+		throw new Error('AssignmentPattern#get() has no implementation.');
+	}
+	declareVariable(stack: Stack, value?: any) {
+		if (value === undefined) {
+			value = this.right.get(stack);
+		}
+		this.left.declareVariable(stack, value);
 	}
 	dependency(computed?: true): ExpressionNode[] {
-		return this.defaultValue ? [this.defaultValue] : [];
+		return [this.right];
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
-		return this.defaultValue?.dependencyPath(computed) || [];
+		return this.right.dependencyPath(computed) || [];
 	}
 	toString(): string {
-		let init = this.defaultValue ? (' = ' + this.defaultValue.toString()) : '';
-		return this.identifier.toString() + init;
+		return `${this.left.toString()} = ${this.right.toString()}`;
 	}
 	toJson(): object {
 		return {
-			identifier: this.identifier.toJSON(),
-			defaultValue: this.defaultValue?.toJSON()
+			left: this.left.toJSON(),
+			right: this.right.toJSON()
 		};
 	}
 }
-
 
 @Deserializer('FunctionExpression')
 export class FunctionExpression extends AbstractExpressionNode {
 	static fromJSON(node: FunctionExpression, deserializer: NodeDeserializer): FunctionExpression {
 		return new FunctionExpression(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			deserializer(node.body),
 			node.async,
 			node.generator,
 			node.id ? deserializer(node.id) as Identifier : void 0,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: FunctionExpression, visitNode: VisitNodeType): void {
@@ -76,12 +88,14 @@ export class FunctionExpression extends AbstractExpressionNode {
 		visitNode(node.body);
 	}
 	constructor(
-		protected params: ExpressionNode[],
+		protected params: DeclarationExpression[],
 		protected body: ExpressionNode,
 		protected async: boolean,
 		protected generator: boolean,
-		protected id?: Identifier) {
-		super();
+		protected id?: Identifier,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getParams() {
 		return this.params;
@@ -105,10 +119,10 @@ export class FunctionExpression extends AbstractExpressionNode {
 		const rest = this.params[this.params.length - 1] instanceof RestElement;
 		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.params[i].set(stack, args[i]);
+			this.params[i].declareVariable(stack, args[i]);
 		}
 		if (rest) {
-			this.params[limit].set(stack, args.slice(limit));
+			this.params[limit].declareVariable(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {
@@ -310,11 +324,13 @@ export class FunctionExpression extends AbstractExpressionNode {
 export class FunctionDeclaration extends FunctionExpression implements DeclarationExpression {
 	static fromJSON(node: FunctionDeclaration, deserializer: NodeDeserializer): FunctionDeclaration {
 		return new FunctionDeclaration(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			deserializer(node.body),
 			node.async,
 			node.generator,
-			deserializer(node.id) as Identifier
+			deserializer(node.id) as Identifier,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: FunctionDeclaration, visitNode: VisitNodeType): void {
@@ -324,12 +340,14 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 	}
 	declare protected id: Identifier;
 	constructor(
-		params: ExpressionNode[],
+		params: DeclarationExpression[],
 		body: ExpressionNode,
 		async: boolean,
 		generator: boolean,
-		id: Identifier) {
-		super(params, body, async, generator, id);
+		id: Identifier,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(params, body, async, generator, id, range, loc);
 	}
 	override get(stack: Stack): Function {
 		const func = super.get(stack);
@@ -346,12 +364,14 @@ export class FunctionDeclaration extends FunctionExpression implements Declarati
 export class ArrowFunctionExpression extends AbstractExpressionNode {
 	static fromJSON(node: ArrowFunctionExpression, deserializer: NodeDeserializer): ArrowFunctionExpression {
 		return new ArrowFunctionExpression(
-			node.params.map(deserializer),
+			node.params.map(deserializer) as DeclarationExpression[],
 			Array.isArray(node.body)
 				? node.body.map(deserializer)
 				: deserializer(node.body),
 			node.expression,
-			node.async
+			node.async,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ArrowFunctionExpression, visitNode: VisitNodeType): void {
@@ -362,11 +382,13 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 	}
 	private generator = false;
 	constructor(
-		private params: ExpressionNode[],
+		private params: DeclarationExpression[],
 		private body: ExpressionNode | ExpressionNode[],
 		private expression: boolean,
-		private async: boolean) {
-		super();
+		private async: boolean,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getParams() {
 		return this.params;
@@ -384,10 +406,10 @@ export class ArrowFunctionExpression extends AbstractExpressionNode {
 		const rest = this.params[this.params.length - 1] instanceof RestElement;
 		const limit = rest ? this.params.length - 1 : this.params.length;
 		for (let i = 0; i < limit; i++) {
-			this.params[i].set(stack, args[i]);
+			this.params[i].declareVariable(stack, args[i]);
 		}
 		if (rest) {
-			this.params[limit].set(stack, args.slice(limit));
+			this.params[limit].declareVariable(stack, args.slice(limit));
 		}
 	}
 	get(stack: Stack) {

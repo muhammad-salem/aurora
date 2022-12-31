@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -26,7 +26,9 @@ export class PipelineExpression extends AbstractExpressionNode {
 		return new PipelineExpression(
 			deserializer(node.left),
 			deserializer(node.right),
-			node.arguments.map(arg => typeof arg === 'string' ? arg : deserializer(arg))
+			node.arguments.map(arg => typeof arg === 'string' ? arg : deserializer(arg)),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: PipelineExpression, visitNode: VisitNodeType): void {
@@ -35,8 +37,13 @@ export class PipelineExpression extends AbstractExpressionNode {
 		node.arguments.forEach(arg => typeof arg == 'object' && visitNode(arg));
 	}
 	private arguments: (ExpressionNode | '?' | '...?')[];
-	constructor(private left: ExpressionNode, private right: ExpressionNode, params: (ExpressionNode | '?' | '...?')[] = []) {
-		super();
+	constructor(
+		private left: ExpressionNode,
+		private right: ExpressionNode,
+		params: (ExpressionNode | '?' | '...?')[] = [],
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		this.arguments = params;
 	}
 	getLeft() {

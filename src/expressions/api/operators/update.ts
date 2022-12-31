@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
@@ -11,7 +11,13 @@ export type UpdateOperator = '++' | '--';
 @Deserializer('UpdateExpression')
 export class UpdateExpression extends AbstractExpressionNode {
 	static fromJSON(node: UpdateExpression, deserializer: NodeDeserializer): UpdateExpression {
-		return new UpdateExpression(node.operator, deserializer(node.argument), node.prefix);
+		return new UpdateExpression(
+			node.operator,
+			deserializer(node.argument),
+			node.prefix,
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: UpdateExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
@@ -27,8 +33,13 @@ export class UpdateExpression extends AbstractExpressionNode {
 		'--': num => { return --num.value; }
 	};
 
-	constructor(private operator: UpdateOperator, private argument: ExpressionNode, private prefix: boolean) {
-		super();
+	constructor(
+		private operator: UpdateOperator,
+		private argument: ExpressionNode,
+		private prefix: boolean,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getOperator() {
 		return this.operator;

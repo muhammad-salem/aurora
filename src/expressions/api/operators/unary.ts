@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../expression.js';
 import type { Context } from '../../scope/scope.js';
 import type { Stack } from '../../scope/stack.js';
@@ -13,7 +13,12 @@ export type UnaryOperator = '-' | '+' | '~' | '!' | 'void' | 'delete' | 'typeof'
 @Deserializer('UnaryExpression')
 export class UnaryExpression extends AbstractExpressionNode {
 	static fromJSON(node: UnaryExpression, deserializer: NodeDeserializer): UnaryExpression {
-		return new UnaryExpression(node.operator, deserializer(node.argument));
+		return new UnaryExpression(
+			node.operator,
+			deserializer(node.argument),
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: UnaryExpression, visitNode: VisitNodeType): void {
 		visitNode(node.argument);
@@ -26,8 +31,12 @@ export class UnaryExpression extends AbstractExpressionNode {
 		'void': (value: any) => { return void value; },
 		'typeof': (value: any) => { return typeof value; },
 	};
-	constructor(private operator: UnaryOperator, private argument: ExpressionNode) {
-		super();
+	constructor(
+		private operator: UnaryOperator,
+		private argument: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getOperator() {
 		return this.operator;

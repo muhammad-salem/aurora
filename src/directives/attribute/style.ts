@@ -25,8 +25,8 @@ export class StyleDirective extends AttributeDirective {
 			}
 		}
 	}
-	get style(): StyleType {
-		return this.el.getAttribute('style') as StyleType;
+	get style() {
+		return this.el.style as any;
 	}
 
 	private _setStyleFromLine(line: string) {

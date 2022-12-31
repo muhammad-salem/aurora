@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
@@ -10,13 +13,20 @@ import { Deserializer } from '../deserialize/deserialize.js';
 @Deserializer('ReturnStatement')
 export class ReturnStatement extends AbstractExpressionNode {
 	static fromJSON(node: ReturnStatement, deserializer: NodeDeserializer): ReturnStatement {
-		return new ReturnStatement(node.argument ? deserializer(node.argument) : void 0);
+		return new ReturnStatement(
+			node.argument ? deserializer(node.argument) : void 0,
+			node.range,
+			node.loc
+		);
 	}
 	static visit(node: ReturnStatement, visitNode: VisitNodeType): void {
 		node.argument && visitNode(node.argument);
 	}
-	constructor(private argument?: ExpressionNode) {
-		super();
+	constructor(
+		private argument?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getArgument() {
 		return this.argument;

@@ -9,6 +9,7 @@ export function hasBindingHook<T>(ctx: T) {
 		case ctx instanceof WeakMap:
 		case ctx instanceof WeakSet:
 		case ctx instanceof Promise:
+		// check first if running in browser
 		case HTMLElement && ctx instanceof HTMLElement:
 			return true;
 		default:

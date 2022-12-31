@@ -8,17 +8,17 @@ export function isComponentModelClass(target: Constructable): target is Componen
 }
 
 export function getComponentView<T extends object>(modelClass: TypeOf<T>, selector?: string): TypeOf<HTMLComponent<T>> | undefined {
-	if (isComponentModelClass(modelClass)) {
-		let viewClassName: string;
-		if (selector) {
-			viewClassName = modelClass.component[selector];
-			if (!viewClassName) {
-				throw new Error(`${modelClass.name} doesn't have ${selector} as view`);
-			}
-		} else {
-			viewClassName = Object.keys(modelClass.component)[0];
-		}
-		return Reflect.get(modelClass, viewClassName);
+	if (!isComponentModelClass(modelClass)) {
+		return;
 	}
-	return;
+	let viewClassName: string;
+	if (selector) {
+		viewClassName = modelClass.component[selector];
+		if (!viewClassName) {
+			throw new Error(`${modelClass.name} doesn't have ${selector} as view`);
+		}
+	} else {
+		viewClassName = Object.keys(modelClass.component)[0];
+	}
+	return modelClass[viewClassName];
 }

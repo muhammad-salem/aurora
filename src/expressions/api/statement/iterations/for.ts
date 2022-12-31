@@ -1,6 +1,6 @@
 import type {
-	NodeDeserializer, ExpressionNode,
-	ExpressionEventPath, VisitNodeType
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
 } from '../../expression.js';
 import type { Stack } from '../../../scope/stack.js';
 import { AbstractExpressionNode, ReturnValue } from '../../abstract.js';
@@ -23,7 +23,9 @@ export class ForNode extends AbstractExpressionNode {
 			deserializer(node.body),
 			node.init && deserializer(node.init),
 			node.test && deserializer(node.test),
-			node.update && deserializer(node.update)
+			node.update && deserializer(node.update),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ForNode, visitNode: VisitNodeType): void {
@@ -36,8 +38,10 @@ export class ForNode extends AbstractExpressionNode {
 		private body: ExpressionNode,
 		private init?: ExpressionNode,
 		private test?: ExpressionNode,
-		private update?: ExpressionNode) {
-		super();
+		private update?: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getBody() {
 		return this.body;
@@ -110,7 +114,9 @@ export class ForOfNode extends AbstractExpressionNode {
 		return new ForOfNode(
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ForOfNode, visitNode: VisitNodeType): void {
@@ -121,8 +127,10 @@ export class ForOfNode extends AbstractExpressionNode {
 	constructor(
 		private left: ForDeclaration,
 		private right: ExpressionNode,
-		private body: ExpressionNode) {
-		super();
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;
@@ -183,7 +191,9 @@ export class ForInNode extends AbstractExpressionNode {
 		return new ForInNode(
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ForInNode, visitNode: VisitNodeType): void {
@@ -195,8 +205,10 @@ export class ForInNode extends AbstractExpressionNode {
 	constructor(
 		private left: VariableDeclarationNode | ObjectPattern | ArrayPattern,
 		private right: ExpressionNode,
-		private body: ExpressionNode) {
-		super();
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;
@@ -257,7 +269,9 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 		return new ForAwaitOfNode(
 			deserializer(node.left) as ForDeclaration,
 			deserializer(node.right),
-			deserializer(node.body)
+			deserializer(node.body),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: ForAwaitOfNode, visitNode: VisitNodeType): void {
@@ -269,8 +283,10 @@ export class ForAwaitOfNode extends AbstractExpressionNode {
 	constructor(
 		private left: ForDeclaration,
 		private right: ExpressionNode,
-		private body: ExpressionNode) {
-		super();
+		private body: ExpressionNode,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getLeft() {
 		return this.left;

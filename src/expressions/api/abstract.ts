@@ -2,7 +2,7 @@ import type { AwaitPromiseInfo, Stack } from '../scope/stack.js';
 import type {
 	NodeDeserializer, ExpressionNode, ExpressionNodConstructor,
 	NodeJsonType, DeclarationExpression, ExpressionEventMap,
-	ExpressionEventPath, VisitNodeType
+	ExpressionEventPath, VisitNodeType, SourceLocation
 } from './expression.js';
 
 function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: ExpressionEventPath[]): void {
@@ -25,17 +25,28 @@ function initPathExpressionEventMap(rootEventMap: ExpressionEventMap, path: Expr
 		}
 	}
 }
+
 export abstract class AbstractExpressionNode implements ExpressionNode {
 	static fromJSON(node: ExpressionNode, deserializer: NodeDeserializer): ExpressionNode {
 		return deserializer(node as any);
+	}
+	type: string;
+	loc?: SourceLocation;
+	range?: [number, number];
+	constructor(range?: [number, number], loc?: SourceLocation) {
+		this.type = this.getClass().type;
+		range && (this.range = range);
+		loc && (this.loc = loc);
 	}
 	getClass(): ExpressionNodConstructor<ExpressionNode> {
 		return this.constructor as ExpressionNodConstructor<ExpressionNode>;
 	}
 	toJSON(key?: string): NodeJsonType {
-		const type = this.getClass().type;
 		const json = this.toJson(key);
-		return { type, ...json };
+		const index: { range?: [number, number], loc?: SourceLocation } = {};
+		this.range && (index.range = this.range);
+		this.loc && (index.loc = this.loc);
+		return Object.assign({ type: this.type }, json, index);
 	}
 	events(): ExpressionEventMap {
 		const dependencyNodes = this.dependency();
@@ -53,13 +64,14 @@ export abstract class AbstractExpressionNode implements ExpressionNode {
 	abstract toString(): string;
 	abstract toJson(key?: string): { [key: string]: any };
 }
+
 export abstract class InfixExpressionNode<T> extends AbstractExpressionNode {
 	static visit(node: InfixExpressionNode<any>, visitNode: VisitNodeType): void {
 		visitNode(node.getLeft());
 		visitNode(node.getRight())
 	}
-	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode) {
-		super();
+	constructor(protected operator: T, protected left: ExpressionNode, protected right: ExpressionNode, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getOperator() {
 		return this.operator;

@@ -60,6 +60,10 @@ export class SimpleCustomMessage {
 		this.message = 'test message';
 	}
 
+	onMessageChange(text: string) {
+		console.log('onMessageChange', text);
+	}
+
 }
 
 @Component({
@@ -109,8 +113,13 @@ export class SimpleCustomInputElement implements OnInit {
 				{{data |> json}}
 			</div>
 	  	`,
+	imports: [
+		SimpleCustomTextareaComponent,
+		SimpleCustomMessage,
+		SimpleCustomInputElement
+	]
 })
-export class SimpleCustomForm {
+export class SimpleForm {
 
 	model = {
 		test: 'test',
@@ -124,11 +133,13 @@ export class SimpleCustomForm {
 
 	@HostListener('submit', ['$event'])
 	onSubmit(event: Event) {
+		event.preventDefault();
 		console.log('$event', event);
-		const data = new FormData(event.target as HTMLFormElement);
+		const formData = new FormData(event.target as HTMLFormElement);
 		const collect = {};
-		data.forEach((value, key) => Reflect.set(collect, key, value));
+		formData.forEach((value, key) => Reflect.set(collect, key, value));
 		this.data = collect;
+		console.log('data', this.data);
 	}
 
 	@HostListener('formdata', ['$event'])

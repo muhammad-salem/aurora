@@ -2,6 +2,23 @@ import type { Scope, Context } from '../scope/scope.js';
 import type { Stack } from '../scope/stack.js';
 import { TypeOf } from './utils.js';
 
+
+/**
+ * Each Position object consists of 
+ * a line number (1-indexed) 
+ * and a column number (0-indexed)
+ */
+export interface Position {
+	line: number; // >= 1
+	column: number; // >= 0
+}
+
+export interface SourceLocation {
+	source?: string | null;
+	start: Position;
+	end: Position;
+}
+
 export type NodeType = { type: string };
 export type NodeJsonType = { [key: string]: any } & NodeType;
 
@@ -11,6 +28,29 @@ export type ExpressionEventPath = ExpressionEventPathDotNotation | ExpressionEve
 export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 
 export interface ExpressionNode {
+
+	/**
+	 * The `type` field is a string representing the AST variant type.
+	 * Each subtype of `Node` is documented below with the specific string of its type field.
+	 * You can use this field to determine which interface a node implements.
+	 */
+	type: string;
+
+	/**
+	 * The `loc` field represents the source location information of the node.
+	 * If the node contains no information about the source location,
+	 * the field is `null` or `undefined`;
+	 * otherwise it is an object consisting of 
+	 * a start position (the position of the first character of the parsed source region)
+	 * and an end position (the position of the first character after the parsed source region):
+	 * and offset index (the position of the first character) 
+	 */
+	loc?: SourceLocation;
+
+	/**
+	 * start and end position offset
+	 */
+	range?: [number, number];
 
 	/**
 	 * assign the value to this expression in stack.

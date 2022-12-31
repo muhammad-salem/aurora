@@ -1,16 +1,18 @@
 import { Component, Input, View, HostListener } from '@ibyar/aurora';
-
-// import structural directives first
-// so it can register itself with the html parser as a node
-export * from '../directive/add-note.directive.js';
-export * from '../directive/notify-user.directive.js';
-export * from '../directive/time.directive.js';
-export * from './person.js';
-
-import type { Person, PersonModel } from './person.js';
+import { AddNoteDirective } from '../directive/add-note.directive.js';
+import { NotifyUserDirective } from '../directive/notify-user.directive.js';
+import { TimeDirective } from '../directive/time.directive.js';
+import { Person, PersonEdit, PersonView } from './person.js';
 
 @Component({
 	selector: 'person-app',
+	imports: [
+		AddNoteDirective,
+		NotifyUserDirective,
+		TimeDirective,
+		PersonView,
+		PersonEdit,
+	],
 	template: `
 		<div *time></div>
 		<template *time let-HH="hh" let-MM="mm" let-SS="ss">{{HH}}:{{MM}}:{{SS}}</template>
@@ -35,7 +37,7 @@ import type { Person, PersonModel } from './person.js';
 
 		<person-edit #personEdit [(person)]="people[0]" (save)="printPerson($event)"></person-edit>
 
-		<progress-bar [value]="+people[0].age" min="0" max="100"></progress-bar>
+		<progress-bar [value]="+people[0].age" max="100"></progress-bar>
 
 		
 		<h6>if(...){template ref #1} else {template ref #2} else if(....){template ref #3} else {template ref #4}</h6>
@@ -175,11 +177,11 @@ export class PersonApp {
 		console.log('personEdit:save', event.detail, this.view);
 	}
 
-	printPerson(person: PersonModel) {
+	printPerson(person: PersonView) {
 		console.log('printPerson', person);
 	}
 
-	onPersonViewClick(event: string, person: PersonModel) {
+	onPersonViewClick(event: string, person: PersonView) {
 		console.log(event, person);
 	}
 

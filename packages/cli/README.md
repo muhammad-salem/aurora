@@ -10,13 +10,13 @@
 [npm-url]: https://npmjs.org/package/@ibyar/cli
 [downloads-image]: https://img.shields.io/npm/dt/@ibyar/cli
 [downloads-url]: https://npmjs.org/package/@ibyar/cli
-[license-img]: https://img.shields.io/github/license/ibyar/cli
-[license-url]: https://github.com/ibyar/cli/blob/master/LICENSE
+[license-img]: https://img.shields.io/github/license/ibyar/aurora
+[license-url]: https://github.com/ibyar/aurora/blob/master/LICENSE
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
-[contributors]: https://img.shields.io/github/contributors/ibyar/cli
+[contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-The Ibyar/Aurora CLI tool.
+The Ibyar/Aurora CLI tool. ( dev - prerelease)
 
 
 ## `Install`
@@ -36,14 +36,24 @@ yarn add @ibyar/cli
  it load the configuration from a `tsconfig.json` file
 
 ```
+Usage: ibyar [options]
+
 Examples:
     ibyar
     ibyar -b
-    ibyar -b -w
+    ibyar -gt
+    ibyar -v
+    ibyar --help
 
 Options:
-    -b      --build     build the current project
-    -w      --watch     watch files changes
+    -b      --build             compile the project source code with ibyar transformers
+    -gt     --generate-types    generate "web-types.json" files, and typescript
+	                            definitions '.d.ts' files. 
+	                            you can import this file later in your "index.ts" 
+								or "polyfills.ts" file, so any editor "VS Code" can
+								support autocomplete easily,
+    -h      --help              print help message
+    -v      --version           output the version number
 ```
 
 

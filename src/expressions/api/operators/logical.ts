@@ -10,7 +10,9 @@ export class LogicalExpression extends InfixExpressionNode<LogicalOperator> {
 		return new LogicalExpression(
 			node.operator,
 			deserializer(node.left),
-			deserializer(node.right)
+			deserializer(node.right),
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: LogicalExpression, visitNode: VisitNodeType): void {

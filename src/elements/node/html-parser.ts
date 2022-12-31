@@ -163,7 +163,7 @@ export class NodeParserHelper {
 	protected extractDirectiveNames(node: BaseNode): string[] {
 		const names: string[] = [];
 		if (node.attributes?.length) {
-			names.push(...this.getAttributeDirectives(node.attributes));
+			names.push(...this.getAttributeDirectives(node.attributes).filter(name => name.startsWith('*')));
 		}
 		if (node.inputs?.length) {
 			names.push(...this.getAttributeDirectives(node.inputs));
@@ -177,10 +177,10 @@ export class NodeParserHelper {
 		if (node.outputs?.length) {
 			names.push(...this.getAttributeDirectives(node.outputs));
 		}
-		return names;
+		return [...new Set(names)];
 	}
 	protected getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
-		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name));
+		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name.split('.')[0]));
 	}
 }
 
@@ -497,7 +497,7 @@ export class NodeParser extends NodeParserHelper {
 }
 
 function createFilterByAttrName(attributes: string[]) {
-	return (attr: Attribute<string, any>) => attributes.includes(attr.name);
+	return (attr: Attribute<string, any>) => attributes.includes(attr.name.split('.')[0]);
 }
 
 function createArrayCleaner(attributes: Attribute<string, any>[]) {

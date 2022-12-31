@@ -1,4 +1,7 @@
-import type { NodeDeserializer, ExpressionNode, ExpressionEventPath, VisitNodeType } from '../expression.js';
+import type {
+	NodeDeserializer, ExpressionNode, ExpressionEventPath,
+	VisitNodeType, SourceLocation
+} from '../expression.js';
 import type { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { SpreadElement } from './spread.js';
@@ -12,7 +15,9 @@ export class CallExpression extends AbstractExpressionNode {
 		return new CallExpression(
 			deserializer(node.callee),
 			node.arguments.map(param => deserializer(param)),
-			node.optional
+			node.optional,
+			node.range,
+			node.loc
 		);
 	}
 	static visit(node: CallExpression, visitNode: VisitNodeType): void {
@@ -20,8 +25,13 @@ export class CallExpression extends AbstractExpressionNode {
 		node.arguments.forEach(visitNode);
 	}
 	private arguments: ExpressionNode[];
-	constructor(private callee: ExpressionNode, params: ExpressionNode[], private optional: boolean = false) {
-		super();
+	constructor(
+		private callee: ExpressionNode,
+		params: ExpressionNode[],
+		private optional: boolean = false,
+		range?: [number, number],
+		loc?: SourceLocation) {
+		super(range, loc);
 		this.arguments = params;
 	}
 	getCallee() {

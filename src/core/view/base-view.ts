@@ -8,20 +8,14 @@ import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
-import { getCurrentZone } from '../zone/bootstrap.js';
+import { getRootZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
-import { createZoneProxyHandler } from '../zone/proxy.js';
+import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 
-const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
-
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
-
-	if (FACTORY_CACHE.has(htmlElementType)) {
-		return FACTORY_CACHE.get(htmlElementType) as TypeOf<HTMLComponent<T>>;
-	}
-	class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
+	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
@@ -48,14 +42,14 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
 			args.push(detector)
-			this._zone = getCurrentZone(componentRef.zone).fork();
+			this._zone = getRootZone().fork(componentRef.zone);
 			args.push(this._zone);
 			const model = new modelClass(...args);
 			this._model = model;
 
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
-				? createZoneProxyHandler(model, this._zone)
+				? createProxyZone(model, this._zone)
 				: model;
 			modelScope.getContextProxy = () => modelProxyRef;
 			this._modelScope = modelScope;
@@ -261,8 +255,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				// setup ui view
 				this._render.initView();
 
-				// init Host Listener events
-				this._render.initHostListener();
+				// init view binding
+				this._render.initViewBinding();
 			}
 
 			if (isAfterViewInit(this._model)) {
@@ -353,6 +347,4 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 		}
 	};
-	FACTORY_CACHE.set(htmlElementType, CustomView);
-	return CustomView;
 }

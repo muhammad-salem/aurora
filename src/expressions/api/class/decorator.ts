@@ -1,18 +1,21 @@
+import type {
+	ExpressionEventPath, ExpressionNode, NodeDeserializer,
+	SourceLocation, VisitNodeType
+} from '../expression.js';
 import { Stack } from '../../scope/stack.js';
 import { AbstractExpressionNode } from '../abstract.js';
 import { Deserializer } from '../deserialize/deserialize.js';
-import { ExpressionEventPath, ExpressionNode, NodeDeserializer, VisitNodeType } from '../expression.js';
 
 @Deserializer('Decorator')
 export class Decorator extends AbstractExpressionNode {
 	static fromJSON(node: Decorator, deserializer: NodeDeserializer<any>): Decorator {
-		return new Decorator(deserializer(node.expression));
+		return new Decorator(deserializer(node.expression), node.range, node.loc);
 	}
 	static visit(node: Decorator, visitNode: VisitNodeType): void {
 		visitNode(node.expression);
 	}
-	constructor(private expression: ExpressionNode) {
-		super();
+	constructor(private expression: ExpressionNode, range?: [number, number], loc?: SourceLocation) {
+		super(range, loc);
 	}
 	getExpression() {
 		return this.expression;
