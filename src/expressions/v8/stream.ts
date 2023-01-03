@@ -435,7 +435,7 @@ export class TokenStreamImpl extends TokenStream {
 				addLiteralChar(c);
 			}
 		}
-		const range: [number, number] = [start, this.pos];
+		const range: [number, number] = [start - 1, this.pos];
 		return this.newToken(result, range, new TemplateStringLiteral(literal.join(''), range));
 	}
 	public scanTemplateContinuation(): TokenExpression {

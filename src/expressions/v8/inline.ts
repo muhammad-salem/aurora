@@ -1522,7 +1522,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 			const template = next.getValue<TemplateStringLiteral>();
 			return this.createTemplateLiteralExpressionNode([template.string], [], tag, template.range);
 		}
-		this.consume(Token.TEMPLATE_SPAN);
+		const start = this.consume(Token.TEMPLATE_SPAN);
 		const expressions: ExpressionNode[] = [];
 		const strings: string[] = [];
 		strings.push(next.getValue<TemplateStringLiteral>().string);
@@ -1547,8 +1547,9 @@ export class JavaScriptInlineParser extends AbstractParser {
 		if (next.isNotType(Token.TEMPLATE_TAIL)) {
 			throw new SyntaxError(this.errorMessage(`Unexpected Token: ${JSON.stringify(next)}`));
 		}
+		const range = this.createRange(start);
 		// Once we've reached a TEMPLATE_TAIL, we can close the TemplateLiteral.
-		return this.createTemplateLiteralExpressionNode(strings, expressions, tag);
+		return this.createTemplateLiteralExpressionNode(strings, expressions, tag, range);
 	}
 	protected createTemplateLiteralExpressionNode(strings: string[], expressions: ExpressionNode[], tag?: ExpressionNode, range?: RangeOrVoid): TaggedTemplateExpression | TemplateLiteral {
 		if (tag) {
@@ -2267,7 +2268,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 					x = this.factory.createInfixExpression(cmp.getName() as AssignmentOperator | LogicalOperator | BinaryOperator, x, y, this.createRange(x));
 					if (op.isNotType(cmp)) {
 						// The comparison was negated - add a NOT.
-						x = this.factory.createUnaryExpression(Token.NOT.getName() as UnaryOperator, x, this.createRange(x));
+						x = this.factory.createUnaryExpression(Token.NOT.getName() as UnaryOperator, x, this.createRange(op));
 					}
 				} else {
 					x = this.factory.createInfixExpression(op.token.getName() as AssignmentOperator | LogicalOperator | BinaryOperator, x, y, this.createRange(x));
