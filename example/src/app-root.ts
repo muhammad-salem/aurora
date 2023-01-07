@@ -12,7 +12,7 @@ export interface App {
 	template: `
 	<h3>{{appName}}</h3>
 	<div class="container-fluid w-100 h-100">
-		<nav class="nav nav-pills nav-fill">
+		<nav class="nav nav-pills nav-fill gap-1">
 			<template *forOf="let app of appList">
 				<li class="nav-item">
 					<a  class="nav-link" href="javascript:void(0)" 
