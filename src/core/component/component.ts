@@ -3,7 +3,7 @@ import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DomNode, DomRenderNode, canAttachShadow,
-	directiveRegistry, DomElementNode, Attribute
+	directiveRegistry, DomElementNode
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
@@ -17,7 +17,7 @@ import {
 } from '../annotation/decorators.js';
 import {
 	BootstrapMetadata, ChildRef, HostBindingRef,
-	InputPropertyRef, HostListenerRef, OutputPropertyRef,
+	InputPropertyRef, ListenerRef, OutputPropertyRef,
 	PropertyRef, ReflectComponents
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
@@ -45,9 +45,9 @@ export interface DirectiveRef<T> {
 	view: string;
 	viewChild: ChildRef[];
 	ViewChildren: ChildRef[];
-	hostListeners: HostListenerRef[];
+	hostListeners: ListenerRef[];
 	hostBindings: HostBindingRef[];
-	viewBindings: DomElementNode[];
+	viewBindings?: DomElementNode;
 }
 
 export interface ComponentRef<T> {
@@ -67,8 +67,8 @@ export interface ComponentRef<T> {
 	viewChild: ChildRef[];
 	ViewChildren: ChildRef[];
 	hostBindings: HostBindingRef[];
-	hostListeners: HostListenerRef[];
-	viewBindings: DomElementNode[];
+	hostListeners: ListenerRef[];
+	viewBindings?: DomElementNode;
 
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
 	isShadowDom: boolean;
@@ -79,8 +79,10 @@ export interface ComponentRef<T> {
 }
 
 type ViewBindingOption = {
+	prototype: Record<PropertyKey, any>;
 	hostBindings?: HostBindingRef[];
-	hostListeners?: HostListenerRef[];
+	hostListeners?: ListenerRef[];
+	selector?: string;
 };
 
 export class Components {
@@ -90,34 +92,9 @@ export class Components {
 		return Components.EMPTY_LIST as T[];
 	}
 
-	private static parseHostBindings(prototype: Record<PropertyKey, any>, option: ViewBindingOption, selector?: string): DomElementNode[] {
-		option.hostListeners ??= [];
-		option.hostBindings ??= [];
-		const listeners = option.hostListeners.reduce((list, listener) => {
-			const details = listener.eventName.split(':', 2) as [string, string] | [string];
-			const source = details.length === 2 ? details[0] : 'this';
-			if (details.length === 2) {
-				listener.eventName = details[1];
-			}
-			list[source] ??= [];
-			list[source].push(listener);
-			return list;
-		}, {} as Record<string, HostListenerRef[]>) ?? {};
-
-		return Object.keys(listeners).map(host => {
-			const hostOption: ViewBindingOption = { hostListeners: listeners[host] };
-			if (host === 'this') {
-				hostOption.hostBindings = option.hostBindings;
-			}
-			const node = Components.parseHostBinding(prototype, hostOption, selector);
-			node.templateRefName = new Attribute(host, undefined);
-			return node;
-		})
-	}
-
-	private static parseHostBinding(prototype: Record<PropertyKey, any>, option: ViewBindingOption, selector?: string): DomElementNode {
+	private static parseHostBinding(option: ViewBindingOption): DomElementNode {
 		const inputs = option.hostBindings?.map(binding => {
-			const descriptor = Object.getOwnPropertyDescriptor(prototype, binding.modelPropertyName);
+			const descriptor = Object.getOwnPropertyDescriptor(option.prototype, binding.modelPropertyName);
 			if (typeof descriptor?.value === 'function') {
 				return `[${binding.hostPropertyName}]="${binding.modelPropertyName}()"`
 			}
@@ -126,8 +103,8 @@ export class Components {
 		const outputs = option.hostListeners?.map(
 			listener => `(${listener.eventName})="${listener.modelCallbackName}(${listener.args.join(', ')})"`
 		) ?? [];
-		selector ??= 'div';
-		const template = `<${selector} ${inputs.join(' ')} ${outputs.join(' ')}></${selector}>`;
+		option.selector ??= 'div';
+		const template = `<${option.selector} ${inputs.join(' ')} ${outputs.join(' ')}></${option.selector}>`;
 		const viewBindings = htmlParser.toDomRootNode(template) as DomElementNode;
 		buildExpressionNodes(viewBindings);
 		return viewBindings;
@@ -136,9 +113,9 @@ export class Components {
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 		Object.assign(bootstrap, opts);
-		bootstrap.viewBindings = Components.emptyList();
 		if (bootstrap.hostListeners?.length || bootstrap.hostBindings?.length) {
-			bootstrap.viewBindings = Components.parseHostBindings(modelClass.prototype, {
+			bootstrap.viewBindings = Components.parseHostBinding({
+				prototype: modelClass.prototype,
 				hostBindings: bootstrap.hostBindings,
 				hostListeners: bootstrap.hostListeners,
 			});
@@ -208,17 +185,18 @@ export class Components {
 		componentRef.ViewChildren ||= Components.emptyList();
 		componentRef.hostBindings ||= Components.emptyList();
 		componentRef.hostListeners ||= Components.emptyList();
-		componentRef.viewBindings ||= Components.emptyList();
 		componentRef.encapsulation ||= 'custom';
 		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
 
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
-			componentRef.viewBindings = Components.parseHostBindings(modelClass.prototype, {
+			componentRef.viewBindings = Components.parseHostBinding({
+				prototype: modelClass.prototype,
+				selector: componentRef.selector,
 				hostBindings: componentRef.hostBindings,
 				hostListeners: componentRef.hostListeners,
-			}, componentRef.selector);
+			});
 		}
 
 		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {

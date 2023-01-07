@@ -97,42 +97,10 @@ export class ComponentRender<T extends object> {
 		}
 	}
 	initViewBinding() {
-		this.componentRef.viewBindings?.forEach(host => {
-			console.log('host.templateRefName?.name', host.templateRefName?.name);
-
-			switch (host.templateRefName?.name) {
-				case 'this':
-					const subs = this.initAttribute(this.view, host, this.contextStack);
-					this.subscriptions.push(...subs);
-					// this.initHtmlElement(this.view, host, this.contextStack, this.subscriptions);
-					break;
-				case 'window':
-					this.initAttribute(window as any, host, this.contextStack);
-					break;
-				case undefined:
-					break;
-				default:
-					let scopeSubscriptions: ScopeSubscription<Context>[] | undefined;
-					const subscriptions = (element?: HTMLElement) => {
-						if (!element && scopeSubscriptions) {
-							scopeSubscriptions.forEach(sub => sub.unsubscribe());
-							this.subscriptions = this.subscriptions.filter(sub => !scopeSubscriptions!.includes(sub));
-							scopeSubscriptions = undefined;
-							return;
-						} else if (element) {
-							scopeSubscriptions = this.initAttribute(this.view, host, this.contextStack);
-							this.subscriptions.push(...subs);
-						}
-						// element && this.initHtmlElement(element, host, this.contextStack, this.subscriptions);
-					};
-					// this.viewScope.subscribe(host.templateRefName!.name, subscriptions);
-					const element = this.viewScope.get(host.templateRefName!.name) as HTMLElement | undefined;
-					subscriptions(element);
-					break;
-			};
-
-
-		});
+		if (!this.componentRef.viewBindings) {
+			return;
+		}
+		this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
@@ -359,11 +327,11 @@ export class ComponentRender<T extends object> {
 			if (!element.hasAttribute(attributeName)) {
 				element.setAttribute(attributeName, '');
 			}
-			if (directiveRef.viewBindings.length) {
+			if (directiveRef.viewBindings) {
 				const directiveStack = stack.copyStack();
 				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
 				directiveStack.pushScope(directiveScope);
-				directiveRef.viewBindings.forEach(host => this.initHtmlElement(element, host, directiveStack, subscriptions));
+				this.initHtmlElement(element, directiveRef.viewBindings, directiveStack, subscriptions);
 			}
 		});
 	}
