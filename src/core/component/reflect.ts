@@ -26,7 +26,7 @@ export class ChildRef {
 	) { }
 }
 
-export class ListenerRef {
+export class HostListenerRef {
 	constructor(public eventName: string, public args: string[], public modelCallbackName: string) { }
 }
 
@@ -100,7 +100,7 @@ export class ReflectComponents {
 	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
 		bootstrap.hostListeners ??= [];
-		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
+		bootstrap.hostListeners.push(new HostListenerRef(eventName, args, propertyKey));
 	}
 
 	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
