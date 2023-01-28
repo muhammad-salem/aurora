@@ -70,6 +70,7 @@ export interface ComponentRef<T> {
 	hostBindings: HostBindingRef[];
 	hostListeners: ListenerRef[];
 	viewBindings?: DomElementNode;
+	windowBindings?: DomElementNode;
 
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
 	isShadowDom: boolean;
@@ -262,6 +263,7 @@ export class Components {
 				hostListeners: componentRef.hostListeners,
 			});
 			componentRef.viewBindings = hostNode.host;
+			componentRef.windowBindings = hostNode.window;
 
 			if (typeof componentRef.template === 'function') {
 				const creator = componentRef.template;

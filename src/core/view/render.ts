@@ -97,10 +97,12 @@ export class ComponentRender<T extends object> {
 		}
 	}
 	initViewBinding() {
-		if (!this.componentRef.viewBindings) {
-			return;
+		if (this.componentRef.viewBindings) {
+			this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
 		}
-		this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
+		if (this.componentRef.windowBindings) {
+			this.initAttribute(window as any, this.componentRef.windowBindings, this.contextStack);
+		}
 	}
 	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
 		source.addEventListener(eventName, (event: Event) => {
