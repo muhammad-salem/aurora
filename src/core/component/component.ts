@@ -3,7 +3,8 @@ import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DomNode, DomRenderNode, canAttachShadow,
-	directiveRegistry, DomElementNode, DomFragmentNode
+	directiveRegistry, DomElementNode,
+	DomFragmentNode, DomParentNode
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
@@ -96,6 +97,18 @@ export class Components {
 	private static EMPTY_LIST = Object.freeze<any>([]);
 	private static emptyList<T>(): T[] {
 		return Components.EMPTY_LIST as T[];
+	}
+
+	private static patchTemplate(child: DomNode, templates: DomElementNode[]): void {
+		if (child instanceof DomElementNode && child.templateRefName?.name) {
+			const ref = templates.find(node => child.templateRefName?.name === node.templateRefName?.name);
+			if (ref?.outputs) {
+				(child.outputs ??= []).push(...ref.outputs);
+			}
+		}
+		if (child instanceof DomParentNode) {
+			child.children?.forEach(node => Components.patchTemplate(node, templates));
+		}
 	}
 
 	private static createOutputs(Listeners?: ListenerRef[]) {
@@ -249,7 +262,20 @@ export class Components {
 				hostListeners: componentRef.hostListeners,
 			});
 			componentRef.viewBindings = hostNode.host;
-			console.log('hostNode', hostNode);
+
+			if (typeof componentRef.template === 'function') {
+				const creator = componentRef.template;
+				componentRef.template = (model: T) => {
+					const template = creator(model);
+					if (hostNode.template) {
+						Components.patchTemplate(template, hostNode.template);
+					}
+					return template;
+				};
+			} else if (hostNode.template) {
+				Components.patchTemplate(componentRef.template, hostNode.template);
+			}
+
 		}
 
 		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {
