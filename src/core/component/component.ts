@@ -3,7 +3,7 @@ import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DomNode, DomRenderNode, canAttachShadow,
-	directiveRegistry, DomElementNode
+	directiveRegistry, DomElementNode, DomFragmentNode
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
@@ -85,6 +85,12 @@ type ViewBindingOption = {
 	selector?: string;
 };
 
+type HostNode = {
+	host?: DomElementNode;
+	window?: DomElementNode;
+	template?: DomElementNode[];
+};
+
 export class Components {
 
 	private static EMPTY_LIST = Object.freeze<any>([]);
@@ -92,33 +98,78 @@ export class Components {
 		return Components.EMPTY_LIST as T[];
 	}
 
-	private static parseHostBinding(option: ViewBindingOption): DomElementNode {
+	private static createOutputs(Listeners?: ListenerRef[]) {
+		return Listeners?.map(
+			listener => `(${listener.eventName})="${listener.modelCallbackName}(${listener.args.join(', ')})"`
+		).join(' ') ?? ''
+	}
+
+	private static parseHostNode(option: ViewBindingOption): HostNode {
 		const inputs = option.hostBindings?.map(binding => {
 			const descriptor = Object.getOwnPropertyDescriptor(option.prototype, binding.modelPropertyName);
 			if (typeof descriptor?.value === 'function') {
 				return `[${binding.hostPropertyName}]="${binding.modelPropertyName}()"`
 			}
 			return `[${binding.hostPropertyName}]="${binding.modelPropertyName}"`;
-		}) ?? [];
-		const outputs = option.hostListeners?.map(
-			listener => `(${listener.eventName})="${listener.modelCallbackName}(${listener.args.join(', ')})"`
-		) ?? [];
-		option.selector ??= 'div';
-		const template = `<${option.selector} ${inputs.join(' ')} ${outputs.join(' ')}></${option.selector}>`;
-		const viewBindings = htmlParser.toDomRootNode(template) as DomElementNode;
-		buildExpressionNodes(viewBindings);
-		return viewBindings;
+		}).join(' ') ?? '';
+
+		const hostListeners: ListenerRef[] = [];
+		const windowListeners: ListenerRef[] = [];
+		const templateListeners: Record<string, ListenerRef[]> = {};
+
+		option.hostListeners?.forEach(listener => {
+			const [host, event] = listener.eventName.split(':', 2);
+			if (event === undefined) {
+				hostListeners.push(listener);
+			} else if ('window' === host.toLowerCase()) {
+				windowListeners.push(new ListenerRef(event, listener.args, listener.modelCallbackName));
+			} else {
+				(templateListeners[host] ??= []).push(new ListenerRef(event, listener.args, listener.modelCallbackName));
+			}
+		});
+
+		const result: HostNode = {};
+
+		if (hostListeners.length) {
+			const hostOutputs = Components.createOutputs(hostListeners);
+			const selector = option.selector ?? 'div';
+			const hostTemplate = `<${selector} ${inputs} ${hostOutputs}></${selector}>`;
+			result.host = htmlParser.toDomRootNode(hostTemplate) as DomElementNode;
+			buildExpressionNodes(result.host);
+		}
+
+		if (windowListeners.length) {
+			const windowOutputs = Components.createOutputs(windowListeners);
+			const windowTemplate = `<window ${windowOutputs}></window>`;
+			result.window = htmlParser.toDomRootNode(windowTemplate) as DomElementNode;
+			buildExpressionNodes(result.window);
+		}
+
+		const templateHosts = Object.keys(templateListeners);
+		if (templateHosts.length) {
+			const template = templateHosts.map(host => {
+				const hostOutputs = Components.createOutputs(templateListeners[host]);
+				return `<template #${host} ${hostOutputs}></template>`;
+			}).join('');
+			const templateNodes = htmlParser.toDomRootNode(template) as DomElementNode | DomFragmentNode;
+			buildExpressionNodes(templateNodes);
+			result.template = templateNodes instanceof DomFragmentNode
+				? templateNodes.children?.filter(child => child instanceof DomElementNode) as DomElementNode[] ?? []
+				: [templateNodes];
+		}
+		return result;
 	}
 
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
 		Object.assign(bootstrap, opts);
 		if (bootstrap.hostListeners?.length || bootstrap.hostBindings?.length) {
-			bootstrap.viewBindings = Components.parseHostBinding({
+			const hostNode = Components.parseHostNode({
 				prototype: modelClass.prototype,
 				hostBindings: bootstrap.hostBindings,
 				hostListeners: bootstrap.hostListeners,
 			});
+			bootstrap.viewBindings = hostNode.host;
 		}
 		bootstrap.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
@@ -191,12 +242,14 @@ export class Components {
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
 
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
-			componentRef.viewBindings = Components.parseHostBinding({
+			const hostNode = Components.parseHostNode({
 				prototype: modelClass.prototype,
 				selector: componentRef.selector,
 				hostBindings: componentRef.hostBindings,
 				hostListeners: componentRef.hostListeners,
 			});
+			componentRef.viewBindings = hostNode.host;
+			console.log('hostNode', hostNode);
 		}
 
 		if (!(componentRef.formAssociated === true || typeof componentRef.formAssociated === 'function')) {
