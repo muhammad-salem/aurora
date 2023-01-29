@@ -16,6 +16,7 @@ import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { EventEmitter } from '../component/events.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -103,11 +104,6 @@ export class ComponentRender<T extends object> {
 		if (this.componentRef.windowBindings) {
 			this.initAttribute(window as any, this.componentRef.windowBindings, this.contextStack);
 		}
-	}
-	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
-		source.addEventListener(eventName, (event: Event) => {
-			this.view._zone.run(funcCallback as () => void, this.view._model);
-		});
 	}
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
@@ -277,6 +273,9 @@ export class ComponentRender<T extends object> {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
 			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(changeEventName, listener);
+			subscriptions.push(createSubscriptionDestroyer(
+				() => element.removeEventListener(changeEventName, listener),
+			));
 		}
 
 		const templateRefName = node.templateRefName;
@@ -396,6 +395,9 @@ export class ComponentRender<T extends object> {
 					listener = event.value;
 				}
 				element.addEventListener(event.name as any, listener as any);
+				subscriptions.push(createSubscriptionDestroyer(
+					() => element.removeEventListener(event.name as any, listener as any),
+				));
 			});
 		}
 		if (node.templateAttrs?.length) {
@@ -437,7 +439,10 @@ export class ComponentRender<T extends object> {
 					stack.pushBlockScopeFor({ $event });
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
-				((<any>directive)[event.name] as any).subscribe(listener);
+				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
+				subscriptions.push(createSubscriptionDestroyer(
+					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
+				));
 			});
 		}
 		if (node.templateAttrs?.length) {
