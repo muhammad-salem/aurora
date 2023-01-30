@@ -142,9 +142,7 @@ export class ComponentRender<T extends object> {
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		stack.pushScope(scope);
-
-		const dSubs = this.initStructuralDirective(structural, directive, stack);
-		subscriptions.push(...dSubs);
+		subscriptions.push(...this.initDirective(structural, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
 		}
@@ -313,7 +311,7 @@ export class ComponentRender<T extends object> {
 			const stack = contextStack.copyStack();
 			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
 
-			const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
+			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
 				directiveZone.run(directive.onInit, directive);
@@ -409,7 +407,7 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
-	initStructuralDirective(
+	initDirective(
 		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
