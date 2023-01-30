@@ -102,7 +102,7 @@ export class ComponentRender<T extends object> {
 			this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
 		}
 		if (this.componentRef.windowBindings) {
-			this.initAttribute(window as any, this.componentRef.windowBindings, this.contextStack);
+			this.subscriptions.push(...this.initAttribute(window as any, this.componentRef.windowBindings, this.contextStack));
 		}
 	}
 	getElementByName(name: string) {
