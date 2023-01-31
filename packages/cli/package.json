@@ -42,8 +42,8 @@
 		"@ibyar/expressions": "^0.8.5",
 		"@ibyar/pipes": "^0.8.5",
 		"reflect-metadata": "^0.1.13",
-		"tslib": "^2.4.1",
-		"typescript": "^4.9.4"
+		"tslib": "^2.5.0",
+		"typescript": "^4.9.5"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
