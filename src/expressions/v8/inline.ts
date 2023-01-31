@@ -2342,7 +2342,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 
 		if (Token.isCount(op.token) || Token.isUnary(op.token)) {
 			// Allow the parser to rewrite the expression.
-			return this.factory.createUnaryExpression(op.token.getName() as UpdateOperator | UnaryOperator, expression, op.range);
+			return this.factory.createUnaryExpression(op.token.getName() as UpdateOperator | UnaryOperator, expression, this.createRangeByStart(op));
 		}
 		throw new Error(this.errorMessage(`while rewrite unary operation`));
 	}

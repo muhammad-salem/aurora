@@ -462,7 +462,7 @@ export class ExpressionNodeFactory implements NodeFactory {
 		switch (operator) {
 			case '++':
 			case '--':
-				return new UpdateExpression(operator, expression, true);
+				return new UpdateExpression(operator, expression, true, range, loc);
 			case '+':
 			case '-':
 			case '!':
@@ -470,9 +470,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 			case 'typeof':
 			case 'void':
 			case 'delete':
-				return new UnaryExpression(operator, expression);
+				return new UnaryExpression(operator, expression, range, loc);
 			case 'await':
-				return new AwaitExpression(expression);
+				return new AwaitExpression(expression, range, loc);
 			default:
 				throw new Error(`${operator} is not prefix operator`);
 		}
