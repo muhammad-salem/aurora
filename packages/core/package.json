@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/core",
-	"version": "0.8.5",
+	"version": "0.8.6",
 	"description": "Ibyar core, Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/core",
@@ -35,8 +35,8 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/elements": "^0.8.5",
-		"@ibyar/expressions": "^0.8.5",
+		"@ibyar/elements": "^0.8.6",
+		"@ibyar/expressions": "^0.8.6",
 		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.5.0"
 	},
