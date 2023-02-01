@@ -276,6 +276,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					this._zone.run(this._model.afterViewChecked, this._modelScope.getContextProxy!());
 				}
 			};
+			const event = new CustomEvent('connected', { cancelable: true, bubbles: false, composed: false });
+			this.dispatchEvent(event);
 		}
 
 
@@ -337,6 +339,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 			});
 			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
+			const event = new CustomEvent('disconnected', { cancelable: true, bubbles: false, composed: false });
+			this.dispatchEvent(event);
 		}
 
 		triggerOutput(eventName: string, value?: any): void {

@@ -16,6 +16,7 @@ import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { EventEmitter } from '../component/events.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -97,15 +98,12 @@ export class ComponentRender<T extends object> {
 		}
 	}
 	initViewBinding() {
-		if (!this.componentRef.viewBindings) {
-			return;
+		if (this.componentRef.viewBindings) {
+			this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
 		}
-		this.initHtmlElement(this.view, this.componentRef.viewBindings, this.contextStack, this.subscriptions);
-	}
-	addNativeEventListener(source: HTMLElement | Window, eventName: string, funcCallback: Function) {
-		source.addEventListener(eventName, (event: Event) => {
-			this.view._zone.run(funcCallback as () => void, this.view._model);
-		});
+		if (this.componentRef.windowBindings) {
+			this.subscriptions.push(...this.initAttribute(window as any, this.componentRef.windowBindings, this.contextStack));
+		}
 	}
 	getElementByName(name: string) {
 		return Reflect.get(this.view, name);
@@ -144,9 +142,7 @@ export class ComponentRender<T extends object> {
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		stack.pushScope(scope);
-
-		const dSubs = this.initStructuralDirective(structural, directive, stack);
-		subscriptions.push(...dSubs);
+		subscriptions.push(...this.initDirective(structural, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
 		}
@@ -275,6 +271,9 @@ export class ComponentRender<T extends object> {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
 			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(changeEventName, listener);
+			subscriptions.push(createSubscriptionDestroyer(
+				() => element.removeEventListener(changeEventName, listener),
+			));
 		}
 
 		const templateRefName = node.templateRefName;
@@ -312,7 +311,7 @@ export class ComponentRender<T extends object> {
 			const stack = contextStack.copyStack();
 			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
 
-			const directiveSubscriptions = this.initStructuralDirective(directive, directiveNode, stack);
+			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
 				directiveZone.run(directive.onInit, directive);
@@ -394,6 +393,9 @@ export class ComponentRender<T extends object> {
 					listener = event.value;
 				}
 				element.addEventListener(event.name as any, listener as any);
+				subscriptions.push(createSubscriptionDestroyer(
+					() => element.removeEventListener(event.name as any, listener as any),
+				));
 			});
 		}
 		if (node.templateAttrs?.length) {
@@ -405,7 +407,7 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
-	initStructuralDirective(
+	initDirective(
 		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
@@ -435,7 +437,10 @@ export class ComponentRender<T extends object> {
 					stack.pushBlockScopeFor({ $event });
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
-				((<any>directive)[event.name] as any).subscribe(listener);
+				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
+				subscriptions.push(createSubscriptionDestroyer(
+					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
+				));
 			});
 		}
 		if (node.templateAttrs?.length) {

@@ -359,6 +359,7 @@ export function Service(opt: ServiceOptions): Function {
 		return target;
 	};
 }
+
 export function Directive(opt: DirectiveOptions): Function {
 	return (target: Function) => {
 		Components.defineDirective(target, opt);

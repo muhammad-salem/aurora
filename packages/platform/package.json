@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/platform",
-	"version": "0.8.5",
+	"version": "0.8.6",
 	"description": "Ibyar Platform, A utility package for Aurora",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
@@ -34,10 +34,10 @@
 	},
 	"dependencies": {
 		"reflect-metadata": "^0.1.13",
-		"tslib": "^2.4.1"
+		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
-		"typescript": "^4.9.4"
+		"typescript": "^4.9.5"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
