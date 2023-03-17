@@ -23,7 +23,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 			const classes = moduleInfo.classes;
 
 			const sourceViewInfos: ViewInfo[] = classes.flatMap(c => c.views);
-			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.Node) => {
+			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.SourceFile) => {
 				return ts.visitEachChild(node, (childNode) => {
 					if (!ts.isClassDeclaration(childNode)) {
 						return childNode;
@@ -53,7 +53,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 						[...staticMembers, ...childNode.members.slice()],
 					);
 				}, context);
-			});
+			}) as ts.SourceFile;
 			if (sourceViewInfos.length) {
 				const statements = updateSourceFile.statements?.slice() ?? [];
 				// statements.push(createConstructorOfViewInterfaceDeclaration());
