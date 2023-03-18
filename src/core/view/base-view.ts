@@ -29,6 +29,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		private subscriptions: ScopeSubscription<Context>[] = [];
 		private onDestroyCalls: (() => void)[] = [];
+		private needRendering = true;
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
@@ -226,7 +227,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 			// init view binding
 			this._render.initViewBinding();
-
+			this.needRendering = false;
 		}
 
 		connectedCallback() {
@@ -265,7 +266,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			// do once
-			if (this.childNodes.length === 0) {
+			if (this.needRendering) {
 				this.initView();
 			}
 
