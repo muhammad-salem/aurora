@@ -1,8 +1,7 @@
 import {
-	ChangeDetectorRef,
-	Component, EventEmitter, HostBinding, HostListener,
-	Input, OnChanges, OnInit, Optional, Output, SelfSkip, Service,
-	View, ViewChild, ViewChildren
+	Component, EventEmitter, HostBinding,
+	HostListener, Input, OnInit, Output,
+	Service, View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
 @Service({ provideIn: 'root' })
@@ -88,7 +87,7 @@ export class PersonView implements OnInit {
 	@HostBinding('class.invalid')
 	invalid: boolean;
 
-	constructor(@Optional() private service: LogService, @SelfSkip() private service2: LogService) { }
+	constructor(private service: LogService, private service2: LogService) { }
 
 	onInit(): void {
 		console.log('onInit', this);
@@ -133,7 +132,7 @@ export class PersonView implements OnInit {
 		console.log(this, msg);
 	}
 
-	collectData(@Optional() data: Object, @SelfSkip('GG') ddd: Person, @SelfSkip() p: Person): string[] {
+	collectData(data: Object, ddd: Person, p: Person): string[] {
 		return [];
 	}
 
