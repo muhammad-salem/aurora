@@ -97,6 +97,10 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Host Color Picker',
 			load: () => import('./color/host-color.component.js').then(module => module.HostColorPickerComponent),
+		},
+		{
+			title: 'Template And Slot Content',
+			load: () => import('./slot/slot.js').then(module => module.ElementDetailsExampleComponent),
 		}
 
 
