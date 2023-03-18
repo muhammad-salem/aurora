@@ -45,6 +45,7 @@ export interface PipeOptions {
 }
 
 export interface ComponentOptions<T = Function> {
+
 	/**
 	 * a tag name for the component,
 	 * if the tag name is valid custom element name, the view class will be a custom element,
@@ -72,6 +73,7 @@ export interface ComponentOptions<T = Function> {
 	 * you should copy the html files to its folder by yourself. 
 	 */
 	templateUrl?: TemplateUrl | string;
+
 	/**
 	 * template: typeof 'string' ==> html string,
 	 * 			 TypeOf 'DomRootRenderNode<T>' ==> JSX, create factory
@@ -83,10 +85,12 @@ export interface ComponentOptions<T = Function> {
 	 * 				
 	 */
 	template?: string | DomNode;
+
 	/**
 	 * style for this element
 	 */
 	styles?: string | { [key: string]: string }[];
+
 	/**
 	 * what basic element should the new component inherit from,
 	 * the tag name to inherit from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
@@ -113,10 +117,10 @@ export interface ComponentOptions<T = Function> {
 	 *		@View('personform') personForm: HTMLFormElement;
 	 * ```
 	 * 
-	 * any root element as 
+	 * any app root element as 
 	 * 
 	 * ```html
-	 * <root-app></root-app>
+	 * <app-root></app-root>
 	 * ```
 	 * 
 	 * the supported bind options is 'One way binding *(as passing data only)'
@@ -127,7 +131,7 @@ export interface ComponentOptions<T = Function> {
 	 * 
 	 * ```html
 	 * <script>
-	 * 	let appVersion = '0.1.504';
+	 * 	const appVersion = '0.1.504';
 	 * 	function onRootAppClick() {
 	 *		console.log('root app clicked');
 	 * 	}
@@ -135,18 +139,20 @@ export interface ComponentOptions<T = Function> {
 	 *		console.log('root app save', data);
 	 * 	}
 	 * </script>
-	 * <root-app [version]="appVersion" 
+	 * <app-root [version]="appVersion" 
 	 * 		onclick="onRootAppClick()"
-	 * 		(save)="onSave()" ></root-app>
+	 * 		(save)="onSave()" >
+	 * </app-root>
 	 * ```
 	 * 
 	 * default is 'custom'
 	 * @type {'custom' | 'shadowDom' | 'template' | 'shadowDom-template'}
 	 */
-	encapsulation?: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
+	encapsulation?: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
 
 	/**
-	 * default: 'open'
+	 * default: 'open' when encapsulation used,
+	 * otherwise it is undefined and will not attach shadow root element.
 	 */
 	shadowDomMode?: ShadowRootMode;
 

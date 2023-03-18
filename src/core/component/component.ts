@@ -72,7 +72,7 @@ export interface ComponentRef<T> {
 	viewBindings?: DomElementNode;
 	windowBindings?: DomElementNode;
 
-	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
+	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
 	isShadowDom: boolean;
 	shadowDomMode: ShadowRootMode;
 	shadowDomDelegatesFocus: boolean;
@@ -251,7 +251,7 @@ export class Components {
 		componentRef.hostBindings ||= Components.emptyList();
 		componentRef.hostListeners ||= Components.emptyList();
 		componentRef.encapsulation ||= 'custom';
-		componentRef.isShadowDom = /shadow-dom/g.test(componentRef.encapsulation);
+		componentRef.isShadowDom = /shadow-/g.test(componentRef.encapsulation);
 		componentRef.shadowDomMode ||= 'open';
 		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
 

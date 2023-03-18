@@ -91,6 +91,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
 			this._render = new ComponentRender(this, this.subscriptions);
+
+			if (this._componentRef.encapsulation === 'shadow-slot') {
+				// render view before inserting any slot element as child
+				this.initView();
+			}
 		}
 
 		detectChanges(): void {
@@ -215,6 +220,15 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this.doBlockCallback();
 		}
 
+		private initView() {
+			// setup ui view
+			this._render.initView();
+
+			// init view binding
+			this._render.initViewBinding();
+
+		}
+
 		connectedCallback() {
 			if (this.subscriptions.length) {
 				this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -252,11 +266,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 			// do once
 			if (this.childNodes.length === 0) {
-				// setup ui view
-				this._render.initView();
-
-				// init view binding
-				this._render.initViewBinding();
+				this.initView();
 			}
 
 			if (isAfterViewInit(this._model)) {
