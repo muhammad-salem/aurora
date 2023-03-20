@@ -1,4 +1,4 @@
-import type { ChildOptions, OutputEventInit } from '../annotation/decorators.js';
+import type { ChildOptions, OutputEventInit } from '../annotation/options.js';
 import type { ComponentRef } from './component.js';
 
 export class PropertyRef {

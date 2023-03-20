@@ -15,7 +15,7 @@ import { buildExpressionNodes } from '../html/expression.js';
 import {
 	ComponentOptions, PipeOptions,
 	ServiceOptions, DirectiveOptions
-} from '../annotation/decorators.js';
+} from '../annotation/options.js';
 import {
 	BootstrapMetadata, ChildRef, HostBindingRef,
 	InputPropertyRef, ListenerRef, OutputPropertyRef,
