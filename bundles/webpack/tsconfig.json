@@ -5,7 +5,7 @@
 		"declaration": true,
 		"importHelpers": true,
 		"inlineSources": false,
-		"declarationMap": false,
+		"declarationMap": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"strictBindCallApply": true,

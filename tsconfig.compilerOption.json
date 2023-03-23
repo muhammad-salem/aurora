@@ -4,7 +4,7 @@
 		"declaration": true,
 		"importHelpers": true,
 		"inlineSources": true,
-		"declarationMap": false,
+		"declarationMap": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"noImplicitReturns": true,

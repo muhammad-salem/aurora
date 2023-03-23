@@ -6,7 +6,7 @@
 		"declaration": true,
 		"importHelpers": true,
 		"inlineSources": false,
-		"declarationMap": false,
+		"declarationMap": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"strictBindCallApply": true,
@@ -27,10 +27,10 @@
 		"allowJs": true
 	},
 	"include": [
-	  "src/**/*.ts",
-	  "src/**/*.tsx"
+		"src/**/*.ts",
+		"src/**/*.tsx"
 	],
-   "files": [
-	 "src/index.ts"
-   ],
+	"files": [
+		"src/index.ts"
+	],
 }
