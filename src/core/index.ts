@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 
-export * from './annotation/decorators.js';
+export * from './annotation/context.js';
+export * from './annotation/decorators-es.js';
+// export * from './annotation/decorators.js';
 
 export * from './component/component.js';
 export * from './component/reflect.js';

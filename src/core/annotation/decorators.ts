@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Class, TypeOf } from '../utils/typeof.js';
 import { Components } from '../component/component.js';
 import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml } from '../utils/path.js';
@@ -75,21 +75,21 @@ export function HostBinding(hostPropertyName: string): Function {
 }
 
 export function Pipe(opt: PipeOptions): Function {
-	return (target: Function) => {
+	return (target: TypeOf<Class>) => {
 		Components.definePipe(target, opt);
 		return target;
 	};
 }
 
 export function Service(opt: ServiceOptions): Function {
-	return (target: Function) => {
+	return (target: TypeOf<Class>) => {
 		Components.defineService(target, opt);
 		return target;
 	};
 }
 
 export function Directive(opt: DirectiveOptions): Function {
-	return (target: Function) => {
+	return (target: TypeOf<Class>) => {
 		Components.defineDirective(target, opt);
 		return target;
 	};
