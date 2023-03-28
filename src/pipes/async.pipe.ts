@@ -8,7 +8,7 @@
  */
 
 
-import { AsyncPipeTransform, OnDestroy, Pipe } from '@ibyar/core';
+import { AsyncPipeTransform, Metadata, MetadataContext, OnDestroy, Pipe } from '@ibyar/core';
 
 interface Observer<T> {
 	complete: () => void;
@@ -157,6 +157,8 @@ const _subscribableStrategy = new SubscribableStrategy();
 
 @Pipe({ name: 'async', asynchronous: true })
 export class AsyncPipe<T> extends AsyncPipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> implements OnDestroy {
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 	private _latestValue: any = null;
 
 	private _subscription: Unsubscribable | Promise<any> | null = null;

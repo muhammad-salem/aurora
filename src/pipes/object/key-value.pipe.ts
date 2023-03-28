@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@ibyar/core';
+import { Metadata, MetadataContext, Pipe, PipeTransform } from '@ibyar/core';
 
 type StringKey<V> = { [key: string]: V };
 type NumberKey<V> = { [key: number]: V };
@@ -13,7 +13,11 @@ export type CompareFn<K, V> = (a: KeyValue<K, V>, b: KeyValue<K, V>) => number;
 @Pipe({
 	name: 'keyvalue'
 })
-export class KeyValuePipe<K, V> implements PipeTransform<StringKey<V> | NumberKey<V> | Map<K, V>, KeyValue<K, V>[]>{
+export class KeyValuePipe<K, V> implements PipeTransform<StringKey<V> | NumberKey<V> | Map<K, V>, KeyValue<K, V>[]> {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	transform(obj: StringKey<V> | NumberKey<V> | Map<K, V> | Array<V>, compareFn?: CompareFn<K, V>): KeyValue<K, V>[] {
 		let pair: KeyValue<K, V>[] = [];
 		if (obj instanceof Map) {

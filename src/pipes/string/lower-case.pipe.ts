@@ -1,9 +1,12 @@
-import { Pipe, PipeTransform } from '@ibyar/core';
+import { Metadata, MetadataContext, Pipe, PipeTransform } from '@ibyar/core';
 
 @Pipe({
 	name: 'lowercase'
 })
 export class LowerCasePipe implements PipeTransform<string, string> {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	transform(value: string): string;
 	transform(value: null | undefined): null;

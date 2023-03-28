@@ -1,5 +1,5 @@
 import {
-	Directive, Input, OnDestroy,
+	Directive, Input, Metadata, MetadataContext, OnDestroy,
 	OnInit, StructuralDirective,
 	TemplateRef, ViewContainerRef
 } from '@ibyar/core';
@@ -32,6 +32,9 @@ export class SwitchView {
 	selector: '*case',
 })
 export class CaseOfSwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	private _view: SwitchView = new SwitchView(this.viewContainerRef, this.templateRef);
 
@@ -67,6 +70,9 @@ export class CaseOfSwitchDirective extends StructuralDirective implements OnInit
 })
 export class DefaultCaseOfSwitchDirective extends StructuralDirective implements OnInit {
 
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	@Input('default')
 	defaultCaseValue: any;
 
@@ -83,6 +89,9 @@ export class DefaultCaseOfSwitchDirective extends StructuralDirective implements
 	selector: '*switch',
 })
 export class SwitchDirective extends StructuralDirective implements OnInit, OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	private _defaultViews: SwitchView[] = [];
 	private _casesRef: CaseOfSwitchDirective[] = [];

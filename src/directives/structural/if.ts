@@ -1,10 +1,13 @@
-import { Directive, Input, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
+import { Directive, Input, Metadata, MetadataContext, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
 
 
 @Directive({
 	selector: '*if',
 })
 export class IfThenElseDirective extends StructuralDirective implements OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	_condition: boolean;
 	private _thenTemplateRef: TemplateRef = this.templateRef;

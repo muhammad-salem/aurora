@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive } from '@ibyar/core';
+import { AttributeDirective, Directive, Metadata, MetadataContext } from '@ibyar/core';
 import { AbstractControl } from './form-control.js';
 
 
@@ -50,11 +50,17 @@ export class FormArray<T = any> extends AbstractFormArray<T> {
 })
 export class FormArrayDirective extends AttributeDirective {
 
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 }
 
 @Directive({
 	selector: 'formArrayName'
 })
 export class FormArrayNameDirective extends AttributeDirective {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 }

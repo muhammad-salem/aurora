@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, HostBinding, HostListener, Input, OnInit } from '@ibyar/core';
+import { AttributeDirective, Directive, HostBinding, HostListener, Input, Metadata, MetadataContext, OnInit } from '@ibyar/core';
 import { ControlValue, isControlValue } from '../builder/form-builder.js';
 import { AbstractControl, FormControl } from './form-control.js';
 
@@ -65,6 +65,9 @@ export class FormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any
 	selector: 'formGroup'
 })
 export class FormGroupDirective extends AttributeDirective implements OnInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	declare protected el: HTMLFormElement;
 
