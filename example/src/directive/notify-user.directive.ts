@@ -1,7 +1,7 @@
 import {
-	Component,
-	Directive, Input,
-	OnDestroy, OnInit, ScopeSubscription, StructuralDirective
+	Component, Directive, Input, Metadata,
+	MetadataContext, OnDestroy, OnInit,
+	ScopeSubscription, StructuralDirective
 } from '@ibyar/aurora';
 
 
@@ -12,6 +12,9 @@ type NotifyUserContext = { notifyMessage: string, notifyType: string };
 	template: `<div class="alert alert-{{notifyType}}" role="alert">{{notifyMessage}}</div>`
 })
 class NotifyComponent implements NotifyUserContext {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	@Input()
 	notifyMessage: string;
@@ -25,6 +28,10 @@ class NotifyComponent implements NotifyUserContext {
 	selector: '*notify-user',
 })
 export class NotifyUserDirective extends StructuralDirective implements OnInit, OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 
 	private context: NotifyUserContext = {
 		notifyMessage: 'no message',

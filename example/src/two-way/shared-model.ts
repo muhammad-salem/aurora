@@ -1,4 +1,4 @@
-import { Component, Input } from '@ibyar/aurora';
+import { Component, Input, Metadata, MetadataContext } from '@ibyar/aurora';
 
 @Component({
 	selector: 'text-editor',
@@ -21,6 +21,9 @@ export class Editor {
 	imports: [Editor]
 })
 export class EditorApp {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	model = { text: '25' };
 

@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener } from '@ibyar/aurora';
+import { Component, Input, View, HostListener, MetadataContext, Metadata } from '@ibyar/aurora';
 import { AddNoteDirective } from '../directive/add-note.directive.js';
 import { NotifyUserDirective } from '../directive/notify-user.directive.js';
 import { TimeDirective } from '../directive/time.directive.js';
@@ -116,6 +116,10 @@ import { Person, PersonEdit, PersonView } from './person.js';
 		`
 })
 export class PersonApp {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	@Input()
 	appVersion: string = '2022.08.05';
 

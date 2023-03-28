@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+import { Component, HostListener, Input, Metadata, MetadataContext, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'custom-textarea',
@@ -6,6 +6,9 @@ import { Component, HostListener, Input, OnInit, ValueControl, WriteValueOptions
 	formAssociated: true,
 })
 export class CustomTextareaComponent implements OnInit, ValueControl<string> {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	private text: string | null = '';
 	private disabled: boolean = false;
@@ -59,6 +62,9 @@ export class CustomTextareaComponent implements OnInit, ValueControl<string> {
 	formAssociated: true,
 })
 export class CustomMessage implements ValueControl<string> {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 
 	@Input('value')
@@ -128,6 +134,9 @@ export class CustomInputValueControl implements ValueControl<number> {
 })
 export class CustomInputElement {
 
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	@Input('id')
 	elId: string;
 
@@ -169,6 +178,9 @@ export class CustomInputElement {
 	]
 })
 export class AdvancedForm {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	model = {
 		test: 'test',

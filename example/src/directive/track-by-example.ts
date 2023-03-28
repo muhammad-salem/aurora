@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@ibyar/aurora';
+import { Component, Metadata, MetadataContext, OnInit } from '@ibyar/aurora';
 
 
 export type Hero = {
@@ -40,6 +40,9 @@ export type Hero = {
 	`
 })
 export class TrackByComponent implements OnInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	heros: Hero[] = [
 		{

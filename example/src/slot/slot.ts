@@ -1,10 +1,10 @@
-import { Component } from '@ibyar/aurora';
+import { Component, Metadata, MetadataContext } from '@ibyar/aurora';
 
 
 
 @Component({
 	selector: 'element-details',
-	encapsulation: 'shadow-slot',
+	encapsulation: 'shadow-dom',
 	template: `
 	<style>
 		details {
@@ -28,6 +28,9 @@ import { Component } from '@ibyar/aurora';
 		}
 		h4 span {
 			color: white;
+		}
+		dl, dt {
+			margin-top: 10px !important;
 		}
 		.attributes {
 			margin-left: 22px;
@@ -53,6 +56,9 @@ import { Component } from '@ibyar/aurora';
 	<hr />`,
 })
 export class ElementDetailsComponent {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 }
 
@@ -82,5 +88,8 @@ export class ElementDetailsComponent {
 		<element-details id="empty"></element-details>`
 })
 export class ElementDetailsExampleComponent {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 }

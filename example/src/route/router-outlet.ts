@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/aurora';
+import { Directive, Input, Metadata, MetadataContext, OnDestroy, StructuralDirective } from '@ibyar/aurora';
 
 
 export interface RouteData { selector: string, is?: string };
@@ -7,6 +7,9 @@ export interface RouteData { selector: string, is?: string };
 	selector: '*router-outlet',
 })
 export class RouterOutlet extends StructuralDirective implements OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	@Input()
 	set routeData(routeData: RouteData | undefined) {

@@ -3,7 +3,9 @@ import {
 	JavaScriptParser, LanguageMode, OnInit,
 	Scope, Context, Stack, ViewChild,
 	ChangeDetectorRef, ModuleScopeResolver,
-	ModuleSourceProvider
+	ModuleSourceProvider,
+	MetadataContext,
+	Metadata
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
@@ -75,6 +77,9 @@ const styles = `
 	styles: styles,
 })
 export class ExpressionEditorComponent implements OnInit, AfterViewInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	ast = '';
 	str = '';

@@ -1,4 +1,4 @@
-import { Component, HostBinding, HostListener } from '@ibyar/aurora';
+import { Component, HostBinding, HostListener, Metadata, MetadataContext } from '@ibyar/aurora';
 
 @Component({
 	selector: 'host-color',
@@ -11,6 +11,9 @@ import { Component, HostBinding, HostListener } from '@ibyar/aurora';
 	<div>Current Color: {{ selectedColor || 'nothing'}}.</div>`
 })
 export class HostColorPickerComponent {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 
 	colors = [

@@ -1,4 +1,4 @@
-import { Component, OnInit, View } from '@ibyar/aurora';
+import { Component, Metadata, MetadataContext, OnInit, View } from '@ibyar/aurora';
 
 @Component({
 	selector: 'video-player',
@@ -8,6 +8,9 @@ import { Component, OnInit, View } from '@ibyar/aurora';
 	shadowDomDelegatesFocus: true // will be ignored
 })
 export class VideoPlayer implements OnInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 	@View()
 	player: HTMLVideoElement;
 
@@ -32,6 +35,9 @@ export class VideoPlayer implements OnInit {
 	imports: [VideoPlayer]
 })
 export class VideoPlayList {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	allowLoad = true;
 

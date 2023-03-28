@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@ibyar/aurora';
+import { Component, Metadata, MetadataContext, OnDestroy, OnInit } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -115,6 +115,10 @@ import { interval, Subscription } from 'rxjs';
     `
 })
 export class PipeAppComponent implements OnInit, OnDestroy {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 
 	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {

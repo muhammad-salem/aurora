@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@ibyar/aurora';
+import { Component, Metadata, MetadataContext, OnInit } from '@ibyar/aurora';
 import { FormBuilder, FormGroup, Validators } from '@ibyar/forms';
 
 type User = { name: string, age: number };
@@ -17,6 +17,9 @@ type User = { name: string, age: number };
 	</form>`,
 })
 export class FormGroupComponent implements OnInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	private _fb = new FormBuilder();
 

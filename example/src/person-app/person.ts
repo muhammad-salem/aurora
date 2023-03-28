@@ -1,11 +1,15 @@
 import {
 	Component, EventEmitter, HostBinding,
-	HostListener, Input, OnInit, Output,
+	HostListener, Input, Metadata, MetadataContext, OnInit, Output,
 	Service, View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
 @Service({ provideIn: 'root' })
 export class LogService {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	constructor() { }
 	info(message: string) {
 		let date = new Date();
@@ -57,6 +61,9 @@ const style = `
 	styles: style,
 })
 export class PersonView implements OnInit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	@Input()
 	person: Person = {
@@ -150,6 +157,10 @@ export class PersonView implements OnInit {
 				</form>`
 })
 export class PersonEdit {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
+
 	@Input()
 	person: Person;
 
@@ -171,6 +182,9 @@ export class PersonEdit {
 	template: '<progress [max]="max" [value]="value"></progress>'
 })
 export class ProgressBar {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	@Input()
 	max: number;
