@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Class, TypeOf } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -175,7 +175,7 @@ export class Components {
 	}
 
 	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
+		const bootstrap: BootstrapMetadata = ReflectComponents.getBootstrap(modelClass);
 		Object.assign(bootstrap, opts);
 		if (bootstrap.hostListeners?.length || bootstrap.hostBindings?.length) {
 			const hostNode = Components.parseHostNode({
@@ -193,8 +193,8 @@ export class Components {
 		});
 	}
 
-	static definePipe(modelClass: Function, opts: PipeOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
+	static definePipe<T extends Class>(modelClass: TypeOf<T>, opts: PipeOptions) {
+		const bootstrap: BootstrapMetadata = ReflectComponents.getBootstrap(modelClass);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -202,8 +202,8 @@ export class Components {
 		ClassRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineService(modelClass: Function, opts: ServiceOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
+	static defineService<T extends Class>(modelClass: TypeOf<T>, opts: ServiceOptions) {
+		const bootstrap: BootstrapMetadata = ReflectComponents.getBootstrap(modelClass);
 		for (const key in opts) {
 			bootstrap[key] = Reflect.get(opts, key);
 		}
@@ -212,8 +212,8 @@ export class Components {
 		ClassRegistryProvider.registerService(modelClass);
 	}
 
-	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
+	static defineComponent<T extends Class>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
+		const bootstrap: BootstrapMetadata = ReflectComponents.getBootstrap(modelClass);
 		const componentRef = Object.assign({}, opts, bootstrap) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 

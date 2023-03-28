@@ -1,4 +1,6 @@
+import { MetadataContext } from '../annotation/context.js';
 import type { ChildOptions, OutputEventInit } from '../annotation/options.js';
+import { Class } from '../utils/typeof.js';
 import type { ComponentRef } from './component.js';
 
 export class PropertyRef {
@@ -45,14 +47,13 @@ const AuroraMetadata = Symbol.for('aurora:metadata');
 export class ReflectComponents {
 
 	static getOrCreateBootstrap<T extends {}>(target: Object): T {
-		let bootstrap: T = Reflect.getMetadata(AuroraBootstrap, target);
-		if (!bootstrap) {
-			bootstrap = {} as T;
-			Reflect.defineMetadata(AuroraBootstrap, bootstrap, target);
-		}
-		return bootstrap;
+		return target as T;
 	}
 
+	static defineBootstrap<T>(type: Class<T>, metadata: MetadataContext): T {
+		Reflect.defineMetadata(AuroraBootstrap, metadata, type);
+		return metadata as T;
+	}
 	static getBootstrap<T extends {}>(target: Object): T {
 		return Reflect.getMetadata(AuroraBootstrap, target);
 	}

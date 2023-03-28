@@ -90,7 +90,7 @@ export class ClassRegistry {
 
 	hasDirective<T>(selector: string): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass);
 			if (directiveRef.selector === selector) {
 				return true;
 			}
@@ -100,7 +100,7 @@ export class ClassRegistry {
 
 	directiveHasInput<T>(input: string, directiveType: 'attributes' | 'structural' = 'attributes'): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass);
 			if ((directiveType === 'attributes' && !directiveRef.selector.startsWith('*'))
 				|| (directiveType === 'structural' && directiveRef.selector.startsWith('*'))) {
 				if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
@@ -113,7 +113,7 @@ export class ClassRegistry {
 
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass);
 			if (directiveRef.selector === selector) {
 				return directiveRef;
 			}
@@ -124,7 +124,7 @@ export class ClassRegistry {
 
 	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
 		for (const pipeClass of this.pipeSet) {
-			const pipeRef: PipeRef<T> = ReflectComponents.getBootstrap(pipeClass.prototype);
+			const pipeRef: PipeRef<T> = ReflectComponents.getBootstrap(pipeClass);
 			if (pipeRef.name === pipeName) {
 				return pipeRef;
 			}
@@ -134,7 +134,7 @@ export class ClassRegistry {
 
 	getService<T>(serviceName: string): ServiceRef<T> | undefined {
 		for (const serviceClass of this.serviceSet) {
-			const serviceRef: ServiceRef<T> = ReflectComponents.getBootstrap(serviceClass.prototype);
+			const serviceRef: ServiceRef<T> = ReflectComponents.getBootstrap(serviceClass);
 			if (serviceRef.name === serviceName) {
 				return serviceRef;
 			}
