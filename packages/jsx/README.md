@@ -40,6 +40,9 @@ import { jsxParser, Fragment } from '@ibyar/jsx';
 	template: <>foo: [[foo |> json]], bar: [[bar |> json]]</>
 })
 export class MyComponent {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 	/** define inputs and outputs types*/
 	props: {
 		foo: string;
@@ -55,6 +58,9 @@ export class MyComponent {
 	selector: '*for'
 })
 export class ForDirective {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 
 	props: {
 		of: string;
@@ -83,6 +89,9 @@ export class ForDirective {
 	</>
 })
 export class JsxComponent {
+
+	@Metadata
+	static [Symbol.metadata]: MetadataContext;
 	/** define inputs and outputs types*/
 	props: {
 		
