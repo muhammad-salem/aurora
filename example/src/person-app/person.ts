@@ -82,15 +82,17 @@ export class PersonView implements OnInit {
 	@ViewChildren(HTMLParagraphElement) children: HTMLParagraphElement[];
 
 
-	@HostBinding('class.valid')
-	valid: boolean;
+	@HostBinding('class.on')
+	on: boolean;
 
-	@HostBinding('class.invalid')
-	invalid: boolean;
+	@HostBinding('class.off')
+	off: boolean;
 
 	constructor(private service: LogService, private service2: LogService) { }
 
 	onInit(): void {
+		this.on = true;
+		this.off = !this.on;
 		console.log('onInit', this);
 		this.open.emit('init data');
 	}
@@ -113,9 +115,8 @@ export class PersonView implements OnInit {
 	onClick(target: HTMLElement) {
 		console.log('target', target);
 		this._select.emit(this.person);
-
-		this.valid = !this.valid;
-		this.invalid = !this.invalid;
+		this.off = this.on;
+		this.on = !this.on;
 	}
 
 	@HostListener('select')
