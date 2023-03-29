@@ -1,4 +1,4 @@
-import { Component, FormValue, HostListener, Input, Metadata, MetadataContext, OnChanges, OnInit, ValueControl, WriteValueMode, WriteValueOptions } from '@ibyar/aurora';
+import { Component, FormValue, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'simple-custom-textarea',
@@ -6,10 +6,6 @@ import { Component, FormValue, HostListener, Input, Metadata, MetadataContext, O
 	formAssociated: true,
 })
 export class SimpleCustomTextareaComponent implements OnInit, ValueControl<string> {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
-
 
 	private text: string | null = '';
 
@@ -56,9 +52,6 @@ export class SimpleCustomTextareaComponent implements OnInit, ValueControl<strin
 })
 export class SimpleCustomMessage {
 
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
-
 
 	@Input('value') message: string | null = '';
 
@@ -78,9 +71,6 @@ export class SimpleCustomMessage {
 	formAssociated: true,
 })
 export class SimpleCustomInputElement implements OnInit {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	@Input('id')
 	elId: string;
@@ -129,9 +119,6 @@ export class SimpleCustomInputElement implements OnInit {
 	]
 })
 export class SimpleForm {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	model = {
 		test: 'test',

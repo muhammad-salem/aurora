@@ -1,5 +1,5 @@
 import { jsxParser, Fragment } from '@ibyar/jsx';
-import { Component, EventEmitter, Metadata, MetadataContext } from '@ibyar/aurora';
+import { Component } from '@ibyar/aurora';
 
 let x = <>text<div id="id"></div></>;
 
@@ -9,9 +9,6 @@ console.log(x);
 	template: ''
 })
 class MyComponent /*implements JsxComponent<{}>*/ {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	/**
 	 * a cli should generate this props
@@ -55,8 +52,5 @@ console.log('t', t);
 	template: t
 })
 export class JsxComponentTest {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 	about: string;
 }

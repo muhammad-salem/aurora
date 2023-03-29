@@ -1,10 +1,7 @@
-import { Metadata, MetadataContext, Pipe, PipeTransform } from '@ibyar/core';
+import { Pipe, PipeTransform } from '@ibyar/core';
 
 @Pipe({ name: 'chunk' })
 export class ChunkPipe<T> implements PipeTransform<Array<T>, (T | string)[][]> {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	transform(input: Array<T> | string | null | undefined, size: number): (T | string)[][] {
 		if (input === undefined || input === null) return input as any;

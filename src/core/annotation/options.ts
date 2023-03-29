@@ -1,8 +1,6 @@
 import type { TypeOf } from '../utils/typeof.js';
 import { DomNode } from '@ibyar/elements';
-import { Components } from '../component/component.js';
-import { ReflectComponents } from '../component/reflect.js';
-import { fetchHtml, TemplateUrl } from '../utils/path.js';
+import { TemplateUrl } from '../utils/path.js';
 import { ZoneType } from '../zone/bootstrap.js';
 import { ValueControl } from '../component/custom-element.js';
 
@@ -184,8 +182,6 @@ export interface ComponentOptions<T = Function> {
 	 * 	// formAssociated: CustomMessage,
 	 * })
 	 * export class CustomMessage implements ValueControl<string> {
-	 *  @Metadata
-	 *  static [Symbol.metadata]: MetadataContext;
 	 * 
 	 * 	private message: string | null = '';
 	 * 	private disabled: boolean = false;
@@ -236,8 +232,6 @@ export interface ComponentOptions<T = Function> {
 	 * 	formAssociated: CustomInputValueControl,
 	 * })
 	 * export class CustomInputElement {
-	 *  @Metadata
-	 *  static [Symbol.metadata]: MetadataContext;
 	 * 	
 	 *  @View()
 	 * 	view: HTMLInputElement;

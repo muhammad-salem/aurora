@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Input, Metadata, MetadataContext } from '@ibyar/core';
+import { AttributeDirective, Directive, Input } from '@ibyar/core';
 
 
 class DOMTokenListProxyHandler implements ProxyHandler<DOMTokenList> {
@@ -24,9 +24,6 @@ const handler = new DOMTokenListProxyHandler();
 	selector: 'class'
 })
 export class ClassDirective extends AttributeDirective {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	private proxy?: DOMTokenList;
 

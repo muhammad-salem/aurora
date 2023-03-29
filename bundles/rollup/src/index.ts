@@ -1,6 +1,6 @@
 /// <reference types="@ibyar/types" />
 import '@ibyar/example';
-import { Component, Metadata, MetadataContext } from '@ibyar/core';
+import { Component } from '@ibyar/core';
 import helloTemplate from './hello.html';
 
 @Component({
@@ -8,9 +8,6 @@ import helloTemplate from './hello.html';
 	template: helloTemplate,
 })
 export class HelloApp {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	name = 'jon'
 }

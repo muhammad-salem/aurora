@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Metadata, MetadataContext, TypeOf } from '@ibyar/core';
+import { AttributeDirective, Directive, TypeOf } from '@ibyar/core';
 import type { AsyncValidator, Validator } from './validators.js';
 
 export abstract class AbstractControl<T> {
@@ -94,9 +94,6 @@ export class FormControl<T> extends AbstractControl<T> {
 })
 export class FormControlDirective extends AttributeDirective {
 
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
-
 
 }
 
@@ -104,9 +101,6 @@ export class FormControlDirective extends AttributeDirective {
 	selector: 'formControlName'
 })
 export class FormControlNameDirective extends AttributeDirective {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 
 }

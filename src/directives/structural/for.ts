@@ -1,7 +1,5 @@
 import {
 	Directive, EmbeddedViewRef, Input,
-	Metadata,
-	MetadataContext,
 	OnDestroy, StructuralDirective, ViewRef
 } from '@ibyar/core';
 import {
@@ -121,9 +119,6 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 })
 export class ForDirective<T> extends AbstractForDirective<T>  {
 
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
-
 	@Input('of')
 	set forOf(forOf: T[] | null | undefined) {
 		this._forOf = forOf;
@@ -145,10 +140,7 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 @Directive({
 	selector: '*forOf',
 })
-export class ForOfDirective<T> extends AbstractForDirective<T>  {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
+export class ForOfDirective<T> extends AbstractForDirective<T> {
 
 	@Input('of')
 	set forOf(forOf: T[] | null | undefined) {
@@ -172,9 +164,6 @@ export class ForOfDirective<T> extends AbstractForDirective<T>  {
 	selector: '*forAwait',
 })
 export class ForAwaitDirective<T> extends StructuralDirective implements OnDestroy {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	private _forAwait: AsyncIterable<T> | null | undefined;
 
@@ -212,9 +201,6 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 	selector: '*forIn',
 })
 export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralDirective implements OnDestroy {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	private _forIn: T | null | undefined;
 

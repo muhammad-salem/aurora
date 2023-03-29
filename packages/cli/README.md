@@ -61,7 +61,7 @@ Options:
 The Ibyar CLI has a typescript transformer to generate a definitions for you component
 
 ```ts
-import { Component, EventEmitter, Input, Output, Metadata, MetadataContext } from '@ibyar/aurora';
+import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
 
 
 @Component({
@@ -74,8 +74,6 @@ import { Component, EventEmitter, Input, Output, Metadata, MetadataContext } fro
 })
 export class PersonEdit {
 
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 	@Input()
 	person: Person;
 

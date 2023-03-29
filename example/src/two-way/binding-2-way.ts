@@ -1,4 +1,4 @@
-import { Component, HostListener, Metadata, MetadataContext } from '@ibyar/aurora';
+import { Component, HostListener } from '@ibyar/aurora';
 import { interval } from 'rxjs';
 
 @Component({
@@ -18,9 +18,6 @@ import { interval } from 'rxjs';
     `
 })
 export class Binding2Way {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	data1 = 'two way data binding';
 	data2 = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla laoreet';

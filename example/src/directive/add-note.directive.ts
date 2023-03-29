@@ -1,4 +1,4 @@
-import { Component, Directive, Input, Metadata, MetadataContext, OnDestroy, OnInit, StructuralDirective } from '@ibyar/aurora';
+import { Component, Directive, Input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/aurora';
 
 
 @Component({
@@ -6,9 +6,6 @@ import { Component, Directive, Input, Metadata, MetadataContext, OnDestroy, OnIn
 	template: `<div class="alert alert-success" role="alert">structural directive name: '{{directiveName}}'</div>`
 })
 class NoteComponent {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 
 	@Input()
@@ -19,9 +16,6 @@ class NoteComponent {
 	selector: '*add-note',
 })
 export class AddNoteDirective extends StructuralDirective implements OnInit, OnDestroy {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	onInit(): void {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);

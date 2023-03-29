@@ -1,4 +1,4 @@
-import { Metadata, MetadataContext, Pipe, PipeTransform } from '@ibyar/core';
+import { Pipe, PipeTransform } from '@ibyar/core';
 
 
 /**
@@ -18,9 +18,6 @@ import { Metadata, MetadataContext, Pipe, PipeTransform } from '@ibyar/core';
  */
 @Pipe({ name: 'slice' })
 export class SlicePipe<T> implements PipeTransform<Array<T>, Array<T>> {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	/**
 	 * @param value a list or a string to be sliced.

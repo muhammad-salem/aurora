@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Metadata, MetadataContext, OnInit, } from '@ibyar/aurora';
+import { ChangeDetectorRef, Component, OnInit, } from '@ibyar/aurora';
 
 @Component({
 	selector: 'fetch-app',
@@ -22,9 +22,6 @@ import { ChangeDetectorRef, Component, Metadata, MetadataContext, OnInit, } from
 	</div>`
 })
 export class FetchApp implements OnInit {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	list: number[] = [];
 	selected: number = 1;

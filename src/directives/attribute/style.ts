@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Input, Metadata, MetadataContext } from '@ibyar/core';
+import { AttributeDirective, Directive, Input } from '@ibyar/core';
 
 type StyleType = string | Array<string> | { [propertyName: string]: string };
 
@@ -6,9 +6,6 @@ type StyleType = string | Array<string> | { [propertyName: string]: string };
 	selector: 'style'
 })
 export class StyleDirective extends AttributeDirective {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	@Input()
 	set style(style: StyleType) {

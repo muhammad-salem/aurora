@@ -1,4 +1,4 @@
-import { Component, Metadata, MetadataContext } from '@ibyar/aurora';
+import { Component } from '@ibyar/aurora';
 
 
 
@@ -57,9 +57,6 @@ import { Component, Metadata, MetadataContext } from '@ibyar/aurora';
 })
 export class ElementDetailsComponent {
 
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
-
 }
 
 
@@ -88,8 +85,5 @@ export class ElementDetailsComponent {
 		<element-details id="empty"></element-details>`
 })
 export class ElementDetailsExampleComponent {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 }

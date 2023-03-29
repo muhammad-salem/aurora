@@ -259,7 +259,7 @@ if `aurora` is selected, you need to import the `Zone.js` package.
 
 ```ts
 
-import { Component, HostListener, isModel, OnDestroy, OnInit, Metadata, MetadataContext } from '@ibyar/aurora';
+import { Component, HostListener, isModel, OnDestroy, OnInit } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -351,9 +351,6 @@ import { interval, Subscription } from 'rxjs';
     `
 })
 export class PipeAppComponent implements OnInit, OnDestroy {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {

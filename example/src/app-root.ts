@@ -1,4 +1,4 @@
-import { Component, Metadata, MetadataContext, OnInit, TypeOf } from '@ibyar/aurora';
+import { Component, OnInit, TypeOf } from '@ibyar/aurora';
 import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
@@ -33,9 +33,6 @@ export interface App {
 	]
 })
 export class AppRoot implements OnInit {
-
-	@Metadata
-	static [Symbol.metadata]: MetadataContext;
 
 	selectedComponent: TypeOf<object> | null = null;
 	selectedApp: App;
