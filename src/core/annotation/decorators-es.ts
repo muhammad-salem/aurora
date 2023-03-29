@@ -6,7 +6,7 @@ import {
 	ChildOptions, ComponentOptions, DirectiveOptions,
 	OutputEventInit, OutputOptions, PipeOptions, ServiceOptions
 } from './options.js';
-import { getCurrentMetadata } from './context.js';
+import { getCurrentMetadata, makeMetadataDecorator } from './context.js';
 
 
 
@@ -135,32 +135,30 @@ export function HostBinding<This, Value>(hostPropertyName: string) {
 	};
 }
 
-export function Pipe<T extends Class>(opt: PipeOptions) {
-	return (constructor: T, context?: ClassDecoratorContext<T>) => {
+export const Pipe = makeMetadataDecorator<PipeOptions>(
+	(opt, constructor) => {
 		const metadata = getCurrentMetadata();
 		ReflectComponents.defineBootstrap(constructor, metadata);
 		Components.definePipe(constructor as any, opt);
-		return constructor;
-	};
-}
+	}
+);
 
-export function Service<T extends Class>(opt: ServiceOptions) {
-	return (constructor: T, context?: ClassDecoratorContext<T>) => {
+
+export const Service = makeMetadataDecorator<ServiceOptions>(
+	(opt, constructor) => {
 		const metadata = getCurrentMetadata();
 		ReflectComponents.defineBootstrap(constructor, metadata);
 		Components.defineService(constructor as any, opt);
-		return constructor;
-	};
-}
+	}
+);
 
-export function Directive<T extends Class>(opt: DirectiveOptions) {
-	return (constructor: T, context?: ClassDecoratorContext<T>) => {
+
+export const Directive = makeMetadataDecorator<DirectiveOptions>(
+	(opt, constructor) => {
 		const metadata = getCurrentMetadata();
 		ReflectComponents.defineBootstrap(constructor, metadata);
-		Components.defineDirective(constructor, opt);
-		return constructor;
-	};
-}
+		Components.defineDirective(constructor as any, opt);
+	});
 
 
 function generateComponent<T extends Class>(target: TypeOf<T>, opt: ComponentOptions<T>) {
@@ -180,8 +178,8 @@ function generateComponent<T extends Class>(target: TypeOf<T>, opt: ComponentOpt
 	}
 }
 
-export function Component<T extends Class>(opt: ComponentOptions<T> | ComponentOptions<T>[]) {
-	return (constructor: T, context?: ClassDecoratorContext<T>) => {
+export const Component = makeMetadataDecorator<ComponentOptions | ComponentOptions[]>(
+	(opt, constructor) => {
 		const metadata = getCurrentMetadata();
 		ReflectComponents.defineBootstrap(constructor, metadata);
 		if (Array.isArray(opt)) {
@@ -191,39 +189,13 @@ export function Component<T extends Class>(opt: ComponentOptions<T> | ComponentO
 		} else if (typeof opt === 'object') {
 			generateComponent(constructor as any, opt);
 		}
-		return constructor;
-	};
-}
+	}
+);
 
-
-
-// export function SelfSkip(name?: string): Function {
-// 	return (target: Function, propertyKey: string, index: number) => {
-// 		let metadata = Reflect.getMetadata('selfskip', target, propertyKey);
-// 		if (!metadata) {
-// 			metadata = {};
-// 			Reflect.defineMetadata('selfskip', metadata, target, propertyKey);
-// 		}
-// 		metadata[index] = name;
-// 	};
-// }
-
-// export function Optional(): Function {
-// 	return (target: Function, propertyKey: string, index: number) => {
-// 		let metadata = Reflect.getMetadata('optional', target, propertyKey);
-// 		if (!metadata) {
-// 			metadata = {};
-// 			Reflect.defineMetadata('optional', metadata, target, propertyKey);
-// 		}
-// 		metadata[index] = true;
-// 	};
-// }
-
-export function customElement<T extends HTMLElement>(opt: { selector: string } & ElementDefinitionOptions) {
-	return (constructor: TypeOf<T>, context?: ClassDecoratorContext) => {
+export const customElement = makeMetadataDecorator<{ selector: string } & ElementDefinitionOptions, Class<HTMLElement>>(
+	(opt, constructor) => {
 		const metadata = getCurrentMetadata();
 		ReflectComponents.defineBootstrap(constructor, metadata);
-		Components.defineView(constructor, opt);
-		return constructor;
-	};
-}
+		Components.defineView(constructor as any, opt);
+	}
+);

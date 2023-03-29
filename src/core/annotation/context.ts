@@ -1,3 +1,4 @@
+import type { Class } from '../utils/typeof.js';
 
 declare global {
 	interface SymbolConstructor {
@@ -38,21 +39,29 @@ export function updateCurrentMetadata(): void {
 	lastContext = MetadataContext.create();
 }
 
-export function Metadata<This extends { [Symbol.metadata]: MetadataContext }, Value>(value: undefined, context: ClassFieldDecoratorContext<This, Value>) {
-	if (typeof context.name !== 'symbol') {
-		throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
-	}
-	if (context.private) {
-		throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
-	}
-	if (!context.static) {
-		throw new SyntaxError(`metadata decorator should be on static member, current property is '${context.name.toString()}'.`);
-	}
-	context.addInitializer(function () {
-		const metadata: MetadataContext = this[Symbol.metadata]
-			? MetadataContext.create()
-			: MetadataContext.inherits(this[Symbol.metadata]);
+export function makeMetadataDecorator<V, T extends Class = Class>(
+	decorator?: (opt: V, constructor: T, context?: ClassDecoratorContext<T>) => (T | void)) {
+	return (props: V): ((constructor: T, context: ClassDecoratorContext<T>) => T) => {
+		const metadata: MetadataContext = MetadataContext.create();
 		lastContext = metadata;
-		return metadata;
-	});
+		return (constructor: T, context: ClassDecoratorContext<T>) => {
+			context.addInitializer(function () {
+				const thisArg = this as T & { [Symbol.metadata]: MetadataContext };
+				const parentMetadata = thisArg[Symbol.metadata];
+				if (parentMetadata) {
+					Object.assign(metadata, context);
+				}
+				thisArg[Symbol.metadata] = metadata;
+			});
+			return decorator?.(props, constructor, context) ?? constructor;
+		};
+	}
+}
+
+export const Metadata = makeMetadataDecorator<void>();
+
+export function MetadataScopEnd<T extends Class>() {
+	const metadata = lastContext;
+	updateCurrentMetadata();
+	return (constructor: T, context?: ClassDecoratorContext<T>) => constructor;
 }
