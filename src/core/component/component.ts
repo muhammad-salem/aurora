@@ -74,8 +74,7 @@ export interface ComponentRef<T> {
 
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
 	isShadowDom: boolean;
-	shadowDomMode: ShadowRootMode;
-	shadowDomDelegatesFocus: boolean;
+	shadowRootInit: ShadowRootInit;
 	formAssociated: boolean | TypeOf<ValueControl<any>>;
 	zone?: ZoneType;
 }
@@ -92,6 +91,8 @@ type HostNode = {
 	window?: DomElementNode;
 	template?: DomElementNode[];
 };
+
+const DEFAULT_SHADOW_ROOT_INIT: ShadowRootInit = { mode: 'open', delegatesFocus: false, slotAssignment: 'named' };
 
 export class Components {
 
@@ -251,9 +252,10 @@ export class Components {
 		componentRef.hostBindings ||= Components.emptyList();
 		componentRef.hostListeners ||= Components.emptyList();
 		componentRef.encapsulation ||= 'custom';
-		componentRef.isShadowDom = /shadow-/g.test(componentRef.encapsulation);
-		componentRef.shadowDomMode ||= 'open';
-		componentRef.shadowDomDelegatesFocus = componentRef.shadowDomDelegatesFocus === true || false;
+		componentRef.isShadowDom = /shadow/g.test(componentRef.encapsulation);
+		if (componentRef.isShadowDom) {
+			componentRef.shadowRootInit = Object.assign({}, DEFAULT_SHADOW_ROOT_INIT, (componentRef.shadowRootInit ?? {}));
+		}
 
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
 			const hostNode = Components.parseHostNode({

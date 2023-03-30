@@ -57,12 +57,8 @@ export class ComponentRender<T extends object> {
 
 		let rootRef: HTMLElement | ShadowRoot;
 		if (this.componentRef.isShadowDom) {
-			if (this.view.shadowRoot /* OPEN MODE */) {
-				rootRef = this.view.shadowRoot;
-			} else /* CLOSED MODE*/ {
-				rootRef = Reflect.get(this.view, '_shadowRoot') as ShadowRoot;
-				Reflect.deleteProperty(this.view, '_shadowRoot');
-			}
+			rootRef = Reflect.get(this.view, '_shadowRoot') as ShadowRoot;
+			Reflect.deleteProperty(this.view, '_shadowRoot');
 		} else {
 			rootRef = this.view;
 		}
