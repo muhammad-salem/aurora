@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Class, TypeOf } from '../utils/typeof.js';
 import { DomNode } from '@ibyar/elements';
 import { Components } from '../component/component.js';
 import { ReflectComponents } from '../component/reflect.js';
@@ -44,7 +44,7 @@ export interface PipeOptions {
 	asynchronous?: boolean;
 }
 
-export interface ComponentOptions<T = Function> {
+export interface ComponentOptions<T = Class> {
 
 	/**
 	 * a tag name for the component,
@@ -148,7 +148,7 @@ export interface ComponentOptions<T = Function> {
 	 * default is 'custom'
 	 * @type {'custom' | 'shadowDom' | 'template' | 'shadowDom-template'}
 	 */
-	encapsulation?: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
+	encapsulation?: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template';
 
 	/**
 	 * default: 'open' when encapsulation used,
@@ -160,6 +160,12 @@ export interface ComponentOptions<T = Function> {
 	 * default: false
 	 */
 	shadowDomDelegatesFocus?: boolean;
+
+	/**
+	 * shadow root initialization options,
+	 * default mode: `open`, delegatesFocus: `false` and slotAssignment: `manual`
+	 */
+	shadowRootInit?: Partial<ShadowRootInit>;
 
 	/**
 	 * Create a custom form-associated element with HTMLElement.attachInternals

@@ -35,10 +35,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			super();
 			this._componentRef = componentRef;
 			if (componentRef.isShadowDom) {
-				this._shadowRoot = this.attachShadow({
-					mode: componentRef.shadowDomMode,
-					delegatesFocus: componentRef.shadowDomDelegatesFocus
-				});
+				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
@@ -91,6 +88,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
 			}
+
 			this._render = new ComponentRender(this, this.subscriptions);
 
 			if (this._componentRef.encapsulation === 'shadow-slot') {
