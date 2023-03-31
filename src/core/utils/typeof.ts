@@ -7,3 +7,5 @@ export interface TypeOf<T> extends Function {
 }
 
 export type Class<T = any> = new (...args: any) => T;
+
+export type MetadataClass<T = any> = Class<T> & { [Symbol.metadata]: Record<PropertyKey, any> };

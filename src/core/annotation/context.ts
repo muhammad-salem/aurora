@@ -1,19 +1,25 @@
-import type { Class } from '../utils/typeof.js';
+import type { Class, MetadataClass } from '../utils/typeof.js';
 
 declare global {
+
 	interface SymbolConstructor {
 		/**
 		 * metadata symbol
 		 */
 		readonly metadata: unique symbol;
 	}
+
+	interface ClassDecoratorContext<Class extends abstract new (...args: any) => any = abstract new (...args: any) => any,> {
+		context: MetadataContext;
+	}
+
 }
 
 if (!Symbol.metadata) {
 	Reflect.set(Symbol, 'metadata', Symbol('metadata'));
 }
 
-export interface MetadataContext extends Record<PropertyKey, unknown> {
+export interface MetadataContext extends Record<PropertyKey, any> {
 
 }
 
@@ -39,20 +45,18 @@ export function updateCurrentMetadata(): void {
 	lastContext = MetadataContext.create();
 }
 
+function setConstructorMetadata(constructor: MetadataClass, metadata: MetadataContext) {
+	constructor[Symbol.metadata] = Object.assign(metadata, constructor[Symbol.metadata] ?? {});
+}
+
 export function makeMetadataDecorator<V, T extends Class = Class>(
 	decorator?: (opt: V, constructor: T, context?: ClassDecoratorContext<T>) => (T | void)) {
 	return (props: V): ((constructor: T, context: ClassDecoratorContext<T>) => T) => {
 		const metadata: MetadataContext = MetadataContext.create();
 		lastContext = metadata;
 		return (constructor: T, context: ClassDecoratorContext<T>) => {
-			context.addInitializer(function () {
-				const thisArg = this as T & { [Symbol.metadata]: MetadataContext };
-				const parentMetadata = thisArg[Symbol.metadata];
-				if (parentMetadata) {
-					Object.assign(metadata, context);
-				}
-				thisArg[Symbol.metadata] = metadata;
-			});
+			setConstructorMetadata(constructor as any as MetadataClass, metadata);
+			context.context = metadata;
 			return decorator?.(props, constructor, context) ?? constructor;
 		};
 	}
