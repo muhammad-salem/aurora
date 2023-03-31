@@ -58,7 +58,6 @@ abstract class TerminateStatement extends AbstractExpressionNode {
 
 @Deserializer('BreakStatement')
 export class BreakStatement extends TerminateStatement {
-	static readonly BREAK_INSTANCE = Object.freeze(new BreakStatement()) as BreakStatement;
 	static fromJSON(node: BreakStatement, deserializer: NodeDeserializer): BreakStatement {
 		return new BreakStatement(
 			node.label ? deserializer(node.label) as Identifier : void 0,
@@ -76,7 +75,6 @@ export class BreakStatement extends TerminateStatement {
 
 @Deserializer('ContinueStatement')
 export class ContinueStatement extends TerminateStatement {
-	static readonly CONTINUE_INSTANCE = Object.freeze(new ContinueStatement()) as ContinueStatement;
 	static fromJSON(node: ContinueStatement, deserializer: NodeDeserializer): ContinueStatement {
 		return new ContinueStatement(
 			node.label && deserializer(node.label) as Identifier,
