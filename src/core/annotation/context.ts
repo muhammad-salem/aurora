@@ -1,5 +1,9 @@
 import type { Class, MetadataClass } from '../utils/typeof.js';
 
+export interface MetadataContext extends Record<PropertyKey, any> {
+
+}
+
 declare global {
 
 	interface SymbolConstructor {
@@ -36,10 +40,6 @@ declare global {
 
 if (!Symbol.metadata) {
 	Reflect.set(Symbol, 'metadata', Symbol('metadata'));
-}
-
-export interface MetadataContext extends Record<PropertyKey, any> {
-
 }
 
 export class MetadataContext {
