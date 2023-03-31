@@ -99,8 +99,12 @@ export class AppRoot implements OnInit {
 			load: () => import('./color/host-color.component.js').then(module => module.HostColorPickerComponent),
 		},
 		{
-			title: 'Template And Slot Content',
-			load: () => import('./slot/slot.js').then(module => module.ElementDetailsExampleComponent),
+			title: 'Automatic Slot',
+			load: () => import('./slot/automatic-slot.js').then(module => module.ElementDetailsExampleComponent),
+		},
+		{
+			title: 'Manual Slot',
+			load: () => import('./slot/manual-slot.js').then(module => module.ManualSlotExample),
 		}
 
 

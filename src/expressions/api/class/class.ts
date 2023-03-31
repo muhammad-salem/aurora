@@ -348,7 +348,8 @@ export class MethodDefinition extends AbstractDefinition {
 		visitNode(node.value);
 		node.decorators.forEach(visitNode);
 	}
-	declare protected 'static': boolean; value: FunctionExpression;
+	declare protected 'static': boolean;
+	declare value: FunctionExpression;
 	afterInstanceConstruct: any;
 	constructor(
 		private kind: MethodDefinitionKind,
