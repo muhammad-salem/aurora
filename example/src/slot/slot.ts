@@ -4,7 +4,7 @@ import { Component } from '@ibyar/aurora';
 
 @Component({
 	selector: 'element-details',
-	encapsulation: 'shadow-slot',
+	encapsulation: 'shadow-dom',
 	template: `
 	<style>
 		details {
