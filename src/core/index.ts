@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+export * from './annotation/options.js';
 export * from './annotation/decorators.js';
 
 export * from './component/component.js';
