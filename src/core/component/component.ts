@@ -215,7 +215,7 @@ export class Components {
 
 	static defineComponent<T extends Class>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
 		const bootstrap: BootstrapMetadata = ReflectComponents.getBootstrap(modelClass);
-		const componentRef = Object.assign({}, opts, bootstrap) as any as ComponentRef<T>;
+		const componentRef = Object.assign(bootstrap, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 
 		if (typeof componentRef.template === 'string') {
