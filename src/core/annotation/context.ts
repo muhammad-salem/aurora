@@ -64,31 +64,31 @@ export function updateCurrentMetadata(context?: MetadataContext): void {
 	currentContext = context ?? MetadataContext.create();
 }
 
-function updateConstructorMetadata(constructor: MetadataClass, metadata: MetadataContext) {
-	constructor[Symbol.metadata] = Object.assign(metadata, constructor[Symbol.metadata] ?? {});
+function updateConstructorMetadata(constructor: MetadataClass): MetadataContext {
+	if (constructor[Symbol.metadata]) {
+		constructor[Symbol.metadata] = Object.assign(
+			constructor[Symbol.metadata],
+			getCurrentMetadata()
+		);
+	} else {
+		constructor[Symbol.metadata] = getCurrentMetadata();
+	}
+	return constructor[Symbol.metadata];
 }
 
 export function makeClassDecoratorContext<V, T extends Class = Class>(
 	decorator?: (opt: V, constructor: T, context: ClassDecoratorContext<T>) => (T | void)) {
-	return (props: V): ((constructor: T, context: ClassDecoratorContext<T>) => T) => {
+	return (props: V) => {
 		updateCurrentMetadata();
-		const metadata = getCurrentMetadata();
 		return (constructor: T, context: ClassDecoratorContext<T>) => {
-			updateConstructorMetadata(constructor as any as MetadataClass, metadata);
-			context.metadata = metadata;
-			const returnValue = decorator?.(props, constructor, context) ?? constructor;
-			updateCurrentMetadata();
-			return returnValue;
+			context.metadata = updateConstructorMetadata(constructor as any as MetadataClass);
+			context.addInitializer(() => updateCurrentMetadata());
+			return decorator?.(props, constructor, context) ?? constructor;
 		};
-	}
+	};
 }
 
 export const Metadata = makeClassDecoratorContext<void>();
-
-export function MetadataScopEnd<T extends Class>() {
-	updateCurrentMetadata();
-	return (constructor: T, context?: ClassDecoratorContext<T>) => constructor;
-}
 
 export function makeClassMemberDecoratorContext<This, Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
 	return (value: Value, context: Context) => {
