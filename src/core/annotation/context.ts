@@ -56,6 +56,23 @@ export class MetadataContext {
 		return Object.assign(previous, next);
 	}
 
+	static merge(previous: MetadataContext, next: MetadataContext): MetadataContext {
+		for (const key in next) {
+			const previousValue = previous[key];
+			const nextValue = next[key];
+			if (typeof previousValue === 'object' && typeof nextValue === 'object') {
+				if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
+					previous[key] = previousValue.concat(nextValue);
+				} else {
+					previous[key] = Object.assign(previousValue, nextValue);
+				}
+			} else {
+				previous[key] = nextValue;
+			}
+		}
+		return previous;
+	}
+
 }
 
 let currentContext: MetadataContext = MetadataContext.create();
@@ -75,10 +92,10 @@ function updateConstructorMetadata(constructor: MetadataClass): MetadataContext 
 		if (constructor[Symbol.metadata] == pConstr) {
 			constructor[Symbol.metadata] = MetadataContext.inherits(pConstr);
 		}
-		MetadataContext.assign(constructor[Symbol.metadata], getCurrentMetadata());
+		MetadataContext.merge(constructor[Symbol.metadata], getCurrentMetadata());
 	} else {
 		if (constructor[Symbol.metadata]) {
-			MetadataContext.assign(constructor[Symbol.metadata], getCurrentMetadata());
+			MetadataContext.merge(constructor[Symbol.metadata], getCurrentMetadata());
 		} else {
 			constructor[Symbol.metadata] = getCurrentMetadata();
 		}
