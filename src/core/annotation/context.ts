@@ -62,7 +62,8 @@ export class MetadataContext {
 			const nextValue = next[key];
 			if (typeof previousValue === 'object' && typeof nextValue === 'object') {
 				if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
-					previous[key] = previousValue.concat(nextValue);
+					previous[key] = previousValue.concat(nextValue)
+						.filter((value, index, array) => index === array.indexOf(value));
 				} else {
 					previous[key] = Object.assign(previousValue, nextValue);
 				}
@@ -108,7 +109,10 @@ export function makeClassDecoratorContext<V, T extends Class = Class>(
 		updateCurrentMetadata();
 		return (constructor: T, context: ClassDecoratorContext<T>) => {
 			context.metadata = updateConstructorMetadata(constructor as any as MetadataClass);
-			context.addInitializer(() => updateCurrentMetadata());
+			context.addInitializer(() => {
+				updateCurrentMetadata();
+				console.log(context.metadata, props);
+			});
 			return decorator?.(props, constructor, context) ?? constructor;
 		};
 	};
