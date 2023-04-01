@@ -52,6 +52,10 @@ export class MetadataContext {
 		return Object.assign(MetadataContext.create(), context);
 	}
 
+	static assign(previous: MetadataContext, next: MetadataContext): MetadataContext {
+		return Object.assign(previous, next);
+	}
+
 }
 
 let currentContext: MetadataContext = MetadataContext.create();
@@ -65,13 +69,19 @@ export function updateCurrentMetadata(context?: MetadataContext): void {
 }
 
 function updateConstructorMetadata(constructor: MetadataClass): MetadataContext {
-	if (constructor[Symbol.metadata]) {
-		constructor[Symbol.metadata] = Object.assign(
-			constructor[Symbol.metadata],
-			getCurrentMetadata()
-		);
+	const pConstr = constructor.prototype?.constructor?.[Symbol.metadata];
+	if (pConstr) {
+		// inheritance
+		if (constructor[Symbol.metadata] == pConstr) {
+			constructor[Symbol.metadata] = MetadataContext.inherits(pConstr);
+		}
+		MetadataContext.assign(constructor[Symbol.metadata], getCurrentMetadata());
 	} else {
-		constructor[Symbol.metadata] = getCurrentMetadata();
+		if (constructor[Symbol.metadata]) {
+			MetadataContext.assign(constructor[Symbol.metadata], getCurrentMetadata());
+		} else {
+			constructor[Symbol.metadata] = getCurrentMetadata();
+		}
 	}
 	return constructor[Symbol.metadata];
 }
