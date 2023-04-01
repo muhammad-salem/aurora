@@ -88,8 +88,7 @@ export function updateCurrentMetadata(context?: MetadataContext): void {
 function updateConstructorMetadata(constructor: MetadataClass): MetadataContext {
 	const pConstr = constructor.prototype?.constructor?.[Symbol.metadata];
 	if (pConstr) {
-		// inheritance
-		if (constructor[Symbol.metadata] == pConstr) {
+		if (!constructor.hasOwnProperty(Symbol.metadata)) {
 			constructor[Symbol.metadata] = MetadataContext.inherits(pConstr);
 		}
 		MetadataContext.merge(constructor[Symbol.metadata], getCurrentMetadata());
