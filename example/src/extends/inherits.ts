@@ -1,7 +1,8 @@
 
-import { Component, Directive, Input } from '@ibyar/aurora';
+import { Component, Directive, Input, Pipe } from '@ibyar/aurora';
 
 
+@Pipe({ name: 'pipe' })
 @Directive({ selector: 'parent' })
 export class Parent {
 	@Input()
