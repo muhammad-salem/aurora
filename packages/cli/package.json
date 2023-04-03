@@ -41,7 +41,6 @@
 		"@ibyar/elements": "^0.8.6",
 		"@ibyar/expressions": "^0.8.6",
 		"@ibyar/pipes": "^0.8.6",
-		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.5.0",
 		"typescript": "^5.0.2"
 	},
@@ -54,7 +53,6 @@
 		"ibyar",
 		"custom-elements",
 		"dependency-injection",
-		"reflect-metadata",
 		"services",
 		"component",
 		"directive",

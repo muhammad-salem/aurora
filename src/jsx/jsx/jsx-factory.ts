@@ -6,7 +6,7 @@ import {
 	TextContent, directiveRegistry, DomAttributeDirectiveNode, LiveAttribute
 } from '@ibyar/elements';
 
-import { ComponentRef, ReflectComponents } from '@ibyar/core';
+import { ComponentRef, MetadataClass, ReflectComponents } from '@ibyar/core';
 
 export const Fragment = 'fragment';
 
@@ -37,7 +37,7 @@ export class JsxParser extends NodeParserHelper {
 				node = new DomElementNode(props.is);
 			} else {
 				// search for component selector
-				const componentRef: ComponentRef<any> = ReflectComponents.getComponentRef(tagName);
+				const componentRef = ReflectComponents.getMetaDate(tagName as MetadataClass) as ComponentRef<any>;
 				node = new DomElementNode(componentRef.selector);
 			}
 		}

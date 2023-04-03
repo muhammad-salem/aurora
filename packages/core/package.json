@@ -37,7 +37,6 @@
 	"dependencies": {
 		"@ibyar/elements": "^0.8.6",
 		"@ibyar/expressions": "^0.8.6",
-		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.5.0"
 	},
 	"peerDependencies": {
@@ -58,7 +57,6 @@
 		"shadow-dom",
 		"shadowdom",
 		"dependency-injection",
-		"reflect-metadata",
 		"services",
 		"component",
 		"directive",

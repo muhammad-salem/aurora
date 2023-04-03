@@ -1,5 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
-import { ReflectComponents } from '../component/reflect.js';
+import type { MetadataClass, TypeOf } from '../utils/typeof.js';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
 import { getComponentView } from '../view/utils.js';
@@ -241,9 +240,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		return viewRef;
 	}
 	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
-	override createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
-	override createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
-	override createComponent<C extends {}>(arg0: string | TypeOf<C> | TypeOf<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
+	override createComponent<C extends {}>(viewClass: MetadataClass<HTMLComponent<C>>, options?: IndexOptions): C;
+	override createComponent<C extends {}>(componentType: MetadataClass<C>, options?: ViewContainerComponentOptions): C;
+	override createComponent<C extends {}>(arg0: string | MetadataClass<C> | TypeOf<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
 		let ViewClass: TypeOf<HTMLComponent<C>>;
 		if (typeof arg0 === 'string') {
 			ViewClass = customElements.get(arg0) as TypeOf<HTMLComponent<C>>;
@@ -251,8 +250,8 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 			if (Reflect.has(arg0, 'observedAttributes')) {
 				ViewClass = arg0 as TypeOf<HTMLComponent<C>>;
 			} else {
-				const componentType = arg0 as TypeOf<C>;
-				const defaultTagName = ReflectComponents.getComponentRef<C>(componentType).selector;
+				const componentType = arg0 as MetadataClass<C>;
+				const defaultTagName = componentType[Symbol.metadata].selector;
 				const view = getComponentView(componentType, options?.selector ?? defaultTagName);
 				if (!view) {
 					throw new Error(`Can't find View component for class ${componentType.name}`);

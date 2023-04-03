@@ -1,7 +1,6 @@
 import { MetadataContext } from '../annotation/context.js';
 import type { ChildOptions, OutputEventInit } from '../annotation/options.js';
-import { Class } from '../utils/typeof.js';
-import type { ComponentRef } from './component.js';
+import { MetadataClass } from '../utils/typeof.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, protected _viewName?: string) { }
@@ -40,73 +39,38 @@ export interface BootstrapMetadata {
 	[key: string]: any;
 }
 
-const AuroraBootstrap = Symbol.for('aurora:bootstrap');
-const AuroraMetadata = Symbol.for('aurora:metadata');
-
 
 export class ReflectComponents {
 
-	static getOrCreateBootstrap<T extends {}>(target: Object): T {
-		return target as T;
+	static getMetaDate(constructor: MetadataClass) {
+		return constructor[Symbol.metadata];
 	}
 
-	static defineBootstrap<T>(type: Class<T>, metadata: MetadataContext): T {
-		Reflect.defineMetadata(AuroraBootstrap, metadata, type);
-		return metadata as T;
-	}
-	static getBootstrap<T extends {}>(target: Object): T {
-		return Reflect.getMetadata(AuroraBootstrap, target);
+	static addInput(metadata: MetadataContext, modelName: string, viewName: string) {
+		(metadata.inputs ??= []).push(new InputPropertyRef(modelName, viewName));
 	}
 
-	static getComponentRef<T>(target: object): ComponentRef<T> {
-		return Reflect.getMetadata(AuroraMetadata, target);
+	static addOutput(metadata: MetadataContext, modelName: string, viewName: string, options: OutputEventInit) {
+		(metadata.outputs ??= []).push(new OutputPropertyRef(modelName, viewName, options));
 	}
 
-	static setComponentRef<T>(target: object, componentRef: ComponentRef<T>): void {
-		Reflect.defineMetadata(AuroraMetadata, componentRef, target);
+	static setComponentView(metadata: MetadataContext, modelName: string) {
+		metadata.view = modelName;
 	}
 
-	static addOptional(modelProperty: Object) {
+	static addViewChild(metadata: MetadataContext, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
+		(metadata.viewChild ??= []).push(new ChildRef(modelName, selector, childOptions));
 	}
 
-	static addInput(modelProperty: Object, modelName: string, viewName: string) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.inputs ??= [];
-		bootstrap.inputs.push(new InputPropertyRef(modelName, viewName));
+	static addViewChildren(metadata: MetadataContext, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
+		(metadata.ViewChildren ??= []).push(new ChildRef(modelName, selector));
 	}
 
-	static addOutput(modelProperty: Object, modelName: string, viewName: string, options: OutputEventInit) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.outputs ??= [];
-		bootstrap.outputs.push(new OutputPropertyRef(modelName, viewName, options));
+	static addHostListener(metadata: MetadataContext, propertyKey: string, eventName: string, args: string[]) {
+		(metadata.hostListeners ??= []).push(new ListenerRef(eventName, args, propertyKey));
 	}
 
-	static setComponentView(modelProperty: Object, modelName: string) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.view = modelName;
-	}
-
-	static addViewChild(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.viewChild ??= [];
-		bootstrap.viewChild.push(new ChildRef(modelName, selector, childOptions));
-	}
-
-	static addViewChildren(modelProperty: Object, modelName: string, selector: string | typeof HTMLElement | CustomElementConstructor) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.ViewChildren ??= [];
-		bootstrap.ViewChildren.push(new ChildRef(modelName, selector));
-	}
-
-	static addHostListener(modelProperty: Object, propertyKey: string, eventName: string, args: string[]) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostListeners ??= [];
-		bootstrap.hostListeners.push(new ListenerRef(eventName, args, propertyKey));
-	}
-
-	static addHostBinding(modelProperty: Object, propertyKey: string, hostPropertyName: string) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelProperty);
-		bootstrap.hostBindings ??= [];
-		bootstrap.hostBindings.push(new HostBindingRef(propertyKey, hostPropertyName));
+	static addHostBinding(metadata: MetadataContext, propertyKey: string, hostPropertyName: string) {
+		(metadata.hostBindings ??= []).push(new HostBindingRef(propertyKey, hostPropertyName));
 	}
 }
