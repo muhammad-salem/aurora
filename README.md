@@ -124,8 +124,6 @@ yarn add @ibyar/aurora
 - [x] @HostBinding [Supported by Component and Attribute directive].
 - [x] @ViewChild
 - [ ] @ViewChildren
-- [ ] @SelfSkip
-- [ ] @Optional
 - [ ] XSS (cross-site-scripting)
 
 ## Built-in Directive
