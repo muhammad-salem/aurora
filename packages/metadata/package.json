@@ -1,0 +1,54 @@
+{
+	"name": "@ibyar/metadata",
+	"version": "0.8.6",
+	"description": "Ibyar metadata is implementations for proposal-decorator-metadata",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/directives"
+	},
+	"bugs": {
+		"url": "https://github.com/ibyar/aurora/issues"
+	},
+	"author": "The Ibyar Authors (https://github.com/ibyar/aurora/graphs/contributors)",
+	"contributors": [
+		{
+			"name": "Muhammad Salem",
+			"email": "salem.ebo@gmail.com"
+		}
+	],
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@ibyar/core": "^0.8.6",
+		"@ibyar/elements": "^0.8.6",
+		"@ibyar/platform": "^0.8.6",
+		"tslib": "^2.5.0"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.2"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"directives",
+		"typescript",
+		"front-end"
+	]
+}
