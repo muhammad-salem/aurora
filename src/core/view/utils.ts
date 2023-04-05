@@ -1,5 +1,6 @@
+import type { MetadataClass } from '@ibyar/decorators';
 import type { HTMLComponent } from '../component/custom-element.js';
-import type { MetadataClass, TypeOf } from '../utils/typeof.js';
+import type { TypeOf } from '../utils/typeof.js';
 import type { ComponentModelClass } from './view.js';
 
 export function isComponentModelClass(target: MetadataClass): target is ComponentModelClass {

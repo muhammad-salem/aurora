@@ -1,4 +1,5 @@
-import type { Class, MetadataClass, TypeOf } from '../utils/typeof.js';
+import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
+import type { Class, TypeOf } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -22,7 +23,6 @@ import {
 	PropertyRef, ReflectComponents
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
-import { MetadataContext } from '../annotation/context.js';
 
 
 export interface ServiceRef<T> {

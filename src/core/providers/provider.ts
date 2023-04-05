@@ -1,9 +1,8 @@
-
+import type { MetadataClass } from '@ibyar/decorators';
 import type {
 	ComponentRef, DirectiveRef, PipeRef, ServiceRef
 } from '../component/component.js';
 import type { PropertyRef } from '../component/reflect.js';
-import type { MetadataClass } from '../utils/typeof.js';
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 
 export class ClassRegistry {

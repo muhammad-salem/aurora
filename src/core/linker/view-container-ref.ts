@@ -1,9 +1,10 @@
-import type { MetadataClass, TypeOf } from '../utils/typeof.js';
+import type { MetadataClass } from '@ibyar/decorators';
+import type { TypeOf } from '../utils/typeof.js';
+import { ReactiveScopeControl } from '@ibyar/expressions';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
 import { getComponentView } from '../view/utils.js';
 import { HTMLComponent } from '../component/custom-element.js';
-import { ReactiveScopeControl } from '@ibyar/expressions';
 
 interface IndexOptions {
 	/**

@@ -1,4 +1,5 @@
-import type { MetadataClass, TypeOf } from '../utils/typeof.js';
+import type { TypeOf } from '../utils/typeof.js';
+import { MetadataClass, Metadata } from '@ibyar/decorators';
 import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -7,7 +8,6 @@ import { ToCamelCase } from '../utils/utils.js';
 import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
 import { isComponentModelClass } from './utils.js';
-import { Metadata } from '../annotation/context.js';
 
 const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
 

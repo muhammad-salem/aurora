@@ -1,6 +1,5 @@
-import { MetadataContext } from '../annotation/context.js';
+import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
 import type { ChildOptions, OutputEventInit } from '../annotation/options.js';
-import { MetadataClass } from '../utils/typeof.js';
 
 export class PropertyRef {
 	constructor(public modelProperty: string, protected _viewName?: string) { }

@@ -1,4 +1,8 @@
-import type { Class, MetadataClass, TypeOf } from '../utils/typeof.js';
+import type { Class } from '../utils/typeof.js';
+import {
+	MetadataClass, MetadataContext,
+	makeClassDecorator, makeClassMemberDecorator
+} from '@ibyar/decorators';
 import { Components } from '../component/component.js';
 import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml } from '../utils/path.js';
@@ -6,7 +10,6 @@ import {
 	ChildOptions, ComponentOptions, DirectiveOptions,
 	OutputEventInit, OutputOptions, PipeOptions, ServiceOptions
 } from './options.js';
-import { MetadataContext, makeClassDecoratorContext, makeClassMemberDecoratorContext } from './context.js';
 
 
 
@@ -14,7 +17,7 @@ type PropertyValue<T> = T | ((value: T) => void) | undefined;
 
 
 export function Input<This, Value>(name?: string) {
-	return makeClassMemberDecoratorContext<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (!name && typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -28,7 +31,7 @@ export function Input<This, Value>(name?: string) {
 }
 
 export function FormValue<This, Value>() {
-	return makeClassMemberDecoratorContext<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -46,7 +49,7 @@ export function Output<This, Value>(name?: string, options?: OutputEventInit): (
 export function Output<This, Value>(name?: string | OutputOptions, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void {
 	const eventType = typeof name === 'object' ? name.name : name;
 	const eventOpts = typeof name === 'object' ? name : options;
-	return makeClassMemberDecoratorContext<This, undefined, ClassFieldDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, undefined, ClassFieldDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -68,7 +71,7 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 }
 
 export function View<This, Value>() {
-	return makeClassMemberDecoratorContext<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -82,7 +85,7 @@ export function View<This, Value>() {
 }
 
 export function ViewChild<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-	return makeClassMemberDecoratorContext<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -96,7 +99,7 @@ export function ViewChild<This, Value>(selector: string | typeof HTMLElement | C
 }
 
 export function ViewChildren<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor) {
-	return makeClassMemberDecoratorContext<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -111,7 +114,7 @@ export function ViewChildren<This, Value>(selector: string | typeof HTMLElement 
 
 
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
-	return makeClassMemberDecoratorContext<This, Value, ClassMethodDecoratorContext>(
+	return makeClassMemberDecorator<This, Value, ClassMethodDecoratorContext>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -131,7 +134,7 @@ export function HostListener<This, Value extends (this: This, ...args: any) => a
 type ValueGetter<T> = T | (() => T) | undefined;
 
 export function HostBinding<This, Value>(hostPropertyName: string) {
-	return makeClassMemberDecoratorContext<This, ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<This, ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -144,21 +147,21 @@ export function HostBinding<This, Value>(hostPropertyName: string) {
 	);
 }
 
-export const Pipe = makeClassDecoratorContext<PipeOptions>(
+export const Pipe = makeClassDecorator<PipeOptions>(
 	(opt, constructor, context) => {
 		Components.definePipe(constructor as any, opt, context.metadata);
 	}
 );
 
 
-export const Service = makeClassDecoratorContext<ServiceOptions>(
+export const Service = makeClassDecorator<ServiceOptions>(
 	(opt, constructor, context) => {
 		Components.defineService(constructor as any, opt, context.metadata);
 	}
 );
 
 
-export const Directive = makeClassDecoratorContext<DirectiveOptions>(
+export const Directive = makeClassDecorator<DirectiveOptions>(
 	(opt, constructor, context) => {
 		Components.defineDirective(constructor as any, opt, context.metadata);
 	}
@@ -182,7 +185,7 @@ function generateComponent<T extends Class>(target: MetadataClass<T>, opt: Compo
 	}
 }
 
-export const Component = makeClassDecoratorContext<ComponentOptions | ComponentOptions[]>(
+export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[]>(
 	(opt, constructor, context) => {
 		if (Array.isArray(opt)) {
 			for (const comp of opt) {
@@ -194,7 +197,7 @@ export const Component = makeClassDecoratorContext<ComponentOptions | ComponentO
 	}
 );
 
-export const customElement = makeClassDecoratorContext<{ selector: string } & ElementDefinitionOptions, Class<HTMLElement>>(
+export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, Class<HTMLElement>>(
 	(opt, constructor, context) => {
 		Components.defineView(constructor as any, opt);
 	}
