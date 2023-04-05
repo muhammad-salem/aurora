@@ -1,6 +1,6 @@
 {
 	"references": [
-		{ "path": "src/metadata" },
+		{ "path": "src/decorators" },
 		{ "path": "src/elements" },
 		{ "path": "src/expressions" },
 		{ "path": "src/platform" },

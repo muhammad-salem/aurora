@@ -2,7 +2,7 @@
 	"extends": "../../tsconfig.compilerOption.json",
 	"references": [
 		{
-			"path": "../metadata/tsconfig.json"
+			"path": "../decorators/tsconfig.json"
 		},
 		{
 			"path": "../elements/tsconfig.json"

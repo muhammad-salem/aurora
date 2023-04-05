@@ -33,6 +33,7 @@
 		"access": "public"
 	},
 	"dependencies": {
+		"@ibyar/decorators": "^0.8.6",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {

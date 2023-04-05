@@ -35,6 +35,7 @@
 		"access": "public"
 	},
 	"dependencies": {
+		"@ibyar/decorators": "^0.8.6",
 		"@ibyar/elements": "^0.8.6",
 		"@ibyar/expressions": "^0.8.6",
 		"tslib": "^2.5.0"
