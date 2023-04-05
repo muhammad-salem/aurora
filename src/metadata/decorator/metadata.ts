@@ -1,4 +1,4 @@
-import type { Class, MetadataClass } from '../utils/typeof.js';
+export type MetadataClass<T = any> = { new(...args: any): T;[Symbol.metadata]: Record<PropertyKey, any> };
 
 export interface MetadataContext extends Record<PropertyKey, any> {
 
@@ -39,7 +39,12 @@ declare global {
 }
 
 if (!Symbol.metadata) {
-	Reflect.set(Symbol, 'metadata', Symbol('metadata'));
+	Object.defineProperty(Symbol, 'metadata', {
+		configurable: false,
+		enumerable: false,
+		writable: false,
+		value: Symbol('metadata'),
+	});
 }
 
 export class MetadataContext {
@@ -103,26 +108,30 @@ function updateConstructorMetadata(constructor: MetadataClass): MetadataContext 
 	return constructor[Symbol.metadata];
 }
 
-export function makeClassDecoratorContext<V, T extends Class = Class>(
-	decorator?: (opt: V, constructor: T, context: ClassDecoratorContext<T>) => (T | void)) {
-	return (props: V) => {
+export function makeClassDecorator<V, Type = any>(
+	decorator?: (param: V, constructor: Type, context: ClassDecoratorContext<new (...args: any) => any>) => void) {
+	return (param: V) => {
 		updateCurrentMetadata();
-		return (constructor: T, context: ClassDecoratorContext<T>) => {
-			context.metadata = updateConstructorMetadata(constructor as any as MetadataClass);
-			context.addInitializer(() => {
-				updateCurrentMetadata();
-				console.log(context.metadata, props);
-			});
-			return decorator?.(props, constructor, context) ?? constructor;
+		return (constructor: any, context: ClassDecoratorContext<new (...args: any) => any>) => {
+			if (typeof context.metadata !== 'object') {
+				context.metadata = updateConstructorMetadata(constructor as any as MetadataClass);
+				context.addInitializer(() => {
+					updateCurrentMetadata();
+				});
+			}
+			decorator?.(param, constructor, context);
+			return constructor;
 		};
 	};
 }
 
-export const Metadata = makeClassDecoratorContext<void>();
+export const Metadata = makeClassDecorator<void>();
 
-export function makeClassMemberDecoratorContext<This, Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
+export function makeClassMemberDecorator<This, Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
 	return (value: Value, context: Context) => {
-		context.metadata = getCurrentMetadata();
+		if (typeof context.metadata !== 'object') {
+			context.metadata = getCurrentMetadata();
+		}
 		decorator?.(value, context);
 	};
 }
