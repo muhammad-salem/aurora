@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/metadata",
+	"name": "@ibyar/decorators",
 	"version": "0.8.6",
-	"description": "Ibyar metadata is implementations for proposal-decorator-metadata",
+	"description": "Ibyar Decorators is implementations for proposal-decorator-metadata",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/decorators",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/directives"
+		"directory": "packages/decorators"
 	},
 	"bugs": {
 		"url": "https://github.com/ibyar/aurora/issues"
@@ -33,9 +33,6 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.8.6",
-		"@ibyar/elements": "^0.8.6",
-		"@ibyar/platform": "^0.8.6",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
@@ -47,7 +44,7 @@
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"directives",
+		"decorators",
 		"typescript",
 		"front-end"
 	]
