@@ -15,7 +15,7 @@
 		"@ibyar/esmpack": "^1.0.0",
 		"assert": "2.0.0",
 		"test262-parser-tests": "0.0.5",
-		"typescript": "^5.0.2"
+		"typescript": "^5.0.3"
 	},
 	"scripts": {
 		"clean": "tsc -b --clean example/",
