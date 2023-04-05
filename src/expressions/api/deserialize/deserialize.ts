@@ -1,15 +1,13 @@
 import type { ExpressionNode, ExpressionNodConstructor } from '../expression.js';
+import { makeClassDecorator } from '@ibyar/metadata';
 import { expressionTypes } from './type-store.js';
 
-
-
-export function Deserializer(type: string): Function {
-	return (target: ExpressionNodConstructor<ExpressionNode>) => {
+export const Deserializer = makeClassDecorator<string, ExpressionNodConstructor<ExpressionNode>>(
+	(type, target) => {
 		target.type = type;
 		expressionTypes.set(type, target);
-		return target;
-	};
-}
+	}
+);
 
 export function getDeserializerType(target: ExpressionNodConstructor<ExpressionNode>) {
 	return target.type;
