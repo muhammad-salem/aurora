@@ -1,12 +1,12 @@
 /// <reference path="../types/index.ts" />
-
+import type { MetadataClass } from '@ibyar/decorators';
 import {
 	DomChild, DomElementNode, DomStructuralDirectiveNode,
 	DomFragmentNode, NodeParserHelper, LiveTextContent,
 	TextContent, directiveRegistry, DomAttributeDirectiveNode, LiveAttribute
 } from '@ibyar/elements';
 
-import { ComponentRef, MetadataClass, ReflectComponents } from '@ibyar/core';
+import { ComponentRef, ReflectComponents } from '@ibyar/core';
 
 export const Fragment = 'fragment';
 
