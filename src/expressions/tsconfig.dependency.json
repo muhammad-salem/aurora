@@ -1,4 +1,8 @@
 {
 	"extends": "../../tsconfig.compilerOption.json",
-	"references": []
+	"references": [
+		{
+			"path": "../metadata/tsconfig.json"
+		}
+	]
 }
