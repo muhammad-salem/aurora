@@ -157,6 +157,7 @@ const _subscribableStrategy = new SubscribableStrategy();
 
 @Pipe({ name: 'async', asynchronous: true })
 export class AsyncPipe<T> extends AsyncPipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> implements OnDestroy {
+
 	private _latestValue: any = null;
 
 	private _subscription: Unsubscribable | Promise<any> | null = null;

@@ -6,6 +6,7 @@ import {
 
 @Service({ provideIn: 'root' })
 export class LogService {
+
 	constructor() { }
 	info(message: string) {
 		let date = new Date();
@@ -151,6 +152,7 @@ export class PersonView implements OnInit {
 				</form>`
 })
 export class PersonEdit {
+
 	@Input()
 	person: Person;
 

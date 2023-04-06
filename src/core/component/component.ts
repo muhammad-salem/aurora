@@ -1,4 +1,5 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
+import type { Class, TypeOf } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -59,7 +60,7 @@ export interface ComponentRef<T> {
 	styles: string;
 	extend: Tag;
 
-	viewClass: TypeOf<HTMLComponent<T>> & CustomElementConstructor;
+	viewClass: MetadataClass<HTMLComponent<T>> & CustomElementConstructor;
 	modelClass: TypeOf<T>;
 
 	inputs: InputPropertyRef[];
@@ -175,47 +176,39 @@ export class Components {
 		return result;
 	}
 
-	static defineDirective(modelClass: Function, opts: DirectiveOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-		Object.assign(bootstrap, opts);
-		if (bootstrap.hostListeners?.length || bootstrap.hostBindings?.length) {
+	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
+		Object.assign(metadata, opts);
+		if (metadata.hostListeners?.length || metadata.hostBindings?.length) {
 			const hostNode = Components.parseHostNode({
 				prototype: modelClass.prototype,
-				hostBindings: bootstrap.hostBindings,
-				hostListeners: bootstrap.hostListeners,
+				hostBindings: metadata.hostBindings,
+				hostListeners: metadata.hostListeners,
 			});
-			bootstrap.viewBindings = hostNode.host;
+			metadata.viewBindings = hostNode.host;
 		}
-		bootstrap.modelClass = modelClass;
+		metadata.modelClass = modelClass;
 		ClassRegistryProvider.registerDirective(modelClass);
 		directiveRegistry.register(opts.selector, {
-			inputs: (bootstrap.inputs as PropertyRef[])?.map(input => input.viewAttribute),
-			outputs: (bootstrap.outputs as PropertyRef[])?.map(output => output.viewAttribute),
+			inputs: (metadata.inputs as PropertyRef[])?.map(input => input.viewAttribute),
+			outputs: (metadata.outputs as PropertyRef[])?.map(output => output.viewAttribute),
 		});
 	}
 
-	static definePipe(modelClass: Function, opts: PipeOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-		for (const key in opts) {
-			bootstrap[key] = Reflect.get(opts, key);
-		}
-		bootstrap.modelClass = modelClass;
+	static definePipe<T extends Class>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
+		Object.assign(metadata, opts);
+		metadata.modelClass = modelClass;
 		ClassRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineService(modelClass: Function, opts: ServiceOptions) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-		for (const key in opts) {
-			bootstrap[key] = Reflect.get(opts, key);
-		}
-		bootstrap.modelClass = modelClass;
-		bootstrap.name = modelClass.name;
+	static defineService<T extends Class>(modelClass: MetadataClass<T>, opts: ServiceOptions, metadata: MetadataContext) {
+		Object.assign(metadata, opts);
+		metadata.modelClass = modelClass;
+		metadata.name = modelClass.name;
 		ClassRegistryProvider.registerService(modelClass);
 	}
 
-	static defineComponent<T extends Object>(modelClass: TypeOf<T>, opts: ComponentOptions<T>) {
-		const bootstrap: BootstrapMetadata = ReflectComponents.getOrCreateBootstrap(modelClass.prototype);
-		const componentRef = Object.assign({}, opts, bootstrap) as any as ComponentRef<T>;
+	static defineComponent<T extends Class>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 
 		if (typeof componentRef.template === 'string') {
@@ -292,11 +285,9 @@ export class Components {
 
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
-		ReflectComponents.setComponentRef(componentRef.modelClass, componentRef);
-		ReflectComponents.setComponentRef(componentRef.viewClass, componentRef);
 
 		ClassRegistryProvider.registerComponent(modelClass);
-		ClassRegistryProvider.registerView(bootstrap.viewClass);
+		ClassRegistryProvider.registerView(componentRef.viewClass);
 
 		const options: ElementDefinitionOptions = {};
 		const parentTagName = componentRef.extend?.name;
@@ -315,7 +306,7 @@ export class Components {
 
 	}
 
-	static defineView<T extends HTMLElement>(viewClass: TypeOf<T>, opt: { selector: string } & ElementDefinitionOptions) {
+	static defineView<T extends HTMLElement>(viewClass: MetadataClass<T>, opt: { selector: string } & ElementDefinitionOptions) {
 		ClassRegistryProvider.registerView(viewClass);
 		customElements.define(
 			opt.selector as string,

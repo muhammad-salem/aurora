@@ -29,6 +29,9 @@ import { Component } from '@ibyar/aurora';
 		h4 span {
 			color: white;
 		}
+		dl, dt {
+			margin-top: 10px !important;
+		}
 		.attributes {
 			margin-left: 22px;
 			font-size: 90%;

@@ -10,8 +10,6 @@
 		"noImplicitReturns": true,
 		"strictBindCallApply": true,
 		"downlevelIteration": true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
 		"moduleResolution": "Node",
 		"target": "ES2022",
 		"module": "ES2022",

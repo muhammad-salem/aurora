@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 
 export * from './annotation/options.js';
 export * from './annotation/decorators.js';
@@ -19,7 +18,6 @@ export * from './html/expression.js';
 
 export * from './pipe/pipe.js';
 
-export * from './providers/injector.js';
 export * from './providers/provider.js';
 
 export * from './utils/elements-util.js';

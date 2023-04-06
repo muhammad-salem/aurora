@@ -1,14 +1,12 @@
 import {
 	Directive, DomParentNode, OnDestroy, OnInit,
 	StructuralDirective, PipeTransform, Pipe,
-	Component, Input
+	Component, Input,
 } from '@ibyar/aurora';
 import { map, Subscription, timer, timestamp } from 'rxjs';
 
 
-@Pipe({
-	name: 'toDate'
-})
+@Pipe({ name: 'toDate' })
 export class ToDate implements PipeTransform<number, Date> {
 	transform(timestamp: number): Date {
 		return new Date(timestamp);
@@ -30,6 +28,7 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 		</div>`
 })
 class ShowTimeComponent implements TimeContext {
+
 	@Input() time: number = 0;
 	@Input() date: number = 0;
 	@Input() hh: number = 0;
@@ -42,6 +41,7 @@ class ShowTimeComponent implements TimeContext {
 	selector: '*time',
 })
 export class TimeDirective extends StructuralDirective implements OnInit, OnDestroy {
+
 	private dateSubscription: Subscription;
 	private context: TimeContext;
 	onInit(): void {

@@ -1,4 +1,4 @@
-import { Component, FormValue, HostListener, Input, OnChanges, OnInit, ValueControl, WriteValueMode, WriteValueOptions } from '@ibyar/aurora';
+import { Component, FormValue, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'simple-custom-textarea',
@@ -6,7 +6,6 @@ import { Component, FormValue, HostListener, Input, OnChanges, OnInit, ValueCont
 	formAssociated: true,
 })
 export class SimpleCustomTextareaComponent implements OnInit, ValueControl<string> {
-
 
 	private text: string | null = '';
 

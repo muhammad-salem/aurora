@@ -36,11 +36,10 @@
 		"@ibyar/core": "^0.8.6",
 		"@ibyar/elements": "^0.8.6",
 		"@ibyar/platform": "^0.8.6",
-		"reflect-metadata": "^0.1.13",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
-		"typescript": "^5.0.2"
+		"typescript": "^5.0.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

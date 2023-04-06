@@ -73,6 +73,7 @@ import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
 				</form>`
 })
 export class PersonEdit {
+
 	@Input()
 	person: Person;
 

@@ -140,7 +140,7 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 @Directive({
 	selector: '*forOf',
 })
-export class ForOfDirective<T> extends AbstractForDirective<T>  {
+export class ForOfDirective<T> extends AbstractForDirective<T> {
 
 	@Input('of')
 	set forOf(forOf: T[] | null | undefined) {

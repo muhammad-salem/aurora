@@ -1,36 +1,36 @@
-
+import type { MetadataClass } from '@ibyar/decorators';
 import type {
 	ComponentRef, DirectiveRef, PipeRef, ServiceRef
 } from '../component/component.js';
-import { PropertyRef, ReflectComponents } from '../component/reflect.js';
+import type { PropertyRef } from '../component/reflect.js';
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
 
 export class ClassRegistry {
-	viewSet: Set<Function> = new Set();
-	componentSet: Set<Function> = new Set();
-	serviceSet: Set<Function> = new Set();
-	directiveSet: Set<Function> = new Set();
-	pipeSet: Set<Function> = new Set();
+	viewSet: Set<MetadataClass> = new Set();
+	componentSet: Set<MetadataClass> = new Set();
+	serviceSet: Set<MetadataClass> = new Set();
+	directiveSet: Set<MetadataClass> = new Set();
+	pipeSet: Set<MetadataClass> = new Set();
 
-	registerView(classRef: Function): void {
+	registerView(classRef: MetadataClass): void {
 		this.viewSet.add(classRef);
 	}
-	registerComponent(classRef: Function): void {
+	registerComponent(classRef: MetadataClass): void {
 		this.componentSet.add(classRef);
 	}
-	registerService(classRef: Function): void {
+	registerService(classRef: MetadataClass): void {
 		this.serviceSet.add(classRef);
 	}
-	registerDirective(classRef: Function): void {
+	registerDirective(classRef: MetadataClass): void {
 		this.directiveSet.add(classRef);
 	}
-	registerPipe(classRef: Function): void {
+	registerPipe(classRef: MetadataClass): void {
 		this.pipeSet.add(classRef);
 	}
 
 	hasComponent<T>(selector: string): boolean {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
+			const componentRef = modelClass[Symbol.metadata] as ComponentRef<T>;
 			if (componentRef.selector === selector) {
 				return true;
 			}
@@ -39,7 +39,7 @@ export class ClassRegistry {
 	}
 	getComponentRef<T>(selector: string): ComponentRef<T> | undefined {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
+			const componentRef = modelClass[Symbol.metadata] as ComponentRef<T>;
 			if (componentRef.selector === selector) {
 				return componentRef;
 			}
@@ -49,7 +49,7 @@ export class ClassRegistry {
 
 	getComponent<T>(selector: string) {
 		for (const modelClass of this.componentSet) {
-			const componentRef: ComponentRef<T> = ReflectComponents.getComponentRef(modelClass);
+			const componentRef = modelClass[Symbol.metadata] as ComponentRef<T>;
 			if (componentRef.selector === selector) {
 				return modelClass;
 			}
@@ -90,7 +90,7 @@ export class ClassRegistry {
 
 	hasDirective<T>(selector: string): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef = directiveClass[Symbol.metadata] as DirectiveRef<T>;
 			if (directiveRef.selector === selector) {
 				return true;
 			}
@@ -100,7 +100,7 @@ export class ClassRegistry {
 
 	directiveHasInput<T>(input: string, directiveType: 'attributes' | 'structural' = 'attributes'): boolean {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef = directiveClass[Symbol.metadata] as DirectiveRef<T>;
 			if ((directiveType === 'attributes' && !directiveRef.selector.startsWith('*'))
 				|| (directiveType === 'structural' && directiveRef.selector.startsWith('*'))) {
 				if (directiveRef.inputs?.filter(ref => ref.viewAttribute === input).length > 0) {
@@ -113,7 +113,7 @@ export class ClassRegistry {
 
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
-			const directiveRef: DirectiveRef<T> = ReflectComponents.getBootstrap(directiveClass.prototype);
+			const directiveRef = directiveClass[Symbol.metadata] as DirectiveRef<T>;
 			if (directiveRef.selector === selector) {
 				return directiveRef;
 			}
@@ -124,7 +124,7 @@ export class ClassRegistry {
 
 	getPipe<T>(pipeName: string): PipeRef<T> | undefined {
 		for (const pipeClass of this.pipeSet) {
-			const pipeRef: PipeRef<T> = ReflectComponents.getBootstrap(pipeClass.prototype);
+			const pipeRef = pipeClass[Symbol.metadata] as PipeRef<T>;
 			if (pipeRef.name === pipeName) {
 				return pipeRef;
 			}
@@ -134,7 +134,7 @@ export class ClassRegistry {
 
 	getService<T>(serviceName: string): ServiceRef<T> | undefined {
 		for (const serviceClass of this.serviceSet) {
-			const serviceRef: ServiceRef<T> = ReflectComponents.getBootstrap(serviceClass.prototype);
+			const serviceRef = serviceClass[Symbol.metadata] as ServiceRef<T>;
 			if (serviceRef.name === serviceName) {
 				return serviceRef;
 			}

@@ -7,6 +7,7 @@ import { Component, OnInit, View } from '@ibyar/aurora';
 	shadowRootInit: { mode: 'open', delegatesFocus: true }, // will be ignored
 })
 export class VideoPlayer implements OnInit {
+
 	@View()
 	player: HTMLVideoElement;
 

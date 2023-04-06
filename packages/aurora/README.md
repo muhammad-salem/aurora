@@ -29,33 +29,34 @@
 [npm-url-platform]: https://npmjs.org/package/@ibyar/platform
 [npm-image-cli]: https://img.shields.io/npm/v/@ibyar/cli.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-cli]: https://npmjs.org/package/@ibyar/cli
-[npm-image-reflect-metadata]: https://img.shields.io/npm/v/reflect-metadata.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
-[npm-url-reflect-metadata]: https://npmjs.org/package/reflect-metadata
+[npm-image-decorators]: https://img.shields.io/npm/v/@ibyar/decorators.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-decorators]: https://npmjs.org/package/@ibyar/decorators
 [npm-image-tslib]: https://img.shields.io/npm/v/tslib.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-tslib]: https://npmjs.org/package/tslib
 
 [directory]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/folder-active.svg
 [package]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/symbol-field.svg
 
-[package-aurora]: https://github.com/ibyar/aurora/tree/dev/packages/aurora
-[source-aurora]: https://github.com/ibyar/aurora/tree/dev/src/aurora
-[package-pipes]: https://github.com/ibyar/aurora/tree/dev/packages/pipes
-[source-pipes]: https://github.com/ibyar/aurora/tree/dev/src/pipes
-[package-directives]: https://github.com/ibyar/aurora/tree/dev/packages/directives
-[source-directives]: https://github.com/ibyar/aurora/tree/dev/src/directives
-[package-core]: https://github.com/ibyar/aurora/tree/dev/packages/core
-[source-core]: https://github.com/ibyar/aurora/tree/dev/src/core
-[package-expressions]: https://github.com/ibyar/aurora/tree/dev/packages/expressions
-[source-expressions]: https://github.com/ibyar/aurora/tree/dev/src/expressions
-[package-elements]: https://github.com/ibyar/aurora/tree/dev/packages/elements
-[source-elements]: https://github.com/ibyar/aurora/tree/dev/src/elements
-[package-platform]: https://github.com/ibyar/aurora/tree/dev/packages/platform
-[source-platform]: https://github.com/ibyar/aurora/tree/dev/src/platform
-[package-cli]: https://github.com/ibyar/aurora/tree/dev/packages/cli
-[source-cli]: https://github.com/ibyar/aurora/tree/dev/src/cli
+[package-aurora]: ./packages/aurora
+[source-aurora]: ./src/aurora
+[package-pipes]: ./packages/pipes
+[source-pipes]: ./src/pipes
+[package-directives]: ./packages/directives
+[source-directives]: ./src/directives
+[package-core]: ./packages/core
+[source-core]: ./src/core
+[package-expressions]: ./packages/expressions
+[source-expressions]: ./src/expressions
+[package-elements]: ./packages/elements
+[source-elements]: ./src/elements
+[package-platform]: ./packages/platform
+[source-platform]: ./src/platform
+[package-cli]: ./packages/cli
+[source-cli]: ./src/cli
+[package-decorators]: ./packages/decorators
+[source-decorators]: ./src/decorators
 
 [tslib]: https://github.com/Microsoft/tslib
-[metadata]: https://github.com/rbuckton/reflect-metadata
 
 Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
 
@@ -91,7 +92,7 @@ yarn add @ibyar/aurora
 | @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
 | @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform]  [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
 | @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
-| reflect-metadata | Proposal to add Metadata to ECMAScript. | [![NPM Version][npm-image-reflect-metadata]][npm-url-reflect-metadata] [![PKG][package]][npm-url-reflect-metadata] [![SRC][directory]][metadata] |
+| @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
 | tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
 
 
@@ -128,9 +129,6 @@ yarn add @ibyar/aurora
 - [x] @HostBinding [Supported by Component and Attribute directive].
 - [x] @ViewChild
 - [ ] @ViewChildren
-- [ ] @SelfSkip
-- [ ] @Optional
-- [x] [Annotation/Decorators reflect-metadata][metadata]
 - [ ] XSS (cross-site-scripting)
 
 ## Built-in Directive
@@ -448,10 +446,10 @@ npm install
 npm run build
 ```
 
-see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/example)
+see test app for full [`example`](./example)
 
 ## WebPack bundle
 
-see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
+see test app for full [`bundles/webpack`](./bundles/webpack)
 
-see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
+see test app for full [`bundles/rollup`](./bundles/rollup)

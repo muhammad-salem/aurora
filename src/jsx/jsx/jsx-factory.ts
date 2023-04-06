@@ -1,5 +1,5 @@
 /// <reference path="../types/index.ts" />
-
+import type { MetadataClass } from '@ibyar/decorators';
 import {
 	DomChild, DomElementNode, DomStructuralDirectiveNode,
 	DomFragmentNode, NodeParserHelper, LiveTextContent,
@@ -37,7 +37,7 @@ export class JsxParser extends NodeParserHelper {
 				node = new DomElementNode(props.is);
 			} else {
 				// search for component selector
-				const componentRef: ComponentRef<any> = ReflectComponents.getComponentRef(tagName);
+				const componentRef = ReflectComponents.getMetaDate(tagName as MetadataClass) as ComponentRef<any>;
 				node = new DomElementNode(componentRef.selector);
 			}
 		}

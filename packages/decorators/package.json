@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/platform",
+	"name": "@ibyar/decorators",
 	"version": "0.8.6",
-	"description": "Ibyar Platform, A utility package for Aurora",
+	"description": "Ibyar Decorators is implementations for proposal-decorator-metadata",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/decorators",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/platform"
+		"directory": "packages/decorators"
 	},
 	"bugs": {
 		"url": "https://github.com/ibyar/aurora/issues"
@@ -44,7 +44,8 @@
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"platform",
+		"decorators",
+		"typescript",
 		"front-end"
 	]
 }

@@ -116,6 +116,7 @@ import { interval, Subscription } from 'rxjs';
 })
 export class PipeAppComponent implements OnInit, OnDestroy {
 
+
 	text = 'Lorem ipsum is placeholder text commonly used in the graphic, print, and publishing industries for previewing layouts and visual mockups';
 	obj = {
 		a: [1, 2, 3],

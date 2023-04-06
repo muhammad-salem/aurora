@@ -6,6 +6,7 @@ import { Directive, Input, OnDestroy, StructuralDirective, TypeOf } from '@ibyar
 })
 export class ComponentOutlet<C extends {}> extends StructuralDirective implements OnDestroy {
 
+
 	@Input()
 	set component(componentType: TypeOf<C> | undefined) {
 		this.viewContainerRef.clear();

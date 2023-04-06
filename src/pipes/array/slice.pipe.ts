@@ -18,6 +18,7 @@ import { Pipe, PipeTransform } from '@ibyar/core';
  */
 @Pipe({ name: 'slice' })
 export class SlicePipe<T> implements PipeTransform<Array<T>, Array<T>> {
+
 	/**
 	 * @param value a list or a string to be sliced.
 	 * @param start the starting index of the subset to return:

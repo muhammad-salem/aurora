@@ -22,6 +22,7 @@ import { ChangeDetectorRef, Component, OnInit, } from '@ibyar/aurora';
 	</div>`
 })
 export class FetchApp implements OnInit {
+
 	list: number[] = [];
 	selected: number = 1;
 
