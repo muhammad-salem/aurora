@@ -1,10 +1,9 @@
 import {
 	Component, EventEmitter, HostBinding,
 	HostListener, Input, OnInit, Output,
-	Service, View, ViewChild, ViewChildren
+	View, ViewChild, ViewChildren
 } from '@ibyar/aurora';
 
-@Service({ provideIn: 'root' })
 export class LogService {
 
 	constructor() { }

@@ -120,7 +120,6 @@ yarn add @ibyar/aurora
 - [x] Component
 - [x] Directives (Attribute and Structural Directives)
 - [x] Pipes
-- [ ] Services
 - [x] Lifecycle
 - [x] @Input
 - [x] @Output

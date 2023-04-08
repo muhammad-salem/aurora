@@ -154,13 +154,6 @@ export const Pipe = makeClassDecorator<PipeOptions>(
 );
 
 
-export const Service = makeClassDecorator<ServiceOptions>(
-	(opt, constructor, context) => {
-		Components.defineService(constructor as any, opt, context.metadata);
-	}
-);
-
-
 export const Directive = makeClassDecorator<DirectiveOptions>(
 	(opt, constructor, context) => {
 		Components.defineDirective(constructor as any, opt, context.metadata);
