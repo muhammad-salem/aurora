@@ -127,7 +127,7 @@ export function makeClassDecorator<V, Type = any>(
 
 export const Metadata = makeClassDecorator<void>();
 
-export function makeClassMemberDecorator<This, Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
+export function makeClassMemberDecorator<Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
 	return (value: Value, context: Context) => {
 		if (typeof context.metadata !== 'object') {
 			context.metadata = getCurrentMetadata();

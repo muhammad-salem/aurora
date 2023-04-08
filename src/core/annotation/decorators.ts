@@ -17,7 +17,7 @@ type PropertyValue<T> = T | ((value: T) => void) | undefined;
 
 
 export function Input<This, Value>(name?: string) {
-	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (!name && typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -31,7 +31,7 @@ export function Input<This, Value>(name?: string) {
 }
 
 export function FormValue<This, Value>() {
-	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -49,7 +49,7 @@ export function Output<This, Value>(name?: string, options?: OutputEventInit): (
 export function Output<This, Value>(name?: string | OutputOptions, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void {
 	const eventType = typeof name === 'object' ? name.name : name;
 	const eventOpts = typeof name === 'object' ? name : options;
-	return makeClassMemberDecorator<This, undefined, ClassFieldDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<undefined, ClassFieldDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -71,7 +71,7 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 }
 
 export function View<This, Value>() {
-	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -85,7 +85,7 @@ export function View<This, Value>() {
 }
 
 export function ViewChild<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -99,7 +99,7 @@ export function ViewChild<This, Value>(selector: string | typeof HTMLElement | C
 }
 
 export function ViewChildren<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor) {
-	return makeClassMemberDecorator<This, PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -114,7 +114,7 @@ export function ViewChildren<This, Value>(selector: string | typeof HTMLElement 
 
 
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
-	return makeClassMemberDecorator<This, Value, ClassMethodDecoratorContext>(
+	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
@@ -134,7 +134,7 @@ export function HostListener<This, Value extends (this: This, ...args: any) => a
 type ValueGetter<T> = T | (() => T) | undefined;
 
 export function HostBinding<This, Value>(hostPropertyName: string) {
-	return makeClassMemberDecorator<This, ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
+	return makeClassMemberDecorator<ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
 		(value, context) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
