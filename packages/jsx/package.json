@@ -41,7 +41,7 @@
 	},
 	"devDependencies": {
 		"csstype": "^3.1.0",
-		"typescript": "^5.0.3"
+		"typescript": "^5.0.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"

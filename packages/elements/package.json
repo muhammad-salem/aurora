@@ -35,7 +35,7 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"typescript": "^5.0.3"
+		"typescript": "^5.0.4"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
