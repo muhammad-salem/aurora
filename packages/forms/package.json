@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/forms",
-	"version": "0.8.6",
+	"version": "1.0.0",
 	"description": "Ibyar forms contain form group, form builder and native ui form group",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/forms",
@@ -34,8 +34,8 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/core": "^0.8.6",
-		"@ibyar/platform": "^0.8.6",
+		"@ibyar/core": "^1.0.0",
+		"@ibyar/platform": "^1.0.0",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {

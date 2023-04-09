@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/jsx",
-	"version": "0.8.6",
+	"version": "1.0.0",
 	"description": "Ibyar JSX, create DomNode tree sing jsx, one way binding, two way binding.",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/jsx",
@@ -34,9 +34,9 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/decorators": "^0.8.6",
-		"@ibyar/elements": "^0.8.6",
-		"@ibyar/core": "^0.8.6",
+		"@ibyar/core": "^1.0.0",
+		"@ibyar/decorators": "^1.0.0",
+		"@ibyar/elements": "^1.0.0",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {

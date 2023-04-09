@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/rollup",
-	"version": "0.8.6",
+	"version": "1.0.0",
 	"description": "A rollup demo to work with @ibyar/aurora package to build web components",
 	"license": "MIT",
 	"private": true,
@@ -9,8 +9,8 @@
 		"serve": "rollup --config rollup.config.serve.js"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^0.8.6",
-		"@ibyar/example": "^0.8.6",
+		"@ibyar/aurora": "^1.0.0",
+		"@ibyar/example": "^1.0.0",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
