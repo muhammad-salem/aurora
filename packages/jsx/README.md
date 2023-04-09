@@ -40,6 +40,7 @@ import { jsxParser, Fragment } from '@ibyar/jsx';
 	template: <>foo: [[foo |> json]], bar: [[bar |> json]]</>
 })
 export class MyComponent {
+
 	/** define inputs and outputs types*/
 	props: {
 		foo: string;
@@ -83,6 +84,7 @@ export class ForDirective {
 	</>
 })
 export class JsxComponent {
+
 	/** define inputs and outputs types*/
 	props: {
 		

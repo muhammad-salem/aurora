@@ -116,6 +116,7 @@ import { Person, PersonEdit, PersonView } from './person.js';
 		`
 })
 export class PersonApp {
+
 	@Input()
 	appVersion: string = '2022.08.05';
 

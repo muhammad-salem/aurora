@@ -4,10 +4,10 @@ import { Component, OnInit, View } from '@ibyar/aurora';
 	selector: 'video-player',
 	extend: 'video',
 	encapsulation: 'shadow-dom', // will be ignored 'video' element can't attach shadow dom, it already applied before
-	shadowDomMode: 'open', // will be ignored
-	shadowDomDelegatesFocus: true // will be ignored
+	shadowRootInit: { mode: 'open', delegatesFocus: true }, // will be ignored
 })
 export class VideoPlayer implements OnInit {
+
 	@View()
 	player: HTMLVideoElement;
 

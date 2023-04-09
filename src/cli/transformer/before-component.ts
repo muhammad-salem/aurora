@@ -49,7 +49,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 			}
 
 			const classes: ClassInfo[] = [];
-			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.Node) => {
+			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.SourceFile) => {
 				return ts.visitEachChild(node, (childNode) => {
 					let decoratorArguments: ts.ObjectLiteralElementLike[] | undefined;
 					if (ts.isClassDeclaration(childNode)) {
@@ -203,7 +203,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 					}
 					return childNode;
 				}, context);
-			});
+			}) as ts.SourceFile;
 			if (classes.length) {
 				moduleManger.add({ path: sourceFile.fileName, classes });
 				const statements = updateSourceFile.statements?.slice() ?? [];

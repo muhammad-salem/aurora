@@ -1,5 +1,5 @@
 import { jsxParser, Fragment } from '@ibyar/jsx';
-import { Component, EventEmitter } from '@ibyar/aurora';
+import { Component } from '@ibyar/aurora';
 
 let x = <>text<div id="id"></div></>;
 

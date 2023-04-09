@@ -98,7 +98,7 @@ export class Literal<T> extends AbstractExpressionNode implements CanFindScope {
 		}
 		return new Literal(node.value, node.raw, undefined, undefined, node.range, node.loc);
 	}
-	type: 'Literal';
+	declare type: 'Literal';
 	regex?: { pattern: string, flags: string };
 	bigint?: string;
 	raw?: string

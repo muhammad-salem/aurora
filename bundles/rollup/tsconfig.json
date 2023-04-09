@@ -6,7 +6,7 @@
 		"declaration": true,
 		"importHelpers": true,
 		"inlineSources": false,
-		"declarationMap": false,
+		"declarationMap": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		"strictBindCallApply": true,
@@ -14,10 +14,10 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"moduleResolution": "Node",
-		"module": "ES2020",
-		"target": "ES2021",
+		"module": "ES2022",
+		"target": "ES2022",
 		"lib": [
-			"ES2021",
+			"ES2022",
 			"dom"
 		],
 		"strict": true,
@@ -27,10 +27,10 @@
 		"allowJs": true
 	},
 	"include": [
-	  "src/**/*.ts",
-	  "src/**/*.tsx"
+		"src/**/*.ts",
+		"src/**/*.tsx"
 	],
-   "files": [
-	 "src/index.ts"
-   ],
+	"files": [
+		"src/index.ts"
+	],
 }

@@ -1,3 +1,4 @@
+import type ts from 'typescript/lib/tsserverlibrary.js';
 
 export type ViewInfo = {
 	selector: string;

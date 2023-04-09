@@ -1,7 +1,6 @@
 import {
-	Component,
-	Directive, Input,
-	OnDestroy, OnInit, ScopeSubscription, StructuralDirective
+	Component, Directive, Input, OnDestroy, OnInit,
+	ScopeSubscription, StructuralDirective
 } from '@ibyar/aurora';
 
 
@@ -25,6 +24,7 @@ class NotifyComponent implements NotifyUserContext {
 	selector: '*notify-user',
 })
 export class NotifyUserDirective extends StructuralDirective implements OnInit, OnDestroy {
+
 
 	private context: NotifyUserContext = {
 		notifyMessage: 'no message',

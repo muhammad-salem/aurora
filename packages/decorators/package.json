@@ -1,0 +1,51 @@
+{
+	"name": "@ibyar/decorators",
+	"version": "1.0.0",
+	"description": "Ibyar Decorators is implementations for proposal-decorator-metadata",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/decorators",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/decorators"
+	},
+	"bugs": {
+		"url": "https://github.com/ibyar/aurora/issues"
+	},
+	"author": "The Ibyar Authors (https://github.com/ibyar/aurora/graphs/contributors)",
+	"contributors": [
+		{
+			"name": "Muhammad Salem",
+			"email": "salem.ebo@gmail.com"
+		}
+	],
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"tslib": "^2.5.0"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.4"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"decorators",
+		"typescript",
+		"front-end"
+	]
+}

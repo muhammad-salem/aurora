@@ -4,7 +4,7 @@
 			"path": "../tsconfig.json"
 		}
 	],
-	"extends": "@ibyar/aurora/tsconfig.compilerOption.json",
+	"extends": "../tsconfig.compilerOption.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"outDir": "dist",

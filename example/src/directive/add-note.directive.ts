@@ -7,6 +7,7 @@ import { Component, Directive, Input, OnDestroy, OnInit, StructuralDirective } f
 })
 class NoteComponent {
 
+
 	@Input()
 	directiveName: string;
 }

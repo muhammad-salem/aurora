@@ -8,5 +8,6 @@ import helloTemplate from './hello.html';
 	template: helloTemplate,
 })
 export class HelloApp {
+
 	name = 'jon'
 }

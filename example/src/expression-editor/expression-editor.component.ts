@@ -1,9 +1,7 @@
 import {
-	AfterViewInit, Component, ExpressionNode,
-	JavaScriptParser, LanguageMode, OnInit,
-	Scope, Context, Stack, ViewChild,
-	ChangeDetectorRef, ModuleScopeResolver,
-	ModuleSourceProvider
+	AfterViewInit, Component, ExpressionNode, JavaScriptParser,
+	LanguageMode, OnInit, Scope, Context, Stack, ViewChild,
+	ChangeDetectorRef, ModuleScopeResolver, ModuleSourceProvider,
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
