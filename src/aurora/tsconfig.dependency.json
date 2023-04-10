@@ -5,16 +5,22 @@
 			"path": "../elements/tsconfig.json"
 		},
 		{
-			"path": "../expressions/tsconfig.json"
+			"path": "../decorators/tsconfig.json"
 		},
 		{
-			"path": "../metadata/tsconfig.json"
+			"path": "../expressions/tsconfig.json"
 		},
 		{
 			"path": "../core/tsconfig.json"
 		},
 		{
 			"path": "../jsx/tsconfig.json"
+		},
+		{
+			"path": "../forms/tsconfig.json"
+		},
+		{
+			"path": "../platforms/tsconfig.json"
 		},
 		{
 			"path": "../directives/tsconfig.json"
