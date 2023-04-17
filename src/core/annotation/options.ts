@@ -92,8 +92,9 @@ export interface ComponentOptions<T = Class> {
 	/**
 	 * what basic element should the new component inherit from,
 	 * the tag name to inherit from as 'a', 'div', 'table', 'td', 'th', 'tr', etc ...
+	 * also, support extends a custom element tag name.
 	 */
-	extend?: keyof HTMLElementTagNameMap;
+	extend?: keyof HTMLElementTagNameMap | `${string}-${string}`;
 
 	/**
 	 * An encapsulation policy for the template and CSS styles. One of:
