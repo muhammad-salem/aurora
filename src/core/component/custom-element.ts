@@ -26,10 +26,6 @@ export interface BaseComponent<T> extends CustomElement {
 
 	getComponentRef(): ComponentRef<T>;
 
-	setParentComponent<V extends object>(parent: HTMLComponent<V>): void;
-	getParentComponent<V extends object>(): HTMLComponent<V>;
-	hasParentComponent(): boolean;
-
 	hasInputStartWith(viewProp: string): boolean;
 	getInputStartWith(viewProp: string): PropertyRef | undefined;
 	getInput(viewProp: string): PropertyRef | undefined;

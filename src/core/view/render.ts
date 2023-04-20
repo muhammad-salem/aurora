@@ -225,9 +225,6 @@ export class ComponentRender<T extends object> {
 			// html unknown element
 			element = document.createElement(node.tagName);
 		}
-		if (isHTMLComponent(element)) {
-			element.setParentComponent(this.view);
-		}
 		return element;
 	}
 	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): HTMLElement {
