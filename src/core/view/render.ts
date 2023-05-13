@@ -272,6 +272,7 @@ export class ComponentRender<T extends object> {
 		const templateRefName = node.templateRefName;
 		if (templateRefName) {
 			Reflect.set(this.view, templateRefName.name, element);
+			Reflect.set(elementScope.getContext(), templateRefName.name, element);
 			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
 			if (view) {
