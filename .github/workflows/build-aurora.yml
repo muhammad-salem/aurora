@@ -1,4 +1,4 @@
-name: Build Aurora + Example
+name: Build Aurora
 
 on:
   push:
