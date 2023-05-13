@@ -5,6 +5,8 @@
 [![LICENSE][license-img]][license-url]
 [![lerna][lerna-img]][lerna-url]
 ![GitHub contributors][contributors]
+[![Build Aurora + Example][actions-image]][actions-url]
+
 
 [npm-image]: https://img.shields.io/npm/v/@ibyar/aurora.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url]: https://npmjs.org/package/@ibyar/aurora
@@ -15,6 +17,9 @@
 [lerna-img]: https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
+[actions-image]: https://github.com/ibyar/aurora/actions/workflows/build-aurora.yml/badge.svg
+[actions-url]: https://github.com/ibyar/aurora/actions/workflows/build-aurora.yml
+
 [npm-image-pipes]: https://img.shields.io/npm/v/@ibyar/pipes.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-pipes]: https://npmjs.org/package/@ibyar/pipes
 [npm-image-directives]: https://img.shields.io/npm/v/@ibyar/directives.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
