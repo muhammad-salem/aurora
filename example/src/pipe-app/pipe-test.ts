@@ -89,6 +89,46 @@ import { interval, Subscription } from 'rxjs';
                 <td>3345.54645 |> Math.trunc</td>
                 <td>{{3345.54645 |> Math.trunc}}</td>
             </tr>
+            <tr>
+                <td>Relative Time Format</td>
+                <td>date |> rtf:unit:lang:options</td>
+                <td>
+					<div class="row">
+						<div class="col-2">
+							{{date |> rtf:unit:lang:options}}
+						</div>
+						<div class="col-10">
+							<div class="row">
+								<div class="col-2">
+									<select class="form-select col-3" (change)="unit = this.value">
+										<option *forOf="let u of units" [value]="u" [selected]="unit === u">{{u}}</option>
+									</select>
+								</div>
+								<div class="col-2">
+									<select class="form-select col-3" (change)="lang = this.value">
+										<option *forOf="let l of langs" [value]="l" [selected]="lang === l">{{l}}</option>
+									</select>
+								</div>
+								<div class="col-2">
+									<select class="form-select col-3" (change)="updateOptions('numeric', this.value)">
+										<option *forOf="let n of numerics" [value]="n" [selected]="options.numeric === n">{{n}}</option>
+									</select>
+								</div>
+								<div class="col-2">
+									<select class="form-select col-3" (change)="updateOptions('style', this.value)">
+										<option *forOf="let s of styles" [value]="s" [selected]="options.style === s">{{s}}</option>
+									</select>
+								</div>
+								<div class="col-2">
+									<select class="form-select col-3" (change)="updateOptions('localeMatcher', this.value)">
+										<option *forOf="let m of localeMatchers" [value]="m" [selected]="options.localeMatcher === m">{{m}}</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</td>
+            </tr>
         </tbody>
     </table>
 
@@ -164,6 +204,34 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	currentColor = this.colors[0];
 
+	date = new Date();
+	lang = 'en';
+	options: Intl.RelativeTimeFormatOptions = {
+		numeric: 'auto',
+		style: 'long',
+		localeMatcher: 'best fit',
+	};
+	unit: Intl.RelativeTimeFormatUnit = 'day';
+	langs = [
+		'ar', 'bn', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr',
+		'he', 'hi', 'hu', 'id', 'it', 'ja', 'ko', 'nl', 'no', 'pl',
+		'pt', 'ro', 'ru', 'sk', 'sv', 'ta', 'th', 'tr', 'zh'
+	];
+	units = [
+		'year', 'years',
+		'quarter', 'quarters',
+		'month', 'months',
+		'week', 'weeks',
+		'day', 'days',
+		'hour', 'hours',
+		'minute', 'minutes',
+		'second', 'seconds'
+	];
+
+	numerics: Intl.RelativeTimeFormatNumeric[] = ['always', 'auto'];
+	styles: Intl.ListFormatStyle[] = ['short', 'long', 'narrow'];
+	localeMatchers: Intl.ListFormatLocaleMatcher[] = ['best fit', 'lookup'];
+
 	private _subscription: Subscription;
 
 
@@ -175,6 +243,10 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			}
 			this.currentColor = this.colors[index++];
 		});
+	}
+
+	updateOptions(key: keyof Intl.RelativeTimeFormatOptions, value: Intl.RelativeTimeFormatOptions[keyof Intl.RelativeTimeFormatOptions]) {
+		this.options = Object.assign({}, this.options, { [key]: value });
 	}
 
 	onDestroy() {
