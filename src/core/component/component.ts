@@ -19,9 +19,8 @@ import {
 	ServiceOptions, DirectiveOptions
 } from '../annotation/options.js';
 import {
-	BootstrapMetadata, ChildRef, HostBindingRef,
-	InputPropertyRef, ListenerRef, OutputPropertyRef,
-	PropertyRef, ReflectComponents
+	ChildRef, HostBindingRef, InputPropertyRef,
+	ListenerRef, OutputPropertyRef, PropertyRef
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
 
