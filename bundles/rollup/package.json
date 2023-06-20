@@ -11,7 +11,7 @@
 	"dependencies": {
 		"@ibyar/aurora": "^1.0.0",
 		"@ibyar/example": "^1.0.0",
-		"tslib": "^2.5.0"
+		"tslib": "^2.5.3"
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",
@@ -22,7 +22,7 @@
 		"rollup-plugin-css-only": "^4.3.0",
 		"rollup-plugin-html": "^0.2.1",
 		"rollup-plugin-serve": "^2.0.1",
-		"typescript": "^5.0.4"
+		"typescript": "^5.1.3"
 	},
 	"keywords": [
 		"rollup",

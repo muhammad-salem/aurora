@@ -40,13 +40,13 @@
 		"@ibyar/expressions": "^1.0.0",
 		"@ibyar/platform": "^1.0.0",
 		"@ibyar/pipes": "^1.0.0",
-		"tslib": "^2.5.0"
+		"tslib": "^2.5.3"
 	},
 	"peerDependencies": {
-		"zone.js": "~0.11.4 || ~0.12.0"
+		"zone.js": "~0.11.4 || ~0.12.0 || ~0.13.1"
 	},
 	"devDependencies": {
-		"typescript": "^5.0.4"
+		"typescript": "^5.1.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
