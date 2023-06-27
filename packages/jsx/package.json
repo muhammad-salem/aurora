@@ -37,7 +37,7 @@
 		"@ibyar/core": "^1.0.0",
 		"@ibyar/decorators": "^1.0.0",
 		"@ibyar/elements": "^1.0.0",
-		"tslib": "^2.5.3"
+		"tslib": "^2.6.0"
 	},
 	"devDependencies": {
 		"csstype": "^3.1.0",

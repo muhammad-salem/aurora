@@ -21,7 +21,7 @@
 		"@ibyar/jsx": "^1.0.0",
 		"bootstrap": "^5.2.2",
 		"rxjs": "^7.5.7",
-		"tslib": "^2.5.3"
+		"tslib": "^2.6.0"
 	},
 	"devDependencies": {
 		"@ibyar/cli": "^1.0.0",

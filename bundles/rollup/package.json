@@ -11,7 +11,7 @@
 	"dependencies": {
 		"@ibyar/aurora": "^1.0.0",
 		"@ibyar/example": "^1.0.0",
-		"tslib": "^2.5.3"
+		"tslib": "^2.6.0"
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",

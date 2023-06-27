@@ -36,7 +36,7 @@
 	"dependencies": {
 		"@ibyar/core": "^1.0.0",
 		"@ibyar/platform": "^1.0.0",
-		"tslib": "^2.5.3"
+		"tslib": "^2.6.0"
 	},
 	"devDependencies": {
 		"typescript": "^5.1.3"
