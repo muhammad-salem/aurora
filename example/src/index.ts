@@ -1,4 +1,5 @@
 import './polyfills.js'
+import './reactive-scope/scope.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 
