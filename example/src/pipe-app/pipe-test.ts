@@ -100,7 +100,7 @@ import { interval, Subscription } from 'rxjs';
 						<div class="col-10">
 							<div class="row">
 								<div class="col-2">
-									<select $selectUnit class="form-select col-3" (change)="unit = selectUnit.value">
+									<select #selectUnit class="form-select col-3" (change)="unit = selectUnit.value">
 										<option *forOf="let u of units" [value]="u" [selected]="unit === u">{{u}}</option>
 									</select>
 								</div>
