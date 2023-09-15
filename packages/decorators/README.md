@@ -29,3 +29,12 @@ yarn add @ibyar/decorators
 ```
 
 Create you decorator that is aware of metadata context for [proposal-decorator-metadata](https://github.com/tc39/proposal-decorator-metadata)
+
+
+## Compatibility
+
+| Version | TS Version   |
+|---------|--------------|
+| 1.0.0   | 5.0.0, 5.1.0 |
+| 1.1.0   | 5.2.0, ...   |
+
