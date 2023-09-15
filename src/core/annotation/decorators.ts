@@ -18,28 +18,28 @@ type PropertyValue<T> = T | ((value: T) => void) | undefined;
 
 export function Input<This, Value>(name?: string) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (!name && typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.addInput(context.metadata, context.name as string, name || context.name as string);
+			ReflectComponents.addInput(metadata, context.name as string, name || context.name as string);
 		}
 	);
 }
 
 export function FormValue<This, Value>() {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.addInput(context.metadata, context.name, 'value');
+			ReflectComponents.addInput(metadata, context.name, 'value');
 		}
 	);
 }
@@ -50,7 +50,7 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 	const eventType = typeof name === 'object' ? name.name : name;
 	const eventOpts = typeof name === 'object' ? name : options;
 	return makeClassMemberDecorator<undefined, ClassFieldDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
@@ -58,7 +58,7 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
 			ReflectComponents.addOutput(
-				context.metadata,
+				metadata,
 				context.name,
 				eventType || context.name,
 				{
@@ -72,42 +72,42 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 
 export function View<This, Value>() {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.setComponentView(context.metadata, context.name);
+			ReflectComponents.setComponentView(metadata, context.name);
 		}
 	);
 }
 
 export function ViewChild<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.addViewChild(context.metadata, context.name, selector, childOptions);
+			ReflectComponents.addViewChild(metadata, context.name, selector, childOptions);
 		}
 	);
 }
 
 export function ViewChildren<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.addViewChildren(context.metadata, context.name, selector);
+			ReflectComponents.addViewChildren(metadata, context.name, selector);
 		}
 	);
 }
@@ -115,13 +115,13 @@ export function ViewChildren<This, Value>(selector: string | typeof HTMLElement 
 
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
 	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			args = typeof args === 'string' ? [args] : args;
 			ReflectComponents.addHostListener(
-				context.metadata,
+				metadata,
 				context.name,
 				eventName,
 				args || []
@@ -135,28 +135,28 @@ type ValueGetter<T> = T | (() => T) | undefined;
 
 export function HostBinding<This, Value>(hostPropertyName: string) {
 	return makeClassMemberDecorator<ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
-		(value, context) => {
+		(value, context, metadata) => {
 			if (typeof context.name !== 'string') {
 				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
 			}
 			if (context.private) {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
-			ReflectComponents.addHostBinding(context.metadata, context.name, hostPropertyName);
+			ReflectComponents.addHostBinding(metadata, context.name, hostPropertyName);
 		}
 	);
 }
 
 export const Pipe = makeClassDecorator<PipeOptions>(
-	(opt, constructor, context) => {
-		Components.definePipe(constructor as any, opt, context.metadata);
+	(opt, constructor, context, metadata) => {
+		Components.definePipe(constructor as any, opt, metadata);
 	}
 );
 
 
 export const Directive = makeClassDecorator<DirectiveOptions>(
-	(opt, constructor, context) => {
-		Components.defineDirective(constructor as any, opt, context.metadata);
+	(opt, constructor, context, metadata) => {
+		Components.defineDirective(constructor as any, opt, metadata);
 	}
 );
 
@@ -179,13 +179,13 @@ function generateComponent<T extends Class>(target: MetadataClass<T>, opt: Compo
 }
 
 export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[]>(
-	(opt, constructor, context) => {
+	(opt, constructor, context, metadata) => {
 		if (Array.isArray(opt)) {
 			for (const comp of opt) {
-				generateComponent(constructor as any, comp, context.metadata);
+				generateComponent(constructor as any, comp, metadata);
 			}
 		} else if (typeof opt === 'object') {
-			generateComponent(constructor as any, opt, context.metadata);
+			generateComponent(constructor as any, opt, metadata);
 		}
 	}
 );

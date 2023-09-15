@@ -1,4 +1,4 @@
-import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
+import { metadataHoler, type MetadataClass, type MetadataContext } from '@ibyar/decorators';
 import type { ChildOptions, OutputEventInit } from '../annotation/options.js';
 
 export class PropertyRef {
@@ -42,7 +42,7 @@ export interface BootstrapMetadata {
 export class ReflectComponents {
 
 	static getMetaDate(constructor: MetadataClass) {
-		return constructor[Symbol.metadata];
+		return metadataHoler.get(constructor[Symbol.metadata]);
 	}
 
 	static addInput(metadata: MetadataContext, modelName: string, viewName: string) {
