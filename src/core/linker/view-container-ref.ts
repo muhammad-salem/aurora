@@ -5,6 +5,7 @@ import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
 import { getComponentView } from '../view/utils.js';
 import { HTMLComponent } from '../component/custom-element.js';
+import { ReflectComponents } from '../component/reflect.js';
 
 interface IndexOptions {
 	/**
@@ -252,7 +253,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 				ViewClass = arg0 as TypeOf<HTMLComponent<C>>;
 			} else {
 				const componentType = arg0 as MetadataClass<C>;
-				const defaultTagName = componentType[Symbol.metadata].selector;
+				const defaultTagName = ReflectComponents.getMetaDate(componentType)?.selector;
 				const view = getComponentView(componentType, options?.selector ?? defaultTagName);
 				if (!view) {
 					throw new Error(`Can't find View component for class ${componentType.name}`);

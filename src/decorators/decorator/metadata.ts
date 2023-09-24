@@ -12,30 +12,6 @@ declare global {
 		 */
 		readonly metadata: unique symbol;
 	}
-
-	interface ClassDecoratorContext<Class extends abstract new (...args: any) => any = abstract new (...args: any) => any,> {
-		metadata: MetadataContext;
-	}
-
-	interface ClassMethodDecoratorContext {
-		metadata: MetadataContext;
-	}
-
-	interface ClassGetterDecoratorContext {
-		metadata: MetadataContext;
-	}
-
-	interface ClassFieldDecoratorContext {
-		metadata: MetadataContext;
-	}
-
-	interface ClassSetterDecoratorContext {
-		metadata: MetadataContext;
-	}
-
-	interface ClassAccessorDecoratorContext {
-		metadata: MetadataContext;
-	}
 }
 
 if (!Symbol.metadata) {
@@ -43,83 +19,63 @@ if (!Symbol.metadata) {
 		configurable: false,
 		enumerable: false,
 		writable: false,
-		value: Symbol('metadata'),
+		value: Symbol('Symbol.metadata'),
 	});
 }
 
-export class MetadataContext {
 
-	static create(): MetadataContext {
-		return new MetadataContext();
+class ContextService {
+	constructor(private contextMap: WeakMap<Record<any, any>, Record<any, any>>) { }
+
+	has(key: Record<any, any>) {
+		return this.contextMap.has(key);
 	}
 
-	static inherits(context: MetadataContext): MetadataContext {
-		return Object.assign(MetadataContext.create(), context);
+	get(key: Record<any, any>) {
+		return this.contextMap.get(key);
 	}
 
-	static assign(previous: MetadataContext, next: MetadataContext): MetadataContext {
-		return Object.assign(previous, next);
+	getOrCreate(key: Record<any, any>) {
+		if (this.contextMap.has(key)) {
+			return this.contextMap.get(key);
+		}
+		const value = Object.create(null);
+		const prototype = Object.getPrototypeOf(key);
+		if (this.contextMap.has(prototype)) {
+			const parent = this.contextMap.get(prototype);
+			parent && this.clone(value, parent);
+		}
+		this.contextMap.set(key, value);
+		return value;
 	}
 
-	static merge(previous: MetadataContext, next: MetadataContext): MetadataContext {
-		for (const key in next) {
-			const previousValue = previous[key];
-			const nextValue = next[key];
-			if (typeof previousValue === 'object' && typeof nextValue === 'object') {
-				if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
-					previous[key] = previousValue.concat(nextValue)
-						.filter((value, index, array) => index === array.indexOf(value));
-				} else {
-					previous[key] = Object.assign(previousValue, nextValue);
-				}
+	private clone(child: MetadataContext, parent: MetadataContext): void {
+		for (const property in parent) {
+			const parentValue = parent[property];
+			if (Array.isArray(parentValue)) {
+				child[property] = [...parentValue];
+			} else if (typeof parentValue === 'undefined' || parentValue === null) {
+				child[property] = parentValue;
+			} else if (typeof parentValue === 'object') {
+				child[property] = Object.assign(Object.create(null), parentValue);
 			} else {
-				previous[key] = nextValue;
+				child[property] = parentValue;
 			}
 		}
-		return previous;
 	}
-
 }
 
-let currentContext: MetadataContext = MetadataContext.create();
+const contextMap = new WeakMap<Record<any, any>, Record<any, any>>();
+export const metadataHoler = new ContextService(contextMap);
 
-export function getCurrentMetadata(): MetadataContext {
-	return currentContext;
-}
-
-export function updateCurrentMetadata(context?: MetadataContext): void {
-	currentContext = context ?? MetadataContext.create();
-}
-
-function updateConstructorMetadata(constructor: MetadataClass): MetadataContext {
-	const pConstr = constructor.prototype?.constructor?.[Symbol.metadata];
-	if (pConstr) {
-		if (!constructor.hasOwnProperty(Symbol.metadata)) {
-			constructor[Symbol.metadata] = MetadataContext.inherits(pConstr);
-		}
-		MetadataContext.merge(constructor[Symbol.metadata], getCurrentMetadata());
-	} else {
-		if (constructor[Symbol.metadata]) {
-			MetadataContext.merge(constructor[Symbol.metadata], getCurrentMetadata());
-		} else {
-			constructor[Symbol.metadata] = getCurrentMetadata();
-		}
-	}
-	return constructor[Symbol.metadata];
-}
 
 export function makeClassDecorator<V, Type = any>(
-	decorator?: (param: V, constructor: Type, context: ClassDecoratorContext<new (...args: any) => any>) => void) {
+	decorator?: (param: V, constructor: Type, context: ClassDecoratorContext<new (...args: any) => any>, metadata: MetadataContext) => void
+) {
 	return (param: V) => {
-		updateCurrentMetadata();
 		return (constructor: any, context: ClassDecoratorContext<new (...args: any) => any>) => {
-			if (typeof context.metadata !== 'object') {
-				context.metadata = updateConstructorMetadata(constructor as any as MetadataClass);
-				context.addInitializer(() => {
-					updateCurrentMetadata();
-				});
-			}
-			decorator?.(param, constructor, context);
+			const metadata = metadataHoler.getOrCreate(context.metadata);
+			decorator?.(param, constructor, context, metadata);
 			return constructor;
 		};
 	};
@@ -127,11 +83,11 @@ export function makeClassDecorator<V, Type = any>(
 
 export const Metadata = makeClassDecorator<void>();
 
-export function makeClassMemberDecorator<Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(decorator?: (value: Value | undefined, context: Context) => void) {
+export function makeClassMemberDecorator<Value, Context extends ClassMemberDecoratorContext = ClassMemberDecoratorContext>(
+	decorator?: (value: Value | undefined, context: Context, metadata: MetadataContext) => void
+) {
 	return (value: Value, context: Context) => {
-		if (typeof context.metadata !== 'object') {
-			context.metadata = getCurrentMetadata();
-		}
-		decorator?.(value, context);
+		const metadata = metadataHoler.getOrCreate(context.metadata);
+		decorator?.(value, context, metadata);
 	};
 }

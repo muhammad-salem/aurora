@@ -17,7 +17,6 @@ import { PropertyRef } from '../component/reflect.js';
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
-		_parentComponent: HTMLComponent<object>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -91,6 +90,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 			this._render = new ComponentRender(this, this.subscriptions);
 
+			if (this.attributes.length > 0) {
+				let attrs: Attr[] = Array.prototype.slice.call(this.attributes);
+				attrs.forEach(attr => this.initOuterAttribute(attr));
+			}
+
 			if (this._componentRef.encapsulation === 'shadow-slot') {
 				// render view before inserting any slot element as child
 				this.initView();
@@ -109,18 +113,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 
 		getComponentRef(): ComponentRef<T> {
 			return this._componentRef;
-		}
-
-		setParentComponent(parent: HTMLComponent<any>): void {
-			this._parentComponent = parent;
-		}
-
-		getParentComponent(): HTMLComponent<any> {
-			return this._parentComponent;
-		}
-
-		hasParentComponent(): boolean {
-			return this._parentComponent ? true : false;
 		}
 
 		hasInputStartWith(viewProp: string): boolean {
@@ -242,11 +234,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 			});
 
-			if (!this.hasParentComponent() && this.attributes.length > 0) {
-				let attrs: Attr[] = Array.prototype.slice.call(this.attributes);
-				attrs.forEach(attr => this.initOuterAttribute(attr));
-			}
-
 			if (isOnChanges(this._model)) {
 				this._zone.run(this._model.onChanges, this._modelScope.getContextProxy!());
 			}
@@ -290,7 +277,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		}
 
 
-		initOuterAttribute(attr: Attr) {
+		private initOuterAttribute(attr: Attr) {
 			// [window, this] scop
 			let elementAttr = attr.name;
 			let modelProperty = attr.value;

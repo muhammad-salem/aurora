@@ -23,14 +23,23 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	const htmlViewClassName = `HTML${viewClassName}Element`;
 
 	let parentClass: TypeOf<HTMLComponent<T>>;
-	if (FACTORY_CACHE.has(htmlParent)) {
-		parentClass = FACTORY_CACHE.get(htmlParent) as TypeOf<HTMLComponent<T>>;
+	if (componentRef.extendCustomElement) {
+		parentClass = componentRef.extend.classRef as TypeOf<HTMLComponent<T>>;
 	} else {
-		parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
-		FACTORY_CACHE.set(htmlParent, parentClass);
+		if (FACTORY_CACHE.has(htmlParent)) {
+			parentClass = FACTORY_CACHE.get(htmlParent) as TypeOf<HTMLComponent<T>>;
+		} else {
+			parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
+			FACTORY_CACHE.set(htmlParent, parentClass);
+		}
 	}
+
 	viewClass = ({
-		[htmlViewClassName]: @Metadata() class extends parentClass { constructor() { super(componentRef, modelClass); } }
+		[htmlViewClassName]: @Metadata() class extends parentClass {
+			constructor(optionalComponentRef?: ComponentRef<T>, modelConstructor?: TypeOf<T>) {
+				super(optionalComponentRef ?? componentRef, modelConstructor ?? modelClass);
+			}
+		}
 	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {

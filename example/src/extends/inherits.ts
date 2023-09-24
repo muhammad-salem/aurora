@@ -1,6 +1,11 @@
 
-import { Component, Directive, Input, Pipe } from '@ibyar/aurora';
+import { Component, Directive, Input, Pipe, metadataHoler } from '@ibyar/aurora';
 
+function debugClass(constructor: any) {
+	const metadata = metadataHoler.get(Reflect.get(constructor, Symbol.metadata));
+	console.log(`${constructor.name} frozen`, JSON.parse(JSON.stringify(metadata)));
+	console.log(`${constructor.name} ref`, metadata);
+}
 
 @Pipe({ name: 'pipe' })
 @Directive({ selector: 'parent' })
@@ -9,20 +14,29 @@ export class Parent {
 	name: string;
 }
 
-
-console.log('Parent frozen', JSON.parse(JSON.stringify(Reflect.get(Parent, Symbol.metadata))));
-console.log('Parent ref', Reflect.get(Parent, Symbol.metadata));
+debugClass(Parent);
 
 
 @Component({
-	selector: 'child-comp'
+	selector: 'first-child-comp'
 })
-export class Child extends Parent {
+export class FirstChild extends Parent {
 
 	@Input()
 	age: number;
 }
 
-console.log('Child frozen', JSON.parse(JSON.stringify(Reflect.get(Child, Symbol.metadata))));
-console.log('Child ref', Reflect.get(Child, Symbol.metadata));
+@Component({
+	selector: 'last-child-comp'
+})
+export class LastChild extends Parent {
 
+	@Input()
+	address: number;
+}
+
+
+
+debugClass(Parent);
+debugClass(FirstChild);
+debugClass(LastChild);

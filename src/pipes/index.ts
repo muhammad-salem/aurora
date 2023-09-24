@@ -7,6 +7,9 @@ export * from './array/diff.pipe.js';
 export * from './array/every.pipe.js';
 export * from './array/slice.pipe.js';
 
+// date pipes
+export * from './date/relative-time-format.pipe.js';
+
 // object pipes
 export * from './object/json.pipe.js';
 export * from './object/key-value.pipe.js';

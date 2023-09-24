@@ -1,4 +1,4 @@
-import { ReactiveScope, Context, ScopeSubscription, Stack } from '@ibyar/expressions';
+import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope } from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
@@ -225,15 +225,27 @@ export class ComponentRender<T extends object> {
 			// html unknown element
 			element = document.createElement(node.tagName);
 		}
-		if (isHTMLComponent(element)) {
-			element.setParentComponent(this.view);
-		}
 		return element;
 	}
 	createElement(node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): HTMLElement {
 		const element = this.createElementByTagName(node);
 		this.initHtmlElement(element, node, contextStack, subscriptions, host);
 		return element;
+	}
+
+	private createReadOnlyWithReactiveInnerScope<T extends Context>(ctx: T, aliasName?: string, propertyKeys?: (keyof T)[]) {
+		if (!aliasName) {
+			return ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
+		}
+		const reactiveScope = ReactiveScope.for(ctx, propertyKeys);
+		const context: Record<string, any> = {
+			'this': ctx,
+			[aliasName]: ctx,
+		};
+		const rootScope = ReadOnlyScope.for(context, ['this', aliasName]);
+		rootScope.setInnerScope('this', reactiveScope);
+		rootScope.setInnerScope(aliasName as 'this', reactiveScope);
+		return rootScope;
 	}
 
 	/**
@@ -258,7 +270,7 @@ export class ComponentRender<T extends object> {
 		const elementStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element)
 			? element._viewScope
-			: ReactiveScope.readOnlyScopeForThis(element);
+			: this.createReadOnlyWithReactiveInnerScope(element, node.templateRefName?.name);
 		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);

@@ -1,12 +1,12 @@
 import {
-	ExpressionNode, InfixExpressionNode, ScopeSubscription,
-	Stack, findReactiveScopeByEventMap, ReactiveScope,
-	Context, ValueChangedCallback, Scope,
-	MemberExpression, Identifier, Deserializer,
-	VisitNodeType, NodeDeserializer
+	Context, Deserializer, ExpressionEventMap, ExpressionNode,
+	Identifier, InfixExpressionNode, MemberExpression,
+	NodeDeserializer, ReactiveScope, Scope, ScopeSubscription,
+	Stack, ValueChangedCallback, VisitNodeType,
+	findReactiveScopeByEventMap
 } from '@ibyar/expressions';
-import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { isOnDestroy } from '../component/lifecycle.js';
+import { createSubscriptionDestroyer } from '../context/subscription.js';
 import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
 type OneWayOperator = '=:';
@@ -99,10 +99,12 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	declare protected left: MemberExpression;
 	declare protected right: MemberExpression | Identifier;
 
-	private rightEvents = this.right.events();
-	private leftEvents = this.left.events();
+	private rightEvents: ExpressionEventMap;
+	private leftEvents: ExpressionEventMap;
 	constructor(left: MemberExpression, right: MemberExpression | Identifier) {
 		super('=::', left, right);
+		this.rightEvents = this.right.events();
+		this.leftEvents = this.left.events();
 	}
 
 	set(stack: Stack, value: any) {

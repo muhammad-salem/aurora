@@ -5,7 +5,8 @@ import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DomNode, DomRenderNode, canAttachShadow,
 	directiveRegistry, DomElementNode,
-	DomFragmentNode, DomParentNode
+	DomFragmentNode, DomParentNode,
+	isValidCustomElementName
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
@@ -18,9 +19,8 @@ import {
 	ServiceOptions, DirectiveOptions
 } from '../annotation/options.js';
 import {
-	BootstrapMetadata, ChildRef, HostBindingRef,
-	InputPropertyRef, ListenerRef, OutputPropertyRef,
-	PropertyRef, ReflectComponents
+	ChildRef, HostBindingRef, InputPropertyRef,
+	ListenerRef, OutputPropertyRef, PropertyRef
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
 
@@ -59,6 +59,7 @@ export interface ComponentRef<T> {
 	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
+	extendCustomElement: boolean;
 
 	viewClass: MetadataClass<HTMLComponent<T>> & CustomElementConstructor;
 	modelClass: TypeOf<T>;
@@ -210,6 +211,7 @@ export class Components {
 	static defineComponent<T extends Class>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
+		componentRef.extendCustomElement = !!opts.extend && isValidCustomElementName(opts.extend);
 
 		if (typeof componentRef.template === 'string') {
 			if (componentRef.styles) {
@@ -308,10 +310,12 @@ export class Components {
 
 	static defineView<T extends HTMLElement>(viewClass: MetadataClass<T>, opt: { selector: string } & ElementDefinitionOptions) {
 		ClassRegistryProvider.registerView(viewClass);
+		const { selector, ...definition } = opt;
 		customElements.define(
-			opt.selector as string,
+			selector,
 			viewClass,
-			Object.assign({}, opt, { selector: undefined }),
+			definition,
 		);
 	}
+
 }

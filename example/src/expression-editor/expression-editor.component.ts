@@ -58,6 +58,7 @@ const styles = `
 						<textarea #moduleA cols="40" rows="200">...</textarea>
 					</div>
 				</div>
+				<div class="column"><pre>{{ast}}</pre></div>
 				<div class="column">
 					<div class="d-flex flex-column">
 						<pre class="text-success">{{str}}</pre>
@@ -66,7 +67,6 @@ const styles = `
 						<pre class="text-danger" #error></pre>
 					</div>
 				</div>
-				<div class="column"><pre>{{ast}}</pre></div>
 			</div>
 		</div>
 		`,

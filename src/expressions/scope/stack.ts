@@ -196,7 +196,7 @@ export class Stack implements Stack {
 			this.pushScope(this.moduleScope);
 			// for the rest of module body
 			this.pushReactiveScope();
-		} else {
+		} else if (this.stack.length === 0) {
 			// not a module scope
 			this.pushBlockScope();
 		}
