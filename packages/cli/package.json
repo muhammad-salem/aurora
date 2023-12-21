@@ -42,7 +42,7 @@
 		"@ibyar/expressions": "^1.0.0",
 		"@ibyar/pipes": "^1.0.0",
 		"tslib": "^2.6.2",
-		"typescript": "^5.2.2"
+		"typescript": "^5.3.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose"
