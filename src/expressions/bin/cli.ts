@@ -2,7 +2,7 @@
 
 import { exit } from 'process';
 import { readFileSync, writeFileSync } from 'fs';
-import { JavaScriptParser } from '../index.js';
+import { JavaScriptParser, Stack } from '../index.js';
 
 const CLI_VERSION = '1.0.1';
 
@@ -52,26 +52,37 @@ if (printVersion) {
 	exit();
 }
 
-const parseFile = inputs.includes('p') || inputs.includes('parse');
-const path = inputs.find((v, i, arr) => arr[i - 1] === 'p' || arr[i - 1] === 'parse');
-if (parseFile && path) {
-	const script = readFileSync(path, 'utf8').toString();
+function isContain(small: string, big: string) {
+	return {
+		found: inputs.includes(small) || inputs.includes(big),
+		path: inputs.find((v, i, arr) => arr[i - 1] === small || arr[i - 1] === big),
+	};
+}
+
+const isParse = isContain('p', 'parse');
+if (isParse.found && isParse.path) {
+	const script = readFileSync(isParse.path, 'utf8').toString();
 
 	const ast = JavaScriptParser.parse(script);
 	const json = JSON.stringify(ast);
 
-	const writeOut = inputs.includes('o') || inputs.includes('out');
-	const outPath = inputs.find((v, i, arr) => arr[i - 1] === 'o' || arr[i - 1] === 'out');
 
-	if (writeOut && outPath) {
-		writeFileSync(outPath, json);
+	const isOut = isContain('o', 'out');
+
+	if (isOut.found && isOut.path) {
+		writeFileSync(isOut.path, json);
 	} else {
 		console.log(ast);
 	}
 	exit();
 }
 
-const runScript = inputs.includes('r') || inputs.includes('run');
-if (runScript) {
-	console.log('not implemented yet.');
+const isRun = isContain('r', 'run');
+if (isRun.found && isRun.path) {
+	const script = readFileSync(isRun.path, 'utf8').toString();
+
+	const ast = JavaScriptParser.parse(script);
+	const stack = Stack.for([globalThis]);
+	ast.get(stack);
 }
+
