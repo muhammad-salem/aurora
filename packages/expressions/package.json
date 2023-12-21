@@ -26,6 +26,9 @@
 	"exports": {
 		".": "./index.js"
 	},
+	"bin": {
+		"expr": "./bin/cli.js"
+	},
 	"files": [
 		"*"
 	],
