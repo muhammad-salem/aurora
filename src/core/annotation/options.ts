@@ -16,6 +16,32 @@ export interface DirectiveOptions {
 	selector: string;
 
 	/**
+	 * export this directive to the HTML template scope,
+	 * 
+	 * it can be accessed by the template reference name 
+	 * ex:
+	 * ```ts
+	 * 
+	 * 
+	 * 
+	 * Directive({
+	 * 	selector: '*tooltip',
+	 * 	exportAs: 'tooltip'
+	 * })
+	 * ```
+	 * 
+	 * in your component
+	 * 
+	 * ```html
+	 * <a tooltip="I'm a tooltip!!" #tooltip="tooltip">I'm a link</a>
+	 * <button (click)="tooltip.toggleTooltip()">Toggle tooltip</button>
+	 * ```
+	 * 
+	 */
+
+	exportAs?: string;
+
+	/**
 	 * - use `manual` for no zone.js patch effect applied,
 	 *  and used for manual change detection for heavily process components.
 	 * 
