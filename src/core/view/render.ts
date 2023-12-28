@@ -15,7 +15,7 @@ import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
-import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { createDestroySubscription } from '../context/subscription.js';
 import { EventEmitter } from '../component/events.js';
 
 type ViewContext = { [element: string]: HTMLElement };
@@ -146,7 +146,7 @@ export class ComponentRender<T extends object> {
 			this.initAttributeDirectives(directive.attributeDirectives, structural, stack, subscriptions);
 		}
 		if (isOnDestroy(structural)) {
-			subscriptions.push(createSubscriptionDestroyer(() => structural.onDestroy()));
+			subscriptions.push(createDestroySubscription(() => structural.onDestroy()));
 		}
 
 	}
@@ -279,7 +279,7 @@ export class ComponentRender<T extends object> {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
 			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(changeEventName, listener);
-			subscriptions.push(createSubscriptionDestroyer(
+			subscriptions.push(createDestroySubscription(
 				() => element.removeEventListener(changeEventName, listener),
 			));
 		}
@@ -401,7 +401,7 @@ export class ComponentRender<T extends object> {
 					listener = event.value;
 				}
 				element.addEventListener(event.name as any, listener as any);
-				subscriptions.push(createSubscriptionDestroyer(
+				subscriptions.push(createDestroySubscription(
 					() => element.removeEventListener(event.name as any, listener as any),
 				));
 			});
@@ -446,7 +446,7 @@ export class ComponentRender<T extends object> {
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
 				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
-				subscriptions.push(createSubscriptionDestroyer(
+				subscriptions.push(createDestroySubscription(
 					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
 				));
 			});
