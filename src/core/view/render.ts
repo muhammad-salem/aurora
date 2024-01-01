@@ -37,12 +37,14 @@ export class ComponentRender<T extends object> {
 	private template: DomNode;
 	private contextStack: Stack;
 	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
+	private exportAsScope: ReactiveScope<Record<string, any>>;
 	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
 
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<Context>(this.view._modelScope);
+		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 	}
 	initView(): void {
@@ -138,6 +140,9 @@ export class ComponentRender<T extends object> {
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		stack.pushScope(scope);
+		if (directiveRef.exportAs) {
+			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
+		}
 		subscriptions.push(...this.initDirective(structural, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
@@ -317,7 +322,11 @@ export class ComponentRender<T extends object> {
 			const directiveZone = this.view._zone.fork(directiveRef.zone);
 			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
 			const stack = contextStack.copyStack();
-			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
+			const directiveContext: Record<string, typeof directive> = { 'this': directive };
+			if (directiveRef.exportAs) {
+				this.exportAsScope.set(directiveRef.exportAs, directive);
+			}
+			const thisScope = stack.pushReactiveScopeFor(directiveContext);
 
 			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
@@ -325,7 +334,7 @@ export class ComponentRender<T extends object> {
 				directiveZone.run(directive.onInit, directive);
 			}
 			if (isOnDestroy(directive)) {
-				subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
+				subscriptions.push(createDestroySubscription(() => directive.onDestroy()));
 			}
 			if (!(element instanceof HTMLElement)) {
 				return;
