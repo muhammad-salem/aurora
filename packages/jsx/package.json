@@ -34,9 +34,9 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/core": "^1.1.0",
-		"@ibyar/decorators": "^1.1.0",
-		"@ibyar/elements": "^1.1.0",
+		"@ibyar/core": "^1.1.1",
+		"@ibyar/decorators": "^1.1.1",
+		"@ibyar/elements": "^1.1.1",
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {

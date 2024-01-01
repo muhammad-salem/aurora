@@ -16,7 +16,7 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^1.1.0",
+		"@ibyar/aurora": "^1.1.1",
 		"@ibyar/forms": "^1.1.1",
 		"@ibyar/jsx": "^1.1.1",
 		"bootstrap": "^5.2.2",
@@ -24,7 +24,7 @@
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"@ibyar/cli": "^1.1.0",
+		"@ibyar/cli": "^1.1.1",
 		"typescript": "^5.3.3"
 	},
 	"scripts": {

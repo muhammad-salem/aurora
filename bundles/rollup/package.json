@@ -9,7 +9,7 @@
 		"serve": "rollup --config rollup.config.serve.js"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^1.1.0",
+		"@ibyar/aurora": "^1.1.1",
 		"@ibyar/example": "^1.1.1",
 		"tslib": "^2.6.2"
 	},
