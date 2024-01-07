@@ -295,9 +295,9 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 		return this._observer.subscribe(propertyKey, callback);
 	}
 	unsubscribe(propertyKey?: keyof T, subscription?: ScopeSubscription<T>) {
-		if (propertyKey && subscription) {
+		if (subscription && propertyKey !== null && propertyKey !== undefined) {
 			this._observer.unsubscribe(propertyKey, subscription);
-		} else if (propertyKey) {
+		} else if (propertyKey !== null && propertyKey !== undefined) {
 			this._observer.unsubscribe(propertyKey);
 		} else {
 			this._observer.destroy();
