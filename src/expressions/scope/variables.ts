@@ -30,14 +30,20 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		const value = compute(updateFn);
 		const variable = new ComputedVariable<T>(this, index, value as T);
 		const observeComputed = () => {
-			subscription.forEach(sub => sub.unsubscribe());
 			this.watchState();
 			const value = compute(updateFn);
-			subscription = this.observeState(observeComputed);
+			const state = this.readState();
 			this.restoreState();
+			Object.keys(subscriptions)
+				.filter(index => !state.includes(+index))
+				.forEach(index => subscriptions[index].pause());
+			state.forEach(index => {
+				subscriptions[index]?.resume();
+				subscriptions[index] ??= this.subscribe(index, observeComputed);
+			});
 			this.set(index, value);
 		};
-		let subscription = this.observeState(observeComputed);
+		const subscriptions = this.observeState(observeComputed);
 		this.restoreState();
 		return variable;
 	}
@@ -55,7 +61,7 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 	}
 
 	observeState(updateFn: () => void) {
-		return this.readState().map(index => this.subscribe(index, updateFn));
+		return Object.fromEntries(this.readState().map(index => [index, this.subscribe(index, updateFn)]));
 	}
 
 	restoreState() {
