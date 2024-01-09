@@ -15,6 +15,7 @@ function compute<T>(updateFn: () => T): T | unknown {
 export class VariableScope extends ReactiveScope<Array<any>> {
 
 	private state: number[][] = [];
+	private watch = true;
 
 	constructor() {
 		super([]);
@@ -86,8 +87,18 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		this.state.push([]);
 	}
 
+	untrack() {
+		this.watch = false;
+	}
+
 	observeIndex(index: number) {
-		this.state.at(-1)?.push(index);
+		if (this.watch) {
+			this.state.at(-1)?.push(index);
+		}
+	}
+
+	track() {
+		this.watch = true;
 	}
 
 	readState() {
