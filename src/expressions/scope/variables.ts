@@ -1,9 +1,5 @@
 import { ReactiveScope } from './scope.js';
 
-const INDEX = Symbol('INDEX');
-const SCOPE = Symbol('SCOPE');
-const UPDATE_FN = Symbol('UPDATE_FN');
-
 function compute<T>(updateFn: () => T): T | unknown {
 	try {
 		return updateFn();
@@ -28,12 +24,20 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		return new LazyVariable<T>(this, this.getContext().length, updateFn);
 	}
 
-	createComputed<T>(updateFn: () => T): Variable<T> {
+	createComputed<T>(updateFn: () => T): ComputedVariable<T> {
 		const index = this.getContext().length;
 		this.watchState();
 		const value = compute(updateFn);
-		const variable = new Variable<T>(this, index, value as T);
-		this.observeState(index, updateFn);
+		const variable = new ComputedVariable<T>(this, index, value as T);
+		const observeComputed = () => {
+			subscription.forEach(sub => sub.unsubscribe());
+			this.watchState();
+			const value = compute(updateFn);
+			subscription = this.observeState(observeComputed);
+			this.restoreState();
+			this.set(index, value);
+		};
+		let subscription = this.observeState(observeComputed);
 		this.restoreState();
 		return variable;
 	}
@@ -46,11 +50,12 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		this.state.at(-1)?.push(index);
 	}
 
-	observeState(index: number, updateFn: () => any) {
-		this.unsubscribe(index);
-		const update = () => this.set(index, compute(updateFn));
-		const dependencies = this.state.at(-1);
-		dependencies?.forEach(i => this.subscribe(i, update));
+	readState() {
+		return this.state.at(-1) ?? [];
+	}
+
+	observeState(updateFn: () => void) {
+		return this.readState().map(index => this.subscribe(index, updateFn));
 	}
 
 	restoreState() {
@@ -59,48 +64,71 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 
 }
 
-export class Variable<T> {
+export abstract class Variable<T> {
+	abstract get(): T;
+}
 
-	protected [SCOPE]: VariableScope;
-	protected [INDEX]: number;
+export class ComputedVariable<T> extends Variable<T> {
+
+	#index: number;
+	#scope: VariableScope;
 
 	constructor(scope: VariableScope, index: number, initValue: T) {
-		this[SCOPE] = scope;
-		this[INDEX] = index;
+		super();
+		this.#scope = scope;
+		this.#index = index;
 		scope.set(index, initValue);
 	}
 
 	get(): T {
-		this[SCOPE].observeIndex(this[INDEX]);
-		return this[SCOPE].get(this[INDEX]);
+		this.#scope.observeIndex(this.#index);
+		return this.#scope.get(this.#index);
 	}
 
 }
 
 export class LazyVariable<T> extends Variable<T> {
-	protected [UPDATE_FN]: () => T;
+
+	#index: number;
+	#scope: VariableScope;
+	#updateFn: () => T;
 
 	constructor(scope: VariableScope, index: number, updateFn: () => T) {
-		super(scope, index, compute(updateFn) as T);
-		this[UPDATE_FN] = updateFn;
+		super();
+		this.#scope = scope;
+		this.#index = index;
+		this.#updateFn = updateFn;
+		scope.set(index, compute(updateFn) as T);
 	}
 
 	override get(): T {
-		const value = compute(this[UPDATE_FN]);
-		this[SCOPE].set(this[INDEX], value);
-		return super.get();
+		const value = compute(this.#updateFn);
+		this.#scope.set(this.#index, value);
+		this.#scope.observeIndex(this.#index);
+		return this.#scope.get(this.#index);
 	}
 
 }
 
-export class WritableVariable<T> extends Variable<T>{
+export class WritableVariable<T> extends Variable<T> {
+
+	#index: number;
+	#scope: VariableScope;
 
 	constructor(scope: VariableScope, index: number, initValue: T) {
-		super(scope, index, initValue);
+		super();
+		this.#scope = scope;
+		this.#index = index;
+		scope.set(index, initValue);
+	}
+
+	get(): T {
+		this.#scope.observeIndex(this.#index);
+		return this.#scope.get(this.#index);
 	}
 
 	set(value: T) {
-		this[SCOPE].set(this[INDEX], value);
+		this.#scope.set(this.#index, value);
 	}
 
 	update(updateFn: (value: T) => T): void {
