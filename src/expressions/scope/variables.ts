@@ -1,5 +1,9 @@
 import { ReactiveScope } from './scope.js';
 
+type CleanupFn = () => void;
+type CleanupRegister = (cleanupFn?: CleanupFn) => void;
+
+
 function compute<T>(updateFn: () => T): T | unknown {
 	try {
 		return updateFn();
@@ -46,6 +50,36 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		const subscriptions = this.observeState(observeComputed);
 		this.restoreState();
 		return variable;
+	}
+
+	createEffect<T>(effectFn: (onCleanup?: CleanupFn) => T): { destroy(): void } {
+		let cleanupFn: (() => void) | undefined;
+		const cleanupRegister: CleanupRegister = onClean => cleanupFn = onClean;
+		const callback = () => effectFn(cleanupRegister);
+		this.watchState();
+		compute(callback);
+		const observeComputed = () => {
+			cleanupFn?.();
+			this.watchState();
+			compute(callback);
+			const state = this.readState();
+			this.restoreState();
+			Object.keys(subscriptions)
+				.filter(index => !state.includes(+index))
+				.forEach(index => subscriptions[index].pause());
+			state.forEach(index => {
+				subscriptions[index]?.resume();
+				subscriptions[index] ??= this.subscribe(index, observeComputed);
+			});
+		};
+		const subscriptions = this.observeState(observeComputed);
+		this.restoreState();
+		return {
+			destroy: () => {
+				Object.values(subscriptions).forEach(sub => sub.unsubscribe());
+				cleanupFn?.();
+			},
+		};
 	}
 
 	watchState() {
