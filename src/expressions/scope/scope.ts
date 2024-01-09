@@ -167,7 +167,9 @@ export class ValueChangeObserver<T> {
 			return;
 		}
 		this._lock.push(propertyKey);
-		subscribers?.forEach(subscriptionInfo => {
+
+		const currentSubscription = Array.from(subscribers.values());
+		currentSubscription.forEach(subscriptionInfo => {
 			if (!subscriptionInfo.enable) {
 				return;
 			}
