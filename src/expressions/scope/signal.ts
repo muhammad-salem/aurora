@@ -147,7 +147,14 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 }
 
 export abstract class ReactiveNode<T> {
-	abstract get(): T;
+
+	constructor(protected scope: SignalScope, protected index: number) { }
+
+	get(): T {
+		this.scope.observeIndex(this.index);
+		return this.scope.get(this.index);
+	}
+
 }
 
 const SIGNAL = Symbol('Signal');
@@ -174,19 +181,9 @@ export class Computed<T> extends ReactiveNode<T> {
 		return fn;
 	}
 
-	#index: number;
-	#scope: SignalScope;
-
 	constructor(scope: SignalScope, index: number, initValue: T) {
-		super();
-		this.#scope = scope;
-		this.#index = index;
+		super(scope, index);
 		scope.set(index, initValue);
-	}
-
-	get(): T {
-		this.#scope.observeIndex(this.#index);
-		return this.#scope.get(this.#index);
 	}
 
 }
@@ -203,23 +200,18 @@ export class Lazy<T> extends ReactiveNode<T> {
 		return fn;
 	}
 
-	#index: number;
-	#scope: SignalScope;
-	#updateFn: () => T;
+	private updateFn: () => T;
 
 	constructor(scope: SignalScope, index: number, updateFn: () => T) {
-		super();
-		this.#scope = scope;
-		this.#index = index;
-		this.#updateFn = updateFn;
+		super(scope, index);
+		this.updateFn = updateFn;
 		scope.set(index, compute(updateFn) as T);
 	}
 
 	override get(): T {
-		const value = compute(this.#updateFn);
-		this.#scope.set(this.#index, value);
-		this.#scope.observeIndex(this.#index);
-		return this.#scope.get(this.#index);
+		const value = compute(this.updateFn);
+		this.scope.set(this.index, value);
+		return super.get();
 	}
 
 }
@@ -240,23 +232,13 @@ export class Signal<T> extends ReactiveNode<T> {
 		return fn;
 	}
 
-	#index: number;
-	#scope: SignalScope;
-
 	constructor(scope: SignalScope, index: number, initValue: T) {
-		super();
-		this.#scope = scope;
-		this.#index = index;
+		super(scope, index);
 		scope.set(index, initValue);
 	}
 
-	get(): T {
-		this.#scope.observeIndex(this.#index);
-		return this.#scope.get(this.#index);
-	}
-
 	set(value: T) {
-		this.#scope.set(this.#index, value);
+		this.scope.set(this.index, value);
 	}
 
 	update(updateFn: (value: T) => T): void {
