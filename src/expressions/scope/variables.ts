@@ -53,16 +53,29 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		return variable;
 	}
 
-	createEffect<T>(effectFn: (onCleanup?: CleanupFn) => T): { destroy(): void } {
+	createEffect(effectFn: (onCleanup?: CleanupFn) => void): { destroy(): void } {
 		let cleanupFn: (() => void) | undefined;
-		const cleanupRegister: CleanupRegister = onClean => cleanupFn = onClean;
-		const callback = () => effectFn(cleanupRegister);
+		let isCleanupRegistered = false;
+		const cleanupRegister: CleanupRegister = onClean => {
+			cleanupFn = onClean;
+			isCleanupRegistered = true;
+		};
+		const callback = () => {
+			isCleanupRegistered = false;
+			const error = compute(() => effectFn(cleanupRegister)) as any;
+			if (error instanceof Error) {
+				console.error(error);
+			}
+			if (!isCleanupRegistered) {
+				cleanupFn = undefined;
+			}
+		};
 		this.watchState();
-		compute(callback);
+		callback();
 		const observeComputed = () => {
 			cleanupFn?.();
 			this.watchState();
-			compute(callback);
+			callback();
 			const state = this.readState();
 			this.restoreState();
 			Object.keys(subscriptions)
