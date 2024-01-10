@@ -11,7 +11,7 @@ function compute<T>(updateFn: () => T): T | unknown {
 	}
 }
 
-export class VariableScope extends ReactiveScope<Array<any>> {
+export class SignalScope extends ReactiveScope<Array<any>> {
 
 	private state: number[][] = [];
 	private watch = true;
@@ -20,33 +20,33 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createVariable<T>(initValue: T): WritableVariable<T> {
-		const writable = new WritableVariable<T>(this, this.getContext().length, initValue);
-		WritableVariable.bindFn(writable);
-		return writable;
+	createSignal<T>(initValue: T): Signal<T> {
+		const signal = new Signal<T>(this, this.getContext().length, initValue);
+		Signal.bindFn(signal);
+		return signal;
 	}
-	createVariableFn<T>(initValue: T) {
-		const writable = new WritableVariable<T>(this, this.getContext().length, initValue);
-		return WritableVariable.writable(writable);
+	createSignalFn<T>(initValue: T) {
+		const signal = new Signal<T>(this, this.getContext().length, initValue);
+		return Signal.writable(signal);
 	}
 
-	createLazyComputed<T>(updateFn: () => T): LazyVariable<T> {
-		const lazy = new LazyVariable<T>(this, this.getContext().length, updateFn);
-		LazyVariable.bindFn(lazy);
+	createLazy<T>(updateFn: () => T): Lazy<T> {
+		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
+		Lazy.bindFn(lazy);
 		return lazy;
 	}
 
-	createLazyComputedFn<T>(updateFn: () => T) {
-		const lazy = new LazyVariable<T>(this, this.getContext().length, updateFn);
-		return LazyVariable.lazy(lazy);
+	createLazyFn<T>(updateFn: () => T) {
+		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
+		return Lazy.lazy(lazy);
 	}
 
-	createComputed<T>(updateFn: () => T): ComputedVariable<T> {
+	createComputed<T>(updateFn: () => T): Computed<T> {
 		const index = this.getContext().length;
 		this.watchState();
 		const value = compute(updateFn);
-		const variable = new ComputedVariable<T>(this, index, value as T);
-		ComputedVariable.bindFn(variable);
+		const computed = new Computed<T>(this, index, value as T);
+		Computed.bindFn(computed);
 		const observeComputed = () => {
 			this.watchState();
 			const value = compute(updateFn);
@@ -63,12 +63,12 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 		};
 		const subscriptions = this.observeState(observeComputed);
 		this.restoreState();
-		return variable;
+		return computed;
 	}
 
 	createComputedFn<T>(updateFn: () => T) {
-		const instance = this.createComputed(updateFn);
-		return ComputedVariable.computed(instance);
+		const computed = this.createComputed(updateFn);
+		return Computed.computed(computed);
 	}
 
 	createEffect(effectFn: (onCleanup?: CleanupFn) => void): { destroy(): void } {
@@ -146,28 +146,37 @@ export class VariableScope extends ReactiveScope<Array<any>> {
 
 }
 
-export abstract class Variable<T> {
+export abstract class ReactiveNode<T> {
 	abstract get(): T;
 }
 
-export const Signal = Symbol('Signal') as symbol;
+const SIGNAL = Symbol('Signal');
 
-export class ComputedVariable<T> extends Variable<T> {
+export interface Reactive<T> {
+	[SIGNAL]: ReactiveNode<T>;
+}
 
-	static bindFn<T>(instance: ComputedVariable<T>) {
+export function isReactive<T = any>(value: unknown): value is Reactive<T> {
+	return (value as Partial<Reactive<T>>)[SIGNAL] !== undefined;
+}
+
+
+export class Computed<T> extends ReactiveNode<T> {
+
+	static bindFn<T>(instance: Computed<T>) {
 		instance.get = instance.get.bind(instance);
 	}
 
-	static computed<T>(instance: ComputedVariable<T>) {
+	static computed<T>(instance: Computed<T>) {
 		const fn = () => instance.get();
-		(fn as any)[Signal] = instance;
+		(fn as any)[SIGNAL] = instance;
 		return fn;
 	}
 
 	#index: number;
-	#scope: VariableScope;
+	#scope: SignalScope;
 
-	constructor(scope: VariableScope, index: number, initValue: T) {
+	constructor(scope: SignalScope, index: number, initValue: T) {
 		super();
 		this.#scope = scope;
 		this.#index = index;
@@ -181,23 +190,23 @@ export class ComputedVariable<T> extends Variable<T> {
 
 }
 
-export class LazyVariable<T> extends Variable<T> {
+export class Lazy<T> extends ReactiveNode<T> {
 
-	static bindFn<T>(instance: LazyVariable<T>) {
+	static bindFn<T>(instance: Lazy<T>) {
 		instance.get = instance.get.bind(instance);
 	}
 
-	static lazy<T>(instance: LazyVariable<T>) {
+	static lazy<T>(instance: Lazy<T>) {
 		const fn = () => instance.get();
-		(fn as any)[Signal] = instance;
+		(fn as any)[SIGNAL] = instance;
 		return fn;
 	}
 
 	#index: number;
-	#scope: VariableScope;
+	#scope: SignalScope;
 	#updateFn: () => T;
 
-	constructor(scope: VariableScope, index: number, updateFn: () => T) {
+	constructor(scope: SignalScope, index: number, updateFn: () => T) {
 		super();
 		this.#scope = scope;
 		this.#index = index;
@@ -214,26 +223,26 @@ export class LazyVariable<T> extends Variable<T> {
 
 }
 
-export class WritableVariable<T> extends Variable<T> {
+export class Signal<T> extends ReactiveNode<T> {
 
-	static bindFn<T>(instance: WritableVariable<T>) {
+	static bindFn<T>(instance: Signal<T>) {
 		instance.get = instance.get.bind(instance);
 		instance.set = instance.set.bind(instance);
 		instance.update = instance.update.bind(instance);
 	}
 
-	static writable<T>(instance: WritableVariable<T>) {
+	static writable<T>(instance: Signal<T>) {
 		const fn = () => instance.get();
 		fn.set = (value: T) => instance.set(value);
 		fn.update = (updateFn: (value: T) => T) => instance.update(updateFn);
-		(fn as any)[Signal] = instance;
+		(fn as any)[SIGNAL] = instance;
 		return fn;
 	}
 
 	#index: number;
-	#scope: VariableScope;
+	#scope: SignalScope;
 
-	constructor(scope: VariableScope, index: number, initValue: T) {
+	constructor(scope: SignalScope, index: number, initValue: T) {
 		super();
 		this.#scope = scope;
 		this.#index = index;
