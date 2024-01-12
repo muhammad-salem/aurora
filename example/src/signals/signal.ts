@@ -43,7 +43,7 @@ import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from 
 			<hr>
 
 
-			<p>lazy x*y= {{ l() }} <button class="btn btn-outline-success" (click)="l()">Lazy Update</button></p>
+			<p>lazy x*y= {{ l() }} <button class="btn btn-outline-success" (click)="l()">Refresh value</button></p>
 			<p>double g = <span [class]="{'text-danger': e() instanceof Error}">{{ e() }}</span> (error if a = false)</p>
 
 		`,
@@ -82,8 +82,14 @@ export class SimpleCounter implements OnDestroy {
 
 	constructor() {
 		this.effectSubscription = effect(() => {
-			console.log('x', this.x(), 'y', this.y(), 'z', this.z());
-			console.log('a', this.a(), 'g', untracked(this.g), 'h', untracked(this.h));
+			console.log(
+				'x', this.x(),
+				'y', this.y(),
+				'z', this.z(),
+				'a', this.a(),
+				'g', untracked(this.g),
+				'h', untracked(this.h),
+			);
 		});
 	}
 
