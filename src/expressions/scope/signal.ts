@@ -168,7 +168,7 @@ export interface Reactive<T> {
 }
 
 export function isReactive<T = any>(value: unknown): value is Reactive<T> {
-	const node = (value as Partial<Reactive<T>>)[SIGNAL];
+	const node = (value as Partial<Reactive<T>>)?.[SIGNAL];
 	return node !== undefined && node instanceof ReactiveNode;
 }
 
