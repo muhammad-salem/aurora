@@ -22,7 +22,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 	createSignal<T>(initValue: T): Signal<T> {
 		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		Signal.bindFn(signal);
+		Signal.bindNode(signal);
 		return signal;
 	}
 	createSignalFn<T>(initValue: T) {
@@ -32,7 +32,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 	createLazy<T>(updateFn: () => T): Lazy<T> {
 		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
-		Lazy.bindFn(lazy);
+		Lazy.bindNode(lazy);
 		return lazy;
 	}
 
@@ -46,7 +46,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		this.watchState();
 		const value = compute(updateFn);
 		const computed = new Computed<T>(this, index, value as T);
-		Computed.bindFn(computed);
+		Computed.bindNode(computed);
 		const observeComputed = () => {
 			this.watchState();
 			const value = compute(updateFn);
@@ -183,7 +183,7 @@ export function getReactiveNode<T = any>(value: unknown): ReactiveNode<T> | void
 
 export class Computed<T> extends ReactiveNode<T> {
 
-	static bindFn<T>(instance: Computed<T>) {
+	static bindNode<T>(instance: Computed<T>) {
 		instance.get = instance.get.bind(instance);
 	}
 
@@ -202,7 +202,7 @@ export class Computed<T> extends ReactiveNode<T> {
 
 export class Lazy<T> extends ReactiveNode<T> {
 
-	static bindFn<T>(instance: Lazy<T>) {
+	static bindNode<T>(instance: Lazy<T>) {
 		instance.get = instance.get.bind(instance);
 	}
 
@@ -230,7 +230,7 @@ export class Lazy<T> extends ReactiveNode<T> {
 
 export class Signal<T> extends ReactiveNode<T> {
 
-	static bindFn<T>(instance: Signal<T>) {
+	static bindNode<T>(instance: Signal<T>) {
 		instance.get = instance.get.bind(instance);
 		instance.set = instance.set.bind(instance);
 		instance.update = instance.update.bind(instance);
@@ -255,6 +255,30 @@ export class Signal<T> extends ReactiveNode<T> {
 
 	update(updateFn: (value: T) => T): void {
 		this.set(updateFn(this.get()));
+	}
+
+	asReadonly() {
+		return ReadOnlySignal.readOnly(new ReadOnlySignal(this.scope, this.index));
+	}
+
+	asReadonlyNode() {
+		const node = new ReadOnlySignal(this.scope, this.index);
+		ReadOnlySignal.bindNode(node)
+		return node;
+	}
+
+}
+
+export class ReadOnlySignal<T> extends ReactiveNode<T> {
+
+	static bindNode<T>(instance: ReadOnlySignal<T>) {
+		instance.get = instance.get.bind(instance);
+	}
+
+	static readOnly<T>(instance: ReadOnlySignal<T>) {
+		const fn = () => instance.get();
+		(fn as any)[SIGNAL] = instance;
+		return fn;
 	}
 
 }
