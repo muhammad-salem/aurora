@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, effect, signal, untracked } from '@ibyar/aurora';
+import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from '@ibyar/aurora';
 
 
 @Component({
@@ -7,7 +7,7 @@ import { Component, OnDestroy, computed, effect, signal, untracked } from '@ibya
 			<!-- count is invoked as a getter! -->
 			<p>Count {{ count() }}</p>
 			<p>{{ name }}</p> <!-- Not reactive! -->
-			<button  class="btn btn-outline-success" (click)="increment()">Increment count</button>
+			<button class="btn btn-outline-success" (click)="increment()">Increment count</button>
 			<hr>
 			<p>x {{ x() }}</p>
 			<p>y {{ y() }}</p>
@@ -34,14 +34,17 @@ import { Component, OnDestroy, computed, effect, signal, untracked } from '@ibya
 			<div class="row">
 				<div class="col-4">
 					<div class="form-check">
-						<input class="form-check-input" type="checkbox" id="a" [checked]="a()" (change)="a.set($event.target.checked)">
-						<label class="form-check-label" for="a">
-							A
-						</label>
+						<input class="form-check-input" type="checkbox" id="a"
+							[checked]="a()" (change)="a.set($event.target.checked)">
+						<label class="form-check-label" for="a">A</label>
 					</div>
 				</div>
 			</div>
 			<hr>
+
+
+			<p>lazy x*y= {{ l() }} <button class="btn btn-outline-success" (click)="l()">Lazy Update</button></p>
+			<p>double g = <span [class]="{'text-danger': e() instanceof Error}">{{ e() }}</span> (error if a = false)</p>
 
 		`,
 })
@@ -52,6 +55,17 @@ export class SimpleCounter implements OnDestroy {
 	y = signal(4);
 	z = signal(20);
 	a = signal(true);
+
+	l = lazy(() => this.x() * this.y());
+	e = computed(() => {
+		if (this.a()) {
+			return this.g() * 2;
+		}
+		throw new Error('throw exception');
+	});
+
+	Error = Error;
+
 
 
 	g = computed(() => {
