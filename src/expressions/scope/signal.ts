@@ -1,4 +1,4 @@
-import { ReactiveScope } from './scope.js';
+import { ReactiveScope, ValueChangedCallback } from './scope.js';
 
 type CleanupFn = () => void;
 type CleanupRegister = (cleanupFn?: CleanupFn) => void;
@@ -155,6 +155,10 @@ export abstract class ReactiveNode<T> {
 		return this.scope.get(this.index);
 	}
 
+	subscribe(callback: ValueChangedCallback) {
+		return this.scope.subscribe(this.index, callback);
+	}
+
 }
 
 const SIGNAL = Symbol('Signal');
@@ -168,6 +172,14 @@ export function isReactive<T = any>(value: unknown): value is Reactive<T> {
 	return node !== undefined && node instanceof ReactiveNode;
 }
 
+export function getReactiveNode<T = any>(value: unknown): ReactiveNode<T> | void {
+	if (value instanceof ReactiveNode) {
+		return value;
+	}
+	else if (isReactive(value)) {
+		return value[SIGNAL];
+	}
+}
 
 export class Computed<T> extends ReactiveNode<T> {
 
@@ -243,6 +255,18 @@ export class Signal<T> extends ReactiveNode<T> {
 
 	update(updateFn: (value: T) => T): void {
 		this.set(updateFn(this.get()));
+	}
+
+}
+
+export class SignalValueScope<T> extends ReactiveScope<Record<PropertyKey, any>> {
+	constructor() {
+		super({});
+	}
+
+	watchSignal(propertyKey: keyof T, node: ReactiveNode<any>) {
+		this.set(propertyKey, node.get());
+		return node.subscribe(value => this.set(propertyKey, value));
 	}
 
 }
