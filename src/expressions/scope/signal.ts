@@ -27,7 +27,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 	}
 	createSignalFn<T>(initValue: T) {
 		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		return Signal.writable(signal);
+		return Signal.toReactiveSignal(signal);
 	}
 
 	createLazy<T>(updateFn: () => T): Lazy<T> {
@@ -38,7 +38,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 	createLazyFn<T>(updateFn: () => T) {
 		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
-		return Lazy.lazy(lazy);
+		return Lazy.toReactiveSignal(lazy);
 	}
 
 	createComputed<T>(updateFn: () => T): Computed<T> {
@@ -68,7 +68,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 	createComputedFn<T>(updateFn: () => T) {
 		const computed = this.createComputed(updateFn);
-		return Computed.computed(computed);
+		return Computed.toReactiveSignal(computed);
 	}
 
 	createEffect(effectFn: (onCleanup?: CleanupFn) => void): { destroy(): void } {
@@ -148,6 +148,16 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 export abstract class ReactiveNode<T> {
 
+	static bindNode<T>(instance: ReactiveNode<T>) {
+		instance.get = instance.get.bind(instance);
+	}
+
+	static toReactiveSignal<T>(instance: ReadOnlySignal<T>): ReactiveSignal<T> {
+		const fn = () => instance.get();
+		fn[SIGNAL] = instance;
+		return fn as ReactiveSignal<T>;
+	}
+
 	constructor(protected scope: SignalScope, protected index: number) { }
 
 	get(): T {
@@ -181,17 +191,14 @@ export function getReactiveNode<T = any>(value: unknown): ReactiveNode<T> | void
 	}
 }
 
+export type ReactiveSignal<T> = (() => T) & {
+	/**
+	 * original node that can access value from scope
+	 */
+	[SIGNAL]: unknown;
+};
+
 export class Computed<T> extends ReactiveNode<T> {
-
-	static bindNode<T>(instance: Computed<T>) {
-		instance.get = instance.get.bind(instance);
-	}
-
-	static computed<T>(instance: Computed<T>) {
-		const fn = () => instance.get();
-		(fn as any)[SIGNAL] = instance;
-		return fn;
-	}
 
 	constructor(scope: SignalScope, index: number, initValue: T) {
 		super(scope, index);
@@ -201,16 +208,6 @@ export class Computed<T> extends ReactiveNode<T> {
 }
 
 export class Lazy<T> extends ReactiveNode<T> {
-
-	static bindNode<T>(instance: Lazy<T>) {
-		instance.get = instance.get.bind(instance);
-	}
-
-	static lazy<T>(instance: Lazy<T>) {
-		const fn = () => instance.get();
-		(fn as any)[SIGNAL] = instance;
-		return fn;
-	}
 
 	private updateFn: () => T;
 
@@ -228,6 +225,11 @@ export class Lazy<T> extends ReactiveNode<T> {
 
 }
 
+export type WritableSignal<T> = ReactiveSignal<T> & {
+	set(value: T): void;
+	update(updateFn: (value: T) => T): void;
+};
+
 export class Signal<T> extends ReactiveNode<T> {
 
 	static bindNode<T>(instance: Signal<T>) {
@@ -236,12 +238,12 @@ export class Signal<T> extends ReactiveNode<T> {
 		instance.update = instance.update.bind(instance);
 	}
 
-	static writable<T>(instance: Signal<T>) {
+	static toReactiveSignal<T>(instance: Signal<T>): WritableSignal<T> {
 		const fn = () => instance.get();
 		fn.set = (value: T) => instance.set(value);
 		fn.update = (updateFn: (value: T) => T) => instance.update(updateFn);
-		(fn as any)[SIGNAL] = instance;
-		return fn;
+		fn[SIGNAL] = instance;
+		return fn as WritableSignal<T>;
 	}
 
 	constructor(scope: SignalScope, index: number, initValue: T) {
@@ -258,7 +260,7 @@ export class Signal<T> extends ReactiveNode<T> {
 	}
 
 	asReadonly() {
-		return ReadOnlySignal.readOnly(new ReadOnlySignal(this.scope, this.index));
+		return ReadOnlySignal.toReactiveSignal(new ReadOnlySignal(this.scope, this.index));
 	}
 
 	asReadonlyNode() {
@@ -270,16 +272,6 @@ export class Signal<T> extends ReactiveNode<T> {
 }
 
 export class ReadOnlySignal<T> extends ReactiveNode<T> {
-
-	static bindNode<T>(instance: ReadOnlySignal<T>) {
-		instance.get = instance.get.bind(instance);
-	}
-
-	static readOnly<T>(instance: ReadOnlySignal<T>) {
-		const fn = () => instance.get();
-		(fn as any)[SIGNAL] = instance;
-		return fn;
-	}
 
 }
 
