@@ -44,7 +44,6 @@ export class ComponentRender<T extends object> {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<Context>(this.view._modelScope);
-		this.contextStack.pushScope(this.view._signalValueScope);
 		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 	}

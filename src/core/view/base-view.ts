@@ -22,7 +22,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_signalScope: SignalScope;
-		_signalValueScope: SignalValueScope<T>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -55,13 +54,13 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._model = model;
 
 			clearSignalScope();
-			this._signalValueScope = new SignalValueScope<T>();
-			Object.entries(this._model).forEach((propertyName, value) => {
+			Object.keys(this._model).forEach(key => {
+				const value = this._model[key];
 				const node = getReactiveNode(value);
 				if (!node) {
 					return;
 				}
-				this._signalValueScope.watchSignal(propertyName as any, node);
+				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 			});
 
 			const modelScope = ReactiveScopeControl.for(model);
