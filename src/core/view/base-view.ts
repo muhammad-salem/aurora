@@ -1,5 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope, ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
+import {
+	ReactiveScope, ReactiveScopeControl, Context,
+	ScopeSubscription, SignalScope, SignalValueScope, getReactiveNode
+} from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -13,10 +16,13 @@ import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
+import { clearSignalScope, setSignalScope } from '../signals/signals.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
+		_signalScope: SignalScope;
+		_signalValueScope: SignalValueScope<T>;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -36,6 +42,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (componentRef.isShadowDom) {
 				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
+
+			this._signalScope = new SignalScope();
+			setSignalScope(this._signalScope);
+
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
 			args.push(detector)
@@ -43,6 +53,16 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			args.push(this._zone);
 			const model = new modelClass(...args);
 			this._model = model;
+
+			clearSignalScope();
+			this._signalValueScope = new SignalValueScope<T>();
+			Object.entries(this._model).forEach((propertyName, value) => {
+				const node = getReactiveNode(value);
+				if (!node) {
+					return;
+				}
+				this._signalValueScope.watchSignal(propertyName as any, node);
+			});
 
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
