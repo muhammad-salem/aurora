@@ -54,6 +54,13 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._model = model;
 
 			clearSignalScope();
+			const modelScope = ReactiveScopeControl.for(model);
+			const modelProxyRef = this._zone instanceof ProxyAuroraZone
+				? createProxyZone(model, this._zone)
+				: model;
+			modelScope.getContextProxy = () => modelProxyRef;
+			this._modelScope = modelScope;
+
 			Object.keys(this._model).forEach(key => {
 				const value = this._model[key];
 				const node = getReactiveNode(value);
@@ -62,13 +69,6 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				}
 				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 			});
-
-			const modelScope = ReactiveScopeControl.for(model);
-			const modelProxyRef = this._zone instanceof ProxyAuroraZone
-				? createProxyZone(model, this._zone)
-				: model;
-			modelScope.getContextProxy = () => modelProxyRef;
-			this._modelScope = modelScope;
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getInnerScope<ReactiveScope<BaseComponent<T>>>('this')!;
