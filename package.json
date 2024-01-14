@@ -14,6 +14,7 @@
 	"devDependencies": {
 		"@ibyar/esmpack": "^1.0.0",
 		"assert": "2.0.0",
+		"lerna": "^8.0.2",
 		"test262-parser-tests": "0.0.5",
 		"typescript": "^5.3.3"
 	},
@@ -24,10 +25,10 @@
 		"build:example": "npm run clean && tsc -b -v example/",
 		"build:example:w": "npm run clean && tsc -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
-		"do:publish-no-git": "npm run build && lerna publish --no-git-tag-version --no-push",
-		"do:publish-no-tag": "npm run build && lerna publish --no-git-tag-version",
-		"do:publish-no-push": "npm run build && lerna publish --no-push",
-		"do:publish": "npm run build && lerna publish",
+		"do:publish-no-git": "npm run build && lerna publish --no-private --no-git-tag-version --no-push",
+		"do:publish-no-tag": "npm run build && lerna publish --no-private --no-git-tag-version",
+		"do:publish-no-push": "npm run build && lerna publish --no-private --no-push",
+		"do:publish": "npm run build && lerna publish --no-private ",
 		"docs": "./node_modules/.bin/typedoc --tsconfig ./tsconfig.json"
 	}
 }
