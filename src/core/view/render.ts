@@ -139,6 +139,7 @@ export class ComponentRender<T extends object> {
 		));
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
+		scope.getInnerScope('this')!.getContextProxy = () => structural;
 		stack.pushScope(scope);
 		if (directiveRef.exportAs) {
 			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
@@ -321,12 +322,15 @@ export class ComponentRender<T extends object> {
 			}
 			const directiveZone = this.view._zone.fork(directiveRef.zone);
 			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
-			const stack = contextStack.copyStack();
-			const directiveContext: Record<string, typeof directive> = { 'this': directive };
 			if (directiveRef.exportAs) {
 				this.exportAsScope.set(directiveRef.exportAs, directive);
 			}
-			const thisScope = stack.pushReactiveScopeFor(directiveContext);
+
+			const stack = contextStack.copyStack();
+			const scope = ReactiveScope.readOnlyScopeForThis(directive);
+			const directiveScope = scope.getInnerScope('this')!;
+			directiveScope.getContextProxy = () => directive;
+			stack.pushScope(scope);
 
 			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
@@ -345,7 +349,6 @@ export class ComponentRender<T extends object> {
 			}
 			if (directiveRef.viewBindings) {
 				const directiveStack = stack.copyStack();
-				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
 				directiveStack.pushScope(directiveScope);
 				this.initHtmlElement(element, directiveRef.viewBindings, directiveStack, subscriptions);
 			}
