@@ -126,6 +126,7 @@ yarn add @ibyar/aurora
 - [x] Directives (Attribute and Structural Directives)
 - [x] Pipes
 - [x] Lifecycle
+- [x] Signals
 - [x] @Input
 - [x] @Output
 - [x] @View
