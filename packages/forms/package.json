@@ -42,7 +42,8 @@
 		"typescript": "^5.3.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/forms/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

@@ -49,7 +49,8 @@
 		"typescript": "^5.3.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/aurora/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",
@@ -77,6 +78,5 @@
 		"shadow-dom",
 		"typescript",
 		"front-end"
-	],
-	"gitHead": "85a94555492c9cf4c4a985f5972ebd5009708775"
+	]
 }
