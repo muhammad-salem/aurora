@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/example",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "Aurora test, all the test apps, used while building this lib",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
@@ -16,9 +16,9 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^1.2.1",
-		"@ibyar/forms": "^1.2.1",
-		"@ibyar/jsx": "^1.2.1",
+		"@ibyar/aurora": "^1.2.2",
+		"@ibyar/forms": "^1.2.2",
+		"@ibyar/jsx": "^1.2.2",
 		"bootstrap": "^5.2.2",
 		"rxjs": "^7.5.7",
 		"tslib": "^2.6.2"
