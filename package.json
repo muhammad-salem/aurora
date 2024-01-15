@@ -25,10 +25,10 @@
 		"build:example": "npm run clean && tsc -b -v example/",
 		"build:example:w": "npm run clean && tsc -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
-		"do:publish-no-git": "npm run build && lerna publish --no-private --force-publish --no-git-tag-version --no-push",
-		"do:publish-no-tag": "npm run build && lerna publish --no-private --force-publish --no-git-tag-version",
-		"do:publish-no-push": "npm run build && lerna publish --no-private --force-publish --no-push",
-		"do:publish": "npm run build && lerna publish --no-private --force-publish",
+		"do:publish-no-git": "npm run build && lerna publish --force-publish --no-git-tag-version --no-push",
+		"do:publish-no-tag": "npm run build && lerna publish --force-publish --no-git-tag-version",
+		"do:publish-no-push": "npm run build && lerna publish --force-publish --no-push",
+		"do:publish": "npm run build && lerna publish --force-publish",
 		"docs": "./node_modules/.bin/typedoc --tsconfig ./tsconfig.json"
 	}
 }
