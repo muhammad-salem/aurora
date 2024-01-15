@@ -15,6 +15,7 @@
 		"@ibyar/esmpack": "^1.0.0",
 		"assert": "2.0.0",
 		"lerna": "^8.0.2",
+		"typedoc": "^0.25.7",
 		"test262-parser-tests": "0.0.5",
 		"typescript": "^5.3.3"
 	},
