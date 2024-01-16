@@ -1,5 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
-import { ReactiveScope, ReactiveScopeControl, Context, ScopeSubscription } from '@ibyar/expressions';
+import {
+	ReactiveScope, ReactiveScopeControl, Context,
+	ScopeSubscription, SignalScope, SignalValueScope, getReactiveNode
+} from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
 	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
@@ -13,10 +16,12 @@ import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
+import { clearSignalScope, setSignalScope } from '../signals/signals.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
+		_signalScope: SignalScope;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -36,6 +41,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			if (componentRef.isShadowDom) {
 				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
+
+			this._signalScope = new SignalScope();
+			setSignalScope(this._signalScope);
+
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
 			args.push(detector)
@@ -44,12 +53,22 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const model = new modelClass(...args);
 			this._model = model;
 
+			clearSignalScope();
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
 				: model;
 			modelScope.getContextProxy = () => modelProxyRef;
 			this._modelScope = modelScope;
+
+			Object.keys(this._model).forEach(key => {
+				const value = this._model[key];
+				const node = getReactiveNode(value);
+				if (!node) {
+					return;
+				}
+				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
+			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
 			const elementScope = this._viewScope.getInnerScope<ReactiveScope<BaseComponent<T>>>('this')!;

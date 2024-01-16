@@ -38,6 +38,7 @@ export interface PipeRef<T> {
 }
 export interface DirectiveRef<T> {
 	selector: string;
+	exportAs?: string;
 	zone?: ZoneType;
 
 	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;

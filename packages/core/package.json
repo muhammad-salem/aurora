@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/core",
-	"version": "1.0.0",
+	"version": "1.2.2",
 	"description": "Ibyar core, Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/core",
@@ -35,19 +35,20 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/decorators": "^1.0.0",
-		"@ibyar/elements": "^1.0.0",
-		"@ibyar/expressions": "^1.0.0",
+		"@ibyar/decorators": "^1.2.2",
+		"@ibyar/elements": "^1.2.2",
+		"@ibyar/expressions": "^1.2.2",
 		"tslib": "^2.6.2"
 	},
 	"peerDependencies": {
 		"zone.js": "~0.11.4 || ~0.12.0 || ~0.13.1"
 	},
 	"devDependencies": {
-		"typescript": "^5.2.2"
+		"typescript": "^5.3.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/core/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

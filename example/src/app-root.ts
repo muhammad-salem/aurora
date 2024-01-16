@@ -105,9 +105,11 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Manual Slot',
 			load: () => import('./slot/manual-slot.js').then(module => module.ManualSlotExample),
+		},
+		{
+			title: 'Scope Signal',
+			load: () => import('./signals/signal.js').then(module => module.SimpleCounter),
 		}
-
-
 	];
 
 	onInit(): void {

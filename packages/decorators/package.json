@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/decorators",
-	"version": "1.0.0",
+	"version": "1.2.2",
 	"description": "Ibyar Decorators is implementations for proposal-decorator-metadata",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/decorators",
@@ -36,10 +36,11 @@
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"typescript": "^5.2.2"
+		"typescript": "^5.3.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/decorators/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

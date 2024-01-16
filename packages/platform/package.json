@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/platform",
-	"version": "1.0.0",
+	"version": "1.2.2",
 	"description": "Ibyar Platform, A utility package for Aurora",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
@@ -36,10 +36,11 @@
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"typescript": "^5.2.2"
+		"typescript": "^5.3.3"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/platform/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

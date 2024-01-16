@@ -15,7 +15,7 @@ import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
-import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { createDestroySubscription } from '../context/subscription.js';
 import { EventEmitter } from '../component/events.js';
 
 type ViewContext = { [element: string]: HTMLElement };
@@ -37,12 +37,14 @@ export class ComponentRender<T extends object> {
 	private template: DomNode;
 	private contextStack: Stack;
 	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
+	private exportAsScope: ReactiveScope<Record<string, any>>;
 	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
 
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<Context>(this.view._modelScope);
+		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 	}
 	initView(): void {
@@ -137,7 +139,11 @@ export class ComponentRender<T extends object> {
 		));
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
+		scope.getInnerScope('this')!.getContextProxy = () => structural;
 		stack.pushScope(scope);
+		if (directiveRef.exportAs) {
+			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
+		}
 		subscriptions.push(...this.initDirective(structural, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
@@ -146,7 +152,7 @@ export class ComponentRender<T extends object> {
 			this.initAttributeDirectives(directive.attributeDirectives, structural, stack, subscriptions);
 		}
 		if (isOnDestroy(structural)) {
-			subscriptions.push(createSubscriptionDestroyer(() => structural.onDestroy()));
+			subscriptions.push(createDestroySubscription(() => structural.onDestroy()));
 		}
 
 	}
@@ -279,7 +285,7 @@ export class ComponentRender<T extends object> {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
 			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
 			element.addEventListener(changeEventName, listener);
-			subscriptions.push(createSubscriptionDestroyer(
+			subscriptions.push(createDestroySubscription(
 				() => element.removeEventListener(changeEventName, listener),
 			));
 		}
@@ -316,8 +322,15 @@ export class ComponentRender<T extends object> {
 			}
 			const directiveZone = this.view._zone.fork(directiveRef.zone);
 			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
+			if (directiveRef.exportAs) {
+				this.exportAsScope.set(directiveRef.exportAs, directive);
+			}
+
 			const stack = contextStack.copyStack();
-			const thisScope = stack.pushReactiveScopeFor({ 'this': directive });
+			const scope = ReactiveScope.readOnlyScopeForThis(directive);
+			const directiveScope = scope.getInnerScope('this')!;
+			directiveScope.getContextProxy = () => directive;
+			stack.pushScope(scope);
 
 			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
@@ -325,7 +338,7 @@ export class ComponentRender<T extends object> {
 				directiveZone.run(directive.onInit, directive);
 			}
 			if (isOnDestroy(directive)) {
-				subscriptions.push(createSubscriptionDestroyer(() => directive.onDestroy()));
+				subscriptions.push(createDestroySubscription(() => directive.onDestroy()));
 			}
 			if (!(element instanceof HTMLElement)) {
 				return;
@@ -336,7 +349,6 @@ export class ComponentRender<T extends object> {
 			}
 			if (directiveRef.viewBindings) {
 				const directiveStack = stack.copyStack();
-				const directiveScope = thisScope.getInnerScope<ReactiveScope<any>>('this')!;
 				directiveStack.pushScope(directiveScope);
 				this.initHtmlElement(element, directiveRef.viewBindings, directiveStack, subscriptions);
 			}
@@ -401,7 +413,7 @@ export class ComponentRender<T extends object> {
 					listener = event.value;
 				}
 				element.addEventListener(event.name as any, listener as any);
-				subscriptions.push(createSubscriptionDestroyer(
+				subscriptions.push(createDestroySubscription(
 					() => element.removeEventListener(event.name as any, listener as any),
 				));
 			});
@@ -446,7 +458,7 @@ export class ComponentRender<T extends object> {
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
 				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
-				subscriptions.push(createSubscriptionDestroyer(
+				subscriptions.push(createDestroySubscription(
 					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
 				));
 			});

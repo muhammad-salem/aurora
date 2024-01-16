@@ -6,7 +6,7 @@ import {
 	findReactiveScopeByEventMap
 } from '@ibyar/expressions';
 import { isOnDestroy } from '../component/lifecycle.js';
-import { createSubscriptionDestroyer } from '../context/subscription.js';
+import { createDestroySubscription } from '../context/subscription.js';
 import { AsyncPipeProvider, AsyncPipeScope, PipeProvider } from '../pipe/pipe.js';
 
 type OneWayOperator = '=:';
@@ -57,7 +57,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 					hasAsync = true;
 					asyncPipeScope.set(pipelineName, pipe);
 					if (isOnDestroy(pipe.prototype)) {
-						subscriptions.push(createSubscriptionDestroyer(() => asyncPipeScope.unsubscribe(pipelineName)));
+						subscriptions.push(createDestroySubscription(() => asyncPipeScope.unsubscribe(pipelineName)));
 					}
 				} else if (scope instanceof PipeProvider) {
 					hasSync = true;

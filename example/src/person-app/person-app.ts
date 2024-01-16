@@ -3,6 +3,7 @@ import { AddNoteDirective } from '../directive/add-note.directive.js';
 import { NotifyUserDirective } from '../directive/notify-user.directive.js';
 import { TimeDirective } from '../directive/time.directive.js';
 import { Person, PersonEdit, PersonView } from './person.js';
+import { ColorTogglerDirective } from '../directive/color-toggle.directive.js';
 
 @Component({
 	selector: 'person-app',
@@ -10,6 +11,7 @@ import { Person, PersonEdit, PersonView } from './person.js';
 		AddNoteDirective,
 		NotifyUserDirective,
 		TimeDirective,
+		ColorTogglerDirective,
 		PersonView,
 		PersonEdit,
 	],
@@ -21,6 +23,9 @@ import { Person, PersonEdit, PersonView } from './person.js';
 			{{appName}}
 		</div>
 		<notify-user type="primary" message="A simple primary alert—check it out!"></notify-user>
+
+		<div [color-toggle]="" #colorToggle="colorToggle"> Welcome to you! </div>
+		<button class="btn btn-outline-primary" (click)="colorToggle.toggleColor()">Toggle</button>
 
 		<h1 [textContent]="title"></h1>
 		

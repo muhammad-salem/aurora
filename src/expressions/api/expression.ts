@@ -27,6 +27,16 @@ export type ExpressionEventPathBracketNotation = { computed: true, path: string,
 export type ExpressionEventPath = ExpressionEventPathDotNotation | ExpressionEventPathBracketNotation;
 export type ExpressionEventMap = { [key: string]: ExpressionEventMap };
 
+export type DeclarationType = 'HoistableDeclaration' | 'ClassDeclaration' | 'LexicalDeclaration';
+export type HoistableDeclaration =
+	| 'FunctionDeclaration'
+	| 'GeneratorDeclaration'
+	| 'AsyncFunctionDeclaration'
+	| 'AsyncGeneratorDeclaration';
+
+export type LexicalDeclaration = 'Let' | 'Const';
+
+
 export interface ExpressionNode {
 
 	/**

@@ -143,7 +143,7 @@ export interface Stack {
 }
 
 export class Stack implements Stack {
-	static for(...contexts: Scope<Context>[]): Stack {
+	static for(...contexts: Context[]): Stack {
 		if (contexts.length === 0) {
 			return new Stack();
 		}
