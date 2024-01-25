@@ -1,0 +1,49 @@
+{
+	"name": "@ibyar/html",
+	"version": "1.2.2",
+	"description": "Ibyar HTML, is an HTML parser for @Ibyar/aurora framework.",
+	"license": "MIT",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/html",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ibyar/aurora.git",
+		"directory": "packages/html"
+	},
+	"bugs": {
+		"url": "https://github.com/ibyar/aurora/issues"
+	},
+	"author": "The Ibyar Authors (https://github.com/ibyar/aurora/graphs/contributors)",
+	"contributors": [
+		{
+			"name": "Muhammad Salem",
+			"email": "salem.ebo@gmail.com"
+		}
+	],
+	"main": "./index.js",
+	"module": "./index.js",
+	"types": "./index.d.ts",
+	"type": "module",
+	"exports": {
+		".": "./index.js"
+	},
+	"files": [
+		"*"
+	],
+	"private": true,
+	"publishConfig": {
+		"access": "restricted"
+	},
+	"devDependencies": {
+		"typescript": "^5.3.3"
+	},
+	"scripts": {
+		"build": "tsc --build --verbose",
+		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/elements/tsconfig.json"
+	},
+	"keywords": [
+		"aurora",
+		"ibyar",
+		"html",
+		"parser"
+	]
+}
