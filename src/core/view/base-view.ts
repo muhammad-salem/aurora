@@ -1,7 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, SignalValueScope, getReactiveNode
+	ScopeSubscription, SignalScope, getReactiveNode
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
