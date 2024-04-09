@@ -24,7 +24,7 @@
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"@ibyar/cli": "^1.2.1",
+		"@ibyar/cli": "^1.2.2",
 		"typescript": "^5.3.3"
 	},
 	"scripts": {
