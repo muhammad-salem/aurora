@@ -20,6 +20,7 @@
 		"@ibyar/forms": "^1.2.2",
 		"@ibyar/jsx": "^1.2.2",
 		"bootstrap": "^5.2.2",
+		"signal-polyfill": "^0.1.0",
 		"rxjs": "^7.5.7",
 		"tslib": "^2.6.2"
 	},
