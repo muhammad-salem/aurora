@@ -109,6 +109,10 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Scope Signal',
 			load: () => import('./signals/signal.js').then(module => module.SimpleCounter),
+		},
+		{
+			title: 'Signal Proposal',
+			load: () => import('./signals/proposal.js').then(module => module.SignalProposal),
 		}
 	];
 
