@@ -1,7 +1,7 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, getReactiveNode
+	ScopeSubscription, SignalScope, getReactiveNode, isReactive
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -17,6 +17,8 @@ import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, setSignalScope } from '../signals/signals.js';
+import { Signal } from 'signal-polyfill';
+import { effectProposal } from '../signals/proposal-signals.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
@@ -54,6 +56,8 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			this._model = model;
 
 			clearSignalScope();
+
+
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
@@ -61,13 +65,18 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			modelScope.getContextProxy = () => modelProxyRef;
 			this._modelScope = modelScope;
 
-			Object.keys(this._model).forEach(key => {
-				const value = this._model[key];
-				const node = getReactiveNode(value);
-				if (!node) {
-					return;
-				}
-				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
+			const keys = Object.keys(model);
+			keys.filter(key => isReactive(this._model[key]))
+				.forEach(key => getReactiveNode(this._model[key])!.subscribe((value, old) => this._modelScope.emit(key as any, value, old)));
+
+			keys.filter(key => {
+				const signal = this._model[key];
+				return signal instanceof Signal.State || signal instanceof Signal.Computed;
+			}).forEach(key => {
+				const signalScope = this._modelScope.getInnerScope(key as any) as ReactiveScopeControl<any>;
+				effectProposal(() => {
+					signalScope.detectChanges();
+				});
 			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
