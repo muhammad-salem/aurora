@@ -268,7 +268,7 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 	protected _observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
 
 
-	constructor(context: T, propertyKeys?: (keyof T)[], protected _name?: keyof T, protected _parent?: ReactiveScope<any>) {
+	constructor(context: T, propertyKeys?: (keyof T)[], protected _name?: PropertyKey, protected _parent?: ReactiveScope<any>) {
 		super(context, propertyKeys);
 		this._clone = Object.assign({}, context);
 	}
