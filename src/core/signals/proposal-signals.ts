@@ -1,37 +1,15 @@
+import { ReactiveScope } from '@ibyar/expressions';
 import { Signal } from 'signal-polyfill';
 
-let needsEnqueue = true;
 
-const w = new Signal.subtle.Watcher(() => {
-	if (needsEnqueue) {
-		needsEnqueue = false;
-		queueMicrotask(processPending);
-	}
-});
+export function setupScopesForSignal(signal: Signal.State<any> | Signal.Computed<any>, parent: ReactiveScope<any>, name: string) {
+	const symbols = Object.getOwnPropertySymbols(signal);
+	const scope = new ReactiveScope(signal, symbols as any, name, parent);
+	parent.setInnerScope(name, scope);
 
-function processPending() {
-	needsEnqueue = true;
+	const symbol = symbols[0];
+	const contextScope = new ReactiveScope(signal as any[symbol], ['value', 'version'], symbol, scope);
+	scope.setInnerScope(symbol as any, contextScope);
 
-	for (const s of w.getPending()) {
-		s.get();
-	}
-
-	w.watch();
-}
-
-export function effectProposal(callback: () => (() => void) | void) {
-	let cleanup: (() => void) | void;
-
-	const computed = new Signal.Computed(() => {
-		typeof cleanup === 'function' && cleanup();
-		cleanup = callback();
-	});
-
-	w.watch(computed);
-	// computed.get();
-
-	return () => {
-		w.unwatch(computed);
-		typeof cleanup === 'function' && cleanup();
-	};
+	return scope;
 }
