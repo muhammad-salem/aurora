@@ -18,7 +18,7 @@ import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, setSignalScope } from '../signals/signals.js';
 import { Signal } from 'signal-polyfill';
-import { effectProposal } from '../signals/proposal-signals.js';
+import { setupScopesForSignal } from '../signals/proposal-signals.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
@@ -73,10 +73,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				const signal = this._model[key];
 				return signal instanceof Signal.State || signal instanceof Signal.Computed;
 			}).forEach(key => {
-				const signalScope = this._modelScope.getInnerScope(key as any) as ReactiveScopeControl<any>;
-				effectProposal(() => {
-					signalScope.detectChanges();
-				});
+				queueMicrotask(() => setupScopesForSignal(this._model[key], this._modelScope, key));
 			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
