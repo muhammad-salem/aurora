@@ -11,39 +11,39 @@ export function clearSignalScope() {
 	signalScope = undefined;
 }
 
-function isValidContext(): void {
+function assertValidContext(): void {
 	if (!signalScope) {
 		throw new Error('Create a Signal, Computed and Effect is only allowed in class constructor.');
 	}
 }
 
 export function signalNode<T>(initialValue: T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createSignal(initialValue);
 }
 
 export function signal<T>(initialValue: T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createSignalFn(initialValue);
 }
 
 export function computedNode<T>(computation: () => T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createComputed(computation);
 }
 
 export function computed<T>(computation: () => T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createComputedFn(computation);
 }
 
 export function lazyNode<T>(computation: () => T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createLazy(computation);
 }
 
 export function lazy<T>(computation: () => T) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createLazyFn(computation);
 }
 
@@ -59,7 +59,7 @@ function wrapEffect<T>(scope: SignalScope, effectFn: EffectFn): EffectFn {
 
 
 export function effect(effectFn: (onCleanup?: (clean: () => void) => void) => void) {
-	isValidContext();
+	assertValidContext();
 	return signalScope!.createEffect(wrapEffect(signalScope!, effectFn));
 }
 
