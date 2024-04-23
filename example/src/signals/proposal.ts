@@ -1,5 +1,5 @@
 import { Signal } from 'signal-polyfill';
-import { Component, OnInit } from '@ibyar/aurora';
+import { Component } from '@ibyar/aurora';
 
 
 @Component({
@@ -12,12 +12,9 @@ import { Component, OnInit } from '@ibyar/aurora';
 		<input type="number" [value]="+counter?.get() ?? 100" (input)="counter?.set(+$event.target.value)"/>
 	</div>`
 })
-export class SignalProposal implements OnInit {
+export class SignalProposal {
 	counter?: Signal.State<number> | null = new Signal.State(100);
 
-	onInit(): void {
-		setInterval(() => this.addCounter(1), 1000);
-	}
 
 	resetCounter() {
 		this.counter = new Signal.State(100);
