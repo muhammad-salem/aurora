@@ -69,10 +69,10 @@ This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](h
 
 - Demo: https://muhammad-salem.github.io/aurora-demo
 - API Doc: https://muhammad-salem.github.io/aurora-docs
-- Ibyar Expression & Elements parser: https://ibyar.github.io/astexplorer/
+- Ibyar Expression & Elements parser: https://muhammad-salem.github.io/astexplorer
 	- select: JavaScript: @ibyar/expressions
 	- select: HTML: @ibyar/elements
-- Custom Elements Everywhere for Aurora Test & Results: https://ibyar.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
+- Custom Elements Everywhere for Aurora Test & Results: https://muhammad-salem.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
 
 ## `Install`
 
