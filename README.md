@@ -67,8 +67,8 @@ Ibyar Aurora, is a web framework, that can create and define a Web Component sta
 
 This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
 
-- Demo: https://ibyar.github.io/aurora-demo
-- API Doc: https://ibyar.github.io/aurora-docs
+- Demo: https://muhammad-salem.github.io/aurora-demo
+- API Doc: https://muhammad-salem.github.io/aurora-docs
 - Ibyar Expression & Elements parser: https://ibyar.github.io/astexplorer/
 	- select: JavaScript: @ibyar/expressions
 	- select: HTML: @ibyar/elements
