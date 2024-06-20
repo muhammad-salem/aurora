@@ -197,9 +197,9 @@ export class ComponentRender<T extends object> {
 			fragmentParent.append(this.createElement(child, contextStack, subscriptions, host));
 		} else if (child instanceof DomStructuralDirectiveNode) {
 			const commentText = child.name + (typeof child.value == 'string' ? (' = ' + child.value) : '');
-			const comment = document.createComment(`start ${commentText}`);
+			const comment = document.createComment(`start-- ${commentText}`);
 			fragmentParent.append(comment);
-			const lastComment = document.createComment(`end ${commentText}`);
+			const lastComment = document.createComment(`-end--- ${commentText}`);
 			comment.after(lastComment);
 			this.createStructuralDirective(child, comment, contextStack, subscriptions, parentNode, host);
 		} else if (isLiveTextContent(child)) {
