@@ -100,14 +100,16 @@ export class NodeParserHelper {
 			// <template #refName *if="isActive; else disabled" > ... </template>
 			// <template #disabled > ... </template>
 
-			const temp = node.attributes!.filter(attr => attr.name == sdName)[0];
+			const temp = node.attributes!.find(attr => attr.name == sdName)!;
 			node.attributes!.splice(node.attributes!.indexOf(temp), 1);
 			const isTemplate = node.tagName === 'template';
 
 			const directiveNode = isTemplate ? new DomFragmentNode(node.children) : node;
-			const directive = (typeof temp?.value === 'boolean')
-				? new DomStructuralDirectiveNode(temp.name, directiveNode)
-				: new DomStructuralDirectiveNode(temp.name, directiveNode, String(temp.value));
+			const directive = new DomStructuralDirectiveNode(
+				temp.name,
+				directiveNode,
+				(typeof temp?.value === 'boolean') ? undefined : String(temp.value)
+			);
 			const directiveName = temp.name.substring(1);
 			if (isTemplate) {
 				directive.inputs = node.inputs;
@@ -127,6 +129,9 @@ export class NodeParserHelper {
 		}
 
 		// <for let-user [of]="users"></for>
+		// @for (item of items; track item.id) {
+		// 	{ { item.name } }
+		// }
 		if (directiveRegistry.has('*' + node.tagName)) {
 			const children = new DomFragmentNode(node.children);
 			const directive = new DomStructuralDirectiveNode('*' + node.tagName, children);
@@ -140,7 +145,6 @@ export class NodeParserHelper {
 
 		return node;
 	}
-
 
 	protected extractDirectiveAttributesFromNode(directiveName: string, directive: BaseNode, node: DomElementNode): void {
 		const attributes = directiveRegistry.getAttributes(directiveName);
@@ -160,6 +164,7 @@ export class NodeParserHelper {
 		node.attributes && directive.attributes?.forEach(createArrayCleaner(node.attributes));
 		node.templateAttrs && directive.templateAttrs?.forEach(createArrayCleaner(node.templateAttrs));
 	}
+
 	protected extractDirectiveNames(node: BaseNode): string[] {
 		const names: string[] = [];
 		if (node.attributes?.length) {
@@ -179,9 +184,11 @@ export class NodeParserHelper {
 		}
 		return [...new Set(names)];
 	}
+
 	protected getAttributeDirectives(attributes: Attribute<string, any>[]): string[] {
 		return directiveRegistry.filterDirectives(attributes.map(attr => attr.name.split('.')[0]));
 	}
+
 }
 
 export class NodeParser extends NodeParserHelper {
@@ -208,6 +215,11 @@ export class NodeParser extends NodeParserHelper {
 	private propType: 'attr' | 'ref-name' | 'input' | 'output' | 'two-way';
 
 	private escaper = new EscapeHTMLCharacter();
+
+	private flowName: string;
+	private skipCount = 0;
+	private flowScopeCount = 0;
+	private interpolationCount = 0;
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -238,14 +250,23 @@ export class NodeParser extends NodeParserHelper {
 	}
 
 	private parseText(token: string) {
-		if (token === '<') {
+		if (token === '<' || token === '@' || (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}')) {
 			if (this.tempText) {
 				this.tempText = this.escaper.unescape(this.tempText);
 				this.stackTrace.push(this.tempText);
 				this.popElement();
 				this.tempText = '';
 			}
-			return this.parseTag;
+			if (token === '}') {
+				this.flowScopeCount--;
+				this.popElement();
+				return this.parseText;
+			}
+			return token === '<' ? this.parseTag : this.parseControlFlow;
+		} else if (token === '{') {
+			this.interpolationCount++;
+		} else if (token === '}') {
+			this.interpolationCount--;
 		}
 		this.tempText += token;
 		return this.parseText;
@@ -341,7 +362,7 @@ export class NodeParser extends NodeParserHelper {
 			if (this.tempText.trim()) {
 				this.propertyName = this.tempText;
 				this.currentNode.addAttribute(this.propertyName, true);
-				this.propertyName, this.propertyValue = this.tempText = '';
+				this.propertyName = this.propertyValue = this.tempText = '';
 			}
 			if (isEmptyElement(this.currentNode.tagName)) {
 				this.popElement();
@@ -386,8 +407,6 @@ export class NodeParser extends NodeParserHelper {
 		return this.parsePropertyName;
 	}
 
-
-
 	private parseRefName(token: string) {
 		if (/=/.test(token)) {
 			return this.parseRefName;
@@ -426,6 +445,39 @@ export class NodeParser extends NodeParserHelper {
 		}
 		this.tempText += token;
 		return this.parseInputOutput;
+	}
+
+	private parseControlFlow(token: string) {
+		if (/\s/.test(token)) {
+			return this.parseControlFlow;
+		} else if (token === '(') {
+			this.flowName = '*' + this.tempText;
+			this.stackTrace.push(new DomElementNode('template'));
+			this.tempText = '';
+			this.skipCount = 1;
+			return this.parseControlFlowExpression;
+		} else if (token === '{') {
+			this.tempText = '';
+			this.flowScopeCount++;
+			return this.parseText;
+		}
+		this.tempText += token;
+		return this.parseControlFlow;
+	}
+
+	private parseControlFlowExpression(token: string) {
+		if (token === ')') {
+			this.skipCount--;
+			if (this.skipCount == 0) {
+				this.currentNode.addAttribute(this.flowName, this.tempText);
+				this.flowName = this.tempText = '';
+				return this.parseControlFlow;
+			}
+		} else if (token === '(') {
+			this.skipCount++;
+		}
+		this.tempText += token;
+		return this.parseControlFlowExpression;
 	}
 
 	private parsePropertyValue(token: string) {
@@ -467,7 +519,6 @@ export class NodeParser extends NodeParserHelper {
 		return this.parsePropertyValue;
 	}
 
-
 	private popElement() {
 		const element = this.stackTrace.pop();
 		if (element) {
@@ -481,8 +532,7 @@ export class NodeParser extends NodeParserHelper {
 					parent.addChild(element);
 				}
 				this.stackTrace.push(parent);
-			}
-			else {
+			} else {
 				if (typeof element === 'string') {
 					parseTextChild(element).forEach(text => this.childStack.push(text));
 				} else if (element instanceof DomElementNode) {
