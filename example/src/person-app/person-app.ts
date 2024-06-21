@@ -111,13 +111,65 @@ import { ColorTogglerDirective } from '../directive/color-toggle.directive.js';
 			</li>
 			<li class="list-group-item row">
 				<select class="form-select col-3" (change)="selectFruit = this.value">
-					<option *forOf="let fruit of fruits"
-						[value]="fruit"
-						>{{fruit |> titlecase}}</option>
+					<option *forOf="let fruit of fruits" [value]="fruit">{{fruit |> titlecase}}</option>
 				</select>
 			</li>
 		</ul>
 		<hr>
+
+		<h1>Control Flow</h1>
+		<h2>*For Of Directive</h2>
+		<h5>{{controlFlowSyntax[0]}}</h5>
+		<h5>{{controlFlowSyntax[1]}}</h5>
+		<div class="row">
+			@forOf(let user of people){
+				<div class="col-3">
+					<p>Name: <span>{{user.name}}</span></p>
+					<p>Age: <span>{{user.age}}</span></p>
+				</div>
+			}
+		</div>
+
+		<h2>*For In Directive</h2>
+		<h5>{{controlFlowSyntax[2]}}</h5>
+		<div class="row">
+			@forIn(let key in people[0]){
+				<div class="col-3">
+					<p>Key: <span>{{key}}</span></p>
+					<p>Value: <span>{{people[0][key]}}</span></p>
+				</div>
+			}
+		</div>
+
+		<h2>*For Await OF Directive</h2>
+		<h5>{{controlFlowSyntax[3]}}</h5>
+		<div class="row">
+			@forAwait(let num of asyncIterable){
+				<div class="col-3">
+					<p>num = <span>{{num}}</span></p>
+				</div>
+			}
+		</div>
+
+		<hr>
+
+		<h1>Switch Case Directive</h1>
+		<h5><pre>{{controlFlowSyntax[4]}}</pre></h5>
+		<ul class="list-group">
+			<li class="list-group-item row">
+				@switch(selectFruit){
+					@case('oranges'){<div>Oranges</div>}
+					@case('apples'){<div>Apples</div>}
+					@case('bananas'){<div>Bananas</div>}
+					@default{<div>Not Found</div>}
+				}
+			</li>
+			<li class="list-group-item row">
+				<select class="form-select col-3" (change)="selectFruit = this.value">
+					@for(let fruit of fruits){<option [value]="fruit">{{fruit |> titlecase}}</option>}
+				</select>
+			</li>
+		</ul>
 		`
 })
 export class PersonApp {
@@ -172,6 +224,19 @@ export class PersonApp {
 			return `${person.name} is ${person.age} years old.`;
 		}
 	};
+
+	controlFlowSyntax = [
+		'@for(let user of people) {...}',
+		'@forOf(let user of people) {...}',
+		'@forIn(let key in people[0]) {...}',
+		'@forAwait(let num of asyncIterable) {...}',
+		`@switch(selectFruit){
+	@case('oranges'){<div>Oranges</div>}
+	@case('apples'){<div>Apples</div>}
+	@case('bananas'){<div>Bananas</div>}
+	@default{<div>Not Found</div>}
+}`
+	];
 
 	@HostListener('personEdit:input', ['$event'])
 	onPersonEdit(event: Event) {
