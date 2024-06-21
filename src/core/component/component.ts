@@ -57,7 +57,6 @@ export interface ComponentRef<T> {
 	selector: string;
 	template: DomNode | DomRenderNode<T>;
 	compiledTemplate?: DomNode;
-	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
 	extendCustomElement: boolean;

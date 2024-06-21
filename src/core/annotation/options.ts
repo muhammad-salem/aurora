@@ -99,13 +99,11 @@ export interface ComponentOptions<T = Class> {
 	templateUrl?: TemplateUrl | string;
 
 	/**
-	 * template: typeof 'string' ==> html string,
-	 * 			 TypeOf 'DomRootRenderNode<T>' ==> JSX, create factory
+	 * template: html string
 	 * 	if template === null || undefined ==> it had nothing to render, 
 	 * and may be inherit from an html element
 	 * 
-	 * 2 possible way to write a template, as inline string, represent a a valid html, 
-	 * or us aurora jsx factory 
+	 * write a template, as inline string, represent a a valid html.
 	 * 				
 	 */
 	template?: string | DomNode;

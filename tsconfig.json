@@ -6,7 +6,6 @@
 		{ "path": "src/html" },
 		{ "path": "src/platform" },
 		{ "path": "src/core" },
-		{ "path": "src/jsx" },
 		{ "path": "src/pipes" },
 		{ "path": "src/directives" },
 		{ "path": "src/forms" },

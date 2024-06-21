@@ -21,7 +21,6 @@
 		"strict": true,
 		"strictPropertyInitialization": false,
 		"removeComments": true,
-		"jsx": "react",
 		"allowJs": true
 	},
 	"include": [

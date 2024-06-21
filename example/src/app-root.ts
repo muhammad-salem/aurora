@@ -87,10 +87,6 @@ export class AppRoot implements OnInit {
 			load: () => import('./forms/simple-form.js').then(module => module.SimpleForm),
 		},
 		{
-			title: 'Jsx Components',
-			load: () => import('./jsx/test.js').then(module => module.JsxComponentTest),
-		},
-		{
 			title: 'Form Group Component',
 			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
 		},

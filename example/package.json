@@ -18,7 +18,6 @@
 	"dependencies": {
 		"@ibyar/aurora": "^1.2.2",
 		"@ibyar/forms": "^1.2.2",
-		"@ibyar/jsx": "^1.2.2",
 		"bootstrap": "^5.3.3",
 		"rxjs": "^7.8.1",
 		"tslib": "^2.6.3"
