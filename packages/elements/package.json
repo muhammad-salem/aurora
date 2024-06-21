@@ -35,11 +35,11 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"typescript": "^5.3.3"
+		"typescript": "^5.5.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/elements/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/elements/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

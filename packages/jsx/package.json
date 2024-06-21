@@ -37,15 +37,15 @@
 		"@ibyar/core": "^1.2.2",
 		"@ibyar/decorators": "^1.2.2",
 		"@ibyar/elements": "^1.2.2",
-		"tslib": "^2.6.2"
+		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
 		"csstype": "^3.1.0",
-		"typescript": "^5.3.3"
+		"typescript": "^5.5.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/jsx/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/jsx/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",
