@@ -146,6 +146,7 @@ yarn add @ibyar/aurora
 - [x] *switch and (*case, *default)
 
 
+ -- support control flow syntax
  -- see `directive syntax` [structural-directive-syntax-reference](https://github.com/ibyar/aurora/blob/dev/packages/directives/README.md#structural-directive-syntax-reference)
 
 #### Attributes Directives
@@ -270,6 +271,10 @@ import { interval, Subscription } from 'rxjs';
 	zone: 'AURORA',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
+	@for(let color of colors; let i = index, isOdd = odd) {
+		isOdd :{{ isOdd? 'odd': 'even'}}
+		color: {{color}}
+	}
 	<div *for="const color of colors">
 		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>
