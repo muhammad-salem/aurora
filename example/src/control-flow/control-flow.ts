@@ -4,7 +4,7 @@ import { Component } from '@ibyar/aurora';
 @Component({
 	selector: 'control-flow',
 	template: `
-		@for(let item of list; let i = index; let isFirst = first; let isLast = last;) {
+		@for(let item of list; let i = index, isFirst = first, isLast = last;) {
 			@if(isFirst){
 				<hr>
 			}
