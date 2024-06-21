@@ -457,6 +457,12 @@ export class NodeParser extends NodeParserHelper {
 			this.skipCount = 1;
 			return this.parseControlFlowExpression;
 		} else if (token === '{') {
+			if (this.tempText) {
+				this.stackTrace.push(new DomElementNode('template'));
+				this.currentNode.addAttribute('*' + this.tempText, true);
+				this.skipCount = 0;
+				this.flowName = '';
+			}
 			this.tempText = '';
 			this.flowScopeCount++;
 			return this.parseText;
