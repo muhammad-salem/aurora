@@ -205,6 +205,10 @@ export class NodeParser extends NodeParserHelper {
 		return this.stackTrace[this.stackTrace.length - 1] as DomElementNode;
 	}
 
+	private get lastChild(): DomChild {
+		return this.childStack[this.childStack.length - 1] as DomChild;
+	}
+
 	private commentOpenCount = 0;
 	private commentCloseCount = 0;
 
@@ -220,6 +224,7 @@ export class NodeParser extends NodeParserHelper {
 	private skipCount = 0;
 	private flowScopeCount = 0;
 	private interpolationCount = 0;
+	private successorDirective = false;
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -245,6 +250,11 @@ export class NodeParser extends NodeParserHelper {
 		this.propType = 'attr';
 		this.commentOpenCount = 0;
 		this.commentCloseCount = 0;
+		this.flowName = '';
+		this.skipCount = 0;
+		this.flowScopeCount = 0;
+		this.interpolationCount = 0;
+		this.successorDirective = false;
 		this.stateFn = this.parseText;
 		this.propertyName = this.propertyValue = this.tempText = '';
 	}
@@ -260,7 +270,7 @@ export class NodeParser extends NodeParserHelper {
 			if (token === '}') {
 				this.flowScopeCount--;
 				this.popElement();
-				return this.parseText;
+				return this.parsePossibleSuccessorsControlFlow;
 			}
 			return token === '<' ? this.parseTag : this.parseControlFlow;
 		} else if (token === '{') {
@@ -448,18 +458,16 @@ export class NodeParser extends NodeParserHelper {
 	}
 
 	private parseControlFlow(token: string) {
-		if (/\s/.test(token)) {
-			return this.parseControlFlow;
-		} else if (token === '(') {
-			this.flowName = '*' + this.tempText;
+		if (token === '(') {
+			this.flowName = '*' + this.tempText.trim();
 			this.stackTrace.push(new DomElementNode('template'));
 			this.tempText = '';
 			this.skipCount = 1;
 			return this.parseControlFlowExpression;
 		} else if (token === '{') {
-			if (this.tempText) {
+			if (this.tempText.trim()) {
 				this.stackTrace.push(new DomElementNode('template'));
-				this.currentNode.addAttribute('*' + this.tempText, true);
+				this.currentNode.addAttribute('*' + this.tempText.trim(), true);
 				this.skipCount = 0;
 				this.flowName = '';
 			}
@@ -484,6 +492,31 @@ export class NodeParser extends NodeParserHelper {
 		}
 		this.tempText += token;
 		return this.parseControlFlowExpression;
+	}
+
+	private parsePossibleSuccessorsControlFlow(token: string) {
+		if (/\s/.test(token)) {
+			this.tempText += token;
+			return this.parsePossibleSuccessorsControlFlow;
+		}
+		if (token === '@') {
+			this.tempText = '';
+			return this.parseSuccessorsControlFlowName;
+		}
+		this.index--;
+		return this.parseText;
+	}
+
+	private parseSuccessorsControlFlowName(token: string) {
+		if (token === '(' || token == '{') {
+			this.flowName = '*' + this.tempText.trim();
+			const leadDirective = this.lastChild! as DomStructuralDirectiveNode;
+			this.successorDirective = directiveRegistry.hasSuccessor(leadDirective.name, this.flowName);
+			this.index--;
+			return this.parseControlFlow;
+		}
+		this.tempText += token;
+		return this.parseSuccessorsControlFlowName;
 	}
 
 	private parsePropertyValue(token: string) {
@@ -542,7 +575,14 @@ export class NodeParser extends NodeParserHelper {
 				if (typeof element === 'string') {
 					parseTextChild(element).forEach(text => this.childStack.push(text));
 				} else if (element instanceof DomElementNode) {
-					this.childStack.push(this.checkNode(element));
+					const child = this.checkNode(element);
+					if (child instanceof DomStructuralDirectiveNode && this.successorDirective) {
+						const leadDirective = this.lastChild as DomStructuralDirectiveNode;
+						(leadDirective.successors ??= []).push(child);
+						this.successorDirective = false;
+					} else {
+						this.childStack.push(child);
+					}
 				} else {
 					this.childStack.push(element);
 				}
