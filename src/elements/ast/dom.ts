@@ -279,6 +279,11 @@ export class DomStructuralDirectiveNode extends BaseNode {
 	 */
 	node: DomNode;
 
+	/**
+	 * successors directives
+	 */
+	successors?: DomStructuralDirectiveNode[];
+
 	constructor(name: string, node: DomNode, value?: string) {
 		super();
 		this.name = name;
