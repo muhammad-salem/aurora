@@ -57,6 +57,12 @@ export interface DirectiveOptions {
 	 *  - if the web component zone is `aurora`, the directive zone also will be `aurora` and will get the benefit of `zone.js`.
 	 */
 	zone?: ZoneType;
+
+
+	/**
+	 * list of possible structure directive successor
+	 */
+	successors?: string[];
 }
 
 export interface ServiceOptions {

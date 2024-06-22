@@ -192,6 +192,7 @@ export class Components {
 		directiveRegistry.register(opts.selector, {
 			inputs: (metadata.inputs as PropertyRef[])?.map(input => input.viewAttribute),
 			outputs: (metadata.outputs as PropertyRef[])?.map(output => output.viewAttribute),
+			successors: (metadata.successors as string[] | undefined),
 		});
 	}
 
