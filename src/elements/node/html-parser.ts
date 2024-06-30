@@ -577,8 +577,8 @@ export class NodeParser extends NodeParserHelper {
 				} else if (element instanceof DomElementNode) {
 					const child = this.checkNode(element);
 					if (child instanceof DomStructuralDirectiveNode && this.successorDirective) {
-						const leadDirective = this.lastChild as DomStructuralDirectiveNode;
-						(leadDirective.successors ??= []).push(child);
+						const leadDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
+						leadDirective.successor = child;
 						this.successorDirective = false;
 					} else {
 						this.childStack.push(child);
@@ -590,6 +590,13 @@ export class NodeParser extends NodeParserHelper {
 		}
 	}
 
+}
+
+function chainSuccessor(directive: DomStructuralDirectiveNode): DomStructuralDirectiveNode {
+	if (directive.successor) {
+		return chainSuccessor(directive.successor);
+	}
+	return directive;
 }
 
 function createFilterByAttrName(attributes: string[]) {
