@@ -105,7 +105,7 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	if (elementExpression instanceof MemberExpression) {
 		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
-		console.error(`${attr.name} is not a valid MemberExpression 'x.y.z'`);
+		console.error(`[${attr.name}] is not a valid MemberExpression 'x.y.z'`);
 	}
 	attr.pipelineNames = getPipelineNames(modelExpression);
 }
@@ -164,6 +164,9 @@ function parseChild(child: DomNode) {
 		// in case if add input/output support need to handle that here.
 		parseChild(child.node);
 		parseBaseNode(child);
+		if (child.successor) {
+			parseChild(child.successor);
+		}
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	} else if (child instanceof DomFragmentNode) {
