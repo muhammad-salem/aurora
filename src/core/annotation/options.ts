@@ -60,9 +60,9 @@ export interface DirectiveOptions {
 
 
 	/**
-	 * list of possible structure directive successor
+	 * name of possible structure directive successor
 	 */
-	successors?: string[];
+	successor?: string;
 }
 
 export interface ServiceOptions {
