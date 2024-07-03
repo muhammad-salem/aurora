@@ -13,6 +13,7 @@ export class StructuralDirective {
 		protected viewContainerRef: ViewContainerRef,
 		protected host: HTMLComponent<any> | StructuralDirective,
 		protected _zone: AuroraZone,
+		protected successor?: TemplateRef,
 	) { }
 }
 

@@ -120,6 +120,16 @@ export class ComponentRender<T extends object> {
 			stack,
 			(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? [],
 		);
+		let successorTemplateRef: TemplateRef | undefined;
+		if (directive.successor) {
+			successorTemplateRef = new TemplateRefImpl(
+				this,
+				directive.successor,
+				stack,
+				[]
+			);
+		}
+
 		const directiveZone = this.view._zone.fork(directiveRef.zone);
 		const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
@@ -136,7 +146,9 @@ export class ComponentRender<T extends object> {
 			viewContainerRef,
 			host,
 			directiveZone,
+			successorTemplateRef,
 		));
+
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		scope.getInnerScope('this')!.getContextProxy = () => structural;
@@ -154,7 +166,6 @@ export class ComponentRender<T extends object> {
 		if (isOnDestroy(structural)) {
 			subscriptions.push(createDestroySubscription(() => structural.onDestroy()));
 		}
-
 	}
 	createComment(node: CommentNode): Comment {
 		return document.createComment(`${node.comment}`);
