@@ -58,6 +58,9 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 	protected _updateUI() {
 		if (!this._forOf || this._forOf.length == 0) {
 			this.viewContainerRef.clear();
+			if (this.successor) {
+				this.viewContainerRef.createEmbeddedView(this.successor);
+			}
 			return;
 		}
 		const lastContext: ForOfContext<T>[] = new Array(this.viewContainerRef.length);
@@ -116,8 +119,9 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 
 @Directive({
 	selector: '*for',
+	successor: '*empty',
 })
-export class ForDirective<T> extends AbstractForDirective<T>  {
+export class ForDirective<T> extends AbstractForDirective<T> {
 
 	@Input('of')
 	set forOf(forOf: T[] | null | undefined) {
@@ -139,6 +143,7 @@ export class ForDirective<T> extends AbstractForDirective<T>  {
 
 @Directive({
 	selector: '*forOf',
+	successor: '*empty',
 })
 export class ForOfDirective<T> extends AbstractForDirective<T> {
 
@@ -162,6 +167,7 @@ export class ForOfDirective<T> extends AbstractForDirective<T> {
 
 @Directive({
 	selector: '*forAwait',
+	successor: '*empty',
 })
 export class ForAwaitDirective<T> extends StructuralDirective implements OnDestroy {
 
@@ -176,6 +182,9 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 	private async _updateUI() {
 		this.viewContainerRef.clear();
 		if (!this._forAwait) {
+			if (this.successor) {
+				this.viewContainerRef.createEmbeddedView(this.successor);
+			}
 			return;
 		}
 		const previousContext: ForContext<T>[] = [];
@@ -199,6 +208,7 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 
 @Directive({
 	selector: '*forIn',
+	successor: '*empty',
 })
 export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralDirective implements OnDestroy {
 
@@ -213,6 +223,9 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 	private _updateUI() {
 		this.viewContainerRef.clear();
 		if (!this._forIn) {
+			if (this.successor) {
+				this.viewContainerRef.createEmbeddedView(this.successor);
+			}
 			return;
 		}
 		const keys = Object.keys(this._forIn) as PropertyKey[];
@@ -220,6 +233,9 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 			const context = new ForInContext<PropertyKey>(key, array, index, array.length);
 			this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 		});
+		if (keys.length == 0 && this.successor) {
+			this.viewContainerRef.createEmbeddedView(this.successor);
+		}
 	}
 
 	onDestroy() {
