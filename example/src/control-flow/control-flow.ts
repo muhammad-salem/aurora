@@ -13,6 +13,20 @@ import { Component } from '@ibyar/aurora';
 				<hr>
 			}
 		}
+
+		@if(false) {
+			if
+		} @else if(true) {
+			else if
+		} @else {
+			else
+		}
+
+		@for(x of []) {
+			show {{x}}
+		} @empty {
+			empty for of
+		}
 	`
 })
 export class ControlFlowExample {
