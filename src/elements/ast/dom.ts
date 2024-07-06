@@ -225,15 +225,16 @@ export class DomFragmentNode extends DomParentNode {
 /**
  * dom structural successor structural fragment node
  */
-export class DomSuccessorStructuralFragmentNode extends DomFragmentNode {
+export class DomStructuralDirectiveSuccessorNode extends DomFragmentNode {
 	declare children: [DomStructuralDirectiveNode];
 	constructor(private successorName: string) {
 		super([]);
 	}
 	oJSON() {
-		return Object.assign({}, this, { type: 'DomSuccessorStructuralFragmentNode' });
+		return Object.assign({}, this, { type: 'StructuralDirectiveSuccessorNode' });
 	}
 }
+
 export class DomElementNode extends DomParentNode {
 
 	/**
@@ -295,7 +296,7 @@ export class DomStructuralDirectiveNode extends BaseNode {
 	/**
 	 * successors directives
 	 */
-	successor?: DomSuccessorStructuralFragmentNode;
+	successor?: DomStructuralDirectiveSuccessorNode;
 
 	constructor(name: string, node: DomNode, value?: string) {
 		super();
