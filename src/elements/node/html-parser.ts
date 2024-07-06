@@ -3,14 +3,15 @@ import {
 	DomElementNode, CommentNode, parseTextChild,
 	TextContent, LiveTextContent, DomFragmentNode,
 	DomStructuralDirectiveNode, DomNode, DomChild,
-	ElementAttribute, Attribute, DomAttributeDirectiveNode,
-	BaseNode, LiveAttribute, DomSuccessorStructuralFragmentNode
+	ElementAttribute, Attribute, BaseNode, LiveAttribute,
+	DomParentNode, DomAttributeDirectiveNode,
+	DomStructuralDirectiveSuccessorNode,
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DomElementNode | CommentNode | string;
+type ChildNode = DomElementNode | DomStructuralDirectiveSuccessorNode | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -224,7 +225,6 @@ export class NodeParser extends NodeParserHelper {
 	private skipCount = 0;
 	private flowScopeCount = 0;
 	private interpolationCount = 0;
-	private successorDirective = false;
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -254,25 +254,36 @@ export class NodeParser extends NodeParserHelper {
 		this.skipCount = 0;
 		this.flowScopeCount = 0;
 		this.interpolationCount = 0;
-		this.successorDirective = false;
 		this.stateFn = this.parseText;
 		this.propertyName = this.propertyValue = this.tempText = '';
 	}
 
 	private parseText(token: string) {
-		if (token === '<' || token === '@' || (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}')) {
+		if (token === '<' || token === '@') {
 			if (this.tempText) {
 				this.tempText = this.escaper.unescape(this.tempText);
 				this.stackTrace.push(this.tempText);
 				this.popElement();
 				this.tempText = '';
 			}
-			if (token === '}') {
-				this.flowScopeCount--;
+			return token === '<' ? this.parseTag : this.parseControlFlow;
+		}
+		else if (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}') {
+			if (this.tempText.trim()) {
+				this.tempText = this.escaper.unescape(this.tempText);
+				this.stackTrace.push(this.tempText);
 				this.popElement();
+				this.tempText = '';
+			}
+			this.flowScopeCount--;
+			this.popElement();
+			this.popElement();
+			const lastDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
+			if (!lastDirective.successor && directiveRegistry.hasSuccessors(lastDirective.name)) {
 				return this.parsePossibleSuccessorsControlFlow;
 			}
-			return token === '<' ? this.parseTag : this.parseControlFlow;
+			this.flowName = '';
+			return this.parseText;
 		} else if (token === '{') {
 			this.interpolationCount++;
 		} else if (token === '}') {
@@ -469,7 +480,6 @@ export class NodeParser extends NodeParserHelper {
 				this.stackTrace.push(new DomElementNode('template'));
 				this.currentNode.addAttribute('*' + this.tempText.trim(), true);
 				this.skipCount = 0;
-				this.flowName = '';
 			}
 			this.tempText = '';
 			this.flowScopeCount++;
@@ -484,7 +494,7 @@ export class NodeParser extends NodeParserHelper {
 			this.skipCount--;
 			if (this.skipCount == 0) {
 				this.currentNode.addAttribute(this.flowName, this.tempText);
-				this.flowName = this.tempText = '';
+				this.tempText = '';
 				return this.parseControlFlow;
 			}
 		} else if (token === '(') {
@@ -510,15 +520,13 @@ export class NodeParser extends NodeParserHelper {
 	private parsePossibleSuccessorsControlFlowName(token: string) {
 		if (/\s/.test(token) || token === '{') {
 			const successorFlowName = '*' + this.tempText.trim();
-			this.tempText = '';
-			if (this.lastChild instanceof DomStructuralDirectiveNode) {
-				const leadDirective = chainSuccessor(this.lastChild);
-				this.successorDirective = directiveRegistry.hasSuccessor(leadDirective.name, successorFlowName);
-				if (this.successorDirective) {
-					const successorTemplate = new DomSuccessorStructuralFragmentNode(successorFlowName);
-					leadDirective.successor = successorTemplate;
-				}
+			const isSuccessor = directiveRegistry.hasSuccessor(this.flowName, successorFlowName);
+			if (!isSuccessor) {
+				return this.parseControlFlow;
 			}
+			this.tempText = '';
+			const successorTemplate = new DomStructuralDirectiveSuccessorNode(successorFlowName);
+			this.stackTrace.push(successorTemplate);
 			return this.parseSuccessorsControlFlowName;
 		}
 		this.tempText += token;
@@ -575,36 +583,34 @@ export class NodeParser extends NodeParserHelper {
 
 	private popElement() {
 		const element = this.stackTrace.pop();
-		if (element) {
-			const parent = this.stackTrace.pop();
-			if (parent && parent instanceof DomElementNode) {
-				if (typeof element === 'string') {
-					parent.addTextChild(element);
-				} else if (element instanceof DomElementNode) {
-					parent.addChild(this.checkNode(element));
+		if (!element) {
+			return;
+		}
+		const parent = this.stackTrace.pop();
+		if (parent && parent instanceof DomParentNode) {
+			if (typeof element === 'string') {
+				parent.addTextChild(element);
+			} else if (element instanceof DomElementNode) {
+				parent.addChild(this.checkNode(element));
+			} else if (element instanceof CommentNode) {
+				parent.addChild(element);
+			}
+			this.stackTrace.push(parent);
+		} else {
+			if (typeof element === 'string') {
+				parseTextChild(element).forEach(text => this.childStack.push(text));
+			} else if (element instanceof DomElementNode) {
+				const child = this.checkNode(element);
+				this.childStack.push(child);
+			} else if (element instanceof DomStructuralDirectiveSuccessorNode) {
+				if (this.lastChild instanceof DomStructuralDirectiveNode) {
+					const leadDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
+					leadDirective.successor = element;
 				} else {
-					parent.addChild(element);
+					throw new SyntaxError('Error while parsing structural directive successor node');
 				}
-				this.stackTrace.push(parent);
 			} else {
-				if (typeof element === 'string') {
-					const children = parseTextChild(element);
-					const childStack = this.successorDirective
-						? (chainSuccessor(this.lastChild as DomStructuralDirectiveNode).successor?.children ?? [])
-						: this.childStack;
-					parseTextChild(element).forEach(text => childStack.push(text));
-				} else if (element instanceof DomElementNode) {
-					const child = this.checkNode(element);
-					if (child instanceof DomStructuralDirectiveNode && this.successorDirective) {
-						const leadDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
-						leadDirective.successor?.addChild(child);
-						this.successorDirective = false;
-					} else {
-						this.childStack.push(child);
-					}
-				} else {
-					this.childStack.push(element);
-				}
+				this.childStack.push(element);
 			}
 		}
 	}
@@ -612,7 +618,7 @@ export class NodeParser extends NodeParserHelper {
 }
 
 function chainSuccessor(directive: DomStructuralDirectiveNode): DomStructuralDirectiveNode {
-	if (directive.successor instanceof DomSuccessorStructuralFragmentNode && directive.successor.children.length > 0) {
+	if (directive.successor instanceof DomStructuralDirectiveSuccessorNode && directive.successor.children[0] instanceof DomStructuralDirectiveNode) {
 		return chainSuccessor(directive.successor.children[0]);
 	}
 	return directive;
