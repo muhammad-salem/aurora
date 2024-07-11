@@ -636,15 +636,6 @@ export class NodeParser extends NodeParserHelper {
 		}
 		return undefined;
 	}
-	private setLastElementDomStructuralDirectiveNode() {
-		if (this.stackTrace[this.stackTrace.length - 1] instanceof DomStructuralDirectiveNode) {
-			return;
-		} else if (this.childStack[this.childStack.length - 1] instanceof DomStructuralDirectiveNode) {
-			this.stackTrace.push(this.childStack.pop() as DomElementNode);
-		} else {
-			throw new Error(`parsing error, can't find las Structural Directive Node.`);
-		}
-	}
 
 }
 
