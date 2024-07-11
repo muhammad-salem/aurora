@@ -230,7 +230,7 @@ export class DomStructuralDirectiveSuccessorNode extends DomFragmentNode {
 	constructor(private successorName: string) {
 		super([]);
 	}
-	oJSON() {
+	toJSON() {
 		return Object.assign({}, this, { type: 'StructuralDirectiveSuccessorNode' });
 	}
 }
@@ -301,7 +301,7 @@ export class DomStructuralDirectiveNode extends BaseNode {
 	constructor(name: string, node: DomNode, value?: string) {
 		super();
 		this.name = name;
-		this.node = node;
+		this.node = node!;
 		this.value = value;
 	}
 
