@@ -13,21 +13,7 @@ import { Component } from '@ibyar/aurora';
 				<hr>
 			}
 		}
-		@for(let x of []){x}@empty{y}@if('bool'){a}@else if(false){b}@else{c}@for(let x of []){m}@empty{n}
-
-		@if(false) {
-			if
-		} @else if(true) {
-			else if
-		} @else {
-			else
-		}
-
-		@for(x of []) {
-			show {{x}}
-		} @empty {
-			empty for of
-		}
+		print yes => @for(let x of []){x}@empty{y}@if('bool'){e}@else if(false){b}@else{c}@for(let x of []){m}@empty{n}
 	`
 })
 export class ControlFlowExample {
