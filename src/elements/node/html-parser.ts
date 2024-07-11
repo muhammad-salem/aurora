@@ -257,20 +257,11 @@ export class NodeParser extends NodeParserHelper {
 
 	private parseText(token: string) {
 		if (token === '<' || token === '@') {
-			if (this.tempText) {
-				this.tempText = this.escaper.unescape(this.tempText);
-				this.stackTrace.push(this.tempText);
-				this.popElement();
-				this.tempText = '';
-			}
+			this.checkTextChild();
 			return token === '<' ? this.parseTag : this.parseControlFlow;
 		}
 		else if (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}') {
-			if (this.tempText) {
-				this.tempText = this.escaper.unescape(this.tempText);
-				this.stackTrace.push(this.tempText);
-				this.popElement();
-			}
+			this.checkTextChild();
 			this.tempText = '';
 			this.flowScopeCount--;
 			const directive = this.getLastStructuralDirectiveNode();
@@ -279,9 +270,7 @@ export class NodeParser extends NodeParserHelper {
 				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
 					return this.parsePossibleSuccessorsControlFlow;
 				}
-				while (this.currentNode instanceof DomStructuralDirectiveNode) {
-					this.popElement();
-				}
+				this.popStructuralDirectiveNodes();
 			}
 			return this.parseText;
 		} else if (token === '{') {
@@ -510,6 +499,7 @@ export class NodeParser extends NodeParserHelper {
 			this.tempText = '';
 			return this.parsePossibleSuccessorsControlFlowName;
 		}
+		this.popStructuralDirectiveNodes();
 		this.index--;
 		return this.parseText;
 	}
@@ -530,9 +520,7 @@ export class NodeParser extends NodeParserHelper {
 			this.tempText += token;
 			return this.parseText;
 		} else if (token === '(') {
-			while (this.currentNode instanceof DomStructuralDirectiveNode) {
-				this.popElement();
-			}
+			this.popStructuralDirectiveNodes();
 			this.index--;
 			return this.parseControlFlow;
 		}
@@ -586,6 +574,21 @@ export class NodeParser extends NodeParserHelper {
 		}
 		this.tempText += token;
 		return this.parsePropertyValue;
+	}
+
+	private checkTextChild() {
+		if (this.tempText) {
+			this.tempText = this.escaper.unescape(this.tempText);
+			this.stackTrace.push(this.tempText);
+			this.popElement();
+			this.tempText = '';
+		}
+	}
+
+	private popStructuralDirectiveNodes() {
+		while (this.currentNode instanceof DomStructuralDirectiveNode) {
+			this.popElement();
+		}
 	}
 
 	private popElement() {
