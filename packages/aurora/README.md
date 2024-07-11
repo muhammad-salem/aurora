@@ -111,6 +111,7 @@ yarn add @ibyar/aurora
 | Event Binding | ✓ |
 | Template Parser | ✓ |
 | Template Syntax | ✓ |
+| Control Flow Syntax | ✓ |
 | Template Reference Variables | ✓ |
 | Template HTML File | fetch or embedded |
 | Fragment | ✓ |
