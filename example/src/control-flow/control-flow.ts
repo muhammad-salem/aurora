@@ -13,6 +13,7 @@ import { Component } from '@ibyar/aurora';
 				<hr>
 			}
 		}
+		@for(let x of []){x}@empty{y}@if('bool'){a}@else if(false){b}@else{c}@for(let x of []){m}@empty{n}
 
 		@if(false) {
 			if
