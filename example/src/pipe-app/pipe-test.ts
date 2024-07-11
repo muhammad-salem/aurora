@@ -100,26 +100,31 @@ import { interval, Subscription } from 'rxjs';
 						<div class="col-10">
 							<div class="row">
 								<div class="col-2">
+									<label>unit:</label>
 									<select #selectUnit class="form-select col-3" (change)="unit = selectUnit.value">
 										<option *forOf="let u of units" [value]="u" [selected]="unit === u">{{u}}</option>
 									</select>
 								</div>
 								<div class="col-2">
+									<label>lang:</label>
 									<select #selectLang class="form-select col-3" (change)="lang = selectLang.value">
 										<option *forOf="let l of langs" [value]="l" [selected]="lang === l">{{l}}</option>
 									</select>
 								</div>
 								<div class="col-2">
+									<label>numeric:</label>
 									<select class="form-select col-3" (change)="updateOptions('numeric', this.value)">
 										<option *forOf="let n of numerics" [value]="n" [selected]="options.numeric === n">{{n}}</option>
 									</select>
 								</div>
 								<div class="col-2">
+									<label>style:</label>
 									<select class="form-select col-3" (change)="updateOptions('style', this.value)">
 										<option *forOf="let s of styles" [value]="s" [selected]="options.style === s">{{s}}</option>
 									</select>
 								</div>
 								<div class="col-2">
+									<label>localeMatcher:</label>
 									<select class="form-select col-3" (change)="updateOptions('localeMatcher', this.value)">
 										<option *forOf="let m of localeMatchers" [value]="m" [selected]="options.localeMatcher === m">{{m}}</option>
 									</select>
@@ -205,7 +210,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 	currentColor = this.colors[0];
 
 	date = new Date();
-	lang = 'en';
+	lang = 'ar';
 	options: Intl.RelativeTimeFormatOptions = {
 		numeric: 'auto',
 		style: 'long',
