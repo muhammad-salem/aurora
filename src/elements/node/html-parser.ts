@@ -499,7 +499,7 @@ export class NodeParser extends NodeParserHelper {
 			this.tempText = '';
 			return this.parsePossibleSuccessorsControlFlowName;
 		}
-		this.popStructuralDirectiveNodes();
+		this.popElement();
 		this.index--;
 		return this.parseText;
 	}
