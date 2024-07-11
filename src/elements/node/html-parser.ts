@@ -11,7 +11,7 @@ import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DomElementNode | DomStructuralDirectiveSuccessorNode | CommentNode | string;
+type ChildNode = DomElementNode | DomStructuralDirectiveNode | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -45,6 +45,9 @@ export class EscapeHTMLCharacter {
 export class NodeParserHelper {
 
 	protected checkNode(node: DomElementNode): DomElementNode | DomStructuralDirectiveNode {
+		if (node instanceof DomStructuralDirectiveNode) {
+			return node;
+		}
 		const attributes = node.attributes;
 		if (attributes) {
 			let temp: ElementAttribute<string, any> | ElementAttribute<string, any>[] | undefined;
@@ -206,10 +209,6 @@ export class NodeParser extends NodeParserHelper {
 		return this.stackTrace[this.stackTrace.length - 1] as DomElementNode;
 	}
 
-	private get lastChild(): DomChild {
-		return this.childStack[this.childStack.length - 1] as DomChild;
-	}
-
 	private commentOpenCount = 0;
 	private commentCloseCount = 0;
 
@@ -221,7 +220,6 @@ export class NodeParser extends NodeParserHelper {
 
 	private escaper = new EscapeHTMLCharacter();
 
-	private flowName: string;
 	private skipCount = 0;
 	private flowScopeCount = 0;
 	private interpolationCount = 0;
@@ -250,7 +248,6 @@ export class NodeParser extends NodeParserHelper {
 		this.propType = 'attr';
 		this.commentOpenCount = 0;
 		this.commentCloseCount = 0;
-		this.flowName = '';
 		this.skipCount = 0;
 		this.flowScopeCount = 0;
 		this.interpolationCount = 0;
@@ -269,20 +266,23 @@ export class NodeParser extends NodeParserHelper {
 			return token === '<' ? this.parseTag : this.parseControlFlow;
 		}
 		else if (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}') {
-			if (this.tempText.trim()) {
+			if (this.tempText) {
 				this.tempText = this.escaper.unescape(this.tempText);
 				this.stackTrace.push(this.tempText);
 				this.popElement();
-				this.tempText = '';
 			}
+			this.tempText = '';
 			this.flowScopeCount--;
-			this.popElement();
-			this.popElement();
-			const lastDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
-			if (!lastDirective.successor && directiveRegistry.hasSuccessors(lastDirective.name)) {
-				return this.parsePossibleSuccessorsControlFlow;
+			const directive = this.getLastStructuralDirectiveNode();
+			if (directive) {
+				const lastDirective = chainSuccessor(directive);
+				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
+					return this.parsePossibleSuccessorsControlFlow;
+				}
+				while (this.currentNode instanceof DomStructuralDirectiveNode) {
+					this.popElement();
+				}
 			}
-			this.flowName = '';
 			return this.parseText;
 		} else if (token === '{') {
 			this.interpolationCount++;
@@ -470,17 +470,13 @@ export class NodeParser extends NodeParserHelper {
 
 	private parseControlFlow(token: string) {
 		if (token === '(') {
-			this.flowName = '*' + this.tempText.trim();
-			this.stackTrace.push(new DomElementNode('template'));
+			const flowName = '*' + this.tempText.trim();
+			this.stackTrace.push(new DomStructuralDirectiveNode(flowName, new DomFragmentNode()));
 			this.tempText = '';
 			this.skipCount = 1;
 			return this.parseControlFlowExpression;
 		} else if (token === '{') {
-			if (this.tempText.trim()) {
-				this.stackTrace.push(new DomElementNode('template'));
-				this.currentNode.addAttribute('*' + this.tempText.trim(), true);
-				this.skipCount = 0;
-			}
+			this.skipCount = 0;
 			this.tempText = '';
 			this.flowScopeCount++;
 			return this.parseText;
@@ -492,11 +488,12 @@ export class NodeParser extends NodeParserHelper {
 	private parseControlFlowExpression(token: string) {
 		if (token === ')') {
 			this.skipCount--;
-			if (this.skipCount == 0) {
-				this.currentNode.addAttribute(this.flowName, this.tempText);
+			if (this.skipCount == 0 && this.currentNode instanceof DomStructuralDirectiveNode) {
+				this.currentNode.value = this.tempText;
 				this.tempText = '';
 				return this.parseControlFlow;
 			}
+			throw new SyntaxError(`Control Flow Expression Syntax Error`);
 		} else if (token === '(') {
 			this.skipCount++;
 		}
@@ -520,21 +517,31 @@ export class NodeParser extends NodeParserHelper {
 	private parsePossibleSuccessorsControlFlowName(token: string) {
 		if (/\s/.test(token) || token === '{') {
 			const successorFlowName = '*' + this.tempText.trim();
-			const isSuccessor = directiveRegistry.hasSuccessor(this.flowName, successorFlowName);
-			if (!isSuccessor) {
-				return this.parseControlFlow;
+			const directive = this.getLastStructuralDirectiveNode();
+			if (directive) {
+				const isSuccessor = directiveRegistry.hasSuccessor(directive.name, successorFlowName);
+				if (isSuccessor) {
+					directive.successor = new DomStructuralDirectiveSuccessorNode(successorFlowName);
+					this.tempText = '';
+					this.index--;
+					return this.parseSuccessorsControlFlowName;
+				}
 			}
-			this.tempText = '';
-			const successorTemplate = new DomStructuralDirectiveSuccessorNode(successorFlowName);
-			this.stackTrace.push(successorTemplate);
-			return this.parseSuccessorsControlFlowName;
+			this.tempText += token;
+			return this.parseText;
+		} else if (token === '(') {
+			while (this.currentNode instanceof DomStructuralDirectiveNode) {
+				this.popElement();
+			}
+			this.index--;
+			return this.parseControlFlow;
 		}
 		this.tempText += token;
 		return this.parsePossibleSuccessorsControlFlowName;
 	}
 
 	private parseSuccessorsControlFlowName(token: string) {
-		if (token === '(' || token == '{') {
+		if (token === '(' || token === '{') {
 			this.index--;
 			return this.parseControlFlow;
 		}
@@ -586,32 +593,56 @@ export class NodeParser extends NodeParserHelper {
 		if (!element) {
 			return;
 		}
-		const parent = this.stackTrace.pop();
-		if (parent && parent instanceof DomParentNode) {
+		let parent: ChildNode | DomFragmentNode | undefined = this.stackTrace.pop();
+		let directive: DomStructuralDirectiveNode | undefined;
+		if (parent instanceof DomStructuralDirectiveNode && parent.node instanceof DomFragmentNode) {
+			directive = parent;
+			parent = parent.successor ?? parent.node ?? parent;
+		}
+		if (parent instanceof DomParentNode) {
 			if (typeof element === 'string') {
 				parent.addTextChild(element);
 			} else if (element instanceof DomElementNode) {
 				parent.addChild(this.checkNode(element));
-			} else if (element instanceof CommentNode) {
-				parent.addChild(element);
+			} else {
+				parent.addChild(element)
 			}
-			this.stackTrace.push(parent);
+			this.stackTrace.push(directive ?? parent as ChildNode);
 		} else {
 			if (typeof element === 'string') {
 				parseTextChild(element).forEach(text => this.childStack.push(text));
 			} else if (element instanceof DomElementNode) {
 				const child = this.checkNode(element);
 				this.childStack.push(child);
-			} else if (element instanceof DomStructuralDirectiveSuccessorNode) {
-				if (this.lastChild instanceof DomStructuralDirectiveNode) {
-					const leadDirective = chainSuccessor(this.lastChild as DomStructuralDirectiveNode);
-					leadDirective.successor = element;
-				} else {
-					throw new SyntaxError('Error while parsing structural directive successor node');
-				}
-			} else {
+			}
+			else {
 				this.childStack.push(element);
 			}
+		}
+	}
+
+	private getLastStructuralDirectiveNode() {
+		for (let i = this.stackTrace.length - 1; i >= 0; i--) {
+			const el = this.stackTrace[i];
+			if (el instanceof DomStructuralDirectiveNode) {
+				return el;
+			}
+		}
+		for (let i = this.childStack.length - 1; i >= 0; i--) {
+			const el = this.childStack[i];
+			if (el instanceof DomStructuralDirectiveNode) {
+				return el;
+			}
+		}
+		return undefined;
+	}
+	private setLastElementDomStructuralDirectiveNode() {
+		if (this.stackTrace[this.stackTrace.length - 1] instanceof DomStructuralDirectiveNode) {
+			return;
+		} else if (this.childStack[this.childStack.length - 1] instanceof DomStructuralDirectiveNode) {
+			this.stackTrace.push(this.childStack.pop() as DomElementNode);
+		} else {
+			throw new Error(`parsing error, can't find las Structural Directive Node.`);
 		}
 	}
 
