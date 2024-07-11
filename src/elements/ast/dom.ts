@@ -227,7 +227,7 @@ export class DomFragmentNode extends DomParentNode {
  */
 export class DomStructuralDirectiveSuccessorNode extends DomFragmentNode {
 	declare children: [DomStructuralDirectiveNode];
-	constructor(private successorName: string) {
+	constructor(public name: string) {
 		super([]);
 	}
 	toJSON() {
