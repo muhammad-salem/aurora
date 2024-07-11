@@ -229,9 +229,8 @@ export class NodeParser extends NodeParserHelper {
 		for (; this.index < html.length; this.index++) {
 			this.stateFn = this.stateFn(html[this.index]);
 		}
-		if (this.tempText && this.stateFn === this.parseText) {
-			this.stateFn('<');
-		}
+		this.checkTextChild();
+		this.popStructuralDirectiveNodes();
 		if (this.stackTrace.length > 0) {
 			console.error(this.stackTrace);
 			throw new Error(`error parsing html, had ${this.stackTrace.length} element, [${(this.stackTrace as DomElementNode[]).map(dom => dom.tagName).join(', ')}], with no closing tag`);
