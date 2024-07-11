@@ -57,7 +57,6 @@ export interface ComponentRef<T> {
 	selector: string;
 	template: DomNode | DomRenderNode<T>;
 	compiledTemplate?: DomNode;
-	// attrTemplate: JsxAttrComponent;
 	styles: string;
 	extend: Tag;
 	extendCustomElement: boolean;
@@ -193,6 +192,7 @@ export class Components {
 		directiveRegistry.register(opts.selector, {
 			inputs: (metadata.inputs as PropertyRef[])?.map(input => input.viewAttribute),
 			outputs: (metadata.outputs as PropertyRef[])?.map(output => output.viewAttribute),
+			successor: (metadata.successor as string | undefined),
 		});
 	}
 

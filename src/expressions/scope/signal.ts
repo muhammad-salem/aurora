@@ -165,6 +165,14 @@ export abstract class ReactiveNode<T> {
 		return this.scope.get(this.index);
 	}
 
+	getScope() {
+		this.scope;
+	}
+
+	getIndex() {
+		this.index;
+	}
+
 	subscribe(callback: ValueChangedCallback) {
 		return this.scope.subscribe(this.index, callback);
 	}

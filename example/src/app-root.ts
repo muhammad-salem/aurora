@@ -87,10 +87,6 @@ export class AppRoot implements OnInit {
 			load: () => import('./forms/simple-form.js').then(module => module.SimpleForm),
 		},
 		{
-			title: 'Jsx Components',
-			load: () => import('./jsx/test.js').then(module => module.JsxComponentTest),
-		},
-		{
 			title: 'Form Group Component',
 			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
 		},
@@ -109,6 +105,10 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Scope Signal',
 			load: () => import('./signals/signal.js').then(module => module.SimpleCounter),
+		},
+		{
+			title: 'Control Flow',
+			load: () => import('./control-flow/control-flow.js').then(module => module.ControlFlowExample),
 		}
 	];
 

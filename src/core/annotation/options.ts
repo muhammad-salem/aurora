@@ -57,6 +57,12 @@ export interface DirectiveOptions {
 	 *  - if the web component zone is `aurora`, the directive zone also will be `aurora` and will get the benefit of `zone.js`.
 	 */
 	zone?: ZoneType;
+
+
+	/**
+	 * name of possible structure directive successor
+	 */
+	successor?: string;
 }
 
 export interface ServiceOptions {
@@ -99,13 +105,11 @@ export interface ComponentOptions<T = Class> {
 	templateUrl?: TemplateUrl | string;
 
 	/**
-	 * template: typeof 'string' ==> html string,
-	 * 			 TypeOf 'DomRootRenderNode<T>' ==> JSX, create factory
+	 * template: html string
 	 * 	if template === null || undefined ==> it had nothing to render, 
 	 * and may be inherit from an html element
 	 * 
-	 * 2 possible way to write a template, as inline string, represent a a valid html, 
-	 * or us aurora jsx factory 
+	 * write a template, as inline string, represent a a valid html.
 	 * 				
 	 */
 	template?: string | DomNode;

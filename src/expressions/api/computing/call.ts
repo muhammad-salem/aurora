@@ -51,6 +51,9 @@ export class CallExpression extends AbstractExpressionNode {
 		const parameters: any[] = this.getCallParameters(stack);
 		if (!thisContext && this.callee instanceof MemberExpression) {
 			thisContext = this.callee.getObject().get(stack);
+			if ((funCallBack === null || funCallBack === undefined) && (this.callee as MemberExpression).getOptional()) {
+				return;
+			}
 		} else if (!thisContext && this.callee instanceof Identifier) {
 			thisContext = stack.findScope(this.callee.getName()).getContextProxy?.();
 		}

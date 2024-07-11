@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/expressions",
-	"version": "1.2.2",
+	"version": "2.0.0",
 	"description": "Aurora expression, an template expression and evaluation, An 100% spec compliant ES2022 JavaScript toolchain,",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/expressions",
@@ -36,15 +36,15 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/decorators": "^1.2.2",
-		"tslib": "^2.6.2"
+		"@ibyar/decorators": "^2.0.0",
+		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
-		"typescript": "^5.3.3"
+		"typescript": "^5.5.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/expressions/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/expressions/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

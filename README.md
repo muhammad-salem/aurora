@@ -67,12 +67,12 @@ Ibyar Aurora, is a web framework, that can create and define a Web Component sta
 
 This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
 
-- Demo: https://ibyar.github.io/aurora-demo
-- API Doc: https://ibyar.github.io/aurora-docs
-- Ibyar Expression & Elements parser: https://ibyar.github.io/astexplorer/
+- Demo: https://muhammad-salem.github.io/aurora-demo
+- API Doc: https://muhammad-salem.github.io/aurora-docs
+- Ibyar Expression & Elements parser: https://muhammad-salem.github.io/astexplorer
 	- select: JavaScript: @ibyar/expressions
 	- select: HTML: @ibyar/elements
-- Custom Elements Everywhere for Aurora Test & Results: https://ibyar.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
+- Custom Elements Everywhere for Aurora Test & Results: https://muhammad-salem.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
 
 ## `Install`
 
@@ -111,6 +111,7 @@ yarn add @ibyar/aurora
 | Event Binding | ✓ |
 | Template Parser | ✓ |
 | Template Syntax | ✓ |
+| Control Flow Syntax | ✓ |
 | Template Reference Variables | ✓ |
 | Template HTML File | fetch or embedded |
 | Fragment | ✓ |
@@ -146,6 +147,7 @@ yarn add @ibyar/aurora
 - [x] *switch and (*case, *default)
 
 
+ -- support control flow syntax
  -- see `directive syntax` [structural-directive-syntax-reference](https://github.com/ibyar/aurora/blob/dev/packages/directives/README.md#structural-directive-syntax-reference)
 
 #### Attributes Directives
@@ -270,6 +272,10 @@ import { interval, Subscription } from 'rxjs';
 	zone: 'AURORA',
 	template: `
 	<style>.bs-color{color: var({{currentColor}});}</style>
+	@for(let color of colors; let i = index, isOdd = odd) {
+		isOdd :{{ isOdd? 'odd': 'even'}}
+		color: {{color}}
+	}
 	<div *for="const color of colors">
 		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>

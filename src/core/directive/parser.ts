@@ -41,7 +41,7 @@ export class DirectiveExpressionParser {
 	scan(): void {
 		// parse 'let/const/var' if found, or switch to expression mode.
 		if (this.isDeclareKeyword()) {
-			this.parseTemplateInput();
+			this.parseTemplateInput(false);
 		} else {
 			// parse expression, possible ends is semicolon, comma, let and 'EOS'
 			this.parseExpression(this.directiveName);
@@ -53,7 +53,7 @@ export class DirectiveExpressionParser {
 
 		// parse let and parseDirectiveAndTemplateInputs
 		while (this.stream.peek().isNotType(Token.EOS)) {
-			this.parseTemplateInput() || this.parseDirectiveAndTemplateInputs();
+			this.parseTemplateInput(true) || this.parseDirectiveAndTemplateInputs();
 			this.consumeSemicolonOrComma();
 		}
 	}
@@ -118,30 +118,39 @@ export class DirectiveExpressionParser {
 			return;
 		}
 	}
-	protected parseTemplateInput() {
+
+	protected parseTemplateInput(allowComma: boolean) {
 		// let = "let" :local "=" :export ";"?
 		if (this.isDeclareKeyword()) {
 			let peek = this.stream.peek();
 			const list: TokenExpression[] = [peek];
 			this.consume(peek.token);
-			peek = this.stream.peek();
-			if (Token.isOpenPair(peek.token) && peek.isNotType(Token.LPAREN)) {
-				// object and array pattern, destructing
-				this.stream.readTill(Token.closeOf(peek.token), list);
-			} else if (peek.isType(Token.IDENTIFIER)) {
-				this.consumeToList(Token.IDENTIFIER, list);
-			} else {
-				throw new Error(this.stream.createError(`Can't parse let/const/var {IDENTIFIER/ObjectPattern}`));
-			}
-			if (this.consumeIfToken(Token.ASSIGN, list)) {
-				this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
-			} else {
-				list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
+			this.consumeDeclarations(list);
+			while (allowComma && this.stream.currentToken().isType(Token.COMMA)) {
+				list.push(TokenConstant.COMMA);
+				this.consumeDeclarations(list);
 			}
 			this.templateExpressions.push(list);
 			return true;
 		}
 		return false;
+	}
+
+	private consumeDeclarations(list: TokenExpression[]) {
+		const peek = this.stream.peek();
+		if (Token.isOpenPair(peek.token) && peek.isNotType(Token.LPAREN)) {
+			// object and array pattern, destructing
+			this.stream.readTill(Token.closeOf(peek.token), list);
+		} else if (peek.isType(Token.IDENTIFIER)) {
+			this.consumeToList(Token.IDENTIFIER, list);
+		} else {
+			throw new Error(this.stream.createError(`Can't parse let/const/var {IDENTIFIER/ObjectPattern}`));
+		}
+		if (this.consumeIfToken(Token.ASSIGN, list)) {
+			this.stream.readTokensConsiderPair(list, Token.SEMICOLON, Token.COMMA, Token.LET, Token.CONST, Token.VAR, Token.EOS);
+		} else {
+			list.push(TokenConstant.ASSIGN, TokenConstant.IMPLICIT);
+		}
 	}
 
 	protected parseExpression(inputName: string) {
@@ -201,7 +210,6 @@ export class DirectiveExpressionParser {
 		}
 		const inputName = inputToken.getValue<Identifier>().getName() as string;
 		this.directiveInputs.set(inputName, list.map(this.mapTokenToString).join(' '));
-
 	}
 
 	private mapTokenToString(token: TokenExpression): String {

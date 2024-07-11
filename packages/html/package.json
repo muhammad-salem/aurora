@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/jsx",
-	"version": "1.2.2",
-	"description": "Ibyar JSX, create DomNode tree sing jsx, one way binding, two way binding.",
+	"name": "@ibyar/html",
+	"version": "2.0.0",
+	"description": "Ibyar HTML, is an HTML parser for @Ibyar/aurora framework.",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/jsx",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/html",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/jsx"
+		"directory": "packages/html"
 	},
 	"bugs": {
 		"url": "https://github.com/ibyar/aurora/issues"
@@ -33,25 +33,18 @@
 	"publishConfig": {
 		"access": "restricted"
 	},
-	"dependencies": {
-		"@ibyar/core": "^1.2.2",
-		"@ibyar/decorators": "^1.2.2",
-		"@ibyar/elements": "^1.2.2",
-		"tslib": "^2.6.2"
-	},
 	"devDependencies": {
-		"csstype": "^3.1.0",
-		"typescript": "^5.3.3"
+		"@types/hast": "^3.0.4",
+		"typescript": "^5.5.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/jsx/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/elements/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"jsx",
-		"tsx",
-		"typescript"
+		"html",
+		"parser"
 	]
 }

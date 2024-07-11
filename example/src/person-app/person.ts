@@ -1,18 +1,26 @@
 import {
 	Component, EventEmitter, HostBinding,
 	HostListener, Input, OnInit, Output,
-	View, ViewChild, ViewChildren
+	View, ViewChild, ViewChildren, inject
 } from '@ibyar/aurora';
 
 export class LogService {
 
-	constructor() { }
 	info(message: string) {
 		let date = new Date();
 		console.log(
 			`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} -- ${message}`
 		);
 	}
+
+	log(...args: any[]) {
+		let date = new Date();
+		console.log(
+			`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} -- `,
+			...args
+		);
+	}
+
 }
 
 export interface Person {
@@ -87,12 +95,12 @@ export class PersonView implements OnInit {
 	@HostBinding('class.off')
 	off: boolean;
 
-	constructor(private service: LogService, private service2: LogService) { }
+	private logger = inject(LogService);
 
 	onInit(): void {
 		this.on = true;
 		this.off = !this.on;
-		console.log('onInit', this);
+		this.logger.log('onInit', this);
 		this.open.emit('init data');
 	}
 
@@ -102,17 +110,17 @@ export class PersonView implements OnInit {
 
 	@HostListener('window:load', ['$event'])
 	onLoad(e: Event) {
-		console.log(this, e);
+		this.logger.log(this, e);
 	}
 
 	@HostListener('window:resize', ['$event'])
 	onResize(e: Event) {
-		console.log(this, e);
+		this.logger.log(this, e);
 	}
 
 	@HostListener('click', ['$event.target'])
 	onClick(target: HTMLElement) {
-		console.log('target', target);
+		this.logger.log('target', target);
 		this._select.emit(this.person);
 		this.off = this.on;
 		this.on = !this.on;
@@ -120,17 +128,17 @@ export class PersonView implements OnInit {
 
 	@HostListener('select')
 	onClose(data: any) {
-		console.log('select', data);
+		this.logger.log('select', data);
 	}
 
 	@HostListener('person.age')
 	personChange() {
-		console.log('age change', this.person.age);
+		this.logger.log('age change', this.person.age);
 	}
 
 	@Input()
 	set resize(msg: string) {
-		console.log(this, msg);
+		this.logger.log(this, msg);
 	}
 
 	collectData(data: Object, ddd: Person, p: Person): string[] {
@@ -161,8 +169,10 @@ export class PersonEdit {
 	@Output()
 	save = new EventEmitter<Person>();
 
+	private logger = inject(LogService);
+
 	printPerson() {
-		console.log(this.person);
+		this.logger.log(this.person);
 		this.save.emit(this.person);
 	}
 }

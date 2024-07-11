@@ -11,10 +11,17 @@ export interface DirectiveNodeOptions {
 	 * list of outputs view name
 	 */
 	outputs?: string[];
+
+	/**
+	 * successors block/scope for a directive 
+	 * 
+	 * ex: [`@if`/`@else`] & [`@for`/`@empty`]
+	 */
+	successor?: string;
 }
 
 class DirectiveNodeInfo {
-	constructor(private inputs?: string[], private outputs?: string[]) { }
+	constructor(private inputs?: string[], private outputs?: string[], private successor?: string) { }
 
 	hasAttributes(): boolean {
 		return this.hasInputs() || this.hasOutputs();
@@ -26,6 +33,10 @@ class DirectiveNodeInfo {
 
 	hasOutputs(): boolean {
 		return (this.outputs?.length ?? 0) > 0;
+	}
+
+	hasSuccessors(): boolean {
+		return (this.successor?.trim().length ?? 0) > 0;
 	}
 
 	getAttributes(): string[] | undefined {
@@ -47,6 +58,10 @@ class DirectiveNodeInfo {
 		return this.outputs;
 	}
 
+	getSuccessor(): string | undefined {
+		return this.successor;
+	}
+
 	hasAttribute(attributeName: string): boolean {
 		return this.hasInput(attributeName) || this.hasOutput(attributeName);
 	}
@@ -57,6 +72,10 @@ class DirectiveNodeInfo {
 
 	hasOutput(outputName: string): boolean {
 		return this.outputs?.includes(outputName) || false;
+	}
+
+	hasSuccessor(successor: string): boolean {
+		return this.successor == successor;
 	}
 
 }
@@ -80,7 +99,7 @@ export class DirectiveRegistry {
 	 */
 	register(directiveName: string, options?: DirectiveNodeOptions): void {
 		if (!this.directives.has(directiveName)) {
-			const info = new DirectiveNodeInfo(options?.inputs, options?.outputs);
+			const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successor);
 			this.directives.set(directiveName, info);
 		}
 	}
@@ -136,6 +155,10 @@ export class DirectiveRegistry {
 		return this.directives.get(directiveName)?.hasOutputs() || false;
 	}
 
+	hasSuccessors(directiveName: string): boolean {
+		return this.directives.get(directiveName)?.hasSuccessors() || false;
+	}
+
 	/**
 	 * get the value of the registered inputs and outputs by directive name
 	 * @param directiveName 
@@ -164,6 +187,15 @@ export class DirectiveRegistry {
 	}
 
 	/**
+	 * get the value of the registered successors by directive name
+	 * @param directiveName 
+	 * @returns 
+	 */
+	getSuccessor(directiveName: string): string | undefined {
+		return this.directives.get(directiveName)?.getSuccessor();
+	}
+
+	/**
 	 * check if a directive has a attribute
 	 * @param directiveName 
 	 * @param attributeName 
@@ -181,6 +213,16 @@ export class DirectiveRegistry {
 	 */
 	hasInput(directiveName: string, inputName: string): boolean {
 		return this.directives.get(directiveName)?.hasInput(inputName) || false;
+	}
+
+	/**
+	 * check if has successor
+	 * @param directiveName 
+	 * @param successorName 
+	 * @returns 
+	 */
+	hasSuccessor(directiveName: string, successorName: string): boolean {
+		return this.directives.get(directiveName)?.hasSuccessor(successorName) || false;
 	}
 
 	/**

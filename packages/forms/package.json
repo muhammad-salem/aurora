@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/forms",
-	"version": "1.2.2",
+	"version": "2.0.0",
 	"description": "Ibyar forms contain form group, form builder and native ui form group",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/forms",
@@ -34,16 +34,16 @@
 		"access": "restricted"
 	},
 	"dependencies": {
-		"@ibyar/core": "^1.2.2",
-		"@ibyar/platform": "^1.2.2",
-		"tslib": "^2.6.2"
+		"@ibyar/core": "^2.0.0",
+		"@ibyar/platform": "^2.0.0",
+		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
-		"typescript": "^5.3.3"
+		"typescript": "^5.5.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "../../node_modules/.bin/typedoc --tsconfig ../../src/forms/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/forms/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",

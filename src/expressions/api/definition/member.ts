@@ -39,6 +39,9 @@ export class MemberExpression extends AbstractExpressionNode implements CanFindS
 	getProperty() {
 		return this.property;
 	}
+	getOptional() {
+		return this.optional;
+	}
 	set(stack: Stack, value: any) {
 		const objectScope = (this.object as ExpressionNode & CanFindScope).findScope<Context>(stack);
 		let propertyKey: PropertyKey;
