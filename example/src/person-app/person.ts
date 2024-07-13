@@ -1,9 +1,11 @@
 import {
 	Component, EventEmitter, HostBinding,
-	HostListener, Input, OnInit, Output,
+	HostListener, Injectable, Input, OnInit, Output,
 	View, ViewChild, ViewChildren, inject
 } from '@ibyar/aurora';
 
+
+@Injectable({})
 export class LogService {
 
 	info(message: string) {
