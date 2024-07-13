@@ -25,19 +25,16 @@ export class InjectionProvider {
 	}
 
 	getToken<T>(token: InjectionToken<T>): T | undefined {
-		if (this.hasToken(token)) {
-			return this.tokens.get(token);
-		}
-		return this.parent?.getToken(token);
+		return this.tokens.get(token);
 	}
 
 	getInstance<T>(type: TypeOf<T>): T {
-		if (this.hasType(type)) {
-			return this.getOrCreateInstance(type);
+		let instance = this.types.get(type);
+		if (instance === EMPTY_VALUE) {
+			instance = new type();
+			this.types.set(type, instance);
 		}
-		return this.parent?.getInstance(type)
-			// will be create in the root provider, the first parent in the chain
-			?? this.getOrCreateInstance(type);
+		return instance;
 	}
 
 	setType<T>(type: TypeOf<T>, value?: T): void {
@@ -58,20 +55,13 @@ export class InjectionProvider {
 		}
 	}
 
-	inject<T>(provider: Provider<T>): T | undefined {
-		if (provider instanceof InjectionToken) {
-			return this.getToken(provider);
+	inject<T>(typeOrToken: Provider<T>): T | undefined {
+		if (typeOrToken instanceof InjectionToken) {
+			const provider = this.parent?.hasToken(typeOrToken) || this;
+			return provider.getToken(typeOrToken);
 		}
-		return this.getInstance(provider);
-	}
-
-	private getOrCreateInstance<T>(type: TypeOf<T>): T {
-		let instance = this.types.get(type);
-		if (instance === EMPTY_VALUE) {
-			instance = new type();
-			this.types.set(type, instance);
-		}
-		return instance;
+		const provider = this.parent?.hasType(typeOrToken) || this;
+		return provider.getInstance(typeOrToken);
 	}
 
 }
