@@ -121,8 +121,7 @@ yarn add @ibyar/aurora
 ## Library Features
 
 - [x] ES Module
-- [ ] JavaScript API
-- [ ] Dependency Injection
+- [x] Dependency Injection
 - [x] Component
 - [x] Directives (Attribute and Structural Directives)
 - [x] Pipes
