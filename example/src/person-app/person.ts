@@ -128,9 +128,9 @@ export class PersonView implements OnInit {
 		this.on = !this.on;
 	}
 
-	@HostListener('select')
-	onClose(data: any) {
-		this.logger.log('select', data);
+	@HostListener('select', '$event.detail')
+	onClose(person: Person) {
+		this.logger.log('select person', person);
 	}
 
 	@HostListener('person.age')
