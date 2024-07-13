@@ -111,7 +111,7 @@ import { ColorTogglerDirective } from '../directive/color-toggle.directive.js';
 			</li>
 			<li class="list-group-item row">
 				<select class="form-select col-3" (change)="selectFruit = this.value">
-					<option *forOf="let fruit of fruits" [value]="fruit">{{fruit |> titlecase}}</option>
+					<option *forOf="let fruit of fruits" [value]="fruit" [selected]="selectFruit === fruit">{{fruit |> titlecase}}</option>
 				</select>
 			</li>
 		</ul>
@@ -166,7 +166,7 @@ import { ColorTogglerDirective } from '../directive/color-toggle.directive.js';
 			</li>
 			<li class="list-group-item row">
 				<select class="form-select col-3" (change)="selectFruit = this.value">
-					@for(let fruit of fruits){<option [value]="fruit">{{fruit |> titlecase}}</option>}
+					@for(let fruit of fruits){<option [value]="fruit" [selected]="selectFruit === fruit">{{fruit |> titlecase}}</option>}
 				</select>
 			</li>
 		</ul>
