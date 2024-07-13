@@ -48,7 +48,7 @@ export class InjectionProvider {
 		this.tokens.set(token, value);
 	}
 
-	set<T>(typeOrToken: Provider<T>, value?: T) {
+	provide<T>(typeOrToken: Provider<T>, value?: T) {
 		if (typeOrToken instanceof InjectionToken) {
 			const provider = this.parent?.hasToken(typeOrToken) || this;
 			provider.setToken(typeOrToken, value);
@@ -58,7 +58,7 @@ export class InjectionProvider {
 		}
 	}
 
-	get<T>(provider: Provider<T>): T | undefined {
+	inject<T>(provider: Provider<T>): T | undefined {
 		if (provider instanceof InjectionToken) {
 			return this.getToken(provider);
 		}
