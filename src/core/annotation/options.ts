@@ -65,7 +65,7 @@ export interface DirectiveOptions {
 	successor?: string;
 }
 
-export interface ServiceOptions {
+export interface InjectableOptions {
 	provideIn?: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
 }
 

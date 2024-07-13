@@ -42,7 +42,8 @@ export class AppRoot implements OnInit {
 	lazyLoad(app: App) {
 		this.selectedApp = app;
 		this.appName = app.title;
-		app.load().then(component => this.selectedComponent = app.component = component);
+		app.load().then(component => this.selectedComponent = app.component = component)
+			.catch(error => console.error(`Error loading component module: ${app.title}`, error));
 	}
 
 	appList: App[] = [

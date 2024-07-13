@@ -1,9 +1,11 @@
 import {
 	Component, EventEmitter, HostBinding,
-	HostListener, Input, OnInit, Output,
+	HostListener, Injectable, Input, OnInit, Output,
 	View, ViewChild, ViewChildren, inject
 } from '@ibyar/aurora';
 
+
+@Injectable({})
 export class LogService {
 
 	info(message: string) {
@@ -126,9 +128,9 @@ export class PersonView implements OnInit {
 		this.on = !this.on;
 	}
 
-	@HostListener('select')
-	onClose(data: any) {
-		this.logger.log('select', data);
+	@HostListener('select', '$event.detail')
+	onClose(person: Person) {
+		this.logger.log('select person', person);
 	}
 
 	@HostListener('person.age')

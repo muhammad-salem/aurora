@@ -8,7 +8,8 @@ import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml } from '../utils/path.js';
 import {
 	ChildOptions, ComponentOptions, DirectiveOptions,
-	OutputEventInit, OutputOptions, PipeOptions, ServiceOptions
+	OutputEventInit, OutputOptions, PipeOptions,
+	InjectableOptions
 } from './options.js';
 
 
@@ -160,6 +161,11 @@ export const Directive = makeClassDecorator<DirectiveOptions>(
 	}
 );
 
+export const Injectable = makeClassDecorator<InjectableOptions>(
+	(opt, constructor, context) => {
+		Components.defineInjectable(constructor as any, opt, context.metadata);
+	}
+);
 
 function generateComponent<T extends Class>(target: MetadataClass<T>, opt: ComponentOptions<T>, metadata: MetadataContext) {
 	if (opt.templateUrl) {

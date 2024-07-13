@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/pipes",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Ibyar pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/pipes",
@@ -33,9 +33,9 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^2.0.0",
-		"@ibyar/elements": "^2.0.0",
-		"@ibyar/expressions": "^2.0.0",
+		"@ibyar/core": "^2.0.1",
+		"@ibyar/elements": "^2.0.1",
+		"@ibyar/expressions": "^2.0.1",
 		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
@@ -53,5 +53,6 @@
 		"async",
 		"typescript",
 		"front-end"
-	]
+	],
+	"gitHead": "31aa3e3b2fef408118e2ae69ae3027b16a38943e"
 }
