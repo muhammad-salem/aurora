@@ -9,7 +9,9 @@ export * from './component/custom-element.js';
 export * from './component/events.js';
 export * from './component/lifecycle.js';
 
+export * from './di/provider.js';
 export * from './di/inject.js';
+export * from './di/tokens.js';
 
 export * from './linker/view-ref.js';
 export * from './linker/template-ref.js';
