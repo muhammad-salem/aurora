@@ -16,12 +16,12 @@ export class InjectionProvider {
 
 	constructor(private parent?: InjectionProvider) { }
 
-	hasToken<T>(token: InjectionToken<T>): boolean {
-		return this.tokens.has(token);
+	hasToken<T>(token: InjectionToken<T>): InjectionProvider | false {
+		return this.tokens.has(token) ? this : false;
 	}
 
-	hasType<T>(type: TypeOf<T>): boolean {
-		return this.types.has(type);
+	hasType<T>(type: TypeOf<T>): InjectionProvider | false {
+		return this.types.has(type) ? this : false;
 	}
 
 	getToken<T>(token: InjectionToken<T>): T | undefined {
@@ -48,11 +48,13 @@ export class InjectionProvider {
 		this.tokens.set(token, value);
 	}
 
-	set<T>(provider: Provider<T>, value?: T) {
-		if (provider instanceof InjectionToken) {
-			this.tokens.set(provider, value);
+	set<T>(typeOrToken: Provider<T>, value?: T) {
+		if (typeOrToken instanceof InjectionToken) {
+			const provider = this.parent?.hasToken(typeOrToken) || this;
+			provider.setToken(typeOrToken, value);
 		} else {
-			this.types.set(provider, value ?? EMPTY_VALUE);
+			const provider = this.parent?.hasType(typeOrToken) || this;
+			provider.setType(typeOrToken, value ?? EMPTY_VALUE as unknown as T);
 		}
 	}
 
