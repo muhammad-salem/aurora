@@ -8,7 +8,7 @@ export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'sel
 export class ClassRegistry {
 	viewSet: Set<MetadataClass> = new Set();
 	componentSet: Set<MetadataClass> = new Set();
-	serviceSet: Set<MetadataClass> = new Set();
+	injectableSet: Set<MetadataClass> = new Set();
 	directiveSet: Set<MetadataClass> = new Set();
 	pipeSet: Set<MetadataClass> = new Set();
 
@@ -18,8 +18,8 @@ export class ClassRegistry {
 	registerComponent(classRef: MetadataClass): void {
 		this.componentSet.add(classRef);
 	}
-	registerService(classRef: MetadataClass): void {
-		this.serviceSet.add(classRef);
+	registerInjectable(classRef: MetadataClass): void {
+		this.injectableSet.add(classRef);
 	}
 	registerDirective(classRef: MetadataClass): void {
 		this.directiveSet.add(classRef);
@@ -133,7 +133,7 @@ export class ClassRegistry {
 	}
 
 	getService<T>(serviceName: string): ServiceRef<T> | undefined {
-		for (const serviceClass of this.serviceSet) {
+		for (const serviceClass of this.injectableSet) {
 			const serviceRef = ReflectComponents.getMetaDate(serviceClass) as ServiceRef<T>;
 			if (serviceRef.name === serviceName) {
 				return serviceRef;

@@ -16,13 +16,14 @@ import { initCustomElementView } from '../view/view.js';
 import { buildExpressionNodes } from '../html/expression.js';
 import {
 	ComponentOptions, PipeOptions,
-	ServiceOptions, DirectiveOptions
+	InjectableOptions, DirectiveOptions
 } from '../annotation/options.js';
 import {
 	ChildRef, HostBindingRef, InputPropertyRef,
 	ListenerRef, OutputPropertyRef, PropertyRef
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
+import { provide } from '../di/inject.js';
 
 
 export interface ServiceRef<T> {
@@ -202,11 +203,12 @@ export class Components {
 		ClassRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineService<T extends Class>(modelClass: MetadataClass<T>, opts: ServiceOptions, metadata: MetadataContext) {
+	static defineInjectable<T extends Class>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
-		ClassRegistryProvider.registerService(modelClass);
+		ClassRegistryProvider.registerInjectable(modelClass);
+		provide(modelClass);
 	}
 
 	static defineComponent<T extends Class>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
