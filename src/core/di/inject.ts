@@ -1,24 +1,18 @@
 import { TypeOf } from '../utils/typeof.js';
+import { InjectionProvider, InjectionToken, Provider } from './provider.js';
 
-export class InjectionToken<T> {
-	constructor(public token: string) { }
+
+const ROOT_PROVIDER = new InjectionProvider();
+
+
+export function provide<T>(type: TypeOf<T>): void;
+export function provide<T>(token: InjectionToken<T>, value: T): void;
+export function provide<T>(provider: Provider<T>, value?: T) {
+	ROOT_PROVIDER.set(provider, value);
 }
-
-type Provider<T> = TypeOf<T> | InjectionToken<T>;
-
-const instances = new WeakMap<Provider<any>, any>();
 
 export function inject<T>(type: TypeOf<T>): T;
-export function inject<T>(type: InjectionToken<T>): T | undefined;
-export function inject<T>(type: Provider<T>): T | undefined {
-	if (instances.has(type) || type instanceof InjectionToken) {
-		return instances.get(type);
-	}
-	const ref = new type();
-	instances.set(type, ref);
-	return ref;
-}
-
-export function provide<T>(provider: Provider<T>, value: T) {
-	instances.set(provider, value);
+export function inject<T>(token: InjectionToken<T>): T | undefined;
+export function inject<T>(provider: Provider<T>): T | undefined {
+	return ROOT_PROVIDER.get(provider);
 }
