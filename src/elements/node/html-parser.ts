@@ -269,7 +269,7 @@ export class NodeParser extends NodeParserHelper {
 				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
 					return this.parsePossibleSuccessorsControlFlow;
 				}
-				this.popStructuralDirectiveNodes();
+				this.popElement();
 			}
 			return this.parseText;
 		} else if (token === '{') {
@@ -464,6 +464,10 @@ export class NodeParser extends NodeParserHelper {
 			this.skipCount = 1;
 			return this.parseControlFlowExpression;
 		} else if (token === '{') {
+			if (this.tempText.trim()) {
+				const flowName = '*' + this.tempText.trim();
+				this.stackTrace.push(new DomStructuralDirectiveNode(flowName, new DomFragmentNode()));
+			}
 			this.skipCount = 0;
 			this.tempText = '';
 			this.flowScopeCount++;
