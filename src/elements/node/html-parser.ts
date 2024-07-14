@@ -222,6 +222,7 @@ export class NodeParser extends NodeParserHelper {
 
 	private skipCount = 0;
 	private flowScopeCount = 0;
+	private flowChainCount = 0;
 	private interpolationCount = 0;
 
 	parse(html: string)/*: DomNode*/ {
@@ -249,6 +250,7 @@ export class NodeParser extends NodeParserHelper {
 		this.commentCloseCount = 0;
 		this.skipCount = 0;
 		this.flowScopeCount = 0;
+		this.flowChainCount = 0;
 		this.interpolationCount = 0;
 		this.stateFn = this.parseText;
 		this.propertyName = this.propertyValue = this.tempText = '';
@@ -256,8 +258,13 @@ export class NodeParser extends NodeParserHelper {
 
 	private parseText(token: string) {
 		if (token === '<' || token === '@') {
-			this.checkTextChild();
-			return token === '<' ? this.parseTag : this.parseControlFlow;
+			if (token === '@' && this.tempText.at(-1) === '\\') {
+				this.tempText = this.tempText.replace(/.$/, token);
+				return this.parseText;
+			} else {
+				this.checkTextChild();
+				return token === '<' ? this.parseTag : this.parseControlFlow;
+			}
 		}
 		else if (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}') {
 			this.checkTextChild();
@@ -267,9 +274,13 @@ export class NodeParser extends NodeParserHelper {
 			if (directive) {
 				const lastDirective = chainSuccessor(directive);
 				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
+					this.flowChainCount++;
 					return this.parsePossibleSuccessorsControlFlow;
 				}
-				this.popElement();
+				do {
+					this.flowChainCount--;
+					this.popElement();
+				} while (this.flowChainCount > 0);
 			}
 			return this.parseText;
 		} else if (token === '{') {
@@ -502,7 +513,10 @@ export class NodeParser extends NodeParserHelper {
 			this.tempText = '';
 			return this.parsePossibleSuccessorsControlFlowName;
 		}
-		this.popElement();
+		do {
+			this.flowChainCount--;
+			this.popElement();
+		} while (this.flowChainCount > 0);
 		this.index--;
 		return this.parseText;
 	}
@@ -688,6 +702,18 @@ export class HTMLParser {
 				html += `{{${node.value}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
+			} else if (node instanceof DomFragmentNode) {
+				html += this.stringify(node.children);
+			} else if (node instanceof DomStructuralDirectiveNode) {
+				html += `@${node.name}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
+				html += this.stringify([node.node]);
+			} else if (node instanceof DomStructuralDirectiveSuccessorNode) {
+				html += `@${node.name}`;
+				if (node.children.length === 1 && node.children[0] instanceof DomStructuralDirectiveNode) {
+					html += this.stringify(node.children).substring(1);
+				} else {
+					html += this.stringify(node.children);
+				}
 			} else if (node instanceof DomElementNode) {
 				let attrs = '';
 				if (node.attributes) {
@@ -787,6 +813,10 @@ export class HTMLParser {
 			case 'DomStructuralDirectiveNode':
 				inherit(node, DomStructuralDirectiveNode);
 				this.deserializeNode((node as DomStructuralDirectiveNode).node);
+				break;
+			case 'StructuralDirectiveSuccessorNode':
+				inherit(node, DomStructuralDirectiveSuccessorNode);
+				(node as DomStructuralDirectiveSuccessorNode).children?.forEach(child => this.deserializeNode(child));
 				break;
 			case 'DomAttributeDirectiveNode':
 				inherit(node, DomAttributeDirectiveNode);
