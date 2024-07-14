@@ -222,6 +222,7 @@ export class NodeParser extends NodeParserHelper {
 
 	private skipCount = 0;
 	private flowScopeCount = 0;
+	private flowChainCount = 0;
 	private interpolationCount = 0;
 
 	parse(html: string)/*: DomNode*/ {
@@ -249,6 +250,7 @@ export class NodeParser extends NodeParserHelper {
 		this.commentCloseCount = 0;
 		this.skipCount = 0;
 		this.flowScopeCount = 0;
+		this.flowChainCount = 0;
 		this.interpolationCount = 0;
 		this.stateFn = this.parseText;
 		this.propertyName = this.propertyValue = this.tempText = '';
@@ -272,9 +274,13 @@ export class NodeParser extends NodeParserHelper {
 			if (directive) {
 				const lastDirective = chainSuccessor(directive);
 				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
+					this.flowChainCount++;
 					return this.parsePossibleSuccessorsControlFlow;
 				}
-				this.popElement();
+				do {
+					this.flowChainCount--;
+					this.popElement();
+				} while (this.flowChainCount > 0);
 			}
 			return this.parseText;
 		} else if (token === '{') {
@@ -507,7 +513,10 @@ export class NodeParser extends NodeParserHelper {
 			this.tempText = '';
 			return this.parsePossibleSuccessorsControlFlowName;
 		}
-		this.popElement();
+		do {
+			this.flowChainCount--;
+			this.popElement();
+		} while (this.flowChainCount > 0);
 		this.index--;
 		return this.parseText;
 	}
