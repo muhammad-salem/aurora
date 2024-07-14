@@ -4,6 +4,7 @@ import { Component } from '@ibyar/aurora';
 @Component({
 	selector: 'control-flow',
 	template: `
+		escape \\@ by adding double \\ before \\@
 		@for(let item of list; let i = index, isFirst = first, isLast = last;) {
 			@if(isFirst){
 				<hr>
