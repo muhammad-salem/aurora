@@ -258,7 +258,6 @@ export class NodeParser extends NodeParserHelper {
 		if (token === '<' || token === '@') {
 			if (token === '@' && this.tempText.at(-1) === '\\') {
 				this.tempText = this.tempText.replace(/.$/, token);
-				console.log('tempText ', this.tempText);
 				return this.parseText;
 			} else {
 				this.checkTextChild();
