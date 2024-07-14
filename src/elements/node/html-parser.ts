@@ -255,7 +255,7 @@ export class NodeParser extends NodeParserHelper {
 	}
 
 	private parseText(token: string) {
-		if (token === '<' || token === '@') {
+		if (token === '<' || (token === '@' && this.tempText.at(-1) !== '\\')) {
 			this.checkTextChild();
 			return token === '<' ? this.parseTag : this.parseControlFlow;
 		}
