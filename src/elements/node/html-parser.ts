@@ -688,6 +688,18 @@ export class HTMLParser {
 				html += `{{${node.value}}}`;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
+			} else if (node instanceof DomFragmentNode) {
+				html += this.stringify(node.children);
+			} else if (node instanceof DomStructuralDirectiveNode) {
+				html += `@${node.name}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
+				html += this.stringify([node.node]);
+			} else if (node instanceof DomStructuralDirectiveSuccessorNode) {
+				html += `@${node.name}`;
+				if (node.children.length === 1 && node.children[0] instanceof DomStructuralDirectiveNode) {
+					html += this.stringify(node.children).substring(1);
+				} else {
+					html += this.stringify(node.children);
+				}
 			} else if (node instanceof DomElementNode) {
 				let attrs = '';
 				if (node.attributes) {
