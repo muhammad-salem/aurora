@@ -255,9 +255,15 @@ export class NodeParser extends NodeParserHelper {
 	}
 
 	private parseText(token: string) {
-		if (token === '<' || (token === '@' && this.tempText.at(-1) !== '\\')) {
-			this.checkTextChild();
-			return token === '<' ? this.parseTag : this.parseControlFlow;
+		if (token === '<' || token === '@') {
+			if (token === '@' && this.tempText.at(-1) === '\\') {
+				this.tempText = this.tempText.replace(/.$/, token);
+				console.log('tempText ', this.tempText);
+				return this.parseText;
+			} else {
+				this.checkTextChild();
+				return token === '<' ? this.parseTag : this.parseControlFlow;
+			}
 		}
 		else if (this.interpolationCount === 0 && this.flowScopeCount > 0 && token === '}') {
 			this.checkTextChild();
