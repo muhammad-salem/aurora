@@ -813,6 +813,7 @@ export class HTMLParser {
 			case 'DomStructuralDirectiveNode':
 				inherit(node, DomStructuralDirectiveNode);
 				this.deserializeNode((node as DomStructuralDirectiveNode).node);
+				(node as DomStructuralDirectiveNode).successor && this.deserializeNode((node as DomStructuralDirectiveNode).successor!);
 				break;
 			case 'StructuralDirectiveSuccessorNode':
 				inherit(node, DomStructuralDirectiveSuccessorNode);
