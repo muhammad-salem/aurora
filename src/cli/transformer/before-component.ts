@@ -208,25 +208,25 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							inputs: getInputs(childNode, typeChecker),
 							outputs: getOutputs(childNode, typeChecker),
 						});
-						const staticMembers = viewInfos.map(
-							viewInfo => ts.factory.createPropertyDeclaration(
-								[
-									ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
-									ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
-								],
-								viewInfo.viewName,
-								undefined,
-								createStaticPropertyViewType(viewInfo.viewName),
-								undefined,
-							)
-						);
+						// const staticMembers = viewInfos.map(
+						// 	viewInfo => ts.factory.createPropertyDeclaration(
+						// 		[
+						// 			ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
+						// 			ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
+						// 		],
+						// 		viewInfo.viewName,
+						// 		undefined,
+						// 		createStaticPropertyViewType(viewInfo.viewName),
+						// 		undefined,
+						// 	)
+						// );
 						return ts.factory.updateClassDeclaration(
 							childNode,
 							modifiers ? ts.factory.createNodeArray(modifiers) : void 0,
 							childNode.name,
 							childNode.typeParameters,
 							childNode.heritageClauses,
-							[...staticMembers, ...childNode.members.slice()],
+							[/*...staticMembers,*/ ...childNode.members.slice()],
 						);
 					}
 					return childNode;
