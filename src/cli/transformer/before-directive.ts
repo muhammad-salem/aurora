@@ -8,7 +8,7 @@ import {
 
 
 /**
- * search for `@Component({})` and precompile the source code
+ * search for `@Directive({})` and to register with the html parser
  * @param program a ts program 
  * @returns a transformer factory of source file
  */
