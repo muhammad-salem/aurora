@@ -1,3 +1,4 @@
+import '../directives/register.js';
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
