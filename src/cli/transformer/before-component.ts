@@ -1,6 +1,6 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { buildExpressionNodes } from '@ibyar/core/node';
-import { htmlParser, directiveRegistry } from '@ibyar/elements/node';
+import { htmlParser } from '@ibyar/elements/node';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
 	createConstructorOfViewInterfaceDeclaration,
@@ -8,10 +8,9 @@ import {
 } from './factory.js';
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 import {
-	isComponentDecorator, isDirectiveDecorator,
-	getInputNames, getInputs, getOutputNames,
-	getOutputs, getTextValueForProperty,
-	isComponentOrDirectiveDecorator,
+	getInputs, getOutputs,
+	getTextValueForProperty,
+	isComponentDecorator
 } from './helpers.js';
 
 
@@ -27,7 +26,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 		return sourceFile => {
 			let visitSourceFile = false;
 			let componentPropertyName: string;
-			let directivePropertyName: string;
 			for (const statement of sourceFile.statements) {
 				if (ts.isImportDeclaration(statement)) {
 					const modulePath = statement.moduleSpecifier.getText();
@@ -43,14 +41,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								} else if (importSpecifier.name.getText() === 'Component') {
 									visitSourceFile = true;
 									componentPropertyName = importSpecifier.name.getText();
-								}
-
-								if (importSpecifier.propertyName?.getText() === 'Directive') {
-									visitSourceFile = true;
-									directivePropertyName = importSpecifier.name.getText();
-								} else if (importSpecifier.name.getText() === 'Directive') {
-									visitSourceFile = true;
-									directivePropertyName = importSpecifier.name.getText();
 								}
 							}
 						});
@@ -74,7 +64,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						if (!decorators || decorators.length === 0) {
 							return childNode;
 						}
-						const hasDecorator = decorators.some(decorator => isComponentOrDirectiveDecorator(decorator, componentPropertyName, directivePropertyName));
+						const hasDecorator = decorators.some(decorator => isComponentDecorator(decorator, componentPropertyName));
 						if (!hasDecorator) {
 							return childNode;
 						}
@@ -83,24 +73,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							if (!ts.isDecorator(modifier)) {
 								return modifier;
 							}
-							if (isDirectiveDecorator(modifier)) {
-								const options = (modifier.expression as ts.CallExpression).arguments[0];
-								if (ts.isObjectLiteralExpression(options)) {
-									const selector = getTextValueForProperty(options, 'selector');
-									if (!selector) {
-										return modifier;
-									}
-									const successor = getTextValueForProperty(options, 'successor');
-									const inputs = getInputNames(childNode, typeChecker);
-									const outputs = getOutputNames(childNode, typeChecker);
-									directiveRegistry.update(selector, { inputs, outputs, successor });
-								}
-								return modifier;
-							}
-							if (!isComponentDecorator(modifier)) {
-								return modifier;
-							}
-
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
 								const selector = getTextValueForProperty(option, 'selector');
 								if (!selector) {
@@ -250,5 +222,3 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 		};
 	};
 }
-
-export default beforeCompileComponentOptions;

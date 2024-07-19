@@ -2,11 +2,13 @@ import '../directives/register.js';
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
+import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 
 
 export function emitProgram(program: ts.Program) {
 	program.emit(undefined, undefined, undefined, undefined, {
 		before: [
+			beforeCompileDirectiveOptions(program),
 			beforeCompileComponentOptions(program),
 		],
 		after: [],
