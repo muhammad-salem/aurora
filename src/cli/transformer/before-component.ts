@@ -3,37 +3,17 @@ import { buildExpressionNodes } from '@ibyar/core/node';
 import { htmlParser, directiveRegistry } from '@ibyar/elements/node';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
-	convertToProperties, createConstructorOfViewInterfaceDeclaration,
-	createInterfaceType, createStaticPropertyViewType
+	createConstructorOfViewInterfaceDeclaration,
+	convertToProperties, createInterfaceType
 } from './factory.js';
-import { moduleManger, ViewInfo, ClassInfo, InputOutputTypeInfo } from './modules.js';
+import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
+import {
+	isComponentDecorator, isDirectiveDecorator,
+	getInputNames, getInputs, getOutputNames,
+	getOutputs, getTextValueForProperty,
+	isComponentOrDirectiveDecorator,
+} from './helpers.js';
 
-
-/**
- * register `class` and `style` attribute directive
- */
-directiveRegistry.register('class', { inputs: ['class'] });
-directiveRegistry.register('style', { inputs: ['style'] });
-
-/**
- * for of/await/in directives
- */
-directiveRegistry.register('*for', { inputs: ['of', 'trackBy'], successor: '*empty' });
-directiveRegistry.register('*forOf', { inputs: ['of', 'trackBy'], successor: '*empty' });
-directiveRegistry.register('*forAwait', { inputs: ['of'], successor: '*empty' });
-directiveRegistry.register('*forIn', { inputs: ['in'], successor: '*empty' });
-
-/**
- * if then else directive
- */
-directiveRegistry.register('*if', { inputs: ['if', 'then', 'else'], successor: '*else' });
-
-/**
- * switch case default directives
- */
-directiveRegistry.register('*switch', { inputs: ['switch'] });
-directiveRegistry.register('*case', { inputs: ['case'] });
-directiveRegistry.register('*default', { inputs: ['default'] });
 
 
 /**
@@ -47,6 +27,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 		return sourceFile => {
 			let visitSourceFile = false;
 			let componentPropertyName: string;
+			let directivePropertyName: string;
 			for (const statement of sourceFile.statements) {
 				if (ts.isImportDeclaration(statement)) {
 					const modulePath = statement.moduleSpecifier.getText();
@@ -62,6 +43,14 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								} else if (importSpecifier.name.getText() === 'Component') {
 									visitSourceFile = true;
 									componentPropertyName = importSpecifier.name.getText();
+								}
+
+								if (importSpecifier.propertyName?.getText() === 'Directive') {
+									visitSourceFile = true;
+									directivePropertyName = importSpecifier.name.getText();
+								} else if (importSpecifier.name.getText() === 'Directive') {
+									visitSourceFile = true;
+									directivePropertyName = importSpecifier.name.getText();
 								}
 							}
 						});
@@ -85,18 +74,27 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						if (!decorators || decorators.length === 0) {
 							return childNode;
 						}
-						const isComponentDecorator = (decorator: ts.Decorator): boolean => {
-							return ts.isCallExpression(decorator.expression)
-								&& decorator.expression.expression.getText() === componentPropertyName;
-						};
-						const hasComponentDecorator = decorators.some(isComponentDecorator);
-						if (!hasComponentDecorator) {
+						const hasDecorator = decorators.some(decorator => isComponentOrDirectiveDecorator(decorator, componentPropertyName, directivePropertyName));
+						if (!hasDecorator) {
 							return childNode;
 						}
-
 						const viewInfos: ViewInfo[] = [];
 						const modifiers = childNode.modifiers?.map(modifier => {
 							if (!ts.isDecorator(modifier)) {
+								return modifier;
+							}
+							if (isDirectiveDecorator(modifier)) {
+								const options = (modifier.expression as ts.CallExpression).arguments[0];
+								if (ts.isObjectLiteralExpression(options)) {
+									const selector = getTextValueForProperty(options, 'selector');
+									if (!selector) {
+										return modifier;
+									}
+									const successor = getTextValueForProperty(options, 'successor');
+									const inputs = getInputNames(childNode, typeChecker);
+									const outputs = getOutputNames(childNode, typeChecker);
+									directiveRegistry.register(selector, { inputs, outputs, successor });
+								}
 								return modifier;
 							}
 							if (!isComponentDecorator(modifier)) {
@@ -104,15 +102,11 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							}
 
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
-								const selectorProperty = option.properties
-									.find(prop => prop.name?.getText() === 'selector') as ts.PropertyAssignment | undefined;
-
-								if (!selectorProperty) {
+								const selector = getTextValueForProperty(option, 'selector');
+								if (!selector) {
 									console.error(`Component missing selector name: ${childNode.name?.getText()}`);
 									return option;
 								}
-								const initializer = selectorProperty.initializer.getText();
-								const selector = initializer.substring(1, initializer.length - 1);
 								const viewName = `HTML${selector.split('-')
 									.map(name => name.replace(/^\w/, char => char.toUpperCase()))
 									.join('')}Element`;
@@ -239,6 +233,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				const interfaces = classes.flatMap(s => s.views).map(info => {
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});
+				statements.push(); //emit inputs and outputs for component and directives;
 				statements.push(...interfaces);
 				return ts.factory.updateSourceFile(
 					sourceFile,
@@ -254,55 +249,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 			return updateSourceFile;
 		};
 	};
-}
-
-export function isInputDecorator(decorator: ts.Decorator): boolean {
-	return ts.isCallExpression(decorator.expression) && (
-		decorator.expression.expression.getText() === 'Input'
-		|| decorator.expression.expression.getText() === 'FormValue'
-	);
-}
-
-export function isOutputDecorator(decorator: ts.Decorator): boolean {
-	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === 'Output';
-}
-
-export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): InputOutputTypeInfo {
-
-	const map: InputOutputTypeInfo = {};
-	classNode.members.forEach(member => {
-		if (!ts.isPropertyDeclaration(member)) {
-			return;
-		}
-		const decorators = ts.getDecorators(member);
-		if (!decorators) {
-			return;
-		}
-		const inputDecorators = decorators.filter(decoratorFilter);
-		if (!inputDecorators.length) {
-			return;
-		}
-		let inputType = member.type?.getText();
-		if (!inputType && member.initializer) {
-			inputType = checker.typeToString(checker.getTypeAtLocation(member.initializer), member.initializer, undefined);
-		}
-		inputDecorators.forEach(input => {
-			const decoratorCall = input.expression as ts.CallExpression;
-			const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
-			const inputName = aliasName ? aliasName.text : member.name.getText();
-			map[inputName] = inputType;
-		});
-	})
-	return map;
-}
-
-export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
-
-	return getMapByDecorator(classNode, checker, isInputDecorator);
-}
-
-export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
-	return getMapByDecorator(classNode, checker, isOutputDecorator);
 }
 
 export default beforeCompileComponentOptions;
