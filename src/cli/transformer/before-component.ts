@@ -93,7 +93,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 									const successor = getTextValueForProperty(options, 'successor');
 									const inputs = getInputNames(childNode, typeChecker);
 									const outputs = getOutputNames(childNode, typeChecker);
-									directiveRegistry.register(selector, { inputs, outputs, successor });
+									directiveRegistry.update(selector, { inputs, outputs, successor });
 								}
 								return modifier;
 							}
