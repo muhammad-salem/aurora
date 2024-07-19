@@ -2,7 +2,7 @@
 
 import { exit } from 'process';
 
-const CLI_VERSION = '1.0.1';
+const CLI_VERSION = '2.0.3';
 
 const args = process.argv;
 const inputs = args.slice(2);
