@@ -148,6 +148,9 @@ export function HostBinding<This, Value>(hostPropertyName: string) {
 	);
 }
 
+/**
+ * register a new pipe
+ */
 export const Pipe = makeClassDecorator<PipeOptions>(
 	(opt, constructor, context, metadata) => {
 		Components.definePipe(constructor as any, opt, metadata);
@@ -155,12 +158,18 @@ export const Pipe = makeClassDecorator<PipeOptions>(
 );
 
 
+/**
+ * register a new structure or attribute directive 
+ */
 export const Directive = makeClassDecorator<DirectiveOptions>(
 	(opt, constructor, context, metadata) => {
 		Components.defineDirective(constructor as any, opt, metadata);
 	}
 );
 
+/**
+ * register a new service
+ */
 export const Injectable = makeClassDecorator<InjectableOptions>(
 	(opt, constructor, context) => {
 		Components.defineInjectable(constructor as any, opt, context.metadata);
@@ -184,6 +193,9 @@ function generateComponent<T extends Class>(target: MetadataClass<T>, opt: Compo
 	}
 }
 
+/**
+ * define a new custom element model class
+ */
 export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[]>(
 	(opt, constructor, context, metadata) => {
 		if (Array.isArray(opt)) {
