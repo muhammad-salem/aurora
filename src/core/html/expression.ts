@@ -135,7 +135,7 @@ function parseChild(child: DomNode) {
 		parseBaseNode(child);
 		parseDomParentNode(child);
 	} else if (child instanceof DomStructuralDirectiveNode) {
-		let expressions: ExpressionNode[] = [];
+		const expressions: ExpressionNode[] = [];
 		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = expressions;
 		if (child.value) {
 			// use shorthand syntax, possible mixed with input and outputs
