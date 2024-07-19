@@ -259,7 +259,7 @@ export class NodeParser extends NodeParserHelper {
 	private parseText(token: string) {
 		if (token === '<' || token === '@') {
 			if (token === '@' && this.tempText.at(-1) === '\\') {
-				this.tempText = this.tempText.replace(/.$/, token);
+				this.tempText = this.tempText.substring(0, this.tempText.length - 2) + token;
 				return this.parseText;
 			} else {
 				this.checkTextChild();
