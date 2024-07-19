@@ -105,6 +105,17 @@ export class DirectiveRegistry {
 	}
 
 	/**
+	 * update registry with a new value of directive
+	 * @param directiveName 
+	 * @param options 
+	 */
+
+	update(directiveName: string, options?: DirectiveNodeOptions): void {
+		const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successor);
+		this.directives.set(directiveName, info);
+	}
+
+	/**
 	 * replace the current options with a new one.
 	 * 
 	 * the directive could be a structural directive or an attribute directive.
