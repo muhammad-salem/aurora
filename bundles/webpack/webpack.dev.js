@@ -3,13 +3,13 @@ const path = require('path');
 const commonConfig = require('./common.config.js');
 
 const devConfig = {
-	devtool: 'source-map',
+	devtool: "inline-source-map",
 	mode: 'development',
 	devServer: {
 		static: {
 			directory: path.join(__dirname, 'dist'),
 		},
-		compress: true,
+		compress: false,
 		port: 9000,
 	},
 };
