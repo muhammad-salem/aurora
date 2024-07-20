@@ -37,6 +37,7 @@
 	},
 	"dependencies": {
 		"@ibyar/core": "^2.0.2",
+		"@ibyar/decorators": "^2.0.2",
 		"@ibyar/directives": "^2.0.2",
 		"@ibyar/elements": "^2.0.2",
 		"@ibyar/expressions": "^2.0.2",
