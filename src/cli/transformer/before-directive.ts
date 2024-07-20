@@ -71,7 +71,7 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 										const outputs = getOutputNames(childNode, typeChecker);
 										directiveRegistry.update(selector, { inputs: inputs.map(input => input.aliasName), outputs, successor });
 										const modelClass = {};
-										const metadata = metadataHoler.getOrCreate(modelClass);
+										const metadata = metadataHoler.createAndAssign(modelClass);
 										metadata.modelClass = modelClass;
 										metadata.selector = selector;
 										metadata.inputs = inputs.map(input => ({ modelProperty: input.name, viewAttribute: input.aliasName }));
