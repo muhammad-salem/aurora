@@ -21,8 +21,8 @@
 	"scripts": {
 		"clean": "tsc -b --clean example/",
 		"build:src": "npm run clean && tsc --build -v",
-		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar --build -v && cd ../..",
-		"build:forms": "cd src/forms && tsc -b --clean && npx ibyar --build -v && cd ../..",
+		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar -b -v && cd ../..",
+		"build:forms": "cd src/forms && tsc -b --clean && npx ibyar -b -v && cd ../..",
 		"build": "npm run build:src && npm run build:directives && npm run build:forms",
 		"build:w": "npm run clean && tsc --build -v -w",
 		"build:example": "npm run clean && tsc -b -v example/",
