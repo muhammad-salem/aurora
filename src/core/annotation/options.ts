@@ -1,8 +1,8 @@
 import type { Class, TypeOf } from '../utils/typeof.js';
-import { DomNode } from '@ibyar/elements';
-import { TemplateUrl } from '../utils/path.js';
-import { ZoneType } from '../zone/bootstrap.js';
-import { ValueControl } from '../component/custom-element.js';
+import type { DomNode } from '@ibyar/elements';
+import type { TemplateUrl } from '../utils/path.js';
+import type { ZoneType } from '../zone/bootstrap.js';
+import type { ValueControl } from '../component/custom-element.js';
 
 
 export interface DirectiveOptions {
