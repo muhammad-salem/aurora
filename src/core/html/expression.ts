@@ -14,7 +14,7 @@ import {
 	TwoWayAssignmentExpression
 } from '../binding/binding.expressions.js';
 import { DirectiveExpressionParser } from '../directive/parser.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { classRegistryProvider } from '../providers/provider.js';
 
 const ThisTextContent = JavaScriptParser.parseScript('this.textContent') as MemberExpression;
 function parseLiveText(text: LiveTextContent) {
@@ -135,7 +135,7 @@ function parseChild(child: DomNode) {
 		parseBaseNode(child);
 		parseDomParentNode(child);
 	} else if (child instanceof DomStructuralDirectiveNode) {
-		let expressions: ExpressionNode[] = [];
+		const expressions: ExpressionNode[] = [];
 		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = expressions;
 		if (child.value) {
 			// use shorthand syntax, possible mixed with input and outputs
@@ -146,7 +146,7 @@ function parseChild(child: DomNode) {
 			searchForLetAttributes(child, expressions);
 
 			if (info.directiveInputs.size > 0) {
-				const ref = ClassRegistryProvider.getDirectiveRef(child.name);
+				const ref = classRegistryProvider.getDirectiveRef(child.name);
 				if (!ref?.inputs?.length) {
 					return;
 				}
@@ -194,4 +194,12 @@ export function buildExpressionNodes(node: DomNode) {
 	} else {
 		parseChild(node);
 	}
+}
+
+/**
+ * function to skip node checking
+ * @param modelClass 
+ */
+export function registerDirective(modelClass: Record<string, any>) {
+	classRegistryProvider.registerDirective(modelClass as any);
 }

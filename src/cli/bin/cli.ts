@@ -2,7 +2,7 @@
 
 import { exit } from 'process';
 
-const CLI_VERSION = '1.0.1';
+const CLI_VERSION = '2.1.1';
 
 const args = process.argv;
 const inputs = args.slice(2);
@@ -22,12 +22,14 @@ Usage: ibyar [options]
 Examples:
     ibyar
     ibyar -b
+    ibyar -b -w
     ibyar -gt
     ibyar -v
     ibyar --help
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
+	-w		--watch				compile and watch source files, used with --build
     -gt     --generate-types    generate "web-types.json" files, and typescript
 	                            definitions '.d.ts' files. 
 	                            you can import this file later in your "index.ts" 
@@ -42,12 +44,11 @@ Options:
 
 if (printVersion) {
 	console.log(CLI_VERSION);
-	exit();
 }
 
 if (runBuild) {
 	import('../compiler/compiler.js').then(module => {
-		if (process.argv.includes('-w') || process.argv.includes('--watch')) {
+		if (inputs.includes('-w') || inputs.includes('--watch')) {
 			module.compileAndWatchArgs();
 		} else {
 			module.compileArgs();

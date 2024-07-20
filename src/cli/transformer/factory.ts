@@ -113,18 +113,17 @@ export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, view
 	return generateStatements(sourceCode);
 }
 
-export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
-
+export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 	const viewClassDeclarations = classes.map(c => {
-		const inputs = Object.keys(c.inputs);
-		const outputs = Object.keys(c.outputs).map(output => 'on' + ToCamelCase(output));
+		const inputs = c.inputs.map(input => input.aliasName);
+		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
 		const interfaceBody = `
 			public static observedAttributes: [${attributes}];
 
-			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
+			${c.inputs.map(input => `public ${input.aliasName}${input.type ? `: ${input.type}` : ''};`).join('\n')}
 
-			${Object.keys(c.outputs).map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
+			${c.outputs.map(output => `public on${ToCamelCase(output.aliasName)}${output.type ? `: ${output.type}` : ''};`).join('\n')}
 			
 		`;
 		// need to fix @FormValue type;
@@ -145,4 +144,43 @@ export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 			}
 		}`;
 	return generateStatements(sourceCode);
+}
+
+/**
+ * create new type with name `ɵɵ0Directives0ɵɵ`
+ * 
+ * example:
+ * ```ts
+ * export type ɵɵ0Directives0ɵɵ = [{
+ * 	selector: '*if';
+ * 	successor: '*else',
+ * 	inputs: [
+ * 		{ name: 'ifCondition', aliasName: 'if' },
+ * 		{ name: 'thenTemplateRef', aliasName: 'then' },
+ * 		{ name: 'elseTemplateRef', aliasName: 'else' },
+ * 	],
+ * 	outputs: [],
+ * }];
+ * ```
+ * @param classes directive class information
+ * @returns new array of statements
+ */
+export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
+	const nodes: string[] | undefined = classes.map(directive => {
+		const inputs: string[] = directive.inputs.map(input => `{name: '${input.name}', aliasName: '${input.aliasName}'}`);
+		const outputs: string[] = directive.outputs.map(output => `{name: '${output.name}', aliasName: '${output.aliasName}'}`);
+		const temp: string[] = [`selector: '${directive.name}'`];
+		if (directive.successor) {
+			temp.push(`successor: '${directive.successor}'`);
+		}
+		if (directive.inputs.length > 0) {
+			temp.push(`inputs: [${inputs.join(',')}]`);
+		}
+		if (directive.outputs.length > 0) {
+			temp.push(`outputs: [${outputs.join(',')}]`);
+		}
+		return `{${temp.join(',')}}`;
+	});
+	const directivesType = `export type ɵɵ0Directives0ɵɵ = [${nodes.join(',')}]`;
+	return generateStatements(directivesType);
 }

@@ -77,10 +77,12 @@ This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](h
 ## `Install`
 
 ``` bash
+npm i -g @ibyar/cli
 npm i --save @ibyar/aurora
 ```
 
 ``` bash
+yarn global add @ibyar/cli
 yarn add @ibyar/aurora
 ```
 
@@ -219,9 +221,18 @@ yarn add @ibyar/aurora
 [two-component]:https://github.com/salemebo/aurora-ts/blob/master/test/multi-component/m-person.tsx
 
 
+
+#### how to bundle your package before publish
+
+```bash
+# run ibyar cli to pre-build your template and view types.
+ibyar --build
+#or
+ibyar --build --watch
+```
+
+
 ### How to use:
-
-
 
 ### `HTML -- template parser example`
 

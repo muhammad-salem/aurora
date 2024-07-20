@@ -1,12 +1,19 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { buildExpressionNodes } from '@ibyar/core/node';
-import { htmlParser } from '@ibyar/elements/node';
+import { buildExpressionNodes } from '@ibyar/core/node.js';
+import { htmlParser } from '@ibyar/elements/node.js';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
-	convertToProperties, createConstructorOfViewInterfaceDeclaration,
-	createInterfaceType, createStaticPropertyViewType
+	createConstructorOfViewInterfaceDeclaration,
+	convertToProperties, createInterfaceType
 } from './factory.js';
-import { moduleManger, ViewInfo, ClassInfo, InputOutputTypeInfo } from './modules.js';
+import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
+import {
+	getInputs, getOutputs,
+	getTextValueForProperty,
+	isComponentDecorator
+} from './helpers.js';
+
+
 
 /**
  * search for `@Component({})` and precompile the source code
@@ -44,7 +51,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				}
 			}
 			if (!visitSourceFile) {
-				moduleManger.add({ path: sourceFile.fileName, skip: true });
 				return sourceFile;
 			}
 
@@ -57,34 +63,21 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						if (!decorators || decorators.length === 0) {
 							return childNode;
 						}
-						const isComponentDecorator = (decorator: ts.Decorator): boolean => {
-							return ts.isCallExpression(decorator.expression)
-								&& decorator.expression.expression.getText() === componentPropertyName;
-						};
-						const hasComponentDecorator = decorators.some(isComponentDecorator);
-						if (!hasComponentDecorator) {
+						const hasDecorator = decorators.some(decorator => isComponentDecorator(decorator, componentPropertyName));
+						if (!hasDecorator) {
 							return childNode;
 						}
-
 						const viewInfos: ViewInfo[] = [];
 						const modifiers = childNode.modifiers?.map(modifier => {
 							if (!ts.isDecorator(modifier)) {
 								return modifier;
 							}
-							if (!isComponentDecorator(modifier)) {
-								return modifier;
-							}
-
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
-								const selectorProperty = option.properties
-									.find(prop => prop.name?.getText() === 'selector') as ts.PropertyAssignment | undefined;
-
-								if (!selectorProperty) {
+								const selector = getTextValueForProperty(option, 'selector');
+								if (!selector) {
 									console.error(`Component missing selector name: ${childNode.name?.getText()}`);
 									return option;
 								}
-								const initializer = selectorProperty.initializer.getText();
-								const selector = initializer.substring(1, initializer.length - 1);
 								const viewName = `HTML${selector.split('-')
 									.map(name => name.replace(/^\w/, char => char.toUpperCase()))
 									.join('')}Element`;
@@ -175,30 +168,31 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						});
 
 						classes.push({
+							type: 'component',
 							name: childNode.name?.getText() ?? '',
 							views: viewInfos,
 							inputs: getInputs(childNode, typeChecker),
 							outputs: getOutputs(childNode, typeChecker),
 						});
-						const staticMembers = viewInfos.map(
-							viewInfo => ts.factory.createPropertyDeclaration(
-								[
-									ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
-									ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
-								],
-								viewInfo.viewName,
-								undefined,
-								createStaticPropertyViewType(viewInfo.viewName),
-								undefined,
-							)
-						);
+						// const staticMembers = viewInfos.map(
+						// 	viewInfo => ts.factory.createPropertyDeclaration(
+						// 		[
+						// 			ts.factory.createModifier(ts.SyntaxKind.StaticKeyword),
+						// 			ts.factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)
+						// 		],
+						// 		viewInfo.viewName,
+						// 		undefined,
+						// 		createStaticPropertyViewType(viewInfo.viewName),
+						// 		undefined,
+						// 	)
+						// );
 						return ts.factory.updateClassDeclaration(
 							childNode,
 							modifiers ? ts.factory.createNodeArray(modifiers) : void 0,
 							childNode.name,
 							childNode.typeParameters,
 							childNode.heritageClauses,
-							[...staticMembers, ...childNode.members.slice()],
+							[/*...staticMembers,*/ ...childNode.members.slice()],
 						);
 					}
 					return childNode;
@@ -211,6 +205,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				const interfaces = classes.flatMap(s => s.views).map(info => {
 					return ts.setTextRange(info.interFaceType, updateSourceFile);
 				});
+				statements.push(); //emit inputs and outputs for component and directives;
 				statements.push(...interfaces);
 				return ts.factory.updateSourceFile(
 					sourceFile,
@@ -222,59 +217,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 					updateSourceFile.libReferenceDirectives,
 				);
 			}
-			moduleManger.add({ path: sourceFile.fileName, skip: true });
 			return updateSourceFile;
 		};
 	};
 }
-
-export function isInputDecorator(decorator: ts.Decorator): boolean {
-	return ts.isCallExpression(decorator.expression) && (
-		decorator.expression.expression.getText() === 'Input'
-		|| decorator.expression.expression.getText() === 'FormValue'
-	);
-}
-
-export function isOutputDecorator(decorator: ts.Decorator): boolean {
-	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === 'Output';
-}
-
-export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): InputOutputTypeInfo {
-
-	const map: InputOutputTypeInfo = {};
-	classNode.members.forEach(member => {
-		if (!ts.isPropertyDeclaration(member)) {
-			return;
-		}
-		const decorators = ts.getDecorators(member);
-		if (!decorators) {
-			return;
-		}
-		const inputDecorators = decorators.filter(decoratorFilter);
-		if (!inputDecorators.length) {
-			return;
-		}
-		let inputType = member.type?.getText();
-		if (!inputType && member.initializer) {
-			inputType = checker.typeToString(checker.getTypeAtLocation(member.initializer), member.initializer, undefined);
-		}
-		inputDecorators.forEach(input => {
-			const decoratorCall = input.expression as ts.CallExpression;
-			const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
-			const inputName = aliasName ? aliasName.text : member.name.getText();
-			map[inputName] = inputType;
-		});
-	})
-	return map;
-}
-
-export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
-
-	return getMapByDecorator(classNode, checker, isInputDecorator);
-}
-
-export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
-	return getMapByDecorator(classNode, checker, isOutputDecorator);
-}
-
-export default beforeCompileComponentOptions;

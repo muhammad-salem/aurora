@@ -5,12 +5,11 @@ import {
 	findByTagName, Tag, htmlParser, templateParser,
 	DomNode, DomRenderNode, canAttachShadow,
 	directiveRegistry, DomElementNode,
-	DomFragmentNode, DomParentNode,
-	isValidCustomElementName
+	DomParentNode, isValidCustomElementName
 } from '@ibyar/elements';
 
 import { HTMLComponent, ValueControl } from './custom-element.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { classRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective, StructuralDirective } from '../directive/directive.js';
 import { initCustomElementView } from '../view/view.js';
 import { buildExpressionNodes } from '../html/expression.js';
@@ -23,6 +22,7 @@ import {
 	ListenerRef, OutputPropertyRef, PropertyRef
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
+import { parseHostNode } from '../html/host.js';
 import { provide } from '../di/inject.js';
 
 
@@ -82,19 +82,6 @@ export interface ComponentRef<T> {
 	zone?: ZoneType;
 }
 
-type ViewBindingOption = {
-	prototype: Record<PropertyKey, any>;
-	hostBindings?: HostBindingRef[];
-	hostListeners?: ListenerRef[];
-	selector?: string;
-};
-
-type HostNode = {
-	host?: DomElementNode;
-	window?: DomElementNode;
-	template?: DomElementNode[];
-};
-
 const DEFAULT_SHADOW_ROOT_INIT: ShadowRootInit = { mode: 'open', delegatesFocus: false, slotAssignment: 'named' };
 
 export class Components {
@@ -116,72 +103,11 @@ export class Components {
 		}
 	}
 
-	private static createOutputs(Listeners?: ListenerRef[]) {
-		return Listeners?.map(
-			listener => `(${listener.eventName})="${listener.modelCallbackName}(${listener.args.join(', ')})"`
-		).join(' ') ?? ''
-	}
-
-	private static parseHostNode(option: ViewBindingOption): HostNode {
-		const inputs = option.hostBindings?.map(binding => {
-			const descriptor = Object.getOwnPropertyDescriptor(option.prototype, binding.modelPropertyName);
-			if (typeof descriptor?.value === 'function') {
-				return `[${binding.hostPropertyName}]="${binding.modelPropertyName}()"`
-			}
-			return `[${binding.hostPropertyName}]="${binding.modelPropertyName}"`;
-		}).join(' ') ?? '';
-
-		const hostListeners: ListenerRef[] = [];
-		const windowListeners: ListenerRef[] = [];
-		const templateListeners: Record<string, ListenerRef[]> = {};
-
-		option.hostListeners?.forEach(listener => {
-			const [host, event] = listener.eventName.split(':', 2);
-			if (event === undefined) {
-				hostListeners.push(listener);
-			} else if ('window' === host.toLowerCase()) {
-				windowListeners.push(new ListenerRef(event, listener.args, listener.modelCallbackName));
-			} else {
-				(templateListeners[host] ??= []).push(new ListenerRef(event, listener.args, listener.modelCallbackName));
-			}
-		});
-
-		const result: HostNode = {};
-
-		if (hostListeners.length) {
-			const hostOutputs = Components.createOutputs(hostListeners);
-			const selector = option.selector ?? 'div';
-			const hostTemplate = `<${selector} ${inputs} ${hostOutputs}></${selector}>`;
-			result.host = htmlParser.toDomRootNode(hostTemplate) as DomElementNode;
-			buildExpressionNodes(result.host);
-		}
-
-		if (windowListeners.length) {
-			const windowOutputs = Components.createOutputs(windowListeners);
-			const windowTemplate = `<window ${windowOutputs}></window>`;
-			result.window = htmlParser.toDomRootNode(windowTemplate) as DomElementNode;
-			buildExpressionNodes(result.window);
-		}
-
-		const templateHosts = Object.keys(templateListeners);
-		if (templateHosts.length) {
-			const template = templateHosts.map(host => {
-				const hostOutputs = Components.createOutputs(templateListeners[host]);
-				return `<template #${host} ${hostOutputs}></template>`;
-			}).join('');
-			const templateNodes = htmlParser.toDomRootNode(template) as DomElementNode | DomFragmentNode;
-			buildExpressionNodes(templateNodes);
-			result.template = templateNodes instanceof DomFragmentNode
-				? templateNodes.children?.filter(child => child instanceof DomElementNode) as DomElementNode[] ?? []
-				: [templateNodes];
-		}
-		return result;
-	}
 
 	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		if (metadata.hostListeners?.length || metadata.hostBindings?.length) {
-			const hostNode = Components.parseHostNode({
+			const hostNode = parseHostNode({
 				prototype: modelClass.prototype,
 				hostBindings: metadata.hostBindings,
 				hostListeners: metadata.hostListeners,
@@ -189,7 +115,7 @@ export class Components {
 			metadata.viewBindings = hostNode.host;
 		}
 		metadata.modelClass = modelClass;
-		ClassRegistryProvider.registerDirective(modelClass);
+		classRegistryProvider.registerDirective(modelClass);
 		directiveRegistry.register(opts.selector, {
 			inputs: (metadata.inputs as PropertyRef[])?.map(input => input.viewAttribute),
 			outputs: (metadata.outputs as PropertyRef[])?.map(output => output.viewAttribute),
@@ -200,14 +126,14 @@ export class Components {
 	static definePipe<T extends Class>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
-		ClassRegistryProvider.registerPipe(modelClass);
+		classRegistryProvider.registerPipe(modelClass);
 	}
 
 	static defineInjectable<T extends Class>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
-		ClassRegistryProvider.registerInjectable(modelClass);
+		classRegistryProvider.registerInjectable(modelClass);
 		provide(modelClass);
 	}
 
@@ -256,7 +182,7 @@ export class Components {
 		}
 
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
-			const hostNode = Components.parseHostNode({
+			const hostNode = parseHostNode({
 				prototype: modelClass.prototype,
 				selector: componentRef.selector,
 				hostBindings: componentRef.hostBindings,
@@ -291,8 +217,8 @@ export class Components {
 		componentRef.modelClass = modelClass;
 		componentRef.viewClass = initCustomElementView(modelClass, componentRef);
 
-		ClassRegistryProvider.registerComponent(modelClass);
-		ClassRegistryProvider.registerView(componentRef.viewClass);
+		classRegistryProvider.registerComponent(modelClass);
+		classRegistryProvider.registerView(componentRef.viewClass);
 
 		const options: ElementDefinitionOptions = {};
 		const parentTagName = componentRef.extend?.name;
@@ -312,7 +238,7 @@ export class Components {
 	}
 
 	static defineView<T extends HTMLElement>(viewClass: MetadataClass<T>, opt: { selector: string } & ElementDefinitionOptions) {
-		ClassRegistryProvider.registerView(viewClass);
+		classRegistryProvider.registerView(viewClass);
 		const { selector, ...definition } = opt;
 		customElements.define(
 			selector,

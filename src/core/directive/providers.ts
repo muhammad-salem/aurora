@@ -1,7 +1,7 @@
 import { ReactiveScope } from '@ibyar/expressions';
 import { TypeOf } from '@ibyar/expressions/api/utils';
 import { isOnInit } from '../component/lifecycle.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { classRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective } from './directive.js';
 
 export type ElementContext = { this: HTMLElement } & { [key: string]: AttributeDirective | undefined; };
@@ -30,7 +30,7 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 				return Reflect.get(directive, propertyKey);
 			}
 		}
-		const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(propertyKey as string);
+		const directiveRef = classRegistryProvider.getDirectiveRef<any>(propertyKey as string);
 		if (directiveRef && directiveRef.modelClass instanceof AttributeDirective) {
 			const directive = new directiveRef.modelClass(this.el) as AttributeDirective;
 			this.directiveMap.set(propertyKey as string, directive);
@@ -55,7 +55,7 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 				return Reflect.set(directive, propertyKey, value);
 			}
 		}
-		const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(propertyKey as string);
+		const directiveRef = classRegistryProvider.getDirectiveRef<any>(propertyKey as string);
 		if (directiveRef && directiveRef.modelClass.prototype instanceof AttributeDirective) {
 			const directive = new directiveRef.modelClass(this.el) as AttributeDirective;
 			this.directiveMap.set(propertyKey as string, directive);
@@ -79,10 +79,10 @@ export class ElementReactiveScope extends ReactiveScope<ElementContext> {
 				return true;
 			}
 		}
-		if (ClassRegistryProvider.hasDirective(propertyKey)) {
+		if (classRegistryProvider.hasDirective(propertyKey)) {
 			return true;
 		}
-		if (ClassRegistryProvider.directiveHasInput(propertyKey)) {
+		if (classRegistryProvider.directiveHasInput(propertyKey)) {
 			return true;
 		}
 		return false;

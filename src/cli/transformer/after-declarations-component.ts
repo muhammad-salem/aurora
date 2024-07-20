@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { createStaticPropertyViewType, updateModule } from './factory.js';
+import { createStaticPropertyViewType, updateModuleTypeWithComponentView } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
 
@@ -13,14 +13,11 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 	return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
 		return sourceFile => {
 			const moduleInfo = moduleManger.get(sourceFile.fileName);
-			moduleManger.delete(sourceFile.fileName);
-			if (!moduleInfo) {
-				return sourceFile;
-			} else if (moduleInfo.skip || !moduleInfo.classes) {
+			if (!moduleInfo?.classes?.length) {
 				return sourceFile;
 			}
 
-			const classes = moduleInfo.classes;
+			const classes = moduleInfo.classes.filter(c => c.type === 'component');
 
 			const sourceViewInfos: ViewInfo[] = classes.flatMap(c => c.views);
 			const updateSourceFile = ts.visitNode(sourceFile, (node: ts.SourceFile) => {
@@ -62,7 +59,7 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 				// });
 				// statements.push(...interfaces);
 				// statements.push(...updateGlobalHTMLElementTagNameMap(sourceViewInfos.map(v => ({ tagName: v.selector, viewName: v.viewName }))));
-				statements.push(...updateModule(classes));
+				statements.push(...updateModuleTypeWithComponentView(classes));
 				return ts.factory.updateSourceFile(
 					sourceFile,
 					statements,
@@ -77,5 +74,3 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 		};
 	};
 }
-
-export default afterDeclarationsCompileComponentOptions;

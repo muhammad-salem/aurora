@@ -1,7 +1,7 @@
 import { ReactiveScopeControl, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
 import { OnDestroy } from '../component/lifecycle.js';
 import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { classRegistryProvider } from '../providers/provider.js';
 import { TypeOf } from '../utils/typeof.js';
 
 /**
@@ -33,7 +33,7 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		if (pipeName in this._ctx) {
 			return true;
 		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		const pipeRef = classRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		return pipeRef !== undefined && !pipeRef.asynchronous;
 	}
 	get(pipeName: string): any {
@@ -41,7 +41,7 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		if (transformFunc = this._ctx[pipeName]) {
 			return transformFunc;
 		}
-		const pipeRef = ClassRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
+		const pipeRef = classRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		if (pipeRef !== undefined && !pipeRef.asynchronous) {
 			const pipe = new pipeRef.modelClass();
 			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
@@ -60,11 +60,11 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 		super({});
 	}
 	has(pipeName: string): boolean {
-		const pipeRef = ClassRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
+		const pipeRef = classRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		return pipeRef?.asynchronous ? true : false;
 	}
 	get(pipeName: string): TypeOf<AsyncPipeTransform<any, any>> | undefined {
-		const pipeRef = ClassRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
+		const pipeRef = classRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		if (pipeRef?.asynchronous) {
 			return pipeRef.modelClass;
 		}

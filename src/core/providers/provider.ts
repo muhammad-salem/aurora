@@ -114,7 +114,7 @@ export class ClassRegistry {
 	getDirectiveRef<T>(selector: string): DirectiveRef<T> | undefined {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef = ReflectComponents.getMetaDate(directiveClass) as DirectiveRef<T>;
-			if (directiveRef.selector === selector) {
+			if (directiveRef?.selector === selector) {
 				return directiveRef;
 			}
 		}
@@ -143,4 +143,4 @@ export class ClassRegistry {
 	}
 }
 
-export const ClassRegistryProvider = new ClassRegistry();
+export const classRegistryProvider = new ClassRegistry();

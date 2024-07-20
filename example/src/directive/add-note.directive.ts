@@ -5,7 +5,7 @@ import { Component, Directive, Input, OnDestroy, OnInit, StructuralDirective } f
 	selector: 'note-component',
 	template: `<div class="alert alert-success" role="alert">structural directive name: '{{directiveName}}'</div>`
 })
-class NoteComponent {
+export class NoteComponent {
 
 
 	@Input()

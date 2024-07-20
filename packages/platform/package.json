@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/platform",
-	"version": "2.0.2",
+	"version": "2.1.1",
 	"description": "Ibyar Platform, A utility package for Aurora",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/platform",
@@ -48,5 +48,5 @@
 		"platform",
 		"front-end"
 	],
-	"gitHead": "59201a2da8d5f72094275e23bf7377bbc664af78"
+	"gitHead": "fe5f9e549067991c34ef34d6f5aeac7ce1e8f253"
 }

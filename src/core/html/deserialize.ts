@@ -56,9 +56,10 @@ function deserializeChild(child: DomNode) {
 		deserializeBaseNode(child);
 		deserializeDomParentNode(child);
 	} else if (child instanceof DomStructuralDirectiveNode) {
-		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = (child as DomStructuralDirectiveNodeUpgrade).templateExpressions.map(deserialize);
+		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = (child as DomStructuralDirectiveNodeUpgrade).templateExpressions?.map(deserialize) ?? [];
 		deserializeChild(child.node);
 		deserializeBaseNode(child);
+		child.successor && deserializeChild(child.successor);
 	} else if (isLiveTextContent(child)) {
 		deserializeLiveText(child);
 	} else if (child instanceof DomFragmentNode) {
