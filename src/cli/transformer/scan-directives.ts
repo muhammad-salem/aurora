@@ -2,10 +2,6 @@ import ts from 'typescript/lib/tsserverlibrary.js';
 import { DirectiveInfo, registerDirectiveCall } from '../directives/register.js';
 
 
-function removeQuotations(string: string) {
-	return string.substring(1, string.length - 1);
-}
-
 function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.SourceFile) {
 	console.log(alias.getText(sourceFile));
 	const type = alias.type;
@@ -24,7 +20,7 @@ function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.Source
 			const name = member.name.getText(sourceFile);
 			if ((name === 'selector' || name === 'successor') && member.type && ts.isLiteralTypeNode(member.type)) {
 				const value = member.type.literal.getText(sourceFile);
-				info[name] = removeQuotations(value);
+				info[name] = value;
 			} else if ((name === 'inputs' || name === 'outputs') && member.type && ts.isTupleTypeNode(member.type)) {
 				type Item = { name: string, aliasName: string };
 				const value: Item[] = [];
@@ -40,7 +36,7 @@ function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.Source
 						const key = property.name.getText(sourceFile);
 						if ((key === 'name' || key == 'aliasName') && property.type && ts.isLiteralTypeNode(property.type)) {
 							const keyValue = property.type.literal.getText(sourceFile);
-							itemObject[key] = removeQuotations(keyValue);
+							itemObject[key] = keyValue;
 						}
 					});
 					value.push(itemObject);
