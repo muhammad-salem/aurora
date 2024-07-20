@@ -1,6 +1,7 @@
 import '../directives/register.js';
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
+import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-declarations-directie.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 import { scanDirectivesTypeVisitor } from '../transformer/scan-directives.js';
@@ -19,6 +20,7 @@ export function emitProgram(program: ts.Program) {
 		after: [],
 		afterDeclarations: [
 			afterDeclarationsCompileComponentOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
+			afterDeclarationsCompileDirectiveOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
 		],
 	});
 }
