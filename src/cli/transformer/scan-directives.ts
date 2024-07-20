@@ -7,60 +7,54 @@ function removeQuotations(string: string) {
 }
 
 function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.SourceFile) {
-	const type = alias.type;
-	if (!ts.isTupleTypeNode(type)) {
+	const elm = alias.type;
+	if (!ts.isTypeLiteralNode(elm)) {
 		return;
 	}
-	type.elements.forEach(elm => {
-		if (!ts.isTypeLiteralNode(elm)) {
+	const info = {} as DirectiveInfo;
+	elm.members.forEach(member => {
+		if (!ts.isPropertySignature(member)) {
 			return;
 		}
-		const info = {} as DirectiveInfo;
-		elm.members.forEach(member => {
-			if (!ts.isPropertySignature(member)) {
-				return;
-			}
-			const name = member.name.getText(sourceFile);
-			if ((name === 'selector' || name === 'successor') && member.type && ts.isLiteralTypeNode(member.type)) {
-				const value = member.type.literal.getText(sourceFile);
-				info[name] = removeQuotations(value);
-			} else if ((name === 'inputs' || name === 'outputs') && member.type && ts.isTupleTypeNode(member.type)) {
-				type Item = { name: string, aliasName: string };
-				const value: Item[] = [];
-				member.type.elements.forEach(item => {
-					if (!ts.isTypeLiteralNode(item)) {
+		const name = member.name.getText(sourceFile);
+		if ((name === 'selector' || name === 'successor') && member.type && ts.isLiteralTypeNode(member.type)) {
+			const value = member.type.literal.getText(sourceFile);
+			info[name] = removeQuotations(value);
+		} else if ((name === 'inputs' || name === 'outputs') && member.type && ts.isTupleTypeNode(member.type)) {
+			type Item = { name: string, aliasName: string };
+			const value: Item[] = [];
+			member.type.elements.forEach(item => {
+				if (!ts.isTypeLiteralNode(item)) {
+					return;
+				}
+				const itemObject = {} as Item;
+				item.members.forEach(property => {
+					if (!ts.isPropertySignature(property)) {
 						return;
 					}
-					const itemObject = {} as Item;
-					item.members.forEach(property => {
-						if (!ts.isPropertySignature(property)) {
-							return;
-						}
-						const key = property.name.getText(sourceFile);
-						if ((key === 'name' || key == 'aliasName') && property.type && ts.isLiteralTypeNode(property.type)) {
-							const keyValue = property.type.literal.getText(sourceFile);
-							itemObject[key] = removeQuotations(keyValue);
-						}
-					});
-					value.push(itemObject);
+					const key = property.name.getText(sourceFile);
+					if ((key === 'name' || key == 'aliasName') && property.type && ts.isLiteralTypeNode(property.type)) {
+						const keyValue = property.type.literal.getText(sourceFile);
+						itemObject[key] = removeQuotations(keyValue);
+					}
 				});
-				info[name] = value;
-			}
-		});
-		if (!info.selector) {
-			return;
+				value.push(itemObject);
+			});
+			info[name] = value;
 		}
-		registerDirectiveCall(info);
 	});
-
+	if (!info.selector) {
+		return;
+	}
+	registerDirectiveCall(info);
 }
 
 /**
- * search for `ɵɵ0Directives0ɵɵ` type
+ * search for `ɵɵ0Directive.*0ɵɵ` type
  * 
  * example:
  * ```ts
- * export type ɵɵ0Directives0ɵɵ = [{
+ * export type ɵɵ0IfDirective0ɵɵ = {
  * 	selector: '*if';
  * 	successor: '*else',
  * 	inputs: [
@@ -69,14 +63,14 @@ function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.Source
  * 		{ name: 'elseTemplateRef', aliasName: 'else' },
  * 	],
  * 	outputs: [],
- * }];
+ * };
  * ```
  * @param program a ts program 
  * @returns a transformer factory of source file
  */
 export function scanDirectivesTypeVisitor(sourceFile: ts.SourceFile): void {
 	ts.forEachChild(sourceFile, node => {
-		if (ts.isTypeAliasDeclaration(node) && node.name.getText(sourceFile) === 'ɵɵ0Directives0ɵɵ') {
+		if (ts.isTypeAliasDeclaration(node) && node.name.getText(sourceFile).endsWith('Directive0ɵɵ')) {
 			extractDirectives(node, sourceFile);
 		}
 	});
