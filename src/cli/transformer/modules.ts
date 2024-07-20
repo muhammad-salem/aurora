@@ -36,6 +36,12 @@ class ModuleManger implements Map<string, ModuleInfo> {
 	private map = new Map<string, ModuleInfo>();
 
 	add(info: ModuleInfo) {
+		if (!info.skip && info.classes) {
+			const old = this.map.get(info.path);
+			if (old && !old.skip) {
+				info.classes = info.classes.concat(old.classes ?? []);
+			}
+		}
 		this.map.set(info.path, info);
 	}
 	clear(): void {
