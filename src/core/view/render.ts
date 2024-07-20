@@ -9,7 +9,7 @@ import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js'
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent, isHTMLComponent } from '../component/custom-element.js';
 import { documentStack } from '../context/stack.js';
-import { ClassRegistryProvider } from '../providers/provider.js';
+import { classRegistryProvider } from '../providers/provider.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
@@ -107,7 +107,7 @@ export class ComponentRender<T extends object> {
 		return Reflect.get(this.view, name);
 	}
 	createStructuralDirective(directive: DomStructuralDirectiveNode, comment: Comment, directiveStack: Stack, subscriptions: ScopeSubscription<Context>[], parentNode: Node, host: HTMLComponent<any> | StructuralDirective): void {
-		const directiveRef = ClassRegistryProvider.getDirectiveRef<T>(directive.name);
+		const directiveRef = classRegistryProvider.getDirectiveRef<T>(directive.name);
 		if (!directiveRef) {
 			// didn't find directive or it is not define yet.
 			// class registry should have 'when defined' callback
@@ -322,7 +322,7 @@ export class ComponentRender<T extends object> {
 		contextStack: Stack,
 		subscriptions: ScopeSubscription<Context>[]) {
 		attributeDirectives?.forEach(directiveNode => {
-			const directiveRef = ClassRegistryProvider.getDirectiveRef<any>(directiveNode.name);
+			const directiveRef = classRegistryProvider.getDirectiveRef<any>(directiveNode.name);
 			if (!directiveRef
 				|| !((directiveRef.modelClass.prototype instanceof AttributeDirective)
 					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
