@@ -49,17 +49,6 @@ class ContextService {
 		return value;
 	}
 
-	/**
-	 * used for macaulay assign metadata to constructor
-	 * @param key 
-	 * @returns 
-	 */
-	createAndAssign(key: Record<any, any>) {
-		const metadata = this.getOrCreate(key);
-		Object.assign(key, { [Symbol.metadata]: metadata });
-		return metadata;
-	}
-
 	private clone(child: MetadataContext, parent: MetadataContext): void {
 		for (const property in parent) {
 			const parentValue = parent[property];
