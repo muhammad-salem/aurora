@@ -114,7 +114,6 @@ export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, view
 }
 
 export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
-
 	const viewClassDeclarations = classes.map(c => {
 		const inputs = c.inputs.map(input => input.aliasName);
 		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
@@ -145,4 +144,37 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 			}
 		}`;
 	return generateStatements(sourceCode);
+}
+
+/**
+ * create new type with name `ɵɵ0Directives0ɵɵ`
+ * 
+ * example:
+ * ```ts
+ * export type ɵɵ0Directives0ɵɵ = [{
+ * 	selector: '*if';
+ * 	successor: '*else',
+ * 	inputs: [
+ * 		{ name: 'ifCondition', aliasName: 'if' },
+ * 		{ name: 'thenTemplateRef', aliasName: 'then' },
+ * 		{ name: 'elseTemplateRef', aliasName: 'else' },
+ * 	],
+ * 	outputs: [],
+ * }];
+ * ```
+ * @param classes directive class information
+ * @returns new array of statements
+ */
+export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
+	const nodes: string[] | undefined = classes.map(directive => {
+		const inputs: string[] = directive.inputs.map(input => `${input.name}: ${input.aliasName}`);
+		const outputs: string[] = directive.outputs.map(input => `${input.name}: ${input.aliasName}`);
+		return `{
+			selector: ${directive.name},${directive.successor ? `successor: ${directive.successor},` : ''}
+			inputs: [${inputs.join(',')}],
+			inputs: [${outputs.join(',')}],
+		}`;
+	});
+	const directivesType = `export type ɵɵ0Directives0ɵɵ = [${nodes.join(',')}]`;
+	return generateStatements(directivesType);
 }
