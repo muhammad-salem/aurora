@@ -1,6 +1,6 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { buildExpressionNodes } from '@ibyar/core/node';
-import { htmlParser } from '@ibyar/elements/node';
+import { buildExpressionNodes } from '@ibyar/core/node.js';
+import { htmlParser } from '@ibyar/elements/node.js';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
 	createConstructorOfViewInterfaceDeclaration,

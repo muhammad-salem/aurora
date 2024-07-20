@@ -1,4 +1,4 @@
-import { DomElementNode, DomFragmentNode, htmlParser } from '@ibyar/elements/node';
+import { DomElementNode, DomFragmentNode, htmlParser } from '@ibyar/elements/node.js';
 import { HostBindingRef, ListenerRef } from '../component/reflect.js';
 import { buildExpressionNodes } from './expression.js';
 
