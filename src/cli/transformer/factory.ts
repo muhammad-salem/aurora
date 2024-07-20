@@ -167,13 +167,19 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
  */
 export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 	const nodes: string[] | undefined = classes.map(directive => {
-		const inputs: string[] = directive.inputs.map(input => `${input.name}: ${input.aliasName}`);
-		const outputs: string[] = directive.outputs.map(input => `${input.name}: ${input.aliasName}`);
-		return `{
-			selector: ${directive.name},${directive.successor ? `successor: ${directive.successor},` : ''}
-			inputs: [${inputs.join(',')}],
-			inputs: [${outputs.join(',')}],
-		}`;
+		const inputs: string[] = directive.inputs.map(input => `{name: '${input.name}', aliasName: '${input.aliasName}'}`);
+		const outputs: string[] = directive.outputs.map(output => `{name: '${output.name}', aliasName: '${output.aliasName}'}`);
+		const temp: string[] = [`selector: '${directive.name}'`];
+		if (directive.successor) {
+			temp.push(`successor: '${directive.successor}'`);
+		}
+		if (directive.inputs.length > 0) {
+			temp.push(`inputs: [${inputs.join(',')}]`);
+		}
+		if (directive.outputs.length > 0) {
+			temp.push(`outputs: [${outputs.join(',')}]`);
+		}
+		return `{${temp.join(',')}}`;
 	});
 	const directivesType = `export type ɵɵ0Directives0ɵɵ = [${nodes.join(',')}]`;
 	return generateStatements(directivesType);
