@@ -7,11 +7,11 @@ const CLI_VERSION = '2.0.3';
 const args = process.argv;
 const inputs = args.slice(2);
 
-const showHelp = inputs.includes('-h') || inputs.includes('--help');
-const printVersion = inputs.includes('-v') || inputs.includes('--version');
+const showHelp = inputs[0] === '-h' || inputs[0] === '--help';
+const printVersion = inputs[0] === '-v' || inputs[0] === '--version';
 
-const runBuild = inputs.includes('-b') || inputs.includes('--build');
-const generateTypes = inputs.includes('-gt') || inputs.includes('--generate-types');
+const runBuild = inputs[0] === '-b' || inputs[0] === '--build';
+const generateTypes = inputs[0] === '-gt' || inputs[0] === '--generate-types';
 
 if (showHelp) {
 	const help =
