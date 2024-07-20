@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/cli",
-	"version": "2.0.2",
+	"version": "2.1.0",
 	"description": "The Ibyar/Aurora CLI tool",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
@@ -36,12 +36,12 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^2.0.2",
-		"@ibyar/decorators": "^2.0.2",
-		"@ibyar/directives": "^2.0.2",
-		"@ibyar/elements": "^2.0.2",
-		"@ibyar/expressions": "^2.0.2",
-		"@ibyar/pipes": "^2.0.2",
+		"@ibyar/core": "^2.1.0",
+		"@ibyar/decorators": "^2.1.0",
+		"@ibyar/directives": "^2.1.0",
+		"@ibyar/elements": "^2.1.0",
+		"@ibyar/expressions": "^2.1.0",
+		"@ibyar/pipes": "^2.1.0",
 		"tslib": "^2.6.3",
 		"typescript": "^5.5.2"
 	},
