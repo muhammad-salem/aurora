@@ -3,7 +3,7 @@ import { directiveRegistry } from '@ibyar/elements/node.js';
 import { DecoratorInfo } from '../transformer/modules.js';
 import { metadataHoler } from '@ibyar/decorators';
 
-interface DirectiveInfo {
+export interface DirectiveInfo {
 	selector: string,
 	successor?: string,
 	inputs?: DecoratorInfo[],
