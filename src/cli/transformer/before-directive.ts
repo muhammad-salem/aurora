@@ -44,7 +44,6 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 				}
 			}
 			if (!visitSourceFile) {
-				moduleManger.add({ path: sourceFile.fileName, skip: true });
 				return sourceFile;
 			}
 			const classes: ClassInfo[] = [];
@@ -60,7 +59,7 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 							return childNode;
 						}
 						childNode.modifiers?.forEach(modifier => {
-							if (ts.isDecorator(modifier) && isDirectiveDecorator(modifier)) {
+							if (ts.isDecorator(modifier) && isDirectiveDecorator(modifier, directivePropertyName)) {
 								const options = (modifier.expression as ts.CallExpression).arguments[0];
 								if (ts.isObjectLiteralExpression(options)) {
 									const selector = getTextValueForProperty(options, 'selector');

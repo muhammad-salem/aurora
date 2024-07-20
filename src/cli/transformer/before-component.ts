@@ -51,7 +51,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				}
 			}
 			if (!visitSourceFile) {
-				moduleManger.add({ path: sourceFile.fileName, skip: true });
 				return sourceFile;
 			}
 
@@ -218,7 +217,6 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 					updateSourceFile.libReferenceDirectives,
 				);
 			}
-			moduleManger.add({ path: sourceFile.fileName, skip: true });
 			return updateSourceFile;
 		};
 	};

@@ -19,9 +19,7 @@ export type ClassInfo = {
 	outputs: DecoratorInfo[];
 };
 
-export type ModuleInfo =
-	| { path: string; skip: true; }
-	| { path: string; skip?: false; classes?: ClassInfo[]; }
+export type ModuleInfo = { path: string; classes?: ClassInfo[]; }
 
 class ModuleManger implements Map<string, ModuleInfo> {
 	[Symbol.iterator](): IterableIterator<[string, ModuleInfo]> {
@@ -36,9 +34,9 @@ class ModuleManger implements Map<string, ModuleInfo> {
 	private map = new Map<string, ModuleInfo>();
 
 	add(info: ModuleInfo) {
-		if (!info.skip && info.classes) {
+		if (info.classes?.length) {
 			const old = this.map.get(info.path);
-			if (old && !old.skip) {
+			if (old) {
 				info.classes = info.classes.concat(old.classes ?? []);
 			}
 		}
