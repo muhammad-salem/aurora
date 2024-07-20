@@ -47,7 +47,6 @@ function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.Source
 		if (!info.selector) {
 			return;
 		}
-		console.log('registerDirectiveCall', info);
 		registerDirectiveCall(info);
 	});
 
