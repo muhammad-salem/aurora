@@ -182,7 +182,10 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		let directiveTypeName = directive.name.startsWith('*')
 			? directive.name.substring(1)
 			: directive.name;
-		directiveTypeName = ToCamelCase(directiveTypeName.replace(/[-_]/, ' '));
+		directiveTypeName = directiveTypeName.replaceAll(/[-_]/, ' ')
+			.split(' ')
+			.map(str => str.charAt(0).toUpperCase() + str.substring(1))
+			.join('');
 		return `export type ɵɵ0${ToCamelCase(directiveTypeName)}Directive0ɵɵ = {${temp.join(',')}};`;
 	});
 	return generateStatements(nodes.join());
