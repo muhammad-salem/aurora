@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { moduleManger } from './modules.js';
+import { ClassInfo, moduleManger } from './modules.js';
 import {
 	getInputs, getOutputs,
 	getTextValueForProperty,
@@ -47,6 +47,7 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 				moduleManger.add({ path: sourceFile.fileName, skip: true });
 				return sourceFile;
 			}
+			const classes: ClassInfo[] = [];
 			ts.visitNode(sourceFile, (node: ts.SourceFile) => {
 				return ts.visitEachChild(node, (childNode) => {
 					if (ts.isClassDeclaration(childNode)) {
@@ -73,6 +74,14 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 											inputs,
 											outputs
 										});
+										classes.push({
+											type: 'directive',
+											name: selector,
+											successor,
+											inputs,
+											outputs,
+											views: [],
+										});
 									}
 								}
 							}
@@ -81,6 +90,9 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 					return childNode;
 				}, context);
 			});
+			if (classes.length) {
+				moduleManger.add({ path: sourceFile.fileName, classes });
+			}
 			return sourceFile;
 		};
 	};

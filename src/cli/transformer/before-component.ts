@@ -169,6 +169,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 						});
 
 						classes.push({
+							type: 'component',
 							name: childNode.name?.getText() ?? '',
 							views: viewInfos,
 							inputs: getInputs(childNode, typeChecker),

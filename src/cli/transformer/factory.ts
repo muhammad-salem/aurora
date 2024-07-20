@@ -113,7 +113,7 @@ export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, view
 	return generateStatements(sourceCode);
 }
 
-export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
+export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 
 	const viewClassDeclarations = classes.map(c => {
 		const inputs = c.inputs.map(input => input.aliasName);
