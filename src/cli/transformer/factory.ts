@@ -179,8 +179,14 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		if (directive.outputs.length > 0) {
 			temp.push(`outputs: [${outputs.join(',')}]`);
 		}
-		return `{${temp.join(',')}}`;
+		let directiveTypeName = directive.name.startsWith('*')
+			? directive.name.substring(1)
+			: directive.name;
+		directiveTypeName = directiveTypeName.replaceAll('-', ' ')
+			.split(' ')
+			.map(str => str.charAt(0).toUpperCase() + str.substring(1))
+			.join('');
+		return `export type ɵɵ0${ToCamelCase(directiveTypeName)}Directive0ɵɵ = {${temp.join(',')}};`;
 	});
-	const directivesType = `export type ɵɵ0Directives0ɵɵ = [${nodes.join(',')}]`;
-	return generateStatements(directivesType);
+	return generateStatements(nodes.join());
 }

@@ -2,13 +2,13 @@
 
 import { exit } from 'process';
 
-const CLI_VERSION = '2.1.1';
+const CLI_VERSION = '2.1.2';
 
 const args = process.argv;
 const inputs = args.slice(2);
 
 const showHelp = inputs.includes('-h') || inputs.includes('--help');
-const printVersion = inputs.includes('-v') || inputs.includes('--version');
+const printVersion = inputs.length === 1 && (inputs.includes('-v') || inputs.includes('--version'));
 
 const runBuild = inputs.includes('-b') || inputs.includes('--build');
 const generateTypes = inputs.includes('-gt') || inputs.includes('--generate-types');
