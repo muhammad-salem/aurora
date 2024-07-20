@@ -13,10 +13,10 @@ export function afterDeclarationsCompileComponentOptions(program: ts.Program): t
 	return (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
 		return sourceFile => {
 			const moduleInfo = moduleManger.get(sourceFile.fileName);
-			moduleManger.delete(sourceFile.fileName);
 			if (!moduleInfo) {
 				return sourceFile;
 			} else if (moduleInfo.skip || !moduleInfo.classes) {
+				moduleManger.delete(sourceFile.fileName);
 				return sourceFile;
 			}
 
