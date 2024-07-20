@@ -182,7 +182,7 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		let directiveTypeName = directive.name.startsWith('*')
 			? directive.name.substring(1)
 			: directive.name;
-		directiveTypeName = directiveTypeName.replaceAll(/[-_]/, ' ')
+		directiveTypeName = directiveTypeName.replaceAll('-', ' ')
 			.split(' ')
 			.map(str => str.charAt(0).toUpperCase() + str.substring(1))
 			.join('');
