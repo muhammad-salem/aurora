@@ -6,40 +6,103 @@ import { metadataHoler } from '@ibyar/decorators';
 interface DirectiveInfo {
 	selector: string,
 	successor?: string,
-	inputs: DecoratorInfo[],
-	outputs: DecoratorInfo[],
+	inputs?: DecoratorInfo[],
+	outputs?: DecoratorInfo[],
 }
 export function registerDirectiveCall(info: DirectiveInfo) {
 	directiveRegistry.register(info.selector, {
 		successor: info.successor,
-		inputs: info.inputs.map(i => i.aliasName),
-		outputs: info.outputs.map(i => i.aliasName),
+		inputs: info.inputs?.map(i => i.aliasName),
+		outputs: info.outputs?.map(i => i.aliasName),
 	});
 	const modelClass = {};
-	const metadata = metadataHoler.createAndAssign(modelClass);
+	const modelKey = {};
+	(modelClass as any)[Symbol.metadata] = modelKey;
+	const metadata = metadataHoler.getOrCreate(modelKey);
 	metadata.modelClass = modelClass;
 	metadata.selector = info.selector;
-	metadata.inputs = info.inputs.map(input => ({ modelProperty: input.name, viewAttribute: input.aliasName }));
+	metadata.inputs = info.inputs?.map(input => ({ modelProperty: input.name, viewAttribute: input.aliasName }));
 	registerDirective(modelClass);
 }
 
+/**
+ * register `class` and `style` attribute directive
+ */
+registerDirectiveCall({
+	selector: 'class',
+	inputs: [{ name: 'class', aliasName: 'class' }],
+});
+
+registerDirectiveCall({
+	selector: 'style',
+	inputs: [{ name: 'style', aliasName: 'style' }],
+});
+
+
+// registerDirective
 
 /**
  * for of/await/in directives
  */
-directiveRegistry.register('*for', { inputs: ['of', 'trackBy'], successor: '*empty' });
-directiveRegistry.register('*forOf', { inputs: ['of', 'trackBy'], successor: '*empty' });
-directiveRegistry.register('*forAwait', { inputs: ['of'], successor: '*empty' });
-directiveRegistry.register('*forIn', { inputs: ['in'], successor: '*empty' });
+registerDirectiveCall({
+	selector: '*for',
+	successor: '*empty',
+	inputs: [
+		{ name: 'forOf', aliasName: 'of' },
+		{ name: 'trackBy', aliasName: 'trackBy' },
+	],
+});
+
+registerDirectiveCall({
+	selector: '*forOf',
+	successor: '*empty',
+	inputs: [
+		{ name: 'forOf', aliasName: 'of' },
+		{ name: 'trackBy', aliasName: 'trackBy' },
+	],
+});
+
+registerDirectiveCall({
+	selector: '*forAwait',
+	successor: '*empty',
+	inputs: [{ name: 'forOf', aliasName: 'of' },],
+});
+
+registerDirectiveCall({
+	selector: '*forIn',
+	successor: '*empty',
+	inputs: [{ name: 'forOf', aliasName: 'of' },],
+});
+
 
 /**
  * if then else directive
  */
-directiveRegistry.register('*if', { inputs: ['if', 'then', 'else'], successor: '*else' });
+registerDirectiveCall({
+	selector: '*if',
+	successor: '*else',
+	inputs: [
+		{ name: 'ifCondition', aliasName: 'if' },
+		{ name: 'thenTemplateRef', aliasName: 'then' },
+		{ name: 'elseTemplateRef', aliasName: 'else' },
+	],
+});
+
 
 /**
  * switch case default directives
  */
-directiveRegistry.register('*switch', { inputs: ['switch'] });
-directiveRegistry.register('*case', { inputs: ['case'] });
-directiveRegistry.register('*default', { inputs: ['default'] });
+registerDirectiveCall({
+	selector: '*switch',
+	inputs: [{ name: 'switchValue', aliasName: 'switch' },],
+});
+
+registerDirectiveCall({
+	selector: '*case',
+	inputs: [{ name: 'caseValue', aliasName: 'case' },],
+});
+
+registerDirectiveCall({
+	selector: '*default',
+	inputs: [{ name: 'defaultCaseValue', aliasName: 'default' },],
+});
