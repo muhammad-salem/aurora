@@ -1,5 +1,5 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { InputOutputTypeInfo } from './modules.js';
+import { DecoratorInfo } from './modules.js';
 
 
 /**
@@ -70,8 +70,8 @@ export function isOutputDecorator(decorator: ts.Decorator): boolean {
 	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === 'Output';
 }
 
-export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): InputOutputTypeInfo {
-	const map: InputOutputTypeInfo = {};
+export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): DecoratorInfo[] {
+	const infos: DecoratorInfo[] = [];
 	classNode.members.forEach(member => {
 		if (!ts.isPropertyDeclaration(member)) {
 			return;
@@ -91,11 +91,11 @@ export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.Ty
 		inputDecorators.forEach(input => {
 			const decoratorCall = input.expression as ts.CallExpression;
 			const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
-			const inputName = aliasName ? aliasName.text : member.name.getText();
-			map[inputName] = inputType;
+			const alias = aliasName ? aliasName.text : member.name.getText();
+			infos.push({ name: member.name.getText(), aliasName: alias, type: inputType });
 		});
 	})
-	return map;
+	return infos;
 }
 
 /**
@@ -104,7 +104,7 @@ export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.Ty
  * @param checker 
  * @returns 
  */
-export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
+export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): DecoratorInfo[] {
 	return getMapByDecorator(classNode, checker, isInputDecorator);
 }
 
@@ -115,7 +115,7 @@ export function getInputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecke
  * @returns 
  */
 export function getInputNames(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): string[] {
-	return Object.keys(getMapByDecorator(classNode, checker, isInputDecorator));
+	return getInputs(classNode, checker).map(info => info.aliasName);
 }
 
 /**
@@ -124,7 +124,7 @@ export function getInputNames(classNode: ts.ClassDeclaration, checker: ts.TypeCh
  * @param checker 
  * @returns 
  */
-export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): InputOutputTypeInfo {
+export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): DecoratorInfo[] {
 	return getMapByDecorator(classNode, checker, isOutputDecorator);
 }
 
@@ -135,7 +135,7 @@ export function getOutputs(classNode: ts.ClassDeclaration, checker: ts.TypeCheck
  * @returns 
  */
 export function getOutputNames(classNode: ts.ClassDeclaration, checker: ts.TypeChecker): string[] {
-	return Object.keys(getMapByDecorator(classNode, checker, isOutputDecorator));
+	return getOutputs(classNode, checker).map(info => info.aliasName);
 }
 
 /**

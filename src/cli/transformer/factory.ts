@@ -116,15 +116,15 @@ export function updateGlobalHTMLElementTagNameMap(views: { tagName: string, view
 export function updateModule(classes: ClassInfo[]): ts.NodeArray<ts.Statement> {
 
 	const viewClassDeclarations = classes.map(c => {
-		const inputs = Object.keys(c.inputs);
-		const outputs = Object.keys(c.outputs).map(output => 'on' + ToCamelCase(output));
+		const inputs = c.inputs.map(input => input.aliasName);
+		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
 		const interfaceBody = `
 			public static observedAttributes: [${attributes}];
 
-			${inputs.map(input => `public ${input}: ${c.inputs[input]};`).join('\n')}
+			${c.inputs.map(input => `public ${input.aliasName}${input.type ? `: ${input.type}` : ''};`).join('\n')}
 
-			${Object.keys(c.outputs).map(output => `public on${ToCamelCase(output)}: ${c.outputs[output]};`).join('\n')}
+			${c.outputs.map(output => `public on${ToCamelCase(output.aliasName)}${output.type ? `: ${output.type}` : ''};`).join('\n')}
 			
 		`;
 		// need to fix @FormValue type;

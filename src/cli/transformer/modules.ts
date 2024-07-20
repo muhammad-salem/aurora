@@ -8,13 +8,13 @@ export type ViewInfo = {
 	formAssociated: boolean;
 };
 
-export type InputOutputTypeInfo = { [name: string]: string | undefined };
+export type DecoratorInfo = { name: string, aliasName: string, type?: string };
 
 export type ClassInfo = {
 	name: string,
 	views: ViewInfo[];
-	inputs: InputOutputTypeInfo;
-	outputs: InputOutputTypeInfo;
+	inputs: DecoratorInfo[];
+	outputs: DecoratorInfo[];
 };
 
 export type ModuleInfo =
