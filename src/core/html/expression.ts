@@ -195,3 +195,11 @@ export function buildExpressionNodes(node: DomNode) {
 		parseChild(node);
 	}
 }
+
+/**
+ * function to skip node checking
+ * @param modelClass 
+ */
+export function registerDirective(modelClass: Record<string, any>) {
+	classRegistryProvider.registerDirective(modelClass as any);
+}
