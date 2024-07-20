@@ -1,13 +1,11 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { directiveRegistry } from '@ibyar/elements/node';
 import { moduleManger } from './modules.js';
 import {
-	getInputs, getOutputNames,
+	getInputs, getOutputs,
 	getTextValueForProperty,
 	isDirectiveDecorator
 } from './helpers.js';
-import { metadataHoler } from '@ibyar/decorators';
-import { registerDirective } from '@ibyar/core/node.js';
+import { registerDirectiveCall } from '../directives/register.js';
 
 
 /**
@@ -68,14 +66,13 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 									if (selector) {
 										const successor = getTextValueForProperty(options, 'successor');
 										const inputs = getInputs(childNode, typeChecker);
-										const outputs = getOutputNames(childNode, typeChecker);
-										directiveRegistry.update(selector, { inputs: inputs.map(input => input.aliasName), outputs, successor });
-										const modelClass = {};
-										const metadata = metadataHoler.createAndAssign(modelClass);
-										metadata.modelClass = modelClass;
-										metadata.selector = selector;
-										metadata.inputs = inputs.map(input => ({ modelProperty: input.name, viewAttribute: input.aliasName }));
-										registerDirective(modelClass);
+										const outputs = getOutputs(childNode, typeChecker);
+										registerDirectiveCall({
+											selector,
+											successor,
+											inputs,
+											outputs
+										});
 									}
 								}
 							}
