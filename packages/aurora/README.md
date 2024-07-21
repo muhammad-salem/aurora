@@ -98,8 +98,8 @@ yarn add @ibyar/aurora
 | @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
 | @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
 | @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform]  [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
-| @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
 | @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
+| @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
 | tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
 
 
