@@ -1,18 +1,13 @@
 import '../directives/register.js';
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
-import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-declarations-directie.js';
+import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-declarations-directive.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 import { scanDirectivesTypeVisitor } from '../transformer/scan-directives.js';
 
-export function scanDirective(program: ts.Program) {
-	program.getSourceFiles().forEach(scanDirectivesTypeVisitor);
-}
-
-export function emitProgram(program: ts.Program) {
-	scanDirective(program);
-	program.emit(undefined, undefined, undefined, undefined, {
+export function getTransformers(program: ts.Program): ts.CustomTransformers {
+	return {
 		before: [
 			beforeCompileDirectiveOptions(program),
 			beforeCompileComponentOptions(program),
@@ -22,7 +17,16 @@ export function emitProgram(program: ts.Program) {
 			afterDeclarationsCompileComponentOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
 			afterDeclarationsCompileDirectiveOptions(program) as ts.TransformerFactory<ts.SourceFile | ts.Bundle>,
 		],
-	});
+	};
+}
+
+export function scanDirective(program: ts.Program) {
+	program.getSourceFiles().forEach(scanDirectivesTypeVisitor);
+}
+
+export function emitProgram(program: ts.Program) {
+	scanDirective(program);
+	program.emit(undefined, undefined, undefined, undefined, getTransformers(program));
 }
 
 export function compileFiles(files: readonly string[], options: ts.CompilerOptions) {
@@ -40,7 +44,7 @@ export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLi
 }
 
 
-function getConfigPath() {
+export function getConfigPath() {
 	const configPath = ts.findConfigFile(
 		'./',			/*searchPath*/
 		ts.sys.fileExists,
