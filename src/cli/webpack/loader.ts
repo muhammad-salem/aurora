@@ -5,8 +5,8 @@ import { getConfigPath, getTransformers, scanDirective } from '../compiler/compi
 
 let host: ts.CompilerHost;
 let program: ts.Program;
+let orgWriteFile: ts.WriteFileCallback;
 let transformers: ts.CustomTransformers;
-
 
 /**
  * The entry point for ts-loader
@@ -20,6 +20,7 @@ export function initTypeScript() {
 		throw new Error('');
 	}
 	host = ts.createCompilerHost(cmd.options);
+	orgWriteFile = host.writeFile;
 	program = ts.createProgram(cmd.fileNames, cmd.options, host);
 	transformers = getTransformers(program);
 	scanDirective(program);
@@ -44,4 +45,5 @@ export function loader(this: webpack.LoaderContext<{}>, contents: string, inputS
 	const filePath = normalize(this.resourcePath);
 	program.emit(program.getSourceFile(filePath), undefined, undefined, undefined, transformers);
 	this.callback(null, content, sourceMap);
+	host.writeFile = orgWriteFile;
 }
