@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+import { join } from 'path';
 import { exit } from 'process';
-
-const CLI_VERSION = '2.2.0';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 const args = process.argv;
 const inputs = args.slice(2);
@@ -16,7 +17,7 @@ const generateTypes = inputs.includes('-gt') || inputs.includes('--generate-type
 if (showHelp) {
 	const help =
 		`
-Version ${CLI_VERSION}
+Version ${readPackageVersion()}
 Usage: ibyar [options]
 
 Examples:
@@ -43,7 +44,7 @@ Options:
 
 
 if (printVersion) {
-	console.log(CLI_VERSION);
+	console.log(readPackageVersion());
 }
 
 if (runBuild) {
@@ -58,4 +59,12 @@ if (runBuild) {
 
 if (generateTypes) {
 	console.log('generate types not supported yet.');
+}
+
+function readPackageVersion(): string {
+	const url = fileURLToPath(import.meta.url);
+	const path = join(url, '..', '..', 'package.json');
+	const string = readFileSync(path, 'utf-8').toString();
+	const { version } = JSON.parse(string) as { version: string };
+	return version;
 }
