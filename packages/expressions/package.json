@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/expressions",
-	"version": "2.1.2",
+	"version": "2.2.0",
 	"description": "Aurora expression, an template expression and evaluation, An 100% spec compliant ES2022 JavaScript toolchain,",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/expressions",
@@ -36,7 +36,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/decorators": "^2.1.2",
+		"@ibyar/decorators": "^2.2.0",
 		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
