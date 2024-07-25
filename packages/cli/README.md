@@ -41,19 +41,15 @@ Usage: ibyar [options]
 Examples:
     ibyar
     ibyar -b
-	ibyar -b -w
+    ibyar -b -w
     ibyar -gt
     ibyar -v
     ibyar --help
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
+	                            and generate '.d.ts' files with created Custom HTML Element definitions.
 	-w		--watch				compile and watch source files, used with --build
-    -gt     --generate-types    generate "web-types.json" files, and typescript
-	                            definitions '.d.ts' files. 
-	                            you can import this file later in your "index.ts" 
-								or "polyfills.ts" file, so any editor "VS Code" can
-								support autocomplete easily,
     -h      --help              print help message
     -v      --version           output the version number
 ```
