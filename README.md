@@ -471,6 +471,25 @@ see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/examp
 
 ## WebPack bundle
 
+
+- add webpack loader
+
+```js
+module.exports = {
+  entry: './src/index.ts',
+    module: {
+      exprContextCritical: false,
+        rules: [
+          {
+            test: /\.tsx?$/,
+            use: ['@ibyar/cli',],
+            exclude: /node_modules/,
+          }
+        ]
+      }
+};
+```
+
 see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
 
 see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
