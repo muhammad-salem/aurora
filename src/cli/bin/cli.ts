@@ -53,7 +53,7 @@ if (runBuild) {
 		} else {
 			module.compileArgs();
 		}
-	});
+	}).catch(error => console.error(error));
 }
 
 if (generateTypes) {
