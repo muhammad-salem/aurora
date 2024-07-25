@@ -35,8 +35,35 @@ export function compileFiles(files: readonly string[], options: ts.CompilerOptio
 	emitProgram(program);
 }
 
+const formatHost: ts.FormatDiagnosticsHost = {
+	getCanonicalFileName: path => path,
+	getCurrentDirectory: ts.sys.getCurrentDirectory,
+	getNewLine: () => ts.sys.newLine
+};
+
+function reportDiagnostic(diagnostic: ts.Diagnostic) {
+	console.error("Error", diagnostic.code, ":", ts.flattenDiagnosticMessageText(diagnostic.messageText, formatHost.getNewLine()));
+}
+
+/**
+ * Prints a diagnostic every time the watch status changes.
+ * This is mainly for messages like "Starting compilation" or "Compilation completed".
+ */
+function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
+	console.info(ts.formatDiagnostic(diagnostic, formatHost));
+}
+
 export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLine) {
-	const host = ts.createWatchCompilerHost(configPath, cmd.options, ts.sys);
+	const createProgram = ts.createSemanticDiagnosticsBuilderProgram;
+	const host = ts.createWatchCompilerHost(
+		configPath,
+		cmd.options,
+		ts.sys,
+		createProgram,
+		reportDiagnostic,
+		reportWatchStatusChanged,
+		cmd.watchOptions,
+	);
 	const programFactory = ts.createWatchProgram(host);
 	const programBuilder = programFactory.getProgram();
 	const program = programBuilder.getProgram();
@@ -44,11 +71,13 @@ export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLi
 }
 
 
+
 export function getConfigPath() {
+	const tsconfig = process.argv.slice(2).filter(arg => arg.includes('tsconfig'))[0];
 	const configPath = ts.findConfigFile(
 		'./',			/*searchPath*/
 		ts.sys.fileExists,
-		'tsconfig.json'
+		tsconfig ?? 'tsconfig.json'
 	);
 	if (!configPath) {
 		throw new Error("Could not find a valid 'tsconfig.json'.");
