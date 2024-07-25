@@ -693,19 +693,22 @@ export class HTMLParser {
 		}
 	}
 
-	stringify(stack?: DomNode[]) {
+	stringify(stack?: DomNode | DomNode[]) {
+		if (!Array.isArray(stack)) {
+			stack = stack ? [stack] : [];
+		}
 		let html = '';
-		stack?.forEach(node => {
-			if (node instanceof TextContent) {
-				html += node.value;
-			} else if (node instanceof LiveTextContent) {
+		stack.forEach(node => {
+			if (node instanceof LiveTextContent) {
 				html += `{{${node.value}}}`;
+			} else if (node instanceof TextContent) {
+				html += node.value;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
 			} else if (node instanceof DomFragmentNode) {
 				html += this.stringify(node.children);
 			} else if (node instanceof DomStructuralDirectiveNode) {
-				html += `@${node.name}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
+				html += `@${node.name.substring(1)}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
 				html += this.stringify([node.node]);
 			} else if (node instanceof DomStructuralDirectiveSuccessorNode) {
 				html += `@${node.name}`;

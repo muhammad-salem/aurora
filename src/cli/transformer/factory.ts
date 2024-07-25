@@ -151,7 +151,7 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
  * 
  * example:
  * ```ts
- * export type ɵɵ0Directives0ɵɵ = [{
+ * export type ɵɵ0IfDirective0ɵɵ = {
  * 	selector: '*if';
  * 	successor: '*else',
  * 	inputs: [
@@ -160,7 +160,7 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
  * 		{ name: 'elseTemplateRef', aliasName: 'else' },
  * 	],
  * 	outputs: [],
- * }];
+ * };
  * ```
  * @param classes directive class information
  * @returns new array of statements
