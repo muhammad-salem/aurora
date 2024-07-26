@@ -40,16 +40,16 @@ Usage: ibyar [options]
 
 Examples:
     ibyar
-    ibyar -b
-    ibyar -b -w
-    ibyar -gt
-    ibyar -v
+    ibyar -b				# run build
+    ibyar -b -w				# run build and watch
+    ibyar -b -v -w			# run build, show tsc logs and watch
+    ibyar -v				# show cli version
     ibyar --help
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
 	                            and generate '.d.ts' files with created Custom HTML Element definitions.
-	-w		--watch				compile and watch source files, used with --build
+    -w		--watch				compile and watch source files, used with --build
     -h      --help              print help message
     -v      --version           output the version number
 ```
