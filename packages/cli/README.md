@@ -55,6 +55,27 @@ Options:
 ```
 
 
+## WebPack bundle
+
+
+- add webpack loader
+
+```js
+module.exports = {
+  entry: './src/index.ts',
+    module: {
+      exprContextCritical: false,
+        rules: [
+          {
+            test: /\.tsx?$/,
+            use: ['@ibyar/cli',],
+            exclude: /node_modules/,
+          }
+        ]
+      }
+};
+```
+
 
 The Ibyar CLI has a typescript transformer to generate a definitions for you component
 
