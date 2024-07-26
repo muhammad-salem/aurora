@@ -46,6 +46,34 @@ yarn add @ibyar/directives
 
 ## How to use Structure Directives:
 
+
+### Control Flow Syntax
+
+```html
+@if(x > 50) {
+	x: is {{x}}
+} else {
+	x: is less than 50
+}
+
+@if(x > 50) {
+	x: is {{x}}
+} else if( x > 30 ){
+	x: is more than 30
+}
+
+@for(let item of [1,2,3,4,5,6,7,8]) {
+	<div>item is: {{item}}</div>
+}
+
+@for(let item of []) {
+	<div>item is: {{item}}</div>
+} @empty {
+	array is empty
+}
+
+```
+
 ```html
 <div *if="x > 50"> x: is {{x}} </div>
 

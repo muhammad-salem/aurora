@@ -1,15 +1,8 @@
 import { FormArray } from '../forms/form-array.js';
 import { AbstractControl, FormControl } from '../forms/form-control.js';
 import { FormGroup } from '../forms/form-group.js';
-import { AsyncValidator, Validator } from '../forms/validators.js';
+import { ControlOptions, ControlValue, isControlValue } from './types.js';
 
-export type ControlOptions = { validators?: Validator | Validator[], asyncValidators?: AsyncValidator | AsyncValidator[] }
-
-export type ControlValue<T = any> = { value?: T | null, disabled: boolean };
-
-export function isControlValue<T>(ref: any): ref is ControlValue<T> {
-	return ref.value || ref.disabled;
-}
 
 export class FormBuilder {
 

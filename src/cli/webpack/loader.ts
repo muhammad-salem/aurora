@@ -1,7 +1,7 @@
 import { normalize } from 'path';
 import type * as webpack from 'webpack';
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { getConfigPath, getTransformers, scanDirective } from '../compiler/compiler.js';
+import { getConfigPath, getTransformers, scanDirectives } from '../compiler/compiler.js';
 
 let host: ts.CompilerHost;
 let program: ts.Program;
@@ -23,7 +23,7 @@ export function initTypeScript() {
 	orgWriteFile = host.writeFile;
 	program = ts.createProgram(cmd.fileNames, cmd.options, host);
 	transformers = getTransformers(program);
-	scanDirective(program);
+	scanDirectives(program);
 }
 
 export function loader(this: webpack.LoaderContext<{}>, contents: string, inputSourceMap?: Record<string, any>) {

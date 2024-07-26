@@ -70,30 +70,67 @@ export function isOutputDecorator(decorator: ts.Decorator): boolean {
 	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === 'Output';
 }
 
+export function getMapByDecoratorForPropertyDeclaration(member: ts.PropertyDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): DecoratorInfo[] {
+	const infos: DecoratorInfo[] = [];
+	const decorators = ts.getDecorators(member);
+	if (!decorators) {
+		return infos;
+	}
+	const inputDecorators = decorators.filter(decoratorFilter);
+	if (!inputDecorators.length) {
+		return infos;
+	}
+	let inputType = member.type?.getText();
+	if (!inputType && member.initializer) {
+		inputType = checker.typeToString(checker.getTypeAtLocation(member.initializer), member.initializer, undefined);
+	}
+	inputDecorators.forEach(input => {
+		const decoratorCall = input.expression as ts.CallExpression;
+		const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
+		const alias = aliasName ? aliasName.text : member.name.getText();
+		infos.push({ name: member.name.getText(), aliasName: alias, type: inputType });
+	});
+	return infos;
+}
+
+export function getMapByDecoratorForSetAccessorDeclaration(member: ts.SetAccessorDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): DecoratorInfo[] {
+	const infos: DecoratorInfo[] = [];
+	const decorators = ts.getDecorators(member);
+	if (!decorators) {
+		return infos;
+	}
+	const inputDecorators = decorators.filter(decoratorFilter);
+	if (!inputDecorators.length) {
+		return infos;
+	}
+
+	let memberName: string;
+	if (ts.isIdentifier(member.name)) {
+		memberName = member.name.getText();
+	} else if (ts.isComputedPropertyName(member.name) && ts.isStringLiteral(member.name.expression)) {
+		memberName = member.name.expression.getText();
+	} else {
+		return infos;
+	}
+
+	let inputType = checker.typeToString(checker.getTypeAtLocation(member.parameters[0]), member.parameters[0], undefined);
+	inputDecorators.forEach(input => {
+		const decoratorCall = input.expression as ts.CallExpression;
+		const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
+		const alias = aliasName ? aliasName.text : memberName;
+		infos.push({ name: memberName, aliasName: alias, type: inputType });
+	});
+	return infos;
+}
+
 export function getMapByDecorator(classNode: ts.ClassDeclaration, checker: ts.TypeChecker, decoratorFilter: ((decorator: ts.Decorator) => boolean)): DecoratorInfo[] {
 	const infos: DecoratorInfo[] = [];
 	classNode.members.forEach(member => {
-		if (!ts.isPropertyDeclaration(member)) {
-			return;
+		if (ts.isPropertyDeclaration(member)) {
+			infos.push(...getMapByDecoratorForPropertyDeclaration(member, checker, decoratorFilter));
+		} else if (ts.isSetAccessorDeclaration(member)) {
+			infos.push(...getMapByDecoratorForSetAccessorDeclaration(member, checker, decoratorFilter));
 		}
-		const decorators = ts.getDecorators(member);
-		if (!decorators) {
-			return;
-		}
-		const inputDecorators = decorators.filter(decoratorFilter);
-		if (!inputDecorators.length) {
-			return;
-		}
-		let inputType = member.type?.getText();
-		if (!inputType && member.initializer) {
-			inputType = checker.typeToString(checker.getTypeAtLocation(member.initializer), member.initializer, undefined);
-		}
-		inputDecorators.forEach(input => {
-			const decoratorCall = input.expression as ts.CallExpression;
-			const aliasName = decoratorCall.arguments[0] as ts.StringLiteralLike;
-			const alias = aliasName ? aliasName.text : member.name.getText();
-			infos.push({ name: member.name.getText(), aliasName: alias, type: inputType });
-		});
 	})
 	return infos;
 }

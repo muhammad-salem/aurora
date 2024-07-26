@@ -41,23 +41,76 @@ Usage: ibyar [options]
 Examples:
     ibyar
     ibyar -b
-	ibyar -b -w
+    ibyar -b -w
     ibyar -gt
     ibyar -v
     ibyar --help
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
+	                            and generate '.d.ts' files with created Custom HTML Element definitions.
 	-w		--watch				compile and watch source files, used with --build
-    -gt     --generate-types    generate "web-types.json" files, and typescript
-	                            definitions '.d.ts' files. 
-	                            you can import this file later in your "index.ts" 
-								or "polyfills.ts" file, so any editor "VS Code" can
-								support autocomplete easily,
     -h      --help              print help message
     -v      --version           output the version number
 ```
 
+
+## WebPack Bundle
+
+
+- add webpack loader
+
+```js
+module.exports = {
+  entry: './src/index.ts',
+    module: {
+      exprContextCritical: false,
+        rules: [
+          {
+            test: /\.tsx?$/,
+            use: ['@ibyar/cli',],
+            exclude: /node_modules/,
+          }
+        ]
+      }
+};
+```
+
+## Rollup Bundle
+
+```js
+import typescript from '@rollup/plugin-typescript';
+import {
+	beforeCompileDirectiveOptions, beforeCompileComponentOptions,
+	afterDeclarationsCompileComponentOptions,
+	afterDeclarationsCompileDirectiveOptions,
+	scanDirectivesOnceAsTransformer,
+} from '@ibyar/cli';
+
+export default = {
+	...,
+	plugins: [
+		nodeResolve(),
+		typescript({
+			transformers: {
+				before: [
+					{ type: 'program', factory: scanDirectivesOnceAsTransformer() },
+					{ type: 'program', factory: beforeCompileDirectiveOptions },
+					{ type: 'program', factory: beforeCompileComponentOptions },
+				],
+				after: [],
+				afterDeclarations: [
+					{ type: 'program', factory: afterDeclarationsCompileComponentOptions },
+					{ type: 'program', factory: afterDeclarationsCompileDirectiveOptions },
+				],
+			}
+		}),
+		html({ include: "**/*.html" }),
+		css({ output: 'style.css' }),
+	],
+};
+
+```
 
 
 The Ibyar CLI has a typescript transformer to generate a definitions for you component

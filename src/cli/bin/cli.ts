@@ -12,7 +12,6 @@ const showHelp = inputs.includes('-h') || inputs.includes('--help');
 const printVersion = inputs.length === 1 && (inputs.includes('-v') || inputs.includes('--version'));
 
 const runBuild = inputs.includes('-b') || inputs.includes('--build');
-const generateTypes = inputs.includes('-gt') || inputs.includes('--generate-types');
 
 if (showHelp) {
 	const help =
@@ -30,12 +29,8 @@ Examples:
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
+	                            and generate '.d.ts' files with created Custom HTML Element definitions.
 	-w		--watch				compile and watch source files, used with --build
-    -gt     --generate-types    generate "web-types.json" files, and typescript
-	                            definitions '.d.ts' files. 
-	                            you can import this file later in your "index.ts" 
-								or "polyfills.ts" file, so any editor "VS Code" can
-								support autocomplete easily,
     -h      --help              print help message
     -v      --version           output the version number`;
 	console.log(help);
@@ -55,10 +50,6 @@ if (runBuild) {
 			module.compileArgs();
 		}
 	}).catch(error => console.error(error));
-}
-
-if (generateTypes) {
-	console.log('generate types not supported yet.');
 }
 
 function readPackageVersion(): string {

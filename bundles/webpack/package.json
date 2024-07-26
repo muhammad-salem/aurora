@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/webpack",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"description": "A web pack demo to work with @ibyar/aurora package to build web components",
 	"license": "MIT",
 	"private": true,
@@ -10,9 +10,9 @@
 		"build:prod": "webpack --config ./webpack.prod.js"
 	},
 	"dependencies": {
-		"@ibyar/aurora": "^2.2.0",
-		"@ibyar/cli": "^2.2.0",
-		"@ibyar/example": "^2.2.0"
+		"@ibyar/aurora": "^2.2.1",
+		"@ibyar/cli": "^2.2.1",
+		"@ibyar/example": "^2.2.1"
 	},
 	"devDependencies": {
 		"@ibyar/types": "^0.3.0",
