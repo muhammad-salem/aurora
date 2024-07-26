@@ -1,5 +1,5 @@
 import { AttributeDirective, Directive, HostBinding, HostListener, Input, OnInit } from '@ibyar/core';
-import { ControlValue, isControlValue } from '../builder/form-builder.js';
+import { ControlValue, isControlValue } from '../builder/types.js';
 import { AbstractControl, FormControl } from './form-control.js';
 
 export abstract class AbstractFormGroup<T extends Record<string | number, any> = any> extends AbstractControl<T> {
