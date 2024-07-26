@@ -490,6 +490,45 @@ module.exports = {
 };
 ```
 
+## Rollup Bundle
+
+- configuration setup
+
+```js
+import typescript from '@rollup/plugin-typescript';
+import {
+	beforeCompileDirectiveOptions, beforeCompileComponentOptions,
+	afterDeclarationsCompileComponentOptions,
+	afterDeclarationsCompileDirectiveOptions,
+	scanDirectivesOnceAsTransformer,
+} from '@ibyar/cli';
+
+export default = {
+	...,
+	plugins: [
+		nodeResolve(),
+		typescript({
+			transformers: {
+				before: [
+					{ type: 'program', factory: scanDirectivesOnceAsTransformer() },
+					{ type: 'program', factory: beforeCompileDirectiveOptions },
+					{ type: 'program', factory: beforeCompileComponentOptions },
+				],
+				after: [],
+				afterDeclarations: [
+					{ type: 'program', factory: afterDeclarationsCompileComponentOptions },
+					{ type: 'program', factory: afterDeclarationsCompileDirectiveOptions },
+				],
+			}
+		}),
+		html({ include: "**/*.html" }),
+		css({ output: 'style.css' }),
+	],
+};
+
+```
+
+
 see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
 
 see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
