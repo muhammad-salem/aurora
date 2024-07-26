@@ -55,7 +55,7 @@ Options:
 ```
 
 
-## WebPack bundle
+## WebPack Bundle
 
 
 - add webpack loader
@@ -74,6 +74,42 @@ module.exports = {
         ]
       }
 };
+```
+
+## Rollup Bundle
+
+```js
+import typescript from '@rollup/plugin-typescript';
+import {
+	beforeCompileDirectiveOptions, beforeCompileComponentOptions,
+	afterDeclarationsCompileComponentOptions,
+	afterDeclarationsCompileDirectiveOptions,
+	scanDirectivesOnceAsTransformer,
+} from '@ibyar/cli';
+
+export default = {
+	...,
+	plugins: [
+		nodeResolve(),
+		typescript({
+			transformers: {
+				before: [
+					{ type: 'program', factory: scanDirectivesOnceAsTransformer() },
+					{ type: 'program', factory: beforeCompileDirectiveOptions },
+					{ type: 'program', factory: beforeCompileComponentOptions },
+				],
+				after: [],
+				afterDeclarations: [
+					{ type: 'program', factory: afterDeclarationsCompileComponentOptions },
+					{ type: 'program', factory: afterDeclarationsCompileDirectiveOptions },
+				],
+			}
+		}),
+		html({ include: "**/*.html" }),
+		css({ output: 'style.css' }),
+	],
+};
+
 ```
 
 
