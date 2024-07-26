@@ -469,10 +469,10 @@ npm run build
 
 see test app for full [`example`](https://github.com/ibyar/aurora/tree/dev/example)
 
-## WebPack bundle
+## Integration with `Webpack`
 
 
-- add webpack loader
+### add @ibyar/cli as loader
 
 ```js
 module.exports = {
@@ -490,9 +490,50 @@ module.exports = {
 };
 ```
 
-## Rollup Bundle
+### use `ts-loader`
 
-- configuration setup
+```js
+// 1. import default from the plugin module
+import {
+	beforeCompileDirectiveOptions, beforeCompileComponentOptions,
+	afterDeclarationsCompileComponentOptions,
+	afterDeclarationsCompileDirectiveOptions,
+	scanDirectivesOnceAsTransformer,
+} from '@ibyar/cli';
+
+
+// 3. add getCustomTransformer method to the loader config
+var config = {
+    ...
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                loader: 'ts-loader',
+                options: {
+                    ... // other loader's options
+                    getCustomTransformers: () => ({
+						before: [
+							scanDirectivesOnceAsTransformer(),
+							beforeCompileDirectiveOptions,
+							beforeCompileComponentOptions,
+						],
+						after: [],
+						afterDeclarations: [
+							afterDeclarationsCompileComponentOptions,
+							afterDeclarationsCompileDirectiveOptions,
+						],
+					})
+                }
+            }
+        ]
+    }
+    ...
+};
+```
+
+## Integration with `Rollup`
+
 
 ```js
 import typescript from '@rollup/plugin-typescript';
@@ -506,7 +547,6 @@ import {
 export default = {
 	...,
 	plugins: [
-		nodeResolve(),
 		typescript({
 			transformers: {
 				before: [
@@ -521,8 +561,6 @@ export default = {
 				],
 			}
 		}),
-		html({ include: "**/*.html" }),
-		css({ output: 'style.css' }),
 	],
 };
 
