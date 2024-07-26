@@ -20,12 +20,25 @@ export function getTransformers(program: ts.Program): ts.CustomTransformers {
 	};
 }
 
-export function scanDirective(program: ts.Program) {
+export function scanDirectives(program: ts.Program) {
 	program.getSourceFiles().forEach(scanDirectivesTypeVisitor);
 }
 
+export function scanDirectivesOnceAsTransformer() {
+	let scanDone = false;
+	let ignoreTransformer = (context: ts.TransformationContext): ts.Transformer<ts.SourceFile> => sourceFile => sourceFile;
+	return (program: ts.Program) => {
+		if (scanDone) {
+			return ignoreTransformer;
+		}
+		scanDone = true;
+		scanDirectives(program);
+		return ignoreTransformer;
+	};
+}
+
 export function emitProgram(program: ts.Program) {
-	scanDirective(program);
+	scanDirectives(program);
 	program.emit(undefined, undefined, undefined, undefined, getTransformers(program));
 }
 
