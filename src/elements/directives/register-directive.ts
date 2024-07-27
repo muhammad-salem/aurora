@@ -99,18 +99,17 @@ export class DirectiveRegistry {
 	 */
 	register(directiveName: string, options?: DirectiveNodeOptions): void {
 		if (!this.directives.has(directiveName)) {
-			const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successor);
-			this.directives.set(directiveName, info);
+			this.set(directiveName, options);
 		}
 	}
 
 	/**
-	 * update registry with a new value of directive
+	 * set value of directive
 	 * @param directiveName 
 	 * @param options 
 	 */
 
-	update(directiveName: string, options?: DirectiveNodeOptions): void {
+	set(directiveName: string, options?: DirectiveNodeOptions): void {
 		const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successor);
 		this.directives.set(directiveName, info);
 	}
@@ -126,8 +125,7 @@ export class DirectiveRegistry {
 	 */
 	replace(directiveName: string, options: DirectiveNodeOptions): void {
 		if (this.directives.has(directiveName)) {
-			const info = new DirectiveNodeInfo(options?.inputs, options?.outputs);
-			this.directives.set(directiveName, info);
+			this.set(directiveName, options);
 		}
 	}
 
