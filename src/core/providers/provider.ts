@@ -1,6 +1,6 @@
 import type { MetadataClass } from '@ibyar/decorators';
 import type {
-	ComponentRef, DirectiveRef, PipeRef, ServiceRef
+	ComponentRef, DirectiveRef, PipeRef, InjectableRef
 } from '../component/component.js';
 import { ReflectComponents, type PropertyRef } from '../component/reflect.js';
 export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'self';
@@ -37,6 +37,7 @@ export class ClassRegistry {
 		}
 		return false;
 	}
+
 	getComponentRef<T>(selector: string): ComponentRef<T> | undefined {
 		for (const modelClass of this.componentSet) {
 			const componentRef = ReflectComponents.getMetaDate(modelClass) as ComponentRef<T>;
@@ -74,6 +75,7 @@ export class ClassRegistry {
 		}
 		return false;
 	}
+
 	hasInput<T>(model: Object, eventName: string): PropertyRef | false {
 		if (Reflect.has(model, 'bootstrap')) {
 			const componentRef: ComponentRef<T> = Reflect.get(model, 'bootstrap');
@@ -92,6 +94,16 @@ export class ClassRegistry {
 		for (const directiveClass of this.directiveSet) {
 			const directiveRef = ReflectComponents.getMetaDate(directiveClass) as DirectiveRef<T>;
 			if (directiveRef.selector === selector) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	hasInjectable<T>(name: string): boolean {
+		for (const modelClass of this.injectableSet) {
+			const componentRef = ReflectComponents.getMetaDate(modelClass) as InjectableRef<T>;
+			if (componentRef.name === name) {
 				return true;
 			}
 		}
@@ -132,15 +144,46 @@ export class ClassRegistry {
 		return undefined;
 	}
 
-	getService<T>(serviceName: string): ServiceRef<T> | undefined {
-		for (const serviceClass of this.injectableSet) {
-			const serviceRef = ReflectComponents.getMetaDate(serviceClass) as ServiceRef<T>;
-			if (serviceRef.name === serviceName) {
-				return serviceRef;
+	deleteComponent<T>(selector: string) {
+		for (const modelClass of this.componentSet) {
+			const componentRef = ReflectComponents.getMetaDate(modelClass) as ComponentRef<T>;
+			if (componentRef?.selector === selector) {
+				this.componentSet.delete(modelClass);
+				break;
 			}
 		}
-		return undefined;
 	}
+
+	deleteDirective<T>(selector: string): void {
+		for (const modelClass of this.directiveSet) {
+			const directiveRef = ReflectComponents.getMetaDate(modelClass) as DirectiveRef<T>;
+			if (directiveRef?.selector === selector) {
+				this.injectableSet.delete(modelClass);
+				break;
+			}
+		}
+	}
+
+	deleteInjectable<T>(name: string) {
+		for (const modelClass of this.injectableSet) {
+			const componentRef = ReflectComponents.getMetaDate(modelClass) as InjectableRef<T>;
+			if (componentRef.name === name) {
+				this.injectableSet.delete(modelClass);
+				break;
+			}
+		}
+	}
+
+	deletePipe<T>(name: string) {
+		for (const modelClass of this.pipeSet) {
+			const pipeRef = ReflectComponents.getMetaDate(modelClass) as PipeRef<T>;
+			if (pipeRef.name === name) {
+				this.pipeSet.delete(modelClass);
+				break;
+			}
+		}
+	}
+
 }
 
 export const classRegistryProvider = new ClassRegistry();
