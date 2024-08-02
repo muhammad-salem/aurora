@@ -5,7 +5,8 @@ import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-d
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 import { scanDirectivesTypeVisitor } from '../transformer/scan-directives.js';
-import { dirname } from 'path';
+import { dirname, join, resolve } from 'path';
+import { existsSync } from 'fs';
 
 export function getTransformers(program: ts.Program): ts.CustomTransformers {
 	return {
@@ -124,7 +125,14 @@ export function compileSolutionAndWatch(configFilePath: string, cmd: ts.ParsedCo
 }
 
 export function getConfigPath() {
-	const tsconfig = process.argv.slice(2).filter(arg => arg.includes('tsconfig'))[0];
+	const args = process.argv.slice(2);
+	let tsconfig = args.filter(arg => arg.includes('tsconfig'))[0];
+	if (!tsconfig && args.length > 1 /** -b */) {
+		const path = join(args.at(-1)!, 'tsconfig.json');
+		if (existsSync(path)) {
+			tsconfig = resolve(path);
+		}
+	}
 	const configPath = ts.findConfigFile(
 		'./',			/*searchPath*/
 		ts.sys.fileExists,
