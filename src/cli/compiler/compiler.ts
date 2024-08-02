@@ -110,17 +110,43 @@ export function createEmitAndSemanticDiagnosticsBuilderProgram(rootNames: readon
 	return program;
 }
 
+
+const diagHost = {
+	getCanonicalFileName: function (fileName: string) {
+		return ts.sys.resolvePath(fileName)
+	},
+	getCurrentDirectory: function () {
+		return ts.sys.getCurrentDirectory();
+	},
+	getNewLine: function () {
+		return ts.sys.newLine;
+	}
+};
+
+function reportDiag(diag: ts.Diagnostic) {
+	let output = ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY() ?
+		ts.formatDiagnosticsWithColorAndContext([diag], diagHost) :
+		ts.formatDiagnostic(diag, diagHost);
+	output = output.replace(/^[\r\n]+/, '').replace(/[\r\n]+$/, '');
+	ts.sys.write(output + '\n');
+}
+
+function reportError(errorCount: number, filesInError: (ts.ReportFileInError | undefined)[]) {
+	ts.sys.write(`Error count: ${errorCount}\n`);
+	filesInError.forEach(error => ts.sys.write(`Error file: ${error?.fileName}(${error?.line})\n`));
+}
+
 export function compileSolution(configFilePath: string, cmd: ts.ParsedCommandLine) {
 	const rootNames = [dirname(configFilePath)];
-	const solutionHost = ts.createSolutionBuilderHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
-	const solution = ts.createSolutionBuilder(solutionHost, rootNames, { ...cmd.options, incremental: true });
+	const solutionHost = ts.createSolutionBuilderHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram, reportDiag, reportDiag, reportError);
+	const solution = ts.createSolutionBuilder(solutionHost, rootNames, {});
 	solution.build();
 }
 
 export function compileSolutionAndWatch(configFilePath: string, cmd: ts.ParsedCommandLine) {
 	const rootNames = [dirname(configFilePath)];
-	const solutionHost = ts.createSolutionBuilderWithWatchHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
-	const solution = ts.createSolutionBuilderWithWatch(solutionHost, rootNames, { incremental: false }, cmd.watchOptions);
+	const solutionHost = ts.createSolutionBuilderWithWatchHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram, reportDiag, reportDiag, reportDiag);
+	const solution = ts.createSolutionBuilderWithWatch(solutionHost, rootNames, {}, cmd.watchOptions);
 	solution.build();
 }
 
