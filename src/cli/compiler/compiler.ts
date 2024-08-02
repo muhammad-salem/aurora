@@ -109,15 +109,15 @@ export function createEmitAndSemanticDiagnosticsBuilderProgram(rootNames: readon
 	return program;
 }
 
-export function compileSolution(cmd: ts.ParsedCommandLine) {
-	const rootNames = [dirname((cmd.options as any).configFilePath)];
+export function compileSolution(configFilePath: string, cmd: ts.ParsedCommandLine) {
+	const rootNames = [dirname(configFilePath)];
 	const solutionHost = ts.createSolutionBuilderHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
 	const solution = ts.createSolutionBuilder(solutionHost, rootNames, { ...cmd.options, incremental: true });
 	solution.build();
 }
 
-export function compileSolutionAndWatch(cmd: ts.ParsedCommandLine) {
-	const rootNames = [dirname((cmd.options as any).configFilePath)];
+export function compileSolutionAndWatch(configFilePath: string, cmd: ts.ParsedCommandLine) {
+	const rootNames = [dirname(configFilePath)];
 	const solutionHost = ts.createSolutionBuilderWithWatchHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
 	const solution = ts.createSolutionBuilderWithWatch(solutionHost, rootNames, { incremental: false }, cmd.watchOptions);
 	solution.build();
@@ -143,7 +143,7 @@ export function compileArgs() {
 		return;
 	}
 	if (cmd.projectReferences?.length) {
-		compileSolution(cmd);
+		compileSolution(configPath, cmd);
 	} else {
 		compileFiles(cmd.fileNames, cmd.options);
 	}
@@ -156,7 +156,7 @@ export function compileAndWatchArgs() {
 		return;
 	}
 	if (cmd.projectReferences?.length) {
-		compileSolutionAndWatch(cmd);
+		compileSolutionAndWatch(configPath, cmd);
 	} else {
 		compileAndWatchFiles(configPath, cmd);
 	}
