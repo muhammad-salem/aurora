@@ -22,11 +22,11 @@ The Ibyar/Aurora CLI tool. ( dev - prerelease)
 ## `Install`
 
 ``` bash
-npm i --save @ibyar/cli
+npm i -g --save @ibyar/cli
 ```
 
 ``` bash
-yarn add @ibyar/cli
+yarn global add @ibyar/cli
 ```
 
 # How to use
