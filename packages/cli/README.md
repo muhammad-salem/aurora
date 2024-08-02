@@ -22,11 +22,11 @@ The Ibyar/Aurora CLI tool. ( dev - prerelease)
 ## `Install`
 
 ``` bash
-npm i --save @ibyar/cli
+npm i -g --save @ibyar/cli
 ```
 
 ``` bash
-yarn add @ibyar/cli
+yarn global add @ibyar/cli
 ```
 
 # How to use
@@ -40,25 +40,26 @@ Usage: ibyar [options]
 
 Examples:
     ibyar
-    ibyar -b
-    ibyar -b -w
-    ibyar -gt
-    ibyar -v
+    ibyar -b				# run build
+    ibyar -b -w				# run build and watch
+    ibyar -b -v -w			# run build, show tsc logs and watch
+    ibyar -v				# show cli version
     ibyar --help
 
 Options:
     -b      --build             compile the project source code with ibyar transformers
 	                            and generate '.d.ts' files with created Custom HTML Element definitions.
-	-w		--watch				compile and watch source files, used with --build
+    -w		--watch				compile and watch source files, used with --build
     -h      --help              print help message
     -v      --version           output the version number
 ```
 
 
-## WebPack Bundle
+
+## Integration with `Webpack`
 
 
-- add webpack loader
+### add @ibyar/cli as loader
 
 ```js
 module.exports = {
@@ -76,7 +77,50 @@ module.exports = {
 };
 ```
 
-## Rollup Bundle
+### use `ts-loader`
+
+```js
+// 1. import default from the plugin module
+import {
+	beforeCompileDirectiveOptions, beforeCompileComponentOptions,
+	afterDeclarationsCompileComponentOptions,
+	afterDeclarationsCompileDirectiveOptions,
+	scanDirectivesOnceAsTransformer,
+} from '@ibyar/cli';
+
+
+// 3. add getCustomTransformer method to the loader config
+var config = {
+    ...
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                loader: 'ts-loader',
+                options: {
+                    ... // other loader's options
+                    getCustomTransformers: () => ({
+						before: [
+							scanDirectivesOnceAsTransformer(),
+							beforeCompileDirectiveOptions,
+							beforeCompileComponentOptions,
+						],
+						after: [],
+						afterDeclarations: [
+							afterDeclarationsCompileComponentOptions,
+							afterDeclarationsCompileDirectiveOptions,
+						],
+					})
+                }
+            }
+        ]
+    }
+    ...
+};
+```
+
+## Integration with `Rollup`
+
 
 ```js
 import typescript from '@rollup/plugin-typescript';
@@ -90,7 +134,6 @@ import {
 export default = {
 	...,
 	plugins: [
-		nodeResolve(),
 		typescript({
 			transformers: {
 				before: [
@@ -105,12 +148,11 @@ export default = {
 				],
 			}
 		}),
-		html({ include: "**/*.html" }),
-		css({ output: 'style.css' }),
 	],
 };
 
 ```
+
 
 
 The Ibyar CLI has a typescript transformer to generate a definitions for you component

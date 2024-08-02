@@ -200,6 +200,10 @@ export function buildExpressionNodes(node: DomNode) {
  * function to skip node checking
  * @param modelClass 
  */
-export function registerDirective(modelClass: Record<string, any>) {
+export function provideDirective(modelClass: Record<string, any>) {
 	classRegistryProvider.registerDirective(modelClass as any);
+}
+
+export function deleteDirective(selector: string) {
+	classRegistryProvider.deleteDirective(selector);
 }

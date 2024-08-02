@@ -26,7 +26,7 @@ import { parseHostNode } from '../html/host.js';
 import { provide } from '../di/inject.js';
 
 
-export interface ServiceRef<T> {
+export interface InjectableRef<T> {
 	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
 	modelClass: TypeOf<T>;
 	name: string;

@@ -14,7 +14,7 @@
 	"devDependencies": {
 		"@ibyar/esmpack": "^1.0.0",
 		"assert": "2.1.0",
-		"lerna": "^8.1.3",
+		"lerna": "^8.1.7",
 		"test262-parser-tests": "0.0.5",
 		"typescript": "^5.5.2"
 	},
@@ -26,8 +26,12 @@
 		"fix-permission": "npx rimraf ./node_modules/.bin/ibyar && npm i && npx ibyar -v",
 		"build": "npm run build:src && npm run fix-permission && npm run build:directives && npm run build:forms",
 		"build:w": "npm run clean && tsc --build -v -w",
+		"ibyar": "npm run clean && ibyar --build -v -w",
+		"ibyar:w": "npm run clean && ibyar --build -v -w",
 		"build:example": "npm run clean && tsc -b -v example/",
 		"build:example:w": "npm run clean && tsc -b -v -w example/",
+		"ibyar:example": "npm run clean && ibyar -b -v example/",
+		"ibyar:example:w": "npm run clean && ibyar -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
 		"do:publish-no-git": "npm run build && lerna publish --force-publish --no-git-tag-version --no-push",
 		"do:publish-no-tag": "npm run build && lerna publish --force-publish --no-git-tag-version",
