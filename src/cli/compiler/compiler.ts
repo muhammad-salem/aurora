@@ -5,6 +5,7 @@ import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-d
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 import { scanDirectivesTypeVisitor } from '../transformer/scan-directives.js';
+import { dirname } from 'path';
 
 export function getTransformers(program: ts.Program): ts.CustomTransformers {
 	return {
@@ -83,7 +84,44 @@ export function compileAndWatchFiles(configPath: string, cmd: ts.ParsedCommandLi
 	emitProgram(program);
 }
 
+type ProgramPatch = ts.Program & { __emit: (targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers) => ts.EmitResult };
 
+export function patchProgram(tsProgram: ts.Program) {
+	const program = tsProgram as ProgramPatch;
+	program.__emit = program.emit;
+	const programTransformers = getTransformers(program);
+	program.emit = (targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult => {
+		if (!customTransformers) {
+			return program.__emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, programTransformers);
+		}
+		return program.__emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, {
+			before: [...(customTransformers?.before ?? []), ...programTransformers.before!],
+			after: [...(customTransformers?.after ?? []), ...programTransformers.after!],
+			afterDeclarations: [...(customTransformers?.afterDeclarations ?? []), ...programTransformers.afterDeclarations!],
+		});
+	};
+}
+
+export function createEmitAndSemanticDiagnosticsBuilderProgram(rootNames: readonly string[] | undefined, options: ts.CompilerOptions | undefined, host?: ts.CompilerHost, oldProgram?: ts.EmitAndSemanticDiagnosticsBuilderProgram | undefined, configFileParsingDiagnostics?: readonly ts.Diagnostic[], projectReferences?: readonly ts.ProjectReference[] | undefined) {
+	const program = ts.createEmitAndSemanticDiagnosticsBuilderProgram(rootNames, options, host, oldProgram, configFileParsingDiagnostics, projectReferences);
+	scanDirectives(program.getProgram());
+	patchProgram(program.getProgram());
+	return program;
+}
+
+export function compileSolution(cmd: ts.ParsedCommandLine) {
+	const rootNames = [dirname((cmd.options as any).configFilePath)];
+	const solutionHost = ts.createSolutionBuilderHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
+	const solution = ts.createSolutionBuilder(solutionHost, rootNames, { ...cmd.options, incremental: true });
+	solution.build();
+}
+
+export function compileSolutionAndWatch(cmd: ts.ParsedCommandLine) {
+	const rootNames = [dirname((cmd.options as any).configFilePath)];
+	const solutionHost = ts.createSolutionBuilderWithWatchHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram);
+	const solution = ts.createSolutionBuilderWithWatch(solutionHost, rootNames, { incremental: false }, cmd.watchOptions);
+	solution.build();
+}
 
 export function getConfigPath() {
 	const tsconfig = process.argv.slice(2).filter(arg => arg.includes('tsconfig'))[0];
@@ -104,7 +142,11 @@ export function compileArgs() {
 	if (!cmd) {
 		return;
 	}
-	compileFiles(cmd.fileNames, cmd.options);
+	if (cmd.projectReferences?.length) {
+		compileSolution(cmd);
+	} else {
+		compileFiles(cmd.fileNames, cmd.options);
+	}
 }
 
 export function compileAndWatchArgs() {
@@ -113,5 +155,9 @@ export function compileAndWatchArgs() {
 	if (!cmd) {
 		return;
 	}
-	compileAndWatchFiles(configPath, cmd);
+	if (cmd.projectReferences?.length) {
+		compileSolutionAndWatch(cmd);
+	} else {
+		compileAndWatchFiles(configPath, cmd);
+	}
 }
