@@ -102,6 +102,10 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	}
 	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
 	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
+	if (Array.isArray(componentRef.disabledFeatures)) {
+		Reflect.set(viewClass, 'disabledFeatures', componentRef.disabledFeatures);
+	}
+	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
 	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
 	if (!Reflect.has(window, htmlViewClassName)) {
 		Reflect.set(window, htmlViewClassName, viewClass);

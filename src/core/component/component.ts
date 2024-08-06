@@ -78,6 +78,7 @@ export interface ComponentRef<T> {
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
 	isShadowDom: boolean;
 	shadowRootInit: ShadowRootInit;
+	disabledFeatures?: ('internals' | 'shadow')[];
 	formAssociated: boolean | TypeOf<ValueControl<any>>;
 	zone?: ZoneType;
 }

@@ -197,6 +197,11 @@ export interface ComponentOptions<T = Class> {
 	shadowRootInit?: Partial<ShadowRootInit>;
 
 	/**
+	 * 
+	 */
+	disabledFeatures?: ('internals' | 'shadow')[];
+
+	/**
 	 * Create a custom form-associated element with HTMLElement.attachInternals
 	 * default: false
 	 * 
