@@ -119,7 +119,7 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
 		const interfaceBody = `
-			public static observedAttributes: [${attributes}];
+			public static observedAttributes: (${attributes})[];
 
 			${c.inputs.map(input => `public ${input.aliasName}${input.type ? `: ${input.type}` : ''};`).join('\n')}
 
@@ -127,12 +127,18 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 			
 		`;
 		// need to fix @FormValue type;
-		return c.views.map(view => `
+		return c.views.map(view => {
+			const disabledFeatures = (Array.isArray(view.disabledFeatures) && view.disabledFeatures.length > 0)
+				? `public static disabledFeatures: ('${view.disabledFeatures.join(' | ')}')[];`
+				: '';
+			return `
 			declare class ${view.viewName} extends ${view.extendsType} {
+				${disabledFeatures}
 				${interfaceBody.trim()}
 			}
 			declare interface ${view.viewName} extends ${view.formAssociated ? `BaseFormAssociatedComponent<${c.name}>, ` : ''}BaseComponent<${c.name}> {}
-		`);
+		`;
+		});
 	});
 	const views = classes.flatMap(c => c.views.map(v => ({ tagName: v.selector, viewName: v.viewName })));
 	const sourceCode = `

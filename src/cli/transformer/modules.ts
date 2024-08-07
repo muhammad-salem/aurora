@@ -6,6 +6,7 @@ export type ViewInfo = {
 	viewName: string;
 	interFaceType: ts.InterfaceDeclaration;
 	formAssociated: boolean;
+	disabledFeatures?: string[];
 };
 
 export type DecoratorInfo = { name: string, aliasName: string, type?: string };
