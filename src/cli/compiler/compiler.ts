@@ -5,7 +5,7 @@ import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-d
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';
 import { beforeCompileDirectiveOptions } from '../transformer/before-directive.js';
 import { scanDirectivesTypeVisitor } from '../transformer/scan-directives.js';
-import { dirname, join, resolve } from 'path';
+import { dirname, join, resolve, relative } from 'path';
 import { existsSync } from 'fs';
 
 export function getTransformers(program: ts.Program): ts.CustomTransformers {
@@ -123,12 +123,17 @@ const diagHost = {
 	}
 };
 
+function getTime() {
+	const date = new Date();
+	return `[${date.toLocaleTimeString('en-US')}]`;
+}
+
 function reportDiag(diag: ts.Diagnostic) {
-	let output = ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY() ?
+	let output = ts.sys.writeOutputIsTTY?.() ?
 		ts.formatDiagnosticsWithColorAndContext([diag], diagHost) :
 		ts.formatDiagnostic(diag, diagHost);
 	output = output.replace(/^[\r\n]+/, '').replace(/[\r\n]+$/, '');
-	ts.sys.write(output + '\n');
+	ts.sys.write(`${getTime()} ${output}` + '\n');
 }
 
 function reportError(errorCount: number, filesInError: (ts.ReportFileInError | undefined)[]) {
@@ -136,10 +141,19 @@ function reportError(errorCount: number, filesInError: (ts.ReportFileInError | u
 	filesInError.forEach(error => ts.sys.write(`Error file: ${error?.fileName}(${error?.line})\n`));
 }
 
+function printProjects(solution: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>) {
+	const projects = (solution as any)?.getBuildOrder() as string[];
+	if (Array.isArray(projects) && projects?.length) {
+		console.log(`${getTime()} Projects in this build: `);
+		projects.forEach(project => console.log(`\t* ${relative(process.cwd(), project)}`));
+	}
+}
+
 export function compileSolution(configFilePath: string, cmd: ts.ParsedCommandLine) {
 	const rootNames = [dirname(configFilePath)];
 	const solutionHost = ts.createSolutionBuilderHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram, reportDiag, reportDiag, reportError);
 	const solution = ts.createSolutionBuilder(solutionHost, rootNames, {});
+	printProjects(solution);
 	solution.build();
 }
 
@@ -147,6 +161,7 @@ export function compileSolutionAndWatch(configFilePath: string, cmd: ts.ParsedCo
 	const rootNames = [dirname(configFilePath)];
 	const solutionHost = ts.createSolutionBuilderWithWatchHost(ts.sys, createEmitAndSemanticDiagnosticsBuilderProgram, reportDiag, reportDiag, reportDiag);
 	const solution = ts.createSolutionBuilderWithWatch(solutionHost, rootNames, {}, cmd.watchOptions);
+	printProjects(solution);
 	solution.build();
 }
 
