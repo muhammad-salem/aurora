@@ -118,8 +118,9 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 		const inputs = c.inputs.map(input => input.aliasName);
 		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
+		const observedAttributes = attributes.length ? `public static observedAttributes: (${attributes})[];` : '';
 		const interfaceBody = `
-			public static observedAttributes: (${attributes})[];
+			${observedAttributes}
 
 			${c.inputs.map(input => `public ${input.aliasName}${input.type ? `: ${input.type}` : ''};`).join('\n')}
 
