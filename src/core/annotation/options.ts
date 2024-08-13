@@ -62,7 +62,13 @@ export interface DirectiveOptions {
 	/**
 	 * name of possible structure directive successor
 	 */
-	successor?: string;
+	successor?: string | string[];
+
+	/**
+	 * name of possible structure directives successor
+	 */
+	successors?: string[];
+
 }
 
 export interface InjectableOptions {
