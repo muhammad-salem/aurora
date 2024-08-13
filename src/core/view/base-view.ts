@@ -38,7 +38,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super();
 			this._componentRef = componentRef;
-			if (componentRef.isShadowDom) {
+			if (componentRef.isShadowDom && !componentRef.disabledFeatures?.includes('shadow')) {
 				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
 
