@@ -3,7 +3,7 @@ import { Directive, Input, OnDestroy, StructuralDirective, TemplateRef } from '@
 
 @Directive({
 	selector: '*if',
-	successor: '*else'
+	successors: ['*else'],
 })
 export class IfThenElseDirective extends StructuralDirective implements OnDestroy {
 
@@ -49,6 +49,7 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 	}
 
 	protected _updateUI() {
+		const elseSuccessor = this.getSuccessor('*else');
 		if (this._condition !== this._lastCondition) {
 			this._lastCondition = this._condition;
 			this.viewContainerRef.clear();
@@ -56,8 +57,8 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 				this.viewContainerRef.createEmbeddedView(this._thenTemplateRef);
 			} else if (this._elseTemplateRef) {
 				this.viewContainerRef.createEmbeddedView(this._elseTemplateRef);
-			} else if (this.successor) {
-				this.viewContainerRef.createEmbeddedView(this.successor);
+			} else if (elseSuccessor) {
+				this.viewContainerRef.createEmbeddedView(elseSuccessor);
 			}
 		}
 	}
