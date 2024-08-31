@@ -120,16 +120,9 @@ export class ComponentRender<T extends object> {
 			stack,
 			(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? [],
 		);
-		let successorTemplateRef: TemplateRef | undefined;
-		if (directive.successor) {
-			successorTemplateRef = new TemplateRefImpl(
-				this,
-				directive.successor,
-				stack,
-				[]
-			);
-		}
-
+		const successorTemplateRefs = Object.fromEntries((directive.successors ?? [])?.map(
+			successor => [successor.name, new TemplateRefImpl(this, successor, stack, [])]
+		));
 		const directiveZone = this.view._zone.fork(directiveRef.zone);
 		const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
@@ -146,7 +139,7 @@ export class ComponentRender<T extends object> {
 			viewContainerRef,
 			host,
 			directiveZone,
-			successorTemplateRef,
+			successorTemplateRefs,
 		));
 
 		templateRef.host = structural;

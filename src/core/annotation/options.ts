@@ -58,12 +58,6 @@ export interface DirectiveOptions {
 	 */
 	zone?: ZoneType;
 
-
-	/**
-	 * name of possible structure directive successor
-	 */
-	successor?: string | string[];
-
 	/**
 	 * name of possible structure directives successor
 	 */
