@@ -177,8 +177,8 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		const inputs: string[] = directive.inputs.map(input => `{name: '${input.name}', aliasName: '${input.aliasName}'}`);
 		const outputs: string[] = directive.outputs.map(output => `{name: '${output.name}', aliasName: '${output.aliasName}'}`);
 		const temp: string[] = [`selector: '${directive.name}'`];
-		if (directive.successor) {
-			temp.push(`successor: '${directive.successor}'`);
+		if (directive.successors) {
+			temp.push(`successors: [${directive.successors.map(successor => `'${successor}'`).join(',')}]`);
 		}
 		if (directive.inputs.length > 0) {
 			temp.push(`inputs: [${inputs.join(',')}]`);

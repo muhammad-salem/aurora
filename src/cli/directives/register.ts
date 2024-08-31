@@ -5,14 +5,14 @@ import { metadataHoler } from '@ibyar/decorators';
 
 export interface DirectiveInfo {
 	selector: string,
-	successor?: string,
+	successors?: string[],
 	inputs?: DecoratorInfo[],
 	outputs?: DecoratorInfo[],
 }
 
 export function registerDirectiveCall(info: DirectiveInfo) {
 	directiveRegistry.set(info.selector, {
-		successor: info.successor,
+		successors: info.successors,
 		inputs: info.inputs?.map(i => i.aliasName),
 		outputs: info.outputs?.map(i => i.aliasName),
 	});

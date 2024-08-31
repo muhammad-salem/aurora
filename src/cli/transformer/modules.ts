@@ -14,7 +14,7 @@ export type DecoratorInfo = { name: string, aliasName: string, type?: string };
 export type ClassInfo = {
 	type: 'component' | 'directive';
 	name: string,
-	successor?: string;
+	successors?: string[];
 	views: ViewInfo[];
 	inputs: DecoratorInfo[];
 	outputs: DecoratorInfo[];

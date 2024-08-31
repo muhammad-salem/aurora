@@ -2,7 +2,8 @@ import ts from 'typescript/lib/tsserverlibrary.js';
 import { ClassInfo, moduleManger } from './modules.js';
 import {
 	getInputs, getOutputs,
-	getTextValueForProperty,
+	getTextValueFormArrayLiteralProperty,
+	getTextValueFormLiteralProperty,
 	isDirectiveDecorator
 } from './helpers.js';
 import { registerDirectiveCall } from '../directives/register.js';
@@ -62,21 +63,21 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 							if (ts.isDecorator(modifier) && isDirectiveDecorator(modifier, directivePropertyName)) {
 								const options = (modifier.expression as ts.CallExpression).arguments[0];
 								if (ts.isObjectLiteralExpression(options)) {
-									const selector = getTextValueForProperty(options, 'selector');
+									const selector = getTextValueFormLiteralProperty(options, 'selector');
 									if (selector) {
-										const successor = getTextValueForProperty(options, 'successor');
+										const successors = getTextValueFormArrayLiteralProperty(options, 'successors');
 										const inputs = getInputs(childNode, typeChecker);
 										const outputs = getOutputs(childNode, typeChecker);
 										registerDirectiveCall({
 											selector,
-											successor,
+											successors,
 											inputs,
 											outputs
 										});
 										classes.push({
 											type: 'directive',
 											name: selector,
-											successor,
+											successors,
 											inputs,
 											outputs,
 											views: [],

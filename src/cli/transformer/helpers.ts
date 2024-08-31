@@ -181,7 +181,7 @@ export function getOutputNames(classNode: ts.ClassDeclaration, checker: ts.TypeC
  * @param property 
  * @returns 
  */
-export function getTextValueForProperty(option: ts.ObjectLiteralExpression, property: string): string | undefined {
+export function getTextValueFormLiteralProperty(option: ts.ObjectLiteralExpression, property: string): string | undefined {
 	const selectorProperty = option.properties
 		.find(prop => prop.name?.getText() === property) as ts.PropertyAssignment | undefined;
 
@@ -190,4 +190,22 @@ export function getTextValueForProperty(option: ts.ObjectLiteralExpression, prop
 		return;
 	}
 	return initializer?.substring(1, initializer.length - 1);
+}
+
+
+/**
+ * get text value for a property in ObjectLiteralExpression
+ * @param option 
+ * @param property 
+ * @returns 
+ */
+export function getTextValueFormArrayLiteralProperty(option: ts.ObjectLiteralExpression, property: string): string[] {
+	const selectorProperty = option.properties
+		.find(prop => prop.name?.getText() === property) as ts.PropertyAssignment | undefined;
+	if (!selectorProperty?.initializer || !ts.isArrayLiteralExpression(selectorProperty.initializer)) {
+		return [];
+	}
+	return selectorProperty.initializer.elements
+		.map(initializer => initializer.getText())
+		.map(initializer => initializer.substring(1, initializer.length - 1));
 }

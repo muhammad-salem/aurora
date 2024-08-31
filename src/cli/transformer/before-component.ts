@@ -9,7 +9,7 @@ import {
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 import {
 	getInputs, getOutputs,
-	getTextValueForProperty,
+	getTextValueFormLiteralProperty,
 	isComponentDecorator
 } from './helpers.js';
 
@@ -73,7 +73,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								return modifier;
 							}
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
-								const selector = getTextValueForProperty(option, 'selector');
+								const selector = getTextValueFormLiteralProperty(option, 'selector');
 								if (!selector) {
 									console.error(`Component missing selector name: ${childNode.name?.getText()}`);
 									return option;
