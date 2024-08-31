@@ -164,9 +164,7 @@ function parseChild(child: DomNode) {
 		// in case if add input/output support need to handle that here.
 		parseChild(child.node);
 		parseBaseNode(child);
-		if (child.successor) {
-			parseChild(child.successor);
-		}
+		child.successors?.forEach(parseChild);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
 	} else if (child instanceof DomFragmentNode) {

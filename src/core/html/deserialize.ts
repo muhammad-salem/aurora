@@ -59,7 +59,7 @@ function deserializeChild(child: DomNode) {
 		(child as DomStructuralDirectiveNodeUpgrade).templateExpressions = (child as DomStructuralDirectiveNodeUpgrade).templateExpressions?.map(deserialize) ?? [];
 		deserializeChild(child.node);
 		deserializeBaseNode(child);
-		child.successor && deserializeChild(child.successor);
+		child.successors?.forEach(deserializeChild);
 	} else if (isLiveTextContent(child)) {
 		deserializeLiveText(child);
 	} else if (child instanceof DomFragmentNode) {
