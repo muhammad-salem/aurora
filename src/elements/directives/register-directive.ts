@@ -168,6 +168,11 @@ export class DirectiveRegistry {
 		return this.directives.get(directiveName)?.hasSuccessors() || false;
 	}
 
+	hasAllSuccessors(directiveName: string, names: string[]): boolean {
+		const successors = this.getSuccessors(directiveName) ?? [];
+		return successors.length === names.length && successors.every(name => names.includes(name));
+	}
+
 	/**
 	 * get the value of the registered inputs and outputs by directive name
 	 * @param directiveName 
@@ -200,7 +205,7 @@ export class DirectiveRegistry {
 	 * @param directiveName 
 	 * @returns 
 	 */
-	getSuccessor(directiveName: string): string[] | undefined {
+	getSuccessors(directiveName: string): string[] | undefined {
 		return this.directives.get(directiveName)?.getSuccessors();
 	}
 

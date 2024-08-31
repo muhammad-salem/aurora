@@ -273,7 +273,8 @@ export class NodeParser extends NodeParserHelper {
 			const directive = this.getLastStructuralDirectiveNode();
 			if (directive) {
 				const lastDirective = chainSuccessor(directive);
-				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
+				const names = lastDirective.successors?.map(successor => successor.name) ?? [];
+				if (!directiveRegistry.hasAllSuccessors(lastDirective.name, names)) {
 					this.flowChainCount++;
 					return this.parsePossibleSuccessorsControlFlow;
 				}
@@ -528,7 +529,7 @@ export class NodeParser extends NodeParserHelper {
 			if (directive) {
 				const isSuccessor = directiveRegistry.hasSuccessor(directive.name, successorFlowName);
 				if (isSuccessor) {
-					directive.successor = new DomStructuralDirectiveSuccessorNode(successorFlowName);
+					(directive.successors ??= []).push(new DomStructuralDirectiveSuccessorNode(successorFlowName));
 					this.tempText = '';
 					this.index--;
 					return this.parseSuccessorsControlFlowName;
@@ -617,7 +618,7 @@ export class NodeParser extends NodeParserHelper {
 		let directive: DomStructuralDirectiveNode | undefined;
 		if (parent instanceof DomStructuralDirectiveNode && parent.node instanceof DomFragmentNode) {
 			directive = parent;
-			parent = parent.successor ?? parent.node ?? parent;
+			parent = parent.successors?.at(-1) ?? parent.node ?? parent;
 		}
 		if (parent instanceof DomParentNode) {
 			if (typeof element === 'string') {
@@ -660,8 +661,13 @@ export class NodeParser extends NodeParserHelper {
 }
 
 function chainSuccessor(directive: DomStructuralDirectiveNode): DomStructuralDirectiveNode {
-	if (directive.successor instanceof DomStructuralDirectiveSuccessorNode && directive.successor.children[0] instanceof DomStructuralDirectiveNode) {
-		return chainSuccessor(directive.successor.children[0]);
+	if (!directive.successors?.length) {
+		return directive;
+	}
+	const successor = directive.successors.at(-1);
+	if (successor instanceof DomStructuralDirectiveSuccessorNode
+		&& successor.children[0] instanceof DomStructuralDirectiveNode) {
+		return chainSuccessor(successor.children[0]);
 	}
 	return directive;
 }
@@ -708,7 +714,7 @@ export class HTMLParser {
 			} else if (node instanceof DomFragmentNode) {
 				html += this.stringify(node.children);
 			} else if (node instanceof DomStructuralDirectiveNode) {
-				html += `@${node.name.substring(1)}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
+				html += `@${node.name.substring(1)}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${Array.isArray(node.successors) ? this.stringify(node.successors) : ''}`;
 				html += this.stringify([node.node]);
 			} else if (node instanceof DomStructuralDirectiveSuccessorNode) {
 				html += `@${node.name}`;
@@ -817,7 +823,10 @@ export class HTMLParser {
 				inherit(node, DomStructuralDirectiveNode);
 				this.deserializeBaseNode(node as DomStructuralDirectiveNode);
 				this.deserializeNode((node as DomStructuralDirectiveNode).node);
-				(node as DomStructuralDirectiveNode).successor && this.deserializeNode((node as DomStructuralDirectiveNode).successor!);
+				const successors = (node as DomStructuralDirectiveNode).successors;
+				if (successors) {
+					successors.forEach(successor => this.deserializeNode(successor));
+				}
 				break;
 			case 'StructuralDirectiveSuccessorNode':
 				inherit(node, DomStructuralDirectiveSuccessorNode);
