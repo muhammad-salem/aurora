@@ -38,13 +38,13 @@
 		"@ibyar/decorators": "^2.3.0",
 		"@ibyar/elements": "^2.3.0",
 		"@ibyar/expressions": "^2.3.0",
-		"tslib": "^2.6.3"
+		"tslib": "^2.7.0"
 	},
 	"peerDependencies": {
-		"zone.js": "~0.11.4 || ~0.12.0 || ~0.13.1"
+		"zone.js": "~0.15.0"
 	},
 	"devDependencies": {
-		"typescript": "^5.5.2"
+		"typescript": "^5.6.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
