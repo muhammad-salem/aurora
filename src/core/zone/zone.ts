@@ -114,7 +114,7 @@ export class AuroraZone extends AbstractAuroraZone {
 
 	runTask<T>(callback: (...args: any[]) => T, applyThis?: any, applyArgs?: any[], name?: string): T {
 		const zone = (this as any as AuroraZonePrivate)._inner;
-		const task = zone.scheduleEventTask('AuroraZoneEvent: ' + name ?? '', callback, EMPTY_PAYLOAD, NOOP, NOOP);
+		const task = zone.scheduleEventTask(`AuroraZoneEvent: ${name ?? ''}`, callback, EMPTY_PAYLOAD, NOOP, NOOP);
 		try {
 			return zone.runTask(task, applyThis, applyArgs);
 		} finally {
