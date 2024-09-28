@@ -7,10 +7,13 @@ import {
 	LocalTemplateVariables, isLocalTemplateVariables
 } from '@ibyar/elements/node.js';
 import {
-	AssignmentExpression, ExpressionNode,
-	expressionVisitor, Identifier,
-	JavaScriptParser, MemberExpression,
-	PipelineExpression
+	Identifier,
+	ExpressionNode,
+	MemberExpression,
+	JavaScriptParser,
+	expressionVisitor,
+	PipelineExpression,
+	VariableDeclarationNode
 } from '@ibyar/expressions';
 import {
 	OneWayAssignmentExpression,
@@ -27,9 +30,12 @@ function parseLiveText(text: LiveTextContent) {
 }
 
 function parseLocalTemplateVariables(local: LocalTemplateVariables) {
-	const expression = JavaScriptParser.parseScript<AssignmentExpression>(local.declarations);
-	local.expression = new OneWayAssignmentExpression(expression.getLeft() as MemberExpression, expression.getRight());
-	local.pipelineNames = getPipelineNames(expression.getRight());
+	const expression = JavaScriptParser.parseScript<VariableDeclarationNode>(`let ${local.declarations}`);
+	local.variables = expression.getDeclarations().map(declaration => {
+		const expression = new OneWayAssignmentExpression(declaration.getId(), declaration.getInit()!);
+		const pipelineNames = getPipelineNames(expression.getRight());
+		return { expression, pipelineNames };
+	});
 }
 
 /**

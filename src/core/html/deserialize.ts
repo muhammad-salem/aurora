@@ -17,10 +17,10 @@ function deserializeLiveText(text: LiveTextContent) {
 }
 
 function deserializeLocalTemplateVariables(local: LocalTemplateVariables) {
-	if (local.expression) {
-		local.expression = deserialize(local.expression) as typeof local.expression;
-		local.pipelineNames = getPipelineNames(local.expression.getRight());
-	}
+	local.variables?.forEach(variable => {
+		variable.expression = deserialize(variable.expression) as typeof variable.expression;
+		variable.pipelineNames = getPipelineNames(variable.expression.getRight());
+	});
 }
 
 function deserializeLiveAttribute(attr: LiveAttribute) {

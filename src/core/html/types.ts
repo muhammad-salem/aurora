@@ -18,8 +18,7 @@ declare module '@ibyar/elements/node.js' {
 	}
 
 	interface LocalTemplateVariables {
-		expression: BindingAssignment;
-		pipelineNames?: string[];
+		variables: Array<{ expression: OneWayAssignmentExpression; pipelineNames?: string[]; }>;
 	}
 
 	interface DomStructuralDirectiveNodeUpgrade extends DomStructuralDirectiveNode {

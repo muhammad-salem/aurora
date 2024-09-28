@@ -176,11 +176,14 @@ export class ComponentRender<T extends object> {
 		return liveText;
 	}
 	createLocalTemplateVariables(localNode: LocalTemplateVariables, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): void {
-		const variableName = (localNode.expression.getLeft() as Identifier).getName();
-		contextStack.pushReactiveScopeFor({ [variableName]: undefined });
-		const localSubscriptions = localNode.expression.subscribe(contextStack, localNode.pipelineNames);
-		subscriptions.push(...localSubscriptions);
-		localNode.expression.get(contextStack);
+		const entries = localNode.variables.map(variable => [(variable.expression.getLeft() as Identifier).getDeclarationName(), undefined]);
+		const context = Object.fromEntries(entries);
+		contextStack.pushReactiveScopeFor(context);
+		localNode.variables.forEach(variable => {
+			const localSubscriptions = variable.expression.subscribe(contextStack, variable.pipelineNames);
+			subscriptions.push(...localSubscriptions);
+			variable.expression.get(contextStack);
+		});
 	}
 	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
 		const fragment = document.createDocumentFragment();
