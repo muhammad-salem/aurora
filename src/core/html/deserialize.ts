@@ -2,7 +2,7 @@ import {
 	BaseNode, DomStructuralDirectiveNode, DomElementNode, DomNode,
 	DomFragmentNode, DomParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent,
-	DomAttributeDirectiveNode
+	DomAttributeDirectiveNode, LocalTemplateVariables
 } from '@ibyar/elements';
 
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
@@ -13,6 +13,13 @@ function deserializeLiveText(text: LiveTextContent) {
 	if (text.expression) {
 		text.expression = deserialize(text.expression) as typeof text.expression;
 		text.pipelineNames = getPipelineNames(text.expression.getRight());
+	}
+}
+
+function deserializeLocalTemplateVariables(local: LocalTemplateVariables) {
+	if (local.expression) {
+		local.expression = deserialize(local.expression) as typeof local.expression;
+		local.pipelineNames = getPipelineNames(local.expression.getRight());
 	}
 }
 
@@ -64,6 +71,8 @@ function deserializeChild(child: DomNode) {
 		deserializeLiveText(child);
 	} else if (child instanceof DomFragmentNode) {
 		deserializeDomParentNode(child);
+	} else if (child instanceof LocalTemplateVariables) {
+		deserializeLocalTemplateVariables(child);
 	}
 }
 

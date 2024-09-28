@@ -3,11 +3,14 @@ import {
 	DomStructuralDirectiveNode, DomElementNode, DomNode,
 	DomFragmentNode, DomParentNode, ElementAttribute,
 	isLiveTextContent, LiveAttribute, LiveTextContent,
-	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode
+	DomStructuralDirectiveNodeUpgrade, DomAttributeDirectiveNode,
+	LocalTemplateVariables, isLocalTemplateVariables
 } from '@ibyar/elements/node.js';
 import {
-	ExpressionNode, expressionVisitor, Identifier,
-	JavaScriptParser, MemberExpression, PipelineExpression
+	AssignmentExpression, ExpressionNode,
+	expressionVisitor, Identifier,
+	JavaScriptParser, MemberExpression,
+	PipelineExpression
 } from '@ibyar/expressions';
 import {
 	OneWayAssignmentExpression,
@@ -21,6 +24,12 @@ function parseLiveText(text: LiveTextContent) {
 	const textExpression = JavaScriptParser.parseScript(text.value);
 	text.expression = new OneWayAssignmentExpression(ThisTextContent, textExpression);
 	text.pipelineNames = getPipelineNames(textExpression);
+}
+
+function parseLocalTemplateVariables(local: LocalTemplateVariables) {
+	const expression = JavaScriptParser.parseScript<AssignmentExpression>(local.declarations);
+	local.expression = new OneWayAssignmentExpression(expression.getLeft() as MemberExpression, expression.getRight());
+	local.pipelineNames = getPipelineNames(expression.getRight());
 }
 
 /**
@@ -167,6 +176,8 @@ function parseChild(child: DomNode) {
 		child.successors?.forEach(parseChild);
 	} else if (isLiveTextContent(child)) {
 		parseLiveText(child);
+	} else if (isLocalTemplateVariables(child)) {
+		parseLocalTemplateVariables(child);
 	} else if (child instanceof DomFragmentNode) {
 		parseDomParentNode(child);
 	}
