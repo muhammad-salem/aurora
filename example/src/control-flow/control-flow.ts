@@ -1,4 +1,4 @@
-import { Component } from '@ibyar/aurora';
+import { Component, OnDestroy, OnInit } from '@ibyar/aurora';
 
 
 @Component({
@@ -15,10 +15,26 @@ import { Component } from '@ibyar/aurora';
 			}
 		}
 		print yes => @for(let x of []){x}@empty{y}@if('bool'){e}@else if(false){b}@else{c}@for(let x of []){m}@empty{s}
+		<hr>
+		Local template variables ==>  \\@let double = 2 * x;
+		<hr>
+		@let double = 2 * x;
+		x = {{x}} <span class="ms-5">double of x = {{double}}</span>
+		<hr>
 	`
 })
-export class ControlFlowExample {
+export class ControlFlowExample implements OnInit, OnDestroy {
+	x = 1;
 
 	list = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+	interval: number;
+
+	onInit(): void {
+		this.interval = setInterval(() => this.x++, 1000) as any;
+	}
+
+	onDestroy(): void {
+		clearInterval(this.interval);
+	}
 
 }
