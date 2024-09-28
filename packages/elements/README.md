@@ -157,6 +157,7 @@ directiveRegistry.register('style');
 <!-- Local template variables -->
 		
 @let name = user.name;
+@let name = user.name, age = user.age; <!-- comma separated variable declaration -->
 @let greeting = 'Hello, ' + name;
 @let data = data$ | async;
 @let pi = 3.1459;
