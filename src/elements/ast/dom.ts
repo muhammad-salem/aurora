@@ -60,6 +60,10 @@ export function isLiveTextContent(text: object): text is LiveTextContent {
 	return text instanceof LiveTextContent;
 }
 
+export function isLocalTemplateVariables(text: object): text is LocalTemplateVariables {
+	return text instanceof LocalTemplateVariables;
+}
+
 /**
  * to comment in dom
  */
@@ -70,6 +74,13 @@ export class CommentNode {
 	}
 }
 
+export class LocalTemplateVariables {
+	constructor(public declarations: string) { }
+
+	toJSON() {
+		return Object.assign({}, this, { type: 'LocalTemplateVariables' });
+	}
+}
 
 export class BaseNode {
 
@@ -313,9 +324,9 @@ export class DomStructuralDirectiveNode extends BaseNode {
 export function isDOMDirectiveNode(node: object): node is DomStructuralDirectiveNode {
 	return node instanceof DomStructuralDirectiveNode;
 }
-export type DomChild = DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export type DomChild = DomElementNode | DomStructuralDirectiveNode | LocalTemplateVariables | CommentNode | TextContent | LiveTextContent;
 
-export type DomNode = DomFragmentNode | DomElementNode | DomStructuralDirectiveNode | CommentNode | TextContent | LiveTextContent;
+export type DomNode = DomFragmentNode | DomElementNode | DomStructuralDirectiveNode | LocalTemplateVariables | CommentNode | TextContent | LiveTextContent;
 
 export type DomRenderNode<T> = (model: T) => DomNode;
 

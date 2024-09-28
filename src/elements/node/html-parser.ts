@@ -6,12 +6,13 @@ import {
 	ElementAttribute, Attribute, BaseNode, LiveAttribute,
 	DomParentNode, DomAttributeDirectiveNode,
 	DomStructuralDirectiveSuccessorNode,
+	LocalTemplateVariables,
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DomElementNode | DomStructuralDirectiveNode | CommentNode | string;
+type ChildNode = DomElementNode | DomStructuralDirectiveNode | LocalTemplateVariables | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -224,6 +225,7 @@ export class NodeParser extends NodeParserHelper {
 	private flowScopeCount = 0;
 	private flowChainCount = 0;
 	private interpolationCount = 0;
+	private insideString?: Record<"'" | '"' | '`', boolean>;
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -486,6 +488,15 @@ export class NodeParser extends NodeParserHelper {
 			return this.parseText;
 		}
 		this.tempText += token;
+		if (this.tempText.trim() === 'let') {
+			this.tempText = '';
+			this.insideString = {
+				"'": false,
+				'"': false,
+				'`': false
+			};
+			return this.parseLocalTemplateVariables;
+		}
 		return this.parseControlFlow;
 	}
 
@@ -553,6 +564,21 @@ export class NodeParser extends NodeParserHelper {
 		}
 		this.tempText += token;
 		return this.parseSuccessorsControlFlowName;
+	}
+
+	private parseLocalTemplateVariables(token: string) {
+		if ((token == '"' || token === "'" || token === '`') && this.tempText.at(-1) !== '\\') {
+			this.insideString![token] = !this.insideString![token];
+		} else if (token === ';' && !this.insideString?.['"'] && !this.insideString?.['`'] && !this.insideString?.["'"]) {
+			const expression = this.tempText.trim();
+			this.stackTrace.push(new LocalTemplateVariables(expression));
+			this.popElement();
+			this.tempText = '';
+			this.insideString = undefined;
+			return this.parseText;
+		}
+		this.tempText += token;
+		return this.parseLocalTemplateVariables;
 	}
 
 	private parsePropertyValue(token: string) {
@@ -711,6 +737,8 @@ export class HTMLParser {
 				html += node.value;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
+			} else if (node instanceof LocalTemplateVariables) {
+				html += `@let ${node.declarations};`;
 			} else if (node instanceof DomFragmentNode) {
 				html += this.stringify(node.children);
 			} else if (node instanceof DomStructuralDirectiveNode) {
@@ -806,6 +834,9 @@ export class HTMLParser {
 				break;
 			case 'CommentNode':
 				inherit(node, CommentNode);
+				break;
+			case 'LocalTemplateVariables':
+				inherit(node, LocalTemplateVariables);
 				break;
 			case 'DomFragmentNode':
 				inherit(node, DomFragmentNode);
