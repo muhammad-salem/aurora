@@ -114,6 +114,7 @@ yarn add @ibyar/aurora
 | Template Parser | ✓ |
 | Template Syntax | ✓ |
 | Control Flow Syntax | ✓ |
+| Variables in templates | ✓ |
 | Template Reference Variables | ✓ |
 | Template HTML File | fetch or embedded |
 | Fragment | ✓ |
@@ -286,6 +287,17 @@ import { interval, Subscription } from 'rxjs';
 		isOdd :{{ isOdd? 'odd': 'even'}}
 		color: {{color}}
 	}
+	<!-- Local template variables -->
+		
+	@let name = user.name;
+	@let greeting = 'Hello, ' + name;
+	@let data = data$ | async;
+	@let pi = 3.1459;
+	@let coordinates = {x: 50, y: 100};
+	@let longExpression = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit ' +
+                      'sed do eiusmod tempor incididunt ut labore et dolore magna ' +
+                      'Ut enim ad minim veniam...';
+
 	<div *for="const color of colors">
 		color: {{color}} <span *if="color === currentColor" class="bs-color"> Current Color ='{{currentColor}}'</span>
 	</div>
