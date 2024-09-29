@@ -1,6 +1,6 @@
-import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope } from '@ibyar/expressions';
+import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope, Identifier } from '@ibyar/expressions';
 import {
-	CommentNode, DomStructuralDirectiveNode,
+	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
 	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
@@ -120,16 +120,9 @@ export class ComponentRender<T extends object> {
 			stack,
 			(directive as DomStructuralDirectiveNodeUpgrade).templateExpressions ?? [],
 		);
-		let successorTemplateRef: TemplateRef | undefined;
-		if (directive.successor) {
-			successorTemplateRef = new TemplateRefImpl(
-				this,
-				directive.successor,
-				stack,
-				[]
-			);
-		}
-
+		const successorTemplateRefs = Object.fromEntries((directive.successors ?? [])?.map(
+			successor => [successor.name, new TemplateRefImpl(this, successor, stack, [])]
+		));
 		const directiveZone = this.view._zone.fork(directiveRef.zone);
 		const viewContainerRef = new ViewContainerRefImpl(parentNode as Element, comment);
 
@@ -146,7 +139,7 @@ export class ComponentRender<T extends object> {
 			viewContainerRef,
 			host,
 			directiveZone,
-			successorTemplateRef,
+			successorTemplateRefs,
 		));
 
 		templateRef.host = structural;
@@ -182,6 +175,16 @@ export class ComponentRender<T extends object> {
 		textNode.expression.get(contextStack);
 		return liveText;
 	}
+	createLocalTemplateVariables(localNode: LocalTemplateVariables, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): void {
+		const entries = localNode.variables.map(variable => [(variable.expression.getLeft() as Identifier).getDeclarationName(), undefined]);
+		const context = Object.fromEntries(entries);
+		contextStack.pushReactiveScopeFor(context);
+		localNode.variables.forEach(variable => {
+			const localSubscriptions = variable.expression.subscribe(contextStack, variable.pipelineNames);
+			subscriptions.push(...localSubscriptions);
+			variable.expression.get(contextStack);
+		});
+	}
 	createDocumentFragment(node: DomFragmentNode, contextStack: Stack, parentNode: Node, subscriptions: ScopeSubscription<Context>[], host: HTMLComponent<any> | StructuralDirective): DocumentFragment {
 		const fragment = document.createDocumentFragment();
 		node.children?.forEach(child => this.appendChildToParent(fragment, child, contextStack, parentNode, subscriptions, host));
@@ -212,6 +215,8 @@ export class ComponentRender<T extends object> {
 			this.createStructuralDirective(child, comment, contextStack, subscriptions, parentNode, host);
 		} else if (isLiveTextContent(child)) {
 			fragmentParent.append(this.createLiveText(child, contextStack, subscriptions));
+		} else if (child instanceof LocalTemplateVariables) {
+			this.createLocalTemplateVariables(child, contextStack, subscriptions);
 		} else if (child instanceof TextContent) {
 			fragmentParent.append(this.createText(child));
 		} else if (child instanceof CommentNode) {

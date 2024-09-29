@@ -13,8 +13,13 @@ export class StructuralDirective {
 		protected viewContainerRef: ViewContainerRef,
 		protected host: HTMLComponent<any> | StructuralDirective,
 		protected _zone: AuroraZone,
-		protected successor?: TemplateRef,
+		private successors: Record<string, TemplateRef>,
 	) { }
+
+	getSuccessor(name: string): TemplateRef | undefined {
+		return this.successors[name];
+	}
+
 }
 
 /**

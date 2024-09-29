@@ -118,8 +118,9 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 		const inputs = c.inputs.map(input => input.aliasName);
 		const outputs = c.outputs.map(input => input.aliasName).map(output => 'on' + ToCamelCase(output));
 		const attributes = [...inputs, ...outputs].map(s => `'${s}'`).join(' | ');
+		const observedAttributes = attributes.length ? `public static observedAttributes: (${attributes})[];` : '';
 		const interfaceBody = `
-			public static observedAttributes: [${attributes}];
+			${observedAttributes}
 
 			${c.inputs.map(input => `public ${input.aliasName}${input.type ? `: ${input.type}` : ''};`).join('\n')}
 
@@ -127,12 +128,18 @@ export function updateModuleTypeWithComponentView(classes: ClassInfo[]): ts.Node
 			
 		`;
 		// need to fix @FormValue type;
-		return c.views.map(view => `
+		return c.views.map(view => {
+			const disabledFeatures = (Array.isArray(view.disabledFeatures) && view.disabledFeatures.length > 0)
+				? `public static disabledFeatures: ('${view.disabledFeatures.join(' | ')}')[];`
+				: '';
+			return `
 			declare class ${view.viewName} extends ${view.extendsType} {
+				${disabledFeatures}
 				${interfaceBody.trim()}
 			}
 			declare interface ${view.viewName} extends ${view.formAssociated ? `BaseFormAssociatedComponent<${c.name}>, ` : ''}BaseComponent<${c.name}> {}
-		`);
+		`;
+		});
 	});
 	const views = classes.flatMap(c => c.views.map(v => ({ tagName: v.selector, viewName: v.viewName })));
 	const sourceCode = `
@@ -170,8 +177,8 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		const inputs: string[] = directive.inputs.map(input => `{name: '${input.name}', aliasName: '${input.aliasName}'}`);
 		const outputs: string[] = directive.outputs.map(output => `{name: '${output.name}', aliasName: '${output.aliasName}'}`);
 		const temp: string[] = [`selector: '${directive.name}'`];
-		if (directive.successor) {
-			temp.push(`successor: '${directive.successor}'`);
+		if (directive.successors) {
+			temp.push(`successors: [${directive.successors.map(successor => `'${successor}'`).join(',')}]`);
 		}
 		if (directive.inputs.length > 0) {
 			temp.push(`inputs: [${inputs.join(',')}]`);

@@ -78,6 +78,7 @@ export interface ComponentRef<T> {
 	encapsulation: 'custom' | 'shadow-dom' | 'template' | 'shadow-dom-template' | 'shadow-slot';
 	isShadowDom: boolean;
 	shadowRootInit: ShadowRootInit;
+	disabledFeatures?: ('internals' | 'shadow')[];
 	formAssociated: boolean | TypeOf<ValueControl<any>>;
 	zone?: ZoneType;
 }
@@ -116,10 +117,18 @@ export class Components {
 		}
 		metadata.modelClass = modelClass;
 		classRegistryProvider.registerDirective(modelClass);
+		const successors: string[] = [];
+		if (metadata.successor) {
+			successors.push(metadata.successor.trim());
+		}
+		if (Array.isArray(metadata.successors)) {
+			successors.push(...metadata.successors.map(s => s.trim()));
+		}
+		metadata.successors = successors;
 		directiveRegistry.register(opts.selector, {
 			inputs: (metadata.inputs as PropertyRef[])?.map(input => input.viewAttribute),
 			outputs: (metadata.outputs as PropertyRef[])?.map(output => output.viewAttribute),
-			successor: (metadata.successor as string | undefined),
+			successors: successors,
 		});
 	}
 

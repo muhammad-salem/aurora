@@ -6,12 +6,13 @@ import {
 	ElementAttribute, Attribute, BaseNode, LiveAttribute,
 	DomParentNode, DomAttributeDirectiveNode,
 	DomStructuralDirectiveSuccessorNode,
+	LocalTemplateVariables,
 } from '../ast/dom.js';
 import { directiveRegistry } from '../directives/register-directive.js';
 
 type Token = (token: string) => Token;
 
-type ChildNode = DomElementNode | DomStructuralDirectiveNode | CommentNode | string;
+type ChildNode = DomElementNode | DomStructuralDirectiveNode | LocalTemplateVariables | CommentNode | string;
 
 export class EscapeHTMLCharacter {
 	static ESCAPE_MAP: { [key: string]: string } = {
@@ -224,6 +225,7 @@ export class NodeParser extends NodeParserHelper {
 	private flowScopeCount = 0;
 	private flowChainCount = 0;
 	private interpolationCount = 0;
+	private insideString?: Record<"'" | '"' | '`', boolean>;
 
 	parse(html: string)/*: DomNode*/ {
 		this.reset();
@@ -273,7 +275,8 @@ export class NodeParser extends NodeParserHelper {
 			const directive = this.getLastStructuralDirectiveNode();
 			if (directive) {
 				const lastDirective = chainSuccessor(directive);
-				if ((lastDirective.successor?.children.length ?? 0) === 0 && directiveRegistry.hasSuccessors(lastDirective.name)) {
+				const names = lastDirective.successors?.map(successor => successor.name) ?? [];
+				if (!directiveRegistry.hasAllSuccessors(lastDirective.name, names)) {
 					this.flowChainCount++;
 					return this.parsePossibleSuccessorsControlFlow;
 				}
@@ -485,6 +488,15 @@ export class NodeParser extends NodeParserHelper {
 			return this.parseText;
 		}
 		this.tempText += token;
+		if (this.tempText.trim() === 'let') {
+			this.tempText = '';
+			this.insideString = {
+				"'": false,
+				'"': false,
+				'`': false
+			};
+			return this.parseLocalTemplateVariables;
+		}
 		return this.parseControlFlow;
 	}
 
@@ -528,7 +540,7 @@ export class NodeParser extends NodeParserHelper {
 			if (directive) {
 				const isSuccessor = directiveRegistry.hasSuccessor(directive.name, successorFlowName);
 				if (isSuccessor) {
-					directive.successor = new DomStructuralDirectiveSuccessorNode(successorFlowName);
+					(directive.successors ??= []).push(new DomStructuralDirectiveSuccessorNode(successorFlowName));
 					this.tempText = '';
 					this.index--;
 					return this.parseSuccessorsControlFlowName;
@@ -552,6 +564,21 @@ export class NodeParser extends NodeParserHelper {
 		}
 		this.tempText += token;
 		return this.parseSuccessorsControlFlowName;
+	}
+
+	private parseLocalTemplateVariables(token: string) {
+		if ((token == '"' || token === "'" || token === '`') && this.tempText.at(-1) !== '\\') {
+			this.insideString![token] = !this.insideString![token];
+		} else if (token === ';' && !this.insideString?.['"'] && !this.insideString?.['`'] && !this.insideString?.["'"]) {
+			const expression = this.tempText.trim();
+			this.stackTrace.push(new LocalTemplateVariables(expression));
+			this.popElement();
+			this.tempText = '';
+			this.insideString = undefined;
+			return this.parseText;
+		}
+		this.tempText += token;
+		return this.parseLocalTemplateVariables;
 	}
 
 	private parsePropertyValue(token: string) {
@@ -617,7 +644,7 @@ export class NodeParser extends NodeParserHelper {
 		let directive: DomStructuralDirectiveNode | undefined;
 		if (parent instanceof DomStructuralDirectiveNode && parent.node instanceof DomFragmentNode) {
 			directive = parent;
-			parent = parent.successor ?? parent.node ?? parent;
+			parent = parent.successors?.at(-1) ?? parent.node ?? parent;
 		}
 		if (parent instanceof DomParentNode) {
 			if (typeof element === 'string') {
@@ -660,8 +687,13 @@ export class NodeParser extends NodeParserHelper {
 }
 
 function chainSuccessor(directive: DomStructuralDirectiveNode): DomStructuralDirectiveNode {
-	if (directive.successor instanceof DomStructuralDirectiveSuccessorNode && directive.successor.children[0] instanceof DomStructuralDirectiveNode) {
-		return chainSuccessor(directive.successor.children[0]);
+	if (!directive.successors?.length) {
+		return directive;
+	}
+	const successor = directive.successors.at(-1);
+	if (successor instanceof DomStructuralDirectiveSuccessorNode
+		&& successor.children[0] instanceof DomStructuralDirectiveNode) {
+		return chainSuccessor(successor.children[0]);
 	}
 	return directive;
 }
@@ -705,10 +737,12 @@ export class HTMLParser {
 				html += node.value;
 			} else if (node instanceof CommentNode) {
 				html += `<!-- ${node.comment} -->`;
+			} else if (node instanceof LocalTemplateVariables) {
+				html += `@let ${node.declarations};`;
 			} else if (node instanceof DomFragmentNode) {
 				html += this.stringify(node.children);
 			} else if (node instanceof DomStructuralDirectiveNode) {
-				html += `@${node.name.substring(1)}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${node.successor ? this.stringify([node.successor]) : ''}`;
+				html += `@${node.name.substring(1)}${node.value ? ` (${node.value})` : ''} {${this.stringify([node.node])}}${Array.isArray(node.successors) ? this.stringify(node.successors) : ''}`;
 				html += this.stringify([node.node]);
 			} else if (node instanceof DomStructuralDirectiveSuccessorNode) {
 				html += `@${node.name}`;
@@ -801,6 +835,9 @@ export class HTMLParser {
 			case 'CommentNode':
 				inherit(node, CommentNode);
 				break;
+			case 'LocalTemplateVariables':
+				inherit(node, LocalTemplateVariables);
+				break;
 			case 'DomFragmentNode':
 				inherit(node, DomFragmentNode);
 				(node as DomFragmentNode).children?.forEach(child => this.deserializeNode(child));
@@ -817,7 +854,10 @@ export class HTMLParser {
 				inherit(node, DomStructuralDirectiveNode);
 				this.deserializeBaseNode(node as DomStructuralDirectiveNode);
 				this.deserializeNode((node as DomStructuralDirectiveNode).node);
-				(node as DomStructuralDirectiveNode).successor && this.deserializeNode((node as DomStructuralDirectiveNode).successor!);
+				const successors = (node as DomStructuralDirectiveNode).successors;
+				if (successors) {
+					successors.forEach(successor => this.deserializeNode(successor));
+				}
 				break;
 			case 'StructuralDirectiveSuccessorNode':
 				inherit(node, DomStructuralDirectiveSuccessorNode);

@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/elements",
-	"version": "2.3.0",
+	"version": "2.4.0",
 	"description": "Ibyar elements, hold info about HTMLElements class, attributes and tag name",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/elements",
@@ -35,7 +35,7 @@
 		"access": "public"
 	},
 	"devDependencies": {
-		"typescript": "^5.5.2"
+		"typescript": "^5.6.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",

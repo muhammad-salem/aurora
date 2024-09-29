@@ -17,11 +17,11 @@ export interface DirectiveNodeOptions {
 	 * 
 	 * ex: [`@if`/`@else`] & [`@for`/`@empty`]
 	 */
-	successor?: string;
+	successors?: string[];
 }
 
 class DirectiveNodeInfo {
-	constructor(private inputs?: string[], private outputs?: string[], private successor?: string) { }
+	constructor(private inputs?: string[], private outputs?: string[], private successors?: string[]) { }
 
 	hasAttributes(): boolean {
 		return this.hasInputs() || this.hasOutputs();
@@ -36,7 +36,7 @@ class DirectiveNodeInfo {
 	}
 
 	hasSuccessors(): boolean {
-		return (this.successor?.trim().length ?? 0) > 0;
+		return (this.successors?.length ?? 0) > 0;
 	}
 
 	getAttributes(): string[] | undefined {
@@ -58,8 +58,8 @@ class DirectiveNodeInfo {
 		return this.outputs;
 	}
 
-	getSuccessor(): string | undefined {
-		return this.successor;
+	getSuccessors(): string[] | undefined {
+		return this.successors;
 	}
 
 	hasAttribute(attributeName: string): boolean {
@@ -75,7 +75,7 @@ class DirectiveNodeInfo {
 	}
 
 	hasSuccessor(successor: string): boolean {
-		return this.successor == successor;
+		return this.successors?.includes(successor) || false;
 	}
 
 }
@@ -110,7 +110,7 @@ export class DirectiveRegistry {
 	 */
 
 	set(directiveName: string, options?: DirectiveNodeOptions): void {
-		const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successor);
+		const info = new DirectiveNodeInfo(options?.inputs, options?.outputs, options?.successors);
 		this.directives.set(directiveName, info);
 	}
 
@@ -168,6 +168,11 @@ export class DirectiveRegistry {
 		return this.directives.get(directiveName)?.hasSuccessors() || false;
 	}
 
+	hasAllSuccessors(directiveName: string, names: string[]): boolean {
+		const successors = this.getSuccessors(directiveName) ?? [];
+		return successors.length === names.length && successors.every(name => names.includes(name));
+	}
+
 	/**
 	 * get the value of the registered inputs and outputs by directive name
 	 * @param directiveName 
@@ -200,8 +205,8 @@ export class DirectiveRegistry {
 	 * @param directiveName 
 	 * @returns 
 	 */
-	getSuccessor(directiveName: string): string | undefined {
-		return this.directives.get(directiveName)?.getSuccessor();
+	getSuccessors(directiveName: string): string[] | undefined {
+		return this.directives.get(directiveName)?.getSuccessors();
 	}
 
 	/**

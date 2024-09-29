@@ -9,7 +9,7 @@ import {
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 import {
 	getInputs, getOutputs,
-	getTextValueForProperty,
+	getTextValueFormLiteralProperty,
 	isComponentDecorator
 } from './helpers.js';
 
@@ -73,7 +73,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								return modifier;
 							}
 							const updateDecoratorOptions = (option: ts.ObjectLiteralExpression) => {
-								const selector = getTextValueForProperty(option, 'selector');
+								const selector = getTextValueFormLiteralProperty(option, 'selector');
 								if (!selector) {
 									console.error(`Component missing selector name: ${childNode.name?.getText()}`);
 									return option;
@@ -90,12 +90,19 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 								const formAssociatedProperty = option.properties.find(prop => prop.name?.getText() === 'formAssociated') as ts.PropertyAssignment | undefined;
 								const formAssociated = formAssociatedProperty?.initializer.getText().substring(1, formAssociatedProperty?.initializer.getText().length - 1);
 
+								const disabledFeaturesInitializer = (option.properties.find(prop => prop.name?.getText() === 'disabledFeatures') as ts.PropertyAssignment | undefined)?.initializer as ts.ArrayLiteralExpression | undefined;
+								let disabledFeatures: string[] | undefined = undefined;
+								if (disabledFeaturesInitializer && ts.isArrayLiteralExpression(disabledFeaturesInitializer)) {
+									disabledFeatures = disabledFeaturesInitializer.elements.filter(ts.isStringLiteral).map(el => el.getText(sourceFile));
+								}
+
 								viewInfos.push({
 									selector,
 									viewName,
 									extendsType,
 									interFaceType: createInterfaceType(viewName, extendsType),
 									formAssociated: 'true' == formAssociated,
+									disabledFeatures: [],
 								});
 
 								const stylesProperty = option.properties.find(prop => prop.name?.getText() === 'styles') as ts.PropertyAssignment | undefined;

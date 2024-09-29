@@ -58,11 +58,11 @@ export interface DirectiveOptions {
 	 */
 	zone?: ZoneType;
 
-
 	/**
-	 * name of possible structure directive successor
+	 * name of possible structure directives successor
 	 */
-	successor?: string;
+	successors?: string[];
+
 }
 
 export interface InjectableOptions {
@@ -195,6 +195,11 @@ export interface ComponentOptions<T = Class> {
 	 * default mode: `open`, delegatesFocus: `false` and slotAssignment: `manual`
 	 */
 	shadowRootInit?: Partial<ShadowRootInit>;
+
+	/**
+	 * 
+	 */
+	disabledFeatures?: ('internals' | 'shadow')[];
 
 	/**
 	 * Create a custom form-associated element with HTMLElement.attachInternals

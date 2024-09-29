@@ -18,7 +18,6 @@ const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>
  */
 export function initCustomElementView<T extends Object>(modelClass: MetadataClass<T>, componentRef: ComponentRef<T>): MetadataClass<HTMLComponent<T>> {
 	const htmlParent = componentRef.extend.classRef as TypeOf<HTMLElement>;
-	let viewClass: TypeOf<HTMLComponent<T>>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
 
@@ -34,8 +33,11 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 		}
 	}
 
-	viewClass = ({
+	const viewClass = ({
 		[htmlViewClassName]: @Metadata() class extends parentClass {
+			public static allAttributes: string[] = [];
+			public static disabledFeatures: string[] = [];
+			public static observedAttributes: string[] = [];
 			constructor(optionalComponentRef?: ComponentRef<T>, modelConstructor?: TypeOf<T>) {
 				super(optionalComponentRef ?? componentRef, modelConstructor ?? modelClass);
 			}
@@ -100,13 +102,17 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	if (componentRef.formAssociated && !observedAttributes.includes('value')) {
 		observedAttributes.push('value');
 	}
-	Reflect.set(viewClass, 'observedAttributes', observedAttributes);
-	Reflect.set(viewClass, 'allAttributes', defaultAttributes.concat(observedAttributes));
+
+	viewClass.allAttributes.push(...defaultAttributes.concat(observedAttributes));
+	viewClass.observedAttributes.push(...observedAttributes);
+	if (Array.isArray(componentRef.disabledFeatures)) {
+		viewClass.disabledFeatures.push(...componentRef.disabledFeatures);
+	}
 	addViewToModelClass<T>(modelClass, componentRef.selector, viewClass, htmlViewClassName);
 	if (!Reflect.has(window, htmlViewClassName)) {
 		Reflect.set(window, htmlViewClassName, viewClass);
 	}
-	return viewClass as MetadataClass;
+	return viewClass as TypeOf<HTMLComponent<T>> as MetadataClass;
 }
 
 export type ComponentModelClass =

@@ -16,6 +16,11 @@ declare module '@ibyar/elements/node.js' {
 		expression: OneWayAssignmentExpression;
 		pipelineNames?: string[];
 	}
+
+	interface LocalTemplateVariables {
+		variables: Array<{ expression: OneWayAssignmentExpression; pipelineNames?: string[]; }>;
+	}
+
 	interface DomStructuralDirectiveNodeUpgrade extends DomStructuralDirectiveNode {
 		/**
 		 * create a new scope for a template and bind the new variables to the directive scope.

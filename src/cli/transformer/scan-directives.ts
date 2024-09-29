@@ -17,9 +17,12 @@ function extractDirectives(alias: ts.TypeAliasDeclaration, sourceFile: ts.Source
 			return;
 		}
 		const name = member.name.getText(sourceFile);
-		if ((name === 'selector' || name === 'successor') && member.type && ts.isLiteralTypeNode(member.type)) {
+		if ((name === 'selector') && member.type && ts.isLiteralTypeNode(member.type)) {
 			const value = member.type.literal.getText(sourceFile);
 			info[name] = removeQuotations(value);
+		} else if ((name === 'successors') && member.type && ts.isArrayLiteralExpression(member.type)) {
+			const values = member.type.elements.map(elm => elm.getText(sourceFile));
+			info[name] = values.map(removeQuotations);
 		} else if ((name === 'inputs' || name === 'outputs') && member.type && ts.isTupleTypeNode(member.type)) {
 			type Item = { name: string, aliasName: string };
 			const value: Item[] = [];

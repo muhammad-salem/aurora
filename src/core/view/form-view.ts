@@ -72,7 +72,8 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 
 		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
 			super(componentRef, modelClass);
-			if (componentRef.extend.name && isFormElement(componentRef.extend.name)) {
+			if ((componentRef.extend.name && isFormElement(componentRef.extend.name))
+				|| componentRef.disabledFeatures?.includes('internals')) {
 				this._internals = new NativeElementInternals(this);
 			} else {
 				this._internals = this.attachInternals();

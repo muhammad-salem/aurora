@@ -113,4 +113,57 @@ directiveRegistry.register('style');
 <for let-user [of]="user">....</for>
 <if [if]="user.name == 'ali'">....</if>
 
+<!-- control flow syntax -->
+
+@if (a > b) {
+  <p>{{a}} is greater than {{b}}</p>
+}
+
+@if (a > b) {
+  {{a}} is greater than {{b}}
+} @else if (b > a) {
+  {{a}} is less than {{b}}
+} @else {
+  {{a}} is equal to {{b}}
+}
+
+@for (item of items; track item.id) {
+  {{ item.name }}
+}
+
+@for (item of items; track item.name) {
+  <li> {{ item.name }}</li>
+} @empty {
+  <li aria-hidden="true"> There are no items. </li>
+}
+
+
+@switch (userPermissions) {
+  @case ('admin') {
+    <app-admin-dashboard />
+  }
+  @case ('reviewer') {
+    <app-reviewer-dashboard />
+  }
+  @case ('editor') {
+    <app-editor-dashboard />
+  }
+  @default {
+    <app-viewer-dashboard />
+  }
+}
+
+
+<!-- Local template variables -->
+		
+@let name = user.name;
+@let name = user.name, age = user.age; <!-- comma separated variable declaration -->
+@let greeting = 'Hello, ' + name;
+@let data = data$ | async;
+@let pi = 3.1459;
+@let coordinates = {x: 50, y: 100};
+@let longExpression = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit ' +
+                      'sed do eiusmod tempor incididunt ut labore et dolore magna ' +
+                      'Ut enim ad minim veniam...';
+
 ```

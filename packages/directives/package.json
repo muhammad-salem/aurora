@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/directives",
-	"version": "2.3.0",
+	"version": "2.4.0",
 	"description": "Ibyar directives had the built-in directives for aurora project",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/directives",
@@ -33,13 +33,13 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^2.3.0",
-		"@ibyar/elements": "^2.3.0",
-		"@ibyar/platform": "^2.3.0",
-		"tslib": "^2.6.3"
+		"@ibyar/core": "^2.4.0",
+		"@ibyar/elements": "^2.4.0",
+		"@ibyar/platform": "^2.4.0",
+		"tslib": "^2.7.0"
 	},
 	"devDependencies": {
-		"typescript": "^5.5.2"
+		"typescript": "^5.6.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",

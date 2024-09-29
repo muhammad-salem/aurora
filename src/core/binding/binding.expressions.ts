@@ -1,5 +1,6 @@
 import {
-	Context, Deserializer, ExpressionEventMap, ExpressionNode,
+	Context, DeclarationExpression, Deserializer,
+	ExpressionEventMap, ExpressionNode,
 	Identifier, InfixExpressionNode, MemberExpression,
 	NodeDeserializer, ReactiveScope, Scope, ScopeSubscription,
 	Stack, ValueChangedCallback, VisitNodeType,
@@ -22,7 +23,7 @@ export interface BindingAssignment extends InfixExpressionNode<BindingOperators>
 export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperator> implements BindingAssignment {
 	static fromJSON(node: OneWayAssignmentExpression, deserializer: NodeDeserializer): OneWayAssignmentExpression {
 		return new OneWayAssignmentExpression(
-			deserializer(node.left) as MemberExpression,
+			deserializer(node.left) as MemberExpression | DeclarationExpression,
 			deserializer(node.right)
 		);
 	}
@@ -33,7 +34,7 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 
 	declare protected left: MemberExpression;
 	private rightEvents = this.right.events();
-	constructor(left: MemberExpression, right: ExpressionNode) {
+	constructor(left: MemberExpression | DeclarationExpression, right: ExpressionNode) {
 		super('=:', left, right);
 	}
 	set(stack: Stack, value: any) {
