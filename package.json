@@ -11,9 +11,6 @@
 		"zone.js": "~0.15.0"
 	},
 	"devDependencies": {
-		"@ibyar/esmpack": "^1.0.0",
-		"assert": "2.1.0",
-		"lerna": "^8.1.7",
 		"test262-parser-tests": "0.0.5",
 		"typescript": "^5.6.2"
 	},
@@ -32,10 +29,10 @@
 		"ibyar:example": "npm run clean && ibyar -b -v example/",
 		"ibyar:example:w": "npm run clean && ibyar -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
-		"do:publish-no-git": "npm run build && lerna publish --force-publish --no-git-tag-version --no-push",
-		"do:publish-no-tag": "npm run build && lerna publish --force-publish --no-git-tag-version",
-		"do:publish-no-push": "npm run build && lerna publish --force-publish --no-push",
-		"do:publish": "npm run build && lerna publish --force-publish",
+		"do:publish-no-git": "npm run build && npx lerna publish --force-publish --no-git-tag-version --no-push",
+		"do:publish-no-tag": "npm run build && npx lerna publish --force-publish --no-git-tag-version",
+		"do:publish-no-push": "npm run build && npx lerna publish --force-publish --no-push",
+		"do:publish": "npm run build && npx lerna publish --force-publish",
 		"docs": "npx typedoc --tsconfig ./tsconfig.json"
 	}
 }

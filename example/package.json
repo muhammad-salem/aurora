@@ -32,6 +32,6 @@
 		"ibyar": "npx ibyar --build --verbose",
 		"build:watch": "npx tsc --build --verbose --watch",
 		"ibyar:watch": "npx ibyar --build --watch --verbose",
-		"esmpack:watch": "npx esmpack -w"
+		"esmpack:watch": "npx @ibyar/esmpack -w"
 	}
 }
