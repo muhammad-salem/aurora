@@ -12,7 +12,6 @@
 	},
 	"devDependencies": {
 		"@ibyar/esmpack": "^1.0.0",
-		"@types/node": "22.5.5",
 		"assert": "2.1.0",
 		"lerna": "^8.1.7",
 		"test262-parser-tests": "0.0.5",
