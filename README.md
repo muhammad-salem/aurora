@@ -580,6 +580,6 @@ export default = {
 ```
 
 
-see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
+see test app for full [`webpack`](https://github.com/ibyar/aurora-demo/tree/main/bundles/webpack)
 
-see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
+see test app for full [`rollup`](https://github.com/ibyar/aurora-demo/tree/main/bundles/rollup)
