@@ -16,7 +16,7 @@ import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
 import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
-import { clearSignalScope, setSignalScope } from '../signals/signals.js';
+import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
@@ -42,8 +42,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
 
-			this._signalScope = new SignalScope();
-			setSignalScope(this._signalScope);
+			this._signalScope = pushNewSignalScope();
 
 			const args = []; /* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
@@ -53,7 +52,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			const model = new modelClass(...args);
 			this._model = model;
 
-			clearSignalScope();
+			clearSignalScope(this._signalScope);
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
