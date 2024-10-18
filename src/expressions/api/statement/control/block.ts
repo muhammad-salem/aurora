@@ -61,7 +61,7 @@ export class BlockStatement extends AbstractExpressionNode {
 	toString(): string {
 		return `{\n${this.body
 			.map(node => ({ insert: !isDeclarationExpression(node), string: node.toString() }))
-			.map(ref => `  ${ref.string}${ref.insert ? ';' : ''}`)
+			.map(ref => `\t\t${ref.string}${ref.insert ? ';' : ''}`)
 			.join('\n')}\n}`;
 	}
 	toJson(): object {
