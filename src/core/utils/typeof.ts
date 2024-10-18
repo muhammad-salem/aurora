@@ -6,4 +6,4 @@ export interface TypeOf<T> extends Function {
 	[key: PropertyKey]: any;
 }
 
-export type Class<T = any> = new (...args: any) => T;
+export type ClassType<T = any> = new (...args: any) => T;

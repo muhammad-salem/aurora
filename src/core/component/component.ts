@@ -1,5 +1,5 @@
 import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
-import type { Class, TypeOf } from '../utils/typeof.js';
+import type { ClassType, TypeOf } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -132,13 +132,13 @@ export class Components {
 		});
 	}
 
-	static definePipe<T extends Class>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
+	static definePipe<T extends ClassType>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		classRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineInjectable<T extends Class>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
+	static defineInjectable<T extends ClassType>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
@@ -146,7 +146,7 @@ export class Components {
 		provide(modelClass);
 	}
 
-	static defineComponent<T extends Class>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+	static defineComponent<T extends ClassType>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 		componentRef.extendCustomElement = !!opts.extend && isValidCustomElementName(opts.extend);

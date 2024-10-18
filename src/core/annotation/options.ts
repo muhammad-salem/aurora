@@ -1,4 +1,4 @@
-import type { Class, TypeOf } from '../utils/typeof.js';
+import type { ClassType, TypeOf } from '../utils/typeof.js';
 import type { DomNode } from '@ibyar/elements';
 import type { TemplateUrl } from '../utils/path.js';
 import type { ZoneType } from '../zone/bootstrap.js';
@@ -74,7 +74,7 @@ export interface PipeOptions {
 	asynchronous?: boolean;
 }
 
-export interface ComponentOptions<T = Class> {
+export interface ComponentOptions<T = ClassType> {
 
 	/**
 	 * a tag name for the component,
