@@ -140,10 +140,6 @@ export function ViewChildren<This, Value>(selector: string | typeof HTMLElement 
 	);
 }
 
-
-/**
- * @deprecated since v2.4.0, use `hostListener` function instead.
- */
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
 	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
 		(value, context, metadata) => {
@@ -164,9 +160,6 @@ export function HostListener<This, Value extends (this: This, ...args: any) => a
 
 type ValueGetter<T> = T | (() => T) | undefined;
 
-/**
- * @deprecated since v2.4.0, use `hostBinding` function instead.
- */
 export function HostBinding<This, Value>(hostPropertyName: string) {
 	return makeClassMemberDecorator<ValueGetter<Value>, ClassFieldDecoratorContext<This, Value> | ClassMethodDecoratorContext<This, any> | ClassGetterDecoratorContext<This, Value>>(
 		(value, context, metadata) => {
