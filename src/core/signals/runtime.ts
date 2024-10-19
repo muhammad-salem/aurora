@@ -1,10 +1,11 @@
 import {
+	AssignmentExpression,
 	CallExpression, ExpressionNode,
-	PropertyDefinition, expressionVisitor,
-	Identifier, MemberExpression, Literal,
-	MethodDefinition, AssignmentExpression,
-	ThisExpression, JavaScriptParser,
-	VisitorCallback
+	expressionVisitor, Identifier,
+	JavaScriptParser, Literal,
+	MemberExpression, MethodDefinition,
+	Property, PropertyDefinition,
+	ThisExpression, VisitorCallback
 } from '@ibyar/expressions';
 
 type Key =
@@ -21,7 +22,7 @@ type Key =
 	| 'computedNode'
 	| 'lazyNode';
 
-type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: string[] };
+type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: Record<string, string> };
 
 /**
  * scan model class for (inputs and output) property definitions with value by function call.
@@ -71,20 +72,20 @@ export class RuntimeClassMetadata {
 
 	newModelInitializers(): SignalRuntimeMetadata[] {
 		return [
-			{ signal: 'input', names: [] },
-			{ signal: 'input', necessity: 'required', names: [] },
-			{ signal: 'output', names: [] },
-			{ signal: 'signal', names: [] },
-			{ signal: 'computed', names: [] },
-			{ signal: 'lazy', names: [] },
-			{ signal: 'formValue', names: [] },
-			{ signal: 'view', names: [] },
-			{ signal: 'viewChild', names: [] },
-			{ signal: 'viewChild', necessity: 'required', names: [] },
-			{ signal: 'viewChildren', names: [] },
-			{ signal: 'signalNode', names: [] },
-			{ signal: 'computedNode', names: [] },
-			{ signal: 'lazyNode', names: [] },
+			{ signal: 'input', names: {} },
+			{ signal: 'input', necessity: 'required', names: {} },
+			{ signal: 'output', names: {} },
+			{ signal: 'signal', names: {} },
+			{ signal: 'computed', names: {} },
+			{ signal: 'lazy', names: {} },
+			{ signal: 'formValue', names: {} },
+			{ signal: 'view', names: {} },
+			{ signal: 'viewChild', names: {} },
+			{ signal: 'viewChild', necessity: 'required', names: {} },
+			{ signal: 'viewChildren', names: {} },
+			{ signal: 'signalNode', names: {} },
+			{ signal: 'computedNode', names: {} },
+			{ signal: 'lazyNode', names: {} },
 		];
 	}
 
@@ -101,7 +102,11 @@ export class RuntimeClassMetadata {
 					return;
 				}
 				const property = properties.find(property => this.isCallOf(value, property.signal, property.necessity));
-				property?.names.push(key instanceof Identifier ? key.getName() : key.getValue());
+				if (property) {
+					const name = key instanceof Identifier ? key.getName() : key.getValue();
+					const alias = this.getAliasNameFromOptionArgument(value);
+					property.names[name] = alias ?? name;
+				}
 			} else if (type === 'MethodDefinition') {
 				const definition = expression as MethodDefinition;
 				if (definition.getKind() !== 'constructor') {
@@ -117,12 +122,33 @@ export class RuntimeClassMetadata {
 								return;
 							}
 							const name = this.hasMemberOfThis(assignment.getLeft());
-							name && property.names.push(name);
+							if (name) {
+								const alias = this.getAliasNameFromOptionArgument(right);
+								property.names[name] = alias ?? name;
+							}
 						}
 					}
 				});
 			}
 		};
+	}
+
+	getAliasNameFromOptionArgument(call: CallExpression): string | undefined {
+		let alias: string | undefined;
+		call.getArguments()?.forEach(argument => expressionVisitor.visit(argument, (exp, type, control) => {
+			if (exp instanceof Property) {
+				const key = exp.getKey();
+				if ((key instanceof Identifier && key.getName() === 'alias')
+					|| (key instanceof Literal && key.getValue() === 'alias')) {
+					const value = exp.getValue();
+					if (value instanceof Literal) {
+						alias = value.getValue();
+						control.abort();
+					}
+				}
+			}
+		}));
+		return alias;
 	}
 
 	isCallOf(call: CallExpression, objectName: string, propertyName?: string): boolean {
