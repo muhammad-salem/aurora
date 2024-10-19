@@ -22,7 +22,7 @@ type Key =
 	| 'computedNode'
 	| 'lazyNode';
 
-type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: Record<string, string> };
+export type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: Record<string, string> };
 
 /**
  * scan model class for (inputs and output) property definitions with value by function call.
