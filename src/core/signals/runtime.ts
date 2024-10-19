@@ -6,6 +6,22 @@ import {
 	ThisExpression, JavaScriptParser
 } from '@ibyar/expressions';
 
+type Key =
+	| 'input'
+	| 'output'
+	| 'formValue'
+	| 'view'
+	| 'viewChild'
+	| 'viewChildren'
+	| 'signal'
+	| 'computed'
+	| 'lazy'
+	| 'signalNode'
+	| 'computedNode'
+	| 'lazyNode';
+
+type PropertyDetail = { objectName: Key, propertyName?: string, list: string[] };
+
 /**
  * scan model class for (inputs and output) property definitions with value by function call.
  */
@@ -13,41 +29,37 @@ export class RuntimeClassMetadata {
 
 	static INSTANCE = new RuntimeClassMetadata();
 
-	static scanInputs(modelClass: Function) {
-		return RuntimeClassMetadata.INSTANCE.getInputs(modelClass);
+	static scanInitializers(modelClass: Function) {
+		return RuntimeClassMetadata.INSTANCE.scan(modelClass);
 	}
 
-	static scanOutputs(modelClass: Function) {
-		return RuntimeClassMetadata.INSTANCE.getOutputs(modelClass);
-	}
-
-	static scanInputsOutputs(modelClass: Function) {
-		return RuntimeClassMetadata.INSTANCE.getInputsOutputs(modelClass);
-	}
-
-
-	getInputs(modelClass: Function): string[] {
+	scan(modelClass: Function): Record<Key, string[]> {
 		const script = this.getClassScript(modelClass);
 		const expr = JavaScriptParser.parse(script);
-		return this.scanPropertyInitializer(expr, 'input', 'required');
-	}
-
-	getOutputs(modelClass: Function): string[] {
-		const script = this.getClassScript(modelClass);
-		const expr = JavaScriptParser.parse(script);
-		return this.scanPropertyInitializer(expr, 'output');
-	}
-
-	getInputsOutputs(modelClass: Function): { inputs: string[], outputs: string[] } {
-		const script = this.getClassScript(modelClass);
-		const expr = JavaScriptParser.parse(script);
-		const inputs = this.scanPropertyInitializer(expr, 'input', 'required');
-		const outputs = this.scanPropertyInitializer(expr, 'output');
-		return { inputs, outputs };
+		const properties = this.newModelInitializers();
+		this.scanPropertyInitializers(expr, properties);
+		return Object.fromEntries(properties.map(property => ([property.propertyName, property.list]))) as Record<Key, string[]>;
 	}
 
 	getClassScript(modelClass: Function): string {
-		return this.getClassList(modelClass).map((ref, index) => `const class${index} = ${ref};`).join('\n');;
+		return this.getClassList(modelClass).map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
+	}
+
+	newModelInitializers(): PropertyDetail[] {
+		return [
+			{ objectName: 'input', propertyName: 'required', list: [] },
+			{ objectName: 'output', list: [] },
+			{ objectName: 'signal', list: [] },
+			{ objectName: 'computed', list: [] },
+			{ objectName: 'lazy', list: [] },
+			{ objectName: 'formValue', list: [] },
+			{ objectName: 'view', list: [] },
+			{ objectName: 'viewChild', propertyName: 'required', list: [] },
+			{ objectName: 'viewChildren', list: [] },
+			{ objectName: 'signalNode', list: [] },
+			{ objectName: 'computedNode', list: [] },
+			{ objectName: 'lazyNode', list: [] },
+		];
 	}
 
 	getClassList(modelClass: Function): Function[] {
@@ -59,8 +71,7 @@ export class RuntimeClassMetadata {
 		return list.reverse();
 	}
 
-	scanPropertyInitializer(modelExpression: ExpressionNode, objectName: string, propertyName?: string): string[] {
-		const inputs: string[] = [];
+	scanPropertyInitializers(modelExpression: ExpressionNode, properties: PropertyDetail[]): void {
 		expressionVisitor.visit(modelExpression, (expression, type) => {
 			if (type === 'PropertyDefinition') {
 				const definition = expression as PropertyDefinition;
@@ -72,9 +83,8 @@ export class RuntimeClassMetadata {
 					|| !(value instanceof CallExpression)) {
 					return;
 				}
-				if (this.isCallOf(value, objectName, propertyName)) {
-					inputs.push(key instanceof Identifier ? key.getName() : key.getValue());
-				}
+				const property = properties.find(property => this.isCallOf(value, property.objectName, property.propertyName));
+				property?.list.push(key instanceof Identifier ? key.getName() : key.getValue());
 			} else if (type === 'MethodDefinition') {
 				const definition = expression as MethodDefinition;
 				if (definition.getKind() !== 'constructor') {
@@ -84,17 +94,19 @@ export class RuntimeClassMetadata {
 					if (expType === 'AssignmentExpression') {
 						const assignment = exp as AssignmentExpression;
 						const right = assignment.getRight();
-						if (right instanceof CallExpression && this.isCallOf(right, objectName, propertyName)) {
+						if (right instanceof CallExpression) {
+							const property = properties.find(property => this.isCallOf(right, property.objectName, property.propertyName));
+							if (!property) {
+								return;
+							}
 							const name = this.hasMemberOfThis(assignment.getLeft());
-							name && inputs.push(name);
+							name && property.list.push(name);
 						}
 					}
 				});
 			}
 		});
-		return inputs;
 	}
-
 
 	isCallOf(call: CallExpression, objectName: string, propertyName?: string): boolean {
 		const callee = call.getCallee();
