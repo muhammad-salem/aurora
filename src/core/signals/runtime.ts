@@ -3,7 +3,8 @@ import {
 	PropertyDefinition, expressionVisitor,
 	Identifier, MemberExpression, Literal,
 	MethodDefinition, AssignmentExpression,
-	ThisExpression, JavaScriptParser
+	ThisExpression, JavaScriptParser,
+	VisitorCallback
 } from '@ibyar/expressions';
 
 type Key =
@@ -20,7 +21,7 @@ type Key =
 	| 'computedNode'
 	| 'lazyNode';
 
-type PropertyDetail = { objectName: Key, propertyName?: string, list: string[] };
+type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: string[] };
 
 /**
  * scan model class for (inputs and output) property definitions with value by function call.
@@ -29,37 +30,34 @@ export class RuntimeClassMetadata {
 
 	static INSTANCE = new RuntimeClassMetadata();
 
-	static scanInitializers(modelClass: Function) {
+	static scanMetadata(modelClass: Function) {
 		return RuntimeClassMetadata.INSTANCE.scan(modelClass);
 	}
 
-	scan(modelClass: Function): Record<Key, string[]> {
+	static scanClass(modelClass: Function, visitorCallback: VisitorCallback) {
+		return RuntimeClassMetadata.INSTANCE.scanModelClass(modelClass, visitorCallback);
+	}
+
+	scan(modelClass: Function): SignalRuntimeMetadata[] {
+		const metadata = this.newModelInitializers();
+		const visitor = this.createVisitor(metadata);
+		this.scanModelClass(modelClass, visitor);
+		return metadata;
+	}
+
+	/**
+	 * scan class `Function` for properties and methods definitions.
+	 * @param modelClass 
+	 * @param visitorCallback 
+	 */
+	scanModelClass(modelClass: Function, visitorCallback: VisitorCallback) {
 		const script = this.getClassScript(modelClass);
 		const expr = JavaScriptParser.parse(script);
-		const properties = this.newModelInitializers();
-		this.scanPropertyInitializers(expr, properties);
-		return Object.fromEntries(properties.map(property => ([property.propertyName, property.list]))) as Record<Key, string[]>;
+		expressionVisitor.visit(expr, visitorCallback);
 	}
 
 	getClassScript(modelClass: Function): string {
 		return this.getClassList(modelClass).map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
-	}
-
-	newModelInitializers(): PropertyDetail[] {
-		return [
-			{ objectName: 'input', propertyName: 'required', list: [] },
-			{ objectName: 'output', list: [] },
-			{ objectName: 'signal', list: [] },
-			{ objectName: 'computed', list: [] },
-			{ objectName: 'lazy', list: [] },
-			{ objectName: 'formValue', list: [] },
-			{ objectName: 'view', list: [] },
-			{ objectName: 'viewChild', propertyName: 'required', list: [] },
-			{ objectName: 'viewChildren', list: [] },
-			{ objectName: 'signalNode', list: [] },
-			{ objectName: 'computedNode', list: [] },
-			{ objectName: 'lazyNode', list: [] },
-		];
 	}
 
 	getClassList(modelClass: Function): Function[] {
@@ -71,8 +69,27 @@ export class RuntimeClassMetadata {
 		return list.reverse();
 	}
 
-	scanPropertyInitializers(modelExpression: ExpressionNode, properties: PropertyDetail[]): void {
-		expressionVisitor.visit(modelExpression, (expression, type) => {
+	newModelInitializers(): SignalRuntimeMetadata[] {
+		return [
+			{ signal: 'input', names: [] },
+			{ signal: 'input', necessity: 'required', names: [] },
+			{ signal: 'output', names: [] },
+			{ signal: 'signal', names: [] },
+			{ signal: 'computed', names: [] },
+			{ signal: 'lazy', names: [] },
+			{ signal: 'formValue', names: [] },
+			{ signal: 'view', names: [] },
+			{ signal: 'viewChild', names: [] },
+			{ signal: 'viewChild', necessity: 'required', names: [] },
+			{ signal: 'viewChildren', names: [] },
+			{ signal: 'signalNode', names: [] },
+			{ signal: 'computedNode', names: [] },
+			{ signal: 'lazyNode', names: [] },
+		];
+	}
+
+	createVisitor(properties: SignalRuntimeMetadata[]): VisitorCallback {
+		return (expression, type) => {
 			if (type === 'PropertyDefinition') {
 				const definition = expression as PropertyDefinition;
 				const key = definition.getKey();
@@ -83,8 +100,8 @@ export class RuntimeClassMetadata {
 					|| !(value instanceof CallExpression)) {
 					return;
 				}
-				const property = properties.find(property => this.isCallOf(value, property.objectName, property.propertyName));
-				property?.list.push(key instanceof Identifier ? key.getName() : key.getValue());
+				const property = properties.find(property => this.isCallOf(value, property.signal, property.necessity));
+				property?.names.push(key instanceof Identifier ? key.getName() : key.getValue());
 			} else if (type === 'MethodDefinition') {
 				const definition = expression as MethodDefinition;
 				if (definition.getKind() !== 'constructor') {
@@ -95,25 +112,25 @@ export class RuntimeClassMetadata {
 						const assignment = exp as AssignmentExpression;
 						const right = assignment.getRight();
 						if (right instanceof CallExpression) {
-							const property = properties.find(property => this.isCallOf(right, property.objectName, property.propertyName));
+							const property = properties.find(property => this.isCallOf(right, property.signal, property.necessity));
 							if (!property) {
 								return;
 							}
 							const name = this.hasMemberOfThis(assignment.getLeft());
-							name && property.list.push(name);
+							name && property.names.push(name);
 						}
 					}
 				});
 			}
-		});
+		};
 	}
 
 	isCallOf(call: CallExpression, objectName: string, propertyName?: string): boolean {
 		const callee = call.getCallee();
-		if (callee instanceof Identifier && callee.getName() === objectName) {
+		if (propertyName && callee instanceof MemberExpression) {
+			return this.isMemberOf(callee, objectName, propertyName);
+		} else if (!propertyName && callee instanceof Identifier && callee.getName() === objectName) {
 			return true;
-		} else if (propertyName && callee instanceof CallExpression && callee.getCallee() instanceof MemberExpression) {
-			return this.isMemberOf(callee.getCallee() as MemberExpression, objectName, propertyName);
 		}
 		return false;
 	}
