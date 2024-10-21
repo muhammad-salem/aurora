@@ -19,11 +19,13 @@ import {
 } from '../annotation/options.js';
 import {
 	ChildRef, HostBindingRef, InputPropertyRef,
-	ListenerRef, OutputPropertyRef, PropertyRef
+	ListenerRef, OutputPropertyRef, PropertyRef,
+	ReflectComponents
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
 import { parseHostNode } from '../html/host.js';
 import { provide } from '../di/inject.js';
+import { RuntimeClassMetadata, SignalRuntimeMetadata } from '../signals/runtime.js';
 
 
 export interface InjectableRef<T> {
@@ -81,6 +83,7 @@ export interface ComponentRef<T> {
 	disabledFeatures?: ('internals' | 'shadow')[];
 	formAssociated: boolean | TypeOf<ValueControl<any>>;
 	zone?: ZoneType;
+	signals: SignalRuntimeMetadata[];
 }
 
 const DEFAULT_SHADOW_ROOT_INIT: ShadowRootInit = { mode: 'open', delegatesFocus: false, slotAssignment: 'named' };
@@ -147,10 +150,12 @@ export class Components {
 	}
 
 	static defineComponent<T extends ClassType>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+		if (!(opts as any as ComponentRef<T>).signals) {
+			this.scanRuntimeComponent(modelClass, opts as any as ComponentRef<T>, metadata);
+		}
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 		componentRef.extendCustomElement = !!opts.extend && isValidCustomElementName(opts.extend);
-
 		if (typeof componentRef.template === 'string') {
 			if (componentRef.styles) {
 				const template = `<style>${componentRef.styles}</style>${componentRef.template}`;
@@ -254,6 +259,27 @@ export class Components {
 			viewClass,
 			definition,
 		);
+	}
+
+	private static scanRuntimeComponent<T extends ClassType>(modelClass: MetadataClass<T>, opts: ComponentRef<T>, metadata: MetadataContext) {
+		const signals = RuntimeClassMetadata.scanMetadata(modelClass);
+		opts.signals = signals;
+		console.log('I/O signalInputs ==> ', modelClass.name, opts.selector, signals);
+		signals.filter(item => item.signal === 'input')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addInput(metadata, option.name, option.alias));
+		signals.filter(item => item.signal === 'formValue')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addInput(metadata, option.name, 'view'));
+		signals.filter(item => item.signal === 'output')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addOutput(
+				metadata, option.name, option.alias,
+				{ bubbles: option.bubbles ?? false, composed: option.composed ?? false }
+			));
+		signals.filter(item => item.signal === 'view')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));
 	}
 
 }
