@@ -9,7 +9,7 @@ import {
 } from '../component/lifecycle.js';
 import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
-import { EventEmitter } from '../component/events.js';
+import { EventEmitter, OutputEventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { getRootZone } from '../zone/bootstrap.js';
 import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
@@ -86,9 +86,10 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			});
 
-			componentRef.outputs.forEach(output =>
-				(model[output.modelProperty as keyof T] as any as EventEmitter<any>)
-					.subscribe((value: any) => {
+			componentRef.outputs.forEach(output => {
+				const event = model[output.modelProperty as keyof T];
+				if (event instanceof EventEmitter) {
+					event.subscribe((value: any) => {
 						const event = new CustomEvent(
 							output.viewAttribute,
 							{
@@ -100,7 +101,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 						);
 						this.dispatchEvent(event);
 					})
-			);
+				} else if (event instanceof OutputEventEmitter) {
+					Reflect.set(event, 'view', this);
+					Reflect.set(event, 'name', output.modelProperty);
+				}
+			});
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);
