@@ -55,3 +55,27 @@ export class EventEmitter<T> {
 		this.subscribers.delete(subscription);
 	}
 }
+
+export type OutputEventOptions = EventInit & { name?: string };
+
+export class OutputEventEmitter<T> {
+
+	private name: string;
+	private view!: HTMLElement;
+
+	constructor(private options?: OutputEventOptions) { }
+
+	emit(value?: T): void {
+		const event = new CustomEvent(
+			this.options?.name ?? this.name,
+			{
+				detail: value,
+				cancelable: this.options?.cancelable,
+				bubbles: this.options?.bubbles,
+				composed: this.options?.bubbles,
+			},
+		);
+		this.view.dispatchEvent(event);
+	}
+
+}
