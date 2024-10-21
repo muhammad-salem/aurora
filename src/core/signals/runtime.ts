@@ -25,8 +25,6 @@ type Key =
 type RuntimeOption = {
 	name: Key,
 	alias: string,
-	bubbles?: boolean,
-	composed?: boolean,
 };
 
 export type SignalRuntimeMetadata = {
@@ -116,11 +114,7 @@ export class RuntimeClassMetadata {
 				if (property) {
 					const name = key instanceof Identifier ? key.getName() : key.getValue();
 					const alias = this.getAliasNameFromOptionArgument(value);
-					const option: RuntimeOption = { name, alias: alias ?? name };
-					property.options.push(option);
-					if (property.signal === 'output') {
-						this.scanOutputOptions(value, option);
-					}
+					property.options.push({ name, alias: alias ?? name });
 				}
 			} else if (type === 'MethodDefinition') {
 				const definition = expression as MethodDefinition;
@@ -139,35 +133,13 @@ export class RuntimeClassMetadata {
 							const name = this.hasMemberOfThis(assignment.getLeft());
 							if (name) {
 								const alias = this.getAliasNameFromOptionArgument(right);
-								const option: RuntimeOption = { name, alias: alias ?? name };
-								property.options.push(option);
-								if (property.signal === 'output') {
-									this.scanOutputOptions(right, option);
-								}
+								property.options.push({ name, alias: alias ?? name });
 							}
 						}
 					}
 				});
 			}
 		};
-	}
-
-	scanOutputOptions(call: CallExpression, option: RuntimeOption): void {
-		call.getArguments()?.forEach(argument => expressionVisitor.visit(argument, (exp, type, control) => {
-			if (exp instanceof Property) {
-				if (this.isProperty(exp.getKey(), 'bubbles')) {
-					const value = exp.getValue();
-					if (value instanceof Literal) {
-						option.bubbles = value.getValue();
-					}
-				} else if (this.isProperty(exp.getKey(), 'composed')) {
-					const value = exp.getValue();
-					if (value instanceof Literal) {
-						option.composed = value.getValue();
-					}
-				}
-			}
-		}));
 	}
 
 	getAliasNameFromOptionArgument(call: CallExpression): string | undefined {

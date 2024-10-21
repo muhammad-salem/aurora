@@ -273,10 +273,7 @@ export class Components {
 			.forEach(option => ReflectComponents.addInput(metadata, option.name, 'view'));
 		signals.filter(item => item.signal === 'output')
 			.flatMap(item => item.options)
-			.forEach(option => ReflectComponents.addOutput(
-				metadata, option.name, option.alias,
-				{ bubbles: option.bubbles ?? false, composed: option.composed ?? false }
-			));
+			.forEach(option => ReflectComponents.addOutput(metadata, option.name, option.alias, {}));
 		signals.filter(item => item.signal === 'view')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));
