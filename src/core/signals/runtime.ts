@@ -22,7 +22,18 @@ type Key =
 	| 'computedNode'
 	| 'lazyNode';
 
-export type SignalRuntimeMetadata = { signal: Key, necessity?: string, names: Record<string, string> };
+type RuntimeOption = {
+	name: Key,
+	alias: string,
+	bubbles?: boolean,
+	composed?: boolean,
+};
+
+export type SignalRuntimeMetadata = {
+	signal: Key;
+	necessity?: string;
+	options: Array<RuntimeOption>;
+};
 
 /**
  * scan model class for (inputs and output) property definitions with value by function call.
@@ -72,20 +83,20 @@ export class RuntimeClassMetadata {
 
 	newModelInitializers(): SignalRuntimeMetadata[] {
 		return [
-			{ signal: 'input', names: {} },
-			{ signal: 'input', necessity: 'required', names: {} },
-			{ signal: 'output', names: {} },
-			{ signal: 'signal', names: {} },
-			{ signal: 'computed', names: {} },
-			{ signal: 'lazy', names: {} },
-			{ signal: 'formValue', names: {} },
-			{ signal: 'view', names: {} },
-			{ signal: 'viewChild', names: {} },
-			{ signal: 'viewChild', necessity: 'required', names: {} },
-			{ signal: 'viewChildren', names: {} },
-			{ signal: 'signalNode', names: {} },
-			{ signal: 'computedNode', names: {} },
-			{ signal: 'lazyNode', names: {} },
+			{ signal: 'input', options: [] },
+			{ signal: 'input', necessity: 'required', options: [] },
+			{ signal: 'output', options: [] },
+			{ signal: 'signal', options: [] },
+			{ signal: 'computed', options: [] },
+			{ signal: 'lazy', options: [] },
+			{ signal: 'formValue', options: [] },
+			{ signal: 'view', options: [] },
+			{ signal: 'viewChild', options: [] },
+			{ signal: 'viewChild', necessity: 'required', options: [] },
+			{ signal: 'viewChildren', options: [] },
+			{ signal: 'signalNode', options: [] },
+			{ signal: 'computedNode', options: [] },
+			{ signal: 'lazyNode', options: [] },
 		];
 	}
 
@@ -105,7 +116,11 @@ export class RuntimeClassMetadata {
 				if (property) {
 					const name = key instanceof Identifier ? key.getName() : key.getValue();
 					const alias = this.getAliasNameFromOptionArgument(value);
-					property.names[name] = alias ?? name;
+					const option: RuntimeOption = { name, alias: alias ?? name };
+					property.options.push(option);
+					if (property.signal === 'output') {
+						this.scanOutputOptions(value, option);
+					}
 				}
 			} else if (type === 'MethodDefinition') {
 				const definition = expression as MethodDefinition;
@@ -124,7 +139,11 @@ export class RuntimeClassMetadata {
 							const name = this.hasMemberOfThis(assignment.getLeft());
 							if (name) {
 								const alias = this.getAliasNameFromOptionArgument(right);
-								property.names[name] = alias ?? name;
+								const option: RuntimeOption = { name, alias: alias ?? name };
+								property.options.push(option);
+								if (property.signal === 'output') {
+									this.scanOutputOptions(right, option);
+								}
 							}
 						}
 					}
@@ -133,13 +152,29 @@ export class RuntimeClassMetadata {
 		};
 	}
 
+	scanOutputOptions(call: CallExpression, option: RuntimeOption): void {
+		call.getArguments()?.forEach(argument => expressionVisitor.visit(argument, (exp, type, control) => {
+			if (exp instanceof Property) {
+				if (this.isProperty(exp.getKey(), 'bubbles')) {
+					const value = exp.getValue();
+					if (value instanceof Literal) {
+						option.bubbles = value.getValue();
+					}
+				} else if (this.isProperty(exp.getKey(), 'composed')) {
+					const value = exp.getValue();
+					if (value instanceof Literal) {
+						option.composed = value.getValue();
+					}
+				}
+			}
+		}));
+	}
+
 	getAliasNameFromOptionArgument(call: CallExpression): string | undefined {
 		let alias: string | undefined;
 		call.getArguments()?.forEach(argument => expressionVisitor.visit(argument, (exp, type, control) => {
 			if (exp instanceof Property) {
-				const key = exp.getKey();
-				if ((key instanceof Identifier && key.getName() === 'alias')
-					|| (key instanceof Literal && key.getValue() === 'alias')) {
+				if (this.isProperty(exp.getKey(), 'alias')) {
 					const value = exp.getValue();
 					if (value instanceof Literal) {
 						alias = value.getValue();
@@ -149,6 +184,11 @@ export class RuntimeClassMetadata {
 			}
 		}));
 		return alias;
+	}
+
+	isProperty(node: ExpressionNode, property: string): boolean {
+		return (node instanceof Identifier && node.getName() === property)
+			|| (node instanceof Literal && node.getValue() === property);
 	}
 
 	isCallOf(call: CallExpression, objectName: string, propertyName?: string): boolean {
@@ -175,7 +215,7 @@ export class RuntimeClassMetadata {
 		return false;
 	}
 
-	hasMemberOfThis(member: ExpressionNode): string | false {
+	hasMemberOfThis(member: ExpressionNode): Key | false {
 		if (!(member instanceof MemberExpression)) {
 			return false;
 		}
@@ -183,9 +223,9 @@ export class RuntimeClassMetadata {
 		const property = member.getProperty();
 		if (object instanceof ThisExpression) {
 			if (property instanceof Identifier) {
-				return property.getName() as string;
+				return property.getName() as Key;
 			} else if (property instanceof Literal) {
-				return property.getValue();
+				return property.getValue() as Key;
 			}
 		}
 		return false;
