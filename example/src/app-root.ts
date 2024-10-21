@@ -116,7 +116,7 @@ export class AppRoot implements OnInit {
 	onInit(): void {
 		this.appName = 'APP NAME';
 		setTimeout(() => {
-			this.lazyLoad(this.appList.at(-1)!);
+			this.lazyLoad(this.appList.at(-2)!);
 		}, 0);
 	}
 

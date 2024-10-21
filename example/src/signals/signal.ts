@@ -1,4 +1,16 @@
-import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from '@ibyar/aurora';
+import {
+	Component, Injectable, OnDestroy,
+	OnInit, computed, effect, inject,
+	input, lazy, output, signal, untracked
+} from '@ibyar/aurora';
+
+
+@Injectable({})
+export class SignalScopeService {
+
+	date = signal(new Date());
+
+}
 
 
 @Component({
@@ -46,15 +58,26 @@ import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from 
 			<p>lazy x*y= {{ l() }} <button class="btn btn-outline-success" (click)="l()">Refresh value</button></p>
 			<p>double g = <span [class]="{'text-danger': e() instanceof Error}">{{ e() }}</span> (error if a = false)</p>
 
+			<hr>
+			<p>date: {{ date() }}</p>
+
 		`,
 })
-export class SimpleCounter implements OnDestroy {
+export class SimpleCounter implements OnInit, OnDestroy {
 	count = signal(0); // WritableSignal<number>
 
 	x = signal(6);
 	y = signal(4);
 	z = signal(20);
 	a = signal(true);
+
+	readonly name = input('name');
+	readonly age = input.required();
+
+	readonly inputWithAlias = input('init-value', { alias: 'alias-name-1' });
+	readonly requiredInputWithAlias = input.required({ alias: 'alias-name-2' });
+
+	readonly event = output<string>();
 
 	l = lazy(() => this.x() * this.y());
 	e = computed(() => {
@@ -77,22 +100,26 @@ export class SimpleCounter implements OnDestroy {
 
 	h = computed(this.g);
 
-	private effectSubscription: { destroy(): void; };
+	service = inject(SignalScopeService);
 
+	date = computed(() => this.service.date().toISOString());
 
-	constructor() {
-		this.effectSubscription = effect(() => {
-			console.log(
-				'x', this.x(),
-				'y', this.y(),
-				'z', this.z(),
-				'a', this.a(),
-				'g', untracked(this.g),
-				'h', untracked(this.h),
-			);
-		});
+	private effectSubscription = effect(() => {
+		console.log(
+			'x', this.x(),
+			'y', this.y(),
+			'z', this.z(),
+			'a', this.a(),
+			'g', untracked(this.g),
+			'h', untracked(this.h),
+		);
+	});
+	private interval: any;
+
+	onInit(): void {
+		this.interval = setInterval(() => this.service.date.update(() => new Date()), 1000);
+		this.event.emit('x = ' + this.x());
 	}
-
 
 	increment() {
 		console.log('c', this.count());
@@ -101,6 +128,7 @@ export class SimpleCounter implements OnDestroy {
 
 	onDestroy(): void {
 		this.effectSubscription.destroy();
+		clearInterval(this.interval);
 	}
 
 }
