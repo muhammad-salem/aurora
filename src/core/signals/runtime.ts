@@ -11,6 +11,7 @@ import {
 type Key =
 	| 'input'
 	| 'output'
+	| 'model'
 	| 'formValue'
 	| 'view'
 	| 'viewChild'
@@ -29,7 +30,7 @@ type RuntimeOption = {
 
 export type SignalRuntimeMetadata = {
 	signal: Key;
-	necessity?: string;
+	necessity?: 'required';
 	options: Array<RuntimeOption>;
 };
 
@@ -84,6 +85,8 @@ export class RuntimeClassMetadata {
 			{ signal: 'input', options: [] },
 			{ signal: 'input', necessity: 'required', options: [] },
 			{ signal: 'output', options: [] },
+			{ signal: 'model', options: [] },
+			{ signal: 'model', necessity: 'required', options: [] },
 			{ signal: 'signal', options: [] },
 			{ signal: 'computed', options: [] },
 			{ signal: 'lazy', options: [] },
