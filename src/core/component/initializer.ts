@@ -1,6 +1,6 @@
 import { ReactiveSignal } from '@ibyar/expressions';
-import { signalScopeFactory } from './factory.js';
-import { OutputEventEmitter, OutputEventOptions } from '../component/events.js';
+import { signalScopeFactory } from '../signals/factory.js';
+import { OutputEventEmitter } from './events.js';
 
 
 export interface InputOptions<T, TransformT> {
@@ -42,6 +42,8 @@ function required<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputS
 input.required = required;
 
 
-export function output<T>(opts?: OutputEventOptions): OutputEventEmitter<T> {
+type OutputOption = EventInit & { alias?: string };
+
+export function output<T>(opts?: OutputOption): OutputEventEmitter<T> {
 	return new OutputEventEmitter<T>(opts);
 }
