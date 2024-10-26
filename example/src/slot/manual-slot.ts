@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HTMLComponent, OnInit, View, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, HTMLComponent, OnInit, view, ViewChild } from '@ibyar/aurora';
 
 
 @Component({
@@ -26,8 +26,7 @@ export class ManualSlotExample implements OnInit, AfterViewInit {
 
 	count = 0;
 
-	@View()
-	view: HTMLComponent<ManualSlotExample>;
+	view = view<HTMLComponent<ManualSlotExample>>();
 
 	@ViewChild('slot')
 	slot: HTMLSlotElement;

@@ -1,7 +1,8 @@
 import {
 	AfterViewInit, Component, ExpressionNode, JavaScriptParser,
 	LanguageMode, OnInit, Scope, Context, Stack, ViewChild,
-	ChangeDetectorRef, ModuleScopeResolver, ModuleSourceProvider,
+	ModuleScopeResolver, ModuleSourceProvider, inject,
+	ChangeDetectorRef,
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
@@ -104,7 +105,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	example: string;
 
 
-	constructor(private _cd: ChangeDetectorRef) { }
+	private _cd = inject(ChangeDetectorRef);
 
 	onInit(): void {
 		this.loadExample('FUNCTION_SCOPES');

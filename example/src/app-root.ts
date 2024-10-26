@@ -1,9 +1,9 @@
-import { Component, OnInit, TypeOf } from '@ibyar/aurora';
+import { Component, OnInit, Type } from '@ibyar/aurora';
 import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
 	title: string;
-	component?: TypeOf<object>;
+	component?: Type<object>;
 	load: () => Promise<any>;
 }
 
@@ -34,7 +34,7 @@ export interface App {
 })
 export class AppRoot implements OnInit {
 
-	selectedComponent: TypeOf<object> | null = null;
+	selectedComponent: Type<object> | null = null;
 	selectedApp: App;
 
 	appName: string = '';
