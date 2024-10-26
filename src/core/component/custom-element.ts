@@ -4,6 +4,7 @@ import { EventEmitter } from './events.js';
 import { ComponentRef } from './component.js';
 import { AuroraZone } from '../zone/zone.js';
 import { PropertyRef } from './reflect.js';
+import { InjectionProvider } from '../di/provider.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -23,6 +24,7 @@ export interface BaseComponent<T> extends CustomElement {
 	_signalScope: SignalScope;
 	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 	_zone: AuroraZone;
+	_provider: InjectionProvider;
 
 	getComponentRef(): ComponentRef<T>;
 

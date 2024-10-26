@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
 	ScopeSubscription, SignalScope, getReactiveNode,
@@ -13,18 +13,20 @@ import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../compo
 import { EventEmitter, OutputEventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { getRootZone } from '../zone/bootstrap.js';
-import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
-import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
+import { AbstractAuroraZone, AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
+import { ChangeDetectorRef, createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
-import { clearInjection, provide } from '../di/inject.js';
+import { clearInjection, forkProvider, provide, addProvider, removeProvider } from '../di/inject.js';
 import { VIEW_TOKEN } from '../component/initializer.js';
+import { InjectionProvider } from '../di/provider.js';
 
-export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElement>): Type<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_signalScope: SignalScope;
+		_provider: InjectionProvider;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -38,7 +40,7 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		private onDestroyCalls: (() => void)[] = [];
 		private needRendering = true;
 
-		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
+		constructor(componentRef: ComponentRef<T>, modelClass: Type<T>) {
 			super();
 			this._componentRef = componentRef;
 			if (componentRef.isShadowDom && !componentRef.disabledFeatures?.includes('shadow')) {
@@ -46,15 +48,19 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			}
 
 			this._signalScope = pushNewSignalScope();
+			this._provider = forkProvider();
 
-			const args = []; /* resolve dependency injection*/
+
+			/* resolve dependency injection*/
 			const detector = createModelChangeDetectorRef(() => this._modelScope);
-			args.push(detector)
 			this._zone = getRootZone().fork(componentRef.zone);
-			args.push(this._zone);
-			provide(VIEW_TOKEN, this);
-			const model = new modelClass(...args);
-			clearInjection(VIEW_TOKEN);
+
+			this._provider.setType(AbstractAuroraZone, this._zone);
+			this._provider.setType(ChangeDetectorRef, detector);
+			this._provider.setToken(VIEW_TOKEN, this);
+			addProvider(this._provider);
+			const model = new modelClass();
+			removeProvider(this._provider);
 			this._model = model;
 
 			clearSignalScope(this._signalScope);
