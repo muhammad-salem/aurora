@@ -1,5 +1,6 @@
 import type { TypeOf } from '../utils/typeof.js';
 import { MetadataClass, Metadata } from '@ibyar/decorators';
+import { getReactiveNode, Signal } from '@ibyar/expressions';
 import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -47,10 +48,21 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	componentRef.inputs.forEach((input) => {
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				return this._modelScope.get(input.modelProperty);
+				const value = this._modelScope.get(input.modelProperty);
+				const signal = getReactiveNode(value);
+				if (signal) {
+					return signal.get();
+				}
+				return value;
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
-				this._modelScope.set(input.modelProperty, value);
+				const model = this._modelScope.get(input.modelProperty);
+				const signal = getReactiveNode(model);
+				if (signal instanceof Signal) {
+					signal.set(value);
+				} else {
+					this._modelScope.set(input.modelProperty, value);
+				}
 			},
 			enumerable: true,
 		});

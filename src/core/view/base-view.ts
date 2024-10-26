@@ -1,7 +1,8 @@
 import type { TypeOf } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, getReactiveNode
+	ScopeSubscription, SignalScope, getReactiveNode,
+	isReactive, WritableSignal
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -76,7 +77,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					if (newValue === oldValue) {
 						return;
 					}
-					this._modelScope.set(input.modelProperty as any, newValue);
+					if (isReactive(this._model[input.modelProperty])) {
+						(this._model[input.modelProperty] as WritableSignal<any>).set(newValue);
+					} else {
+						this._modelScope.set(input.modelProperty as any, newValue);
+					}
 				});
 				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
