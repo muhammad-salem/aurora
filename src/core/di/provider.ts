@@ -1,17 +1,17 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { AbstractType, Type } from '../utils/typeof.js';
 
 
 export class InjectionToken<T> {
 	constructor(public token: string) { }
 }
 
-export type Provider<T> = TypeOf<T> | InjectionToken<T>;
+export type Provider<T> = Type<T> | AbstractType<T> | InjectionToken<T>;
 
 const REQUIRE_INIT = Symbol('REQUIRE_INIT');
 
 export class InjectionProvider {
 
-	private readonly types = new WeakMap<TypeOf<any>, any>();
+	private readonly types = new WeakMap<Type<any> | AbstractType<any>, any>();
 	private readonly tokens = new WeakMap<InjectionToken<any>, any>();
 
 	constructor(private parent?: InjectionProvider) { }
@@ -24,7 +24,7 @@ export class InjectionProvider {
 		return this.tokens.has(token) ? this : false;
 	}
 
-	hasType<T>(type: TypeOf<T>): InjectionProvider | false {
+	hasType<T>(type: Type<any> | AbstractType<any>): InjectionProvider | false {
 		return this.types.has(type) ? this : false;
 	}
 
@@ -32,16 +32,16 @@ export class InjectionProvider {
 		return this.tokens.get(token);
 	}
 
-	getInstance<T>(type: TypeOf<T>): T {
+	getInstance<T>(type: Type<any> | AbstractType<any>): T {
 		let instance = this.types.get(type);
 		if (instance === REQUIRE_INIT) {
-			instance = new type();
+			instance = new (type as Type<any>)();
 			this.types.set(type, instance);
 		}
 		return instance;
 	}
 
-	setType<T>(type: TypeOf<T>, value?: T): void {
+	setType<T>(type: Type<any> | AbstractType<any>, value?: T): void {
 		this.types.set(type, value ?? REQUIRE_INIT);
 	}
 
