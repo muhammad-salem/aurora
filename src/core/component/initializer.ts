@@ -6,6 +6,8 @@ import { signalScopeFactory } from '../signals/factory.js';
 import { OutputEventEmitter } from './events.js';
 import { InjectionToken } from '../di/provider.js';
 import { inject } from '../di/inject.js';
+import { Type } from '../utils/typeof.js';
+import { HTMLComponent } from './custom-element.js';
 
 
 export interface InputOptions<T, TransformT> {
@@ -83,6 +85,10 @@ model.required = requiredModel;
 
 export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
 
-export function view<T extends HTMLElement>(): T {
-	return inject<T>(VIEW_TOKEN) as T;
+
+export function view(): HTMLElement;
+export function view<T extends keyof HTMLElementTagNameMap>(): HTMLElementTagNameMap[T];
+export function view<T>(type: Type<T>): HTMLComponent<T>;
+export function view(): any {
+	return inject(VIEW_TOKEN)!;
 }
