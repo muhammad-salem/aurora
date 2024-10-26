@@ -2,7 +2,7 @@ import { ReactiveScopeControl, ReadOnlyScope, ScopeSubscription } from '@ibyar/e
 import { OnDestroy } from '../component/lifecycle.js';
 import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { classRegistryProvider } from '../providers/provider.js';
-import { TypeOf } from '../utils/typeof.js';
+import { Type } from '../utils/typeof.js';
 
 /**
  * Pipes are used as singleton
@@ -50,7 +50,7 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		}
 		return void 0;
 	}
-	getClass(): TypeOf<PipeProvider> {
+	getClass(): Type<PipeProvider> {
 		return PipeProvider;
 	}
 }
@@ -63,14 +63,14 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 		const pipeRef = classRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		return pipeRef?.asynchronous ? true : false;
 	}
-	get(pipeName: string): TypeOf<AsyncPipeTransform<any, any>> | undefined {
+	get(pipeName: string): Type<AsyncPipeTransform<any, any>> | undefined {
 		const pipeRef = classRegistryProvider.getPipe<AsyncPipeTransform<any, any>>(pipeName);
 		if (pipeRef?.asynchronous) {
 			return pipeRef.modelClass;
 		}
 		return;
 	}
-	getClass(): TypeOf<AsyncPipeProvider> {
+	getClass(): Type<AsyncPipeProvider> {
 		return AsyncPipeProvider;
 	}
 }
@@ -83,7 +83,7 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 	constructor() {
 		super({} as T);
 	}
-	override set(propertyKey: keyof T, pipeClass: TypeOf<AsyncPipeTransform<any, any>>, receiver?: any): boolean {
+	override set(propertyKey: keyof T, pipeClass: Type<AsyncPipeTransform<any, any>>, receiver?: any): boolean {
 		const detector = createChangeDetectorRef(this, propertyKey);
 		const pipe = new pipeClass(detector);
 		const result = super.set(propertyKey, pipe, receiver);
@@ -102,7 +102,7 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 		const pipe = this._ctx[propertyKey];
 		pipe.onDestroy();
 	}
-	getClass(): TypeOf<AsyncPipeScope<T>> {
+	getClass(): Type<AsyncPipeScope<T>> {
 		return AsyncPipeScope;
 	}
 }

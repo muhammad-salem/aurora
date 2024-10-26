@@ -1,4 +1,4 @@
-import type { ClassType } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import {
 	MetadataClass, MetadataContext,
 	makeClassDecorator, makeClassMemberDecorator
@@ -202,7 +202,7 @@ export const Injectable = makeClassDecorator<InjectableOptions>(
 	}
 );
 
-function generateComponent<T extends ClassType>(target: MetadataClass<T>, opt: ComponentOptions<T>, metadata: MetadataContext) {
+function generateComponent<T extends Type<any>>(target: MetadataClass<T>, opt: ComponentOptions<T>, metadata: MetadataContext) {
 	if (opt.templateUrl) {
 		fetchHtml(opt.templateUrl)
 			.then(htmlTemplate => {
@@ -234,7 +234,7 @@ export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[
 	}
 );
 
-export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, ClassType<HTMLElement>>(
+export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, Type<HTMLElement>>(
 	(opt, constructor, context) => {
 		Components.defineView(constructor as any, opt);
 	}

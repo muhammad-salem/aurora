@@ -1,4 +1,4 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import { ComponentRef } from '../component/component.js';
 import {
 	FormAssociatedCustomElement, HTMLFormElement,
@@ -55,7 +55,7 @@ ARIAMixinAttributes.forEach(ariaName => {
 	});
 });
 
-export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<FormAssociatedComponent<T, any>> {
+export function baseFormFactoryView<T extends Object>(htmlElementType: Type<HTMLElement>): Type<FormAssociatedComponent<T, any>> {
 	const baseViewClass = baseFactoryView<T>(htmlElementType);
 	return class BaseFormView<T> extends baseViewClass implements FormAssociatedCustomElement {
 
@@ -70,7 +70,7 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: TypeOf<HT
 		private _form: HTMLFormElement | null;
 		private _valueControl?: ValueControl<T>;
 
-		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
+		constructor(componentRef: ComponentRef<T>, modelClass: Type<T>) {
 			super(componentRef, modelClass);
 			if ((componentRef.extend.name && isFormElement(componentRef.extend.name))
 				|| componentRef.disabledFeatures?.includes('internals')) {

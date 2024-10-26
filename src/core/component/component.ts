@@ -1,5 +1,5 @@
 import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
-import type { ClassType, TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -29,22 +29,22 @@ import { RuntimeClassMetadata, SignalRuntimeMetadata } from '../signals/runtime.
 
 
 export interface InjectableRef<T> {
-	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
-	modelClass: TypeOf<T>;
+	provideIn: Type<CustomElementConstructor> | 'root' | 'platform' | 'any';
+	modelClass: Type<T>;
 	name: string;
 }
 
 export interface PipeRef<T> {
 	name: string;
 	asynchronous?: boolean;
-	modelClass: TypeOf<T>;
+	modelClass: Type<T>;
 }
 export interface DirectiveRef<T> {
 	selector: string;
 	exportAs?: string;
 	zone?: ZoneType;
 
-	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
+	modelClass: Type<StructuralDirective> | Type<AttributeDirective>;
 
 	inputs: PropertyRef[];
 	outputs: PropertyRef[];
@@ -66,7 +66,7 @@ export interface ComponentRef<T> {
 	extendCustomElement: boolean;
 
 	viewClass: MetadataClass<HTMLComponent<T>> & CustomElementConstructor;
-	modelClass: TypeOf<T>;
+	modelClass: Type<T>;
 
 	inputs: InputPropertyRef[];
 	outputs: OutputPropertyRef[];
@@ -82,7 +82,7 @@ export interface ComponentRef<T> {
 	isShadowDom: boolean;
 	shadowRootInit: ShadowRootInit;
 	disabledFeatures?: ('internals' | 'shadow')[];
-	formAssociated: boolean | TypeOf<ValueControl<any>>;
+	formAssociated: boolean | Type<ValueControl<any>>;
 	zone?: ZoneType;
 	signals: SignalRuntimeMetadata[];
 }
@@ -110,8 +110,8 @@ export class Components {
 
 
 	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
-		if (!(opts as any as DirectiveRef<ClassType>).signals) {
-			this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<ClassType>, metadata);
+		if (!(opts as any as DirectiveRef<Type<any>>).signals) {
+			this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<Type<any>>, metadata);
 		}
 		Object.assign(metadata, opts);
 		if (metadata.hostListeners?.length || metadata.hostBindings?.length) {
@@ -139,13 +139,13 @@ export class Components {
 		});
 	}
 
-	static definePipe<T extends ClassType>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
+	static definePipe<T extends Type<any>>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		classRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineInjectable<T extends ClassType>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
+	static defineInjectable<T extends Type<any>>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
@@ -153,7 +153,7 @@ export class Components {
 		provide(modelClass);
 	}
 
-	static defineComponent<T extends ClassType>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+	static defineComponent<T extends Type<any>>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		if (!(opts as any as ComponentRef<T>).signals) {
 			this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
 		}
@@ -265,7 +265,7 @@ export class Components {
 		);
 	}
 
-	private static scanRuntimeSignals<T extends ClassType>(modelClass: MetadataClass<T>, opts: { signals: SignalRuntimeMetadata[] }, metadata: MetadataContext) {
+	private static scanRuntimeSignals<T extends Type<any>>(modelClass: MetadataClass<T>, opts: { signals: SignalRuntimeMetadata[] }, metadata: MetadataContext) {
 		const signals = RuntimeClassMetadata.scanMetadata(modelClass);
 		opts.signals = signals;
 		signals.filter(item => item.signal === 'input')
