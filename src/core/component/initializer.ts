@@ -87,8 +87,9 @@ export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
 
 
 export function view(): HTMLElement;
-export function view<T extends keyof HTMLElementTagNameMap>(): HTMLElementTagNameMap[T];
+export function view<T extends keyof HTMLElementTagNameMap>(extend: T): HTMLElementTagNameMap[T];
 export function view<T>(type: Type<T>): HTMLComponent<T>;
+export function view<T, V extends keyof HTMLElementTagNameMap>(type: Type<T>, extend: V): HTMLComponent<T> & HTMLElementTagNameMap[V];
 export function view(): any {
 	return inject(VIEW_TOKEN)!;
 }
