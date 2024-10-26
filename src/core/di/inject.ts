@@ -6,6 +6,7 @@ const ROOT_PROVIDER = new InjectionProvider();
 
 
 export function provide<T>(type: TypeOf<T>): void;
+export function provide<T>(type: TypeOf<T>, value: T): void;
 export function provide<T>(token: InjectionToken<T>, value: T): void;
 export function provide<T>(provider: Provider<T>, value?: T) {
 	ROOT_PROVIDER.provide(provider, value);

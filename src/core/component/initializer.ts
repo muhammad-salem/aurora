@@ -4,6 +4,8 @@ import {
 } from '@ibyar/expressions';
 import { signalScopeFactory } from '../signals/factory.js';
 import { OutputEventEmitter } from './events.js';
+import { InjectionToken } from '../di/provider.js';
+import { inject } from '../di/inject.js';
 
 
 export interface InputOptions<T, TransformT> {
@@ -77,3 +79,10 @@ function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
 }
 
 model.required = requiredModel;
+
+
+export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
+
+export function view<T extends HTMLElement>(): T {
+	return inject(VIEW_TOKEN) as T;
+}

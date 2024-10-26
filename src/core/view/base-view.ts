@@ -18,6 +18,8 @@ import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
+import { clearInjection, provide } from '../di/inject.js';
+import { VIEW_TOKEN } from '../component/initializer.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
@@ -50,7 +52,9 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 			args.push(detector)
 			this._zone = getRootZone().fork(componentRef.zone);
 			args.push(this._zone);
+			provide(VIEW_TOKEN, this);
 			const model = new modelClass(...args);
+			clearInjection(VIEW_TOKEN);
 			this._model = model;
 
 			clearSignalScope(this._signalScope);
