@@ -7,7 +7,7 @@ export class InjectionToken<T> {
 
 export type Provider<T> = TypeOf<T> | InjectionToken<T>;
 
-const EMPTY_VALUE = Symbol('EMPTY_VALUE');
+const REQUIRE_INIT = Symbol('REQUIRE_INIT');
 
 export class InjectionProvider {
 
@@ -15,6 +15,10 @@ export class InjectionProvider {
 	private readonly tokens = new WeakMap<InjectionToken<any>, any>();
 
 	constructor(private parent?: InjectionProvider) { }
+
+	fork(): InjectionProvider {
+		return new InjectionProvider(this);
+	}
 
 	hasToken<T>(token: InjectionToken<T>): InjectionProvider | false {
 		return this.tokens.has(token) ? this : false;
@@ -30,7 +34,7 @@ export class InjectionProvider {
 
 	getInstance<T>(type: TypeOf<T>): T {
 		let instance = this.types.get(type);
-		if (instance === EMPTY_VALUE) {
+		if (instance === REQUIRE_INIT) {
 			instance = new type();
 			this.types.set(type, instance);
 		}
@@ -38,7 +42,7 @@ export class InjectionProvider {
 	}
 
 	setType<T>(type: TypeOf<T>, value?: T): void {
-		this.types.set(type, value ?? EMPTY_VALUE);
+		this.types.set(type, value ?? REQUIRE_INIT);
 	}
 
 	setToken<T>(token: InjectionToken<T>, value: T): void {
@@ -51,7 +55,7 @@ export class InjectionProvider {
 			provider.setToken(typeOrToken, value);
 		} else {
 			const provider = this.parent?.hasType(typeOrToken) || this;
-			provider.setType(typeOrToken, value ?? EMPTY_VALUE as unknown as T);
+			provider.setType(typeOrToken, value ?? REQUIRE_INIT as unknown as T);
 		}
 	}
 
