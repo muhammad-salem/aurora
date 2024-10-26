@@ -4,6 +4,23 @@ import { InjectionProvider, InjectionToken, Provider } from './provider.js';
 
 const ROOT_PROVIDER = new InjectionProvider();
 
+const providers: InjectionProvider[] = [];
+
+export function forkProvider(): InjectionProvider {
+	return ROOT_PROVIDER.fork();
+}
+
+export function addProvider(modelProvider: InjectionProvider) {
+	providers.push(modelProvider);
+}
+
+export function removeProvider(modelProvider: InjectionProvider) {
+	const index = providers.findIndex(provider => provider === modelProvider);
+	if (index >= 0) {
+		providers.splice(index, 1);
+	}
+}
+
 export function provide<T>(type: Type<T>): void;
 export function provide<T>(type: AbstractType<T>): void;
 export function provide<T>(type: Type<T>, value: T): void;
