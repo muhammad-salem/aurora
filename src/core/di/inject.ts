@@ -16,3 +16,9 @@ export function inject<T>(token: InjectionToken<T>): T | undefined;
 export function inject<T>(provider: Provider<T>): T | undefined {
 	return ROOT_PROVIDER.inject(provider);
 }
+
+export function clearInjection<T>(type: TypeOf<T>): void;
+export function clearInjection<T>(token: InjectionToken<T>): void;
+export function clearInjection<T>(provider: Provider<T>) {
+	ROOT_PROVIDER.clear(provider);
+}

@@ -64,4 +64,14 @@ export class InjectionProvider {
 		return provider.getInstance(typeOrToken);
 	}
 
+	clear<T>(typeOrToken: Provider<T>): void {
+		if (typeOrToken instanceof InjectionToken) {
+			const provider = this.parent?.hasToken(typeOrToken) || this;
+			provider.tokens.delete(typeOrToken);
+		} else {
+			const provider = this.parent?.hasType(typeOrToken) || this;
+			provider.types.delete(typeOrToken);
+		}
+	}
+
 }
