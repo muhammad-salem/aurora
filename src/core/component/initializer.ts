@@ -84,5 +84,5 @@ model.required = requiredModel;
 export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
 
 export function view<T extends HTMLElement>(): T {
-	return inject(VIEW_TOKEN) as T;
+	return inject<T>(VIEW_TOKEN) as T;
 }
