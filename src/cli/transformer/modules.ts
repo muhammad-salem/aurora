@@ -1,15 +1,18 @@
 import type ts from 'typescript/lib/tsserverlibrary.js';
+import { SignalKey } from './signals.js';
 
 export type ViewInfo = {
 	selector: string;
 	extendsType: string;
 	viewName: string;
-	interFaceType: ts.InterfaceDeclaration;
+	interfaceType: ts.InterfaceDeclaration;
 	formAssociated: boolean;
 	disabledFeatures?: string[];
 };
 
 export type DecoratorInfo = { name: string, aliasName: string, type?: string };
+export type SignalInfo = DecoratorInfo & { necessity?: 'required'; };
+export type SignalMetadata = Partial<Record<SignalKey, SignalInfo[]>>;
 
 export type ClassInfo = {
 	type: 'component' | 'directive';
@@ -18,6 +21,7 @@ export type ClassInfo = {
 	views: ViewInfo[];
 	inputs: DecoratorInfo[];
 	outputs: DecoratorInfo[];
+	signals: SignalMetadata;
 };
 
 export type ModuleInfo = { path: string; classes?: ClassInfo[]; }

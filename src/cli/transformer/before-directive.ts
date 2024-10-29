@@ -1,12 +1,13 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { ClassInfo, moduleManger } from './modules.js';
 import {
-	getInputs, getOutputs,
+	getInputs, getOutputs, scanSignals,
 	getTextValueFormArrayLiteralProperty,
 	getTextValueFormLiteralProperty,
 	isDirectiveDecorator
 } from './helpers.js';
 import { registerDirectiveCall } from '../directives/register.js';
+import { SIGNAL_NAMES, SignalDetails, SignalKey } from './signals.js';
 
 
 /**
@@ -20,21 +21,19 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 		return sourceFile => {
 			let visitSourceFile = false;
 			let directivePropertyName: string;
+			const signals: SignalDetails = {};
 			for (const statement of sourceFile.statements) {
 				if (ts.isImportDeclaration(statement)) {
 					const modulePath = statement.moduleSpecifier.getText();
 					if (statement.importClause && modulePath.includes('@ibyar/aurora') || modulePath.includes('@ibyar/core')) {
 						statement.importClause?.namedBindings?.forEachChild(importSpecifier => {
-							if (visitSourceFile) {
-								return;
-							}
 							if (ts.isImportSpecifier(importSpecifier)) {
-								if (importSpecifier.propertyName?.getText() === 'Directive') {
+								const importName = importSpecifier.propertyName?.getText() ?? importSpecifier.name.getText();
+								if (importName === 'Directive') {
 									visitSourceFile = true;
 									directivePropertyName = importSpecifier.name.getText();
-								} else if (importSpecifier.name.getText() === 'Directive') {
-									visitSourceFile = true;
-									directivePropertyName = importSpecifier.name.getText();
+								} else if (SIGNAL_NAMES.includes(importName)) {
+									signals[importName as SignalKey] = importSpecifier.name.getText();
 								}
 							}
 						});
@@ -68,11 +67,19 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 										const successors = getTextValueFormArrayLiteralProperty(options, 'successors');
 										const inputs = getInputs(childNode, typeChecker);
 										const outputs = getOutputs(childNode, typeChecker);
+										const signalDetails = scanSignals(childNode, signals);
+										const allInputs = (inputs ?? [])
+											.concat(signalDetails.input ?? [])
+											.concat(signalDetails.formValue ?? [])
+											.concat(signalDetails.model ?? []);
+										const allOutputs = (outputs ?? []).
+											concat(signalDetails.output ?? [])
+											.concat(signalDetails.model ?? []);
 										registerDirectiveCall({
 											selector,
 											successors,
-											inputs,
-											outputs
+											inputs: allInputs,
+											outputs: allOutputs,
 										});
 										classes.push({
 											type: 'directive',
@@ -81,6 +88,7 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 											inputs,
 											outputs,
 											views: [],
+											signals: signalDetails
 										});
 									}
 								}

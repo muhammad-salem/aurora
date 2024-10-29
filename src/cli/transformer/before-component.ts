@@ -4,14 +4,16 @@ import { htmlParser } from '@ibyar/elements/node.js';
 import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
 	createConstructorOfViewInterfaceDeclaration,
-	convertToProperties, createInterfaceType
+	convertToProperties, createInterfaceType,
+	createInitializer
 } from './factory.js';
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 import {
-	getInputs, getOutputs,
+	getInputs, getOutputs, scanSignals,
 	getTextValueFormLiteralProperty,
 	isComponentDecorator
 } from './helpers.js';
+import { SIGNAL_NAMES, SignalDetails, SignalKey } from './signals.js';
 
 
 
@@ -26,21 +28,19 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 		return sourceFile => {
 			let visitSourceFile = false;
 			let componentPropertyName: string;
+			const signals: SignalDetails = {};
 			for (const statement of sourceFile.statements) {
 				if (ts.isImportDeclaration(statement)) {
 					const modulePath = statement.moduleSpecifier.getText();
 					if (statement.importClause && modulePath.includes('@ibyar/aurora') || modulePath.includes('@ibyar/core')) {
 						statement.importClause?.namedBindings?.forEachChild(importSpecifier => {
-							if (visitSourceFile) {
-								return;
-							}
 							if (ts.isImportSpecifier(importSpecifier)) {
-								if (importSpecifier.propertyName?.getText() === 'Component') {
+								const importName = importSpecifier.propertyName?.getText() ?? importSpecifier.name.getText();
+								if (importName === 'Component') {
 									visitSourceFile = true;
 									componentPropertyName = importSpecifier.name.getText();
-								} else if (importSpecifier.name.getText() === 'Component') {
-									visitSourceFile = true;
-									componentPropertyName = importSpecifier.name.getText();
+								} else if (SIGNAL_NAMES.includes(importName)) {
+									signals[importName as SignalKey] = importSpecifier.name.getText();
 								}
 							}
 						});
@@ -68,6 +68,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							return childNode;
 						}
 						const viewInfos: ViewInfo[] = [];
+						const signalMetadata = scanSignals(childNode, signals);
 						const modifiers = childNode.modifiers?.map(modifier => {
 							if (!ts.isDecorator(modifier)) {
 								return modifier;
@@ -100,9 +101,9 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 									selector,
 									viewName,
 									extendsType,
-									interFaceType: createInterfaceType(viewName, extendsType),
+									interfaceType: createInterfaceType(viewName, extendsType),
 									formAssociated: 'true' == formAssociated,
-									disabledFeatures: [],
+									disabledFeatures: disabledFeatures,
 								});
 
 								const stylesProperty = option.properties.find(prop => prop.name?.getText() === 'styles') as ts.PropertyAssignment | undefined;
@@ -121,6 +122,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 									const name = ts.factory.createIdentifier('compiledTemplate');
 									const initializer = ts.factory.createObjectLiteralExpression(convertToProperties(json));
 									const update = ts.factory.updatePropertyAssignment(template, name, initializer);
+									const signalsOption = ts.factory.createPropertyAssignment('signals', createInitializer(signalMetadata));
 									decoratorArguments = option.properties.map(prop => {
 										if (template === prop) {
 											return update;
@@ -131,7 +133,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 											return false;
 										}
 										return true;
-									});
+									}).concat([signalsOption]);
 									return ts.factory.updateObjectLiteralExpression(option, decoratorArguments);
 								}
 								return option;
@@ -180,6 +182,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 							views: viewInfos,
 							inputs: getInputs(childNode, typeChecker),
 							outputs: getOutputs(childNode, typeChecker),
+							signals: signalMetadata,
 						});
 						// const staticMembers = viewInfos.map(
 						// 	viewInfo => ts.factory.createPropertyDeclaration(
@@ -210,7 +213,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 				const statements = updateSourceFile.statements?.slice() ?? [];
 				statements.push(createConstructorOfViewInterfaceDeclaration());
 				const interfaces = classes.flatMap(s => s.views).map(info => {
-					return ts.setTextRange(info.interFaceType, updateSourceFile);
+					return ts.setTextRange(info.interfaceType, updateSourceFile);
 				});
 				statements.push(); //emit inputs and outputs for component and directives;
 				statements.push(...interfaces);
