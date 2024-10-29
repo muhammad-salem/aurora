@@ -111,8 +111,9 @@ export class Components {
 
 	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
 		if (!(opts as any as DirectiveRef<Type<any>>).signals) {
-			this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<Type<any>>, metadata);
+			(opts as any as DirectiveRef<Type<any>>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
 		}
+		this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<Type<any>>, metadata);
 		Object.assign(metadata, opts);
 		if (metadata.hostListeners?.length || metadata.hostBindings?.length) {
 			const hostNode = parseHostNode({
@@ -155,8 +156,9 @@ export class Components {
 
 	static defineComponent<T extends Type<any>>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		if (!(opts as any as ComponentRef<T>).signals) {
-			this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
+			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
 		}
+		this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 		componentRef.extendCustomElement = !!opts.extend && isValidCustomElementName(opts.extend);
@@ -266,8 +268,10 @@ export class Components {
 	}
 
 	private static scanRuntimeSignals<T extends Type<any>>(modelClass: MetadataClass<T>, opts: { signals: SignalRuntimeMetadata[] }, metadata: MetadataContext) {
-		const signals = RuntimeClassMetadata.scanMetadata(modelClass);
-		opts.signals = signals;
+		if (!opts.signals) {
+			return;
+		}
+		const signals = opts.signals;
 		signals.filter(item => item.signal === 'input')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.addInput(metadata, option.name, option.alias));
