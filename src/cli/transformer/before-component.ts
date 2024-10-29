@@ -5,7 +5,7 @@ import { getExtendsTypeBySelector } from '../elements/tags.js';
 import {
 	createConstructorOfViewInterfaceDeclaration,
 	convertToProperties, createInterfaceType,
-	createInitializer
+	createSignalsAssignment
 } from './factory.js';
 import { moduleManger, ViewInfo, ClassInfo } from './modules.js';
 import {
@@ -122,7 +122,7 @@ export function beforeCompileComponentOptions(program: ts.Program): ts.Transform
 									const name = ts.factory.createIdentifier('compiledTemplate');
 									const initializer = ts.factory.createObjectLiteralExpression(convertToProperties(json));
 									const update = ts.factory.updatePropertyAssignment(template, name, initializer);
-									const signalsOption = ts.factory.createPropertyAssignment('signals', createInitializer(signalMetadata));
+									const signalsOption = createSignalsAssignment(signalMetadata);
 									decoratorArguments = option.properties.map(prop => {
 										if (template === prop) {
 											return update;

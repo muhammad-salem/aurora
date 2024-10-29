@@ -8,6 +8,7 @@ import {
 } from './helpers.js';
 import { registerDirectiveCall } from '../directives/register.js';
 import { SIGNAL_NAMES, SignalDetails, SignalKey } from './signals.js';
+import { createSignalsAssignment } from './factory.js';
 
 
 /**
@@ -68,6 +69,7 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 										const inputs = getInputs(childNode, typeChecker);
 										const outputs = getOutputs(childNode, typeChecker);
 										const signalDetails = scanSignals(childNode, signals);
+										const signalsOption = createSignalsAssignment(signalDetails);
 										const allInputs = (inputs ?? [])
 											.concat(signalDetails.input ?? [])
 											.concat(signalDetails.formValue ?? [])

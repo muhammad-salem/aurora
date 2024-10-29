@@ -1,6 +1,7 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { ToCamelCase } from '@ibyar/core/node.js';
-import { ClassInfo } from './modules.js';
+import { ClassInfo, SignalInfo } from './modules.js';
+import { SignalKey } from './signals.js';
 
 
 export function convertToProperties(json: { [key: string]: any }): ts.ObjectLiteralElementLike[] {
@@ -196,4 +197,29 @@ export function updateModuleTypeWithDirectives(classes: ClassInfo[]): ts.NodeArr
 		return `export type ɵɵ0${ToCamelCase(directiveTypeName)}Directive0ɵɵ = {${temp.join(',')}};`;
 	});
 	return generateStatements(nodes.join());
+}
+
+
+export function convertToRuntimeMetadata(signalMetadata: Partial<Record<SignalKey, SignalInfo[]>>) {
+	return Object.entries(signalMetadata).flatMap(([key, infos]) => {
+		const optional = infos.filter(info => !info.necessity);
+		const optionalItem = {
+			signal: key,
+			options: optional.map(info => ({ name: info.name, alias: info.aliasName })),
+		};
+		const required = infos.filter(info => info.necessity);
+		if (!required.length) {
+			return [optionalItem];
+		}
+		const requiredItem = {
+			signal: key,
+			necessity: 'required',
+			options: required.map(info => ({ name: info.name, alias: info.aliasName })),
+		};
+		return [optionalItem, requiredItem];
+	});
+}
+
+export function createSignalsAssignment(signalMetadata: Partial<Record<SignalKey, SignalInfo[]>>) {
+	return ts.factory.createPropertyAssignment('signals', createInitializer(convertToRuntimeMetadata(signalMetadata)));
 }
