@@ -18,7 +18,7 @@ import { ChangeDetectorRef, createModelChangeDetectorRef } from '../linker/chang
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
-import { clearInjection, forkProvider, provide, addProvider, removeProvider } from '../di/inject.js';
+import { forkProvider, addProvider, removeProvider } from '../di/inject.js';
 import { VIEW_TOKEN } from '../component/initializer.js';
 import { InjectionProvider } from '../di/provider.js';
 
@@ -26,7 +26,6 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_signalScope: SignalScope;
-		_provider: InjectionProvider;
 		_render: ComponentRender<T>;
 		_shadowRoot: ShadowRoot;
 
@@ -35,6 +34,8 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 		_modelScope: ReactiveScopeControl<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 		_zone: AuroraZone;
+		_provider: InjectionProvider;
+		_detector: ChangeDetectorRef;
 
 		private subscriptions: ScopeSubscription<Context>[] = [];
 		private onDestroyCalls: (() => void)[] = [];
@@ -52,11 +53,11 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 
 			/* resolve dependency injection*/
-			const detector = createModelChangeDetectorRef(() => this._modelScope);
+			this._detector = createModelChangeDetectorRef(() => this._modelScope);
 			this._zone = getRootZone().fork(componentRef.zone);
 
 			this._provider.setType(AbstractAuroraZone, this._zone);
-			this._provider.setType(ChangeDetectorRef, detector);
+			this._provider.setType(ChangeDetectorRef, this._detector);
 			this._provider.setToken(VIEW_TOKEN, this);
 			addProvider(this._provider);
 			const model = new modelClass();
