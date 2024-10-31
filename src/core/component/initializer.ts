@@ -1,6 +1,7 @@
 import {
-	getReactiveNode, ReactiveSignal,
-	ScopeSubscription, WritableSignal
+	getReactiveNode,
+	ScopeSubscription,
+	Signal, WritableSignal
 } from '@ibyar/expressions';
 import { signalScopeFactory } from '../signals/factory.js';
 import { OutputEventEmitter } from './events.js';
@@ -19,7 +20,7 @@ export type InputOptionsWithoutTransform<T> = Omit<InputOptions<T, T>, 'transfor
 
 export type InputOptionsWithTransform<T, TransformT> = Required<Pick<InputOptions<T, TransformT>, 'transform'>> & InputOptions<T, TransformT>;
 
-export interface InputSignalWithTransform<T, TransformT> extends ReactiveSignal<T> {
+export interface InputSignalWithTransform<T, TransformT> extends Signal<T> {
 
 }
 
@@ -67,7 +68,7 @@ export interface ModelSignal<T> extends WritableSignal<T> {
 export function model<T>(): ModelSignal<T>;
 export function model<T>(opts?: ModelOptions): ModelSignal<T>;
 export function model<T>(opts?: ModelOptions): ModelSignal<T> {
-	const signal = signalScopeFactory.signal(undefined) as ModelSignal<T>;
+	const signal = signalScopeFactory.signalFn(undefined) as ModelSignal<T>;
 	const node = getReactiveNode(signal);
 	if (node) {
 		signal.subscribe = node.subscribe.bind(signal);
