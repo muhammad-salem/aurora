@@ -11,8 +11,8 @@ const REQUIRE_INIT = Symbol('REQUIRE_INIT');
 
 export class InjectionProvider {
 
-	private readonly types = new WeakMap<Type<any> | AbstractType<any>, any>();
-	private readonly tokens = new WeakMap<InjectionToken<any>, any>();
+	private readonly types = new Map<Type<any> | AbstractType<any>, any>();
+	private readonly tokens = new Map<InjectionToken<any>, any>();
 
 	constructor(private parent?: InjectionProvider) { }
 
@@ -29,7 +29,11 @@ export class InjectionProvider {
 	}
 
 	getToken<T>(token: InjectionToken<T>): T | undefined {
-		return this.tokens.get(token);
+		let value = this.tokens.get(token);
+		if (value === undefined && this.parent) {
+			value = this.parent.getToken(token);
+		}
+		return value;
 	}
 
 	getInstance<T>(type: Type<any> | AbstractType<any>): T {
@@ -37,6 +41,8 @@ export class InjectionProvider {
 		if (instance === REQUIRE_INIT) {
 			instance = new (type as Type<any>)();
 			this.types.set(type, instance);
+		} else if (instance === undefined && this.parent) {
+			instance = this.parent.getInstance(type);
 		}
 		return instance;
 	}
@@ -51,21 +57,17 @@ export class InjectionProvider {
 
 	provide<T>(typeOrToken: Provider<T>, value?: T) {
 		if (typeOrToken instanceof InjectionToken) {
-			const provider = this.parent?.hasToken(typeOrToken) || this;
-			provider.setToken(typeOrToken, value);
+			this.setToken(typeOrToken, value);
 		} else {
-			const provider = this.parent?.hasType(typeOrToken) || this;
-			provider.setType(typeOrToken, value ?? REQUIRE_INIT as unknown as T);
+			this.setType(typeOrToken, value ?? REQUIRE_INIT as unknown as T);
 		}
 	}
 
 	inject<T>(typeOrToken: Provider<T>): T | undefined {
 		if (typeOrToken instanceof InjectionToken) {
-			const provider = this.parent?.hasToken(typeOrToken) || this;
-			return provider.getToken(typeOrToken);
+			return this.getToken(typeOrToken);
 		}
-		const provider = this.parent?.hasType(typeOrToken) || this;
-		return provider.getInstance(typeOrToken);
+		return this.getInstance(typeOrToken);
 	}
 
 	clear<T>(typeOrToken: Provider<T>): void {
