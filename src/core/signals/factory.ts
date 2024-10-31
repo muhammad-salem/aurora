@@ -1,4 +1,4 @@
-import { SignalScope } from '@ibyar/expressions';
+import { ReactiveNode, SignalScope } from '@ibyar/expressions';
 
 type EffectFn = (onCleanup?: (clean: () => void) => void) => void;
 
@@ -17,30 +17,30 @@ class SignalScopeFactory {
 		}
 	}
 
-	signalNode<T>(initialValue: T) {
+	signal<T>(initialValue: T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createSignal(initialValue);
 	}
 
-	signal<T>(initialValue: T) {
+	signalFn<T>(initialValue: T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createSignalFn(initialValue);
 	}
 
-	computedNode<T>(computation: () => T) {
+	computed<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createComputed(computation);
 	}
-	computed<T>(computation: () => T) {
+	computedFn<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createComputedFn(computation);
 	}
 
-	lazyNode<T>(computation: () => T) {
+	lazy<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createLazy(computation);
 	}
-	lazy<T>(computation: () => T) {
+	lazyFn<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createLazyFn(computation);
 	}
@@ -49,10 +49,14 @@ class SignalScopeFactory {
 		const scope = this.scopes.at(-1)!;
 		return scope.createEffect(this.wrapEffect(scope, effectFn));
 	}
-	untracked<T>(nonReactiveReadsFn: () => T): T {
+	untracked<T>(reactiveNode: ReactiveNode<T>): T;
+	untracked<T>(nonReactiveReadsFn: () => T): T;
+	untracked<T>(nonReactiveReads: (() => T) | ReactiveNode<T>): T {
 		const scope = this.effectState.at(-1);
 		scope?.untrack();
-		const value = nonReactiveReadsFn();
+		const value = nonReactiveReads instanceof ReactiveNode
+			? nonReactiveReads.get()
+			: nonReactiveReads();
 		scope?.track();
 		return value;
 	}
