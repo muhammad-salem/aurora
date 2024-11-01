@@ -19,7 +19,7 @@
 		],
 		"strict": true,
 		"strictPropertyInitialization": false,
-		"strictBuiltinIteratorReturn": true,
+		// "strictBuiltinIteratorReturn": true,
 		"removeComments": false
 	}
 }
