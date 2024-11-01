@@ -65,6 +65,11 @@
 [downloads-image-tslib]: https://img.shields.io/npm/dt/tslib
 [downloads-url-tslib]: https://npmjs.org/package/tslib
 
+[npm-image-typescript]: https://img.shields.io/npm/v/typescript.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-typescript]: https://npmjs.org/package/typescript
+[downloads-image-typescript]: https://img.shields.io/npm/dt/typescript
+[downloads-url-typescript]: https://npmjs.org/package/typescript
+
 [directory]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/folder-active.svg
 [package]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/symbol-field.svg
 
@@ -87,6 +92,7 @@
 [package-decorators]: https://github.com/ibyar/aurora/tree/dev/packages/decorators
 [source-decorators]: https://github.com/ibyar/aurora/tree/dev/src/decorators
 
+[typescript]: https://github.com/Microsoft/typescript
 [tslib]: https://github.com/Microsoft/tslib
 
 Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
@@ -135,6 +141,7 @@ yarn add @ibyar/aurora
 | @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![NPM Downloads][downloads-image-directives]][downloads-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
 | @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] [![NPM Downloads][downloads-image-platform]][downloads-url-platform] [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
 | @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![NPM Downloads][downloads-image-decorators]][downloads-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
+| typescript | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-typescript]][npm-url-typescript] [![NPM Downloads][downloads-image-typescript]][downloads-url-typescript] [![PKG][package]][npm-url-typescript] [![SRC][directory]][typescript]|
 | tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![NPM Downloads][downloads-image-tslib]][downloads-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
 
 
