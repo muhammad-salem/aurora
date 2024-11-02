@@ -17,7 +17,7 @@ class SignalScopeFactory {
 		}
 	}
 
-	signal<T, S extends typeof Signal<T>>(initValue: T, signalType?: S): InstanceType<S> {
+	signal<T, S extends typeof Signal<T>>(initValue?: T, signalType?: S): InstanceType<S> {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createSignal(initValue, signalType);
 	}
