@@ -55,3 +55,4 @@ export class EventEmitter<T> {
 		this.subscribers.delete(subscription);
 	}
 }
+

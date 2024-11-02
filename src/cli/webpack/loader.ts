@@ -1,5 +1,4 @@
 import { normalize } from 'path';
-import type * as webpack from 'webpack';
 import ts from 'typescript/lib/tsserverlibrary.js';
 import { getConfigPath, getTransformers, scanDirectives } from '../compiler/compiler.js';
 
@@ -7,6 +6,16 @@ let host: ts.CompilerHost;
 let program: ts.Program;
 let orgWriteFile: ts.WriteFileCallback;
 let transformers: ts.CustomTransformers;
+
+interface webpackLoaderContext {
+
+	resourcePath: string;
+
+	callback(e: Error): void;
+
+	callback(e: null, content?: string, sourceMap?: string): void;
+
+}
 
 /**
  * The entry point for ts-loader
@@ -26,7 +35,7 @@ export function initTypeScript() {
 	scanDirectives(program);
 }
 
-export function loader(this: webpack.LoaderContext<{}>, contents: string, inputSourceMap?: Record<string, any>) {
+export function loader(this: webpackLoaderContext, contents: string, inputSourceMap?: Record<string, any>) {
 	if (!program) {
 		try {
 			initTypeScript();

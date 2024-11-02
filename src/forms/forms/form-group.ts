@@ -1,20 +1,29 @@
 import { AttributeDirective, Directive, HostBinding, HostListener, Input, OnInit } from '@ibyar/core';
-import { ControlValue, isControlValue } from '../builder/types.js';
-import { AbstractControl, FormControl } from './form-control.js';
+import { AbstractControl } from './form-control.js';
+import { AbstractFormArray } from './form-array.js';
 
-export abstract class AbstractFormGroup<T extends Record<string | number, any> = any> extends AbstractControl<T> {
-	controls: Record<string | number, AbstractControl<any>> = {};
-	abstract get<C extends AbstractControl<any>>(key: string): C;
+export type GroupControlType<T, K extends keyof T> = T[K] extends Array<infer A>
+	? AbstractFormArray<A>
+	: T[K] extends { [key in K]: infer G }
+	? AbstractFormGroup<G>
+	: AbstractControl<T[K]>
+	;
 
-	abstract addControl<K extends string & keyof T>(name: K, control: T[K]): AbstractControl<T[K]>;
-	abstract addControl<K extends string & keyof T>(name: K, control: ControlValue<T[K]>): AbstractControl<T[K]>;
-	abstract addControl<K extends string & keyof T>(name: K, control: AbstractControl<T[K]>): AbstractControl<T[K]>;
-	abstract addControl<K extends string & keyof T>(name: K, value: T[K] | ControlValue<T[K]> | AbstractControl<T[K]>): AbstractControl<T[K]>;
+export type GroupeControls<T> = { [K in keyof T]: GroupControlType<T, K> };
 
-	abstract removeControl<K extends string & keyof T>(name: K): void;
+export abstract class AbstractFormGroup<T> extends AbstractControl<T> {
+	controls: GroupeControls<T>;
+
+	constructor(controls?: GroupeControls<T>) {
+		super();
+		this.controls = controls ?? {} as GroupeControls<T>;
+	}
+	abstract get<K extends keyof T>(name: K): GroupControlType<T, K> | undefined;
+	abstract addControl<K extends keyof T>(name: K, control: GroupControlType<T, K>): void;
+	abstract removeControl<K extends keyof T>(name: K): void;
 }
 
-export class FormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any> extends AbstractFormGroup<T> {
+export class FormGroup<T> extends AbstractFormGroup<T> {
 	get valid(): boolean {
 		throw new Error('Method not implemented.');
 	}
@@ -33,23 +42,16 @@ export class FormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any
 	get untouched(): boolean {
 		throw new Error('Method not implemented.');
 	}
-	get<C extends AbstractControl<any>>(key: string): C {
-		throw new Error('Method not implemented.');
+
+	get<K extends keyof T>(key: K): GroupControlType<T, K> | undefined {
+		return this.controls[key];
 	}
 
-	addControl<K extends string & keyof T>(name: K, control: T[K]): AbstractControl<T[K]>;
-	addControl<K extends string & keyof T>(name: K, control: ControlValue<T[K]>): AbstractControl<T[K]>;
-	addControl<K extends string & keyof T>(name: K, control: AbstractControl<T[K]>): AbstractControl<T[K]>;
-	addControl<K extends string & keyof T>(name: K, value: T[K] | ControlValue<T[K]> | AbstractControl<T[K]>): AbstractControl<T[K]> {
-		const control = value instanceof AbstractControl
-			? value
-			: isControlValue(value)
-				? new FormControl(value.value, value.disabled)
-				: new FormControl(value);
+	addControl<K extends keyof T>(name: K, control: GroupControlType<T, K>): void {
 		this.controls[name] = control;
-		return control;
 	}
-	removeControl<K extends string & keyof T>(name: K): void {
+
+	removeControl<K extends keyof T>(name: K): void {
 		delete this.controls[name];
 	}
 	updateValue(value: T | null): void {
@@ -64,12 +66,12 @@ export class FormGroup<T extends { [K in keyof T]: AbstractControl<any>; } = any
 @Directive({
 	selector: 'formGroup'
 })
-export class FormGroupDirective extends AttributeDirective implements OnInit {
+export class FormGroupDirective<T> extends AttributeDirective implements OnInit {
 
 	declare protected el: HTMLFormElement;
 
 	@Input('formGroup')
-	formGroup: FormGroup<any>;
+	formGroup: FormGroup<T>;
 
 	onInit(): void {
 		this.el.noValidate = true;
@@ -82,7 +84,7 @@ export class FormGroupDirective extends AttributeDirective implements OnInit {
 			if (element.type === 'submit' || element.type === 'hidden') {
 				continue;
 			}
-			element.value = this.formGroup.controls[element.name].value;
+			element.value = this.formGroup.controls[element.name as keyof T].value as string;
 		}
 	}
 

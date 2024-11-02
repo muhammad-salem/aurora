@@ -1,72 +1,49 @@
-import { SignalScope } from '@ibyar/expressions';
+import { ReactiveNode, SignalScope } from '@ibyar/expressions';
+import { signalScopeFactory } from './factory.js';
 
-let signalScope: SignalScope | undefined;
-
-
-export function setSignalScope(scope: SignalScope) {
-	signalScope = scope;
+export function pushNewSignalScope() {
+	const scope = SignalScope.create();
+	signalScopeFactory.push(scope);
+	return scope;
 }
 
-export function clearSignalScope() {
-	signalScope = undefined;
+export function pushSignalScope(scope: SignalScope) {
+	signalScopeFactory.push(scope);
 }
 
-function assertValidContext(): void {
-	if (!signalScope) {
-		throw new Error('Create a Signal, Computed and Effect is only allowed in class constructor.');
-	}
-}
-
-export function signalNode<T>(initialValue: T) {
-	assertValidContext();
-	return signalScope!.createSignal(initialValue);
+export function clearSignalScope(scope: SignalScope) {
+	signalScopeFactory.pop(scope);
 }
 
 export function signal<T>(initialValue: T) {
-	assertValidContext();
-	return signalScope!.createSignalFn(initialValue);
+	return signalScopeFactory.signal(initialValue);
 }
 
-export function computedNode<T>(computation: () => T) {
-	assertValidContext();
-	return signalScope!.createComputed(computation);
+export function signalFn<T>(initialValue: T) {
+	return signalScopeFactory.signalFn(initialValue);
 }
 
 export function computed<T>(computation: () => T) {
-	assertValidContext();
-	return signalScope!.createComputedFn(computation);
+	return signalScopeFactory.computed(computation);
 }
 
-export function lazyNode<T>(computation: () => T) {
-	assertValidContext();
-	return signalScope!.createLazy(computation);
+export function computedFn<T>(computation: () => T) {
+	return signalScopeFactory!.computedFn(computation);
 }
 
 export function lazy<T>(computation: () => T) {
-	assertValidContext();
-	return signalScope!.createLazyFn(computation);
+	return signalScopeFactory.lazy(computation);
 }
 
-const effectState: SignalScope[] = [];
-type EffectFn = (onCleanup?: (clean: () => void) => void) => void;
-function wrapEffect<T>(scope: SignalScope, effectFn: EffectFn): EffectFn {
-	return (onCleanup) => {
-		effectState.push(scope);
-		effectFn(onCleanup);
-		effectState.pop();
-	};
+export function lazyFn<T>(computation: () => T) {
+	return signalScopeFactory.lazyFn(computation);
 }
-
 
 export function effect(effectFn: (onCleanup?: (clean: () => void) => void) => void) {
-	assertValidContext();
-	return signalScope!.createEffect(wrapEffect(signalScope!, effectFn));
+	return signalScopeFactory.effect(effectFn);
 }
-
-export function untracked<T>(nonReactiveReadsFn: () => T): T {
-	const scope = effectState.at(-1);
-	scope?.untrack();
-	const value = nonReactiveReadsFn();
-	scope?.track();
-	return value;
+export function untracked<T>(reactiveNode: ReactiveNode<T>): T;
+export function untracked<T>(nonReactiveReadsFn: () => T): T;
+export function untracked<T>(nonReactiveReads: (() => T) | ReactiveNode<T>): T {
+	return signalScopeFactory.untracked(nonReactiveReads as ReactiveNode<T>);
 }

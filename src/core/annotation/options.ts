@@ -1,4 +1,4 @@
-import type { Class, TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import type { DomNode } from '@ibyar/elements';
 import type { TemplateUrl } from '../utils/path.js';
 import type { ZoneType } from '../zone/bootstrap.js';
@@ -66,7 +66,7 @@ export interface DirectiveOptions {
 }
 
 export interface InjectableOptions {
-	provideIn?: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
+	provideIn?: Type<CustomElementConstructor> | 'root' | 'platform' | 'any';
 }
 
 export interface PipeOptions {
@@ -74,7 +74,7 @@ export interface PipeOptions {
 	asynchronous?: boolean;
 }
 
-export interface ComponentOptions<T = Class> {
+export interface ComponentOptions<T = Type<any>> {
 
 	/**
 	 * a tag name for the component,
@@ -285,7 +285,7 @@ export interface ComponentOptions<T = Class> {
 	 * 
 	 * ```
 	 */
-	formAssociated?: boolean | TypeOf<ValueControl<any>>;
+	formAssociated?: boolean | Type<ValueControl<any>>;
 
 	/**
 	 * - use `manual` for no zone.js patch effect applied,
@@ -312,7 +312,7 @@ export interface ComponentOptions<T = Class> {
 	/**
 	 * The imports property specifies the component's template dependencies — those directives, components, and pipes that can be used within its template.
 	 */
-	imports?: (TypeOf<any> | ReadonlyArray<any>)[];
+	imports?: (Type<any> | ReadonlyArray<any>)[];
 }
 
 export interface ChildOptions {

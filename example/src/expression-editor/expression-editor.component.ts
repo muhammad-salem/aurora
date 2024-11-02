@@ -1,37 +1,10 @@
 import {
 	AfterViewInit, Component, ExpressionNode, JavaScriptParser,
-	LanguageMode, OnInit, Scope, Context, Stack, ViewChild,
-	ChangeDetectorRef, ModuleScopeResolver, ModuleSourceProvider,
+	LanguageMode, OnInit, Scope, Context, Stack, viewChild,
+	ModuleScopeResolver, ModuleSourceProvider, inject,
+	ChangeDetectorRef,
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
-
-const styles = `
-	.content {
-		flex: 1;
-		display: flex;
-	}
-
-	.box {
-		display: flex;
-		min-height: min-content;
-	}
-
-	.column {
-		padding: 20px;
-		border-right: 1px solid #999;
-		overflow-y: auto;
-		max-width: 700px;
-	}
-
-	.column1 {
-		width: 200px;
-	}
-
-	textarea {
-		height: 750px;
-		overflow: unset !important;
-	}
-`;
 
 @Component({
 	selector: 'expression-editor',
@@ -39,7 +12,7 @@ const styles = `
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
-				<div class="column column1">
+				<div class="column column-200">
 					<div class="h-25 d-flex flex-column d-flex justify-content-start gap-1">
 						<button class="btn"
 							*for="let name of examples"
@@ -70,7 +43,33 @@ const styles = `
 			</div>
 		</div>
 		`,
-	styles: styles,
+	styles: `
+		.content {
+			flex: 1;
+			display: flex;
+		}
+
+		.box {
+			display: flex;
+			min-height: min-content;
+		}
+
+		.column {
+			padding: 20px;
+			border-right: 1px solid #999;
+			overflow-y: auto;
+			max-width: 700px;
+		}
+
+		.column-200 {
+			width: 200px;
+		}
+
+		textarea {
+			height: 750px;
+			overflow: unset !important;
+		}
+	`,
 })
 export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
@@ -79,17 +78,13 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
 	node: ExpressionNode;
 
-	@ViewChild('moduleA')
-	moduleA: HTMLTextAreaElement;
+	moduleA = viewChild<HTMLTextAreaElement>('moduleA');
 
-	@ViewChild('moduleB')
-	moduleB: HTMLTextAreaElement;
+	moduleB = viewChild<HTMLTextAreaElement>('moduleB');
 
-	@ViewChild('logs')
-	logs: HTMLPreElement;
+	logs = viewChild<HTMLPreElement>('logs');
 
-	@ViewChild('error')
-	error: HTMLPreElement;
+	error = viewChild<HTMLPreElement>('error');
 
 	examples = [
 		'FUNCTION_SCOPES',
@@ -104,7 +99,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	example: string;
 
 
-	constructor(private _cd: ChangeDetectorRef) { }
+	private _cd = inject(ChangeDetectorRef);
 
 	onInit(): void {
 		this.loadExample('FUNCTION_SCOPES');
@@ -113,20 +108,20 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	loadExample(name: keyof typeof import('./expression.spec.js')) {
 		this.example = name;
 		import('./expression.spec.js')
-			.then(module => (this.error.innerText = '', module))
+			.then(module => (this.error.get().innerText = '', module))
 			.then(module => this.loadCode(module[name]))
-			.then(code => this.moduleB.value = code!)
+			.then(code => this.moduleB.get().value = code!)
 			.then(() => this._cd.detectChanges());
 	}
 
 	afterViewInit(): void {
-		fromEvent(this.moduleB, 'change')
+		fromEvent(this.moduleB.get(), 'change')
 			.pipe(
-				map(() => this.moduleB.value),
+				map(() => this.moduleB.get().value),
 				debounceTime(400),
 				distinctUntilChanged(),
 			).subscribe(code => this.loadCode(code));
-		import('./expression.spec.js').then(module => this.moduleA.value = module.MODULE_A);
+		import('./expression.spec.js').then(module => this.moduleA.get().value = module.MODULE_A);
 	}
 
 	loadCode(code: string | null | undefined) {
@@ -141,7 +136,7 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			this.str = node.toString();
 			this.node = node;
 		} catch (e: any) {
-			this.error.innerText = e.stack ?? e ?? 'exception';
+			this.error.get().innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
 		} finally {
 			this._cd.detectChanges();
@@ -157,12 +152,12 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 	}
 
 	executeCode() {
-		this.logs.innerText = '';
-		this.error.innerText = '';
+		this.logs.get().innerText = '';
+		this.error.get().innerText = '';
 		try {
 			const mockConsole = {
 				log: (...data: any[]): void => {
-					this.logs.innerText += data.map(item => this.stringify(item)).join(' ').concat('\n');
+					this.logs.get().innerText += data.map(item => this.stringify(item)).join(' ').concat('\n');
 					console.log(...data);
 				},
 			};
@@ -170,13 +165,13 @@ export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 			const context: Context = { Object, console: mockConsole };
 			const stack = new Stack(Scope.for(context));
 			const fileProvider: ModuleSourceProvider = {
-				'/moduleA': this.moduleA.value,
-				'/moduleB': this.moduleB.value,
+				'/moduleA': this.moduleA.get().value,
+				'/moduleB': this.moduleB.get().value,
 			};
 			const resolver = new ModuleScopeResolver(stack, fileProvider, { allowImportExternal: false });
 			resolver.resolve('/moduleB');
 		} catch (e: any) {
-			this.error.innerText = e.stack ?? e ?? 'exception';
+			this.error.get().innerText = e.stack ?? e ?? 'exception';
 			console.error(e);
 		} finally {
 			this._cd.detectChanges();

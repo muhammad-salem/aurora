@@ -13,6 +13,10 @@ function compute<T>(updateFn: () => T): T | unknown {
 
 export class SignalScope extends ReactiveScope<Array<any>> {
 
+	static create() {
+		return new SignalScope();
+	}
+
 	private state: number[][] = [];
 	private watch = true;
 
@@ -20,14 +24,15 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createSignal<T>(initValue: T): Signal<T> {
-		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		Signal.bindNode(signal);
+	createSignal<T, S extends typeof Signal<T>>(initValue?: T, signalType = Signal as S): InstanceType<S> {
+		const signal = new signalType(this, this.getContext().length, initValue) as InstanceType<S>;
+		signalType.bindNode(signal);
 		return signal;
 	}
-	createSignalFn<T>(initValue: T) {
-		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		return Signal.toReactiveSignal(signal);
+
+	createSignalFn<T, S extends typeof Signal<T>>(initValue: T, signalType = Signal as S) {
+		const signal = new signalType(this, this.getContext().length, initValue);
+		return signalType.toReactiveSignal(signal);
 	}
 
 	createLazy<T>(updateFn: () => T): Lazy<T> {
@@ -193,8 +198,7 @@ export function isReactive<T = any>(value: unknown): value is Reactive<T> {
 export function getReactiveNode<T = any>(value: unknown): ReactiveNode<T> | void {
 	if (value instanceof ReactiveNode) {
 		return value;
-	}
-	else if (isReactive(value)) {
+	} else if (isReactive(value)) {
 		return value[SIGNAL];
 	}
 }
@@ -240,21 +244,21 @@ export type WritableSignal<T> = ReactiveSignal<T> & {
 
 export class Signal<T> extends ReactiveNode<T> {
 
-	static bindNode<T>(instance: Signal<T>) {
-		instance.get = instance.get.bind(instance);
-		instance.set = instance.set.bind(instance);
-		instance.update = instance.update.bind(instance);
+	static bindNode<T>(signal: Signal<T>) {
+		signal.get = signal.get.bind(signal);
+		signal.set = signal.set.bind(signal);
+		signal.update = signal.update.bind(signal);
 	}
 
-	static toReactiveSignal<T>(instance: Signal<T>): WritableSignal<T> {
-		const fn = () => instance.get();
-		fn.set = (value: T) => instance.set(value);
-		fn.update = (updateFn: (value: T) => T) => instance.update(updateFn);
-		fn[SIGNAL] = instance;
+	static toReactiveSignal<T>(signal: Signal<T>): WritableSignal<T> {
+		const fn = () => signal.get();
+		fn.set = (value: T) => signal.set(value);
+		fn.update = (updateFn: (value: T) => T) => signal.update(updateFn);
+		fn[SIGNAL] = signal;
 		return fn as WritableSignal<T>;
 	}
 
-	constructor(scope: SignalScope, index: number, initValue: T) {
+	constructor(scope: SignalScope, index: number, initValue?: T) {
 		super(scope, index);
 		scope.set(index, initValue);
 	}

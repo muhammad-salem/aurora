@@ -24,3 +24,4 @@ jobs:
       - run: npm i
       - run: npm run build:example
       - run: npm run test262
+      - run: npm run build

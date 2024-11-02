@@ -1,4 +1,4 @@
-import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope, Identifier } from '@ibyar/expressions';
+import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope, Identifier, Signal } from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
@@ -17,6 +17,8 @@ import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createDestroySubscription } from '../context/subscription.js';
 import { EventEmitter } from '../component/events.js';
+import { isViewChildSignal } from '../component/initializer.js';
+import { ChildRef } from '../component/reflect.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -39,6 +41,7 @@ export class ComponentRender<T extends object> {
 	private templateNameScope: ReactiveScope<{ [templateName: string]: TemplateRef }>;
 	private exportAsScope: ReactiveScope<Record<string, any>>;
 	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
+	private viewChildSignal: ChildRef[];
 
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
@@ -46,6 +49,7 @@ export class ComponentRender<T extends object> {
 		this.contextStack.pushScope<Context>(this.view._modelScope);
 		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
+		this.viewChildSignal = this.componentRef.viewChild.filter(child => child.selector === 'ɵSignal');
 	}
 	initView(): void {
 		if (!this.componentRef.template) {
@@ -308,8 +312,11 @@ export class ComponentRender<T extends object> {
 			Reflect.set(this.view, templateRefName.name, element);
 			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
+			let signal: Signal<any> | undefined;
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
+			} else if (signal = this.getViewChildSignal(templateRefName.name)) {
+				signal.set(element);
 			}
 		}
 		if (node.children) {
@@ -486,6 +493,16 @@ export class ComponentRender<T extends object> {
 		// TODO: 
 		// check host binding
 		return subscriptions;
+	}
+
+	private getViewChildSignal(templateRefName: string) {
+		for (const child of this.viewChildSignal) {
+			const signal = this.view._model[child.modelName];
+			if (isViewChildSignal(signal) && signal.selector === templateRefName) {
+				return signal;
+			}
+		}
+		return;
 	}
 
 }

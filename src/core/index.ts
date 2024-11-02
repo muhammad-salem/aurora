@@ -1,9 +1,11 @@
 
 export * from './annotation/options.js';
 export * from './annotation/decorators.js';
+
 export * from './signals/signals.js';
 
 export * from './component/component.js';
+export * from './component/initializer.js';
 export * from './component/reflect.js';
 export * from './component/custom-element.js';
 export * from './component/events.js';

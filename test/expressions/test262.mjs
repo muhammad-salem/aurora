@@ -1,4 +1,4 @@
-import { doesNotThrow, throws, deepStrictEqual } from 'assert';
+import { deepStrictEqual, doesNotThrow, throws } from 'assert';
 import { readdirSync, readFileSync } from 'fs';
 import { getLanguageMode, JavaScriptParser } from '@ibyar/expressions';
 

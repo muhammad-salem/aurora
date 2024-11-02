@@ -33,8 +33,8 @@ Create you decorator that is aware of metadata context for [proposal-decorator-m
 
 ## Compatibility
 
-| Version | TS Version   |
-|---------|--------------|
-| 1.0.0   | 5.0.0, 5.1.0 |
-| 1.1.0   | 5.2.0, ...   |
+| Version   | TS Version   |
+|-----------|--------------|
+| 1.0.0     | 5.0.0, 5.1.0 |
+| >=1.1.0   | >=5.2.0      |
 

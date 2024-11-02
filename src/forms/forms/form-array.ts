@@ -1,16 +1,29 @@
 import { AttributeDirective, Directive } from '@ibyar/core';
 import { AbstractControl } from './form-control.js';
+import { AbstractFormGroup } from './form-group.js';
 
+export type ArrayControlType<T> = T extends { [key in keyof T]: any }
+	? AbstractFormGroup<T>
+	: T extends Array<infer A>
+	? AbstractFormArray<A>
+	: AbstractControl<T>;
 
-export abstract class AbstractFormArray<T = any> extends AbstractControl<T> {
+export type ArrayControls<T> = Array<ArrayControlType<T>>;
 
-	protected controls: AbstractControl<T[keyof T]>[] = [];
+export abstract class AbstractFormArray<T> extends AbstractControl<T> {
 
-	abstract at<C extends AbstractControl<T[keyof T]>>(index: number): C;
-	abstract push<C extends AbstractControl<T[keyof T]>>(control: C): C;
+	protected controls: ArrayControls<T>;
+
+	constructor(controls: ArrayControls<T>) {
+		super();
+		this.controls = controls ?? [];
+	}
+
+	abstract at(index: number): ArrayControlType<T> | undefined;
+	abstract push(control: ArrayControlType<T>): number;
 }
 
-export class FormArray<T = any> extends AbstractFormArray<T> {
+export class FormArray<T> extends AbstractFormArray<T> {
 
 	get valid(): boolean {
 		throw new Error('Method not implemented.');
@@ -30,12 +43,11 @@ export class FormArray<T = any> extends AbstractFormArray<T> {
 	get untouched(): boolean {
 		throw new Error('Method not implemented.');
 	}
-	at<C extends AbstractControl<T[keyof T]>>(index: number): C {
-		return this.controls.at(index) as C;
+	at(index: number): ArrayControlType<T> | undefined {
+		return this.controls.at(index);
 	}
-	push<C extends AbstractControl<T[keyof T]>>(control: C): C {
-		this.controls.push(control);
-		return control;
+	push(control: ArrayControlType<T>): number {
+		return this.controls.push(control);
 	}
 	updateValue(value: T | null): void {
 		throw new Error('Method not implemented.');

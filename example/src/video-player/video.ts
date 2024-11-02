@@ -1,4 +1,4 @@
-import { Component, OnInit, View } from '@ibyar/aurora';
+import { Component, OnInit, view } from '@ibyar/aurora';
 
 @Component({
 	selector: 'video-player',
@@ -8,8 +8,7 @@ import { Component, OnInit, View } from '@ibyar/aurora';
 })
 export class VideoPlayer implements OnInit {
 
-	@View()
-	player: HTMLVideoElement;
+	player = view('video');
 
 	onInit() {
 		console.log('src', this.player.src);

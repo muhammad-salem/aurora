@@ -1,5 +1,6 @@
 import ts from 'typescript/lib/tsserverlibrary.js';
-import { DecoratorInfo } from './modules.js';
+import { DecoratorInfo, SignalMetadata, SignalInfo } from './modules.js';
+import { SignalDetails, SignalKey } from './signals.js';
 
 
 /**
@@ -208,4 +209,56 @@ export function getTextValueFormArrayLiteralProperty(option: ts.ObjectLiteralExp
 	return selectorProperty.initializer.elements
 		.map(initializer => initializer.getText())
 		.map(initializer => initializer.substring(1, initializer.length - 1));
+}
+
+
+export function scanAliasName(call: ts.CallExpression): string | void {
+	const alias = call.arguments
+		.filter(expr => ts.isObjectLiteralExpression(expr))
+		.flatMap(expr => expr.properties)
+		.filter(expr => ts.isPropertyAssignment(expr) && ts.isStringLiteral(expr.initializer) && ts.isIdentifier(expr.name) && expr.name.getText() === 'alias')
+		.at(0) as ts.PropertyAssignment | undefined;
+	const initializer = alias?.initializer.getText();
+	return initializer?.substring(1, initializer.length - 1);
+}
+
+export function scanSignalCall(call: ts.CallExpression, signalKey: string, name: string): SignalInfo | false {
+	const type = call.typeArguments?.[0].getText();
+	if (ts.isIdentifier(call.expression) && call.expression.getText() === signalKey) {
+		return { name, type, aliasName: scanAliasName(call) ?? name } as SignalInfo;
+	} else if (ts.isPropertyAccessExpression(call.expression)
+		&& ts.isIdentifier(call.expression.expression) && call.expression.expression.getText() === signalKey
+		&& ts.isIdentifier(call.expression.name) && call.expression.name.getText() === 'required') {
+		return { name, type, necessity: 'required', aliasName: scanAliasName(call) ?? name } as SignalInfo;
+	} else if (ts.isElementAccessExpression(call.expression)
+		&& ts.isIdentifier(call.expression.expression) && call.expression.expression.getText() === signalKey
+		&& ts.isIdentifier(call.expression.argumentExpression) && call.expression.argumentExpression.getText() === 'required') {
+		return { name, type, necessity: 'required', aliasName: scanAliasName(call) ?? name } as SignalInfo;
+	}
+	return false;
+}
+
+/**
+ * get component and directive signals that is evaluated with `input`, `output`, ... etc.
+ * @param classNode 
+ * @param signals 
+ * @returns 
+ */
+export function scanSignals(classNode: ts.ClassDeclaration, signals: SignalDetails): SignalMetadata {
+	const infos: SignalMetadata = {};
+	const members = classNode.members
+		.filter(member => ts.isPropertyDeclaration(member)
+			&& member.initializer
+			&& ts.isCallExpression(member.initializer)
+		) as ts.PropertyDeclaration[];
+	Object.entries(signals).forEach(([alias, signal]) => {
+		members.forEach(member => {
+			const name = (ts.isComputedPropertyName(member.name) && ts.isStringLiteral(member.name.expression))
+				? member.name.expression.getText()
+				: member.name.getText()
+			const info = scanSignalCall(member.initializer as ts.CallExpression, alias, name);
+			info && (infos[signal as SignalKey] ??= []).push(info);
+		});
+	});
+	return infos;
 }

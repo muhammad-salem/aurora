@@ -22,22 +22,53 @@
 
 [npm-image-pipes]: https://img.shields.io/npm/v/@ibyar/pipes.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-pipes]: https://npmjs.org/package/@ibyar/pipes
+[downloads-image-pipes]: https://img.shields.io/npm/dt/@ibyar/pipes
+[downloads-url-pipes]: https://npmjs.org/package/@ibyar/pipes
+
 [npm-image-directives]: https://img.shields.io/npm/v/@ibyar/directives.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-directives]: https://npmjs.org/package/@ibyar/directives
+[downloads-image-directives]: https://img.shields.io/npm/dt/@ibyar/directives
+[downloads-url-directives]: https://npmjs.org/package/@ibyar/directives
+
 [npm-image-core]: https://img.shields.io/npm/v/@ibyar/core.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-core]: https://npmjs.org/package/@ibyar/core
+[downloads-image-core]: https://img.shields.io/npm/dt/@ibyar/core
+[downloads-url-core]: https://npmjs.org/package/@ibyar/core
+
 [npm-image-expressions]: https://img.shields.io/npm/v/@ibyar/expressions.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-expressions]: https://npmjs.org/package/@ibyar/expressions
+[downloads-image-expressions]: https://img.shields.io/npm/dt/@ibyar/expressions
+[downloads-url-expressions]: https://npmjs.org/package/@ibyar/expressions
+
 [npm-image-elements]: https://img.shields.io/npm/v/@ibyar/elements.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-elements]: https://npmjs.org/package/@ibyar/elements
+[downloads-image-elements]: https://img.shields.io/npm/dt/@ibyar/elements
+[downloads-url-elements]: https://npmjs.org/package/@ibyar/elements
+
 [npm-image-platform]: https://img.shields.io/npm/v/@ibyar/platform.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-platform]: https://npmjs.org/package/@ibyar/platform
+[downloads-image-platform]: https://img.shields.io/npm/dt/@ibyar/platform
+[downloads-url-platform]: https://npmjs.org/package/@ibyar/platform
+
 [npm-image-cli]: https://img.shields.io/npm/v/@ibyar/cli.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-cli]: https://npmjs.org/package/@ibyar/cli
+[downloads-image-cli]: https://img.shields.io/npm/dt/@ibyar/cli
+[downloads-url-cli]: https://npmjs.org/package/@ibyar/cli
+
 [npm-image-decorators]: https://img.shields.io/npm/v/@ibyar/decorators.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-decorators]: https://npmjs.org/package/@ibyar/decorators
+[downloads-image-decorators]: https://img.shields.io/npm/dt/@ibyar/decorators
+[downloads-url-decorators]: https://npmjs.org/package/@ibyar/decorators
+
 [npm-image-tslib]: https://img.shields.io/npm/v/tslib.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-tslib]: https://npmjs.org/package/tslib
+[downloads-image-tslib]: https://img.shields.io/npm/dt/tslib
+[downloads-url-tslib]: https://npmjs.org/package/tslib
+
+[npm-image-typescript]: https://img.shields.io/npm/v/typescript.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-typescript]: https://npmjs.org/package/typescript
+[downloads-image-typescript]: https://img.shields.io/npm/dt/typescript
+[downloads-url-typescript]: https://npmjs.org/package/typescript
 
 [directory]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/folder-active.svg
 [package]: https://raw.githubusercontent.com/microsoft/vscode-icons/master/icons/light/symbol-field.svg
@@ -61,6 +92,7 @@
 [package-decorators]: https://github.com/ibyar/aurora/tree/dev/packages/decorators
 [source-decorators]: https://github.com/ibyar/aurora/tree/dev/src/decorators
 
+[typescript]: https://github.com/Microsoft/typescript
 [tslib]: https://github.com/Microsoft/tslib
 
 Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
@@ -74,15 +106,24 @@ This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](h
 	- select: HTML: @ibyar/elements
 - Custom Elements Everywhere for Aurora Test & Results: https://muhammad-salem.github.io/custom-elements-everywhere/libraries/aurora/results/results.html
 
-## `Install`
+## `CLI Install`
 
 ``` bash
 npm i -g @ibyar/cli
-npm i --save @ibyar/aurora
 ```
 
 ``` bash
 yarn global add @ibyar/cli
+```
+
+
+## `Install`
+
+``` bash
+npm i --save @ibyar/aurora
+```
+
+``` bash
 yarn add @ibyar/aurora
 ```
 
@@ -91,16 +132,17 @@ yarn add @ibyar/aurora
 
 | README | Description | NPM, PKG, SRC |
 | ------ | ----------- | ------------- |
-| @ibyar/aurora | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] [![PKG][package]][package-aurora] [![SRC][directory]][source-aurora] |
-| @ibyar/core | create components, render elements<br /> bind attributes and handling events | [![NPM Version][npm-image-core]][npm-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
-| @ibyar/expressions | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to<br />  detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] [![PKG][package]][package-expressions] [![SRC][directory]][source-expressions] |
-| @ibyar/elements | parse `HTML Template`,<br /> has `tag` names, properties for each `tag` | [![NPM Version][npm-image-elements]][npm-url-elements] [![PKG][package]][package-elements] [![SRC][directory]][source-elements] |
-| @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
-| @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
-| @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform]  [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
-| @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
-| @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
-| tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
+| @ibyar/cli | ibyar cli package | [![NPM Version][npm-image-cli]][npm-url-cli] [![NPM Downloads][downloads-image-cli]][downloads-url-cli] [![PKG][package]][package-cli] [![SRC][directory]][source-cli] |
+| @ibyar/aurora | a central package to manage dependance only | [![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![PKG][package]][package-aurora] [![SRC][directory]][source-aurora] |
+| @ibyar/core | create components, render elements<br /> bind attributes and handling events | [![NPM Version][npm-image-core]][npm-url-core] [![NPM Downloads][downloads-image-core]][downloads-url-core] [![PKG][package]][package-core] [![SRC][directory]][source-core] |
+| @ibyar/expressions | a JavaScript engine, parser and evaluator <br />build by the guid of [V8 JavaScript engine](https://github.com/v8/v8).<br />Introduce a reactive scope concept to<br />  detect changes for scope variables,<br />subscriptions based on a `wave effect` like concept,<br /> (simple what is subscribed will only be reevaluated again).<br /> Follow [ESTree](https://github.com/estree/estree/) structural to generate an ast object. | [![NPM Version][npm-image-expressions]][npm-url-expressions] [![NPM Downloads][downloads-image-expressions]][downloads-url-expressions] [![PKG][package]][package-expressions] [![SRC][directory]][source-expressions] |
+| @ibyar/elements | parse `HTML Template`,<br /> has `tag` names, properties for each `tag` | [![NPM Version][npm-image-elements]][npm-url-elements] [![NPM Downloads][downloads-image-elements]][downloads-url-elements] [![PKG][package]][package-elements] [![SRC][directory]][source-elements] |
+| @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![NPM Downloads][downloads-image-pipes]][downloads-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
+| @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![NPM Downloads][downloads-image-directives]][downloads-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
+| @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] [![NPM Downloads][downloads-image-platform]][downloads-url-platform] [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
+| @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![NPM Downloads][downloads-image-decorators]][downloads-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
+| typescript | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-typescript]][npm-url-typescript] [![NPM Downloads][downloads-image-typescript]][downloads-url-typescript] [![PKG][package]][npm-url-typescript] [![SRC][directory]][typescript]|
+| tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![NPM Downloads][downloads-image-tslib]][downloads-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
 
 
 ## 'HTML Template' Features
@@ -226,7 +268,7 @@ yarn add @ibyar/aurora
 #### how to bundle your package before publish
 
 ```bash
-# run ibyar cli to pre-build your template and view types.
+# always run ibyar cli to pre-build (AOT) your template and view types.
 ibyar --build
 #or
 ibyar --build --watch
@@ -406,6 +448,13 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 
 	array = ['a', 'b', 'c', 'd'];
 
+
+	readonly name = input('name');
+	readonly age = input.required();
+	readonly inputWithAlias = input('init-value', { alias: 'alias-name-1' });
+	readonly requiredInputWithAlias = input.required({ alias: 'alias-name-2' });
+	readonly event = output<string>();
+
 	colors = [
 		'--bs-blue',
 		'--bs-indigo',
@@ -580,6 +629,6 @@ export default = {
 ```
 
 
-see test app for full [`bundles/webpack`](https://github.com/ibyar/aurora/tree/dev/bundles/webpack)
+see test app for full [`webpack`](https://github.com/ibyar/aurora-demo/tree/main/bundles/webpack)
 
-see test app for full [`bundles/rollup`](https://github.com/ibyar/aurora/tree/dev/bundles/rollup)
+see test app for full [`rollup`](https://github.com/ibyar/aurora-demo/tree/main/bundles/rollup)

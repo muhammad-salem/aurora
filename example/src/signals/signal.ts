@@ -1,41 +1,52 @@
-import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from '@ibyar/aurora';
+import {
+	Component, Injectable, OnDestroy,
+	OnInit, computed, effect, inject,
+	input, lazy, output, signal, untracked
+} from '@ibyar/aurora';
 
+
+@Injectable({})
+export class SignalScopeService {
+
+	date = signal(new Date());
+
+}
 
 @Component({
 	selector: 'simple-counter',
 	template: `
 			<!-- count is invoked as a getter! -->
-			<p>Count {{ count() }}</p>
-			<p>{{ name }}</p> <!-- Not reactive! -->
+			<p>Count {{ count.get() }}</p>
+			<p>{{ name.get() }}</p> <!-- Not reactive! -->
 			<button class="btn btn-outline-success" (click)="increment()">Increment count</button>
 			<hr>
-			<p>x {{ x() }}</p>
-			<p>y {{ y() }}</p>
-			<p>z {{ z() }}</p>
-			<p>a {{ a() }}</p>
-			<p>g {{ g() }}</p>
-			<p>h {{ h() }}</p>
+			<p>x {{ x.get() }}</p>
+			<p>y {{ y.get() }}</p>
+			<p>z {{ z.get() }}</p>
+			<p>a {{ a.get() }}</p>
+			<p>g {{ g.get() }}</p>
+			<p>h {{ h.get() }}</p>
 			<hr>
 
 			<div class="row">
 				<div class="col-4">
 					<label class="form-label">X:</label>
-					<input type="number" class="form-control" [value]="x()" (change)="x.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="x.get()" (change)="x.set(+$event.target.value)">
 				</div>
 				<div class="col-4">
 					<label class="form-label">Y:</label>
-					<input type="number" class="form-control" [value]="y()" (change)="y.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="y.get()" (change)="y.set(+$event.target.value)">
 				</div>
 				<div class="col-4">
 					<label class="form-label">Z:</label>
-					<input type="number" class="form-control" [value]="z()" (change)="z.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="z.get()" (change)="z.set(+$event.target.value)">
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-4">
 					<div class="form-check">
 						<input class="form-check-input" type="checkbox" id="a"
-							[checked]="a()" (change)="a.set($event.target.checked)">
+							[checked]="a.get()" (change)="a.set($event.target.checked)">
 						<label class="form-check-label" for="a">A</label>
 					</div>
 				</div>
@@ -43,12 +54,15 @@ import { Component, OnDestroy, computed, effect, lazy, signal, untracked } from 
 			<hr>
 
 
-			<p>lazy x*y= {{ l() }} <button class="btn btn-outline-success" (click)="l()">Refresh value</button></p>
-			<p>double g = <span [class]="{'text-danger': e() instanceof Error}">{{ e() }}</span> (error if a = false)</p>
+			<p>lazy x*y= {{ l.get() }} <button class="btn btn-outline-success" (click)="l.get()">Refresh value</button></p>
+			<p>double g = <span [class]="{'text-danger': e.get() instanceof Error}">{{ e.get() }}</span> (error if a = false)</p>
+
+			<hr>
+			<p>date: {{ date.get() }}</p>
 
 		`,
 })
-export class SimpleCounter implements OnDestroy {
+export class SimpleCounter implements OnInit, OnDestroy {
 	count = signal(0); // WritableSignal<number>
 
 	x = signal(6);
@@ -56,10 +70,20 @@ export class SimpleCounter implements OnDestroy {
 	z = signal(20);
 	a = signal(true);
 
-	l = lazy(() => this.x() * this.y());
+	readonly name = input('name');
+	readonly age = input.required();
+
+	readonly inputWithAlias = input('init-value', { alias: 'alias-name-1' });
+	readonly requiredInputWithAlias = input.required({ alias: 'alias-name-2' });
+
+	readonly event = output<string>();
+
+	logEvents = computed(() => console.log('output event:', this.event.get()));
+
+	l = lazy(() => this.x.get() * this.y.get());
 	e = computed(() => {
-		if (this.a()) {
-			return this.g() * 2;
+		if (this.a.get()) {
+			return this.g.get() * 2;
 		}
 		throw new Error('throw exception');
 	});
@@ -69,38 +93,44 @@ export class SimpleCounter implements OnDestroy {
 
 
 	g = computed(() => {
-		if (this.a()) {
-			return this.x() + this.y();
+		if (this.a.get()) {
+			return this.x.get() + this.y.get();
 		}
-		return this.x() + this.z();
+		return this.x.get() + this.z.get();
 	});
 
-	h = computed(this.g);
+	h = computed(this.g.get);
 
-	private effectSubscription: { destroy(): void; };
+	service = inject(SignalScopeService);
 
+	date = computed(() => this.service.date.get().toISOString());
 
-	constructor() {
-		this.effectSubscription = effect(() => {
-			console.log(
-				'x', this.x(),
-				'y', this.y(),
-				'z', this.z(),
-				'a', this.a(),
-				'g', untracked(this.g),
-				'h', untracked(this.h),
-			);
-		});
+	private effectSubscription = effect(() => {
+		console.log(
+			'x', this.x.get(),
+			'y', this.y.get(),
+			'z', this.z.get(),
+			'a', this.a.get(),
+			'g', untracked(this.g),
+			'h', untracked(this.h),
+			'event', this.event.get(),
+		);
+	});
+	private interval: any;
+
+	onInit(): void {
+		this.interval = setInterval(() => this.service.date.update(() => new Date()), 1000);
+		this.event.emit('x = ' + this.x.get());
 	}
 
-
 	increment() {
-		console.log('c', this.count());
+		console.log('c', this.count.get());
 		this.count.update(c => c + 1);
 	}
 
 	onDestroy(): void {
 		this.effectSubscription.destroy();
+		clearInterval(this.interval);
 	}
 
 }

@@ -31,11 +31,34 @@ export abstract class ChangeDetectorRef {
 	abstract checkNoChanges(): void;
 }
 
+class ChangeDetectorRefImpl extends ChangeDetectorRef {
+
+	constructor(private ref: ChangeDetectorRef) {
+		super();
+	}
+
+	detach(): void {
+		this.ref.detach();
+	}
+	reattach(): void {
+		this.ref.reattach();
+	}
+	markForCheck(): void {
+		this.ref.markForCheck();
+	}
+	detectChanges(): void {
+		this.ref.detectChanges();
+	}
+	checkNoChanges(): void {
+		this.ref.checkNoChanges();
+	}
+}
+
 /**
  * create a change Detector Reference by property key.
  */
 export function createChangeDetectorRef(scope: ReactiveScopeControl<any>, propertyKey: keyof Context): ChangeDetectorRef {
-	return {
+	return new ChangeDetectorRefImpl({
 		detach() {
 			scope.detach();
 		},
@@ -51,11 +74,11 @@ export function createChangeDetectorRef(scope: ReactiveScopeControl<any>, proper
 		checkNoChanges() {
 			scope.checkNoChanges();
 		},
-	};
+	});
 }
 
 export function createModelChangeDetectorRef(resolver: () => ReactiveScopeControl<any>): ChangeDetectorRef {
-	return {
+	return new ChangeDetectorRefImpl({
 		detach() {
 			resolver().detach();
 		},
@@ -71,5 +94,5 @@ export function createModelChangeDetectorRef(resolver: () => ReactiveScopeContro
 		checkNoChanges() {
 			resolver().checkNoChanges();
 		},
-	};
+	});
 }

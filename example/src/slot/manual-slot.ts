@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HTMLComponent, OnInit, View, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, OnInit, view, viewChild, ViewChild } from '@ibyar/aurora';
 
 
 @Component({
@@ -26,18 +26,11 @@ export class ManualSlotExample implements OnInit, AfterViewInit {
 
 	count = 0;
 
-	@View()
-	view: HTMLComponent<ManualSlotExample>;
+	view = view(ManualSlotExample);
 
-	@ViewChild('slot')
-	slot: HTMLSlotElement;
-
-	@ViewChild('div1')
-	div1: HTMLDivElement;
-
-	@ViewChild('div2')
-	div2: HTMLDivElement;
-
+	slot = viewChild('slot');
+	div1 = viewChild<HTMLDivElement>('div1');
+	div2 = viewChild<HTMLDivElement>('div2');
 
 
 	onInit(): void {
@@ -52,12 +45,12 @@ export class ManualSlotExample implements OnInit, AfterViewInit {
 		if (this.slot === undefined) {
 			console.error('slot should be not `undefined` yet');
 		}
-		this.slot.addEventListener('slotchange', e => {
-			const nodes = this.slot.assignedNodes();
-			console.log(`Element in Slot "${this.slot.name}" changed to:`, nodes);
+		this.slot.get().addEventListener('slotchange', e => {
+			const nodes = this.slot.get().assignedNodes();
+			console.log(`Element in Slot "${this.slot.get().name}" changed to:`, nodes);
 		});
-		this.view.append(this.div1);
-		this.view.append(this.div2);
+		this.view.append(this.div1.get());
+		this.view.append(this.div2.get());
 	}
 
 	assign(num: number): void {
@@ -65,16 +58,16 @@ export class ManualSlotExample implements OnInit, AfterViewInit {
 		// element.setAttribute('name', 'slot-el');
 		element.innerText = 'manual slot assignment ' + num;
 		this.view.append(element);
-		this.slot.assign(element);
+		this.slot.get().assign(element);
 		console.log(this.slot, element);
 	}
 
 	assignDiv1(): void {
-		this.slot.assign(this.div1);
+		this.slot.get().assign(this.div1.get());
 	}
 
 	assignDiv2(): void {
-		this.slot.assign(this.div2);
+		this.slot.get().assign(this.div2.get());
 	}
 
 }

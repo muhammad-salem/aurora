@@ -1,7 +1,8 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, getReactiveNode
+	ScopeSubscription, SignalScope, getReactiveNode,
+	isReactive, WritableSignal
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -12,13 +13,16 @@ import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../compo
 import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { getRootZone } from '../zone/bootstrap.js';
-import { AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
-import { createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
+import { AbstractAuroraZone, AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
+import { ChangeDetectorRef, createModelChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
-import { clearSignalScope, setSignalScope } from '../signals/signals.js';
+import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
+import { forkProvider, addProvider, removeProvider } from '../di/inject.js';
+import { isOutputSignal, VIEW_TOKEN } from '../component/initializer.js';
+import { InjectionProvider } from '../di/provider.js';
 
-export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLElement>): TypeOf<HTMLComponent<T>> {
+export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElement>): Type<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_signalScope: SignalScope;
@@ -30,30 +34,37 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 		_modelScope: ReactiveScopeControl<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 		_zone: AuroraZone;
+		_provider: InjectionProvider;
+		_detector: ChangeDetectorRef;
 
 		private subscriptions: ScopeSubscription<Context>[] = [];
 		private onDestroyCalls: (() => void)[] = [];
 		private needRendering = true;
 
-		constructor(componentRef: ComponentRef<T>, modelClass: TypeOf<T>) {
+		constructor(componentRef: ComponentRef<T>, modelClass: Type<T>) {
 			super();
 			this._componentRef = componentRef;
 			if (componentRef.isShadowDom && !componentRef.disabledFeatures?.includes('shadow')) {
 				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
 			}
 
-			this._signalScope = new SignalScope();
-			setSignalScope(this._signalScope);
+			this._signalScope = pushNewSignalScope();
+			this._provider = forkProvider();
 
-			const args = []; /* resolve dependency injection*/
-			const detector = createModelChangeDetectorRef(() => this._modelScope);
-			args.push(detector)
+
+			/* resolve dependency injection*/
+			this._detector = createModelChangeDetectorRef(() => this._modelScope);
 			this._zone = getRootZone().fork(componentRef.zone);
-			args.push(this._zone);
-			const model = new modelClass(...args);
+
+			this._provider.setType(AbstractAuroraZone, this._zone);
+			this._provider.setType(ChangeDetectorRef, this._detector);
+			this._provider.setToken(VIEW_TOKEN, this);
+			addProvider(this._provider);
+			const model = new modelClass();
+			removeProvider(this._provider);
 			this._model = model;
 
-			clearSignalScope();
+			clearSignalScope(this._signalScope);
 			const modelScope = ReactiveScopeControl.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
@@ -77,7 +88,11 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 					if (newValue === oldValue) {
 						return;
 					}
-					this._modelScope.set(input.modelProperty as any, newValue);
+					if (isReactive(this._model[input.modelProperty])) {
+						(this._model[input.modelProperty] as WritableSignal<any>).set(newValue);
+					} else {
+						this._modelScope.set(input.modelProperty as any, newValue);
+					}
 				});
 				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
@@ -87,21 +102,24 @@ export function baseFactoryView<T extends object>(htmlElementType: TypeOf<HTMLEl
 				});
 			});
 
-			componentRef.outputs.forEach(output =>
-				(model[output.modelProperty as keyof T] as any as EventEmitter<any>)
-					.subscribe((value: any) => {
+			componentRef.outputs.forEach(output => {
+				const event = model[output.modelProperty as keyof T];
+				if (event instanceof EventEmitter || isOutputSignal(event)) {
+					const options = isOutputSignal(event) ? event.options : output.options;
+					event.subscribe((value: any) => {
 						const event = new CustomEvent(
 							output.viewAttribute,
 							{
 								detail: value,
 								cancelable: false,
-								bubbles: output.options?.bubbles,
-								composed: output.options?.bubbles,
+								bubbles: options?.bubbles,
+								composed: options?.bubbles,
 							},
 						);
 						this.dispatchEvent(event);
 					})
-			);
+				}
+			});
 			// if property of the model has view decorator
 			if (this._componentRef.view) {
 				Reflect.set(this._model, this._componentRef.view, this);

@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, StructuralDirective, TypeOf } from '@ibyar/aurora';
+import { Directive, Input, OnDestroy, StructuralDirective, Type } from '@ibyar/aurora';
 
 
 @Directive({
@@ -8,7 +8,7 @@ export class ComponentOutlet<C extends {}> extends StructuralDirective implement
 
 
 	@Input()
-	set component(componentType: TypeOf<C> | undefined) {
+	set component(componentType: Type<C> | undefined) {
 		this.viewContainerRef.clear();
 		if (!componentType) {
 			return;

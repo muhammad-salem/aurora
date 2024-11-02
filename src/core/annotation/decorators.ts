@@ -1,4 +1,4 @@
-import type { Class } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import {
 	MetadataClass, MetadataContext,
 	makeClassDecorator, makeClassMemberDecorator
@@ -16,6 +16,9 @@ import {
 
 type PropertyValue<T> = T | ((value: T) => void) | undefined;
 
+/**
+ * @deprecated since v2.4.0, use `input` function instead.
+ */
 
 export function Input<This, Value>(name?: string) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
@@ -31,6 +34,10 @@ export function Input<This, Value>(name?: string) {
 	);
 }
 
+
+/**
+ * @deprecated since v2.4.0, use `formValue` function instead.
+ */
 export function FormValue<This, Value>() {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context, metadata) => {
@@ -45,8 +52,19 @@ export function FormValue<This, Value>() {
 	);
 }
 
+/**
+ * @deprecated since v2.4.0, use `output` function instead.
+ */
 export function Output<This, Value>(options?: OutputOptions): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void;
+
+/**
+ * @deprecated since v2.4.0, use `output` function instead.
+ */
 export function Output<This, Value>(name?: string, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void;
+
+/**
+ * @deprecated since v2.4.0, use `output` function instead.
+ */
 export function Output<This, Value>(name?: string | OutputOptions, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void {
 	const eventType = typeof name === 'object' ? name.name : name;
 	const eventOpts = typeof name === 'object' ? name : options;
@@ -71,6 +89,9 @@ export function Output<This, Value>(name?: string | OutputOptions, options?: Out
 	);
 }
 
+/**
+ * @deprecated since v2.4.0, use `view` function instead.
+ */
 export function View<This, Value>() {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context, metadata) => {
@@ -85,6 +106,9 @@ export function View<This, Value>() {
 	);
 }
 
+/**
+ * @deprecated since v2.4.0, use `viewChild` function instead.
+ */
 export function ViewChild<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context, metadata) => {
@@ -99,6 +123,9 @@ export function ViewChild<This, Value>(selector: string | typeof HTMLElement | C
 	);
 }
 
+/**
+ * @deprecated since v2.4.0, use `viewChildren` function instead.
+ */
 export function ViewChildren<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor) {
 	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
 		(value, context, metadata) => {
@@ -112,7 +139,6 @@ export function ViewChildren<This, Value>(selector: string | typeof HTMLElement 
 		}
 	);
 }
-
 
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
 	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
@@ -176,7 +202,7 @@ export const Injectable = makeClassDecorator<InjectableOptions>(
 	}
 );
 
-function generateComponent<T extends Class>(target: MetadataClass<T>, opt: ComponentOptions<T>, metadata: MetadataContext) {
+function generateComponent<T extends Type<any>>(target: MetadataClass<T>, opt: ComponentOptions<T>, metadata: MetadataContext) {
 	if (opt.templateUrl) {
 		fetchHtml(opt.templateUrl)
 			.then(htmlTemplate => {
@@ -208,7 +234,7 @@ export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[
 	}
 );
 
-export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, Class<HTMLElement>>(
+export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, Type<HTMLElement>>(
 	(opt, constructor, context) => {
 		Components.defineView(constructor as any, opt);
 	}

@@ -1,4 +1,4 @@
-import { Component, Input, View, HostListener } from '@ibyar/aurora';
+import { Component, Input, HostListener, view } from '@ibyar/aurora';
 import { AddNoteDirective } from '../directive/add-note.directive.js';
 import { NotifyUserDirective } from '../directive/notify-user.directive.js';
 import { TimeDirective } from '../directive/time.directive.js';
@@ -185,8 +185,7 @@ export class PersonApp {
 	@Input()
 	name = 'alice';
 
-	@View()
-	view: HTMLElement;
+	view = view();
 
 	people: Person[] = [
 		{ name: 'alice', age: 39 },

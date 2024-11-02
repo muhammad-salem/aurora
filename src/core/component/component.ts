@@ -1,5 +1,5 @@
 import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
-import type { Class, TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
 	findByTagName, Tag, htmlParser, templateParser,
@@ -19,30 +19,32 @@ import {
 } from '../annotation/options.js';
 import {
 	ChildRef, HostBindingRef, InputPropertyRef,
-	ListenerRef, OutputPropertyRef, PropertyRef
+	ListenerRef, OutputPropertyRef, PropertyRef,
+	ReflectComponents
 } from './reflect.js';
 import { deserializeExpressionNodes } from '../html/deserialize.js';
 import { parseHostNode } from '../html/host.js';
 import { provide } from '../di/inject.js';
+import { RuntimeClassMetadata, SignalRuntimeMetadata } from '../signals/runtime.js';
 
 
 export interface InjectableRef<T> {
-	provideIn: TypeOf<CustomElementConstructor> | 'root' | 'platform' | 'any';
-	modelClass: TypeOf<T>;
+	provideIn: Type<CustomElementConstructor> | 'root' | 'platform' | 'any';
+	modelClass: Type<T>;
 	name: string;
 }
 
 export interface PipeRef<T> {
 	name: string;
 	asynchronous?: boolean;
-	modelClass: TypeOf<T>;
+	modelClass: Type<T>;
 }
 export interface DirectiveRef<T> {
 	selector: string;
 	exportAs?: string;
 	zone?: ZoneType;
 
-	modelClass: TypeOf<StructuralDirective> | TypeOf<AttributeDirective>;
+	modelClass: Type<StructuralDirective> | Type<AttributeDirective>;
 
 	inputs: PropertyRef[];
 	outputs: PropertyRef[];
@@ -52,6 +54,7 @@ export interface DirectiveRef<T> {
 	hostListeners: ListenerRef[];
 	hostBindings: HostBindingRef[];
 	viewBindings?: DomElementNode;
+	signals: SignalRuntimeMetadata[];
 }
 
 export interface ComponentRef<T> {
@@ -63,7 +66,7 @@ export interface ComponentRef<T> {
 	extendCustomElement: boolean;
 
 	viewClass: MetadataClass<HTMLComponent<T>> & CustomElementConstructor;
-	modelClass: TypeOf<T>;
+	modelClass: Type<T>;
 
 	inputs: InputPropertyRef[];
 	outputs: OutputPropertyRef[];
@@ -79,8 +82,9 @@ export interface ComponentRef<T> {
 	isShadowDom: boolean;
 	shadowRootInit: ShadowRootInit;
 	disabledFeatures?: ('internals' | 'shadow')[];
-	formAssociated: boolean | TypeOf<ValueControl<any>>;
+	formAssociated: boolean | Type<ValueControl<any>>;
 	zone?: ZoneType;
+	signals: SignalRuntimeMetadata[];
 }
 
 const DEFAULT_SHADOW_ROOT_INIT: ShadowRootInit = { mode: 'open', delegatesFocus: false, slotAssignment: 'named' };
@@ -106,6 +110,10 @@ export class Components {
 
 
 	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
+		if (!(opts as any as DirectiveRef<Type<any>>).signals) {
+			(opts as any as DirectiveRef<Type<any>>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
+		}
+		this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<Type<any>>, metadata);
 		Object.assign(metadata, opts);
 		if (metadata.hostListeners?.length || metadata.hostBindings?.length) {
 			const hostNode = parseHostNode({
@@ -132,13 +140,13 @@ export class Components {
 		});
 	}
 
-	static definePipe<T extends Class>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
+	static definePipe<T extends Type<any>>(modelClass: MetadataClass<T>, opts: PipeOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		classRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineInjectable<T extends Class>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
+	static defineInjectable<T extends Type<any>>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
@@ -146,11 +154,14 @@ export class Components {
 		provide(modelClass);
 	}
 
-	static defineComponent<T extends Class>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+	static defineComponent<T extends Type<any>>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
+		if (!(opts as any as ComponentRef<T>).signals) {
+			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
+		}
+		this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
 		componentRef.extend = findByTagName(opts.extend);
 		componentRef.extendCustomElement = !!opts.extend && isValidCustomElementName(opts.extend);
-
 		if (typeof componentRef.template === 'string') {
 			if (componentRef.styles) {
 				const template = `<style>${componentRef.styles}</style>${componentRef.template}`;
@@ -254,6 +265,35 @@ export class Components {
 			viewClass,
 			definition,
 		);
+	}
+
+	private static scanRuntimeSignals<T extends Type<any>>(modelClass: MetadataClass<T>, opts: { signals: SignalRuntimeMetadata[] }, metadata: MetadataContext) {
+		if (!opts.signals) {
+			return;
+		}
+		const signals = opts.signals;
+		signals.filter(item => item.signal === 'input')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addInput(metadata, option.name, option.alias));
+		signals.filter(item => item.signal === 'formValue')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addInput(metadata, option.name, 'view'));
+		signals.filter(item => item.signal === 'output')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addOutput(metadata, option.name, option.alias, {}));
+		signals.filter(item => item.signal === 'model')
+			.flatMap(item => item.options)
+			.forEach(option => {
+				ReflectComponents.addInput(metadata, option.name, option.alias);
+				ReflectComponents.addOutput(metadata, option.name, option.alias, {});
+			});
+		signals.filter(item => item.signal === 'view')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));
+
+		signals.filter(item => item.signal === 'viewChild')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addViewChild(metadata, option.name, 'ɵSignal', {}));
 	}
 
 }

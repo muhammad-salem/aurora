@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, } from '@ibyar/aurora';
+import { ChangeDetectorRef, Component, inject, OnInit, } from '@ibyar/aurora';
 
 @Component({
 	selector: 'fetch-app',
@@ -26,7 +26,7 @@ export class FetchApp implements OnInit {
 	list: number[] = [];
 	selected: number = 1;
 
-	constructor(private _cd: ChangeDetectorRef) { }
+	private _cd = inject(ChangeDetectorRef);
 
 	onInit(): void {
 		fetch('https://raw.githubusercontent.com/ibyar/aurora/dev/example/src/fetch/data.json')

@@ -1,5 +1,6 @@
-import type { TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import { MetadataClass, Metadata } from '@ibyar/decorators';
+import { getReactiveNode, Signal } from '@ibyar/expressions';
 import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -9,7 +10,7 @@ import { baseFactoryView } from './base-view.js';
 import { baseFormFactoryView } from './form-view.js';
 import { isComponentModelClass } from './utils.js';
 
-const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>>>();
+const FACTORY_CACHE = new WeakMap<Type<HTMLElement>, Type<HTMLComponent<any>>>();
 
 /**
  * 
@@ -17,16 +18,16 @@ const FACTORY_CACHE = new WeakMap<TypeOf<HTMLElement>, TypeOf<HTMLComponent<any>
  * @param componentRef 
  */
 export function initCustomElementView<T extends Object>(modelClass: MetadataClass<T>, componentRef: ComponentRef<T>): MetadataClass<HTMLComponent<T>> {
-	const htmlParent = componentRef.extend.classRef as TypeOf<HTMLElement>;
+	const htmlParent = componentRef.extend.classRef as Type<HTMLElement>;
 	const viewClassName = buildViewClassNameFromSelector(componentRef.selector);
 	const htmlViewClassName = `HTML${viewClassName}Element`;
 
-	let parentClass: TypeOf<HTMLComponent<T>>;
+	let parentClass: Type<HTMLComponent<T>>;
 	if (componentRef.extendCustomElement) {
-		parentClass = componentRef.extend.classRef as TypeOf<HTMLComponent<T>>;
+		parentClass = componentRef.extend.classRef as Type<HTMLComponent<T>>;
 	} else {
 		if (FACTORY_CACHE.has(htmlParent)) {
-			parentClass = FACTORY_CACHE.get(htmlParent) as TypeOf<HTMLComponent<T>>;
+			parentClass = FACTORY_CACHE.get(htmlParent) as Type<HTMLComponent<T>>;
 		} else {
 			parentClass = componentRef.formAssociated ? baseFormFactoryView<T>(htmlParent) : baseFactoryView<T>(htmlParent);
 			FACTORY_CACHE.set(htmlParent, parentClass);
@@ -38,7 +39,7 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 			public static allAttributes: string[] = [];
 			public static disabledFeatures: string[] = [];
 			public static observedAttributes: string[] = [];
-			constructor(optionalComponentRef?: ComponentRef<T>, modelConstructor?: TypeOf<T>) {
+			constructor(optionalComponentRef?: ComponentRef<T>, modelConstructor?: Type<T>) {
 				super(optionalComponentRef ?? componentRef, modelConstructor ?? modelClass);
 			}
 		}
@@ -47,10 +48,21 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	componentRef.inputs.forEach((input) => {
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				return this._modelScope.get(input.modelProperty);
+				const value = this._modelScope.get(input.modelProperty);
+				const signal = getReactiveNode(value);
+				if (signal) {
+					return signal.get();
+				}
+				return value;
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
-				this._modelScope.set(input.modelProperty, value);
+				const model = this._modelScope.get(input.modelProperty);
+				const signal = getReactiveNode(model);
+				if (signal instanceof Signal) {
+					signal.set(value);
+				} else {
+					this._modelScope.set(input.modelProperty, value);
+				}
 			},
 			enumerable: true,
 		});
@@ -112,16 +124,16 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	if (!Reflect.has(window, htmlViewClassName)) {
 		Reflect.set(window, htmlViewClassName, viewClass);
 	}
-	return viewClass as TypeOf<HTMLComponent<T>> as MetadataClass;
+	return viewClass as Type<HTMLComponent<T>> as MetadataClass;
 }
 
 export type ComponentModelClass =
 	MetadataClass
 	& { [key: string]: string }
 	& { component: { [key: string]: string } }
-	& { [key: string]: TypeOf<HTMLComponent<any>> };
+	& { [key: string]: Type<HTMLComponent<any>> };
 
-export function addViewToModelClass<T extends object>(modelClass: MetadataClass<T>, selector: string, viewClass: TypeOf<HTMLComponent<T>>, htmlViewClassName: string) {
+export function addViewToModelClass<T extends object>(modelClass: MetadataClass<T>, selector: string, viewClass: Type<HTMLComponent<T>>, htmlViewClassName: string) {
 	Object.defineProperty(modelClass, htmlViewClassName, { value: viewClass });
 
 	if (!isComponentModelClass(modelClass)) {

@@ -1,5 +1,5 @@
 import type { MetadataClass } from '@ibyar/decorators';
-import type { TypeOf } from '../utils/typeof.js';
+import type { Type } from '../utils/typeof.js';
 import { ReactiveScopeControl } from '@ibyar/expressions';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
@@ -89,7 +89,7 @@ export abstract class ViewContainerRef {
 	 * @param viewClass the generated aurora view class
 	 * @param options 
 	 */
-	abstract createComponent<C extends {}>(viewClass: TypeOf<HTMLComponent<C>>, options?: IndexOptions): C;
+	abstract createComponent<C extends {}>(viewClass: Type<HTMLComponent<C>>, options?: IndexOptions): C;
 	/**
 	 * Instantiates a single component and inserts its host view into this container.
 	 *
@@ -102,7 +102,7 @@ export abstract class ViewContainerRef {
 	 *
 	 * @returns The new `HTMLComponent` which contains the component instance and the host view.
 	 */
-	abstract createComponent<C extends {}>(componentType: TypeOf<C>, options?: ViewContainerComponentOptions): C;
+	abstract createComponent<C extends {}>(componentType: Type<C>, options?: ViewContainerComponentOptions): C;
 
 
 	/**
@@ -118,7 +118,7 @@ export abstract class ViewContainerRef {
 	 * @param viewClass the generated aurora view class
 	 * @param options 
 	 */
-	abstract createElement<C extends HTMLElement>(htmlElementClass: TypeOf<C>, options?: HTMLElementOptions): C;
+	abstract createElement<C extends HTMLElement>(htmlElementClass: Type<C>, options?: HTMLElementOptions): C;
 
 	/**
 	 * create a text node and insert to the view
@@ -244,13 +244,13 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
 	override createComponent<C extends {}>(viewClass: MetadataClass<HTMLComponent<C>>, options?: IndexOptions): C;
 	override createComponent<C extends {}>(componentType: MetadataClass<C>, options?: ViewContainerComponentOptions): C;
-	override createComponent<C extends {}>(arg0: string | MetadataClass<C> | TypeOf<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
-		let ViewClass: TypeOf<HTMLComponent<C>>;
+	override createComponent<C extends {}>(arg0: string | MetadataClass<C> | Type<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
+		let ViewClass: Type<HTMLComponent<C>>;
 		if (typeof arg0 === 'string') {
-			ViewClass = customElements.get(arg0) as TypeOf<HTMLComponent<C>>;
+			ViewClass = customElements.get(arg0) as Type<HTMLComponent<C>>;
 		} else if (typeof arg0 === 'function') {
 			if (Reflect.has(arg0, 'observedAttributes')) {
-				ViewClass = arg0 as TypeOf<HTMLComponent<C>>;
+				ViewClass = arg0 as Type<HTMLComponent<C>>;
 			} else {
 				const componentType = arg0 as MetadataClass<C>;
 				const defaultTagName = ReflectComponents.getMetaDate(componentType)?.selector;
@@ -271,7 +271,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 
 	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
 	override createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementDeprecatedTagNameMap[K];
-	override createElement<C extends HTMLElement>(arg0: string | TypeOf<C>, options?: HTMLElementOptions): C {
+	override createElement<C extends HTMLElement>(arg0: string | Type<C>, options?: HTMLElementOptions): C {
 		let element: C;
 		if (typeof arg0 === 'string') {
 			element = document.createElement(arg0, { is: options?.is }) as C;

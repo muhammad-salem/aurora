@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, TypeOf } from '@ibyar/core';
+import { AttributeDirective, Directive, Type } from '@ibyar/core';
 import type { AsyncValidator, Validator } from './validators.js';
 
 export abstract class AbstractControl<T> {
@@ -31,13 +31,13 @@ export abstract class AbstractControl<T> {
 		this.removeValidatorByArray(asyncValidator, this.asyncValidators);
 	}
 	private addValidatorByArray<V = Validator | AsyncValidator>(validator: V, list: V[]): void {
-		const found = list.some(this.isFound(validator, (validator as any).constructor as TypeOf<V>));
+		const found = list.some(this.isFound(validator, (validator as any).constructor as Type<V>));
 		if (found) {
 			return;
 		}
 		list.push(validator);
 	}
-	private isFound<V = Validator | AsyncValidator>(validator: V, classConstructor?: TypeOf<V>) {
+	private isFound<V = Validator | AsyncValidator>(validator: V, classConstructor?: Type<V>) {
 		if (classConstructor) {
 			return (v: V) => v === validator || v instanceof classConstructor;
 		}

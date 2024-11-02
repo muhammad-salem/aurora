@@ -1,7 +1,23 @@
-import { Component, OnInit } from '@ibyar/aurora';
+import { Component, inject, OnInit } from '@ibyar/aurora';
 import { FormBuilder, FormGroup, Validators } from '@ibyar/forms';
 
-type User = { name: string, age: number };
+
+type Parent = {
+	name: string,
+	age: number,
+};
+
+type Friend = {
+	name: string,
+	age: number,
+};
+
+type User = {
+	name: string,
+	age: number,
+	parent: Parent;
+	friends: Friend[];
+};
 
 @Component({
 	selector: 'form-group-component',
@@ -18,18 +34,26 @@ type User = { name: string, age: number };
 })
 export class FormGroupComponent implements OnInit {
 
-	private _fb = new FormBuilder();
+	private _fb = inject(FormBuilder);
 
 	group: FormGroup<any>;
 
 	onInit(): void {
-		this.group = this._fb.group({
+		this.group = this._fb.group<User>({
 			name: this._fb.control('user name', { validators: [Validators.required()] }),
-			age: this._fb.control(15)
+			age: this._fb.control(15),
+			parent: this._fb.group({
+				name: this._fb.control('parent name', { validators: [Validators.required()] }),
+				age: this._fb.control(35),
+			}),
+			friends: this._fb.array([
+				this._fb.group({
+					name: this._fb.control('friend name', { validators: [Validators.required()] }),
+					age: this._fb.control(15),
+				})
+			]),
 		});
 		console.log('group', this.group);
-
 	}
-
 
 }

@@ -3,7 +3,7 @@ import type {
 	SourceLocation, VisitNodeType
 } from './expression.js';
 import type { Stack } from '../scope/stack.js';
-import { AbstractExpressionNode } from './abstract.js';
+import { AbstractExpressionNode, ReturnValue } from './abstract.js';
 import { Deserializer } from './deserialize/deserialize.js';
 
 export type ProgramSourceType = 'script' | 'module';
@@ -32,7 +32,11 @@ export class Program extends AbstractExpressionNode {
 		throw new Error(`Program#set() has no implementation.`);
 	}
 	get(stack: Stack): any {
-		return this.body.map(statement => statement.get(stack)).at(-1);
+		let value = this.body.map(statement => statement.get(stack)).at(-1);
+		if (value instanceof ReturnValue) {
+			value = value.getValue();
+		}
+		return value;
 	}
 
 	dependency(computed?: true): ExpressionNode[] {
