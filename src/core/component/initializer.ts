@@ -94,3 +94,21 @@ export function view<T, V extends keyof HTMLElementTagNameMap>(type: Type<T>, ex
 export function view(): any {
 	return inject(VIEW_TOKEN)!;
 }
+
+
+class ViewChildSignal<T> extends Signal<T> {
+	public selector: Type<T> | HTMLElement | keyof HTMLElementTagNameMap;
+}
+
+export function idViewChildSignal<T = any>(signal: any): signal is ViewChildSignal<T> {
+	return signal instanceof ViewChildSignal;
+}
+
+export function viewChild<T>(selector: Type<T>): Signal<HTMLComponent<T>>;
+export function viewChild<T extends HTMLElement>(selector: Type<T>): Signal<T>;
+export function viewChild<T extends keyof HTMLElementTagNameMap>(selector: T): Signal<HTMLElementTagNameMap[T]>;
+export function viewChild<T>(selector: Type<T> | HTMLElement | keyof HTMLElementTagNameMap): Signal<T> {
+	const signal = signalScopeFactory.signal(undefined, ViewChildSignal) as ViewChildSignal<T>;
+	signal.selector = selector;
+	return signal;
+}
