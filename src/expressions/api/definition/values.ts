@@ -40,7 +40,7 @@ export class Identifier extends AbstractExpressionNode implements DeclarationExp
 	findScope<T extends object>(stack: Stack, scope: Scope<any>): Scope<T>;
 	findScope<T extends object>(stack: Stack, scope?: Scope<any>): Scope<T> | undefined {
 		if (scope) {
-			return scope.getInnerScope(this.name);
+			return scope.getInnerScope(this.name) ?? scope;
 		}
 		scope = stack.findScope(this.name);
 		return scope.getInnerScope(this.name) ?? scope;
