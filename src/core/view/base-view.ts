@@ -10,7 +10,7 @@ import {
 } from '../component/lifecycle.js';
 import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
-import { EventEmitter, OutputEventEmitter } from '../component/events.js';
+import { EventEmitter } from '../component/events.js';
 import { ComponentRender } from './render.js';
 import { getRootZone } from '../zone/bootstrap.js';
 import { AbstractAuroraZone, AuroraZone, ProxyAuroraZone } from '../zone/zone.js';
@@ -19,7 +19,7 @@ import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
 import { forkProvider, addProvider, removeProvider } from '../di/inject.js';
-import { VIEW_TOKEN } from '../component/initializer.js';
+import { isOutputSignal, VIEW_TOKEN } from '../component/initializer.js';
 import { InjectionProvider } from '../di/provider.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElement>): Type<HTMLComponent<T>> {
@@ -104,22 +104,20 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 			componentRef.outputs.forEach(output => {
 				const event = model[output.modelProperty as keyof T];
-				if (event instanceof EventEmitter) {
+				if (event instanceof EventEmitter || isOutputSignal(event)) {
+					const options = isOutputSignal(event) ? event.options : output.options;
 					event.subscribe((value: any) => {
 						const event = new CustomEvent(
 							output.viewAttribute,
 							{
 								detail: value,
 								cancelable: false,
-								bubbles: output.options?.bubbles,
-								composed: output.options?.bubbles,
+								bubbles: options?.bubbles,
+								composed: options?.bubbles,
 							},
 						);
 						this.dispatchEvent(event);
 					})
-				} else if (event instanceof OutputEventEmitter) {
-					Reflect.set(event, 'view', this);
-					Reflect.set(event, 'name', output.modelProperty);
 				}
 			});
 			// if property of the model has view decorator
