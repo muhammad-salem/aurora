@@ -290,6 +290,10 @@ export class Components {
 		signals.filter(item => item.signal === 'view')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));
+
+		signals.filter(item => item.signal === 'viewChild')
+			.flatMap(item => item.options)
+			.forEach(option => ReflectComponents.addViewChild(metadata, option.name, 'ɵSignal', {}));
 	}
 
 }
