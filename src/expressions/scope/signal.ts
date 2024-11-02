@@ -24,7 +24,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createSignal<T, S extends typeof Signal<T>>(initValue: T, signalType = Signal as S): InstanceType<S> {
+	createSignal<T, S extends typeof Signal<T>>(initValue?: T, signalType = Signal as S): InstanceType<S> {
 		const signal = new signalType(this, this.getContext().length, initValue) as InstanceType<S>;
 		signalType.bindNode(signal);
 		return signal;
@@ -258,7 +258,7 @@ export class Signal<T> extends ReactiveNode<T> {
 		return fn as WritableSignal<T>;
 	}
 
-	constructor(scope: SignalScope, index: number, initValue: T) {
+	constructor(scope: SignalScope, index: number, initValue?: T) {
 		super(scope, index);
 		scope.set(index, initValue);
 	}
