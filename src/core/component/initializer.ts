@@ -4,11 +4,11 @@ import {
 	Signal, WritableSignal
 } from '@ibyar/expressions';
 import { signalScopeFactory } from '../signals/factory.js';
-import { OutputEventEmitter } from './events.js';
 import { InjectionToken } from '../di/provider.js';
 import { inject } from '../di/inject.js';
 import { Type } from '../utils/typeof.js';
 import { HTMLComponent } from './custom-element.js';
+import { OutputEventInit } from '../annotation/options.js';
 
 
 export interface InputOptions<T, TransformT> {
@@ -51,10 +51,32 @@ function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): I
 input.required = requiredInput;
 
 
-type OutputOption = EventInit & { alias?: string };
+type OutputOption = OutputEventInit & { alias?: string };
 
-export function output<T>(opts?: OutputOption): OutputEventEmitter<T> {
-	return new OutputEventEmitter<T>(opts);
+
+
+export interface OutputSignal<T> extends Signal<T> {
+	set: never;
+	update: never;
+}
+
+export class OutputSignal<T> extends Signal<T> {
+	public options?: OutputOption;
+
+	emit(value: T) {
+		this.scope.set(this.index, value);
+	}
+}
+
+
+export function isOutputSignal<T = any>(signal: any): signal is OutputSignal<T> {
+	return signal instanceof OutputSignal;
+}
+
+export function output<T>(opts?: OutputOption): OutputSignal<T> {
+	const signal = signalScopeFactory.signal(undefined, OutputSignal) as OutputSignal<T>;
+	signal.options = opts;
+	return signal;
 }
 
 interface ModelOptions {
@@ -96,7 +118,7 @@ export function view(): any {
 }
 
 
-class ViewChildSignal<T> extends Signal<T> {
+export class ViewChildSignal<T> extends Signal<T> {
 	public selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap;
 }
 
