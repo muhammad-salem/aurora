@@ -6,41 +6,13 @@ import {
 } from '@ibyar/aurora';
 import { debounceTime, distinctUntilChanged, fromEvent, map } from 'rxjs';
 
-const styles = `
-	.content {
-		flex: 1;
-		display: flex;
-	}
-
-	.box {
-		display: flex;
-		min-height: min-content;
-	}
-
-	.column {
-		padding: 20px;
-		border-right: 1px solid #999;
-		overflow-y: auto;
-		max-width: 700px;
-	}
-
-	.column1 {
-		width: 200px;
-	}
-
-	textarea {
-		height: 750px;
-		overflow: unset !important;
-	}
-`;
-
 @Component({
 	selector: 'expression-editor',
 	zone: 'manual',
 	template: `
 		<div class="content w-100 h-100">
 			<div class="box">
-				<div class="column column1">
+				<div class="column column-200">
 					<div class="h-25 d-flex flex-column d-flex justify-content-start gap-1">
 						<button class="btn"
 							*for="let name of examples"
@@ -71,7 +43,33 @@ const styles = `
 			</div>
 		</div>
 		`,
-	styles: styles,
+	styles: `
+		.content {
+			flex: 1;
+			display: flex;
+		}
+
+		.box {
+			display: flex;
+			min-height: min-content;
+		}
+
+		.column {
+			padding: 20px;
+			border-right: 1px solid #999;
+			overflow-y: auto;
+			max-width: 700px;
+		}
+
+		.column-200 {
+			width: 200px;
+		}
+
+		textarea {
+			height: 750px;
+			overflow: unset !important;
+		}
+	`,
 })
 export class ExpressionEditorComponent implements OnInit, AfterViewInit {
 
