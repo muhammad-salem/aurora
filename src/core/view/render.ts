@@ -17,7 +17,7 @@ import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createDestroySubscription } from '../context/subscription.js';
 import { EventEmitter } from '../component/events.js';
-import { idViewChildSignal } from '../component/initializer.js';
+import { isViewChildSignal } from '../component/initializer.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -314,7 +314,7 @@ export class ComponentRender<T extends object> {
 			} else {
 				this.componentRef.viewChild.filter(child => child.selector === 'ɵSignal').forEach(child => {
 					const signal = this.view._model[child.modelName];
-					if (idViewChildSignal(signal) && signal.selector == child.selector) {
+					if (isViewChildSignal(signal) && signal.selector == child.selector) {
 						signal.set(view);
 					}
 				});

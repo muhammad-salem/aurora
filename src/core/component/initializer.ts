@@ -100,7 +100,7 @@ class ViewChildSignal<T> extends Signal<T> {
 	public selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap;
 }
 
-export function idViewChildSignal<T = any>(signal: any): signal is ViewChildSignal<T> {
+export function isViewChildSignal<T = any>(signal: any): signal is ViewChildSignal<T> {
 	return signal instanceof ViewChildSignal;
 }
 
