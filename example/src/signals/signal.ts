@@ -78,6 +78,8 @@ export class SimpleCounter implements OnInit, OnDestroy {
 
 	readonly event = output<string>();
 
+	logEvents = computed(() => console.log('output event:', this.event.get()));
+
 	l = lazy(() => this.x.get() * this.y.get());
 	e = computed(() => {
 		if (this.a.get()) {
@@ -111,6 +113,7 @@ export class SimpleCounter implements OnInit, OnDestroy {
 			'a', this.a.get(),
 			'g', untracked(this.g),
 			'h', untracked(this.h),
+			'event', this.event.get(),
 		);
 	});
 	private interval: any;
