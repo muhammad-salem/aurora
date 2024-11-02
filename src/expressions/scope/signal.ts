@@ -24,15 +24,15 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createSignal<T>(initValue: T): Signal<T> {
-		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		Signal.bindNode(signal);
+	createSignal<T, S extends typeof Signal<T>>(initValue: T, signalType = Signal as S): InstanceType<S> {
+		const signal = new signalType(this, this.getContext().length, initValue) as InstanceType<S>;
+		signalType.bindNode(signal);
 		return signal;
 	}
 
-	createSignalFn<T>(initValue: T) {
-		const signal = new Signal<T>(this, this.getContext().length, initValue);
-		return Signal.toReactiveSignal(signal);
+	createSignalFn<T, S extends typeof Signal<T>>(initValue: T, signalType = Signal as S) {
+		const signal = new signalType(this, this.getContext().length, initValue);
+		return signalType.toReactiveSignal(signal);
 	}
 
 	createLazy<T>(updateFn: () => T): Lazy<T> {
