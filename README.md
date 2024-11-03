@@ -173,7 +173,7 @@ yarn add @ibyar/aurora
 - [x] Lifecycle
 - [x] Signals
 - [x] @Input
-- [x] @Output
+- [x] output signal
 - [x] @View
 - [x] @HostListener [Supported by Component and Attribute directive].
 - [x] @HostBinding [Supported by Component and Attribute directive].

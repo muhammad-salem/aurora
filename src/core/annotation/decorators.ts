@@ -53,43 +53,6 @@ export function FormValue<This, Value>() {
 }
 
 /**
- * @deprecated since v2.4.0, use `output` function instead.
- */
-export function Output<This, Value>(options?: OutputOptions): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void;
-
-/**
- * @deprecated since v2.4.0, use `output` function instead.
- */
-export function Output<This, Value>(name?: string, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void;
-
-/**
- * @deprecated since v2.4.0, use `output` function instead.
- */
-export function Output<This, Value>(name?: string | OutputOptions, options?: OutputEventInit): (value: undefined, context: ClassFieldDecoratorContext<This, Value>) => void {
-	const eventType = typeof name === 'object' ? name.name : name;
-	const eventOpts = typeof name === 'object' ? name : options;
-	return makeClassMemberDecorator<undefined, ClassFieldDecoratorContext<This, Value>>(
-		(value, context, metadata) => {
-			if (typeof context.name !== 'string') {
-				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
-			}
-			if (context.private) {
-				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
-			}
-			ReflectComponents.addOutput(
-				metadata,
-				context.name,
-				eventType || context.name,
-				{
-					bubbles: eventOpts?.bubbles ?? false,
-					composed: eventOpts?.composed ?? false
-				}
-			);
-		}
-	);
-}
-
-/**
  * @deprecated since v2.4.0, use `view` function instead.
  */
 export function View<This, Value>() {

@@ -1,7 +1,7 @@
 import {
 	Component, EventEmitter, HostBinding,
 	HostListener, Injectable, Input, OnInit,
-	Output, view, ViewChild, ViewChildren, inject,
+	output, view, ViewChild, ViewChildren, inject,
 } from '@ibyar/aurora';
 
 
@@ -74,8 +74,8 @@ export class PersonView implements OnInit {
 		age: 24
 	};
 
-	@Output() open: EventEmitter<any> = new EventEmitter();
-	@Output('select', { bubbles: true }) _select: EventEmitter<Person> = new EventEmitter();
+	open = output<string>();
+	_select = output<Person>({ alias: '_select', bubbles: true });
 
 
 	className: string = 'p1 m1';
@@ -168,8 +168,7 @@ export class PersonEdit {
 	@Input()
 	show = true;
 
-	@Output()
-	save = new EventEmitter<Person>();
+	save = output<Person>();
 
 	private logger = inject(LogService);
 

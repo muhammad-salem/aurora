@@ -142,7 +142,7 @@ export interface ComponentOptions<T = Type<any>> {
 	 * ```typescript
 	 *		@Input('personage') personAge: number;
 	 *		@Input('propname') propName: string;
-	 *		@Output('savebuttonclick') saveButtonClick = new EventEmitter<Persons>();
+	 *		saveButtonClick = output<Persons>({alias: 'savebuttonclick'});
 	 *		@View('personform') personForm: HTMLFormElement;
 	 * ```
 	 * 

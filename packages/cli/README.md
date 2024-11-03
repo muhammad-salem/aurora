@@ -158,7 +158,7 @@ export default = {
 The Ibyar CLI has a typescript transformer to generate a definitions for you component
 
 ```ts
-import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
+import { Component, EventEmitter, Input, output } from '@ibyar/aurora';
 
 
 @Component({
@@ -177,8 +177,7 @@ export class PersonEdit {
 	@Input()
 	show = true;
 
-	@Output()
-	save = new EventEmitter<Person>();
+	save = output<Person>();
 
 	printPerson() {
 		console.log(this.person);
