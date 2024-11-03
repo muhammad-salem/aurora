@@ -174,7 +174,7 @@ yarn add @ibyar/aurora
 - [x] Signals
 - [x] @Input
 - [x] output signal
-- [x] @View
+- [x] view signal
 - [x] @HostListener [Supported by Component and Attribute directive].
 - [x] @HostBinding [Supported by Component and Attribute directive].
 - [x] @ViewChild

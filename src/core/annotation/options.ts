@@ -143,7 +143,7 @@ export interface ComponentOptions<T = Type<any>> {
 	 *		@Input('personage') personAge: number;
 	 *		@Input('propname') propName: string;
 	 *		saveButtonClick = output<Persons>({alias: 'savebuttonclick'});
-	 *		@View('personform') personForm: HTMLFormElement;
+	 *		readonly view = view(HTMLFormElement);
 	 * ```
 	 * 
 	 * any app root element as 
@@ -275,8 +275,7 @@ export interface ComponentOptions<T = Type<any>> {
 	 * })
 	 * export class CustomInputElement {
 	 * 	
-	 *  @View()
-	 * 	view: HTMLInputElement;
+	 * 	view = view<HTMLInputElement>();
 	 * 
 	 * 	onInit() {
 	 * 		this.view.type = 'number';
