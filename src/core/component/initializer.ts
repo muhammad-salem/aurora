@@ -68,9 +68,40 @@ function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): I
 input.required = requiredInput;
 
 
+interface ModelOptions {
+	alias?: string;
+}
+
+export class ModelSignal<T> extends Signal<T> {
+	options?: ModelOptions & { required?: boolean };
+}
+
+
+export function isModelSignal<T = any>(signal: any): signal is ModelSignal<T> {
+	return signal instanceof ModelSignal;
+}
+
+
+export function model<T>(): ModelSignal<T>;
+export function model<T>(opts?: ModelOptions): ModelSignal<T>;
+export function model<T>(opts?: ModelOptions): ModelSignal<T> {
+	const signal = signalScopeFactory.signal(undefined, ModelSignal) as ModelSignal<T>;
+	signal.options = Object.assign(opts ?? {}, { required: false });
+	return signal;
+}
+
+function requiredModel<T>(): ModelSignal<T>;
+function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
+	const signal = signalScopeFactory.signal(undefined, ModelSignal) as ModelSignal<T>;
+	signal.options = Object.assign(opts ?? {}, { required: true });
+	return signal;
+}
+
+model.required = requiredModel;
+
+
+
 type OutputOption = OutputEventInit & { alias?: string };
-
-
 
 export interface OutputSignal<T> extends Signal<T> {
 	set: never;
@@ -95,32 +126,6 @@ export function output<T>(opts?: OutputOption): OutputSignal<T> {
 	signal.options = opts;
 	return signal;
 }
-
-interface ModelOptions {
-	alias?: string;
-}
-
-export interface ModelSignal<T> extends WritableSignal<T> {
-	subscribe(callback: (value: T) => void): ScopeSubscription<T>;
-}
-
-export function model<T>(): ModelSignal<T>;
-export function model<T>(opts?: ModelOptions): ModelSignal<T>;
-export function model<T>(opts?: ModelOptions): ModelSignal<T> {
-	const signal = signalScopeFactory.signalFn(undefined) as ModelSignal<T>;
-	const node = getReactiveNode(signal);
-	if (node) {
-		signal.subscribe = node.subscribe.bind(signal);
-	}
-	return signal;
-}
-
-function requiredModel<T>(): ModelSignal<T>;
-function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
-	return model(opts);
-}
-
-model.required = requiredModel;
 
 
 export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
