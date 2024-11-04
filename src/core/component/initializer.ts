@@ -1,8 +1,4 @@
-import {
-	getReactiveNode,
-	ScopeSubscription,
-	Signal, WritableSignal
-} from '@ibyar/expressions';
+import { Signal } from '@ibyar/expressions';
 import { signalScopeFactory } from '../signals/factory.js';
 import { InjectionToken } from '../di/provider.js';
 import { inject } from '../di/inject.js';
@@ -32,7 +28,7 @@ export interface InputWithoutTransform<T> extends InputWithTransform<T, T> {
 }
 
 export class InputSignal<T, TransformT = T> extends Signal<T> implements InputWithoutTransform<T> {
-	options?: InputOptions<T, TransformT>;
+	options?: InputOptions<T, TransformT> & { required?: boolean };
 
 	override set(value: T): void;
 	override set(value: TransformT): void;
@@ -54,7 +50,7 @@ export function input<T, TransformT = T>(initialValue: T, opts: InputOptionsWith
 export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT>;
 export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
 	const signal = signalScopeFactory.signal(initialValue, InputSignal) as InputSignal<T, TransformT>;
-	signal.options = opts;
+	signal.options = Object.assign(opts ?? {}, { required: false });
 	return signal;
 }
 
@@ -62,7 +58,9 @@ function requiredInput<T>(): InputWithoutTransform<T>;
 function requiredInput<T>(opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
 function requiredInput<T, TransformT = T>(opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
 function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
-	return input(undefined as T, opts);
+	const signal = signalScopeFactory.signal(undefined, InputSignal) as InputSignal<T, TransformT>;
+	signal.options = Object.assign(opts ?? {}, { required: true });
+	return signal;
 }
 
 input.required = requiredInput;
