@@ -7,7 +7,7 @@ import { Components } from '../component/component.js';
 import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml } from '../utils/path.js';
 import {
-	ChildOptions, ComponentOptions, DirectiveOptions,
+	ComponentOptions, DirectiveOptions,
 	PipeOptions, InjectableOptions
 } from './options.js';
 
@@ -47,23 +47,6 @@ export function FormValue<This, Value>() {
 				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
 			}
 			ReflectComponents.addInput(metadata, context.name, 'value');
-		}
-	);
-}
-
-/**
- * @deprecated since v2.4.0, use `viewChild` function instead.
- */
-export function ViewChild<This, Value>(selector: string | typeof HTMLElement | CustomElementConstructor, childOptions?: ChildOptions) {
-	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context, metadata) => {
-			if (typeof context.name !== 'string') {
-				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
-			}
-			if (context.private) {
-				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
-			}
-			ReflectComponents.addViewChild(metadata, context.name, selector, childOptions);
 		}
 	);
 }

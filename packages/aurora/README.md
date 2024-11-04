@@ -175,9 +175,9 @@ yarn add @ibyar/aurora
 - [x] @Input
 - [x] output signal
 - [x] view signal
+- [x] viewChild signal
 - [x] @HostListener [Supported by Component and Attribute directive].
 - [x] @HostBinding [Supported by Component and Attribute directive].
-- [x] @ViewChild
 - [ ] XSS (cross-site-scripting)
 
 ## Built-in Directive

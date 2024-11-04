@@ -1,7 +1,7 @@
 import {
 	Component, HostBinding, HostListener,
 	Injectable, Input, OnInit, output,
-	view, ViewChild, inject,
+	view, inject, viewChild,
 } from '@ibyar/aurora';
 
 
@@ -82,11 +82,8 @@ export class PersonView implements OnInit {
 
 	view = view();
 
-	@ViewChild(HTMLParagraphElement, { id: 'p-name' })
-	childName!: HTMLParagraphElement;
-
-	@ViewChild(HTMLParagraphElement, { id: 'p-age' })
-	childAge!: HTMLParagraphElement;
+	childName = viewChild<HTMLParagraphElement>('p-name');
+	childAge = viewChild<HTMLParagraphElement>('p-age');
 
 
 	@HostBinding('class.on')
