@@ -16,35 +16,52 @@ export interface InputOptions<T, TransformT> {
 	transform?: (v: TransformT) => T;
 }
 
-export type InputOptionsWithoutTransform<T> = Omit<InputOptions<T, T>, 'transform'> & { transform?: undefined }
+export type InputOptionsWithoutTransform<T> = Omit<InputOptions<T, T>, 'transform'>;
 
 export type InputOptionsWithTransform<T, TransformT> = Required<Pick<InputOptions<T, TransformT>, 'transform'>> & InputOptions<T, TransformT>;
 
-export interface InputSignalWithTransform<T, TransformT> extends Signal<T> {
+export interface InputWithTransform<T, TransformT = T> extends Signal<T> {
+	options?: InputOptions<T, TransformT>;
+}
+
+
+
+export interface InputWithoutTransform<T> extends InputWithTransform<T, T> {
+	options?: InputOptionsWithoutTransform<T>;
 
 }
 
-export interface InputSignal<T, TransformT = T> extends InputSignalWithTransform<T, TransformT> {
+export class InputSignal<T, TransformT = T> extends Signal<T> implements InputWithoutTransform<T> {
+	options?: InputOptions<T, TransformT>;
 
+	override set(value: T): void;
+	override set(value: TransformT): void;
+	override set(value: T | TransformT): void {
+		if (this.options?.transform) {
+			value = this.options.transform(value as TransformT);
+		}
+		super.set(value as T);
+	}
 }
 
-export function input<T>(): InputSignal<T>;
-export function input<T>(initialValue: T, opts?: InputOptionsWithoutTransform<T>): InputSignal<T>;
-export function input<T, TransformT = T>(initialValue: T, opts: InputOptionsWithTransform<T, TransformT>): InputSignalWithTransform<T, TransformT>;
-export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputSignal<T, TransformT>;
-export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputSignal<T, TransformT> {
-	const signal = signalScopeFactory.signal(initialValue);
-	if (opts?.transform) {
-		const setOriginal = signal.set;
-		signal.set = (value: T): void => setOriginal(opts!.transform!(value as any as TransformT));
-	};
-	return signal as InputSignal<T, TransformT>;
+export function isInputSignal<T = any>(signal: any): signal is InputSignal<T> {
+	return signal instanceof InputSignal;
 }
 
-function requiredInput<T>(): InputSignal<T>;
-function requiredInput<T>(opts?: InputOptionsWithoutTransform<T>): InputSignal<T>;
-function requiredInput<T, TransformT = T>(opts: InputOptionsWithTransform<T, TransformT>): InputSignalWithTransform<T, TransformT>;
-function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputSignal<T, TransformT> {
+export function input<T>(): InputWithoutTransform<T>;
+export function input<T>(initialValue: T, opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
+export function input<T, TransformT = T>(initialValue: T, opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
+export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT>;
+export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
+	const signal = signalScopeFactory.signal(initialValue, InputSignal) as InputSignal<T, TransformT>;
+	signal.options = opts;
+	return signal;
+}
+
+function requiredInput<T>(): InputWithoutTransform<T>;
+function requiredInput<T>(opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
+function requiredInput<T, TransformT = T>(opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
+function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
 	return input(undefined as T, opts);
 }
 
