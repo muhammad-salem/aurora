@@ -97,7 +97,13 @@ function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
 
 model.required = requiredModel;
 
+export class FormValueSignal<T> extends Signal<T> {
+	options?: ModelOptions & { required?: boolean };
+}
 
+export function formValue<T>(initValue?: T): FormValueSignal<T> {
+	return signalScopeFactory.signal<T, FormValueSignal<T>>(initValue, FormValueSignal);
+}
 
 type OutputOption = OutputEventInit & { alias?: string };
 
