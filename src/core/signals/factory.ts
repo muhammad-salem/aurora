@@ -1,4 +1,4 @@
-import { ReactiveNode, Signal, SignalScope } from '@ibyar/expressions';
+import { ReactiveNode, Signal, SignalScope, SignalType } from '@ibyar/expressions';
 
 type EffectFn = (onCleanup?: (clean: () => void) => void) => void;
 
@@ -17,12 +17,12 @@ class SignalScopeFactory {
 		}
 	}
 
-	signal<T, S extends typeof Signal<T>>(initValue?: T, signalType?: S): InstanceType<S> {
+	signal<T, S = Signal<T>>(initValue?: T, signalType?: SignalType<T>): S {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createSignal(initValue, signalType);
 	}
 
-	signalFn<T, S extends typeof Signal<T>>(initValue: T, signalType?: S) {
+	signalFn<T>(initValue: T, signalType?: SignalType<T>) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createSignalFn(initValue, signalType);
 	}
