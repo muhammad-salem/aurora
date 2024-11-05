@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Input } from '@ibyar/core';
+import { AttributeDirective, Directive, input } from '@ibyar/core';
 
 
 class DOMTokenListProxyHandler implements ProxyHandler<DOMTokenList> {
@@ -20,15 +20,28 @@ class DOMTokenListProxyHandler implements ProxyHandler<DOMTokenList> {
 
 const handler = new DOMTokenListProxyHandler();
 
+type ClassInput = string | Array<string> | { [className: string]: boolean };
+
+
 @Directive({
 	selector: 'class'
 })
 export class ClassDirective extends AttributeDirective {
 
+	// TODO: fix get input as signal
+	public readonly _class = input.required<void, ClassInput>({ alias: 'class', transform: rawStyle => this.setClass(rawStyle) });
+
 	private proxy?: DOMTokenList;
 
-	@Input('class')
-	set 'class'(className: string | Array<string> | { [className: string]: boolean }) {
+	set 'class'(className: ClassInput) {
+		this.setClass(className);
+	}
+
+	get 'class'() {
+		return (this.proxy ??= new Proxy(this.el.classList, handler)) as any;
+	}
+
+	private setClass(className: ClassInput) {
 		if (typeof className === 'string') {
 			const add = className.split(/[ ]{1,}/);
 			this.updateClassList(add);
@@ -40,9 +53,6 @@ export class ClassDirective extends AttributeDirective {
 			const remove = keys.filter(key => !className[key]);
 			this.updateClassList(add, remove);
 		}
-	}
-	get 'class'() {
-		return (this.proxy ??= new Proxy(this.el.classList, handler)) as any;
 	}
 
 	private updateClassList(add?: string[], remove?: string[]) {
