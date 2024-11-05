@@ -20,8 +20,6 @@ export interface InputWithTransform<T, TransformT = T> extends Signal<T> {
 	options?: InputOptions<T, TransformT>;
 }
 
-
-
 export interface InputWithoutTransform<T> extends InputWithTransform<T, T> {
 	options?: InputOptionsWithoutTransform<T>;
 }
@@ -63,37 +61,6 @@ function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): I
 }
 
 input.required = requiredInput;
-
-
-interface ModelOptions {
-	alias?: string;
-}
-
-export class ModelSignal<T> extends Signal<T> {
-	options?: ModelOptions & { required?: boolean };
-}
-
-
-export function isModelSignal<T = any>(signal: any): signal is ModelSignal<T> {
-	return signal instanceof ModelSignal;
-}
-
-export function model<T>(): ModelSignal<T>;
-export function model<T>(opts?: ModelOptions): ModelSignal<T>;
-export function model<T>(opts?: ModelOptions): ModelSignal<T> {
-	const signal = signalScopeFactory.signal(undefined, ModelSignal) as ModelSignal<T>;
-	signal.options = Object.assign(opts ?? {}, { required: false });
-	return signal;
-}
-
-function requiredModel<T>(): ModelSignal<T>;
-function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
-	const signal = signalScopeFactory.signal(undefined, ModelSignal) as ModelSignal<T>;
-	signal.options = Object.assign(opts ?? {}, { required: true });
-	return signal;
-}
-
-model.required = requiredModel;
 
 export class FormValueSignal<T> extends Signal<T> {
 	options: { required?: boolean };

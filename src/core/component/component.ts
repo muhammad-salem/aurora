@@ -281,12 +281,6 @@ export class Components {
 		signals.filter(item => item.signal === 'output')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.addOutput(metadata, option.name, option.alias, {}));
-		signals.filter(item => item.signal === 'model')
-			.flatMap(item => item.options)
-			.forEach(option => {
-				ReflectComponents.addInput(metadata, option.name, option.alias);
-				ReflectComponents.addOutput(metadata, option.name, option.alias, {});
-			});
 		signals.filter(item => item.signal === 'view')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));
