@@ -12,13 +12,16 @@ import { documentStack } from '../context/stack.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
+import { AttributeDirective, DIRECTIVE_HOST_TOKEN, NATIVE_HOST_TOKEN, StructuralDirective, SUCCESSORS_TOKEN } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
-import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
+import { ViewContainerRef, ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createDestroySubscription } from '../context/subscription.js';
 import { EventEmitter } from '../component/events.js';
 import { isViewChildSignal } from '../component/initializer.js';
 import { ChildRef } from '../component/reflect.js';
+import { addProvider, removeProvider } from '../di/inject.js';
+import { AbstractAuroraZone } from '../zone/zone.js';
+import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -137,14 +140,19 @@ export class ComponentRender<T extends object> {
 			}
 		});
 
+		const provider = this.view._provider.fork();
+		provider.setToken(DIRECTIVE_HOST_TOKEN, host);
+		provider.setType(TemplateRef, templateRef);
+		provider.setType(AbstractAuroraZone, directiveZone);
+		provider.setType(ViewContainerRef, viewContainerRef);
+		provider.setToken(SUCCESSORS_TOKEN, successorTemplateRefs);
+		addProvider(provider);
+		const signalScope = pushNewSignalScope();
+
 		const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
-		const structural = directiveZone.run(() => new StructuralDirectiveClass(
-			templateRef,
-			viewContainerRef,
-			host,
-			directiveZone,
-			successorTemplateRefs,
-		));
+		const structural = directiveZone.run(() => new StructuralDirectiveClass());
+		clearSignalScope(signalScope);
+		removeProvider(provider);
 
 		templateRef.host = structural;
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
@@ -335,13 +343,18 @@ export class ComponentRender<T extends object> {
 		subscriptions: ScopeSubscription<Context>[]) {
 		attributeDirectives?.forEach(directiveNode => {
 			const directiveRef = classRegistryProvider.getDirectiveRef<any>(directiveNode.name);
-			if (!directiveRef
-				|| !((directiveRef.modelClass.prototype instanceof AttributeDirective)
-					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
+			if (!directiveRef || !(directiveRef.modelClass.prototype instanceof AttributeDirective)) {
 				return;
 			}
 			const directiveZone = this.view._zone.fork(directiveRef.zone);
-			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
+			const provider = this.view._provider.fork();
+			provider.setToken(NATIVE_HOST_TOKEN, element);
+			provider.setType(AbstractAuroraZone, directiveZone);
+			addProvider(provider);
+			const signalScope = pushNewSignalScope();
+			const directive = directiveZone.run(() => new directiveRef.modelClass() as AttributeDirective);
+			clearSignalScope(signalScope);
+			removeProvider(provider);
 			if (directiveRef.exportAs) {
 				this.exportAsScope.set(directiveRef.exportAs, directive);
 			}
@@ -448,7 +461,7 @@ export class ComponentRender<T extends object> {
 		return subscriptions;
 	}
 	initDirective(
-		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
+		directive: StructuralDirective | AttributeDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
 		const subscriptions: ScopeSubscription<Context>[] = [];
