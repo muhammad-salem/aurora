@@ -42,6 +42,14 @@ export class InjectionProvider {
 
 	getInstance<T>(type: Type<any> | AbstractType<any>): T {
 		let instance = this.types.get(type);
+		if (instance === undefined) {
+			for (const providerType of this.types.keys()) {
+				if (type.prototype instanceof providerType) {
+					instance = this.types.get(providerType);
+					break;
+				}
+			}
+		}
 		if (instance === REQUIRE_INIT) {
 			instance = new (type as Type<any>)();
 			this.types.set(type, instance);
