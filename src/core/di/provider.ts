@@ -3,6 +3,10 @@ import type { AbstractType, Type } from '../utils/typeof.js';
 
 export class InjectionToken<T> {
 	constructor(public token: string) { }
+
+	withType<V>(): InjectionToken<V> {
+		return this;
+	}
 }
 
 export type Provider<T> = Type<T> | AbstractType<T> | InjectionToken<T>;
