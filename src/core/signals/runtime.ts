@@ -91,6 +91,7 @@ export class RuntimeClassMetadata {
 			{ signal: 'computed', options: [] },
 			{ signal: 'lazy', options: [] },
 			{ signal: 'formValue', options: [] },
+			{ signal: 'formValue', necessity: 'required', options: [] },
 			{ signal: 'view', options: [] },
 			{ signal: 'viewChild', options: [] },
 			{ signal: 'viewChild', necessity: 'required', options: [] },

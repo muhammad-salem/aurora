@@ -24,7 +24,6 @@ export interface InputWithTransform<T, TransformT = T> extends Signal<T> {
 
 export interface InputWithoutTransform<T> extends InputWithTransform<T, T> {
 	options?: InputOptionsWithoutTransform<T>;
-
 }
 
 export class InputSignal<T, TransformT = T> extends Signal<T> implements InputWithoutTransform<T> {
@@ -79,7 +78,6 @@ export function isModelSignal<T = any>(signal: any): signal is ModelSignal<T> {
 	return signal instanceof ModelSignal;
 }
 
-
 export function model<T>(): ModelSignal<T>;
 export function model<T>(opts?: ModelOptions): ModelSignal<T>;
 export function model<T>(opts?: ModelOptions): ModelSignal<T> {
@@ -98,12 +96,22 @@ function requiredModel<T>(opts?: ModelOptions): ModelSignal<T> {
 model.required = requiredModel;
 
 export class FormValueSignal<T> extends Signal<T> {
-	options?: ModelOptions & { required?: boolean };
+	options: { required?: boolean };
 }
 
 export function formValue<T>(initValue?: T): FormValueSignal<T> {
-	return signalScopeFactory.signal<T, FormValueSignal<T>>(initValue, FormValueSignal);
+	const signal = signalScopeFactory.signal<T, FormValueSignal<T>>(initValue, FormValueSignal);
+	signal.options = { required: false };
+	return signal;
 }
+
+function requiredFormValue<T>(): FormValueSignal<T> {
+	const signal = signalScopeFactory.signal<T, FormValueSignal<T>>(undefined, FormValueSignal);
+	signal.options = { required: true };
+	return signal;
+}
+
+formValue.required = requiredFormValue;
 
 type OutputOption = OutputEventInit & { alias?: string };
 
@@ -120,7 +128,6 @@ export class OutputSignal<T> extends Signal<T> {
 	}
 }
 
-
 export function isOutputSignal<T = any>(signal: any): signal is OutputSignal<T> {
 	return signal instanceof OutputSignal;
 }
@@ -131,9 +138,7 @@ export function output<T>(opts?: OutputOption): OutputSignal<T> {
 	return signal;
 }
 
-
 export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
-
 
 export function view(): HTMLElement;
 export function view<T extends keyof HTMLElementTagNameMap>(extend: T): HTMLElementTagNameMap[T];
@@ -142,7 +147,6 @@ export function view<T, V extends keyof HTMLElementTagNameMap>(type: Type<T>, ex
 export function view(): any {
 	return inject(VIEW_TOKEN)!;
 }
-
 
 export class ViewChildSignal<T> extends Signal<T> {
 	public selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap;

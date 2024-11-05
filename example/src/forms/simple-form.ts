@@ -1,4 +1,4 @@
-import { Component, FormValue, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+import { Component, formValue, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'simple-custom-textarea',
@@ -75,13 +75,11 @@ export class SimpleCustomInputElement implements OnInit {
 	@Input('id')
 	elId: string;
 
-	@FormValue()
-	numberValue: number = 99;
+
+	numberValue = formValue(99);
 
 	onInit() {
-		setTimeout(() => {
-			this.numberValue = 666;
-		}, 3000);
+		setTimeout(() => this.numberValue.set(666), 3000);
 	}
 
 }

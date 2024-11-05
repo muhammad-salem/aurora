@@ -34,23 +34,6 @@ export function Input<This, Value>(name?: string) {
 }
 
 
-/**
- * @deprecated since v2.4.0, use `formValue` function instead.
- */
-export function FormValue<This, Value>() {
-	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context, metadata) => {
-			if (typeof context.name !== 'string') {
-				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
-			}
-			if (context.private) {
-				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
-			}
-			ReflectComponents.addInput(metadata, context.name, 'value');
-		}
-	);
-}
-
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
 	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
 		(value, context, metadata) => {
