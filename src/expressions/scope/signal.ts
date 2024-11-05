@@ -24,13 +24,13 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createSignal<T, S extends typeof Signal<T>>(initValue?: T, signalType = Signal as S): InstanceType<S> {
-		const signal = new signalType(this, this.getContext().length, initValue) as InstanceType<S>;
+	createSignal<T, S = SignalType<T>>(initValue?: T, signalType = Signal as SignalType<T>): S {
+		const signal = new signalType(this, this.getContext().length, initValue);
 		signalType.bindNode(signal);
-		return signal;
+		return signal as S;
 	}
 
-	createSignalFn<T, S extends typeof Signal<T>>(initValue: T, signalType = Signal as S) {
+	createSignalFn<T>(initValue: T, signalType = Signal as SignalType<T>) {
 		const signal = new signalType(this, this.getContext().length, initValue);
 		return signalType.toReactiveSignal(signal);
 	}
@@ -240,6 +240,12 @@ export class Lazy<T> extends ReactiveNode<T> {
 export type WritableSignal<T> = ReactiveSignal<T> & {
 	set(value: T): void;
 	update(updateFn: (value: T) => T): void;
+};
+
+export type SignalType<T, S = Signal<T>> = {
+	new(scope: SignalScope, index: number, initValue?: T): S;
+	bindNode<T>(signal: Signal<T>): void;
+	toReactiveSignal<T>(signal: Signal<T>): WritableSignal<T>;
 };
 
 export class Signal<T> extends ReactiveNode<T> {
