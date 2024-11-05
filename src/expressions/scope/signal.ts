@@ -1,7 +1,8 @@
 import { ReactiveScope, ValueChangedCallback } from './scope.js';
 
-type CleanupFn = () => void;
-type CleanupRegister = (cleanupFn?: CleanupFn) => void;
+export type CleanupFn = () => void;
+export type CleanupRegister = (cleanupFn?: CleanupFn) => void;
+export type SignalDestroyRef = { destroy(): void };
 
 function compute<T>(updateFn: () => T): T | unknown {
 	try {
@@ -76,7 +77,7 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		return Computed.toReactiveSignal(computed);
 	}
 
-	createEffect(effectFn: (onCleanup?: CleanupFn) => void): { destroy(): void } {
+	createEffect(effectFn: (onCleanup?: CleanupFn) => void): SignalDestroyRef {
 		let cleanupFn: (() => void) | undefined;
 		let isCleanupRegistered = false;
 		const cleanupRegister: CleanupRegister = onClean => {
