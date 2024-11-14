@@ -171,12 +171,12 @@ export abstract class ReactiveNode<T> {
 		return this.scope.get(this.index);
 	}
 
-	getScope() {
-		this.scope;
+	getScope(): SignalScope {
+		return this.scope;
 	}
 
-	getIndex() {
-		this.index;
+	getIndex(): number {
+		return this.index;
 	}
 
 	subscribe(callback: ValueChangedCallback) {
