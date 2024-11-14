@@ -14,6 +14,7 @@ export class SignalScopeService {
 
 @Component({
 	selector: 'simple-counter',
+	zone: 'manual',
 	template: `
 			<!-- count is invoked as a getter! -->
 			<p>Count {{ count }}</p>
