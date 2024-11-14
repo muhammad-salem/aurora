@@ -16,37 +16,37 @@ export class SignalScopeService {
 	selector: 'simple-counter',
 	template: `
 			<!-- count is invoked as a getter! -->
-			<p>Count {{ count.get() }}</p>
-			<p>{{ name.get() }}</p> <!-- Not reactive! -->
+			<p>Count {{ count }}</p>
+			<p>{{ name }}</p> <!-- Not reactive! -->
 			<button class="btn btn-outline-success" (click)="increment()">Increment count</button>
 			<hr>
-			<p>x {{ x.get() }}</p>
-			<p>y {{ y.get() }}</p>
-			<p>z {{ z.get() }}</p>
-			<p>a {{ a.get() }}</p>
-			<p>g {{ g.get() }}</p>
-			<p>h {{ h.get() }}</p>
+			<p>x {{ x }}</p>
+			<p>y {{ y }}</p>
+			<p>z {{ z }}</p>
+			<p>a {{ a }}</p>
+			<p>g {{ g }}</p>
+			<p>h {{ h }}</p>
 			<hr>
 
 			<div class="row">
 				<div class="col-4">
 					<label class="form-label">X:</label>
-					<input type="number" class="form-control" [value]="x.get()" (change)="x.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="x" (input)="x = +$event.target.value">
 				</div>
 				<div class="col-4">
 					<label class="form-label">Y:</label>
-					<input type="number" class="form-control" [value]="y.get()" (change)="y.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="y" (input)="y = +$event.target.value">
 				</div>
 				<div class="col-4">
 					<label class="form-label">Z:</label>
-					<input type="number" class="form-control" [value]="z.get()" (change)="z.set(+$event.target.value)">
+					<input type="number" class="form-control" [value]="z" (input)="z = +$event.target.value">
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-4">
 					<div class="form-check">
 						<input class="form-check-input" type="checkbox" id="a"
-							[checked]="a.get()" (change)="a.set($event.target.checked)">
+							[checked]="a" (change)="a = $event.target.checked">
 						<label class="form-check-label" for="a">A</label>
 					</div>
 				</div>
@@ -54,11 +54,11 @@ export class SignalScopeService {
 			<hr>
 
 
-			<p>lazy x*y= {{ l.get() }} <button class="btn btn-outline-success" (click)="l.get()">Refresh value</button></p>
-			<p>double g = <span [class]="{'text-danger': e.get() instanceof Error}">{{ e.get() }}</span> (error if a = false)</p>
+			<p>lazy x*y= {{ l }} <button class="btn btn-outline-success" (click)="updateLazyValue()">Refresh value</button></p>
+			<p>double g = <span [class]="{'text-danger': e instanceof Error}">{{ e }}</span> (error if a = false)</p>
 
 			<hr>
-			<p>date: {{ date.get() }}</p>
+			<p>date: {{ date }}</p>
 
 		`,
 })
@@ -126,6 +126,10 @@ export class SimpleCounter implements OnInit, OnDestroy {
 	increment() {
 		console.log('c', this.count.get());
 		this.count.update(c => c + 1);
+	}
+
+	updateLazyValue() {
+		this.l.get();
 	}
 
 	onDestroy(): void {
