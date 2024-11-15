@@ -159,8 +159,6 @@ export class ComponentRender<T extends object> {
 		const scope = ReactiveScope.readOnlyScopeForThis(structural);
 		scope.getInnerScope('this')!.getContextProxy = () => structural;
 		stack.pushScope(scope);
-		const signalMaskScope = stack.pushReactiveScope();
-		this.maskRawSignalScope(signalMaskScope, structural);
 		if (directiveRef.exportAs) {
 			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
 		}
@@ -367,8 +365,6 @@ export class ComponentRender<T extends object> {
 			const directiveScope = scope.getInnerScope('this')!;
 			directiveScope.getContextProxy = () => directive;
 			stack.pushScope(scope);
-			const signalMaskScope = stack.pushReactiveScope();
-			this.maskRawSignalScope(signalMaskScope, directive);
 
 			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
