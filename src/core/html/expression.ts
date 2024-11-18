@@ -80,7 +80,7 @@ function escapeMemberExpression(source: string | string[]): string {
  * @param params 
  */
 function checkAndValidateObjectSyntax(source: string) {
-	if (source.startsWith('{')) {
+	if (source.trimStart().startsWith('{')) {
 		return `(${source})`;
 	}
 	return source;
