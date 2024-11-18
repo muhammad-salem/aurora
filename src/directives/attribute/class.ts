@@ -27,19 +27,15 @@ type ClassInput = string | Array<string> | { [className: string]: boolean };
 	selector: 'class'
 })
 export class ClassDirective extends AttributeDirective {
-
-	// TODO: fix get input as signal
-	public readonly _class = input.required<void, ClassInput>({ alias: 'class', transform: rawStyle => this.setClass(rawStyle) });
-
 	private proxy?: DOMTokenList;
 
-	set 'class'(className: ClassInput) {
-		this.setClass(className);
-	}
-
-	get 'class'() {
-		return (this.proxy ??= new Proxy(this.el.classList, handler)) as any;
-	}
+	public readonly 'class' = input.required<DOMTokenList, ClassInput>({
+		alias: 'class',
+		transform: rawClass => {
+			this.setClass(rawClass);
+			return (this.proxy ??= new Proxy(this.el.classList, handler));
+		}
+	});
 
 	private setClass(className: ClassInput) {
 		if (typeof className === 'string') {
