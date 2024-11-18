@@ -468,7 +468,14 @@ export class ComponentRender<T extends object> {
 		const subscriptions: ScopeSubscription<Context>[] = [];
 
 		if (node.attributes?.length) {
-			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
+			node.attributes.forEach(attr => {
+				const oldRef = Reflect.get(directive, attr.name);
+				if (oldRef instanceof Signal) {
+					oldRef.set(attr.value);
+				} else {
+					Reflect.set(directive, attr.name, attr.value);
+				}
+			});
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
