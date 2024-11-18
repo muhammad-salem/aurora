@@ -112,11 +112,20 @@ export function getPipelineNames(modelExpression: ExpressionNode): string[] | un
 }
 
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
-	const elementSource = attr.name.startsWith('data-')
-		? `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`
-		: `this${escapeMemberExpression(attr.name)}`;
-	const elementExpression = JavaScriptParser.parseScript(elementSource);
-	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
+	let left = attr.name;
+	let right = attr.value;
+	if (attr.name.startsWith('data-')) {
+		left = `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`;
+	} else {
+		left = `this${escapeMemberExpression(attr.name)}`;
+		const elements = left.split(/\.|\[|]/);
+		if (elements.length > 2) {
+			left = `this${escapeMemberExpression(elements[1])}`;
+			right = `({${elements[2]}: ${right}})`;
+		}
+	}
+	const elementExpression = JavaScriptParser.parseScript(left);
+	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(right));
 	if (elementExpression instanceof MemberExpression) {
 		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
