@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, HostBinding, HostListener, Input, OnInit } from '@ibyar/core';
+import { AttributeDirective, Directive, HostBinding, HostListener, input, OnInit } from '@ibyar/core';
 import { AbstractControl } from './form-control.js';
 import { AbstractFormArray } from './form-array.js';
 
@@ -70,13 +70,13 @@ export class FormGroupDirective<T> extends AttributeDirective implements OnInit 
 
 	declare protected el: HTMLFormElement;
 
-	@Input('formGroup')
-	formGroup: FormGroup<T>;
+
+	formGroup = input<FormGroup<T>>();
 
 	onInit(): void {
 		this.el.noValidate = true;
 		console.log('el', this.el);
-		console.log('formGroup', this.formGroup);
+		console.log('formGroup', this.formGroup.get());
 		const elements = this.el.elements;
 		const length = elements.length;
 		for (let i = 0; i < length; i++) {
@@ -84,7 +84,7 @@ export class FormGroupDirective<T> extends AttributeDirective implements OnInit 
 			if (element.type === 'submit' || element.type === 'hidden') {
 				continue;
 			}
-			element.value = this.formGroup.controls[element.name as keyof T].value as string;
+			element.value = this.formGroup.get().controls[element.name as keyof T].value as string;
 		}
 	}
 
