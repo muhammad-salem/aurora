@@ -201,6 +201,10 @@ export class Components {
 			componentRef.shadowRootInit = Object.assign({}, DEFAULT_SHADOW_ROOT_INIT, (componentRef.shadowRootInit ?? {}));
 		}
 
+		componentRef.inputs = componentRef.inputs.filter(
+			(ref, i, l) => i === l.findIndex(s => s.modelProperty === ref.modelProperty && s.viewAttribute === ref.viewAttribute)
+		);
+
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
 			const hostNode = parseHostNode({
 				prototype: modelClass.prototype,
