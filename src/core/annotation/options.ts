@@ -140,8 +140,8 @@ export interface ComponentOptions<T = Type<any>> {
 	 * 	the browser itself, will convert all attributes to lowercase
 	 * 
 	 * ```typescript
-	 *		@Input('personage') personAge: number;
-	 *		@Input('propname') propName: string;
+	 * 		personAge = input<number>(20, {alias: 'personage'});
+	 * 		propName = input<string>(undefined, {alias: 'propname'});
 	 *		saveButtonClick = output<Persons>({alias: 'savebuttonclick'});
 	 *		readonly view = view(HTMLFormElement);
 	 * ```
