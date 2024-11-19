@@ -40,18 +40,18 @@ export class RuntimeClassMetadata {
 
 	static INSTANCE = new RuntimeClassMetadata();
 
-	static scanMetadata(modelClass: Function) {
-		return RuntimeClassMetadata.INSTANCE.scan(modelClass);
+	static scanMetadata(modelClass: Function, scanParent = true) {
+		return RuntimeClassMetadata.INSTANCE.scan(modelClass, scanParent);
 	}
 
-	static scanClass(modelClass: Function, visitorCallback: VisitorCallback) {
-		return RuntimeClassMetadata.INSTANCE.scanModelClass(modelClass, visitorCallback);
+	static scanClass(modelClass: Function, visitorCallback: VisitorCallback, scanParent = true) {
+		return RuntimeClassMetadata.INSTANCE.scanModelClass(modelClass, visitorCallback, scanParent);
 	}
 
-	scan(modelClass: Function): SignalRuntimeMetadata[] {
+	scan(modelClass: Function, scanParent: boolean): SignalRuntimeMetadata[] {
 		const metadata = this.newModelInitializers();
 		const visitor = this.createVisitor(metadata);
-		this.scanModelClass(modelClass, visitor);
+		this.scanModelClass(modelClass, visitor, scanParent);
 		return metadata;
 	}
 
@@ -60,14 +60,15 @@ export class RuntimeClassMetadata {
 	 * @param modelClass 
 	 * @param visitorCallback 
 	 */
-	scanModelClass(modelClass: Function, visitorCallback: VisitorCallback) {
-		const script = this.getClassScript(modelClass);
+	scanModelClass(modelClass: Function, visitorCallback: VisitorCallback, scanParent: boolean) {
+		const script = this.getClassScript(modelClass, scanParent);
 		const expr = JavaScriptParser.parse(script);
 		expressionVisitor.visit(expr, visitorCallback);
 	}
 
-	getClassScript(modelClass: Function): string {
-		return this.getClassList(modelClass).map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
+	getClassScript(modelClass: Function, scanParent: boolean): string {
+		const modelList = scanParent ? this.getClassList(modelClass) : [modelClass];
+		return modelList.map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
 	}
 
 	getClassList(modelClass: Function): Function[] {

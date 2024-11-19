@@ -156,7 +156,8 @@ export class Components {
 
 	static defineComponent<T extends Type<any>>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		if (!(opts as any as ComponentRef<T>).signals) {
-			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
+			const scanParent = !opts.extend?.includes('-');
+			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass, scanParent);
 		}
 		this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
@@ -200,10 +201,6 @@ export class Components {
 		if (componentRef.isShadowDom) {
 			componentRef.shadowRootInit = Object.assign({}, DEFAULT_SHADOW_ROOT_INIT, (componentRef.shadowRootInit ?? {}));
 		}
-
-		componentRef.inputs = componentRef.inputs.filter(
-			(ref, i, l) => i === l.findIndex(s => s.modelProperty === ref.modelProperty && s.viewAttribute === ref.viewAttribute)
-		);
 
 		if (componentRef.hostListeners.length || componentRef.hostBindings.length) {
 			const hostNode = parseHostNode({
