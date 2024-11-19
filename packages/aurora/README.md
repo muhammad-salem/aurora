@@ -172,7 +172,7 @@ yarn add @ibyar/aurora
 - [x] Pipes
 - [x] Lifecycle
 - [x] Signals
-- [x] @Input
+- [x] input signal
 - [x] output signal
 - [x] view signal
 - [x] viewChild signal

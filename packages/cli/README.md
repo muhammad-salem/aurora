@@ -171,17 +171,15 @@ import { Component, EventEmitter, Input, output } from '@ibyar/aurora';
 })
 export class PersonEdit {
 
-	@Input()
-	person: Person;
+	person = input<Person>();
 
-	@Input()
-	show = true;
+	show = input(true);
 
 	save = output<Person>();
 
 	printPerson() {
-		console.log(this.person);
-		this.save.emit(this.person);
+		console.log(this.person.get());
+		this.save.emit(this.person.get());
 	}
 }
 
