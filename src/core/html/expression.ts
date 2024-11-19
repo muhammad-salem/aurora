@@ -118,7 +118,7 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 		left = `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`;
 	} else {
 		left = `this${escapeMemberExpression(attr.name)}`;
-		const elements = left.split(/\.|\[|]/);
+		const elements = left.split(/\.|\[|]/).filter(s => !!s);
 		if (elements.length > 2) {
 			left = `this${escapeMemberExpression(elements[1])}`;
 			right = `({${elements[2]}: ${right}})`;
