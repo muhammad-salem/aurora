@@ -51,8 +51,6 @@ export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T
 	return signal;
 }
 
-function requiredInput<T>(): InputWithoutTransform<T>;
-function requiredInput<T, TransformT = T>(opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
 function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
 	const signal = signalScopeFactory.signal(undefined, InputSignal) as InputSignal<T, TransformT>;
 	signal.options = Object.assign(opts ?? {}, { required: true });
