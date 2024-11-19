@@ -530,7 +530,6 @@ export class ComponentRender<T extends object> {
 				maskScope.set(key, signal.get());
 				signal.subscribe(value => maskScope.set(key, value));
 				maskScope.subscribe(key, value => signal.set(value));
-				maskScope.subscribe(key, value => console.log(key, value));
 			} else if (signal instanceof Computed) {
 				maskScope.set(key, signal.get());
 				signal.subscribe(value => maskScope.set(key, value));
