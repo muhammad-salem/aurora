@@ -40,7 +40,7 @@
 		"@ibyar/expressions": "^2.8.0",
 		"@ibyar/pipes": "^2.8.0",
 		"@ibyar/platform": "^2.8.0",
-		"tslib": "^2.7.0"
+		"tslib": "^2.8.1"
 	},
 	"peerDependencies": {
 		"zone.js": "~0.15.0"
