@@ -42,8 +42,8 @@ export function isInputSignal<T = any>(signal: any): signal is InputSignal<T> {
 }
 
 export function input<T>(): InputWithoutTransform<T>;
-export function input<T>(initialValue: T, opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
 export function input<T, TransformT = T>(initialValue: T, opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
+export function input<T>(initialValue: T, opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
 export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT>;
 export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
 	const signal = signalScopeFactory.signal(initialValue, InputSignal) as InputSignal<T, TransformT>;
