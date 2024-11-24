@@ -15,7 +15,7 @@ export function clearSignalScope(scope: SignalScope) {
 	signalScopeFactory.pop(scope);
 }
 
-export function signal<T>(initialValue: T) {
+export function signal<T>(initialValue?: T) {
 	return signalScopeFactory.signal(initialValue);
 }
 
