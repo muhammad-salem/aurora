@@ -1,8 +1,7 @@
 import type { Type } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, getReactiveNode,
-	isReactive, WritableSignal
+	ScopeSubscription, SignalScope, isReactiveNode
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -73,12 +72,10 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this._modelScope = modelScope;
 
 			Object.keys(this._model).forEach(key => {
-				const value = this._model[key];
-				const node = getReactiveNode(value);
-				if (!node) {
-					return;
+				const node = this._model[key];
+				if (isReactiveNode(node)) {
+					node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 				}
-				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
@@ -88,11 +85,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 					if (newValue === oldValue) {
 						return;
 					}
-					if (isReactive(this._model[input.modelProperty])) {
-						(this._model[input.modelProperty] as WritableSignal<any>).set(newValue);
-					} else {
-						this._modelScope.set(input.modelProperty as any, newValue);
-					}
+					this._render.modelStack.set(input.modelProperty, newValue);
 				});
 				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
@@ -183,14 +176,14 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 		getInputValue(viewProp: string): any {
 			const inputRef = this.getInput(viewProp);
 			if (inputRef) {
-				return this._model[inputRef.modelProperty];
+				return this._render.modelStack.get(inputRef.modelProperty);
 			}
 		}
 
 		setInputValue(viewProp: PropertyKey, value: any): void {
 			const inputRef = this.getInput(viewProp as string);
 			if (inputRef) {
-				this._modelScope.set(inputRef.modelProperty as never, value);
+				this._render.modelStack.set(inputRef.modelProperty, value);
 			}
 		}
 

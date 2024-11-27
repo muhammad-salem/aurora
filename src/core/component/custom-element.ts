@@ -6,6 +6,7 @@ import { AuroraZone } from '../zone/zone.js';
 import { PropertyRef } from './reflect.js';
 import { InjectionProvider } from '../di/provider.js';
 import { ChangeDetectorRef } from '../linker/change-detector-ref.js';
+import { ComponentRender } from '../view/render.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -27,6 +28,7 @@ export interface BaseComponent<T> extends CustomElement {
 	_zone: AuroraZone;
 	_provider: InjectionProvider;
 	_detector: ChangeDetectorRef;
+	_render: ComponentRender<any>;
 
 	getComponentRef(): ComponentRef<T>;
 

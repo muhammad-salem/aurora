@@ -1,4 +1,8 @@
-import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope, Identifier, Signal, SignalScope, isReactive, getReactiveNode, Computed, Lazy, ReactiveNode } from '@ibyar/expressions';
+import {
+	ReactiveScope, Context, ScopeSubscription,
+	Stack, ReadOnlyScope, Identifier, Signal,
+	Computed, Lazy, ReactiveNode
+} from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
@@ -46,12 +50,15 @@ export class ComponentRender<T extends object> {
 	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
 	private viewChildSignal: ChildRef[];
 
+	modelStack: Stack;
+
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<Context>(this.view._modelScope);
 		const signalMaskScope = this.contextStack.pushReactiveScope();
 		this.maskRawSignalScope(signalMaskScope, this.view._model);
+		this.modelStack = this.contextStack.copyStack();
 		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 		this.viewChildSignal = this.componentRef.viewChild.filter(child => child.selector === 'ɵSignal');
