@@ -19,24 +19,12 @@ export function signal<T>(initialValue?: T) {
 	return signalScopeFactory.signal(initialValue);
 }
 
-export function signalFn<T>(initialValue: T) {
-	return signalScopeFactory.signalFn(initialValue);
-}
-
 export function computed<T>(computation: () => T) {
 	return signalScopeFactory.computed(computation);
 }
 
-export function computedFn<T>(computation: () => T) {
-	return signalScopeFactory!.computedFn(computation);
-}
-
 export function lazy<T>(computation: () => T) {
 	return signalScopeFactory.lazy(computation);
-}
-
-export function lazyFn<T>(computation: () => T) {
-	return signalScopeFactory.lazyFn(computation);
 }
 
 export function effect(effectFn: (onCleanup?: (clean: () => void) => void) => void) {

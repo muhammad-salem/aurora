@@ -1,4 +1,4 @@
-import { Signal } from '@ibyar/expressions';
+import { Signal, SignalScope } from '@ibyar/expressions';
 import { signalScopeFactory } from '../signals/factory.js';
 import { InjectionToken } from '../di/provider.js';
 import { inject } from '../di/inject.js';
@@ -25,7 +25,11 @@ export interface InputWithoutTransform<T> extends InputWithTransform<T, T> {
 }
 
 export class InputSignal<T, TransformT = T> extends Signal<T> implements InputWithoutTransform<T> {
-	options?: InputOptions<T, TransformT> & { required?: boolean };
+
+
+	constructor(scope: SignalScope, index: number, initValue?: T, public options?: InputOptions<T, TransformT> & { required?: boolean }) {
+		super(scope, index, initValue);
+	}
 
 	override set(value: T): void;
 	override set(value: TransformT): void;
@@ -42,37 +46,35 @@ export function isInputSignal<T = any>(signal: any): signal is InputSignal<T> {
 }
 
 export function input<T>(): InputWithoutTransform<T>;
-export function input<T, TransformT = T>(initialValue: T, opts: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
-export function input<T>(initialValue: T, opts?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
-export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT>;
-export function input<T, TransformT = T>(initialValue?: T, opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
-	const signal = signalScopeFactory.signal(initialValue, InputSignal) as InputSignal<T, TransformT>;
-	signal.options = Object.assign(opts ?? {}, { required: false });
-	return signal;
+export function input<T, TransformT = T>(initValue: T, options: InputOptionsWithTransform<T, TransformT>): InputWithTransform<T, TransformT>;
+export function input<T>(initValue: T, options?: InputOptionsWithoutTransform<T>): InputWithoutTransform<T>;
+export function input<T, TransformT = T>(initValue?: T, options?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT>;
+export function input<T, TransformT = T>(initValue?: T, options?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
+	options = Object.assign(options ?? {}, { required: false });
+	return signalScopeFactory.factory((scope, index) => new InputSignal<T, TransformT>(scope, index, initValue, options));
 }
 
-function requiredInput<T, TransformT = T>(opts?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
-	const signal = signalScopeFactory.signal(undefined, InputSignal) as InputSignal<T, TransformT>;
-	signal.options = Object.assign(opts ?? {}, { required: true });
-	return signal;
+function requiredInput<T, TransformT = T>(options?: InputOptions<T, TransformT>): InputWithTransform<T, TransformT> {
+	options = Object.assign(options ?? {}, { required: true });
+	return signalScopeFactory.factory((scope, index) => new InputSignal<T, TransformT>(scope, index, undefined, options));
 }
 
 input.required = requiredInput;
 
 export class FormValueSignal<T> extends Signal<T> {
-	options: { required?: boolean };
+
+	constructor(scope: SignalScope, index: number, initValue?: T, public options?: { required?: boolean }) {
+		super(scope, index, initValue);
+	}
+
 }
 
 export function formValue<T>(initValue?: T): FormValueSignal<T> {
-	const signal = signalScopeFactory.signal<T, FormValueSignal<T>>(initValue, FormValueSignal);
-	signal.options = { required: false };
-	return signal;
+	return signalScopeFactory.factory((scope, index) => new FormValueSignal<T>(scope, index, initValue, { required: false }));
 }
 
 function requiredFormValue<T>(): FormValueSignal<T> {
-	const signal = signalScopeFactory.signal<T, FormValueSignal<T>>(undefined, FormValueSignal);
-	signal.options = { required: true };
-	return signal;
+	return signalScopeFactory.factory((scope, index) => new FormValueSignal<T>(scope, index, undefined, { required: true }));
 }
 
 formValue.required = requiredFormValue;
@@ -85,7 +87,10 @@ export interface OutputSignal<T> extends Signal<T> {
 }
 
 export class OutputSignal<T> extends Signal<T> {
-	public options?: OutputOption;
+
+	constructor(scope: SignalScope, index: number, public options?: OutputOption) {
+		super(scope, index);
+	}
 
 	emit(value: T) {
 		this.scope.set(this.index, value);
@@ -96,10 +101,8 @@ export function isOutputSignal<T = any>(signal: any): signal is OutputSignal<T> 
 	return signal instanceof OutputSignal;
 }
 
-export function output<T>(opts?: OutputOption): OutputSignal<T> {
-	const signal = signalScopeFactory.signal(undefined, OutputSignal) as OutputSignal<T>;
-	signal.options = opts;
-	return signal;
+export function output<T>(options?: OutputOption): OutputSignal<T> {
+	return signalScopeFactory.factory((scope, index) => new OutputSignal<T>(scope, index, options));
 }
 
 export const VIEW_TOKEN = new InjectionToken<HTMLElement>('VIEW');
@@ -113,7 +116,10 @@ export function view(): any {
 }
 
 export class ViewChildSignal<T> extends Signal<T> {
-	public selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap;
+
+	constructor(scope: SignalScope, index: number, public selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap) {
+		super(scope, index);
+	}
 }
 
 export function isViewChildSignal<T = any>(signal: any): signal is ViewChildSignal<T> {
@@ -125,7 +131,5 @@ export function viewChild<T>(selector: Type<T>): Signal<HTMLComponent<T>>;
 export function viewChild<T extends keyof HTMLElementTagNameMap>(selector: T): Signal<HTMLElementTagNameMap[T]>;
 export function viewChild<T extends HTMLElement>(selector: string): Signal<T>;
 export function viewChild<T>(selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap): Signal<T> {
-	const signal = signalScopeFactory.signal(undefined, ViewChildSignal) as ViewChildSignal<T>;
-	signal.selector = selector;
-	return signal;
+	return signalScopeFactory.factory((scope, index) => new ViewChildSignal<T>(scope, index, selector));
 }
