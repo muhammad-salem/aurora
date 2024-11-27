@@ -25,26 +25,16 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		super([]);
 	}
 
-	createSignal<T, S = SignalType<T>>(initValue?: T, signalType = Signal as SignalType<T>): S {
-		const signal = new signalType(this, this.getContext().length, initValue);
-		signalType.bindNode(signal);
-		return signal as S;
+	getNextKey() {
+		return this.getContext().length;
 	}
 
-	createSignalFn<T>(initValue: T, signalType = Signal as SignalType<T>) {
-		const signal = new signalType(this, this.getContext().length, initValue);
-		return signalType.toReactiveSignal(signal);
+	createSignal<T>(initValue?: T): Signal<T> {
+		return new Signal(this, this.getContext().length, initValue);
 	}
 
 	createLazy<T>(updateFn: () => T): Lazy<T> {
-		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
-		Lazy.bindNode(lazy);
-		return lazy;
-	}
-
-	createLazyFn<T>(updateFn: () => T) {
-		const lazy = new Lazy<T>(this, this.getContext().length, updateFn);
-		return Lazy.toReactiveSignal(lazy);
+		return new Lazy<T>(this, this.getContext().length, updateFn);
 	}
 
 	createComputed<T>(updateFn: () => T): Computed<T> {
@@ -52,7 +42,6 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		this.watchState();
 		const value = compute(updateFn);
 		const computed = new Computed<T>(this, index, value as T);
-		Computed.bindNode(computed);
 		const observeComputed = () => {
 			this.watchState();
 			const value = compute(updateFn);
@@ -70,11 +59,6 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 		const subscriptions = this.observeState(observeComputed);
 		this.restoreState();
 		return computed;
-	}
-
-	createComputedFn<T>(updateFn: () => T) {
-		const computed = this.createComputed(updateFn);
-		return Computed.toReactiveSignal(computed);
 	}
 
 	createEffect(effectFn: (onCleanup?: CleanupFn) => void): SignalDestroyRef {
@@ -154,16 +138,6 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 export abstract class ReactiveNode<T> {
 
-	static bindNode<T>(instance: ReactiveNode<T>) {
-		instance.get = instance.get.bind(instance);
-	}
-
-	static toReactiveSignal<T>(instance: ReadOnlySignal<T>): ReactiveSignal<T> {
-		const fn = () => instance.get();
-		fn[SIGNAL] = instance;
-		return fn as ReactiveSignal<T>;
-	}
-
 	constructor(protected scope: SignalScope, protected index: number) { }
 
 	get(): T {
@@ -184,32 +158,6 @@ export abstract class ReactiveNode<T> {
 	}
 
 }
-
-const SIGNAL = Symbol('Signal');
-
-export interface Reactive<T> {
-	[SIGNAL]: ReactiveNode<T>;
-}
-
-export function isReactive<T = any>(value: unknown): value is Reactive<T> {
-	const node = (value as Partial<Reactive<T>>)?.[SIGNAL];
-	return node !== undefined && node instanceof ReactiveNode;
-}
-
-export function getReactiveNode<T = any>(value: unknown): ReactiveNode<T> | void {
-	if (value instanceof ReactiveNode) {
-		return value;
-	} else if (isReactive(value)) {
-		return value[SIGNAL];
-	}
-}
-
-export type ReactiveSignal<T> = (() => T) & {
-	/**
-	 * original node that can access value from scope
-	 */
-	[SIGNAL]: unknown;
-};
 
 export class Computed<T> extends ReactiveNode<T> {
 
@@ -238,32 +186,7 @@ export class Lazy<T> extends ReactiveNode<T> {
 
 }
 
-export type WritableSignal<T> = ReactiveSignal<T> & {
-	set(value: T): void;
-	update(updateFn: (value: T) => T): void;
-};
-
-export type SignalType<T, S = Signal<T>> = {
-	new(scope: SignalScope, index: number, initValue?: T): S;
-	bindNode<T>(signal: Signal<T>): void;
-	toReactiveSignal<T>(signal: Signal<T>): WritableSignal<T>;
-};
-
 export class Signal<T> extends ReactiveNode<T> {
-
-	static bindNode<T>(signal: Signal<T>) {
-		signal.get = signal.get.bind(signal);
-		signal.set = signal.set.bind(signal);
-		signal.update = signal.update.bind(signal);
-	}
-
-	static toReactiveSignal<T>(signal: Signal<T>): WritableSignal<T> {
-		const fn = () => signal.get();
-		fn.set = (value: T) => signal.set(value);
-		fn.update = (updateFn: (value: T) => T) => signal.update(updateFn);
-		fn[SIGNAL] = signal;
-		return fn as WritableSignal<T>;
-	}
 
 	constructor(scope: SignalScope, index: number, initValue?: T) {
 		super(scope, index);
@@ -279,13 +202,7 @@ export class Signal<T> extends ReactiveNode<T> {
 	}
 
 	asReadonly() {
-		return ReadOnlySignal.toReactiveSignal(new ReadOnlySignal(this.scope, this.index));
-	}
-
-	asReadonlyNode() {
-		const node = new ReadOnlySignal(this.scope, this.index);
-		ReadOnlySignal.bindNode(node)
-		return node;
+		return new ReadOnlySignal(this.scope, this.index);
 	}
 
 }
@@ -294,14 +211,11 @@ export class ReadOnlySignal<T> extends ReactiveNode<T> {
 
 }
 
-export class SignalValueScope<T> extends ReactiveScope<Record<PropertyKey, any>> {
-	constructor() {
-		super({});
-	}
 
-	watchSignal(propertyKey: keyof T, node: ReactiveNode<any>) {
-		this.set(propertyKey, node.get());
-		return node.subscribe(value => this.set(propertyKey, value));
-	}
+export function isSignal<T = any>(signal: unknown): signal is Signal<T> {
+	return signal instanceof Signal;
+}
 
+export function isReactiveNode<T = any>(signal: unknown): signal is ReactiveNode<T> {
+	return signal instanceof ReactiveNode;
 }
