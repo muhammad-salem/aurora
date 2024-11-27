@@ -1,3 +1,4 @@
+import { skipChangeDetection } from './cd.js';
 import { ReactiveScope, ValueChangedCallback } from './scope.js';
 
 export type CleanupFn = () => void;
@@ -138,7 +139,9 @@ export class SignalScope extends ReactiveScope<Array<any>> {
 
 export abstract class ReactiveNode<T> {
 
-	constructor(protected scope: SignalScope, protected index: number) { }
+	constructor(protected scope: SignalScope, protected index: number) {
+		skipChangeDetection(this);
+	}
 
 	get(): T {
 		this.scope.observeIndex(this.index);
