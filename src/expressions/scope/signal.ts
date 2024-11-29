@@ -214,11 +214,22 @@ export class ReadOnlySignal<T> extends ReactiveNode<T> {
 
 }
 
-
 export function isSignal<T = any>(signal: unknown): signal is Signal<T> {
 	return signal instanceof Signal;
 }
 
-export function isReactiveNode<T = any>(signal: unknown): signal is ReactiveNode<T> {
+export function isComputed<T = any>(signal: unknown): signal is Computed<T> {
+	return signal instanceof Computed;
+}
+
+export function isLazy<T = any>(signal: unknown): signal is Lazy<T> {
+	return signal instanceof Lazy;
+}
+
+export function isReadOnlySignal<T = any>(signal: unknown): signal is ReadOnlySignal<T> {
+	return signal instanceof ReadOnlySignal;
+}
+
+export function isReactive<T = any>(signal: unknown): signal is ReactiveNode<T> {
 	return signal instanceof ReactiveNode;
 }
