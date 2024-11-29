@@ -3,7 +3,7 @@ import {
 	ExpressionEventMap, ExpressionNode,
 	Identifier, InfixExpressionNode, MemberExpression,
 	NodeDeserializer, ReactiveScope, Scope, ScopeSubscription,
-	Signal, Stack, ValueChangedCallback, VisitNodeType,
+	Stack, ValueChangedCallback, VisitNodeType,
 	findReactiveScopeByEventMap
 } from '@ibyar/expressions';
 import { isOnDestroy } from '../component/lifecycle.js';
@@ -38,11 +38,6 @@ export class OneWayAssignmentExpression extends InfixExpressionNode<OneWayOperat
 		super('=:', left, right);
 	}
 	set(stack: Stack, value: any) {
-		const left = this.left.get(stack);
-		if (left instanceof Signal) {
-			left.set(value);
-			return value;
-		}
 		return this.left.set(stack, value);
 	}
 	get(stack: Stack): any {
@@ -121,18 +116,10 @@ export class TwoWayAssignmentExpression extends InfixExpressionNode<TwoWayOperat
 	}
 
 	private setRTL(stack: Stack, value: any) {
-		const left = this.left.get(stack);
-		if (left instanceof Signal) {
-			left.set(value);
-			return value;
-		}
 		return this.left.set(stack, value);
 	}
 	private getRTL(stack: Stack): any {
-		let rv = this.right.get(stack);
-		if (rv instanceof Signal) {
-			rv = rv.get();
-		}
+		const rv = this.right.get(stack);
 		this.setRTL(stack, rv);
 		return rv;
 	}
