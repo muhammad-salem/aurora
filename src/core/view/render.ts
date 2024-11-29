@@ -60,7 +60,7 @@ export class ComponentRender<T extends object> {
 		this.contextStack.pushScope<Context>(this.view._modelScope);
 		const signalMaskScope = this.contextStack.pushReactiveScope();
 		this.maskRawSignalScope(signalMaskScope, this.view._model);
-		this.modelStack = this.contextStack.copyStack();
+		this.modelStack = Stack.forScopes(this.view._modelScope, signalMaskScope);
 		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 		this.viewChildSignal = this.componentRef.viewChild.filter(child => child.selector === 'ɵSignal');
