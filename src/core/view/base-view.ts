@@ -1,7 +1,7 @@
 import type { Type } from '../utils/typeof.js';
 import {
 	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, isReactiveNode
+	ScopeSubscription, SignalScope, isReactive
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -73,7 +73,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 			Object.keys(this._model).forEach(key => {
 				const node = this._model[key];
-				if (isReactiveNode(node)) {
+				if (isReactive(node)) {
 					node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 				}
 			});

@@ -30,6 +30,7 @@ export function lazy<T>(computation: () => T) {
 export function effect(effectFn: (onCleanup?: (clean: () => void) => void) => void) {
 	return signalScopeFactory.effect(effectFn);
 }
+
 export function untracked<T>(reactiveNode: ReactiveNode<T>): T;
 export function untracked<T>(nonReactiveReadsFn: () => T): T;
 export function untracked<T>(nonReactiveReads: (() => T) | ReactiveNode<T>): T {

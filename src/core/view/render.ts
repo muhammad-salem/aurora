@@ -1,7 +1,7 @@
 import {
 	ReactiveScope, Context, ScopeSubscription,
-	Stack, ReadOnlyScope, Identifier, Signal,
-	Computed, Lazy, ReactiveNode
+	Stack, ReadOnlyScope, Identifier,
+	isComputed, isSignal, isReactive
 } from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
@@ -16,12 +16,14 @@ import { documentStack } from '../context/stack.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { AttributeDirective, DIRECTIVE_HOST_TOKEN, NATIVE_HOST_TOKEN, StructuralDirective, SUCCESSORS_TOKEN } from '../directive/directive.js';
+import {
+	AttributeDirective, StructuralDirective, DirectiveViewContext,
+	DIRECTIVE_HOST_TOKEN, NATIVE_HOST_TOKEN, SUCCESSORS_TOKEN,
+} from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
 import { ViewContainerRef, ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createDestroySubscription } from '../context/subscription.js';
-import { EventEmitter } from '../component/events.js';
-import { isViewChildSignal } from '../component/initializer.js';
+import { isViewChildSignal, OutputSignal, ViewChildSignal } from '../component/initializer.js';
 import { ChildRef } from '../component/reflect.js';
 import { addProvider, removeProvider } from '../di/inject.js';
 import { AbstractAuroraZone } from '../zone/zone.js';
@@ -163,13 +165,14 @@ export class ComponentRender<T extends object> {
 		removeProvider(provider);
 
 		templateRef.host = structural;
-		const scope = ReactiveScope.readOnlyScopeForThis(structural);
-		scope.getInnerScope('this')!.getContextProxy = () => structural;
+		const context = DirectiveViewContext.createContext(structural);
+		const scope = ReactiveScope.readOnlyScopeForThis(context);
+		scope.getInnerScope('this')!.getContextProxy = () => context;
 		stack.pushScope(scope);
 		if (directiveRef.exportAs) {
 			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
 		}
-		subscriptions.push(...this.initDirective(structural, directive, stack));
+		subscriptions.push(...this.initDirective(context, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
 		}
@@ -328,7 +331,7 @@ export class ComponentRender<T extends object> {
 			Reflect.set(this.view, templateRefName.name, element);
 			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
-			let signal: Signal<any> | undefined;
+			let signal: ViewChildSignal<any> | undefined;
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
 			} else if (signal = this.getViewChildSignal(templateRefName.name)) {
@@ -368,12 +371,13 @@ export class ComponentRender<T extends object> {
 			}
 
 			const stack = contextStack.copyStack();
-			const scope = ReactiveScope.readOnlyScopeForThis(directive);
+			const context = DirectiveViewContext.createContext(directive);
+			const scope = ReactiveScope.readOnlyScopeForThis(context);
 			const directiveScope = scope.getInnerScope('this')!;
-			directiveScope.getContextProxy = () => directive;
+			directiveScope.getContextProxy = () => context;
 			stack.pushScope(scope);
 
-			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
+			const directiveSubscriptions = this.initDirective(context, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
 				directiveZone.run(directive.onInit, directive);
@@ -469,20 +473,13 @@ export class ComponentRender<T extends object> {
 		return subscriptions;
 	}
 	initDirective(
-		directive: StructuralDirective | AttributeDirective,
+		context: DirectiveViewContext,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
 		const subscriptions: ScopeSubscription<Context>[] = [];
 
 		if (node.attributes?.length) {
-			node.attributes.forEach(attr => {
-				const oldRef = Reflect.get(directive, attr.name);
-				if (oldRef instanceof Signal) {
-					oldRef.set(attr.value);
-				} else {
-					Reflect.set(directive, attr.name, attr.value);
-				}
-			});
+			node.attributes.forEach(attr => Reflect.set(context, attr.name, attr.value));
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
@@ -505,10 +502,8 @@ export class ComponentRender<T extends object> {
 					stack.pushBlockScopeFor({ $event });
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
-				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
-				subscriptions.push(createDestroySubscription(
-					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
-				));
+				const subscription = (Reflect.get(context, event.name) as OutputSignal<T>).subscribe(listener);
+				subscriptions.push(createDestroySubscription(() => subscription.unsubscribe()));
 			});
 		}
 		if (node.templateAttrs?.length) {
@@ -533,14 +528,14 @@ export class ComponentRender<T extends object> {
 	}
 	private maskRawSignalScope(maskScope: ReactiveScope<Context>, model: Context) {
 		Object.entries(model).forEach(([key, signal]) => {
-			if (signal instanceof Signal) {
+			if (isSignal(signal)) {
 				maskScope.set(key, signal.get());
 				signal.subscribe(value => maskScope.set(key, value));
 				maskScope.subscribe(key, value => signal.set(value));
-			} else if (signal instanceof Computed) {
+			} else if (isComputed(signal)) {
 				maskScope.set(key, signal.get());
 				signal.subscribe(value => maskScope.set(key, value));
-			} else if (signal instanceof Lazy || signal instanceof ReactiveNode) {
+			} else if (isReactive(signal)) {
 				maskScope.set(key, undefined);
 				signal.subscribe(value => maskScope.set(key, value));
 			}
