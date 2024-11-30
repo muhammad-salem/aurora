@@ -100,7 +100,7 @@ export class SimpleCounter implements OnInit, OnDestroy {
 		return this.x.get() + this.z.get();
 	});
 
-	h = computed(this.g.get);
+	h = computed(() => this.g.get());
 
 	service = inject(SignalScopeService);
 
