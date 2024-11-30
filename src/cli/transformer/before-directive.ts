@@ -85,8 +85,8 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 											type: 'directive',
 											name: selector,
 											successors,
-											inputs,
-											outputs,
+											inputs: allInputs,
+											outputs: allOutputs,
 											views: [],
 											signals: signalDetails
 										});
