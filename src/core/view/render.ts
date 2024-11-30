@@ -300,7 +300,7 @@ export class ComponentRender<T extends object> {
 	initHtmlElement(element: HTMLElement, node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): void;
 
 	/**
-	 * use to init a new create html element
+	 * use to initialize a newly created html element
 	 * @param element 
 	 * @param node 
 	 * @param contextStack 
