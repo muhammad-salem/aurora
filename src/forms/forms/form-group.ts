@@ -81,10 +81,13 @@ export class FormGroupDirective<T> extends AttributeDirective implements OnInit 
 		const length = elements.length;
 		for (let i = 0; i < length; i++) {
 			const element = elements.item(i) as HTMLInputElement;
-			if (element.type === 'submit' || element.type === 'hidden') {
+			if (element.type === 'submit' || element.type === 'hidden' || !element.name) {
 				continue;
 			}
-			element.value = this.formGroup.get().controls[element.name as keyof T].value as string;
+			const value = this.formGroup.get().controls[element.name as keyof T].value as string | undefined;
+			if (value) {
+				element.value = value;
+			}
 		}
 	}
 
@@ -100,9 +103,11 @@ export class FormGroupDirective<T> extends AttributeDirective implements OnInit 
 	}
 
 
+
 	@HostBinding('class.valid')
 	get valid(): boolean {
 		return true;
 	}
 
 }
+
