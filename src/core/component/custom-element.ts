@@ -57,8 +57,7 @@ export interface BaseComponent<T> extends CustomElement {
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
 
 export function isHTMLComponent(object: any): object is HTMLComponent<any> {
-	return Reflect.has(object, '_model')
-		&& object instanceof HTMLElement;
+	return object instanceof HTMLElement && Reflect.has(object, '_model');
 }
 
 export function isHTMLComponentOfType<T extends object>(object: any, typeClass: Type<T>): object is HTMLComponent<T> {
