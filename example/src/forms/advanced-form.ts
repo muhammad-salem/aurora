@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+import { Component, formValue, HostListener, input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'custom-textarea',
@@ -60,14 +60,12 @@ export class CustomTextareaComponent implements OnInit, ValueControl<string> {
 })
 export class CustomMessage implements ValueControl<string> {
 
-
-	@Input('value')
-	message: string | null = '';
+	message = formValue<string | null>('');
 	private disabled: boolean = false;
 	private _onChange: (_: any) => void = () => { };
 
 	writeValue({ value, mode }: WriteValueOptions<string>) {
-		this.message = mode !== 'reset' ? value : '';
+		this.message.set(mode !== 'reset' ? value : '');
 		console.log('message write value', value, 'and mode', mode);
 	}
 
@@ -86,8 +84,8 @@ export class CustomMessage implements ValueControl<string> {
 	}
 
 	updateMessage() {
-		this.message = 'test message';
-		this.onMessageChange(this.message);
+		this.message.set('test message');
+		this.onMessageChange(this.message.get()!);
 	}
 
 }
@@ -128,11 +126,9 @@ export class CustomInputValueControl implements ValueControl<number> {
 })
 export class CustomInputElement {
 
-	@Input('id')
-	elId: string;
+	elId = input<string>(undefined, { alias: 'id' });
 
-	@Input('value')
-	numberValue: number = 99;
+	numberValue = formValue(99);
 
 }
 

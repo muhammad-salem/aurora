@@ -1,6 +1,6 @@
 import {
 	Component, HostBinding, HostListener,
-	Injectable, Input, OnInit, output,
+	Injectable, input, OnInit, output,
 	view, inject, viewChild,
 } from '@ibyar/aurora';
 
@@ -68,11 +68,12 @@ const style = `
 })
 export class PersonView implements OnInit {
 
-	@Input()
-	person: Person = {
+	person = input<Person>({
 		name: 'Delilah',
 		age: 24
-	};
+	});
+
+	resize = input<void, string>(void 0, { transform: msg => this.logger.log(msg) });
 
 	open = output<string>();
 	_select = output<Person>({ alias: '_select', bubbles: true });
@@ -102,7 +103,7 @@ export class PersonView implements OnInit {
 	}
 
 	get yearOfBirth() {
-		return 2021 - this.person.age;
+		return 2021 - this.person.get().age;
 	}
 
 	@HostListener('window:load', ['$event'])
@@ -118,7 +119,7 @@ export class PersonView implements OnInit {
 	@HostListener('click', ['$event.target'])
 	onClick(target: HTMLElement) {
 		this.logger.log('target', target);
-		this._select.emit(this.person);
+		this._select.emit(this.person.get());
 		this.off = this.on;
 		this.on = !this.on;
 	}
@@ -130,12 +131,7 @@ export class PersonView implements OnInit {
 
 	@HostListener('person.age')
 	personChange() {
-		this.logger.log('age change', this.person.age);
-	}
-
-	@Input()
-	set resize(msg: string) {
-		this.logger.log(this, msg);
+		this.logger.log('age change', this.person.get().age);
 	}
 
 	collectData(data: Object, ddd: Person, p: Person): string[] {
@@ -143,7 +139,7 @@ export class PersonView implements OnInit {
 	}
 
 	addOneYear() {
-		this.person.age++;
+		this.person.get().age++;
 	}
 }
 
@@ -157,11 +153,9 @@ export class PersonView implements OnInit {
 })
 export class PersonEdit {
 
-	@Input()
-	person: Person;
+	person = input<Person>();
 
-	@Input()
-	show = true;
+	show = input(true);
 
 	save = output<Person>();
 
@@ -169,7 +163,7 @@ export class PersonEdit {
 
 	printPerson() {
 		this.logger.log(this.person);
-		this.save.emit(this.person);
+		this.save.emit(this.person.get());
 	}
 }
 
@@ -180,10 +174,8 @@ export class PersonEdit {
 })
 export class ProgressBar {
 
-	@Input()
-	max: number;
+	max = input<number>();
 
-	@Input()
-	value: number;
+	value = input<number>();
 
 }

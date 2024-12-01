@@ -1,5 +1,5 @@
 
-import { Component, Directive, Input, Pipe, metadataHoler } from '@ibyar/aurora';
+import { Component, Directive, input, Pipe, metadataHoler } from '@ibyar/aurora';
 
 function debugClass(constructor: any) {
 	const metadata = metadataHoler.get(Reflect.get(constructor, Symbol.metadata));
@@ -10,8 +10,7 @@ function debugClass(constructor: any) {
 @Pipe({ name: 'pipe' })
 @Directive({ selector: 'parent' })
 export class Parent {
-	@Input()
-	name: string;
+	name = input<string>();
 }
 
 debugClass(Parent);
@@ -21,18 +20,14 @@ debugClass(Parent);
 	selector: 'first-child-comp'
 })
 export class FirstChild extends Parent {
-
-	@Input()
-	age: number;
+	age = input<number>();
 }
 
 @Component({
 	selector: 'last-child-comp'
 })
 export class LastChild extends Parent {
-
-	@Input()
-	address: number;
+	address = input<number>();
 }
 
 

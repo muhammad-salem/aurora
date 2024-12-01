@@ -1,4 +1,4 @@
-import { Component, formValue, HostListener, Input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
+import { Component, formValue, HostListener, input, OnInit, ValueControl, WriteValueOptions } from '@ibyar/aurora';
 
 @Component({
 	selector: 'simple-custom-textarea',
@@ -52,11 +52,10 @@ export class SimpleCustomTextareaComponent implements OnInit, ValueControl<strin
 })
 export class SimpleCustomMessage {
 
-
-	@Input('value') message: string | null = '';
+	message = formValue<string | null>('');
 
 	updateMessage() {
-		this.message = 'test message';
+		this.message.set('test message');
 	}
 
 	onMessageChange(text: string) {
@@ -72,9 +71,7 @@ export class SimpleCustomMessage {
 })
 export class SimpleCustomInputElement implements OnInit {
 
-	@Input('id')
-	elId: string;
-
+	elId = input<string>(undefined, { alias: 'id' });
 
 	numberValue = formValue(99);
 

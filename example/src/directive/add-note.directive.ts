@@ -1,4 +1,4 @@
-import { Component, Directive, Input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/aurora';
+import { Component, Directive, input, OnDestroy, OnInit, StructuralDirective } from '@ibyar/aurora';
 
 
 @Component({
@@ -6,10 +6,7 @@ import { Component, Directive, Input, OnDestroy, OnInit, StructuralDirective } f
 	template: `<div class="alert alert-success" role="alert">structural directive name: '{{directiveName}}'</div>`
 })
 export class NoteComponent {
-
-
-	@Input()
-	directiveName: string;
+	directiveName = input<string>();
 }
 
 @Directive({
@@ -20,11 +17,11 @@ export class AddNoteDirective extends StructuralDirective implements OnInit, OnD
 	onInit(): void {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);
 		const node = this.viewContainerRef.createComponent(NoteComponent);
-		node.directiveName = '*add-note';
+		node.directiveName.set('*add-note');
 	}
-
 
 	onDestroy() {
 		this.viewContainerRef.clear();
 	}
+
 }
