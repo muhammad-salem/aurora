@@ -1,6 +1,6 @@
 import type { MetadataClass } from '@ibyar/decorators';
 import type { Type } from '../utils/typeof.js';
-import { ReactiveScopeControl } from '@ibyar/expressions';
+import { ReactiveControlScope } from '@ibyar/expressions';
 import { TemplateRef } from './template-ref.js';
 import { EmbeddedViewRef, EmbeddedViewRefImpl, ViewRef } from './view-ref.js';
 import { getComponentView } from '../view/utils.js';
@@ -90,6 +90,7 @@ export abstract class ViewContainerRef {
 	 * @param options 
 	 */
 	abstract createComponent<C extends {}>(viewClass: Type<HTMLComponent<C>>, options?: IndexOptions): C;
+
 	/**
 	 * Instantiates a single component and inserts its host view into this container.
 	 *
@@ -103,7 +104,6 @@ export abstract class ViewContainerRef {
 	 * @returns The new `HTMLComponent` which contains the component instance and the host view.
 	 */
 	abstract createComponent<C extends {}>(componentType: Type<C>, options?: ViewContainerComponentOptions): C;
-
 
 	/**
 	 * create an HTMLElement by tag name `selector`.
@@ -280,14 +280,14 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		} else {
 			throw new Error(`Can't find View component for args, ${arg0}, ${options}`);
 		}
-		const scope = ReactiveScopeControl.for<C>(element);
+		const scope = ReactiveControlScope.for<C>(element);
 		const viewRef = new EmbeddedViewRefImpl<C>(scope, [element]);
 		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return element;
 	}
 	override createTextNode(data: string, options?: IndexOptions): Text {
 		const text = document.createTextNode(data);
-		const scope = ReactiveScopeControl.for<Text>(text);
+		const scope = ReactiveControlScope.for<Text>(text);
 		const viewRef = new EmbeddedViewRefImpl<Text>(scope, [text]);
 		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return text;

@@ -1,6 +1,6 @@
 import type { Type } from '../utils/typeof.js';
 import {
-	ReactiveScope, ReactiveScopeControl, Context,
+	ReactiveScope, ReactiveControlScope, Context,
 	ScopeSubscription, SignalScope, isReactive
 } from '@ibyar/expressions';
 import {
@@ -30,7 +30,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScopeControl<T>;
+		_modelScope: ReactiveControlScope<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 		_zone: AuroraZone;
 		_provider: InjectionProvider;
@@ -64,7 +64,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this._model = model;
 
 			clearSignalScope(this._signalScope);
-			const modelScope = ReactiveScopeControl.for(model);
+			const modelScope = ReactiveControlScope.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
 				: model;

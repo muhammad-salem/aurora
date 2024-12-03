@@ -1,4 +1,4 @@
-import { ReactiveScopeControl, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
+import { ReactiveControlScope, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
 import { OnDestroy } from '../component/lifecycle.js';
 import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { classRegistryProvider } from '../providers/provider.js';
@@ -75,7 +75,7 @@ export class AsyncPipeProvider extends ReadOnlyScope<object> {
 	}
 }
 
-export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveScopeControl<T> {
+export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, any> }> extends ReactiveControlScope<T> {
 	static blockScope<P extends { [key: string]: AsyncPipeTransform<any, any> }>(): AsyncPipeScope<P> {
 		return new AsyncPipeScope();
 	}
