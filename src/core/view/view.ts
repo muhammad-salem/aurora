@@ -45,9 +45,6 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	})[htmlViewClassName];
 
 	componentRef.inputs.forEach((input) => {
-		if (Reflect.has(viewClass.prototype, input.viewAttribute)) {
-			return;
-		}
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
 				return this._render.modelStack.get(input.modelProperty);
