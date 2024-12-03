@@ -276,18 +276,13 @@ export class ComponentRender<T extends object> {
 	}
 
 	private createReadOnlyWithReactiveInnerScope<T extends Context>(ctx: T, aliasName?: string, propertyKeys?: (keyof T)[]) {
-		if (!aliasName) {
-			return ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
+		const scope = ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
+		if (aliasName) {
+			const thisInnerScope = scope.getInnerScope('this');
+			scope.set(aliasName as 'this', ctx);
+			scope.setInnerScope(aliasName as 'this', thisInnerScope);
 		}
-		const reactiveScope = ReactiveScope.for(ctx, propertyKeys);
-		const context: Record<string, any> = {
-			'this': ctx,
-			[aliasName]: ctx,
-		};
-		const rootScope = ReadOnlyScope.for(context, ['this', aliasName]);
-		rootScope.setInnerScope('this', reactiveScope);
-		rootScope.setInnerScope(aliasName as 'this', reactiveScope);
-		return rootScope;
+		return scope;
 	}
 
 	/**
