@@ -266,7 +266,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
 		(options?.insert != false) && this.insert(viewRef, options?.index);
-		return component as any as C;
+		return component._model;
 	}
 
 	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
