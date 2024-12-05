@@ -5,7 +5,8 @@ import {
 	JavaScriptParser, Literal,
 	MemberExpression, MethodDefinition,
 	Property, PropertyDefinition,
-	ThisExpression, VisitorCallback
+	SequenceExpression, ThisExpression,
+	VisitorCallback
 } from '@ibyar/expressions';
 
 type Key =
@@ -105,17 +106,27 @@ export class RuntimeClassMetadata {
 			if (type === 'PropertyDefinition') {
 				const definition = expression as PropertyDefinition;
 				const key = definition.getKey();
-				const value = definition.getValue();
+				let value = definition.getValue();
 				if (definition.isPrivate()
 					|| definition.isStatic()
-					|| !(key instanceof Identifier || key instanceof Literal)
-					|| !(value instanceof CallExpression)) {
+					|| !(key instanceof Identifier || key instanceof Literal)) {
 					return;
 				}
-				const property = properties.find(property => this.isCallOf(value, property.signal, property.necessity));
+				if (!(value instanceof CallExpression)) {
+					if (value instanceof SequenceExpression) {
+						value = value.getExpressions().find(node => node instanceof CallExpression && properties.find(property => this.isCallOf(node, property.signal, property.necessity)));
+						if (!value) {
+							return;
+						}
+					} else {
+						return;
+					}
+				}
+				const call = value as CallExpression;
+				const property = properties.find(property => this.isCallOf(call, property.signal, property.necessity));
 				if (property) {
 					const name = key instanceof Identifier ? key.getName() : key.getValue();
-					const alias = this.getAliasNameFromOptionArgument(value);
+					const alias = this.getAliasNameFromOptionArgument(call);
 					property.options.push({ name, alias: alias ?? name });
 				}
 			} else if (type === 'MethodDefinition') {
