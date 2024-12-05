@@ -65,7 +65,7 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 		});
 		let eventListener: Function | undefined;
 		let subscription: Subscription<any>;
-		Object.defineProperty(viewClass.prototype, 'on' + ToCamelCase(output.viewAttribute), {
+		Object.defineProperty(viewClass.prototype, `on${ToCamelCase(output.viewAttribute)}`, {
 			get(): Function | undefined {
 				return eventListener;
 			},

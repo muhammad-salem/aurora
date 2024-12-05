@@ -321,22 +321,20 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 				// (elementAttr)="modelProperty()"
 				elementAttr = elementAttr.substring(1, elementAttr.length - 1);
 				// this.handleEvent(element, elementAttr, viewProperty);
-				modelProperty = modelProperty.endsWith('()') ?
-					modelProperty.substring(0, modelProperty.length - 2) : modelProperty;
+				if (modelProperty.endsWith('()')) {
+					modelProperty = modelProperty.substring(0, modelProperty.length - 2);
+				}
 				let callback: Function = Reflect.get(window, modelProperty);
-				this.addEventListener(elementAttr, event => {
-					callback(event);
-				});
+				this.addEventListener(elementAttr, event => callback(event));
 			} else if (elementAttr.startsWith('on')) {
 				const modelEvent = this.getEventEmitter<any>(elementAttr.substring(2));
 				if (modelEvent) {
 					// modelEvent.subscribe(listener);
-					modelProperty = modelProperty.endsWith('()') ?
-						modelProperty.substring(0, modelProperty.length - 2) : modelProperty;
+					if (modelProperty.endsWith('()')) {
+						modelProperty = modelProperty.substring(0, modelProperty.length - 2);
+					}
 					let listener: Function = Reflect.get(window, modelProperty);
-					modelEvent.subscribe((data: any) => {
-						(listener as Function)(data);
-					});
+					modelEvent.subscribe((data: any) => (listener as Function)(data));
 				}
 			} else {
 				this.setInputValue(attr.name, attr.value);
