@@ -1,12 +1,11 @@
 
-import { isSignal } from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
 import { inject } from '../di/inject.js';
 import { InjectionToken } from '../di/provider.js';
 import { TemplateRef } from '../linker/template-ref.js';
 import { ViewContainerRef } from '../linker/view-container-ref.js';
 import { AuroraZone } from '../zone/zone.js';
-import { isOutputSignal } from '../component/initializer.js';
+import { isInputSignal, isOutputSignal } from '../component/initializer.js';
 
 export const NATIVE_HOST_TOKEN = new InjectionToken<HTMLElement>('NATIVE_HOST');
 export const DIRECTIVE_HOST_TOKEN = new InjectionToken<HTMLComponent<any> | StructuralDirective>('DIRECTIVE_HOST');
@@ -42,8 +41,8 @@ export class DirectiveViewContext {
 	static createContext(directive: StructuralDirective | AttributeDirective): DirectiveViewContext {
 		const ctx = new DirectiveViewContext(directive);
 		Object.entries(directive).forEach(([name, value]) => {
-			if (isSignal(value)) {
-				Object.defineProperty(ctx, name, {
+			if (isInputSignal(value)) {
+				Object.defineProperty(ctx, value.options?.alias ?? name, {
 					get(): any {
 						return value.get();
 					},
@@ -53,14 +52,19 @@ export class DirectiveViewContext {
 					enumerable: true,
 				});
 			} else if (isOutputSignal(value)) {
-				Reflect.set(ctx, name, value);
+				Reflect.set(ctx, value.options?.alias ?? name, value);
 			}
 		});
+		Object.getOwnPropertyNames(Object.getPrototypeOf(directive))
+			.filter(fn => typeof (directive as any)[fn] === 'function' && fn !== 'constructor')
+			.forEach(fn => Reflect.set(ctx, fn, (directive as any)[fn]?.bind(directive)));
 		return ctx;
 	}
 
-	constructor(public readonly _directive: StructuralDirective | AttributeDirective) {
+	#directive: StructuralDirective | AttributeDirective;
 
+	constructor(directive: StructuralDirective | AttributeDirective) {
+		this.#directive = directive;
 	}
 
 }
