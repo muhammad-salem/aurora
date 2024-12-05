@@ -12,8 +12,8 @@ export class NumberEditor {
 
 @Component({
 	selector: 'number-viewer',
-	template: `{{number|>join}}`,
-	// extend: 'number-editor',
+	template: `{{number|>json}}`,
+	extend: 'number-editor',
 })
 export class NumberViewer extends NumberEditor {
 
