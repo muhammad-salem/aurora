@@ -23,7 +23,7 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
 				<li>hh:mm:ss {{${stringLiteralFormat}}} format using string literal ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
 				<li>Time: {{time |> toDate}}</li>
-				<li>Data: {{date}}</li>
+				<li>Day of month: {{date}}</li>
 			</ul>
 		</div>`
 })
@@ -71,9 +71,9 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 		this.updateContext = ctx => {
 			model.date.set(ctx.date);
 			model.time.set(ctx.time);
-			model.hh.set(ctx.date);
-			model.mm.set(ctx.date);
-			model.ss.set(ctx.date);
+			model.hh.set(ctx.hh);
+			model.mm.set(ctx.mm);
+			model.ss.set(ctx.ss);
 		};
 	}
 
