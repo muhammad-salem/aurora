@@ -1,4 +1,4 @@
-import type { ReactiveScope, ReactiveScopeControl, Context, SignalScope } from '@ibyar/expressions';
+import type { ReactiveScope, ReactiveControlScope, Context, SignalScope } from '@ibyar/expressions';
 import type { Type } from '../utils/typeof.js';
 import { EventEmitter } from './events.js';
 import { ComponentRef } from './component.js';
@@ -6,6 +6,7 @@ import { AuroraZone } from '../zone/zone.js';
 import { PropertyRef } from './reflect.js';
 import { InjectionProvider } from '../di/provider.js';
 import { ChangeDetectorRef } from '../linker/change-detector-ref.js';
+import { ComponentRender } from '../view/render.js';
 
 export interface CustomElement {
 	adoptedCallback(): void;
@@ -21,12 +22,13 @@ export type NodeContextType<T> = { 'this': BaseComponent<T> };
 export interface BaseComponent<T> extends CustomElement {
 
 	_model: ModelType<T>;
-	_modelScope: ReactiveScopeControl<T & Context>;
+	_modelScope: ReactiveControlScope<T & Context>;
 	_signalScope: SignalScope;
 	_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 	_zone: AuroraZone;
 	_provider: InjectionProvider;
 	_detector: ChangeDetectorRef;
+	_render: ComponentRender<any>;
 
 	getComponentRef(): ComponentRef<T>;
 
@@ -55,8 +57,7 @@ export interface BaseComponent<T> extends CustomElement {
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
 
 export function isHTMLComponent(object: any): object is HTMLComponent<any> {
-	return Reflect.has(object, '_model')
-		&& object instanceof HTMLElement;
+	return object instanceof HTMLElement && Reflect.has(object, '_model');
 }
 
 export function isHTMLComponentOfType<T extends object>(object: any, typeClass: Type<T>): object is HTMLComponent<T> {

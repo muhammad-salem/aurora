@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, view, viewChild, ViewChild } from '@ibyar/aurora';
+import { AfterViewInit, Component, OnInit, view, viewChild } from '@ibyar/aurora';
 
 
 @Component({
