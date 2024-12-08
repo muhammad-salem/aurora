@@ -12,28 +12,6 @@ import {
 } from './options.js';
 
 
-
-type PropertyValue<T> = T | ((value: T) => void) | undefined;
-
-/**
- * @deprecated since v2.4.0, use `input` function instead.
- */
-
-export function Input<This, Value>(name?: string) {
-	return makeClassMemberDecorator<PropertyValue<Value>, ClassFieldDecoratorContext<This, Value> | ClassSetterDecoratorContext<This, Value>>(
-		(value, context, metadata) => {
-			if (!name && typeof context.name !== 'string') {
-				throw new TypeError(`type ${typeof context.name} of '${context.name.toString()}' is not supported`);
-			}
-			if (context.private) {
-				throw new SyntaxError(`private members '${context.name.toString()}' is not supported.`);
-			}
-			ReflectComponents.addInput(metadata, context.name as string, name || context.name as string);
-		}
-	);
-}
-
-
 export function HostListener<This, Value extends (this: This, ...args: any) => any>(eventName: string, args?: string | string[]) {
 	return makeClassMemberDecorator<Value, ClassMethodDecoratorContext>(
 		(value, context, metadata) => {
