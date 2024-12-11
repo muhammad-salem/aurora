@@ -103,7 +103,7 @@ export class PersonView implements OnInit {
 	}
 
 	get yearOfBirth() {
-		return 2021 - this.person.get().age;
+		return 2025 - this.person.get().age;
 	}
 
 	@HostListener('window:load', ['$event'])
