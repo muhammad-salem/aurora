@@ -402,8 +402,7 @@ export class ComponentRender<T extends object> {
 				/**
 				 * <input id="23" name="person-name" data-id="1234567890" data-user="carinaanand" data-date-of-birth />
 				 */
-				const isAttr = hasAttr(element, attr.name);
-				if (isAttr) {
+				if (hasAttr(element, attr.name)) {
 					if (attr.value === false) {
 						element.removeAttribute(attr.name);
 					} else if (attr.value === true) {

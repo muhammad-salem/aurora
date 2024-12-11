@@ -1,6 +1,5 @@
 import type { ReactiveScope, ReactiveControlScope, Context, SignalScope } from '@ibyar/expressions';
 import type { Type } from '../utils/typeof.js';
-import { EventEmitter } from './events.js';
 import { ComponentRef } from './component.js';
 import { AuroraZone } from '../zone/zone.js';
 import { PropertyRef } from './reflect.js';
@@ -31,27 +30,12 @@ export interface BaseComponent<T> extends CustomElement {
 	_render: ComponentRender<any>;
 
 	getComponentRef(): ComponentRef<T>;
-
-	hasInputStartWith(viewProp: string): boolean;
-	getInputStartWith(viewProp: string): PropertyRef | undefined;
 	getInput(viewProp: string): PropertyRef | undefined;
 	getInputValue(viewProp: string): any;
 	setInputValue(viewProp: string, value: any): void;
 
-	hasInput(viewProp: string): boolean;
-	hasProp(propName: string): boolean;
-	hasOutput(viewProp: string): boolean;
-
-	getOutput(viewProp: string): PropertyRef | undefined;
-	getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined;
-
-	triggerOutput(eventName: string, value?: any): void;
 	onDestroy(callback: () => void): void;
 
-	/**
-	 * apply change detection
-	 */
-	detectChanges(): void;
 }
 
 export interface HTMLComponent<T> extends BaseComponent<T>, HTMLElement { }
