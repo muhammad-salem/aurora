@@ -201,7 +201,7 @@ export declare class PersonEdit {
 import { BaseComponent, ConstructorOfView } from "@ibyar/core";
 
 declare class HTMLPersonEditElement extends HTMLElement {
-    public static observedAttributes: "person" | "show" | "onSave"[];
+    public static observedAttributes: ('person' | 'show' | 'onSave')[];
     public person: Person;
     public show: true;
     public onSave: EventEmitter<Person>;
