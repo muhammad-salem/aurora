@@ -17,16 +17,20 @@
 
 
 	<div id="root"></div>
-	<app-root id="app-root" name="root-component"></app-root>
+	<app-root id="app-root" name="root-component" (test)="testFunction" @eventTest="testFunction()"
+		ontest="testFunction"></app-root>
 
-
-	<script type="module" src="/web_modules/@ibyar/example/dist/index.js"></script>
 	<script type="text/javascript">
+		window.testFunction = function (params) {
+			console.log('params', params);
+		};
 		window.onload = function () {
 			const time = window.performance.timing.domContentLoadedEventEnd - window.performance.timing.navigationStart;;
 			console.log("Time until everything loaded: ", time);
 		};
 	</script>
+	<script type="module" src="/web_modules/@ibyar/example/dist/index.js"></script>
+
 </body>
 
 </html>

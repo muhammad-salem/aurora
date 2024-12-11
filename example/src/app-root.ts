@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, Type } from '@ibyar/aurora';
+import { Component, OnInit, output, signal, Type } from '@ibyar/aurora';
 import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
@@ -103,8 +103,13 @@ export class AppRoot implements OnInit {
 
 	selected = signal<App | undefined>();
 
+	test = output<string>();
+	eventTest = output<number>();
+
 	onInit(): void {
 		setTimeout(() => this.lazyLoad(this.appList.at(-2)!), 0);
+		this.test.emit('data');
+		this.eventTest.emit(333);
 	}
 
 
