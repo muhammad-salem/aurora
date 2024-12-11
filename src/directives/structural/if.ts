@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
+import { Directive, input, OnDestroy, StructuralDirective, TemplateRef } from '@ibyar/core';
 
 
 @Directive({
@@ -13,40 +13,38 @@ export class IfThenElseDirective extends StructuralDirective implements OnDestro
 
 	private _lastCondition: boolean | null = null;
 
-
-	@Input('if')
-	set ifCondition(condition: boolean) {
-		this._condition = condition;
-		this._updateUI();
-	}
-
-	get ifCondition() {
-		return this._condition;
-	}
-
-	@Input('then')
-	set thenTemplateRef(template: TemplateRef) {
-		this._thenTemplateRef = template;
-		if (this._condition) {
-			// need to force rendering the new template in case of false condition
-			this._lastCondition = null;
+	if = input.required<boolean>({
+		transform: condition => {
+			this._condition = condition;
+			this._updateUI();
+			return this._condition;
 		}
-		this._updateUI();
-	}
+	});
 
-	get thenTemplateRef() {
-		return this._thenTemplateRef;
-	}
-
-	@Input('else')
-	set elseTemplateRef(template: TemplateRef) {
-		this._elseTemplateRef = template;
-		if (!this._condition) {
-			// need to force rendering the new template in case of false condition
-			this._lastCondition = null;
+	then = input.required<TemplateRef>({
+		transform: template => {
+			this._thenTemplateRef = template;
+			if (this._condition) {
+				// need to force rendering the new template in case of false condition
+				this._lastCondition = null;
+			}
+			this._updateUI();
+			return this._thenTemplateRef;
 		}
-		this._updateUI();
-	}
+	});
+
+	else = input<TemplateRef>(undefined, {
+		transform: template => {
+			this._elseTemplateRef = template;
+			if (!this._condition) {
+				// need to force rendering the new template in case of false condition
+				this._lastCondition = null;
+			}
+			this._updateUI();
+			return this._elseTemplateRef;
+		}
+	});
+
 
 	protected _updateUI() {
 		const elseSuccessor = this.getSuccessor('*else');

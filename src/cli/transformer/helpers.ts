@@ -256,9 +256,16 @@ export function scanSignals(classNode: ts.ClassDeclaration, signals: SignalDetai
 			const name = (ts.isComputedPropertyName(member.name) && ts.isStringLiteral(member.name.expression))
 				? member.name.expression.getText()
 				: member.name.getText()
-			const info = scanSignalCall(member.initializer as ts.CallExpression, alias, name);
+			const info = scanSignalCall(member.initializer as ts.CallExpression, alias, checkAndRemoveQuotations(name));
 			info && (infos[signal as SignalKey] ??= []).push(info);
 		});
 	});
 	return infos;
+}
+
+function checkAndRemoveQuotations(string: string) {
+	if (/(^'.*'$)|(^".*"$)|(^`.*`$)/.test(string)) {
+		return string.substring(1, string.length - 1);
+	}
+	return string;
 }

@@ -72,11 +72,9 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 										const signalsOption = createSignalsAssignment(signalDetails);
 										const allInputs = (inputs ?? [])
 											.concat(signalDetails.input ?? [])
-											.concat(signalDetails.formValue ?? [])
-											.concat(signalDetails.model ?? []);
+											.concat(signalDetails.formValue ?? []);
 										const allOutputs = (outputs ?? []).
-											concat(signalDetails.output ?? [])
-											.concat(signalDetails.model ?? []);
+											concat(signalDetails.output ?? []);
 										registerDirectiveCall({
 											selector,
 											successors,
@@ -87,8 +85,8 @@ export function beforeCompileDirectiveOptions(program: ts.Program): ts.Transform
 											type: 'directive',
 											name: selector,
 											successors,
-											inputs,
-											outputs,
+											inputs: allInputs,
+											outputs: allOutputs,
 											views: [],
 											signals: signalDetails
 										});

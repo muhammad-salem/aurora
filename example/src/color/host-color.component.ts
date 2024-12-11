@@ -31,7 +31,7 @@ export class HostColorPickerComponent {
 	];
 
 
-	@HostBinding('style.backgroundColor')
+	@HostBinding('style.background-color')
 	selectedColor = '';
 
 
