@@ -85,6 +85,7 @@ function checkAndValidateObjectSyntax(source: string) {
 	}
 	return source;
 }
+
 function parseLiveAttribute(attr: LiveAttribute) {
 	const elementSource = `this${escapeMemberExpression(attr.name)}`;
 	const elementExpression = JavaScriptParser.parseScript(elementSource);
@@ -93,9 +94,8 @@ function parseLiveAttribute(attr: LiveAttribute) {
 		&& (modelExpression instanceof MemberExpression || modelExpression instanceof Identifier)) {
 		attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
-		console.error(`${attr.name}="${attr.value}"" is not a valid MemberExpression or Identifier 'x.y.z'`);
+		console.error(`[(${attr.name})]="${attr.value}" is not a valid MemberExpression or Identifier 'x.y.z'`);
 	}
-
 }
 
 export function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
@@ -129,7 +129,7 @@ function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	if (elementExpression instanceof MemberExpression) {
 		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
-		console.error(`[${attr.name}] is not a valid MemberExpression 'x.y.z'`);
+		console.error(`[${attr.name}]="${attr.value}" is not a valid MemberExpression 'x.y.z'`);
 	}
 	attr.pipelineNames = getPipelineNames(modelExpression);
 }
