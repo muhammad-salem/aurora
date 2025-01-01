@@ -1,6 +1,8 @@
 import {
-	ReactiveScope, Context, ScopeSubscription,
-	Stack, ReadOnlyScope, Identifier,
+	Context,
+	ReactiveScope,
+	ScopeSubscription,
+	Stack, Identifier,
 	isComputed, isSignal, isReactive
 } from '@ibyar/expressions';
 import {
@@ -17,7 +19,7 @@ import { classRegistryProvider } from '../providers/provider.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
 import {
-	AttributeDirective, StructuralDirective, DirectiveViewContext,
+	AttributeDirective, StructuralDirective, ReactiveSignalScope,
 	DIRECTIVE_HOST_TOKEN, NATIVE_HOST_TOKEN, SUCCESSORS_TOKEN,
 } from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
@@ -165,14 +167,13 @@ export class ComponentRender<T extends object> {
 		removeProvider(provider);
 
 		templateRef.host = structural;
-		const context = DirectiveViewContext.createContext(structural);
-		const scope = ReactiveScope.readOnlyScopeForThis(context);
-		scope.getInnerScope('this')!.getContextProxy = () => context;
+		const scope = ReactiveSignalScope.readOnlyScopeForThis(structural);
+		scope.getInnerScope('this')!.getContextProxy = () => structural;
 		stack.pushScope(scope);
 		if (directiveRef.exportAs) {
 			stack.pushBlockScopeFor({ [directiveRef.exportAs]: structural });
 		}
-		subscriptions.push(...this.initDirective(context, directive, stack));
+		subscriptions.push(...this.initDirective(structural, directive, stack));
 		if (isOnInit(structural)) {
 			directiveZone.run(structural.onInit, structural);
 		}
@@ -366,13 +367,12 @@ export class ComponentRender<T extends object> {
 			}
 
 			const stack = contextStack.copyStack();
-			const context = DirectiveViewContext.createContext(directive);
-			const scope = ReactiveScope.readOnlyScopeForThis(context);
+			const scope = ReactiveSignalScope.readOnlyScopeForThis(directive);
 			const directiveScope = scope.getInnerScope('this')!;
-			directiveScope.getContextProxy = () => context;
+			directiveScope.getContextProxy = () => directive;
 			stack.pushScope(scope);
 
-			const directiveSubscriptions = this.initDirective(context, directiveNode, stack);
+			const directiveSubscriptions = this.initDirective(directive, directiveNode, stack);
 			subscriptions.push(...directiveSubscriptions);
 			if (isOnInit(directive)) {
 				directiveZone.run(directive.onInit, directive);
@@ -466,8 +466,9 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
+
 	initDirective(
-		context: DirectiveViewContext,
+		context: StructuralDirective | AttributeDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
 		const subscriptions: ScopeSubscription<Context>[] = [];

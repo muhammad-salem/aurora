@@ -1,4 +1,8 @@
-
+import {
+	Context, isReactive, isSignal,
+	ReactiveScope, ReadOnlyScope, Scope,
+	ScopeSubscription, ValueChangedCallback
+} from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
 import { inject } from '../di/inject.js';
 import { InjectionToken } from '../di/provider.js';
@@ -36,35 +40,69 @@ export class AttributeDirective {
 }
 
 
-export class DirectiveViewContext {
-
-	static createContext(directive: StructuralDirective | AttributeDirective): DirectiveViewContext {
-		const ctx = new DirectiveViewContext(directive);
-		Object.entries(directive).forEach(([name, value]) => {
-			if (isInputSignal(value)) {
-				Object.defineProperty(ctx, value.options?.alias ?? name, {
-					get(): any {
-						return value.get();
-					},
-					set(newValue: any) {
-						return value.set(newValue);
-					},
-					enumerable: true,
-				});
-			} else if (isOutputSignal(value)) {
-				Reflect.set(ctx, value.options?.alias ?? name, value);
-			}
-		});
-		Object.getOwnPropertyNames(Object.getPrototypeOf(directive))
-			.filter(fn => typeof (directive as any)[fn] === 'function' && fn !== 'constructor')
-			.forEach(fn => Reflect.set(ctx, fn, (directive as any)[fn]?.bind(directive)));
-		return ctx;
+export class ReactiveSignalScope<T extends Context> extends ReactiveScope<T> {
+	static for<T extends Context>(context: T, propertyKeys?: (keyof T)[]) {
+		return new ReactiveSignalScope(context, propertyKeys);
+	}
+	static blockScope<T extends Context>(propertyKeys?: (keyof T)[]) {
+		return new ReactiveSignalScope({} as T, propertyKeys);
+	}
+	static scopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
+		const thisScope = ReactiveSignalScope.for(ctx, propertyKeys);
+		const thisCtx = {
+			'this': ctx,
+		};
+		const rootScope = Scope.for(thisCtx, ['this']);
+		rootScope.setInnerScope('this', thisScope);
+		return rootScope;
 	}
 
-	#directive: StructuralDirective | AttributeDirective;
+	static readOnlyScopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
+		const thisScope = ReactiveSignalScope.for(ctx, propertyKeys);
+		const thisCtx = {
+			'this': ctx,
+		};
+		const rootScope = ReadOnlyScope.for(thisCtx, ['this']);
+		rootScope.setInnerScope('this', thisScope);
+		return rootScope;
+	}
 
-	constructor(directive: StructuralDirective | AttributeDirective) {
-		this.#directive = directive;
+	override get(propertyKey: keyof T) {
+		const value = super.get(propertyKey);
+		if (isReactive(value)) {
+			return value.get();
+		}
+		return value;
+	}
+
+	override set(propertyKey: keyof T, newValue: any, receiver?: any): boolean {
+		const value = Reflect.get(this._ctx, propertyKey) as any;
+		if (isSignal(value)) {
+			value.set(newValue);
+			return true;
+		} else {
+			return super.set(propertyKey, newValue, receiver);
+		}
+	}
+
+	override subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
+		const value = Reflect.get(this._ctx, propertyKey) as any;
+		if (isSignal(value)) {
+			return value.subscribe(callback);
+		} else {
+			return super.subscribe(propertyKey, callback);
+		}
+	}
+
+	override unsubscribe(propertyKey?: keyof T | undefined, subscription?: ScopeSubscription<T> | undefined): void {
+		if (propertyKey) {
+			const value = Reflect.get(this._ctx, propertyKey) as any;
+			if (isSignal(value)) {
+				value.getScope().unsubscribe(value.getIndex(), subscription);
+				return;
+			}
+		}
+		super.unsubscribe(propertyKey, subscription);
 	}
 
 }
