@@ -1,4 +1,10 @@
-import { ReactiveScope, Context, ScopeSubscription, Stack, ReadOnlyScope, Identifier, Signal } from '@ibyar/expressions';
+import {
+	Context,
+	ReactiveScope,
+	ScopeSubscription,
+	Stack, Identifier,
+	isComputed, isSignal, isReactive
+} from '@ibyar/expressions';
 import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
@@ -12,13 +18,18 @@ import { documentStack } from '../context/stack.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { isOnDestroy, isOnInit } from '../component/lifecycle.js';
 import { hasAttr } from '../utils/elements-util.js';
-import { AttributeDirective, AttributeOnStructuralDirective, StructuralDirective } from '../directive/directive.js';
+import {
+	AttributeDirective, StructuralDirective, ReactiveSignalScope,
+	DIRECTIVE_HOST_TOKEN, NATIVE_HOST_TOKEN, SUCCESSORS_TOKEN,
+} from '../directive/directive.js';
 import { TemplateRef, TemplateRefImpl } from '../linker/template-ref.js';
-import { ViewContainerRefImpl } from '../linker/view-container-ref.js';
+import { ViewContainerRef, ViewContainerRefImpl } from '../linker/view-container-ref.js';
 import { createDestroySubscription } from '../context/subscription.js';
-import { EventEmitter } from '../component/events.js';
-import { isViewChildSignal } from '../component/initializer.js';
+import { isViewChildSignal, OutputSignal, ViewChildSignal } from '../component/initializer.js';
 import { ChildRef } from '../component/reflect.js';
+import { addProvider, removeProvider } from '../di/inject.js';
+import { AbstractAuroraZone } from '../zone/zone.js';
+import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -43,10 +54,15 @@ export class ComponentRender<T extends object> {
 	private viewScope: ReactiveScope<ViewContext> = new ReactiveScope({});
 	private viewChildSignal: ChildRef[];
 
+	modelStack: Stack;
+
 	constructor(public view: HTMLComponent<T>, private subscriptions: ScopeSubscription<Context>[]) {
 		this.componentRef = this.view.getComponentRef();
 		this.contextStack = documentStack.copyStack();
 		this.contextStack.pushScope<Context>(this.view._modelScope);
+		const signalMaskScope = this.contextStack.pushReactiveScope();
+		this.maskRawSignalScope(signalMaskScope, this.view._model);
+		this.modelStack = Stack.forScopes(this.view._modelScope, signalMaskScope);
 		this.exportAsScope = this.contextStack.pushReactiveScope();
 		this.templateNameScope = this.contextStack.pushReactiveScope();
 		this.viewChildSignal = this.componentRef.viewChild.filter(child => child.selector === 'ɵSignal');
@@ -137,17 +153,21 @@ export class ComponentRender<T extends object> {
 			}
 		});
 
+		const provider = this.view._provider.fork();
+		provider.setToken(DIRECTIVE_HOST_TOKEN, host);
+		provider.setType(TemplateRef, templateRef);
+		provider.setType(AbstractAuroraZone, directiveZone);
+		provider.setType(ViewContainerRef, viewContainerRef);
+		provider.setToken(SUCCESSORS_TOKEN, successorTemplateRefs);
+		addProvider(provider);
+		const signalScope = pushNewSignalScope();
 		const StructuralDirectiveClass = directiveRef.modelClass as typeof StructuralDirective;
-		const structural = directiveZone.run(() => new StructuralDirectiveClass(
-			templateRef,
-			viewContainerRef,
-			host,
-			directiveZone,
-			successorTemplateRefs,
-		));
+		const structural = directiveZone.run(() => new StructuralDirectiveClass());
+		clearSignalScope(signalScope);
+		removeProvider(provider);
 
 		templateRef.host = structural;
-		const scope = ReactiveScope.readOnlyScopeForThis(structural);
+		const scope = ReactiveSignalScope.readOnlyScopeForThis(structural);
 		scope.getInnerScope('this')!.getContextProxy = () => structural;
 		stack.pushScope(scope);
 		if (directiveRef.exportAs) {
@@ -257,18 +277,13 @@ export class ComponentRender<T extends object> {
 	}
 
 	private createReadOnlyWithReactiveInnerScope<T extends Context>(ctx: T, aliasName?: string, propertyKeys?: (keyof T)[]) {
-		if (!aliasName) {
-			return ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
+		const scope = ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
+		if (aliasName) {
+			const thisInnerScope = scope.getInnerScope('this');
+			scope.set(aliasName as 'this', ctx);
+			scope.setInnerScope(aliasName as 'this', thisInnerScope);
 		}
-		const reactiveScope = ReactiveScope.for(ctx, propertyKeys);
-		const context: Record<string, any> = {
-			'this': ctx,
-			[aliasName]: ctx,
-		};
-		const rootScope = ReadOnlyScope.for(context, ['this', aliasName]);
-		rootScope.setInnerScope('this', reactiveScope);
-		rootScope.setInnerScope(aliasName as 'this', reactiveScope);
-		return rootScope;
+		return scope;
 	}
 
 	/**
@@ -281,7 +296,7 @@ export class ComponentRender<T extends object> {
 	initHtmlElement(element: HTMLElement, node: DomElementNode, contextStack: Stack, subscriptions: ScopeSubscription<Context>[]): void;
 
 	/**
-	 * use to init a new create html element
+	 * use to initialize a newly created html element
 	 * @param element 
 	 * @param node 
 	 * @param contextStack 
@@ -312,7 +327,7 @@ export class ComponentRender<T extends object> {
 			Reflect.set(this.view, templateRefName.name, element);
 			this.viewScope.set(templateRefName.name, element);
 			const view = this.componentRef.viewChild.find(child => child.selector === templateRefName.name);
-			let signal: Signal<any> | undefined;
+			let signal: ViewChildSignal<any> | undefined;
 			if (view) {
 				Reflect.set(this.view._model, view.modelName, element);
 			} else if (signal = this.getViewChildSignal(templateRefName.name)) {
@@ -335,19 +350,24 @@ export class ComponentRender<T extends object> {
 		subscriptions: ScopeSubscription<Context>[]) {
 		attributeDirectives?.forEach(directiveNode => {
 			const directiveRef = classRegistryProvider.getDirectiveRef<any>(directiveNode.name);
-			if (!directiveRef
-				|| !((directiveRef.modelClass.prototype instanceof AttributeDirective)
-					|| (directiveRef.modelClass.prototype instanceof AttributeOnStructuralDirective))) {
+			if (!directiveRef || !(directiveRef.modelClass.prototype instanceof AttributeDirective)) {
 				return;
 			}
 			const directiveZone = this.view._zone.fork(directiveRef.zone);
-			const directive = directiveZone.run(() => new directiveRef.modelClass(element, directiveZone) as AttributeDirective | AttributeOnStructuralDirective);
+			const provider = this.view._provider.fork();
+			provider.setToken(NATIVE_HOST_TOKEN, element);
+			provider.setType(AbstractAuroraZone, directiveZone);
+			addProvider(provider);
+			const signalScope = pushNewSignalScope();
+			const directive = directiveZone.run(() => new directiveRef.modelClass() as AttributeDirective);
+			clearSignalScope(signalScope);
+			removeProvider(provider);
 			if (directiveRef.exportAs) {
 				this.exportAsScope.set(directiveRef.exportAs, directive);
 			}
 
 			const stack = contextStack.copyStack();
-			const scope = ReactiveScope.readOnlyScopeForThis(directive);
+			const scope = ReactiveSignalScope.readOnlyScopeForThis(directive);
 			const directiveScope = scope.getInnerScope('this')!;
 			directiveScope.getContextProxy = () => directive;
 			stack.pushScope(scope);
@@ -382,8 +402,7 @@ export class ComponentRender<T extends object> {
 				/**
 				 * <input id="23" name="person-name" data-id="1234567890" data-user="carinaanand" data-date-of-birth />
 				 */
-				const isAttr = hasAttr(element, attr.name);
-				if (isAttr) {
+				if (hasAttr(element, attr.name)) {
 					if (attr.value === false) {
 						element.removeAttribute(attr.name);
 					} else if (attr.value === true) {
@@ -392,7 +411,8 @@ export class ComponentRender<T extends object> {
 						element.setAttribute(attr.name, attr.value as string);
 					}
 				} else {
-					Reflect.set(element, attr.name, attr.value);
+					attr.expression.get(contextStack);
+					// Reflect.set(element, attr.name, attr.value);
 				}
 			});
 		}
@@ -447,14 +467,15 @@ export class ComponentRender<T extends object> {
 		}
 		return subscriptions;
 	}
+
 	initDirective(
-		directive: StructuralDirective | AttributeDirective | AttributeOnStructuralDirective,
+		context: StructuralDirective | AttributeDirective,
 		node: DomStructuralDirectiveNode | DomAttributeDirectiveNode,
 		contextStack: Stack): ScopeSubscription<Context>[] {
 		const subscriptions: ScopeSubscription<Context>[] = [];
 
 		if (node.attributes?.length) {
-			node.attributes.forEach(attr => Reflect.set(directive, attr.name, attr.value));
+			node.attributes.forEach(attr => attr.expression.get(contextStack));
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
@@ -477,10 +498,8 @@ export class ComponentRender<T extends object> {
 					stack.pushBlockScopeFor({ $event });
 					this.view._zone.run(event.expression.get, event.expression, [stack]);
 				};
-				const subscription = ((directive as any)[event.name] as EventEmitter<T>).subscribe(listener);
-				subscriptions.push(createDestroySubscription(
-					() => ((directive as any)[event.name] as EventEmitter<T>).remove(subscription),
-				));
+				const subscription = (Reflect.get(context, event.name) as OutputSignal<T>).subscribe(listener);
+				subscriptions.push(createDestroySubscription(() => subscription.unsubscribe()));
 			});
 		}
 		if (node.templateAttrs?.length) {
@@ -494,7 +513,6 @@ export class ComponentRender<T extends object> {
 		// check host binding
 		return subscriptions;
 	}
-
 	private getViewChildSignal(templateRefName: string) {
 		for (const child of this.viewChildSignal) {
 			const signal = this.view._model[child.modelName];
@@ -504,5 +522,19 @@ export class ComponentRender<T extends object> {
 		}
 		return;
 	}
-
+	private maskRawSignalScope(maskScope: ReactiveScope<Context>, model: Context) {
+		Object.entries(model).forEach(([key, signal]) => {
+			if (isSignal(signal)) {
+				maskScope.set(key, signal.get());
+				signal.subscribe(value => maskScope.set(key, value));
+				maskScope.subscribe(key, value => signal.set(value));
+			} else if (isComputed(signal)) {
+				maskScope.set(key, signal.get());
+				signal.subscribe(value => maskScope.set(key, value));
+			} else if (isReactive(signal)) {
+				maskScope.set(key, undefined);
+				signal.subscribe(value => maskScope.set(key, value));
+			}
+		});
+	}
 }

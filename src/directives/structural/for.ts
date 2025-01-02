@@ -1,5 +1,5 @@
 import {
-	Directive, EmbeddedViewRef, Input,
+	Directive, EmbeddedViewRef, input,
 	OnDestroy, StructuralDirective, ViewRef
 } from '@ibyar/core';
 import {
@@ -124,21 +124,21 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 })
 export class ForDirective<T> extends AbstractForDirective<T> {
 
-	@Input('of')
-	set forOf(forOf: T[] | null | undefined) {
-		this._forOf = forOf;
-		this._updateUI();
-	}
+	of = input.required<T[] | null | undefined>({
+		transform: forOf => {
+			this._forOf = forOf;
+			this._updateUI();
+			return this._forOf;
+		}
+	});
 
-	@Input('trackBy')
-	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
-		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
-		this._updateUI();
-	}
-
-	get trackBy() {
-		return this._forTrackBy;
-	}
+	trackBy = input<TrackBy<T, any> | null | undefined, TrackBy<T, any>>(TRACK_BY_IDENTITY, {
+		transform: trackBy => {
+			this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
+			this._updateUI();
+			return this._forTrackBy;
+		},
+	});
 
 }
 
@@ -148,21 +148,21 @@ export class ForDirective<T> extends AbstractForDirective<T> {
 })
 export class ForOfDirective<T> extends AbstractForDirective<T> {
 
-	@Input('of')
-	set forOf(forOf: T[] | null | undefined) {
-		this._forOf = forOf;
-		this._updateUI();
-	}
+	of = input.required<T[] | null | undefined>({
+		transform: forOf => {
+			this._forOf = forOf;
+			this._updateUI();
+			return this._forOf;
+		}
+	});
 
-	@Input('trackBy')
-	set trackBy(trackBy: TrackBy<T, any> | null | undefined) {
-		this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
-		this._updateUI();
-	}
-
-	get trackBy() {
-		return this._forTrackBy;
-	}
+	trackBy = input<TrackBy<T, any> | null | undefined, TrackBy<T, any>>(TRACK_BY_IDENTITY, {
+		transform: trackBy => {
+			this._forTrackBy = typeof trackBy == 'function' ? trackBy : TRACK_BY_IDENTITY;
+			this._updateUI();
+			return this._forTrackBy;
+		},
+	});
 
 }
 
@@ -174,11 +174,13 @@ export class ForAwaitDirective<T> extends StructuralDirective implements OnDestr
 
 	private _forAwait: AsyncIterable<T> | null | undefined;
 
-	@Input('of')
-	set forAwait(forAwait: AsyncIterable<T> | null | undefined) {
-		this._forAwait = forAwait;
-		this._updateUI().then();
-	}
+	of = input.required<AsyncIterable<T> | null | undefined>({
+		transform: forAwait => {
+			this._forAwait = forAwait;
+			this._updateUI();
+			return this._forAwait;
+		}
+	});
 
 	private async _updateUI() {
 		this.viewContainerRef.clear();
@@ -216,11 +218,13 @@ export class ForInDirective<T = { [key: PropertyKey]: any }> extends StructuralD
 
 	private _forIn: T | null | undefined;
 
-	@Input('in')
-	set forIn(forIn: T | null | undefined) {
-		this._forIn = forIn;
-		this._updateUI();
-	}
+	in = input.required<T | null | undefined>({
+		transform: forIn => {
+			this._forIn = forIn;
+			this._updateUI();
+			return this._forIn;
+		}
+	});
 
 	private _updateUI() {
 		this.viewContainerRef.clear();

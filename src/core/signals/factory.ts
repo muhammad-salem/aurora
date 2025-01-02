@@ -16,33 +16,23 @@ class SignalScopeFactory {
 			throw new Error('expect scope is not matching');
 		}
 	}
-
-	signal<T, S extends typeof Signal<T>>(initValue?: T, signalType?: S): InstanceType<S> {
+	factory<T, S = Signal<T>>(creator: (scope: SignalScope, key: number) => S): S {
 		this.assertValidContext();
-		return this.scopes.at(-1)!.createSignal(initValue, signalType);
+		const scope = this.scopes.at(-1)!;
+		return creator(scope, scope.getNextKey());
 	}
-
-	signalFn<T, S extends typeof Signal<T>>(initValue: T, signalType?: S) {
+	signal<T>(initValue?: T) {
 		this.assertValidContext();
-		return this.scopes.at(-1)!.createSignalFn(initValue, signalType);
+		const scope = this.scopes.at(-1)!;
+		return this.scopes.at(-1)!.createSignal(initValue);
 	}
-
 	computed<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createComputed(computation);
 	}
-	computedFn<T>(computation: () => T) {
-		this.assertValidContext();
-		return this.scopes.at(-1)!.createComputedFn(computation);
-	}
-
 	lazy<T>(computation: () => T) {
 		this.assertValidContext();
 		return this.scopes.at(-1)!.createLazy(computation);
-	}
-	lazyFn<T>(computation: () => T) {
-		this.assertValidContext();
-		return this.scopes.at(-1)!.createLazyFn(computation);
 	}
 	effect(effectFn: (onCleanup?: (clean: () => void) => void) => void) {
 		this.assertValidContext();

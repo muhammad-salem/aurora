@@ -1,7 +1,7 @@
 import {
-	Component, EventEmitter, HostBinding,
-	HostListener, Injectable, Input, OnInit,
-	Output, view, ViewChild, ViewChildren, inject,
+	Component, HostBinding, HostListener,
+	Injectable, input, OnInit, output,
+	view, inject, viewChild,
 } from '@ibyar/aurora';
 
 
@@ -68,27 +68,23 @@ const style = `
 })
 export class PersonView implements OnInit {
 
-	@Input()
-	person: Person = {
+	person = input<Person>({
 		name: 'Delilah',
 		age: 24
-	};
+	});
 
-	@Output() open: EventEmitter<any> = new EventEmitter();
-	@Output('select', { bubbles: true }) _select: EventEmitter<Person> = new EventEmitter();
+	resize = input<void, string>(void 0, { transform: msg => this.logger.log(msg) });
+
+	open = output<string>();
+	_select = output<Person>({ alias: '_select', bubbles: true });
 
 
 	className: string = 'p1 m1';
 
 	view = view();
 
-	@ViewChild(HTMLParagraphElement, { id: 'p-name' })
-	childName!: HTMLParagraphElement;
-
-	@ViewChild(HTMLParagraphElement, { id: 'p-age' })
-	childAge!: HTMLParagraphElement;
-
-	@ViewChildren(HTMLParagraphElement) children: HTMLParagraphElement[];
+	childName = viewChild<HTMLParagraphElement>('p-name');
+	childAge = viewChild<HTMLParagraphElement>('p-age');
 
 
 	@HostBinding('class.on')
@@ -107,7 +103,7 @@ export class PersonView implements OnInit {
 	}
 
 	get yearOfBirth() {
-		return 2021 - this.person.age;
+		return 2025 - this.person.get().age;
 	}
 
 	@HostListener('window:load', ['$event'])
@@ -123,7 +119,7 @@ export class PersonView implements OnInit {
 	@HostListener('click', ['$event.target'])
 	onClick(target: HTMLElement) {
 		this.logger.log('target', target);
-		this._select.emit(this.person);
+		this._select.emit(this.person.get());
 		this.off = this.on;
 		this.on = !this.on;
 	}
@@ -135,12 +131,7 @@ export class PersonView implements OnInit {
 
 	@HostListener('person.age')
 	personChange() {
-		this.logger.log('age change', this.person.age);
-	}
-
-	@Input()
-	set resize(msg: string) {
-		this.logger.log(this, msg);
+		this.logger.log('age change', this.person.get().age);
 	}
 
 	collectData(data: Object, ddd: Person, p: Person): string[] {
@@ -148,7 +139,7 @@ export class PersonView implements OnInit {
 	}
 
 	addOneYear() {
-		this.person.age++;
+		this.person.get().age++;
 	}
 }
 
@@ -162,20 +153,17 @@ export class PersonView implements OnInit {
 })
 export class PersonEdit {
 
-	@Input()
-	person: Person;
+	person = input<Person>();
 
-	@Input()
-	show = true;
+	show = input(true);
 
-	@Output()
-	save = new EventEmitter<Person>();
+	save = output<Person>();
 
 	private logger = inject(LogService);
 
 	printPerson() {
 		this.logger.log(this.person);
-		this.save.emit(this.person);
+		this.save.emit(this.person.get());
 	}
 }
 
@@ -186,10 +174,8 @@ export class PersonEdit {
 })
 export class ProgressBar {
 
-	@Input()
-	max: number;
+	max = input<number>();
 
-	@Input()
-	value: number;
+	value = input<number>();
 
 }

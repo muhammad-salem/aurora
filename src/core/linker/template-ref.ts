@@ -1,7 +1,7 @@
 import { DomNode } from '@ibyar/elements';
 import {
 	ExpressionNode, findReactiveScopeByEventMap,
-	ReactiveScopeControl, Context,
+	ReactiveControlScope, Context,
 	ScopeSubscription, Stack
 } from '@ibyar/expressions';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -55,11 +55,11 @@ export class TemplateRefImpl extends TemplateRef {
 	}
 	createEmbeddedView<C extends object>(context: C = {} as C, parentNode: Node): EmbeddedViewRef<C> {
 		const directiveStack = this._stack.copyStack();
-		const templateScope = ReactiveScopeControl.blockScope<C>();
+		const templateScope = ReactiveControlScope.blockScope<C>();
 		directiveStack.pushScope(templateScope);
 
 		const sandBox = new Stack();
-		const contextScope = ReactiveScopeControl.for<C>(context);
+		const contextScope = ReactiveControlScope.for<C>(context);
 		sandBox.pushScope(contextScope);
 		sandBox.pushScope(templateScope);
 

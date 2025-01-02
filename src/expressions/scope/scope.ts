@@ -1,4 +1,5 @@
 import { TypeOf } from '../api/utils.js';
+import { isChangeDetectionSkipped } from './cd.js';
 
 export type Context = Record<PropertyKey, any>;
 export interface Scope<T = Context> {
@@ -335,7 +336,7 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 	protected getPropertyKeys<V extends Record<PropertyKey, any>>(...objs: V[]) {
 		let keys: (keyof V)[] = [];
 		objs.forEach(obj => {
-			keys.push(...Object.keys(obj));
+			keys.push(...Object.keys(obj).filter(key => !isChangeDetectionSkipped(obj[key])));
 			keys.push(...Object.getOwnPropertySymbols(obj));
 		});
 		keys = Array.from(new Set(keys));
@@ -359,7 +360,7 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 /**
  * used control/notify/pause scope about changes in current context
  */
-export interface ScopeControl<T extends Context> {
+export interface ControlScope<T extends Context> {
 
 	/**
 	 * get current stacte of applying change detection.
@@ -392,15 +393,15 @@ export interface ScopeControl<T extends Context> {
 	checkNoChanges(): void;
 }
 
-export class ReactiveScopeControl<T extends Context> extends ReactiveScope<T> implements ScopeControl<T> {
+export class ReactiveControlScope<T extends Context> extends ReactiveScope<T> implements ControlScope<T> {
 	static for<T extends Context>(context: T, propertyKeys?: (keyof T)[]) {
-		return new ReactiveScopeControl(context, propertyKeys);
+		return new ReactiveControlScope(context, propertyKeys);
 	}
 	static blockScope<T extends Context>(propertyKeys?: (keyof T)[]) {
-		return new ReactiveScopeControl({} as T, propertyKeys);
+		return new ReactiveControlScope({} as T, propertyKeys);
 	}
 	static scopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
-		const thisScope = ReactiveScopeControl.for(ctx, propertyKeys);
+		const thisScope = ReactiveControlScope.for(ctx, propertyKeys);
 		const thisCtx = {
 			'this': ctx,
 		};
@@ -409,7 +410,7 @@ export class ReactiveScopeControl<T extends Context> extends ReactiveScope<T> im
 		return rootScope;
 	}
 	static readOnlyScopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
-		const thisScope = ReactiveScopeControl.for(ctx, propertyKeys);
+		const thisScope = ReactiveControlScope.for(ctx, propertyKeys);
 		const thisCtx = {
 			'this': ctx,
 		};
@@ -480,8 +481,8 @@ export class ReactiveScopeControl<T extends Context> extends ReactiveScope<T> im
 			throw new Error(`Some Changes had been detected`);
 		}
 	}
-	getClass(): TypeOf<ReactiveScopeControl<Context>> {
-		return ReactiveScopeControl;
+	getClass(): TypeOf<ReactiveControlScope<Context>> {
+		return ReactiveControlScope;
 	}
 }
 

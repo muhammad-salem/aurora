@@ -5,5 +5,5 @@ export type ControlOptions = { validators?: Validator | Validator[], asyncValida
 export type ControlValue<T = any> = { value?: T | null, disabled: boolean };
 
 export function isControlValue<T>(ref: any): ref is ControlValue<T> {
-	return ref.value || ref.disabled;
+	return ref?.value || ref?.disabled;
 }
