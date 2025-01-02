@@ -111,6 +111,27 @@ export function getPipelineNames(modelExpression: ExpressionNode): string[] | un
 	return pipelineNames.length ? pipelineNames : undefined;
 }
 
+function parseAssignmentAttributeUpdateElement(attr: ElementAttribute<string, string | number | boolean | object>) {
+	let left = attr.name;
+	let right = attr.value?.toString();
+	if (right?.startsWith('javascript:')) {
+		right = right.substring(11);
+	}
+	if (attr.name.startsWith('data-')) {
+		left = `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`;
+	} else {
+		left = `this${escapeMemberExpression(attr.name)}`;
+		const elements = left.split(/\.|\[|]/).filter(s => !!s);
+		if (elements.length > 2) {
+			left = `this${escapeMemberExpression(elements[1])}`;
+			right = `({${elements[2]}: ${right}})`;
+		}
+	}
+	right = checkAndValidateObjectSyntax(right);
+	const assignment = `${left} = ${right}`;
+	attr.expression = JavaScriptParser.parseScript(assignment);
+}
+
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
 	let left = attr.name;
 	let right = attr.value;
@@ -143,6 +164,7 @@ function parseAttributeDirectives(directive: DomAttributeDirectiveNode) {
 	directive.outputs?.forEach(parseOutputExpression);
 	directive.twoWayBinding?.forEach(parseLiveAttribute);
 	directive.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+	directive.attributes?.forEach(parseAssignmentAttributeUpdateElement);
 }
 
 function parseBaseNode(base: BaseNode) {
@@ -150,6 +172,7 @@ function parseBaseNode(base: BaseNode) {
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
 	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+	base.attributes?.forEach(parseAssignmentAttributeUpdateElement);
 	base.attributeDirectives?.forEach(parseAttributeDirectives);
 }
 

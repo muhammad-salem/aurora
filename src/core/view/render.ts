@@ -411,7 +411,8 @@ export class ComponentRender<T extends object> {
 						element.setAttribute(attr.name, attr.value as string);
 					}
 				} else {
-					Reflect.set(element, attr.name, attr.value);
+					attr.expression.get(contextStack);
+					// Reflect.set(element, attr.name, attr.value);
 				}
 			});
 		}
@@ -474,7 +475,7 @@ export class ComponentRender<T extends object> {
 		const subscriptions: ScopeSubscription<Context>[] = [];
 
 		if (node.attributes?.length) {
-			node.attributes.forEach(attr => Reflect.set(context, attr.name, attr.value));
+			node.attributes.forEach(attr => attr.expression.get(contextStack));
 		}
 		if (node.twoWayBinding?.length) {
 			node.twoWayBinding.forEach(attr => {
