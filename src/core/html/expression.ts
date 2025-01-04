@@ -128,7 +128,7 @@ function parseAssignmentAttributeUpdateElement(attr: ElementAttribute<string, st
 		}
 	}
 	right = checkAndValidateObjectSyntax(right);
-	const assignment = `${left} = ${right}`;
+	const assignment = `${left} = '${right}'`;
 	attr.expression = JavaScriptParser.parseScript(assignment);
 }
 
