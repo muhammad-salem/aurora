@@ -9,7 +9,6 @@ import { InjectionToken } from '../di/provider.js';
 import { TemplateRef } from '../linker/template-ref.js';
 import { ViewContainerRef } from '../linker/view-container-ref.js';
 import { AuroraZone } from '../zone/zone.js';
-import { isInputSignal, isOutputSignal } from '../component/initializer.js';
 
 export const NATIVE_HOST_TOKEN = new InjectionToken<HTMLElement>('NATIVE_HOST');
 export const DIRECTIVE_HOST_TOKEN = new InjectionToken<HTMLComponent<any> | StructuralDirective>('DIRECTIVE_HOST');
@@ -41,12 +40,15 @@ export class AttributeDirective {
 
 
 export class ReactiveSignalScope<T extends Context> extends ReactiveScope<T> {
+
 	static for<T extends Context>(context: T, propertyKeys?: (keyof T)[]) {
 		return new ReactiveSignalScope(context, propertyKeys);
 	}
+
 	static blockScope<T extends Context>(propertyKeys?: (keyof T)[]) {
 		return new ReactiveSignalScope({} as T, propertyKeys);
 	}
+
 	static scopeForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
 		const thisScope = ReactiveSignalScope.for(ctx, propertyKeys);
 		const thisCtx = {
