@@ -1,58 +1,39 @@
 import {
-	Component, Directive, Input, OnDestroy, OnInit,
-	ScopeSubscription, StructuralDirective
+	Component, Directive, effect, input,
+	OnDestroy, StructuralDirective
 } from '@ibyar/aurora';
 
-
-type NotifyUserContext = { notifyMessage: string, notifyType: string };
 
 @Component({
 	selector: 'notify-component',
 	template: `<div class="alert alert-{{notifyType}}" role="alert">{{notifyMessage}}</div>`
 })
-class NotifyComponent implements NotifyUserContext {
+class NotifyComponent {
 
-	@Input()
-	notifyMessage: string;
+	notifyMessage = input<string>();
 
-	@Input()
-	notifyType: string;
+	notifyType = input<string>();
+
 }
 
 
 @Directive({
 	selector: '*notify-user',
 })
-export class NotifyUserDirective extends StructuralDirective implements OnInit, OnDestroy {
+export class NotifyUserDirective extends StructuralDirective implements OnDestroy {
 
+	context = this.viewContainerRef.createComponent(NotifyComponent);
 
-	private context: NotifyUserContext = {
-		notifyMessage: 'no message',
-		notifyType: 'primary'
-	};
-	private scopeSubscription: ScopeSubscription<NotifyUserContext>;
+	notifyMessage = input<string>(undefined, { alias: 'message' });
+	notifyType = input<string>(undefined, { alias: 'type' });
 
+	typeRef = effect(() => this.context.notifyType.set(this.notifyType.get()));
+	messageRef = effect(() => this.context.notifyMessage.set(this.notifyMessage.get()));
 
-	@Input('message')
-	set notifyMessage(message: string) {
-		this.context.notifyMessage = message;
-	}
-
-	@Input('type')
-	set notifyType(type: string) {
-		this.context.notifyType = type;
-	}
-
-	private elements: ChildNode[] = [];
-	private fragment: DocumentFragment;
-	onInit(): void {
-		const context = this.viewContainerRef.createComponent(NotifyComponent);
-		context.notifyMessage = this.context.notifyMessage;
-		context.notifyType = this.context.notifyType;
-		this.context = context;
-	}
 
 	onDestroy() {
+		this.typeRef.destroy();
+		this.messageRef.destroy();
 		this.viewContainerRef.clear();
 	}
 

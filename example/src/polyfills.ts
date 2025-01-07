@@ -1,4 +1,3 @@
-import 'zone.js';
+// import 'zone.js';
 import { bootstrapZone } from '@ibyar/aurora';
-
-bootstrapZone('aurora');
+bootstrapZone('manual');

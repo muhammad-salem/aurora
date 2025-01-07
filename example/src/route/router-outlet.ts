@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, StructuralDirective } from '@ibyar/aurora';
+import { Directive, input, OnDestroy, StructuralDirective } from '@ibyar/aurora';
 
 
 export interface RouteData { selector: string, is?: string };
@@ -8,16 +8,15 @@ export interface RouteData { selector: string, is?: string };
 })
 export class RouterOutlet extends StructuralDirective implements OnDestroy {
 
-	@Input()
-	set routeData(routeData: RouteData | undefined) {
-		this.viewContainerRef.clear();
-		if (!routeData) {
-			return;
-		}
-		this.viewContainerRef.createComponent(routeData.selector);
-	}
+	data = input.required({
+		transform: (routeData?: RouteData) => {
+			this.viewContainerRef.clear();
+			routeData && this.viewContainerRef.createComponent(routeData.selector);
+		},
+	});
 
 	onDestroy() {
 		this.viewContainerRef.clear();
 	}
+
 }

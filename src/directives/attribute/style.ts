@@ -1,4 +1,4 @@
-import { AttributeDirective, Directive, Input } from '@ibyar/core';
+import { AttributeDirective, Directive, input } from '@ibyar/core';
 
 type StyleType = string | Array<string> | { [propertyName: string]: string };
 
@@ -7,8 +7,14 @@ type StyleType = string | Array<string> | { [propertyName: string]: string };
 })
 export class StyleDirective extends AttributeDirective {
 
-	@Input()
-	set style(style: StyleType) {
+	public readonly style = input.required<void, StyleType>({
+		transform: rawStyle => {
+			this.setStyle(rawStyle)
+			return this.el.style;
+		}
+	});
+
+	private setStyle(style: StyleType) {
 		if (typeof style === 'string') {
 			const lines = style.split(/\s{0,};\s{0,}/).filter(str => str);
 			for (const line of lines) {
@@ -24,9 +30,6 @@ export class StyleDirective extends AttributeDirective {
 				this._setStyle(property, style[property]);
 			}
 		}
-	}
-	get style() {
-		return this.el.style as any;
 	}
 
 	private _setStyleFromLine(line: string) {

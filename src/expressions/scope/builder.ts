@@ -1,4 +1,4 @@
-import { Context, ReactiveScope, ReactiveScopeControl, ReadOnlyScope, Scope } from './scope.js';
+import { Context, ReactiveScope, ReactiveControlScope, ReadOnlyScope, Scope } from './scope.js';
 
 export class ScopeBuilder {
 	static for<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
@@ -47,13 +47,13 @@ export class ScopeBuilder {
 		return rootScope;
 	}
 	static reactiveScopeControlFor<T extends Context>(context: T, propertyKeys?: (keyof T)[]) {
-		return new ReactiveScopeControl(context, propertyKeys);
+		return new ReactiveControlScope(context, propertyKeys);
 	}
 	static blockReactiveScopeControl<T extends Context>(propertyKeys?: (keyof T)[]) {
-		return new ReactiveScopeControl({} as T, propertyKeys);
+		return new ReactiveControlScope({} as T, propertyKeys);
 	}
 	static reactiveScopeControlForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
-		const thisScope = ReactiveScopeControl.for(ctx, propertyKeys);
+		const thisScope = ReactiveControlScope.for(ctx, propertyKeys);
 		const thisCtx = {
 			'this': ctx,
 		};
@@ -62,7 +62,7 @@ export class ScopeBuilder {
 		return rootScope;
 	}
 	static readOnlyScopeAndReactiveScopeControlForThis<T extends Context>(ctx: T, propertyKeys?: (keyof T)[]) {
-		const thisScope = ReactiveScopeControl.for(ctx, propertyKeys);
+		const thisScope = ReactiveControlScope.for(ctx, propertyKeys);
 		const thisCtx = {
 			'this': ctx,
 		};

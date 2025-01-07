@@ -140,10 +140,10 @@ export interface ComponentOptions<T = Type<any>> {
 	 * 	the browser itself, will convert all attributes to lowercase
 	 * 
 	 * ```typescript
-	 *		@Input('personage') personAge: number;
-	 *		@Input('propname') propName: string;
-	 *		@Output('savebuttonclick') saveButtonClick = new EventEmitter<Persons>();
-	 *		@View('personform') personForm: HTMLFormElement;
+	 * 		personAge = input<number>(20, {alias: 'personage'});
+	 * 		propName = input<string>(undefined, {alias: 'propname'});
+	 *		saveButtonClick = output<Persons>({alias: 'savebuttonclick'});
+	 *		readonly view = view(HTMLFormElement);
 	 * ```
 	 * 
 	 * any app root element as 
@@ -275,8 +275,7 @@ export interface ComponentOptions<T = Type<any>> {
 	 * })
 	 * export class CustomInputElement {
 	 * 	
-	 *  @View()
-	 * 	view: HTMLInputElement;
+	 * 	view = view<HTMLInputElement>();
 	 * 
 	 * 	onInit() {
 	 * 		this.view.type = 'number';

@@ -46,11 +46,17 @@ export class ReflectComponents {
 	}
 
 	static addInput(metadata: MetadataContext, modelName: string, viewName: string) {
-		(metadata.inputs ??= []).push(new InputPropertyRef(modelName, viewName));
+		let inputs = (metadata.inputs ?? []) as InputPropertyRef[];
+		inputs = inputs.filter(i => i.modelProperty !== modelName);
+		inputs.push(new InputPropertyRef(modelName, viewName));
+		metadata.inputs = inputs;
 	}
 
 	static addOutput(metadata: MetadataContext, modelName: string, viewName: string, options: OutputEventInit) {
-		(metadata.outputs ??= []).push(new OutputPropertyRef(modelName, viewName, options));
+		let outputs = (metadata.outputs ?? []) as OutputPropertyRef[];
+		outputs = outputs.filter(i => i.modelProperty !== modelName);
+		outputs.push(new OutputPropertyRef(modelName, viewName, options));
+		metadata.outputs = outputs;
 	}
 
 	static setComponentView(metadata: MetadataContext, modelName: string) {

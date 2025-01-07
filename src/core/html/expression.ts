@@ -80,11 +80,12 @@ function escapeMemberExpression(source: string | string[]): string {
  * @param params 
  */
 function checkAndValidateObjectSyntax(source: string) {
-	if (source.startsWith('{')) {
+	if (source.trimStart().startsWith('{')) {
 		return `(${source})`;
 	}
 	return source;
 }
+
 function parseLiveAttribute(attr: LiveAttribute) {
 	const elementSource = `this${escapeMemberExpression(attr.name)}`;
 	const elementExpression = JavaScriptParser.parseScript(elementSource);
@@ -93,9 +94,8 @@ function parseLiveAttribute(attr: LiveAttribute) {
 		&& (modelExpression instanceof MemberExpression || modelExpression instanceof Identifier)) {
 		attr.expression = new TwoWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
-		console.error(`${attr.name}="${attr.value}"" is not a valid MemberExpression or Identifier 'x.y.z'`);
+		console.error(`[(${attr.name})]="${attr.value}" is not a valid MemberExpression or Identifier 'x.y.z'`);
 	}
-
 }
 
 export function getPipelineNames(modelExpression: ExpressionNode): string[] | undefined {
@@ -111,16 +111,46 @@ export function getPipelineNames(modelExpression: ExpressionNode): string[] | un
 	return pipelineNames.length ? pipelineNames : undefined;
 }
 
+function parseAssignmentAttributeUpdateElement(attr: ElementAttribute<string, string | number | boolean | object>) {
+	let left = attr.name;
+	let right = attr.value?.toString();
+	if (right?.startsWith('javascript:')) {
+		right = right.substring(11);
+	}
+	if (attr.name.startsWith('data-')) {
+		left = `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`;
+	} else {
+		left = `this${escapeMemberExpression(attr.name)}`;
+		const elements = left.split(/\.|\[|]/).filter(s => !!s);
+		if (elements.length > 2) {
+			left = `this${escapeMemberExpression(elements[1])}`;
+			right = `({${elements[2]}: ${right}})`;
+		}
+	}
+	right = checkAndValidateObjectSyntax(right);
+	const assignment = `${left} = '${right}'`;
+	attr.expression = JavaScriptParser.parseScript(assignment);
+}
+
 function parseLiveAttributeUpdateElement(attr: LiveAttribute) {
-	const elementSource = attr.name.startsWith('data-')
-		? `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`
-		: `this${escapeMemberExpression(attr.name)}`;
-	const elementExpression = JavaScriptParser.parseScript(elementSource);
-	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(attr.value));
+	let left = attr.name;
+	let right = attr.value;
+	if (attr.name.startsWith('data-')) {
+		left = `this.dataset.${convertToMemberAccessStyle(attr.name.substring(5))}`;
+	} else {
+		left = `this${escapeMemberExpression(attr.name)}`;
+		const elements = left.split(/\.|\[|]/).filter(s => !!s);
+		if (elements.length > 2) {
+			left = `this${escapeMemberExpression(elements[1])}`;
+			right = `({${elements[2]}: ${right}})`;
+		}
+	}
+	const elementExpression = JavaScriptParser.parseScript(left);
+	const modelExpression = JavaScriptParser.parseScript(checkAndValidateObjectSyntax(right));
 	if (elementExpression instanceof MemberExpression) {
 		attr.expression = new OneWayAssignmentExpression(elementExpression, modelExpression);
 	} else {
-		console.error(`[${attr.name}] is not a valid MemberExpression 'x.y.z'`);
+		console.error(`[${attr.name}]="${attr.value}" is not a valid MemberExpression 'x.y.z'`);
 	}
 	attr.pipelineNames = getPipelineNames(modelExpression);
 }
@@ -134,6 +164,7 @@ function parseAttributeDirectives(directive: DomAttributeDirectiveNode) {
 	directive.outputs?.forEach(parseOutputExpression);
 	directive.twoWayBinding?.forEach(parseLiveAttribute);
 	directive.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+	directive.attributes?.forEach(parseAssignmentAttributeUpdateElement);
 }
 
 function parseBaseNode(base: BaseNode) {
@@ -141,6 +172,7 @@ function parseBaseNode(base: BaseNode) {
 	base.outputs?.forEach(parseOutputExpression);
 	base.twoWayBinding?.forEach(parseLiveAttribute);
 	base.templateAttrs?.forEach(parseLiveAttributeUpdateElement);
+	base.attributes?.forEach(parseAssignmentAttributeUpdateElement);
 	base.attributeDirectives?.forEach(parseAttributeDirectives);
 }
 
