@@ -89,7 +89,7 @@ export class ReactiveSignalScope<T extends Context> extends ReactiveScope<T> {
 
 	override subscribe(propertyKey: keyof T, callback: ValueChangedCallback): ScopeSubscription<T> {
 		const value = Reflect.get(this._ctx, propertyKey) as any;
-		if (isSignal(value)) {
+		if (isReactive(value)) {
 			return value.subscribe(callback);
 		} else {
 			return super.subscribe(propertyKey, callback);
@@ -99,7 +99,7 @@ export class ReactiveSignalScope<T extends Context> extends ReactiveScope<T> {
 	override unsubscribe(propertyKey?: keyof T | undefined, subscription?: ScopeSubscription<T> | undefined): void {
 		if (propertyKey) {
 			const value = Reflect.get(this._ctx, propertyKey) as any;
-			if (isSignal(value)) {
+			if (isReactive(value)) {
 				value.getScope().unsubscribe(value.getIndex(), subscription);
 				return;
 			}
