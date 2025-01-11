@@ -1,19 +1,11 @@
 import { Component, input, HostListener, view } from '@ibyar/aurora';
-import { AddNoteDirective } from '../directive/add-note.directive.js';
-import { NotifyUserDirective } from '../directive/notify-user.directive.js';
-import { TimeDirective } from '../directive/time.directive.js';
-import { Person, PersonEdit, PersonView } from './person.js';
-import { ColorTogglerDirective } from '../directive/color-toggle.directive.js';
+import { Person, PersonView } from './person.js';
+import { PersonModule } from './person-module.js';
 
 @Component({
 	selector: 'person-app',
 	imports: [
-		AddNoteDirective,
-		NotifyUserDirective,
-		TimeDirective,
-		ColorTogglerDirective,
-		PersonView,
-		PersonEdit,
+		PersonModule
 	],
 	template: `
 		<div *time></div>
