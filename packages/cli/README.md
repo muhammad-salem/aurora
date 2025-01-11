@@ -158,7 +158,7 @@ export default = {
 The Ibyar CLI has a typescript transformer to generate a definitions for you component
 
 ```ts
-import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
+import { Component, EventEmitter, Input, output } from '@ibyar/aurora';
 
 
 @Component({
@@ -171,18 +171,15 @@ import { Component, EventEmitter, Input, Output } from '@ibyar/aurora';
 })
 export class PersonEdit {
 
-	@Input()
-	person: Person;
+	person = input<Person>();
 
-	@Input()
-	show = true;
+	show = input(true);
 
-	@Output()
-	save = new EventEmitter<Person>();
+	save = output<Person>();
 
 	printPerson() {
-		console.log(this.person);
-		this.save.emit(this.person);
+		console.log(this.person.get());
+		this.save.emit(this.person.get());
 	}
 }
 
@@ -204,7 +201,7 @@ export declare class PersonEdit {
 import { BaseComponent, ConstructorOfView } from "@ibyar/core";
 
 declare class HTMLPersonEditElement extends HTMLElement {
-    public static observedAttributes: "person" | "show" | "onSave"[];
+    public static observedAttributes: ('person' | 'show' | 'onSave')[];
     public person: Person;
     public show: true;
     public onSave: EventEmitter<Person>;

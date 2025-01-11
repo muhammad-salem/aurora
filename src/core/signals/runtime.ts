@@ -5,13 +5,13 @@ import {
 	JavaScriptParser, Literal,
 	MemberExpression, MethodDefinition,
 	Property, PropertyDefinition,
-	ThisExpression, VisitorCallback
+	SequenceExpression, ThisExpression,
+	VisitorCallback
 } from '@ibyar/expressions';
 
 type Key =
 	| 'input'
 	| 'output'
-	| 'model'
 	| 'formValue'
 	| 'view'
 	| 'viewChild'
@@ -41,18 +41,18 @@ export class RuntimeClassMetadata {
 
 	static INSTANCE = new RuntimeClassMetadata();
 
-	static scanMetadata(modelClass: Function) {
-		return RuntimeClassMetadata.INSTANCE.scan(modelClass);
+	static scanMetadata(modelClass: Function, scanParent = true) {
+		return RuntimeClassMetadata.INSTANCE.scan(modelClass, scanParent);
 	}
 
-	static scanClass(modelClass: Function, visitorCallback: VisitorCallback) {
-		return RuntimeClassMetadata.INSTANCE.scanModelClass(modelClass, visitorCallback);
+	static scanClass(modelClass: Function, visitorCallback: VisitorCallback, scanParent = true) {
+		return RuntimeClassMetadata.INSTANCE.scanModelClass(modelClass, visitorCallback, scanParent);
 	}
 
-	scan(modelClass: Function): SignalRuntimeMetadata[] {
+	scan(modelClass: Function, scanParent: boolean): SignalRuntimeMetadata[] {
 		const metadata = this.newModelInitializers();
 		const visitor = this.createVisitor(metadata);
-		this.scanModelClass(modelClass, visitor);
+		this.scanModelClass(modelClass, visitor, scanParent);
 		return metadata;
 	}
 
@@ -61,14 +61,15 @@ export class RuntimeClassMetadata {
 	 * @param modelClass 
 	 * @param visitorCallback 
 	 */
-	scanModelClass(modelClass: Function, visitorCallback: VisitorCallback) {
-		const script = this.getClassScript(modelClass);
+	scanModelClass(modelClass: Function, visitorCallback: VisitorCallback, scanParent: boolean) {
+		const script = this.getClassScript(modelClass, scanParent);
 		const expr = JavaScriptParser.parse(script);
 		expressionVisitor.visit(expr, visitorCallback);
 	}
 
-	getClassScript(modelClass: Function): string {
-		return this.getClassList(modelClass).map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
+	getClassScript(modelClass: Function, scanParent: boolean): string {
+		const modelList = scanParent ? this.getClassList(modelClass) : [modelClass];
+		return modelList.map((ref, index) => `const Class${index} = ${ref};`).join('\n');;
 	}
 
 	getClassList(modelClass: Function): Function[] {
@@ -85,12 +86,11 @@ export class RuntimeClassMetadata {
 			{ signal: 'input', options: [] },
 			{ signal: 'input', necessity: 'required', options: [] },
 			{ signal: 'output', options: [] },
-			{ signal: 'model', options: [] },
-			{ signal: 'model', necessity: 'required', options: [] },
 			{ signal: 'signal', options: [] },
 			{ signal: 'computed', options: [] },
 			{ signal: 'lazy', options: [] },
 			{ signal: 'formValue', options: [] },
+			{ signal: 'formValue', necessity: 'required', options: [] },
 			{ signal: 'view', options: [] },
 			{ signal: 'viewChild', options: [] },
 			{ signal: 'viewChild', necessity: 'required', options: [] },
@@ -106,17 +106,27 @@ export class RuntimeClassMetadata {
 			if (type === 'PropertyDefinition') {
 				const definition = expression as PropertyDefinition;
 				const key = definition.getKey();
-				const value = definition.getValue();
+				let value = definition.getValue();
 				if (definition.isPrivate()
 					|| definition.isStatic()
-					|| !(key instanceof Identifier || key instanceof Literal)
-					|| !(value instanceof CallExpression)) {
+					|| !(key instanceof Identifier || key instanceof Literal)) {
 					return;
 				}
-				const property = properties.find(property => this.isCallOf(value, property.signal, property.necessity));
+				if (!(value instanceof CallExpression)) {
+					if (value instanceof SequenceExpression) {
+						value = value.getExpressions().find(node => node instanceof CallExpression && properties.find(property => this.isCallOf(node, property.signal, property.necessity)));
+						if (!value) {
+							return;
+						}
+					} else {
+						return;
+					}
+				}
+				const call = value as CallExpression;
+				const property = properties.find(property => this.isCallOf(call, property.signal, property.necessity));
 				if (property) {
 					const name = key instanceof Identifier ? key.getName() : key.getValue();
-					const alias = this.getAliasNameFromOptionArgument(value);
+					const alias = this.getAliasNameFromOptionArgument(call);
 					property.options.push({ name, alias: alias ?? name });
 				}
 			} else if (type === 'MethodDefinition') {

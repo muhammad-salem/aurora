@@ -1,5 +1,5 @@
 import {
-	Directive, Input, OnDestroy,
+	Directive, input, OnDestroy,
 	OnInit, StructuralDirective,
 	TemplateRef, ViewContainerRef
 } from '@ibyar/core';
@@ -39,11 +39,14 @@ export class CaseOfSwitchDirective extends StructuralDirective implements OnInit
 
 	private _caseValue: any;
 
-	@Input('case')
-	set caseValue(value: any) {
-		this._caseValue = value;
-		this.host._updateView();
-	}
+	case = input.required({
+		transform: value => {
+			this._caseValue = value;
+			this.host._updateView();
+			return this._caseValue;
+		}
+	});
+
 	onInit() {
 		this.host._addCase(this);
 	}
@@ -67,8 +70,7 @@ export class CaseOfSwitchDirective extends StructuralDirective implements OnInit
 })
 export class DefaultCaseOfSwitchDirective extends StructuralDirective implements OnInit {
 
-	@Input('default')
-	defaultCaseValue: any;
+	default = input();
 
 	declare host: SwitchDirective;
 
@@ -90,14 +92,16 @@ export class SwitchDirective extends StructuralDirective implements OnInit, OnDe
 	private _lastValue: any;
 	private _lastViews: SwitchView[];
 
+	switch = input.required({
+		transform: value => {
+			this._switchValue = value;
+			this._updateView();
+			return this._switchValue;
+		}
+	});
+
 	onInit() {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);
-	}
-
-	@Input('switch')
-	set switchValue(value: any) {
-		this._switchValue = value;
-		this._updateView();
 	}
 
 	onDestroy() {

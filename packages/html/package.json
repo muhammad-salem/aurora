@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/html",
-	"version": "2.5.0",
+	"version": "3.0.0",
 	"description": "Ibyar HTML, is an HTML parser for @Ibyar/aurora framework.",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/html",
@@ -35,7 +35,7 @@
 	},
 	"devDependencies": {
 		"@types/hast": "^3.0.4",
-		"typescript": "^5.6.3"
+		"typescript": "^5.7.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",

@@ -1,6 +1,5 @@
 import type { Type } from '../utils/typeof.js';
 import { MetadataClass, Metadata } from '@ibyar/decorators';
-import { getReactiveNode, Signal } from '@ibyar/expressions';
 import { getAllAttributes } from '@ibyar/elements';
 import { ComponentRef } from '../component/component.js';
 import { HTMLComponent } from '../component/custom-element.js';
@@ -48,21 +47,10 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 	componentRef.inputs.forEach((input) => {
 		Object.defineProperty(viewClass.prototype, input.viewAttribute, {
 			get(this: HTMLComponent<T>): any {
-				const value = this._modelScope.get(input.modelProperty);
-				const signal = getReactiveNode(value);
-				if (signal) {
-					return signal.get();
-				}
-				return value;
+				return this._render.modelStack.get(input.modelProperty);
 			},
 			set(this: HTMLComponent<{ [key: string]: any; }>, value: any) {
-				const model = this._modelScope.get(input.modelProperty);
-				const signal = getReactiveNode(model);
-				if (signal instanceof Signal) {
-					signal.set(value);
-				} else {
-					this._modelScope.set(input.modelProperty, value);
-				}
+				return this._render.modelStack.set(input.modelProperty, value);
 			},
 			enumerable: true,
 		});
@@ -77,7 +65,7 @@ export function initCustomElementView<T extends Object>(modelClass: MetadataClas
 		});
 		let eventListener: Function | undefined;
 		let subscription: Subscription<any>;
-		Object.defineProperty(viewClass.prototype, 'on' + ToCamelCase(output.viewAttribute), {
+		Object.defineProperty(viewClass.prototype, `on${ToCamelCase(output.viewAttribute)}`, {
 			get(): Function | undefined {
 				return eventListener;
 			},

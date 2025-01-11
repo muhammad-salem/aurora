@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@ibyar/aurora';
+import { Component, OnDestroy, OnInit, signal } from '@ibyar/aurora';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -207,7 +207,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 		'--bs-gray-dark'
 	];
 
-	currentColor = this.colors[0];
+	currentColor = signal(this.colors[0]);
 
 	date = new Date();
 	lang = 'ar';
@@ -246,7 +246,7 @@ export class PipeAppComponent implements OnInit, OnDestroy {
 			if (index === this.colors.length) {
 				index = 0;
 			}
-			this.currentColor = this.colors[index++];
+			this.currentColor.set(this.colors[index++]);
 		});
 	}
 

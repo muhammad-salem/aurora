@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, StructuralDirective, Type } from '@ibyar/aurora';
+import { Directive, input, OnDestroy, StructuralDirective, Type } from '@ibyar/aurora';
 
 
 @Directive({
@@ -6,15 +6,12 @@ import { Directive, Input, OnDestroy, StructuralDirective, Type } from '@ibyar/a
 })
 export class ComponentOutlet<C extends {}> extends StructuralDirective implements OnDestroy {
 
-
-	@Input()
-	set component(componentType: Type<C> | undefined) {
-		this.viewContainerRef.clear();
-		if (!componentType) {
-			return;
+	component = input.required({
+		transform: (componentType?: Type<C>) => {
+			this.viewContainerRef.clear();
+			componentType && this.viewContainerRef.createComponent<C>(componentType);
 		}
-		this.viewContainerRef.createComponent<C>(componentType);
-	}
+	});
 
 	onDestroy() {
 		this.viewContainerRef.clear();

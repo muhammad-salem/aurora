@@ -15,7 +15,7 @@ import { ChangeDetectorRef, Component, inject, OnInit, } from '@ibyar/aurora';
 			<button type="button" class="btn btn-link" @click="move(list.indexOf(selected), -1)">UP</button>
 			<button type="button" class="btn btn-link" @click="move(list.indexOf(selected), +1)">Down</button>
 			<button type="button" class="btn btn-link" @click="sortItems(+1)">SORT</button>
-			<button type="button" class="btn btn-link" @click="sortItems(-1)">Reverse SORT</button>
+			<button type="button" class="btn btn-link" @click="reversSortItems()">Reverse SORT</button>
 			<button type="button" class="btn btn-link" @click="delete(list.indexOf(selected))">DELETE</button>
 			<button type="button" class="btn btn-link" @click="appendItem()">APPEND</button>
 		</div>
@@ -46,8 +46,12 @@ export class FetchApp implements OnInit {
 		}
 	}
 	delete(index: number) {
-		this.selected = this.list.at(index - 1) ?? 0;
-		return this.list.splice(index, 1)[0];
+		try {
+			this.selected = this.list.at(index - 1) ?? 0;
+			return this.list.splice(index, 1)[0];
+		} finally {
+			this._cd.markForCheck();
+		}
 	}
 	appendItem() {
 		this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
@@ -55,5 +59,9 @@ export class FetchApp implements OnInit {
 	}
 	sortItems(direction: number) {
 		this.list.sort((a, b) => (a - b) * direction);
+	}
+
+	reversSortItems() {
+		this.list.reverse();
 	}
 }

@@ -4,7 +4,7 @@ import { JavaScriptParser } from '../v8/parser.js';
 import { finalizerRegister } from './finalizer.js';
 import {
 	ModuleContext, ModuleImport, ModuleScope, ReactiveScope,
-	ReactiveScopeControl, Scope, Context, WebModuleScope
+	ReactiveControlScope, Scope, Context, WebModuleScope
 } from './scope.js';
 
 
@@ -305,8 +305,8 @@ export class Stack implements Stack {
 	detectChanges() {
 		this.getReactiveScope().forEach(scope => scope.detectChanges());
 	}
-	private getReactiveScopeControls(): ReactiveScopeControl<any>[] {
-		return this.stack.filter(scope => scope instanceof ReactiveScopeControl) as ReactiveScopeControl<any>[];
+	private getReactiveScopeControls(): ReactiveControlScope<any>[] {
+		return this.stack.filter(scope => scope instanceof ReactiveControlScope) as ReactiveControlScope<any>[];
 	}
 	private getReactiveScope(): ReactiveScope<any>[] {
 		return this.stack.filter(scope => scope instanceof ReactiveScope) as ReactiveScope<any>[];

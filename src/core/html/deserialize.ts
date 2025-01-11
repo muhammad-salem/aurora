@@ -29,6 +29,12 @@ function deserializeLiveAttribute(attr: LiveAttribute) {
 	}
 }
 
+function deserializeAssignmentAttributeUpdateElement(attr: ElementAttribute<string, string | number | boolean | object>) {
+	if (attr.expression) {
+		attr.expression = deserialize(attr.expression) as typeof attr.expression;
+	}
+}
+
 function deserializeLiveAttributeUpdateElement(attr: LiveAttribute) {
 	if (attr.expression) {
 		attr.expression = deserialize(attr.expression) as typeof attr.expression;
@@ -47,6 +53,7 @@ function deserializeAttributeDirectives(directive: DomAttributeDirectiveNode) {
 	directive.outputs?.forEach(deserializeOutputExpression);
 	directive.twoWayBinding?.forEach(deserializeLiveAttribute);
 	directive.templateAttrs?.forEach(deserializeLiveAttributeUpdateElement);
+	directive.attributes?.forEach(deserializeAssignmentAttributeUpdateElement);
 }
 
 function deserializeBaseNode(base: BaseNode) {
@@ -55,6 +62,7 @@ function deserializeBaseNode(base: BaseNode) {
 	base.twoWayBinding?.forEach(deserializeLiveAttribute);
 	base.templateAttrs?.forEach(deserializeLiveAttributeUpdateElement);
 	base.attributeDirectives?.forEach(deserializeAttributeDirectives);
+	base.attributes?.forEach(deserializeAssignmentAttributeUpdateElement);
 }
 
 function deserializeChild(child: DomNode) {

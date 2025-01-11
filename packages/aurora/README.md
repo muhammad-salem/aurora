@@ -172,13 +172,12 @@ yarn add @ibyar/aurora
 - [x] Pipes
 - [x] Lifecycle
 - [x] Signals
-- [x] @Input
-- [x] @Output
-- [x] @View
+- [x] input signal
+- [x] output signal
+- [x] view signal
+- [x] viewChild signal
 - [x] @HostListener [Supported by Component and Attribute directive].
 - [x] @HostBinding [Supported by Component and Attribute directive].
-- [x] @ViewChild
-- [ ] @ViewChildren
 - [ ] XSS (cross-site-scripting)
 
 ## Built-in Directive

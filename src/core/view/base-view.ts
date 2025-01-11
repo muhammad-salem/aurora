@@ -1,8 +1,7 @@
 import type { Type } from '../utils/typeof.js';
 import {
-	ReactiveScope, ReactiveScopeControl, Context,
-	ScopeSubscription, SignalScope, getReactiveNode,
-	isReactive, WritableSignal
+	ReactiveScope, ReactiveControlScope, Context,
+	ScopeSubscription, SignalScope, isReactive
 } from '@ibyar/expressions';
 import {
 	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
@@ -31,7 +30,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 		_componentRef: ComponentRef<T>;
 
-		_modelScope: ReactiveScopeControl<T>;
+		_modelScope: ReactiveControlScope<T>;
 		_viewScope: ReactiveScope<{ 'this': BaseComponent<T> }>;
 		_zone: AuroraZone;
 		_provider: InjectionProvider;
@@ -65,7 +64,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this._model = model;
 
 			clearSignalScope(this._signalScope);
-			const modelScope = ReactiveScopeControl.for(model);
+			const modelScope = ReactiveControlScope.for(model);
 			const modelProxyRef = this._zone instanceof ProxyAuroraZone
 				? createProxyZone(model, this._zone)
 				: model;
@@ -73,12 +72,10 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this._modelScope = modelScope;
 
 			Object.keys(this._model).forEach(key => {
-				const value = this._model[key];
-				const node = getReactiveNode(value);
-				if (!node) {
-					return;
+				const node = this._model[key];
+				if (isReactive(node)) {
+					node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 				}
-				node.subscribe((value, old) => this._modelScope.emit(key as any, value, old));
 			});
 
 			this._viewScope = ReactiveScope.for<{ 'this': BaseComponent<T> }>({ 'this': this });
@@ -88,11 +85,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 					if (newValue === oldValue) {
 						return;
 					}
-					if (isReactive(this._model[input.modelProperty])) {
-						(this._model[input.modelProperty] as WritableSignal<any>).set(newValue);
-					} else {
-						this._modelScope.set(input.modelProperty as any, newValue);
-					}
+					this._render.modelStack.set(input.modelProperty, newValue);
 				});
 				this._modelScope.subscribe(input.modelProperty as any, (newValue, oldValue) => {
 					if (newValue === oldValue) {
@@ -138,10 +131,6 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			}
 		}
 
-		detectChanges(): void {
-			this._modelScope.detectChanges();
-		}
-
 		doBlockCallback = (): void => {
 			if (isDoCheck(this._model)) {
 				this._zone.run(this._model.doCheck, this._modelScope.getContextProxy!());
@@ -152,30 +141,6 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			return this._componentRef;
 		}
 
-		hasInputStartWith(viewProp: string): boolean {
-			let dotIndex = viewProp.indexOf('.');
-			if (dotIndex > 0) {
-				viewProp = viewProp.substring(0, dotIndex);
-			}
-			return this.hasInput(viewProp);
-		}
-
-		getInputStartWith(viewProp: string): PropertyRef | undefined {
-			let index = viewProp.indexOf('.');
-			if (index > 0) {
-				viewProp = viewProp.substring(0, index);
-			}
-			index = viewProp.indexOf('[');
-			if (index > 0) {
-				viewProp = viewProp.substring(0, index);
-			}
-			return this.getInput(viewProp);
-		}
-
-		hasInput(viewProp: string): boolean {
-			return this._componentRef.inputs.some(input => input.viewAttribute === viewProp);
-		}
-
 		getInput(viewProp: string): PropertyRef | undefined {
 			return this._componentRef.inputs.find(input => input.viewAttribute === viewProp);
 		}
@@ -183,35 +148,15 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 		getInputValue(viewProp: string): any {
 			const inputRef = this.getInput(viewProp);
 			if (inputRef) {
-				return this._model[inputRef.modelProperty];
+				return this._render.modelStack.get(inputRef.modelProperty);
 			}
 		}
 
 		setInputValue(viewProp: PropertyKey, value: any): void {
 			const inputRef = this.getInput(viewProp as string);
 			if (inputRef) {
-				this._modelScope.set(inputRef.modelProperty as never, value);
+				this._render.modelStack.set(inputRef.modelProperty, value);
 			}
-		}
-
-		hasOutput(viewProp: string): boolean {
-			return this._componentRef.outputs.some(output => output.viewAttribute === viewProp);
-		}
-
-		getOutput(viewProp: string): PropertyRef | undefined {
-			return this._componentRef.outputs.find(output => output.viewAttribute === viewProp);
-		}
-
-		getEventEmitter<V>(viewProp: string): EventEmitter<V> | undefined {
-			const outputRef = this.getOutput(viewProp);
-			if (outputRef) {
-				return this._model[outputRef.modelProperty] as EventEmitter<V>;
-			}
-			return;
-		}
-
-		hasProp(propName: string): boolean {
-			return Reflect.has(this._model, propName);
 		}
 
 		private setAttributeHelper(attrViewName: string, value: any): void {
@@ -313,9 +258,8 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this.dispatchEvent(event);
 		}
 
-
 		private initOuterAttribute(attr: Attr) {
-			// [window, this] scop
+			// [window, this] scope
 			let elementAttr = attr.name;
 			let modelProperty = attr.value;
 			if (elementAttr.startsWith('[')) {
@@ -323,40 +267,51 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 				if (Reflect.has(window, modelProperty)) {
 					this.setInputValue(elementAttr, Reflect.get(window, modelProperty));
 				}
-			}
-			else if (elementAttr.startsWith('(')) {
+			} else if ((elementAttr.startsWith('(') && elementAttr.endsWith(')')) || elementAttr.startsWith('@') || elementAttr.startsWith('on')) {
 				// (elementAttr)="modelProperty()"
-				elementAttr = elementAttr.substring(1, elementAttr.length - 1);
-				// this.handleEvent(element, elementAttr, viewProperty);
-				modelProperty = modelProperty.endsWith('()') ?
-					modelProperty.substring(0, modelProperty.length - 2) : modelProperty;
-				let callback: Function = Reflect.get(window, modelProperty);
-				this.addEventListener(elementAttr, event => {
-					callback(event);
-				});
-			} else if (elementAttr.startsWith('on')) {
-				const modelEvent = this.getEventEmitter<any>(elementAttr.substring(2));
-				if (modelEvent) {
-					// modelEvent.subscribe(listener);
-					modelProperty = modelProperty.endsWith('()') ?
-						modelProperty.substring(0, modelProperty.length - 2) : modelProperty;
-					let listener: Function = Reflect.get(window, modelProperty);
-					modelEvent.subscribe((data: any) => {
-						(listener as Function)(data);
-					});
+				// @elementAttr="modelProperty()"
+				// onElementAttr="modelProperty()"
+				// lower-case-event-name = "modelProperty()"
+
+				let start = 0, end: number | undefined = undefined;
+				if (elementAttr.startsWith('(') || elementAttr.startsWith('@')) {
+					start = 1;
+				} else if (elementAttr.startsWith('on')) {
+					start = 2;
 				}
+				if (elementAttr.endsWith(')')) {
+					end = elementAttr.length - 1;
+				}
+				const eventName = elementAttr.substring(start, end)?.replaceAll('-', '').toLowerCase();
+				if (modelProperty.endsWith('()')) {
+					modelProperty = modelProperty.substring(0, modelProperty.length - 2);
+				}
+				const callback: Function = Reflect.get(window, modelProperty);
+				const customEvent = this._componentRef.outputs.find(output => output.viewAttribute.toLowerCase() === eventName);
+				if (customEvent) {
+					this._modelScope.subscribe(customEvent.modelProperty as keyof T, (data: any) => (callback as Function)?.(data));
+				} else {
+					this.addEventListener(elementAttr, event => callback?.(event));
+				}
+
 			} else {
-				this.setInputValue(attr.name, attr.value);
+				const inputRef = this.getInput(attr.name);
+				if (inputRef) {
+					this._render.modelStack.set(inputRef.modelProperty, attr.value);
+				}
 			}
 		}
+
 		onDestroy(callback: () => void) {
 			this.onDestroyCalls.push(callback);
 		}
+
 		adoptedCallback() {
 			// restart the process
 			this.innerHTML = '';
 			this.connectedCallback();
 		}
+
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {
@@ -376,12 +331,6 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this.dispatchEvent(event);
 		}
 
-		triggerOutput(eventName: string, value?: any): void {
-			const modelEvent = this.getEventEmitter<any>(eventName);
-			if (modelEvent) {
-				modelEvent.emit(value);
-				return;
-			}
-		}
 	};
+
 }

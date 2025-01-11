@@ -1,4 +1,4 @@
-import type { MetadataClass, MetadataContext } from '@ibyar/decorators';
+import { metadataHoler, type MetadataClass, type MetadataContext } from '@ibyar/decorators';
 import type { Type } from '../utils/typeof.js';
 import type { ZoneType } from '../zone/bootstrap.js';
 import {
@@ -111,7 +111,8 @@ export class Components {
 
 	static defineDirective(modelClass: MetadataClass, opts: DirectiveOptions, metadata: MetadataContext) {
 		if (!(opts as any as DirectiveRef<Type<any>>).signals) {
-			(opts as any as DirectiveRef<Type<any>>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
+			const scanParent = !metadataHoler.has(Object.getPrototypeOf(modelClass));
+			(opts as any as DirectiveRef<Type<any>>).signals = RuntimeClassMetadata.scanMetadata(modelClass, scanParent);
 		}
 		this.scanRuntimeSignals(modelClass, opts as any as DirectiveRef<Type<any>>, metadata);
 		Object.assign(metadata, opts);
@@ -156,7 +157,8 @@ export class Components {
 
 	static defineComponent<T extends Type<any>>(modelClass: MetadataClass<T>, opts: ComponentOptions<T>, metadata: MetadataContext) {
 		if (!(opts as any as ComponentRef<T>).signals) {
-			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass);
+			const scanParent = !metadataHoler.has(Object.getPrototypeOf(modelClass));
+			(opts as any as ComponentRef<T>).signals = RuntimeClassMetadata.scanMetadata(modelClass, scanParent);
 		}
 		this.scanRuntimeSignals(modelClass, opts as any as ComponentRef<T>, metadata);
 		const componentRef = Object.assign(metadata, opts) as any as ComponentRef<T>;
@@ -281,12 +283,6 @@ export class Components {
 		signals.filter(item => item.signal === 'output')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.addOutput(metadata, option.name, option.alias, {}));
-		signals.filter(item => item.signal === 'model')
-			.flatMap(item => item.options)
-			.forEach(option => {
-				ReflectComponents.addInput(metadata, option.name, option.alias);
-				ReflectComponents.addOutput(metadata, option.name, option.alias, {});
-			});
 		signals.filter(item => item.signal === 'view')
 			.flatMap(item => item.options)
 			.forEach(option => ReflectComponents.setComponentView(metadata, option.name));

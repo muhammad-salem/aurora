@@ -7,12 +7,12 @@
 		"example"
 	],
 	"dependencies": {
-		"tslib": "^2.7.0",
+		"tslib": "^2.8.1",
 		"zone.js": "~0.15.0"
 	},
 	"devDependencies": {
 		"test262-parser-tests": "0.0.5",
-		"typescript": "^5.6.3"
+		"typescript": "^5.7.3"
 	},
 	"scripts": {
 		"clean": "tsc -b --clean example/",

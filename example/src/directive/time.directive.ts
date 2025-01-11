@@ -1,7 +1,7 @@
 import {
 	Directive, DomParentNode, OnDestroy, OnInit,
 	StructuralDirective, PipeTransform, Pipe,
-	Component, Input,
+	Component, input,
 } from '@ibyar/aurora';
 import { map, Subscription, timer, timestamp } from 'rxjs';
 
@@ -23,17 +23,16 @@ const stringLiteralFormat = '`${hh}:${mm}:${ss}`';
 				<li>HH:MM:SS {{hh}}:{{mm}}:{{ss}}</li>
 				<li>hh:mm:ss {{${stringLiteralFormat}}} format using string literal ==> \`$\{hh\}:$\{mm\}:$\{ss\}\`</li>
 				<li>Time: {{time |> toDate}}</li>
-				<li>Data: {{date}}</li>
+				<li>Day of month: {{date}}</li>
 			</ul>
 		</div>`
 })
-class ShowTimeComponent implements TimeContext {
-
-	@Input() time: number = 0;
-	@Input() date: number = 0;
-	@Input() hh: number = 0;
-	@Input() mm: number = 0;
-	@Input() ss: number = 0;
+class ShowTimeComponent {
+	time = input(0);
+	date = input(0);
+	hh = input(0);
+	mm = input(0);
+	ss = input(0);
 }
 
 
@@ -43,7 +42,9 @@ class ShowTimeComponent implements TimeContext {
 export class TimeDirective extends StructuralDirective implements OnInit, OnDestroy {
 
 	private dateSubscription: Subscription;
-	private context: TimeContext;
+
+	updateContext: (context: TimeContext) => void;
+
 	onInit(): void {
 		if ((this.templateRef.astNode as DomParentNode)?.children?.length) {
 			this.initUserView();
@@ -62,11 +63,18 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 			ss: 0,
 		};
 		const viewRef = this.viewContainerRef.createEmbeddedView(this.templateRef, { context: initValue });
-		this.context = viewRef.context;
+		this.updateContext = ctx => Object.assign(viewRef.context, ctx);
 	}
 
 	private initDefaultView() {
-		this.context = this.viewContainerRef.createComponent(ShowTimeComponent);
+		const model = this.viewContainerRef.createComponent(ShowTimeComponent);
+		this.updateContext = ctx => {
+			model.date.set(ctx.date);
+			model.time.set(ctx.time);
+			model.hh.set(ctx.hh);
+			model.mm.set(ctx.mm);
+			model.ss.set(ctx.ss);
+		};
 	}
 
 	private startTimer() {
@@ -81,11 +89,12 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 				mm: date.getMinutes(),
 				ss: date.getSeconds(),
 			})),
-		).subscribe(context => Object.assign(this.context, context));
+		).subscribe(this.updateContext);
 	}
 
 	onDestroy() {
 		this.dateSubscription.unsubscribe();
 		this.viewContainerRef.clear();
 	}
+
 }
