@@ -8,7 +8,8 @@ import { ReflectComponents } from '../component/reflect.js';
 import { fetchHtml } from '../utils/path.js';
 import {
 	ComponentOptions, DirectiveOptions,
-	PipeOptions, InjectableOptions
+	PipeOptions, InjectableOptions,
+	ModuleOptions
 } from './options.js';
 
 
@@ -109,5 +110,11 @@ export const Component = makeClassDecorator<ComponentOptions | ComponentOptions[
 export const customElement = makeClassDecorator<{ selector: string } & ElementDefinitionOptions, Type<HTMLElement>>(
 	(opt, constructor, context) => {
 		Components.defineView(constructor as any, opt);
+	}
+);
+
+export const Module = makeClassDecorator<ModuleOptions>(
+	(opt, constructor, context) => {
+
 	}
 );

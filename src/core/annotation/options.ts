@@ -325,3 +325,12 @@ export interface ViewChildOpt {
 
 export type OutputEventInit = Omit<EventInit, 'cancelable'>;
 export type OutputOptions = { name?: string } & OutputEventInit;
+
+
+export interface ModuleOptions {
+	/**
+ * The imports property specifies the component's template dependencies — those directives, components, and pipes that can be used within its template.
+ */
+	imports?: (Type<any> | ReadonlyArray<any>)[];
+
+}
