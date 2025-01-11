@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/decorators",
-	"version": "2.8.0",
+	"version": "3.0.0",
 	"description": "Ibyar Decorators is implementations for proposal-decorator-metadata",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/decorators",
