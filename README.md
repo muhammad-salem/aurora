@@ -170,6 +170,7 @@ yarn add @ibyar/aurora
 - [x] Component
 - [x] Directives (Attribute and Structural Directives)
 - [x] Pipes
+- [x] Modules
 - [x] Lifecycle
 - [x] Signals
 - [x] input signal
