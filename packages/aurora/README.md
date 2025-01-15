@@ -291,7 +291,7 @@ bootstrapZone('aurora');
 
  - or use `manual` Zone, if you don't like to use `Zone.js`
 all the events like `rxjs` observables, setTimeout and fetch, etc..
-can't be detected.
+can't be detected, use signals to connect to variables changes, provide better debugging experience.
 
 ```ts
 import { bootstrapZone } from '@ibyar/aurora';
