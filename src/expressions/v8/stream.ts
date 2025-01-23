@@ -1484,8 +1484,8 @@ export class TokenStreamImpl extends TokenStream {
 					this.current = this.newToken(Token.SWITCH, [this.pos, (this.pos += 6)]);
 					return true;
 				}
-				if (/static\s/.test(this.expression.substring(this.pos, this.pos + 7))) {
-					this.current = this.newToken(Token.STATIC, [this.pos, (this.pos += 7)]);
+				if (/static(\s|\{)/.test(this.expression.substring(this.pos, this.pos + 7))) {
+					this.current = this.newToken(Token.STATIC, [this.pos, (this.pos += 6)]);
 					return true;
 				}
 				if (/set\s/.test(this.expression.substring(this.pos, this.pos + 4))) {

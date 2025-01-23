@@ -289,6 +289,7 @@ export interface ComponentOptions<T = Type<any>> {
 	/**
 	 * - use `manual` for no zone.js patch effect applied,
 	 *  and used for manual change detection for heavily process components.
+	 * `better to use with signals`.
 	 * 
 	 * - use `proxy` zone for automatic detect changes without use of `zone.js`
 	 * 
