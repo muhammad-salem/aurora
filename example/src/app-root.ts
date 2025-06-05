@@ -98,7 +98,11 @@ export class AppRoot implements OnInit {
 		{
 			title: 'Control Flow',
 			load: () => import('./control-flow/control-flow.js').then(module => module.ControlFlowExample),
-		}
+		},
+		{
+			title: 'Excel Sheet',
+			load: () => import('./excel/sheet.js').then(module => module.ExcelSheetComponent),
+		},
 	];
 
 	selected = signal<App | undefined>();
@@ -107,7 +111,7 @@ export class AppRoot implements OnInit {
 	eventTest = output<number>();
 
 	onInit(): void {
-		setTimeout(() => this.lazyLoad(this.appList.at(-2)!), 0);
+		setTimeout(() => this.lazyLoad(this.appList.at(-1)!), 0);
 		this.test.emit('data');
 		this.eventTest.emit(333);
 	}
