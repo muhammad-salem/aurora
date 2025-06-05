@@ -2,6 +2,7 @@ import { Component, OnInit, output, signal, Type } from '@ibyar/aurora';
 import { ComponentOutlet } from './route/component-outlet.js';
 
 export interface App {
+	path: string;
 	title: string;
 	component?: Type<object>;
 	load: () => Promise<any>;
@@ -36,70 +37,87 @@ export class AppRoot implements OnInit {
 
 	appList: App[] = [
 		{
+			path: 'track-by',
 			title: 'Track By Example',
 			load: () => import('./directive/track-by-example.js').then(module => module.TrackByComponent),
 		},
 		{
+			path: 'directives',
 			title: 'Directives',
 			load: () => import('./person-app/person-app.js').then(module => module.PersonApp),
 		},
 		{
+			path: 'pipes',
 			title: 'Pipes',
 			load: () => import('./pipe-app/pipe-test.js').then(module => module.PipeAppComponent),
 		},
 		{
+			path: 'two-way-binding',
 			title: 'Two way Binding',
 			load: () => import('./two-way/binding-2-way.js').then(module => module.Binding2Way),
 		},
 		{
-			title: 'Edit',
+			path: 'editor',
+			title: 'Editor',
 			load: () => import('./two-way/shared-model.js').then(module => module.EditorApp),
 		},
 		{
+			path: 'video-play-list',
 			title: 'Play List',
 			load: () => import('./video-player/video.js').then(module => module.VideoPlayList),
 		},
 		{
+			path: 'http fetch',
 			title: 'HTTP Fetch',
 			load: () => import('./fetch/fetch-app.js').then(module => module.FetchApp),
 		},
 		{
+			path: 'expression-editor',
 			title: 'Expression Editor',
 			load: () => import('./expression-editor/expression-editor.component.js').then(module => module.ExpressionEditorComponent),
 		},
 		{
+			path: 'custom-advanced-form',
 			title: 'Custom Advanced Form',
 			load: () => import('./forms/advanced-form.js').then(module => module.AdvancedForm),
 		},
 		{
+			path: 'custom-simple-form',
 			title: 'Custom Simple Form',
 			load: () => import('./forms/simple-form.js').then(module => module.SimpleForm),
 		},
 		{
+			path: 'form-group',
 			title: 'Form Group Component',
 			load: () => import('./form-group/form-group.component.js').then(module => module.FormGroupComponent),
 		},
 		{
+			path: 'host-color-picker',
 			title: 'Host Color Picker',
 			load: () => import('./color/host-color.component.js').then(module => module.HostColorPickerComponent),
 		},
 		{
+			path: 'automatic-slot',
 			title: 'Automatic Slot',
 			load: () => import('./slot/automatic-slot.js').then(module => module.ElementDetailsExampleComponent),
 		},
 		{
+			path: 'manual-slot',
 			title: 'Manual Slot',
 			load: () => import('./slot/manual-slot.js').then(module => module.ManualSlotExample),
 		},
 		{
-			title: 'Scope Signal',
+			path: 'signal-scope',
+			title: 'Signal Scope',
 			load: () => import('./signals/signal.js').then(module => module.SimpleCounter),
 		},
 		{
-			title: 'Control Flow',
+			path: 'control-flow-syntax',
+			title: 'Control Flow Syntax',
 			load: () => import('./control-flow/control-flow.js').then(module => module.ControlFlowExample),
 		},
 		{
+			path: 'excel-sheet',
 			title: 'Excel Sheet',
 			load: () => import('./excel/sheet.js').then(module => module.ExcelSheetComponent),
 		},
@@ -111,16 +129,24 @@ export class AppRoot implements OnInit {
 	eventTest = output<number>();
 
 	onInit(): void {
-		setTimeout(() => this.lazyLoad(this.appList.at(-1)!), 0);
+
+		setTimeout(() => this.loadPreviousApp(), 0);
 		this.test.emit('data');
 		this.eventTest.emit(333);
 	}
 
 
+	loadPreviousApp() {
+		const path = window.location.pathname?.substring(1);
+		const app = this.appList.find(i => i.path === path) ?? this.appList.at(-1);
+		this.lazyLoad(app!);
+	}
+
 	lazyLoad(app: App) {
 		app.load()
 			.then(component => app.component = component)
 			.then(() => this.selected.set(app))
+			.then(() => window.history.pushState({}, '', app.path))
 			.catch(error => console.error(`Error loading component module: ${app.title}`, error));
 	}
 
