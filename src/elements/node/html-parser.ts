@@ -508,7 +508,6 @@ export class NodeParser extends NodeParserHelper {
 				this.tempText = '';
 				return this.parseControlFlow;
 			}
-			throw new SyntaxError(`Control Flow Expression Syntax Error`);
 		} else if (token === '(') {
 			this.skipCount++;
 		}
