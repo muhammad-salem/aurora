@@ -8,11 +8,11 @@
 	],
 	"dependencies": {
 		"tslib": "^2.8.1",
-		"zone.js": "~0.15.0"
+		"zone.js": "~0.15.1"
 	},
 	"devDependencies": {
 		"test262-parser-tests": "0.0.5",
-		"typescript": "^5.7.3"
+		"typescript": "^5.8.3"
 	},
 	"scripts": {
 		"clean": "tsc -b --clean example/",
