@@ -27,7 +27,7 @@ export type ClassInfo = {
 export type ModuleInfo = { path: string; classes?: ClassInfo[]; }
 
 class ModuleManger implements Map<string, ModuleInfo> {
-	[Symbol.iterator](): IterableIterator<[string, ModuleInfo]> {
+	[Symbol.iterator](): MapIterator<[string, ModuleInfo]> {
 		return this.map[Symbol.iterator]();
 	}
 	[Symbol.toStringTag]: string = 'Module Info';
@@ -60,13 +60,13 @@ class ModuleManger implements Map<string, ModuleInfo> {
 		this.map.set(key, value);
 		return this;
 	}
-	entries(): IterableIterator<[string, ModuleInfo]> {
+	entries(): MapIterator<[string, ModuleInfo]> {
 		return this.map.entries();
 	}
-	keys(): IterableIterator<string> {
+	keys(): MapIterator<string> {
 		return this.map.keys();
 	}
-	values(): IterableIterator<ModuleInfo> {
+	values(): MapIterator<ModuleInfo> {
 		return this.map.values();
 	}
 }
