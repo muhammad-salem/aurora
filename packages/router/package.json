@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/aurora",
+	"name": "@ibyar/router",
 	"version": "3.1.1",
-	"description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
+	"description": "Ibyar router had the built-in directives for router and navigation",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/router",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/aurora"
+		"directory": "packages/router"
 	},
 	"bugs": {
 		"url": "https://github.com/ibyar/aurora/issues"
@@ -35,47 +35,21 @@
 	},
 	"dependencies": {
 		"@ibyar/core": "^3.1.1",
-		"@ibyar/decorators": "^3.1.1",
-		"@ibyar/directives": "^3.1.1",
 		"@ibyar/elements": "^3.1.1",
-		"@ibyar/expressions": "^3.1.1",
-		"@ibyar/pipes": "^3.1.1",
 		"@ibyar/platform": "^3.1.1",
-		"@ibyar/router": "^3.1.1",
 		"tslib": "^2.8.1"
-	},
-	"peerDependencies": {
-		"zone.js": "~0.15.1"
 	},
 	"devDependencies": {
 		"typescript": "^5.8.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "npx typedoc --tsconfig ../../src/aurora/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/router/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"custom-elements",
-		"dependency-injection",
-		"services",
-		"component",
-		"directive",
-		"pipes",
-		"forms",
-		"template-syntax",
-		"template-expression",
-		"http-client",
-		"http",
-		"html-parser",
-		"parser",
 		"router",
-		"js-parser",
-		"elements-info",
-		"element",
-		"interceptor",
-		"shadow-dom",
 		"typescript",
 		"front-end"
 	]

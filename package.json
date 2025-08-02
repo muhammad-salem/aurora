@@ -17,10 +17,11 @@
 	"scripts": {
 		"clean": "tsc -b --clean example/",
 		"build:src": "npm run clean && tsc --build -v",
-		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar  -b -v && cd ../..",
+		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar -b -v && cd ../..",
+		"build:router": "cd src/router && tsc -b --clean && npx ibyar -b -v && cd ../..",
 		"build:forms": "cd src/forms && tsc -b --clean && npx ibyar -b -v && cd ../..",
 		"fix-permission": "npx rimraf ./node_modules/.bin/ibyar && npm i && npx ibyar -v",
-		"build": "npm run build:src && npm run fix-permission && npm run build:directives && npm run build:forms",
+		"build": "npm run build:src && npm run fix-permission && npm run build:directives && npm run build:router && npm run build:forms",
 		"build:w": "npm run clean && tsc --build -v -w",
 		"ibyar": "npm run clean && ibyar --build -v -w",
 		"ibyar:w": "npm run clean && ibyar --build -v -w",

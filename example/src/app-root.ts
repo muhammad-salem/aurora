@@ -1,5 +1,4 @@
-import { Component, OnInit, output, signal, Type } from '@ibyar/aurora';
-import { ComponentOutlet } from './route/component-outlet.js';
+import { Component, ComponentOutlet, OnInit, output, signal, Type } from '@ibyar/aurora';
 
 export interface App {
 	path: string;

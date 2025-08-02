@@ -1,4 +1,4 @@
-import { Directive, input, OnDestroy, StructuralDirective } from '@ibyar/aurora';
+import { Directive, input, OnDestroy, StructuralDirective } from '@ibyar/core';
 
 
 export interface RouteData { selector: string, is?: string };
