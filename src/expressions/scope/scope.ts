@@ -527,7 +527,7 @@ export class WebModuleScope extends ModuleScope {
 		super({} as ModuleContext);
 		this.import = import(
 			source
-			/*, { assert: importCallOptions?.assert } */ // TODO: update in future, node16, ESNEXT,ES2022, ES2023, ES2024
+			/*, { with: importCallOptions?.with } */ // TODO: update in future, node16, ESNEXT,ES2022, ES2023, ES2024, ES2025
 		).then(module => (this.updateContext(module))).then(() => this._ctx, () => this._ctx);
 	}
 	private updateContext(context: any) {

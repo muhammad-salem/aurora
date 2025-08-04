@@ -364,9 +364,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ClassBody(body, range, loc);
 	}
-	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, assertions?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration {
+	createNamespaceExportDeclaration(specifiers: ExportSpecifier[], declaration?: DeclarationExpression, source?: Literal<string>, attributes?: ImportAttribute[], range?: [number, number]): ExportNamedDeclaration {
 		const loc = this.rangeFactory?.createSourcePosition(range);
-		return new ExportNamedDeclaration(specifiers, declaration, source, assertions, range, loc);
+		return new ExportNamedDeclaration(specifiers, declaration, source, attributes, range, loc);
 	}
 	createExportSpecifier(local: Identifier, exported: Identifier, range?: [number, number]): ExportSpecifier {
 		const loc = this.rangeFactory?.createSourcePosition(range);
@@ -376,9 +376,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportSpecifier(local, imported, range, loc);
 	}
-	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], assertions?: ImportAttribute[], range?: [number, number]): ImportDeclaration {
+	createImportDeclaration(source: Literal<string>, specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[], attributes?: ImportAttribute[], range?: [number, number]): ImportDeclaration {
 		const loc = this.rangeFactory?.createSourcePosition(range);
-		return new ImportDeclaration(source, specifiers, assertions, range, loc);
+		return new ImportDeclaration(source, specifiers, attributes, range, loc);
 	}
 	createImportNamespaceSpecifier(local: Identifier, range?: [number, number]): ImportNamespaceSpecifier {
 		const loc = this.rangeFactory?.createSourcePosition(range);
@@ -392,7 +392,7 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportExpression(source, attributes, range, loc);
 	}
-	createAssertEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute {
+	createImportWithEntry(key: Identifier | Literal<string>, value: Literal<string>, range?: [number, number]): ImportAttribute {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ImportAttribute(key, value, range, loc);
 	}
@@ -400,9 +400,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new ExportDefaultDeclaration(declaration, range, loc);
 	}
-	createExportAllDeclaration(source: Literal<string>, exported?: Identifier, assertions?: ImportAttribute[], range?: [number, number]): ExportAllDeclaration {
+	createExportAllDeclaration(source: Literal<string>, exported?: Identifier, attributes?: ImportAttribute[], range?: [number, number]): ExportAllDeclaration {
 		const loc = this.rangeFactory?.createSourcePosition(range);
-		return new ExportAllDeclaration(source, exported, assertions, range, loc);
+		return new ExportAllDeclaration(source, exported, attributes, range, loc);
 	}
 	createInfixExpression(op: AssignmentOperator | LogicalOperator | BinaryOperator, left: ExpressionNode, right: ExpressionNode, range?: [number, number]): AssignmentExpression | LogicalExpression | BinaryExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);

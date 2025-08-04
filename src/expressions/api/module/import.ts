@@ -175,7 +175,7 @@ export class ImportDeclaration extends AbstractExpressionNode {
 		return new ImportDeclaration(
 			deserializer(node.source) as Literal<string>,
 			node.specifiers?.map(deserializer) as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
-			node.assertions?.map(deserializer) as (ImportAttribute)[],
+			node.attributes?.map(deserializer) as (ImportAttribute)[],
 			node.range,
 			node.loc
 		);
@@ -183,12 +183,12 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	static visit(node: ImportDeclaration, visitNode: VisitNodeType): void {
 		visitNode(node.source);
 		node.specifiers?.forEach(visitNode);
-		node.assertions?.forEach(visitNode);
+		node.attributes?.forEach(visitNode);
 	}
 	constructor(
 		private source: Literal<string>,
 		private specifiers?: (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[],
-		private assertions?: ImportAttribute[],
+		private attributes?: ImportAttribute[],
 		range?: [number, number],
 		loc?: SourceLocation) {
 		super(range, loc);
@@ -199,20 +199,20 @@ export class ImportDeclaration extends AbstractExpressionNode {
 	getSpecifiers() {
 		return this.specifiers;
 	}
-	getAssertions() {
-		return this.assertions;
+	getAttributes() {
+		return this.attributes;
 	}
 	set(stack: Stack) {
 		throw new Error(`ImportDeclaration.#set() has no implementation.`);
 	}
 	get(stack: Stack): void {
 		let importCallOptions: ImportCallOptions | undefined;
-		if (this.assertions) {
-			const importAssertions: ImportAssertions = this.assertions
-				.map(assertion => assertion.get(stack))
+		if (this.attributes) {
+			const importAttributes: ImportAttributes = this.attributes
+				.map(attribute => attribute.get(stack))
 				.reduce((p, c) => Object.assign(p, c), {});
-			if (importAssertions) {
-				importCallOptions = { assert: importAssertions };
+			if (importAttributes) {
+				importCallOptions = { with: importAttributes };
 			}
 		}
 		const module = stack.importModule(this.source.get(), importCallOptions);
@@ -269,13 +269,13 @@ export class ImportDeclaration extends AbstractExpressionNode {
 			const importSpecifiersString = importSpecifiers.map(importSpecifier => importSpecifier.toString()).join(',');
 			parts.push(`{ ${importSpecifiersString} }`);
 		}
-		return `import ${parts.join(', ')} from ${this.source.toString()}${this.assertions ? ` assert { ${this.assertions.map(assertion => assertion.toString()).join(', ')} }` : ''};`;
+		return `import ${parts.join(', ')} from ${this.source.toString()}${this.attributes ? ` with { ${this.attributes.map(attribute => attribute.toString()).join(', ')} }` : ''};`;
 	}
 	toJson(): object {
 		return {
 			source: this.source.toJSON(),
 			specifiers: this.specifiers?.map(specifier => specifier.toJSON()),
-			assertions: this.assertions?.map(assertion => assertion.toJSON()),
+			attributes: this.attributes?.map(attribute => attribute.toJSON()),
 		};
 	}
 }
