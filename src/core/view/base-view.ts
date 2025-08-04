@@ -312,6 +312,10 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this.connectedCallback();
 		}
 
+		connectedMoveCallback() {
+
+		}
+
 		disconnectedCallback() {
 			// notify first, then call model.onDestroy func
 			if (isOnDestroy(this._model)) {

@@ -11,6 +11,7 @@ export interface CustomElement {
 	adoptedCallback(): void;
 	attributeChangedCallback(name: string, oldValue: any, newValue: any): void;
 	connectedCallback(): void;
+	connectedMoveCallback(): void;
 	disconnectedCallback(): void;
 }
 
