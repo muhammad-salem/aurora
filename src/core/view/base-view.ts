@@ -333,6 +333,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
 			const event = new CustomEvent('disconnected', { cancelable: true, bubbles: false, composed: false });
 			this.dispatchEvent(event);
+			this.needRendering = true;
 		}
 
 	};
