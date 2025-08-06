@@ -822,49 +822,49 @@ export class HTMLParser {
 		node.attributeDirectives?.forEach(attr => this.deserializeNode(attr as any));
 	}
 
-	deserializeNode(node: DomNode) {
+	deserializeNode(node: DomNode | DomAttributeDirectiveNode) {
 		const type = (node as DomNode & { type: string }).type;
 		switch (type) {
 			case 'TextContent':
-				inherit(node, TextContent);
+				node = inherit(node, TextContent);
 				break;
 			case 'LiveTextContent':
-				inherit(node, LiveTextContent);
+				node = inherit(node, LiveTextContent);
 				break;
 			case 'CommentNode':
-				inherit(node, CommentNode);
+				node = inherit(node, CommentNode);
 				break;
 			case 'LocalTemplateVariables':
-				inherit(node, LocalTemplateVariables);
+				node = inherit(node, LocalTemplateVariables);
 				break;
 			case 'DomFragmentNode':
-				inherit(node, DomFragmentNode);
-				(node as DomFragmentNode).children?.forEach(child => this.deserializeNode(child));
+				node = inherit(node, DomFragmentNode);
+				node.children?.forEach(child => this.deserializeNode(child));
 				break;
 			case 'DomElementNode':
-				inherit(node, DomElementNode);
-				if ((node as DomElementNode).templateRefName) {
-					this.deserializeAttributes((node as DomElementNode).templateRefName!);
+				const dom = node = inherit(node, DomElementNode);
+				if (dom.templateRefName) {
+					this.deserializeAttributes(dom.templateRefName!);
 				}
-				this.deserializeBaseNode(node as DomElementNode);
-				(node as DomElementNode).children?.forEach(child => this.deserializeNode(child));
+				this.deserializeBaseNode(node);
+				node.children?.forEach(child => this.deserializeNode(child));
 				break;
 			case 'DomStructuralDirectiveNode':
-				inherit(node, DomStructuralDirectiveNode);
-				this.deserializeBaseNode(node as DomStructuralDirectiveNode);
-				this.deserializeNode((node as DomStructuralDirectiveNode).node);
-				const successors = (node as DomStructuralDirectiveNode).successors;
+				node = inherit(node, DomStructuralDirectiveNode);
+				this.deserializeBaseNode(node);
+				this.deserializeNode((node).node);
+				const successors = (node).successors;
 				if (successors) {
 					successors.forEach(successor => this.deserializeNode(successor));
 				}
 				break;
 			case 'StructuralDirectiveSuccessorNode':
-				inherit(node, DomStructuralDirectiveSuccessorNode);
-				(node as DomStructuralDirectiveSuccessorNode).children?.forEach(child => this.deserializeNode(child));
+				node = inherit(node, DomStructuralDirectiveSuccessorNode);
+				node.children?.forEach(child => this.deserializeNode(child));
 				break;
 			case 'DomAttributeDirectiveNode':
-				inherit(node, DomAttributeDirectiveNode);
-				this.deserializeBaseNode(node as DomAttributeDirectiveNode);
+				node = inherit(node, DomAttributeDirectiveNode);
+				this.deserializeBaseNode(node);
 				break;
 			default:
 				break;
@@ -874,8 +874,9 @@ export class HTMLParser {
 
 }
 
-function inherit(object: any, type: { new(...args: any[]): {} }) {
-	object.__proto__ = type.prototype;
+function inherit<T extends { new(...args: any[]): {} }>(object: any, type: T): InstanceType<T> {
+	Object.setPrototypeOf(object, type.prototype);
+	return object;
 }
 
 export const htmlParser = new HTMLParser();
