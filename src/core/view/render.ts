@@ -27,9 +27,10 @@ import { ViewContainerRef, ViewContainerRefImpl } from '../linker/view-container
 import { createDestroySubscription } from '../context/subscription.js';
 import { isViewChildSignal, OutputSignal, ViewChildSignal } from '../component/initializer.js';
 import { ChildRef } from '../component/reflect.js';
-import { addProvider, removeProvider } from '../di/inject.js';
+import { addProvider, inject, removeProvider } from '../di/inject.js';
 import { AbstractAuroraZone } from '../zone/zone.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
+import { ShadowRootService } from './shadow-root.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
@@ -78,9 +79,9 @@ export class ComponentRender<T extends object> {
 		}
 
 		let rootRef: HTMLElement | ShadowRoot;
-		if (this.componentRef.isShadowDom) {
-			rootRef = Reflect.get(this.view, '_shadowRoot') as ShadowRoot;
-			Reflect.deleteProperty(this.view, '_shadowRoot');
+		const shadowRootService = inject(ShadowRootService);
+		if (this.componentRef.isShadowDom && shadowRootService.has(this.view)) {
+			rootRef = shadowRootService.get(this.view)!;
 		} else {
 			rootRef = this.view;
 		}

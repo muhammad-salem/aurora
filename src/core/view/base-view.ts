@@ -17,16 +17,16 @@ import { ChangeDetectorRef, createModelChangeDetectorRef } from '../linker/chang
 import { createProxyZone } from '../zone/proxy.js';
 import { PropertyRef } from '../component/reflect.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
-import { forkProvider, addProvider, removeProvider } from '../di/inject.js';
+import { forkProvider, addProvider, removeProvider, inject } from '../di/inject.js';
 import { isOutputSignal, VIEW_TOKEN } from '../component/initializer.js';
 import { InjectionProvider } from '../di/provider.js';
+import { ShadowRootService } from './shadow-root.js';
 
 export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElement>): Type<HTMLComponent<T>> {
 	return class CustomView extends htmlElementType implements BaseComponent<T>, CustomElement {
 		_model: ModelType<T>;
 		_signalScope: SignalScope;
 		_render: ComponentRender<T>;
-		_shadowRoot: ShadowRoot;
 
 		_componentRef: ComponentRef<T>;
 
@@ -44,7 +44,8 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			super();
 			this._componentRef = componentRef;
 			if (componentRef.isShadowDom && !componentRef.disabledFeatures?.includes('shadow')) {
-				this._shadowRoot = this.attachShadow(componentRef.shadowRootInit);
+				const shadowRoot = this.attachShadow(componentRef.shadowRootInit);
+				inject(ShadowRootService).set(this, shadowRoot);
 			}
 
 			this._signalScope = pushNewSignalScope();
@@ -308,7 +309,8 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 
 		adoptedCallback() {
 			// restart the process
-			this.innerHTML = '';
+			(inject(ShadowRootService).get(this) ?? this).innerHTML = '';
+			this.needRendering = true;
 			this.connectedCallback();
 		}
 
@@ -333,6 +335,7 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			this.onDestroyCalls.splice(0, this.onDestroyCalls.length);
 			const event = new CustomEvent('disconnected', { cancelable: true, bubbles: false, composed: false });
 			this.dispatchEvent(event);
+			(inject(ShadowRootService).get(this) ?? this).innerHTML = '';
 			this.needRendering = true;
 		}
 
