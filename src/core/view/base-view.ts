@@ -237,10 +237,9 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			// do once
 			if (this.needRendering) {
 				this.initView();
-			}
-
-			if (isAfterViewInit(this._model)) {
-				this._zone.run(this._model.afterViewInit, this._modelScope.getContextProxy!());
+				if (isAfterViewInit(this._model)) {
+					this._zone.run(this._model.afterViewInit, this._modelScope.getContextProxy!());
+				}
 			}
 			if (isAfterViewChecked(this._model)) {
 				this._zone.run(this._model.afterViewChecked, this._modelScope.getContextProxy!());
@@ -309,7 +308,6 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 		}
 
 		adoptedCallback() {
-			// restart the process
 			(inject(ShadowRootService).get(this) ?? this).innerHTML = '';
 			this.needRendering = true;
 			if (isOnViewAdopted(this._model)) {
