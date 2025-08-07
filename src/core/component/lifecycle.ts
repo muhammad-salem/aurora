@@ -49,6 +49,13 @@ export function isAfterViewChecked(object: any): object is AfterViewChecked {
 	return 'afterViewChecked' in object;
 }
 
+export interface OnViewMove {
+	onViewMove(): void;
+}
+export function isOnViewMove(object: any): object is OnViewMove {
+	return 'onViewMove' in object;
+}
+
 export interface OnDestroy {
 	onDestroy(): void;
 }

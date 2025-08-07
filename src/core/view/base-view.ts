@@ -4,8 +4,9 @@ import {
 	ScopeSubscription, SignalScope, isReactive
 } from '@ibyar/expressions';
 import {
-	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
-	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit
+	isAfterContentChecked, isAfterContentInit,
+	isAfterViewChecked, isAfterViewInit, isDoCheck,
+	isOnChanges, isOnDestroy, isOnInit, isOnViewMove
 } from '../component/lifecycle.js';
 import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
@@ -315,7 +316,9 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 		}
 
 		connectedMoveCallback() {
-
+			if (isOnViewMove(this._model)) {
+				this._zone.run(this._model.onViewMove, this._modelScope.getContextProxy!());
+			}
 		}
 
 		disconnectedCallback() {
