@@ -57,6 +57,12 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 	abstract before(node: ChildNode): void;
 
 	/**
+	 * move/resort/reorder after node
+	 * @param node 
+	 */
+	abstract moveBefore(node: ChildNode): void;
+
+	/**
 	 * remove the root nodes from the view, but keep reference to them.
 	 * 
 	 * Detaches a view from this container without destroying it.
@@ -123,6 +129,14 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	before(node: ChildNode): void {
 		node.before(this.getAsANode());
+	}
+	moveBefore(node: ChildNode): void {
+		const parent = node.parentNode as (ParentNode & { moveBefore: (node: Node, child: ChildNode) => void }) | null;
+		if (parent?.moveBefore && node.nextSibling) {
+			parent.moveBefore(this.getAsANode(), node.nextSibling!);
+		} else {
+			this.before(node);
+		}
 	}
 	detach(): void {
 		for (const node of this._rootNodes) {
