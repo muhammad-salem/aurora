@@ -145,6 +145,13 @@ export abstract class ViewContainerRef {
 	abstract move(oldIndex: number, newIndex: number): void;
 
 	/**
+	 * swap 2 view position
+	 * @param oldIndex 
+	 * @param newIndex 
+	 */
+	abstract swap(index1: number, index2: number): void;
+
+	/**
 	 * Returns the index of a view within the current container.
 	 * @param viewRef The view to query.
 	 * @returns The 0-based index of the view's position in this container,
@@ -237,6 +244,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		view.moveBefore(next.first);
 		this._views.splice(oldIndex, 1);
 		this._views.splice(newIndex, 0, view);
+	}
+	swap(index1: number, index2: number): void {
+		const min = Math.min(index1, index2);
+		const max = Math.max(index1, index2);
+		this.move(max, min);
+		this.move(min + 1, max);
 	}
 	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
 		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this._parent);
