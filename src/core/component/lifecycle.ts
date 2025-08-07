@@ -49,11 +49,31 @@ export function isAfterViewChecked(object: any): object is AfterViewChecked {
 	return 'afterViewChecked' in object;
 }
 
+/**
+ * Called each time the element is moved to a different place in the DOM via Element.moveBefore().
+ */
 export interface OnViewMove {
+	/**
+	 * Called each time the element is moved to a different place in the DOM via Element.moveBefore().
+	 */
 	onViewMove(): void;
 }
 export function isOnViewMove(object: any): object is OnViewMove {
 	return 'onViewMove' in object;
+}
+
+/**
+ * Called each time the element is moved to a new document.
+ */
+export interface OnViewAdopted {
+
+	/**
+	 * Called each time the element is moved to a new document.
+	 */
+	onViewAdopted(): void;
+}
+export function isOnViewAdopted(object: any): object is OnViewAdopted {
+	return 'onViewAdopted' in object;
 }
 
 export interface OnDestroy {

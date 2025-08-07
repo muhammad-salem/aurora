@@ -4,9 +4,9 @@ import {
 	ScopeSubscription, SignalScope, isReactive
 } from '@ibyar/expressions';
 import {
-	isAfterContentChecked, isAfterContentInit,
-	isAfterViewChecked, isAfterViewInit, isDoCheck,
-	isOnChanges, isOnDestroy, isOnInit, isOnViewMove
+	isAfterContentChecked, isAfterContentInit, isAfterViewChecked,
+	isAfterViewInit, isDoCheck, isOnChanges, isOnDestroy, isOnInit,
+	isOnViewMove, isOnViewAdopted
 } from '../component/lifecycle.js';
 import { ComponentRef } from '../component/component.js';
 import { BaseComponent, CustomElement, HTMLComponent, ModelType } from '../component/custom-element.js';
@@ -312,6 +312,9 @@ export function baseFactoryView<T extends object>(htmlElementType: Type<HTMLElem
 			// restart the process
 			(inject(ShadowRootService).get(this) ?? this).innerHTML = '';
 			this.needRendering = true;
+			if (isOnViewAdopted(this._model)) {
+				this._zone.run(this._model.onViewAdopted, this._modelScope.getContextProxy!());
+			}
 			this.connectedCallback();
 		}
 
