@@ -55,6 +55,11 @@ export abstract class ViewContainerRef {
 	abstract get(index: number): ViewRef | undefined;
 
 	/**
+	 * Performs the specified action for each element in an array.
+	 */
+	abstract forEach<T extends ViewRef>(callbackfn: (value: T, index: number) => void): void;
+
+	/**
 	 * Reports how many views are currently attached to this container.
 	 * @returns The number of views.
 	 */
@@ -210,6 +215,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		viewRef.detach();
 		this._views.splice(index, 1);
 		return viewRef;
+	}
+	override forEach<T extends ViewRef>(callbackfn: (value: T, index: number) => void): void {
+		this._views.forEach((view, index) => callbackfn(view as unknown as T, index));
 	}
 	override indexOf(viewRef: EmbeddedViewRef<any>): number {
 		return this._views.indexOf(viewRef);
