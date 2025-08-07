@@ -206,6 +206,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 	}
 	override detach(index?: number): ViewRef | undefined {
 		index ??= this._views.length - 1;
+		if (index < 0 || index >= this._views.length) {
+			return;
+		}
 		const viewRef = this._views[index];
 		viewRef.detach();
 		this._views.splice(index, 1);
@@ -216,6 +219,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 	}
 	override remove(index?: number): void {
 		index ??= this._views.length - 1;
+		if (index < 0 || index > this._views.length) {
+			return;
+		}
 		this._views[index].destroy();
 		this._views.splice(index, 1);
 	}
