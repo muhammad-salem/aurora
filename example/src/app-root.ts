@@ -66,7 +66,7 @@ export class AppRoot implements OnInit {
 			load: () => import('./video-player/video.js').then(module => module.VideoPlayList),
 		},
 		{
-			path: 'http fetch',
+			path: 'http-fetch',
 			title: 'HTTP Fetch',
 			load: () => import('./fetch/fetch-app.js').then(module => module.FetchApp),
 		},

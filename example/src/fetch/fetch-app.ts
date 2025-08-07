@@ -1,13 +1,42 @@
-import { ChangeDetectorRef, Component, inject, OnInit, } from '@ibyar/aurora';
+import { ChangeDetectorRef, Component, inject, input, OnDestroy, OnInit, OnViewAdopted, OnViewMove, } from '@ibyar/aurora';
+
+@Component({
+	selector: 'number-item',
+	encapsulation: 'shadow-dom',
+	shadowRootInit: { mode: 'closed' },
+	template: `{{item}}`
+})
+export class NumberItemComponent implements OnInit, OnViewMove, OnViewAdopted, OnDestroy {
+
+	item = input.required<number>();
+
+	onInit(): void {
+		console.log('model: on inti', this.item.get());
+	}
+
+	onViewMove(): void {
+		console.log('view: on move', this.item.get());
+	}
+
+	onViewAdopted(): void {
+		console.log('view: on adopted', this.item.get());
+	}
+
+	onDestroy(): void {
+		console.log('model: on destroy', this.item.get());
+	}
+
+}
 
 @Component({
 	selector: 'fetch-app',
 	zone: 'manual',
+	imports: [NumberItemComponent],
 	template: `	<div class="row gx-5">
 		<div class="col">
 			<ul class="list-group">
 				<li *for="let item of list" class="list-group-item" [class]="{'active': selected === item}" @click="selected = item">
-					{{item}}
+					<number-item [item]="item.num"></number-item>
 				</li>
 			</ul>
 		</div>
@@ -23,15 +52,15 @@ import { ChangeDetectorRef, Component, inject, OnInit, } from '@ibyar/aurora';
 })
 export class FetchApp implements OnInit {
 
-	list: number[] = [];
-	selected: number = 1;
+	list: { num: number }[] = [];
+	selected: { num: number } | undefined;
 
 	private _cd = inject(ChangeDetectorRef);
 
 	onInit(): void {
 		fetch('https://raw.githubusercontent.com/ibyar/aurora/dev/example/src/fetch/data.json')
 			.then(response => response.json())
-			.then((list: string[]) => this.list = list.map(i => +i))
+			.then((list: string[]) => this.list = list.map(i => ({ num: +i })))
 			.then(() => this._cd.markForCheck());
 	}
 
@@ -45,20 +74,19 @@ export class FetchApp implements OnInit {
 			this.list.splice(index, 2, this.list[index + direction], this.list[index]);
 		}
 	}
-	delete(index: number) {
-		try {
-			this.selected = this.list.at(index - 1) ?? 0;
-			return this.list.splice(index, 1)[0];
-		} finally {
-			this._cd.markForCheck();
+	delete(index: number): void {
+		if (this.selected) {
+			this.selected = undefined;
+			this.list.splice(index, 1);
 		}
 	}
 	appendItem() {
-		this.list.push(this.list.length > 0 ? Math.max.apply(Math, this.list) + 1 : 0);
-		this.selected = this.list.length - 1;
+		const num = this.list.map(i => i.num).reduce((a, b) => Math.max(a, b), 0) + 1;
+		this.list.push({ num });
+		this.selected = this.list.at(- 1)!;
 	}
 	sortItems(direction: number) {
-		this.list.sort((a, b) => (a - b) * direction);
+		this.list.sort((a, b) => (a.num - b.num) * direction);
 	}
 
 	reversSortItems() {
