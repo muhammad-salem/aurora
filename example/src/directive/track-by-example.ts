@@ -13,20 +13,26 @@ export type Hero = {
 		<div class="row">
 			<div class="col-10">
 				<div class="row p-2">
-					*for="const hero of heros; trackBy trackById; let i = index;"
-					<div *for="const hero of heros; trackBy trackById; let i = index;">
+					snapshot
+					<div *for="const hero of snapshot; trackBy trackById; let i = index;">
 						#{{i}} - {{hero.id}} - {{hero.title}}
 					</div>
 				</div>
 				<div class="row p-2">
-					*for="const hero of heros; trackBy = (index, heroRef) => heroRef.id; let i = index;"
-					<div *for="const hero of heros; trackBy = (index, heroRef) => heroRef.id; let i = index;">
+					*for="const hero of heroes; trackBy trackById; let i = index;"
+					<div *for="const hero of heroes; trackBy trackById; let i = index;">
 						#{{i}} - {{hero.id}} - {{hero.title}}
 					</div>
 				</div>
 				<div class="row p-2">
-					*for="const hero of heros; trackBy: trackByTitle; let i = index;"
-					<div *for="const hero of heros; trackBy: trackByTitle; let i = index;">
+					*for="const hero of heroes; trackBy = (index, heroRef) => heroRef.id; let i = index;"
+					<div *for="const hero of heroes; trackBy = (index, heroRef) => heroRef.id; let i = index;">
+						#{{i}} - {{hero.id}} - {{hero.title}}
+					</div>
+				</div>
+				<div class="row p-2">
+					*for="const hero of heroes; trackBy: trackByTitle; let i = index;"
+					<div *for="const hero of heroes; trackBy: trackByTitle; let i = index;">
 						#{{i}} - {{hero.id}} - {{hero.title}}
 					</div>
 				</div>
@@ -41,7 +47,7 @@ export type Hero = {
 })
 export class TrackByComponent implements OnInit {
 
-	heros: Hero[] = [
+	heroes: Hero[] = [
 		{
 			"id": 1,
 			"title": "Super Man"
@@ -59,6 +65,9 @@ export class TrackByComponent implements OnInit {
 			"title": "Wolverine"
 		}
 	];
+
+	snapshot = this.heroes.slice();
+
 	onInit(): void {
 
 	}
@@ -71,16 +80,15 @@ export class TrackByComponent implements OnInit {
 	}
 
 	shuffle() {
-		let currentIndex = this.heros.length, randomIndex: number;
+		let currentIndex = this.heroes.length, randomIndex: number;
 		// While there remain elements to shuffle.
 		while (currentIndex != 0) {
 			// Pick a remaining element.
 			randomIndex = Math.floor(Math.random() * currentIndex);
 			currentIndex--;
 			// And swap it with the current element.
-			[this.heros[currentIndex], this.heros[randomIndex]] = [this.heros[randomIndex], this.heros[currentIndex]];
+			[this.heroes[currentIndex], this.heroes[randomIndex]] = [this.heroes[randomIndex], this.heroes[currentIndex]];
 		}
-		console.log('heros', this.heros);
 	}
 
 }
