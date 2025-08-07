@@ -168,11 +168,6 @@ export abstract class ViewContainerRef {
 	 */
 	abstract detach(index?: number): ViewRef | undefined;
 
-	/**
-	 * set the current views from this
-	 * @param views the new `ViewRef` list 
-	 */
-	abstract updateViews(views: ViewRef[]): void;
 }
 
 
@@ -297,15 +292,6 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const viewRef = new EmbeddedViewRefImpl<Text>(scope, [text]);
 		(options?.insert != false) && this.insert(viewRef, options?.index);
 		return text;
-	}
-
-	override updateViews(views: ViewRef[]): void {
-		for (let i = 0; i < views.length; i++) {
-			this.move(views[i] as EmbeddedViewRef<any>, i);
-		}
-		while (this.length > views.length) {
-			this.remove();
-		}
 	}
 
 }
