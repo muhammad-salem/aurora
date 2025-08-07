@@ -12,10 +12,6 @@ interface IndexOptions {
 	 * the index to insert the 
 	 */
 	index?: number;
-	/**
-	 * the default value is true
-	 */
-	insert?: boolean
 }
 
 export interface ViewContainerOptions<C> extends IndexOptions {
@@ -253,7 +249,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 	}
 	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
 		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this._parent);
-		(options?.insert != false) && this.insert(viewRef, options?.index);
+		this.insert(viewRef, options?.index);
 		return viewRef;
 	}
 	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
@@ -280,7 +276,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
-		(options?.insert != false) && this.insert(viewRef, options?.index);
+		this.insert(viewRef, options?.index);
 		return component._model;
 	}
 
@@ -297,14 +293,14 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		}
 		const scope = ReactiveControlScope.for<C>(element);
 		const viewRef = new EmbeddedViewRefImpl<C>(scope, [element]);
-		(options?.insert != false) && this.insert(viewRef, options?.index);
+		this.insert(viewRef, options?.index);
 		return element;
 	}
 	override createTextNode(data: string, options?: IndexOptions): Text {
 		const text = document.createTextNode(data);
 		const scope = ReactiveControlScope.for<Text>(text);
 		const viewRef = new EmbeddedViewRefImpl<Text>(scope, [text]);
-		(options?.insert != false) && this.insert(viewRef, options?.index);
+		this.insert(viewRef, options?.index);
 		return text;
 	}
 
