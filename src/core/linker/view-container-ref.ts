@@ -139,11 +139,10 @@ export abstract class ViewContainerRef {
 
 	/**
 	 * Moves a view to a new location in this container.
-	 * @param viewRef The view to move.
+	 * @param oldIndex The 0-based index of the old location.
 	 * @param newIndex The 0-based index of the new location.
-	 * @returns The moved `ViewRef` instance.
 	 */
-	abstract move(viewRef: ViewRef, newIndex: number): ViewRef;
+	abstract move(oldIndex: number, newIndex: number): void;
 
 	/**
 	 * Returns the index of a view within the current container.
@@ -227,15 +226,17 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		viewRef.after(lastNode);
 		return viewRef;
 	}
-	override move(viewRef: EmbeddedViewRef<any>, newIndex: number): ViewRef {
-		const oldIndex = this.indexOf(viewRef);
-		if (oldIndex > -1) {
-			this.detach(oldIndex);
-		} else {
-			// should remove it from the container first
-			viewRef.detach();
+	override move(oldIndex: number, newIndex: number): void {
+		if (oldIndex === newIndex
+			|| oldIndex < 0 || oldIndex >= this._views.length
+			|| newIndex < 0 || newIndex >= this._views.length) {
+			return;
 		}
-		return this.insert(viewRef, newIndex);
+		const view = this._views.at(oldIndex)!;
+		const next = this._views.at(newIndex)!;
+		view.moveBefore(next.first);
+		this._views.splice(oldIndex, 1);
+		this._views.splice(newIndex, 0, view);
 	}
 	override createEmbeddedView<C extends {}>(templateRef: TemplateRef, options?: ViewContainerOptions<C>): EmbeddedViewRef<C> {
 		const viewRef = templateRef.createEmbeddedView<C>(options?.context || <C>{}, this._parent);
