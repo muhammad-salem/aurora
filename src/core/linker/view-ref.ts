@@ -57,6 +57,12 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 	abstract before(node: ChildNode): void;
 
 	/**
+	 * move/resort/reorder after node
+	 * @param node 
+	 */
+	abstract moveAfter(node: ChildNode): void;
+
+	/**
 	 * move/resort/reorder before node
 	 * @param node 
 	 */
@@ -129,6 +135,13 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	before(node: ChildNode): void {
 		node.before(this.getAsANode());
+	}
+	moveAfter(node: ChildNode): void {
+		if (node.nextSibling) {
+			this.moveBefore(node.nextSibling);
+		} else {
+			this.after(node);
+		}
 	}
 	moveBefore(node: ChildNode): void {
 		const parent = node.parentNode as (ParentNode & { moveBefore: (node: Node, child: ChildNode) => void }) | null;
