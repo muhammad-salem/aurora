@@ -2,10 +2,7 @@ import {
 	Directive, EmbeddedViewRef, input,
 	OnDestroy, StructuralDirective, ViewRef
 } from '@ibyar/core';
-import {
-	diff, PatchArray, PatchOperation,
-	PatchRoot, TrackBy
-} from '@ibyar/platform';
+import { diff, isPatchReplaceRoot, PatchArray, PatchOperation, TrackBy } from '@ibyar/platform';
 
 export class ForContext<T> {
 	constructor(public $implicit: T, public index: number, public count: number) { }
@@ -79,7 +76,7 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 		const patchActions = diff(lastContext, currentContext, { trackBy: this._$implicitTrackBy });
 		if (patchActions.length === 0) {
 			return;
-		} else if (PatchRoot === patchActions[0]) {
+		} else if (isPatchReplaceRoot(patchActions)) {
 			const views = currentContext.map(context =>
 				this.viewContainerRef.createEmbeddedView(this.templateRef, { context, insert: false })
 			);
