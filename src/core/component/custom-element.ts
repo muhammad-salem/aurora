@@ -7,11 +7,56 @@ import { InjectionProvider } from '../di/provider.js';
 import { ChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { ComponentRender } from '../view/render.js';
 
+/**
+ * Custom Elements
+ * 
+ * One of the key features of web components is the ability to create custom elements: that is, 
+ * HTML elements whose behavior is defined by the web developer, 
+ * that extend the set of elements available in the browser.
+ * This article introduces custom elements, and walks through some examples.
+ * 
+ * There are two types of custom element:
+ * 
+ * - Autonomous custom elements inherit from the HTML element base class HTMLElement. 
+ * You have to implement their behavior from scratch.
+ * 
+ * - Customized built-in elements inherit from standard HTML elements such as HTMLImageElement or HTMLParagraphElement. 
+ * Their implementation extends the behavior of select instances of the standard element.
+ */
 export interface CustomElement {
+	/**
+	 * Called each time the element is moved to a new document.
+	 */
 	adoptedCallback(): void;
+
+	/**
+	 * Called when attributes are changed, added, removed, or replaced.
+	 * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#responding_to_attribute_changes Responding to attribute changes} for more details about this callback.
+	 * @param name The name of the attribute which changed
+	 * @param oldValue The attribute's old value.
+	 * @param newValue The attribute's new value.
+	 */
 	attributeChangedCallback(name: string, oldValue: any, newValue: any): void;
+
+	/**
+	 * Called each time the element is added to the document.
+	 * The specification recommends that, as far as possible,
+	 * developers should implement custom element setup in this callback rather than the constructor.
+	 */
 	connectedCallback(): void;
+
+	/**
+	 * When defined, this is called instead of {@link CustomElement.connectedCallback()} and {@link CustomElement.disconnectedCallback()} 
+	 * each time the element is moved to a different place in the DOM via {@link Element.moveBefore()}. 
+	 * Use this to avoid running initialization/cleanup code in the {@link CustomElement.connectedCallback()} and {@link CustomElement.disconnectedCallback()} callbacks 
+	 * when the element is not actually being added to or removed from the DOM.
+	 * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#lifecycle_callbacks_and_state-preserving_moves See Lifecycle callbacks and state-preserving moves} for more details.
+	 */
 	connectedMoveCallback(): void;
+
+	/**
+	 * Called each time the element is removed from the document.
+	 */
 	disconnectedCallback(): void;
 }
 
