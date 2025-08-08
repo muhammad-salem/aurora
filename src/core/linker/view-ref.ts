@@ -23,7 +23,7 @@ export abstract class ViewRef extends ChangeDetectorRef {
 }
 
 
-export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
+export abstract class EmbeddedViewRef<C> extends ViewRef {
 	/**
 	 * The context for this view, inherited from the anchor element.
 	 */
@@ -77,13 +77,13 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 	abstract detach(): void;
 }
 
-export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
+export class EmbeddedViewRefImpl<C> extends EmbeddedViewRef<C> {
 
 	private _destroyed: boolean = false;
 	private _onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
-		private _scope: ReactiveControlScope<C>,
+		private _scope: ReactiveControlScope<C & Context>,
 		private _rootNodes: Node[],
 		private _subscriptions?: ScopeSubscription<Context>[]) {
 		super();
