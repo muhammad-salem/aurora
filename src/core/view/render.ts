@@ -235,7 +235,7 @@ export class ComponentRender<T extends object> {
 			}
 			fragmentParent.append(this.createElement(child, contextStack, subscriptions, host));
 		} else if (child instanceof DomStructuralDirectiveNode) {
-			const comment = document.createComment(` @${child.name.substring(1)} ${typeof child.value ? `(${child.value}) {` : '{'}`);
+			const comment = document.createComment(` @${child.name.substring(1)} ${child.value ? `(${child.value}) {` : '{'}`);
 			fragmentParent.append(comment);
 			fragmentParent.append(document.createComment('}'));
 			this.createStructuralDirective(child, comment, contextStack, subscriptions, parentNode, host);
