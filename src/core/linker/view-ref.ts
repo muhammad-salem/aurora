@@ -144,7 +144,7 @@ export class EmbeddedViewRefImpl<C> extends EmbeddedViewRef<C> {
 		}
 	}
 	moveBefore(node: ChildNode): void {
-		const parent = node.parentNode as (ParentNode & { moveBefore: (node: Node, child: ChildNode) => void }) | null;
+		const parent = node.parentNode as (ParentNode & { moveBefore?: (node: Node, child: ChildNode) => void }) | null;
 		if (parent?.moveBefore && node) {
 			parent.moveBefore(this.getAsANode(), node);
 		} else {
