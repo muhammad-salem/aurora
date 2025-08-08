@@ -16,7 +16,7 @@ export class AddNoteDirective extends StructuralDirective implements OnInit, OnD
 
 	onInit(): void {
 		this.viewContainerRef.createEmbeddedView(this.templateRef);
-		const node = this.viewContainerRef.createComponent(NoteComponent);
+		const node = this.viewContainerRef.createComponent(NoteComponent).component;
 		node.directiveName.set('*add-note');
 	}
 

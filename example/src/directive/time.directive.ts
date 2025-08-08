@@ -67,7 +67,7 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 	}
 
 	private initDefaultView() {
-		const model = this.viewContainerRef.createComponent(ShowTimeComponent);
+		const model = this.viewContainerRef.createComponent(ShowTimeComponent).component;
 		this.updateContext = ctx => {
 			model.date.set(ctx.date);
 			model.time.set(ctx.time);
