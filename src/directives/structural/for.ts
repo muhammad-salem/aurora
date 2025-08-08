@@ -68,7 +68,7 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 			return;
 		}
 		const previousContext: ForOfContext<T>[] = [];
-		this.viewContainerRef.forEach<EmbeddedViewRef<ForOfContext<T>>>(view => previousContext.push(view.context));
+		this.viewContainerRef.forEach<ForOfContext<T>>(view => previousContext.push(view.context));
 
 		diff(previousContext, currentContext, { trackBy: this._$implicitTrackBy }).forEach(patch => {
 			switch (patch.op) {
@@ -83,12 +83,12 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 					break;
 				case PatchOperation.MOVE:
 					this.viewContainerRef.move(patch.currentIndex, patch.nextIndex);
-					(this.viewContainerRef.get(patch.nextIndex) as EmbeddedViewRef<ForOfContext<T>>).context.update(patch.item);
+					this.viewContainerRef.get<ForOfContext<T>>(patch.nextIndex)?.context.update(patch.item);
 					break;
 			}
 		});
 		const count = this.viewContainerRef.length;
-		this.viewContainerRef.forEach<EmbeddedViewRef<ForOfContext<T>>>((view, index) => view.context.update({ index, count }));
+		this.viewContainerRef.forEach<ForOfContext<T>>((view, index) => view.context.update({ index, count }));
 		this.viewContainerRef.forEach(view => view.detectChanges());
 	}
 
