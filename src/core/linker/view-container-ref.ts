@@ -26,6 +26,13 @@ export interface HTMLElementOptions extends ElementCreationOptions, IndexOptions
 
 }
 
+
+export type ComponentViewRef<T> = {
+	component: T;
+	view: HTMLComponent<T>;
+	ref: EmbeddedViewRef<T>;
+};
+
 export abstract class ViewContainerRef {
 
 	/**
@@ -83,14 +90,14 @@ export abstract class ViewContainerRef {
 	 * @param selector the tag name for the aurora custom-element
 	 * @param options 
 	 */
-	abstract createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
+	abstract createComponent<C extends {}>(selector: string, options?: IndexOptions): ComponentViewRef<C>;
 
 	/**
 	 * create component by the aurora custom-element `View` Class
 	 * @param viewClass the generated aurora view class
 	 * @param options 
 	 */
-	abstract createComponent<C extends {}>(viewClass: Type<HTMLComponent<C>>, options?: IndexOptions): C;
+	abstract createComponent<C extends {}>(viewClass: Type<HTMLComponent<C>>, options?: IndexOptions): ComponentViewRef<C>;
 
 	/**
 	 * Instantiates a single component and inserts its host view into this container.
@@ -104,7 +111,7 @@ export abstract class ViewContainerRef {
 	 *
 	 * @returns The new `HTMLComponent` which contains the component instance and the host view.
 	 */
-	abstract createComponent<C extends {}>(componentType: Type<C>, options?: ViewContainerComponentOptions): C;
+	abstract createComponent<C extends {}>(componentType: Type<C>, options?: ViewContainerComponentOptions): ComponentViewRef<C>;
 
 	/**
 	 * create an HTMLElement by tag name `selector`.
@@ -260,10 +267,10 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		this.insert(viewRef, options?.index);
 		return viewRef;
 	}
-	override createComponent<C extends {}>(selector: string, options?: IndexOptions): C;
-	override createComponent<C extends {}>(viewClass: MetadataClass<HTMLComponent<C>>, options?: IndexOptions): C;
-	override createComponent<C extends {}>(componentType: MetadataClass<C>, options?: ViewContainerComponentOptions): C;
-	override createComponent<C extends {}>(arg0: string | MetadataClass<C> | Type<HTMLComponent<C>>, options?: ViewContainerComponentOptions): C {
+	override createComponent<C extends {}>(selector: string, options?: IndexOptions): ComponentViewRef<C>;
+	override createComponent<C extends {}>(viewClass: MetadataClass<HTMLComponent<C>>, options?: IndexOptions): ComponentViewRef<C>;
+	override createComponent<C extends {}>(componentType: MetadataClass<C>, options?: ViewContainerComponentOptions): ComponentViewRef<C>;
+	override createComponent<C extends {}>(arg0: string | MetadataClass<C> | Type<HTMLComponent<C>>, options?: ViewContainerComponentOptions): ComponentViewRef<C> {
 		let ViewClass: Type<HTMLComponent<C>>;
 		if (typeof arg0 === 'string') {
 			ViewClass = customElements.get(arg0) as Type<HTMLComponent<C>>;
@@ -285,7 +292,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
 		this.insert(viewRef, options?.index);
-		return component._model;
+		return { component: component._model, view: component, ref: viewRef };
 	}
 
 	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
