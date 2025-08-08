@@ -157,11 +157,10 @@ export abstract class ViewContainerRef {
 
 	/**
 	 * move a view to a new location from another container
-	 * @param parent parent container
-	 * @param index index in parent container
+	 * @param viewRef the view that needed to be inserted in this container.
 	 * @param newIndex new index in this container, or append
 	 */
-	abstract adopt(parent: ViewContainerRef, index: number, newIndex?: number): void;
+	abstract adopt<T>(viewRef: EmbeddedViewRef<T>, newIndex?: number): void;
 
 	/**
 	 * Moves a view to a new location in this container.
@@ -252,14 +251,9 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		this._views.splice(index, 1);
 		return viewRef;
 	}
-	override adopt(parent: ViewContainerRef, index: number, newIndex?: number): void {
-		const viewRef = parent.remove(index, false);
-		if (!viewRef) {
-			return;
-		}
-		newIndex = ((newIndex ??= this._views.length) > this._views.length) ? this._views.length : newIndex;
+	override adopt<T>(viewRef: EmbeddedViewRef<T>, newIndex = this._views.length): void {
 		const lastNode = newIndex == 0 ? this._firstComment : this._views[newIndex - 1].last;
-		this._views.splice(index, 0, viewRef);
+		this._views.splice(newIndex, 0, viewRef);
 		viewRef.moveAfter(lastNode);
 	}
 	override forEach<T>(callbackfn: (value: EmbeddedViewRef<T>, index: number) => void): void {
