@@ -63,6 +63,11 @@ export interface DirectiveOptions {
 	 */
 	successors?: string[];
 
+	/**
+	 * The imports property specifies the component's template dependencies — those directives, components, and pipes that can be used within its template.
+	 */
+	imports?: (Type<any> | ReadonlyArray<any>)[];
+
 }
 
 export interface InjectableOptions {
