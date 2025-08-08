@@ -1,4 +1,4 @@
-import { Component, ComponentOutlet, OnInit, output, signal, Type } from '@ibyar/aurora';
+import { Component, ComponentOutlet, LazyOutletComponent, OnInit, output, signal, Type } from '@ibyar/aurora';
 
 export interface App {
 	path: string;
@@ -24,12 +24,13 @@ export interface App {
 		</nav>
 		<div class="w-100 h-100 d-flex flex-direction-column my-2">
 			<div class="w-100 h-100">
-				<component-outlet [component]="selected?.component"></component-outlet>
+				<lazy-outlet [component]="selected?.component"></lazy-outlet>
 			</div>
 		</div>
 	</div>`,
 	imports: [
 		ComponentOutlet,
+		LazyOutletComponent,
 	]
 })
 export class AppRoot implements OnInit {
