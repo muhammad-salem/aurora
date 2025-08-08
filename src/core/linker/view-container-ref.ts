@@ -59,12 +59,12 @@ export abstract class ViewContainerRef {
 	 * @param index The 0-based index of the view to retrieve.
 	 * @returns The `ViewRef` instance, or null if the index is out of range.
 	 */
-	abstract get(index: number): ViewRef | undefined;
+	abstract get<T>(index: number): EmbeddedViewRef<T> | undefined;
 
 	/**
 	 * Performs the specified action for each element in an array.
 	 */
-	abstract forEach<T extends ViewRef>(callbackfn: (value: T, index: number) => void): void;
+	abstract forEach<T>(callbackfn: (value: EmbeddedViewRef<T>, index: number) => void): void;
 
 	/**
 	 * Reports how many views are currently attached to this container.
@@ -180,7 +180,7 @@ export abstract class ViewContainerRef {
 	 * @param index The 0-based index of the view to detach.
 	 * If not specified, the last view in the container is detached.
 	 */
-	abstract detach(index?: number): ViewRef | undefined;
+	abstract detach<T>(index?: number): EmbeddedViewRef<T> | undefined;
 
 }
 
@@ -207,13 +207,13 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 			this._views.splice(0);
 		}
 	}
-	override get(index: number): ViewRef | undefined {
+	override get<T>(index: number): EmbeddedViewRef<T> | undefined {
 		if (index >= this._views.length) {
 			return undefined;
 		}
 		return this._views[index];
 	}
-	override detach(index?: number): ViewRef | undefined {
+	override detach<T>(index?: number): EmbeddedViewRef<T> | undefined {
 		index ??= this._views.length - 1;
 		if (index < 0 || index >= this._views.length) {
 			return;
@@ -223,10 +223,10 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		this._views.splice(index, 1);
 		return viewRef;
 	}
-	override forEach<T extends ViewRef>(callbackfn: (value: T, index: number) => void): void {
-		this._views.forEach((view, index) => callbackfn(view as unknown as T, index));
+	override forEach<T>(callbackfn: (value: EmbeddedViewRef<T>, index: number) => void): void {
+		this._views.forEach((view, index) => callbackfn(view, index));
 	}
-	override indexOf(viewRef: EmbeddedViewRef<any>): number {
+	override indexOf<T>(viewRef: EmbeddedViewRef<T>): number {
 		return this._views.indexOf(viewRef);
 	}
 	override remove(index?: number): void {
