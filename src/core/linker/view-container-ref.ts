@@ -182,7 +182,18 @@ export abstract class ViewContainerRef {
 	 * @param index The 0-based index of the view to destroy.
 	 * If not specified, the last view in the container is removed.
 	 */
-	abstract remove(index?: number): void;
+	abstract remove<T>(index?: number): EmbeddedViewRef<T> | undefined;
+
+	/**
+	 * remove a view attached to this container with out destroying it.
+	 * the view will be still attached to the DOM.
+	 * useful in case of moving the view/component to anther container without realizing it again.
+	 * returns the view.
+	 * @param index 
+	 * @param destroy 
+	 * @returns the view in the index
+	 */
+	abstract remove<T>(index: number, destroy: false): EmbeddedViewRef<T> | undefined;
 
 	/**
 	 * Detaches a view from this container without destroying it.
@@ -239,13 +250,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 	override indexOf<T>(viewRef: EmbeddedViewRef<T>): number {
 		return this._views.indexOf(viewRef);
 	}
-	override remove(index?: number): void {
-		index ??= this._views.length - 1;
+	override remove<T>(index = this._views.length - 1, destroy = true): EmbeddedViewRef<T> | undefined {
 		if (index < 0 || index > this._views.length) {
 			return;
 		}
-		this._views[index].destroy();
-		this._views.splice(index, 1);
+		destroy && this._views[index].destroy();
+		return this._views.splice(index, 1)[0];
 	}
 	override insert(viewRef: EmbeddedViewRef<any>, index?: number): ViewRef {
 		index = ((index ??= this._views.length) > this._views.length) ? this._views.length : index;
