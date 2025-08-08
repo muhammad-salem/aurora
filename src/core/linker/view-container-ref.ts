@@ -26,11 +26,15 @@ export interface HTMLElementOptions extends ElementCreationOptions, IndexOptions
 
 }
 
+export type ElementRef<T> = {
+	nativeElement: T;
+	viewRef: EmbeddedViewRef<T>;
+};
 
 export type ComponentViewRef<T> = {
-	component: T;
-	view: HTMLComponent<T>;
-	ref: EmbeddedViewRef<T>;
+	instance: T;
+	nativeElement: HTMLComponent<T>;
+	viewRef: EmbeddedViewRef<T>;
 };
 
 export abstract class ViewContainerRef {
@@ -118,15 +122,21 @@ export abstract class ViewContainerRef {
 	 * @param selector the tag name for the aurora custom-element
 	 * @param options 
 	 */
-	abstract createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
-	abstract createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementDeprecatedTagNameMap[K];
+	abstract createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): ElementRef<HTMLElementTagNameMap[K]>;
+
+	/**
+	 * create an HTMLElement by tag name `selector`.
+	 * @param selector the tag name for the aurora custom-element
+	 * @param options 
+	 */
+	abstract createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): ElementRef<HTMLElementDeprecatedTagNameMap[K]>;
 
 	/**
 	 * create HTMLElement by View Class reference
 	 * @param viewClass the generated aurora view class
 	 * @param options 
 	 */
-	abstract createElement<C extends HTMLElement>(htmlElementClass: Type<C>, options?: HTMLElementOptions): C;
+	abstract createElement<C extends HTMLElement>(htmlElementClass: Type<C>, options?: HTMLElementOptions): ElementRef<C>;
 
 	/**
 	 * create a text node and insert to the view
@@ -292,12 +302,12 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const component = new ViewClass();
 		const viewRef = new EmbeddedViewRefImpl<C>(component._modelScope, [component]);
 		this.insert(viewRef, options?.index);
-		return { component: component._model, view: component, ref: viewRef };
+		return { instance: component._model, nativeElement: component, viewRef: viewRef };
 	}
 
-	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementTagNameMap[K];
-	override createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): HTMLElementDeprecatedTagNameMap[K];
-	override createElement<C extends HTMLElement>(arg0: string | Type<C>, options?: HTMLElementOptions): C {
+	override createElement<K extends keyof HTMLElementTagNameMap>(selector: K, options?: HTMLElementOptions): ElementRef<HTMLElementTagNameMap[K]>;
+	override createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(selector: K, options?: HTMLElementOptions): ElementRef<HTMLElementDeprecatedTagNameMap[K]>;
+	override createElement<C extends HTMLElement>(arg0: string | Type<C>, options?: HTMLElementOptions): ElementRef<C> {
 		let element: C;
 		if (typeof arg0 === 'string') {
 			element = document.createElement(arg0, { is: options?.is }) as C;
@@ -309,7 +319,7 @@ export class ViewContainerRefImpl extends ViewContainerRef {
 		const scope = ReactiveControlScope.for<C>(element);
 		const viewRef = new EmbeddedViewRefImpl<C>(scope, [element]);
 		this.insert(viewRef, options?.index);
-		return element;
+		return { nativeElement: element, viewRef: viewRef };
 	}
 	override createTextNode(data: string, options?: IndexOptions): Text {
 		const text = document.createTextNode(data);
