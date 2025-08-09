@@ -97,6 +97,10 @@
 [source-elements]: https://github.com/ibyar/aurora/tree/dev/src/elements
 [package-platform]: https://github.com/ibyar/aurora/tree/dev/packages/platform
 [source-platform]: https://github.com/ibyar/aurora/tree/dev/src/platform
+[package-router]: https://github.com/ibyar/aurora/tree/dev/packages/router
+[source-router]: https://github.com/ibyar/aurora/tree/dev/src/router
+[package-forms]: https://github.com/ibyar/aurora/tree/dev/packages/forms
+[source-forms]: https://github.com/ibyar/aurora/tree/dev/src/forms
 [package-cli]: https://github.com/ibyar/aurora/tree/dev/packages/cli
 [source-cli]: https://github.com/ibyar/aurora/tree/dev/src/cli
 [package-decorators]: https://github.com/ibyar/aurora/tree/dev/packages/decorators
