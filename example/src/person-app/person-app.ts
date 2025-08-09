@@ -166,7 +166,7 @@ import { PersonModule } from './person-module.js';
 })
 export class PersonApp {
 
-	appVersion = input('2022.08.05');
+	appVersion = input('2025.08.09');
 
 	title = 'Testing Components';
 
