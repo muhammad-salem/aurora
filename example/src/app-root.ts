@@ -22,11 +22,22 @@ export interface App {
 				</li>
 			</template>
 		</nav>
-		<div class="w-100 h-100 d-flex flex-direction-column my-2">
-			<div class="w-100 h-100">
-				<lazy-outlet [component]="selected?.component"></lazy-outlet>
+		<form>
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" id="flexCheckDefault" [checked]="show" (change)="show = $event.target.checked">
+				<label class="form-check-label" for="flexCheckDefault">
+					Show: {{show}}
+				</label>
 			</div>
-		</div>
+		</form>
+		@if(show) {
+			<div class="w-100 h-100 d-flex flex-direction-column my-2">
+				<div class="w-100 h-100">
+					<lazy-outlet [component]="selected?.component"></lazy-outlet>
+				</div>
+			</div>
+		}
+		
 	</div>`,
 	imports: [
 		ComponentOutlet,
@@ -34,6 +45,8 @@ export interface App {
 	]
 })
 export class AppRoot implements OnInit {
+
+	show = signal(false);
 
 	appList: App[] = [
 		{
