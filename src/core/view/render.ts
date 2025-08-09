@@ -278,16 +278,6 @@ export class ComponentRender<T extends object> {
 		return element;
 	}
 
-	private createReadOnlyWithReactiveInnerScope<T extends Context>(ctx: T, aliasName?: string, propertyKeys?: (keyof T)[]) {
-		const scope = ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
-		if (aliasName) {
-			const thisInnerScope = scope.getInnerScope('this');
-			scope.set(aliasName as 'this', ctx);
-			scope.setInnerScope(aliasName as 'this', thisInnerScope);
-		}
-		return scope;
-	}
-
 	/**
 	 * use for init host bindings
 	 * @param element 
@@ -310,7 +300,9 @@ export class ComponentRender<T extends object> {
 		const elementStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element)
 			? element._viewScope
-			: this.createReadOnlyWithReactiveInnerScope(element, node.templateRefName?.name);
+			: (node.templateRefName?.name
+				? ReactiveScope.readOnlyScopeForAliasThis(element, node.templateRefName.name)
+				: ReactiveScope.readOnlyScopeForThis(element));
 		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
