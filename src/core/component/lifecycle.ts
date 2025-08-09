@@ -29,9 +29,7 @@ export function isAfterContentInit(object: any): object is AfterContentInit {
 export interface AfterContentChecked {
 	afterContentChecked(): void;
 }
-export function isAfterContentChecked(
-	object: any
-): object is AfterContentChecked {
+export function isAfterContentChecked(object: any): object is AfterContentChecked {
 	return 'afterContentChecked' in object;
 }
 
