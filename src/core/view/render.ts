@@ -9,7 +9,8 @@ import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
-	TextContent, DomAttributeDirectiveNode, readInputValue, getChangeEventNameFoTag
+	TextContent, DomAttributeDirectiveNode, readInputValue,
+	getChangeEventNameFoTag, getInputChangeEventName
 } from '@ibyar/elements';
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
 import { ComponentRef } from '../component/component.js';
@@ -297,7 +298,13 @@ export class ComponentRender<T extends object> {
 		const changeEventName = getChangeEventNameFoTag(node.tagName);
 		if (changeEventName) {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
-			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', readInputValue(event.target as HTMLInputElement));
+			const listener = (event: HTMLElementEventMap['input' | 'change']) => {
+				const input = event.target as HTMLInputElement;
+				inputScope.emit(
+					getInputChangeEventName(input.type),
+					readInputValue(input)
+				)
+			};
 			element.addEventListener(changeEventName, listener);
 			subscriptions.push(createDestroySubscription(
 				() => element.removeEventListener(changeEventName, listener),

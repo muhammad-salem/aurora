@@ -240,3 +240,35 @@ export function readInputValue(input: HTMLInputElement, hint?: 'value') {
 		default: return input.value;
 	}
 }
+
+/**
+ * get event name for html input element by type.
+ * {@link https://html.spec.whatwg.org/multipage/input.html#concept-input-apply}
+ * @param input 
+ * @returns 
+ */
+export function getInputChangeEventName(type: string) {
+	switch (type) {
+		case 'text':
+		case 'email':
+		case 'password':
+		case 'search':
+		case 'color':
+		case 'tel':
+		case 'url':
+		case 'hidden':
+		case 'time':
+		case 'week':
+		case 'month':
+		case 'date':
+		case 'number':
+		case 'range':
+		case 'datetime-local':
+		default: return 'value';
+
+		case 'file': return 'files';
+
+		case 'radio':
+		case 'checkbox': return 'checked';
+	}
+}
