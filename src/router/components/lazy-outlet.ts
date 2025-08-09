@@ -8,7 +8,7 @@ import {
 	selector: 'lazy-hidden-view',
 	template: `<div #hidden style="display: none"><div></div></div>`
 })
-export class LazyHiddenViewComponent implements OnDestroy {
+export class LazyHiddenViewComponent {
 
 	private hidden = viewChild('hidden');
 
@@ -19,9 +19,6 @@ export class LazyHiddenViewComponent implements OnDestroy {
 		} else if (div.lastChild) {
 			div.lastChild.before(nativeElement);
 		}
-	}
-	onDestroy(): void {
-		this.hidden.get().innerHTML = '';
 	}
 
 }
