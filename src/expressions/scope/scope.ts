@@ -264,6 +264,17 @@ export class ReactiveScope<T extends Context> extends Scope<T> {
 		rootScope.setInnerScope('this', thisScope);
 		return rootScope;
 	}
+	static readOnlyScopeForAliasThis<T extends Context>(ctx: T, alias: string) {
+		const thisScope = ReactiveScope.for(ctx);
+		const thisCtx = {
+			'this': ctx,
+			[alias]: ctx,
+		};
+		const rootScope = ReadOnlyScope.for(thisCtx, ['this', alias]);
+		rootScope.setInnerScope('this', thisScope);
+		rootScope.setInnerScope(alias, thisScope);
+		return rootScope;
+	}
 	protected _clone: T;
 	declare protected _inners: Map<keyof T, ReactiveScope<any>>;
 	protected _observer: ValueChangeObserver<T> = new ValueChangeObserver<T>();
