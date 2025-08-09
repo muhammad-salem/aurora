@@ -26,7 +26,7 @@ export interface App {
 			<div class="form-check">
 				<input class="form-check-input" type="checkbox" id="flexCheckDefault" [(checked)]="show">
 				<label class="form-check-label" for="flexCheckDefault">
-					Show: {{show}}
+					Show lazy components: {{show}}
 				</label>
 			</div>
 		</form>
@@ -46,7 +46,7 @@ export interface App {
 })
 export class AppRoot implements OnInit {
 
-	show = signal(false);
+	show = signal(true);
 
 	appList: App[] = [
 		{
