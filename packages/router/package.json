@@ -1,7 +1,7 @@
 {
 	"name": "@ibyar/router",
 	"version": "3.1.1",
-	"description": "Ibyar router had the built-in directives for router and navigation",
+	"description": "Ibyar router has the built-in directives for router and navigation",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/router",
 	"repository": {

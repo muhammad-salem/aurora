@@ -16,7 +16,7 @@
 [lerna-url]: https://lerna.js.org/
 [contributors]: https://img.shields.io/github/contributors/ibyar/aurora
 
-Ibyar router had the built-in directives for router and navigation.
+Ibyar router has the built-in directives for router and navigation.
 
 ## `Install`
 
