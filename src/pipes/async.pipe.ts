@@ -8,7 +8,7 @@
  */
 
 
-import { AsyncPipeTransform, OnDestroy, Pipe } from '@ibyar/core';
+import { AsyncPipeTransform, ChangeDetectorRef, inject, OnDestroy, Pipe } from '@ibyar/core';
 
 interface Observer<T> {
 	complete: () => void;
@@ -156,7 +156,9 @@ const _subscribableStrategy = new SubscribableStrategy();
 
 
 @Pipe({ name: 'async', asynchronous: true })
-export class AsyncPipe<T> extends AsyncPipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> implements OnDestroy {
+export class AsyncPipe<T> implements AsyncPipeTransform<Observable<T> | Subscribable<T> | EventEmitter<T> | Promise<T> | null | undefined, T | null> {
+
+	private cd = inject(ChangeDetectorRef);
 
 	private _latestValue: any = null;
 
@@ -217,7 +219,8 @@ export class AsyncPipe<T> extends AsyncPipeTransform<Observable<T> | Subscribabl
 	private _updateLatestValue(async: any, value: Object): void {
 		if (async === this._obj) {
 			this._latestValue = value;
-			this.changeDetectorRef.markForCheck();
+			this.cd.markForCheck();
 		}
 	}
+
 }

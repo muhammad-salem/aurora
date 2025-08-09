@@ -8,18 +8,14 @@ import { addProvider, forkProvider, inject, removeProvider } from '../di/inject.
 /**
  * Pipes are used as singleton
  * it will be created if it needed, had no life cycle
- * 
- * * no dependency injection applied on filters for now,
- * TODO: add support of dependency injection
  */
 export interface PipeTransform<T, U> {
 	transform(value: T, ...args: any[]): U;
 }
 
-export abstract class AsyncPipeTransform<T, U> implements PipeTransform<T, U>, OnDestroy {
-	protected changeDetectorRef = inject(ChangeDetectorRef);
-	abstract transform(value: T, ...args: any[]): U;
-	abstract onDestroy(): void;
+export interface AsyncPipeTransform<T, U> extends PipeTransform<T, U>, OnDestroy {
+	transform(value: T, ...args: any[]): U;
+	onDestroy(): void;
 }
 
 export function isPipeTransform<T extends any, U extends any>(pipe: any): pipe is PipeTransform<T, U> {

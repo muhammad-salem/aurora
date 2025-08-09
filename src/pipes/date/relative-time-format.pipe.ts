@@ -1,4 +1,4 @@
-import { AsyncPipeTransform, Pipe } from '@ibyar/core';
+import { AsyncPipeTransform, ChangeDetectorRef, inject, Pipe } from '@ibyar/core';
 
 type RTFInput = {
 	date: Date,
@@ -12,7 +12,10 @@ type RTFInput = {
 	name: 'rtf',
 	asynchronous: true
 })
-export class AsyncRelativeTimeFormatPipe extends AsyncPipeTransform<Date, string> {
+export class AsyncRelativeTimeFormatPipe implements AsyncPipeTransform<Date, string> {
+
+	private cd = inject(ChangeDetectorRef);
+
 	private input: RTFInput;
 	private latestInput: RTFInput;
 
@@ -51,7 +54,7 @@ export class AsyncRelativeTimeFormatPipe extends AsyncPipeTransform<Date, string
 
 	private update() {
 		this.calcValue();
-		this.changeDetectorRef.markForCheck();
+		this.cd.markForCheck();
 	}
 
 	onDestroy(): void {
