@@ -24,7 +24,7 @@ export interface App {
 		</nav>
 		<form>
 			<div class="form-check">
-				<input class="form-check-input" type="checkbox" id="flexCheckDefault" [checked]="show" (change)="show = $event.target.checked">
+				<input class="form-check-input" type="checkbox" id="flexCheckDefault" [(checked)]="show">
 				<label class="form-check-label" for="flexCheckDefault">
 					Show: {{show}}
 				</label>
