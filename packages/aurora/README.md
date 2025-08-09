@@ -50,6 +50,16 @@
 [downloads-image-platform]: https://img.shields.io/npm/dt/@ibyar/platform
 [downloads-url-platform]: https://npmjs.org/package/@ibyar/platform
 
+[npm-image-router]: https://img.shields.io/npm/v/@ibyar/router.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-router]: https://npmjs.org/package/@ibyar/router
+[downloads-image-router]: https://img.shields.io/npm/dt/@ibyar/router
+[downloads-url-router]: https://npmjs.org/package/@ibyar/router
+
+[npm-image-forms]: https://img.shields.io/npm/v/@ibyar/forms.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
+[npm-url-forms]: https://npmjs.org/package/@ibyar/forms
+[downloads-image-forms]: https://img.shields.io/npm/dt/@ibyar/forms
+[downloads-url-forms]: https://npmjs.org/package/@ibyar/forms
+
 [npm-image-cli]: https://img.shields.io/npm/v/@ibyar/cli.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen
 [npm-url-cli]: https://npmjs.org/package/@ibyar/cli
 [downloads-image-cli]: https://img.shields.io/npm/dt/@ibyar/cli
@@ -140,6 +150,8 @@ yarn add @ibyar/aurora
 | @ibyar/pipes | implement all supported pipes | [![NPM Version][npm-image-pipes]][npm-url-pipes] [![NPM Downloads][downloads-image-pipes]][downloads-url-pipes] [![PKG][package]][package-pipes] [![SRC][directory]][source-pipes] |
 | @ibyar/directives | implement all supported directives | [![NPM Version][npm-image-directives]][npm-url-directives] [![NPM Downloads][downloads-image-directives]][downloads-url-directives] [![PKG][package]][package-directives] [![SRC][directory]][source-directives] |
 | @ibyar/platform | utility package for and plural stuff, json patch | [![NPM Version][npm-image-platform]][npm-url-platform] [![NPM Downloads][downloads-image-platform]][downloads-url-platform] [![PKG][package]][package-platform] [![SRC][directory]][source-platform] |
+| @ibyar/router | has the built-in directives for router and navigation | [![NPM Version][npm-image-router]][npm-url-router] [![NPM Downloads][downloads-image-router]][downloads-url-router] [![PKG][package]][package-router] [![SRC][directory]][source-router] |
+| @ibyar/forms | contain form group, form builder and native ui form group | [![NPM Version][npm-image-forms]][npm-url-forms] [![NPM Downloads][downloads-image-forms]][downloads-url-forms] [![PKG][package]][package-forms] [![SRC][directory]][source-forms] |
 | @ibyar/decorators | ibyar decorators package | [![NPM Version][npm-image-decorators]][npm-url-decorators] [![NPM Downloads][downloads-image-decorators]][downloads-url-decorators] [![PKG][package]][package-decorators] [![SRC][directory]][source-decorators] |
 | typescript | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-typescript]][npm-url-typescript] [![NPM Downloads][downloads-image-typescript]][downloads-url-typescript] [![PKG][package]][npm-url-typescript] [![SRC][directory]][typescript]|
 | tslib | Runtime library for TypeScript helpers. | [![NPM Version][npm-image-tslib]][npm-url-tslib] [![NPM Downloads][downloads-image-tslib]][downloads-url-tslib] [![PKG][package]][npm-url-tslib] [![SRC][directory]][tslib]|
@@ -180,6 +192,19 @@ yarn add @ibyar/aurora
 - [x] @HostListener [Supported by Component and Attribute directive].
 - [x] @HostBinding [Supported by Component and Attribute directive].
 - [ ] XSS (cross-site-scripting)
+
+## Lifecycle
+
+- OnChanges
+- OnInit
+- DoCheck
+- AfterContentInit
+- AfterContentChecked
+- AfterViewInit
+- AfterViewChecked
+- OnViewMove
+- OnViewAdopted
+- OnDestroy
 
 ## Built-in Directive
 
