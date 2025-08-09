@@ -9,7 +9,7 @@ import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
-	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
+	TextContent, DomAttributeDirectiveNode, readInputValue, getChangeEventNameFoTag
 } from '@ibyar/elements';
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
 import { ComponentRef } from '../component/component.js';
@@ -34,18 +34,6 @@ import { ShadowRootService } from './shadow-root.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
-function getChangeEventName(tagName: string): 'input' | 'change' | undefined {
-	switch (true) {
-		case tagName === 'input':
-			return 'input';
-		case tagName === 'textarea':
-		case tagName === 'select':
-		case isFormAssociatedCustomElementByTag(tagName):
-			return 'change';
-		default:
-			return undefined;
-	}
-}
 export class ComponentRender<T extends object> {
 	private componentRef: ComponentRef<T>;
 	private template: DomNode;
@@ -306,10 +294,10 @@ export class ComponentRender<T extends object> {
 		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
-		const changeEventName = getChangeEventName(node.tagName);
+		const changeEventName = getChangeEventNameFoTag(node.tagName);
 		if (changeEventName) {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
-			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
+			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', readInputValue(event.target as HTMLInputElement));
 			element.addEventListener(changeEventName, listener);
 			subscriptions.push(createDestroySubscription(
 				() => element.removeEventListener(changeEventName, listener),

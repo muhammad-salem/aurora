@@ -184,3 +184,59 @@ export function isFormLabelableElement(tagName: string): boolean {
 	}
 	return false;
 }
+
+/**
+ * get the event name for html form elements by tag name
+ * @param tagName 
+ * @returns 
+ */
+export function getChangeEventNameFoTag(tagName: string): 'input' | 'change' | undefined {
+	switch (true) {
+		case tagName === 'input':
+			return 'input';
+		case tagName === 'textarea':
+		case tagName === 'select':
+		case isFormAssociatedCustomElementByTag(tagName):
+			return 'change';
+		default:
+			return undefined;
+	}
+}
+
+/**
+ * read value form html input element.
+ * {@link https://html.spec.whatwg.org/multipage/input.html#concept-input-apply}
+ * @param input 
+ * @returns 
+ */
+export function readInputValue(input: HTMLInputElement, hint?: 'value') {
+	if (hint === 'value') {
+		return input.value;
+	}
+	switch (input.type) {
+		case 'text':
+		case 'email':
+		case 'password':
+		case 'search':
+		case 'color':
+		case 'tel':
+		case 'url':
+		case 'hidden': return input.value;
+
+		case 'radio':
+		case 'checkbox': return input.checked;
+
+		case 'file': return input.files;
+
+		case 'time':
+		case 'week':
+		case 'month':
+		case 'date': return input.valueAsDate;
+
+		case 'number':
+		case 'range':
+		case 'datetime-local': return input.valueAsNumber;
+
+		default: return input.value;
+	}
+}
