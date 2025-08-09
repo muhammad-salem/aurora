@@ -3,6 +3,7 @@ import { OnDestroy } from '../component/lifecycle.js';
 import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { Type } from '../utils/typeof.js';
+import { addProvider, forkProvider, inject, removeProvider } from '../di/inject.js';
 
 /**
  * Pipes are used as singleton
@@ -16,7 +17,7 @@ export interface PipeTransform<T, U> {
 }
 
 export abstract class AsyncPipeTransform<T, U> implements PipeTransform<T, U>, OnDestroy {
-	constructor(protected changeDetectorRef: ChangeDetectorRef) { }
+	protected changeDetectorRef = inject(ChangeDetectorRef);
 	abstract transform(value: T, ...args: any[]): U;
 	abstract onDestroy(): void;
 }
@@ -43,7 +44,10 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 		}
 		const pipeRef = classRegistryProvider.getPipe<PipeTransform<any, any>>(pipeName);
 		if (pipeRef !== undefined && !pipeRef.asynchronous) {
+			const provider = forkProvider();
+			addProvider(provider);
 			const pipe = new pipeRef.modelClass();
+			removeProvider(provider);
 			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 			this._ctx[pipeRef.name] = transformFunc;
 			return transformFunc;
@@ -85,7 +89,12 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 	}
 	override set(propertyKey: keyof T, pipeClass: Type<AsyncPipeTransform<any, any>>, receiver?: any): boolean {
 		const detector = createChangeDetectorRef(this, propertyKey);
+		const provider = forkProvider();
+		provider.setType(ChangeDetectorRef, detector);
+		addProvider(provider);
 		const pipe = new pipeClass(detector);
+		removeProvider(provider);
+
 		const result = super.set(propertyKey, pipe, receiver);
 		if (result) {
 			this.wrapper[propertyKey as string] = (value: any, ...args: any[]) => {
