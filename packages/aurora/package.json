@@ -16,7 +16,8 @@
 	"contributors": [
 		{
 			"name": "Muhammad Salem",
-			"email": "salem.ebo@gmail.com"
+			"email": "salem.ebo@gmail.com",
+			"url": "https://github.com/muhammad-salem"
 		}
 	],
 	"main": "./index.js",
@@ -40,13 +41,15 @@
 		"@ibyar/expressions": "^3.1.1",
 		"@ibyar/pipes": "^3.1.1",
 		"@ibyar/platform": "^3.1.1",
+		"@ibyar/router": "^3.1.1",
+		"@ibyar/forms": "^3.1.1",
 		"tslib": "^2.8.1"
 	},
 	"peerDependencies": {
-		"zone.js": "~0.15.0"
+		"zone.js": "~0.15.1"
 	},
 	"devDependencies": {
-		"typescript": "^5.7.3"
+		"typescript": "^5.8.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
@@ -68,7 +71,7 @@
 		"http",
 		"html-parser",
 		"parser",
-		"routers",
+		"router",
 		"js-parser",
 		"elements-info",
 		"element",

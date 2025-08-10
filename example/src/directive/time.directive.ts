@@ -38,6 +38,7 @@ class ShowTimeComponent {
 
 @Directive({
 	selector: '*time',
+	imports: [ShowTimeComponent]
 })
 export class TimeDirective extends StructuralDirective implements OnInit, OnDestroy {
 
@@ -63,11 +64,14 @@ export class TimeDirective extends StructuralDirective implements OnInit, OnDest
 			ss: 0,
 		};
 		const viewRef = this.viewContainerRef.createEmbeddedView(this.templateRef, { context: initValue });
-		this.updateContext = ctx => Object.assign(viewRef.context, ctx);
+		this.updateContext = ctx => {
+			Object.assign(viewRef.context, ctx);
+			viewRef.detectChanges();
+		};
 	}
 
 	private initDefaultView() {
-		const model = this.viewContainerRef.createComponent(ShowTimeComponent);
+		const model = this.viewContainerRef.createComponent(ShowTimeComponent).instance;
 		this.updateContext = ctx => {
 			model.date.set(ctx.date);
 			model.time.set(ctx.time);

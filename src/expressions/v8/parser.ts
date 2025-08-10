@@ -601,12 +601,12 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 				const exportData = this.parseExportClause();
 				let moduleSpecifier: Literal<string> | undefined;
-				let importAssertions: ImportAttribute[] | undefined;
+				let importAttributes: ImportAttribute[] | undefined;
 
 				if (this.checkContextualKeyword('from')) {
 					// Scanner::Location specifier_loc = scanner() -> peek_location();
 					moduleSpecifier = this.parseModuleSpecifier();
-					importAssertions = this.parseImportAssertClause();
+					importAttributes = this.parseImportAttributeClause();
 					this.expectSemicolon();
 
 					// if (exportData.isEmpty()) {
@@ -636,8 +636,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 					// 		zone());
 					// }
 				}
-				return this.factory.createNamespaceExportDeclaration(exportData, undefined, moduleSpecifier, importAssertions, this.createRange(start));
-				// return factory() -> EmptyStatement();
+				return this.factory.createNamespaceExportDeclaration(exportData, undefined, moduleSpecifier, importAttributes, this.createRange(start));
 			}
 
 			case Token.FUNCTION: {
@@ -714,11 +713,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (tok.isType(Token.STRING)) {
 			// Scanner::Location specifier_loc = scanner() -> peek_location();
 			const moduleSpecifier = this.parseModuleSpecifier();
-			const importAssertions = this.parseImportAssertClause();
+			const importAttributes = this.parseImportAttributeClause();
 			this.expectSemicolon();
 
 			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
-			return this.factory.createImportDeclaration(moduleSpecifier, undefined, importAssertions, this.createRange(start));
+			return this.factory.createImportDeclaration(moduleSpecifier, undefined, importAttributes, this.createRange(start));
 		}
 
 		// Parse ImportedDefaultBinding if present.
@@ -759,7 +758,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// ExpectContextualKeyword(ast_value_factory() -> from_string());
 		// Scanner::Location specifier_loc = scanner() -> peek_location();
 		const moduleSpecifier = this.parseModuleSpecifier();
-		const importAssertions = this.parseImportAssertClause();
+		const importAttributes = this.parseImportAttributeClause();
 		this.expectSemicolon();
 
 		// Now that we have all the information, we can make the appropriate
@@ -780,7 +779,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (namedImports?.length) {
 			specifiers.push(...namedImports);
 		}
-		return this.factory.createImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAssertions, this.createRange(start));
+		return this.factory.createImportDeclaration(moduleSpecifier, specifiers.length ? specifiers : undefined, importAttributes, this.createRange(start));
 	}
 	protected parseImportExpressions(): ExpressionNode {
 		const start = this.consume(Token.IMPORT);
@@ -810,11 +809,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				// A trailing comma allowed after the specifier.
 				return this.factory.createImportExpression(specifier as Literal<string>, undefined, this.createRange(start));
 			} else {
-				const importAssertions = this.parseAssignmentExpressionCoverGrammar();
+				const importAttributes = this.parseAssignmentExpressionCoverGrammar();
 				this.check(Token.COMMA);  // A trailing comma is allowed after the import
 				// assertions.
 				this.expect(Token.RPAREN);
-				return this.factory.createImportExpression(specifier as Literal<string>, importAssertions, this.createRange(start));
+				return this.factory.createImportExpression(specifier as Literal<string>, importAttributes, this.createRange(start));
 			}
 		}
 
@@ -842,7 +841,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
 		return declarations;
 	}
-	protected parseImportAssertClause(): ImportAttribute[] | undefined {
+	protected parseImportAttributeClause(): ImportAttribute[] | undefined {
 		// AssertClause :
 		//    assert '{' '}'
 		//    assert '{' AssertEntries '}'
@@ -867,7 +866,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		}
 		this.expect(Token.LBRACE);
 		const counts = {} as { [key: string]: number };
-		const importAssertions: ImportAttribute[] = [];
+		const importAttributes: ImportAttribute[] = [];
 		while (this.peek().isNotType(Token.RBRACE)) {
 			let attributeKey = this.checkAndGetValue(Token.STRING);
 			if (!attributeKey) {
@@ -875,11 +874,11 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			}
 			this.expect(Token.COLON);
 			const attributeValue = this.expectAndGetValue(Token.STRING);
-			importAssertions.push(this.factory.createAssertEntry(attributeKey as Identifier, attributeValue as Literal<string>, this.createRange(attributeKey)));
+			importAttributes.push(this.factory.createImportWithEntry(attributeKey as Identifier, attributeValue as Literal<string>, this.createRange(attributeKey)));
 			counts[attributeKey.toString()] = (counts[attributeKey.toString()] ?? 0) + 1;
 			if (counts[attributeKey.toString()] > 1) {
-				// 	// It is a syntax error if two AssertEntries have the same key.
-				throw new SyntaxError(this.errorMessage('Import Assertion  Duplicate Key'));
+				// 	// It is a syntax error if two ImportWithEntry have the same key.
+				throw new SyntaxError(this.errorMessage('Import With Duplicate Key'));
 			}
 
 			if (this.peek().isType(Token.RBRACE)) break;
@@ -888,7 +887,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			}
 		}
 		this.expect(Token.RBRACE);
-		return importAssertions;
+		return importAttributes;
 	}
 	protected parseModuleSpecifier(): Literal<string> {
 		// ModuleSpecifier :
@@ -1071,10 +1070,10 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			this.expectContextualKeyword('from');
 			// Scanner::Location specifier_loc = scanner() -> peek_location();
 			const moduleSpecifier = this.parseModuleSpecifier();
-			const importAssertions = this.parseImportAssertClause();
+			const importAttributes = this.parseImportAttributeClause();
 			this.expectSemicolon();
 			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
-			return this.factory.createExportAllDeclaration(moduleSpecifier, undefined, importAssertions, this.createRange(start));
+			return this.factory.createExportAllDeclaration(moduleSpecifier, undefined, importAttributes, this.createRange(start));
 		}
 
 		// 'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
@@ -1098,14 +1097,14 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 		this.expectContextualKeyword('from');
 		const moduleSpecifier = this.parseModuleSpecifier();
-		const importAssertions = this.parseImportAssertClause();
+		const importAttributes = this.parseImportAttributeClause();
 		this.expectSemicolon();
 
 		// const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];
 
 		// module() -> AddStarImport(local_name, module_specifier, import_assertions,local_name_loc, specifier_loc, zone());
 		// module() -> AddExport(local_name, export_name, export_name_loc, zone());
-		return this.factory.createExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAssertions, this.createRange(start));
+		return this.factory.createExportAllDeclaration(moduleSpecifier, exportName as Identifier, importAttributes, this.createRange(start));
 	}
 
 	protected parseWithStatement(): WithStatement {

@@ -15,7 +15,7 @@ export function addProvider(modelProvider: InjectionProvider) {
 }
 
 export function removeProvider(modelProvider: InjectionProvider) {
-	const index = PROVIDERS.findIndex(provider => provider === modelProvider);
+	const index = PROVIDERS.lastIndexOf(modelProvider);
 	if (index >= 0) {
 		PROVIDERS.splice(index, 1);
 	}

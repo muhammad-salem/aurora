@@ -1,4 +1,4 @@
-import { Directive, input, OnDestroy, StructuralDirective, Type } from '@ibyar/aurora';
+import { Directive, input, OnDestroy, StructuralDirective, Type } from '@ibyar/core';
 
 
 @Directive({

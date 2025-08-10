@@ -22,7 +22,7 @@ class NotifyComponent {
 })
 export class NotifyUserDirective extends StructuralDirective implements OnDestroy {
 
-	context = this.viewContainerRef.createComponent(NotifyComponent);
+	context = this.viewContainerRef.createComponent(NotifyComponent).instance;
 
 	notifyMessage = input<string>(undefined, { alias: 'message' });
 	notifyType = input<string>(undefined, { alias: 'type' });

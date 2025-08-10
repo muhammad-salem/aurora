@@ -139,7 +139,7 @@ export class PersonView implements OnInit {
 	}
 
 	addOneYear() {
-		this.person.get().age++;
+		this.person.update(person => (person.age++, person));
 	}
 }
 

@@ -9,7 +9,8 @@ import {
 	CommentNode, DomStructuralDirectiveNode, LocalTemplateVariables,
 	DomElementNode, DomFragmentNode, DomNode, isLiveTextContent,
 	isTagNameNative, isValidCustomElementName, LiveTextContent,
-	TextContent, DomAttributeDirectiveNode, isFormAssociatedCustomElementByTag
+	TextContent, DomAttributeDirectiveNode, readInputValue,
+	getChangeEventNameFoTag, getInputChangeEventName
 } from '@ibyar/elements';
 import type { DomStructuralDirectiveNodeUpgrade } from '@ibyar/elements/node.js';
 import { ComponentRef } from '../component/component.js';
@@ -27,24 +28,13 @@ import { ViewContainerRef, ViewContainerRefImpl } from '../linker/view-container
 import { createDestroySubscription } from '../context/subscription.js';
 import { isViewChildSignal, OutputSignal, ViewChildSignal } from '../component/initializer.js';
 import { ChildRef } from '../component/reflect.js';
-import { addProvider, removeProvider } from '../di/inject.js';
+import { addProvider, inject, removeProvider } from '../di/inject.js';
 import { AbstractAuroraZone } from '../zone/zone.js';
 import { clearSignalScope, pushNewSignalScope } from '../signals/signals.js';
+import { ShadowRootService } from './shadow-root.js';
 
 type ViewContext = { [element: string]: HTMLElement };
 
-function getChangeEventName(tagName: string): 'input' | 'change' | undefined {
-	switch (true) {
-		case tagName === 'input':
-			return 'input';
-		case tagName === 'textarea':
-		case tagName === 'select':
-		case isFormAssociatedCustomElementByTag(tagName):
-			return 'change';
-		default:
-			return undefined;
-	}
-}
 export class ComponentRender<T extends object> {
 	private componentRef: ComponentRef<T>;
 	private template: DomNode;
@@ -78,9 +68,9 @@ export class ComponentRender<T extends object> {
 		}
 
 		let rootRef: HTMLElement | ShadowRoot;
-		if (this.componentRef.isShadowDom) {
-			rootRef = Reflect.get(this.view, '_shadowRoot') as ShadowRoot;
-			Reflect.deleteProperty(this.view, '_shadowRoot');
+		const shadowRootService = inject(ShadowRootService);
+		if (this.componentRef.isShadowDom && shadowRootService.has(this.view)) {
+			rootRef = shadowRootService.get(this.view)!;
 		} else {
 			rootRef = this.view;
 		}
@@ -234,8 +224,9 @@ export class ComponentRender<T extends object> {
 			}
 			fragmentParent.append(this.createElement(child, contextStack, subscriptions, host));
 		} else if (child instanceof DomStructuralDirectiveNode) {
-			const comment = document.createComment(` @${child.name.substring(1)} ${typeof child.value ? `(${child.value}) ` : ''}`);
+			const comment = document.createComment(` @${child.name.substring(1)} ${child.value ? `(${child.value}) {` : '{'}`);
 			fragmentParent.append(comment);
+			fragmentParent.append(document.createComment('}'));
 			this.createStructuralDirective(child, comment, contextStack, subscriptions, parentNode, host);
 		} else if (isLiveTextContent(child)) {
 			fragmentParent.append(this.createLiveText(child, contextStack, subscriptions));
@@ -276,16 +267,6 @@ export class ComponentRender<T extends object> {
 		return element;
 	}
 
-	private createReadOnlyWithReactiveInnerScope<T extends Context>(ctx: T, aliasName?: string, propertyKeys?: (keyof T)[]) {
-		const scope = ReactiveScope.readOnlyScopeForThis(ctx, propertyKeys);
-		if (aliasName) {
-			const thisInnerScope = scope.getInnerScope('this');
-			scope.set(aliasName as 'this', ctx);
-			scope.setInnerScope(aliasName as 'this', thisInnerScope);
-		}
-		return scope;
-	}
-
 	/**
 	 * use for init host bindings
 	 * @param element 
@@ -308,14 +289,22 @@ export class ComponentRender<T extends object> {
 		const elementStack = contextStack.copyStack();
 		const elementScope = isHTMLComponent(element)
 			? element._viewScope
-			: this.createReadOnlyWithReactiveInnerScope(element, node.templateRefName?.name);
+			: (node.templateRefName?.name
+				? ReactiveScope.readOnlyScopeForAliasThis(element, node.templateRefName.name)
+				: ReactiveScope.readOnlyScopeForThis(element));
 		elementStack.pushScope<Context>(elementScope);
 		const attributesSubscriptions = this.initAttribute(element, node, elementStack);
 		subscriptions.push(...attributesSubscriptions);
-		const changeEventName = getChangeEventName(node.tagName);
+		const changeEventName = getChangeEventNameFoTag(node.tagName);
 		if (changeEventName) {
 			const inputScope = elementScope.getInnerScope<ReactiveScope<HTMLInputElement>>('this')!;
-			const listener = (event: HTMLElementEventMap['input' | 'change']) => inputScope.emit('value', (element as HTMLInputElement).value);
+			const listener = (event: HTMLElementEventMap['input' | 'change']) => {
+				const input = event.target as HTMLInputElement;
+				inputScope.emit(
+					getInputChangeEventName(input.type),
+					readInputValue(input)
+				)
+			};
 			element.addEventListener(changeEventName, listener);
 			subscriptions.push(createDestroySubscription(
 				() => element.removeEventListener(changeEventName, listener),

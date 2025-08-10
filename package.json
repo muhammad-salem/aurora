@@ -8,19 +8,20 @@
 	],
 	"dependencies": {
 		"tslib": "^2.8.1",
-		"zone.js": "~0.15.0"
+		"zone.js": "~0.15.1"
 	},
 	"devDependencies": {
 		"test262-parser-tests": "0.0.5",
-		"typescript": "^5.7.3"
+		"typescript": "^5.8.3"
 	},
 	"scripts": {
 		"clean": "tsc -b --clean example/",
 		"build:src": "npm run clean && tsc --build -v",
-		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar  -b -v && cd ../..",
+		"build:directives": "cd src/directives && tsc -b --clean && npx ibyar -b -v && cd ../..",
+		"build:router": "cd src/router && tsc -b --clean && npx ibyar -b -v && cd ../..",
 		"build:forms": "cd src/forms && tsc -b --clean && npx ibyar -b -v && cd ../..",
 		"fix-permission": "npx rimraf ./node_modules/.bin/ibyar && npm i && npx ibyar -v",
-		"build": "npm run build:src && npm run fix-permission && npm run build:directives && npm run build:forms",
+		"build": "npm run build:src && npm run fix-permission && npm run build:directives && npm run build:router && npm run build:forms",
 		"build:w": "npm run clean && tsc --build -v -w",
 		"ibyar": "npm run clean && ibyar --build -v -w",
 		"ibyar:w": "npm run clean && ibyar --build -v -w",
@@ -33,6 +34,8 @@
 		"do:publish-no-tag": "npm run build && npx lerna publish --force-publish --no-git-tag-version",
 		"do:publish-no-push": "npm run build && npx lerna publish --force-publish --no-push",
 		"do:publish": "npm run build && npx lerna publish --force-publish",
-		"docs": "npx typedoc --tsconfig ./tsconfig.json"
+		"docs": "npx typedoc --tsconfig ./tsconfig.json",
+		"serve": "serve -s -p 5000 ./example/public/",
+		"esmpack": "cd example && esmpack"
 	}
 }

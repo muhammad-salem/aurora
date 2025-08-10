@@ -1,13 +1,8 @@
-import {
-	Directive, EmbeddedViewRef, input,
-	OnDestroy, StructuralDirective, ViewRef
-} from '@ibyar/core';
-import {
-	diff, PatchArray, PatchOperation,
-	PatchRoot, TrackBy
-} from '@ibyar/platform';
+import { Directive, EmbeddedViewRef, input, OnDestroy, StructuralDirective } from '@ibyar/core';
+import { diff, PatchOperation, TrackBy } from '@ibyar/platform';
 
 export class ForContext<T> {
+
 	constructor(public $implicit: T, public index: number, public count: number) { }
 
 	get first(): boolean {
@@ -26,9 +21,10 @@ export class ForContext<T> {
 		return !this.even;
 	}
 
-	public update(forContext: ForContext<T>): void {
+	public update<P extends ForContext<T>>(forContext: Partial<P>): void {
 		Object.assign(this, forContext);
 	}
+
 }
 
 export class ForOfContext<T> extends ForContext<T> {
@@ -64,52 +60,36 @@ export abstract class AbstractForDirective<T> extends StructuralDirective implem
 			}
 			return;
 		}
-		const lastContext: ForOfContext<T>[] = new Array(this.viewContainerRef.length);
-		for (let i = 0; i < lastContext.length; i++) {
-			lastContext[i] = (this.viewContainerRef.get(i) as EmbeddedViewRef<ForOfContext<T>>).context;
-		}
 		const currentContext = this._forOf.map((item, index, array) => new ForOfContext<T>(item, array, index, array.length));
-
-		if (lastContext.length === 0) {
+		if (this.viewContainerRef.length === 0) {
 			currentContext.forEach(context => {
 				this.viewContainerRef.createEmbeddedView(this.templateRef, { context });
 			});
 			return;
 		}
-		const patchActions = diff(lastContext, currentContext, { trackBy: this._$implicitTrackBy });
-		if (patchActions.length === 0) {
-			return;
-		} else if (PatchRoot === patchActions[0]) {
-			const views = currentContext.map(context =>
-				this.viewContainerRef.createEmbeddedView(this.templateRef, { context, insert: false })
-			);
-			this.viewContainerRef.updateViews(views);
-		} else {
-			const views = (patchActions as PatchArray<ForOfContext<T>>[])
-				.map(patch => ({
-					index: patch.nextIndex,
-					view: this._getView(patch, lastContext),
-				}))
-				.filter(item => !!item.view)
-				.sort((a, b) => a.index - b.index)
-				.map(i => i.view) as ViewRef[];
-			views.forEach(view => view.detectChanges());
-			this.viewContainerRef.updateViews(views);
-		}
-	}
-	private _getView(patch: PatchArray<ForOfContext<T>>, lastContext: ForOfContext<T>[]) {
-		if (PatchOperation.REMOVE === patch.op) {
-			return void 0;
-		}
-		if (PatchOperation.ADD === patch.op) {
-			return this.viewContainerRef.createEmbeddedView(this.templateRef, { context: patch.item, index: patch.nextIndex });
-		}
-		if (PatchOperation.KEEP === patch.op) {
-			lastContext[patch.nextIndex].update(patch.item);
-			return this.viewContainerRef.get(patch.nextIndex);
-		}
-		lastContext[patch.currentIndex].update(patch.item);
-		return this.viewContainerRef.get(patch.currentIndex);
+		const previousContext: ForOfContext<T>[] = [];
+		this.viewContainerRef.forEach<ForOfContext<T>>(view => previousContext.push(view.context));
+
+		diff(previousContext, currentContext, { trackBy: this._$implicitTrackBy }).forEach(patch => {
+			switch (patch.op) {
+				case PatchOperation.ADD:
+					this.viewContainerRef.createEmbeddedView(
+						this.templateRef,
+						{ context: patch.item, index: patch.nextIndex }
+					);
+					break;
+				case PatchOperation.REMOVE:
+					this.viewContainerRef.remove(patch.currentIndex);
+					break;
+				case PatchOperation.MOVE:
+					this.viewContainerRef.move(patch.currentIndex, patch.nextIndex);
+					this.viewContainerRef.get<ForOfContext<T>>(patch.nextIndex)?.context.update(patch.item);
+					break;
+			}
+		});
+		const count = this.viewContainerRef.length;
+		this.viewContainerRef.forEach<ForOfContext<T>>((view, index) => view.context.update({ index, count }));
+		this.viewContainerRef.forEach(view => view.detectChanges());
 	}
 
 	onDestroy() {

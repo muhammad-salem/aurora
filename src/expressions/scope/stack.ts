@@ -386,8 +386,8 @@ export class ModuleScopeResolver implements ModuleScopeResolver {
 		return absoluteUrl;
 	}
 	protected findScopeBySource(source: string, importCallOptions?: ImportCallOptions): ModuleScope {
-		if (importCallOptions?.assert?.type) {
-			const type = importCallOptions.assert.type;
+		if (importCallOptions?.with?.type) {
+			const type = importCallOptions.with.type;
 			if (!source.endsWith(`.${type}`)) {
 				throw new Error(`Can't find module scope`);
 			}

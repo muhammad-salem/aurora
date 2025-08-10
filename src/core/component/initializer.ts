@@ -129,7 +129,7 @@ export function isViewChildSignal<T = any>(signal: any): signal is ViewChildSign
 export function viewChild<T extends HTMLElement>(selector: Type<T>): Signal<T>;
 export function viewChild<T>(selector: Type<T>): Signal<HTMLComponent<T>>;
 export function viewChild<T extends keyof HTMLElementTagNameMap>(selector: T): Signal<HTMLElementTagNameMap[T]>;
-export function viewChild<T extends HTMLElement>(selector: string): Signal<T>;
+export function viewChild<T extends HTMLElement>(templateName: string): Signal<T>;
 export function viewChild<T>(selector: string | Type<T> | HTMLElement | keyof HTMLElementTagNameMap): Signal<T> {
 	return signalScopeFactory.factory((scope, index) => new ViewChildSignal<T>(scope, index, selector));
 }

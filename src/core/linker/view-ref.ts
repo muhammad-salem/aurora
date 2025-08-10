@@ -23,7 +23,7 @@ export abstract class ViewRef extends ChangeDetectorRef {
 }
 
 
-export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
+export abstract class EmbeddedViewRef<C> extends ViewRef {
 	/**
 	 * The context for this view, inherited from the anchor element.
 	 */
@@ -57,6 +57,18 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 	abstract before(node: ChildNode): void;
 
 	/**
+	 * move/resort/reorder after node
+	 * @param node 
+	 */
+	abstract moveAfter(node: ChildNode): void;
+
+	/**
+	 * move/resort/reorder before node
+	 * @param node 
+	 */
+	abstract moveBefore(node: ChildNode): void;
+
+	/**
 	 * remove the root nodes from the view, but keep reference to them.
 	 * 
 	 * Detaches a view from this container without destroying it.
@@ -65,13 +77,13 @@ export abstract class EmbeddedViewRef<C extends object> extends ViewRef {
 	abstract detach(): void;
 }
 
-export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
+export class EmbeddedViewRefImpl<C> extends EmbeddedViewRef<C> {
 
 	private _destroyed: boolean = false;
 	private _onDestroySubscribes: (() => void)[] = [];
 
 	constructor(
-		private _scope: ReactiveControlScope<C>,
+		private _scope: ReactiveControlScope<C & Context>,
 		private _rootNodes: Node[],
 		private _subscriptions?: ScopeSubscription<Context>[]) {
 		super();
@@ -123,6 +135,21 @@ export class EmbeddedViewRefImpl<C extends object> extends EmbeddedViewRef<C> {
 	}
 	before(node: ChildNode): void {
 		node.before(this.getAsANode());
+	}
+	moveAfter(node: ChildNode): void {
+		if (node.nextSibling) {
+			this.moveBefore(node.nextSibling);
+		} else {
+			this.after(node);
+		}
+	}
+	moveBefore(node: ChildNode): void {
+		const parent = node.parentNode as (ParentNode & { moveBefore?: (node: Node, child: ChildNode) => void }) | null;
+		if (parent?.moveBefore && node) {
+			parent.moveBefore(this.getAsANode(), node);
+		} else {
+			this.before(node);
+		}
 	}
 	detach(): void {
 		for (const node of this._rootNodes) {

@@ -23,7 +23,7 @@ type User = {
 	selector: 'form-group-component',
 	template: `<form [formGroup]="group">
 		<label for="name" class="form-label">User name:</label>
-		<input id="name" name="name" type="text" class="form-control"/>
+		<input id="name" name="name" type="text" class="form-control" autocomplete="off"/>
 
 		<label for="age" class="form-label">User age:</label>
 		<input id="age" name="age" type="number" class="form-control"/>

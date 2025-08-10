@@ -1,13 +1,13 @@
 {
-	"name": "@ibyar/pipes",
+	"name": "@ibyar/router",
 	"version": "3.1.1",
-	"description": "Ibyar pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
+	"description": "Ibyar router has the built-in directives for router and navigation",
 	"license": "MIT",
-	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/pipes",
+	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/router",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ibyar/aurora.git",
-		"directory": "packages/pipes"
+		"directory": "packages/router"
 	},
 	"bugs": {
 		"url": "https://github.com/ibyar/aurora/issues"
@@ -36,7 +36,7 @@
 	"dependencies": {
 		"@ibyar/core": "^3.1.1",
 		"@ibyar/elements": "^3.1.1",
-		"@ibyar/expressions": "^3.1.1",
+		"@ibyar/platform": "^3.1.1",
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
@@ -44,14 +44,12 @@
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
-		"docs": "npx typedoc --tsconfig ../../src/pipes/tsconfig.json"
+		"docs": "npx typedoc --tsconfig ../../src/router/tsconfig.json"
 	},
 	"keywords": [
 		"aurora",
 		"ibyar",
-		"custom-elements",
-		"pipes",
-		"async",
+		"router",
 		"typescript",
 		"front-end"
 	]

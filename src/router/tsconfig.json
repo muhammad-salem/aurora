@@ -2,17 +2,10 @@
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "../../packages/cli",
+		"outDir": "../../packages/router",
 		"rootDir": ".",
 		"composite": true,
-		"tsBuildInfoFile": "./tsBuild.info",
-		"allowSyntheticDefaultImports": true,
-		"lib": [
-			"ES2022",
-		],
-		"types": [
-			"node"
-		]
+		"tsBuildInfoFile": "./tsBuild.info"
 	},
 	"include": [
 		"**/*.ts",

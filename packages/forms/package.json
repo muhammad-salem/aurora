@@ -16,7 +16,8 @@
 	"contributors": [
 		{
 			"name": "Muhammad Salem",
-			"email": "salem.ebo@gmail.com"
+			"email": "salem.ebo@gmail.com",
+			"url": "https://github.com/muhammad-salem"
 		}
 	],
 	"main": "./index.js",
@@ -29,9 +30,8 @@
 	"files": [
 		"*"
 	],
-	"private": true,
 	"publishConfig": {
-		"access": "restricted"
+		"access": "public"
 	},
 	"dependencies": {
 		"@ibyar/core": "^3.1.1",
@@ -39,7 +39,7 @@
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"typescript": "^5.7.3"
+		"typescript": "^5.8.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",

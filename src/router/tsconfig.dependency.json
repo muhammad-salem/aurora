@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../element/tsconfig.json"
+		},
+		{
+			"path": "../platform/tsconfig.json"
+		},
+		{
+			"path": "../core/tsconfig.json"
+		}
+	]
+}
