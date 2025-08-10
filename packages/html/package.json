@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/html",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"description": "Ibyar HTML, is an HTML parser for @Ibyar/aurora framework.",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/html",
