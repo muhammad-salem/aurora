@@ -1,7 +1,15 @@
 {
-	"extends": "./tsconfig.dependency.json",
+	"extends": "../../../tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../../decorators/tsconfig.json"
+		},
+		{
+			"path": "../tsconfig.json"
+		}
+	],
 	"compilerOptions": {
-		"outDir": "../../packages/cli",
+		"outDir": "../../../packages/expressions/bin",
 		"rootDir": ".",
 		"composite": true,
 		"target": "es2025",
@@ -16,12 +24,10 @@
 		]
 	},
 	"include": [
-		"**/*.ts",
-		"**/*.tsx",
-		"**/*.mts"
+		"cli.ts"
 	],
 	"files": [
-		"index.ts"
+		"cli.ts"
 	],
 	"compileOnSave": true
 }

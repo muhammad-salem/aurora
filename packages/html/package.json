@@ -36,7 +36,7 @@
 	},
 	"devDependencies": {
 		"@types/hast": "^3.0.4",
-		"typescript": "^5.8.3"
+		"typescript": "^6.0.3"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",

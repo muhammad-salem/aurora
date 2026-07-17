@@ -6,7 +6,6 @@
 	],
 	"extends": "../tsconfig.compilerOption.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"outDir": "dist",
 		"rootDir": "src",
 		"composite": true,
