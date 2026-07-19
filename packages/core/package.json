@@ -45,7 +45,7 @@
 		"zone.js": "~0.16.2"
 	},
 	"devDependencies": {
-		"typescript": "^6.0.3"
+		"typescript": "^7.0.2"
 	},
 	"scripts": {
 		"build": "tsc --build --verbose",
