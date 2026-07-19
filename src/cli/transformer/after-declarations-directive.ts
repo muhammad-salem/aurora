@@ -1,4 +1,4 @@
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { updateModuleTypeWithDirectives } from './factory.js';
 import { moduleManger } from './modules.js';
 
