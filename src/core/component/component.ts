@@ -147,11 +147,11 @@ export class Components {
 		classRegistryProvider.registerPipe(modelClass);
 	}
 
-	static defineInjectable<T extends Type<any>>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
+	static defineService<T extends Type<any>>(modelClass: MetadataClass<T>, opts: InjectableOptions, metadata: MetadataContext) {
 		Object.assign(metadata, opts);
 		metadata.modelClass = modelClass;
 		metadata.name = modelClass.name;
-		classRegistryProvider.registerInjectable(modelClass);
+		classRegistryProvider.registerService(modelClass);
 		provide(modelClass);
 	}
 

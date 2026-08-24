@@ -1,11 +1,11 @@
 import {
-	Component, Injectable, OnDestroy,
+	Component, Service, OnDestroy,
 	OnInit, computed, effect, inject,
 	input, lazy, output, signal, untracked
 } from '@ibyar/aurora';
 
 
-@Injectable({})
+@Service()
 export class SignalScopeService {
 
 	date = signal(new Date());

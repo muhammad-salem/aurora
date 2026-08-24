@@ -49,6 +49,16 @@ export function isInjectableDecorator(decorator: ts.Decorator, injectableName = 
 	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === injectableName;
 };
 
+/**
+ * check if a decorator is a `@Service` decorator;
+ * @param decorator 
+ * @param injectableName 
+ * @returns 
+ */
+export function isServiceDecorator(decorator: ts.Decorator, injectableName = 'Service'): boolean {
+	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === injectableName;
+};
+
 
 /**
  * check if Decorator is `@Input` or `@FormValue`
