@@ -1,4 +1,4 @@
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { DirectiveInfo, registerDirectiveCall } from '../directives/register.js';
 
 

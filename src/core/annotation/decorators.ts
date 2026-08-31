@@ -71,7 +71,16 @@ export const Directive = makeClassDecorator<DirectiveOptions>(
  */
 export const Injectable = makeClassDecorator<InjectableOptions>(
 	(opt, constructor, context) => {
-		Components.defineInjectable(constructor as any, opt, context.metadata);
+		Components.defineService(constructor as any, opt, context.metadata);
+	}
+);
+
+/**
+ * register a new service
+ */
+export const Service = makeClassDecorator<void>(
+	(opt, constructor, context) => {
+		Components.defineService(constructor as any, {}, context.metadata);
 	}
 );
 

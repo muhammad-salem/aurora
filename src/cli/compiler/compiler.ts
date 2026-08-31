@@ -1,5 +1,5 @@
 import '../directives/register.js';
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { afterDeclarationsCompileComponentOptions } from '../transformer/after-declarations-component.js';
 import { afterDeclarationsCompileDirectiveOptions } from '../transformer/after-declarations-directive.js';
 import { beforeCompileComponentOptions } from '../transformer/before-component.js';

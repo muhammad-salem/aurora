@@ -1,7 +1,6 @@
 {
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"outDir": "../../packages/elements",
 		"rootDir": ".",
 		"composite": true,

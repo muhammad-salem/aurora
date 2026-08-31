@@ -9,12 +9,11 @@
 		"noImplicitThis": true,
 		"noImplicitReturns": true,
 		"strictBindCallApply": true,
-		"downlevelIteration": true,
-		"moduleResolution": "Node",
-		"target": "ES2022",
-		"module": "ES2022",
+		"moduleResolution": "bundler",
+		"target": "es2025",
+		"module": "es2022",
 		"lib": [
-			"ES2022",
+			"ES2025",
 			"dom"
 		],
 		"strict": true,

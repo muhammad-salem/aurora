@@ -1,4 +1,4 @@
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { ToCamelCase } from '@ibyar/core/node.js';
 import { ClassInfo, SignalInfo } from './modules.js';
 import { SignalKey } from './signals.js';

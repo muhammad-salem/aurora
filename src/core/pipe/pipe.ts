@@ -1,9 +1,10 @@
 import { ReactiveControlScope, ReadOnlyScope, ScopeSubscription } from '@ibyar/expressions';
-import { OnDestroy } from '../component/lifecycle.js';
+import { isOnInit, OnDestroy } from '../component/lifecycle.js';
 import { ChangeDetectorRef, createChangeDetectorRef } from '../linker/change-detector-ref.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { Type } from '../utils/typeof.js';
-import { addProvider, forkProvider, inject, removeProvider } from '../di/inject.js';
+import { addProvider, forkProvider, removeProvider } from '../di/inject.js';
+import { AbstractAuroraZone } from '../zone/zone.js';
 
 /**
  * Pipes are used as singleton
@@ -44,6 +45,19 @@ export class PipeProvider extends ReadOnlyScope<{ [pipeName: string]: Function }
 			addProvider(provider);
 			const pipe = new pipeRef.modelClass();
 			removeProvider(provider);
+
+			if (isOnInit(pipe)) {
+				if (provider.hasType(AbstractAuroraZone)) {
+					const zone = provider.inject(AbstractAuroraZone);
+					zone?.run(pipe.onInit, this.getContextProxy!());
+				} else {
+					try {
+						pipe.onInit();
+					} catch (e) {
+						console.error(e);
+					}
+				}
+			}
 			transformFunc = (value: any, ...args: any[]) => pipe.transform(value, ...args);
 			this._ctx[pipeRef.name] = transformFunc;
 			return transformFunc;
@@ -90,6 +104,19 @@ export class AsyncPipeScope<T extends { [key: string]: AsyncPipeTransform<any, a
 		addProvider(provider);
 		const pipe = new pipeClass(detector);
 		removeProvider(provider);
+
+		if (isOnInit(pipe)) {
+			if (provider.hasType(AbstractAuroraZone)) {
+				const zone = provider.inject(AbstractAuroraZone);
+				zone?.run(pipe.onInit, this.getContextProxy!());
+			} else {
+				try {
+					pipe.onInit();
+				} catch (e) {
+					console.error(e);
+				}
+			}
+		}
 
 		const result = super.set(propertyKey, pipe, receiver);
 		if (result) {

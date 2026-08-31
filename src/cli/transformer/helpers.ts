@@ -1,4 +1,4 @@
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { DecoratorInfo, SignalMetadata, SignalInfo } from './modules.js';
 import { SignalDetails, SignalKey } from './signals.js';
 
@@ -46,6 +46,16 @@ export function isPipeDecorator(decorator: ts.Decorator, pipeName = 'Pipe'): boo
  * @returns 
  */
 export function isInjectableDecorator(decorator: ts.Decorator, injectableName = 'Injectable'): boolean {
+	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === injectableName;
+};
+
+/**
+ * check if a decorator is a `@Service` decorator;
+ * @param decorator 
+ * @param injectableName 
+ * @returns 
+ */
+export function isServiceDecorator(decorator: ts.Decorator, injectableName = 'Service'): boolean {
 	return ts.isCallExpression(decorator.expression) && decorator.expression.expression.getText() === injectableName;
 };
 

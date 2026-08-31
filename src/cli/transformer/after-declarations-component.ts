@@ -1,4 +1,4 @@
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { createStaticPropertyViewType, updateModuleTypeWithComponentView } from './factory.js';
 import { moduleManger, ViewInfo } from './modules.js';
 
