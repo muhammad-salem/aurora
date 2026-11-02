@@ -90,7 +90,7 @@ export class VariableDeclarationNode extends AbstractExpressionNode implements D
 	}
 	constructor(
 		protected declarations: VariableDeclarator[],
-		protected kind: 'var' | 'let' | 'const',
+		protected kind: 'var' | 'let' | 'const' | 'using' | 'await using',
 		range?: [number, number],
 		loc?: SourceLocation) {
 		super(range, loc);

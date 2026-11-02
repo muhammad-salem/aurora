@@ -522,6 +522,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 				return this.parseClassDeclaration(undefined, false, classToken);
 			case Token.VAR:
 			case Token.CONST:
+			case Token.USING:
 				return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
 			case Token.LET:
 				if (this.isNextLetKeyword()) {
@@ -685,7 +686,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		this.expect(Token.LPAREN);
 		const peek = this.peek();
 		const starts_with_let = peek.isType(Token.LET);
-		if (peek.isType(Token.CONST) || (starts_with_let && this.isNextLetKeyword())) {
+		if (peek.isType(Token.CONST) || peek.isType(Token.USING) || (starts_with_let && this.isNextLetKeyword())) {
 
 			// The initializer contains lexical declarations,
 			// so create an in-between scope.
@@ -848,7 +849,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   ('var' | 'const' | 'let') (Identifier ('=' AssignmentExpression)?)+[',']
 		// var converted into ==> 'let' by parser
 
-		let mode: 'const' | 'let' | 'var';
+		let mode: 'const' | 'let' | 'var' | 'using' | 'await using';
 		const start = this.peek();
 		const token = start.token;
 		switch (token) {
@@ -861,10 +862,23 @@ export class JavaScriptInlineParser extends AbstractParser {
 				mode = 'var';
 				break;
 			case Token.LET:
-			default:
 				this.consume(token);
 				mode = 'let';
 				break;
+			case Token.USING:
+				this.consume(token);
+				mode = 'using';
+				break;
+			case Token.AWAIT:
+				const next = this.peekAhead();
+				if (next.token === Token.USING) {
+					this.consume(token);
+					this.consume(next.token);
+					mode = 'await using';
+					break;
+				}
+			default:
+				throw new Error(this.errorMessage(`Declaration Missing Initializer`));
 		}
 		const variables: VariableDeclarator[] = [];
 		do {

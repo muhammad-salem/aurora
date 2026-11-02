@@ -103,7 +103,7 @@ export interface NodeFactory {
 	createForAwaitOfStatement(left: ForDeclaration, right: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForAwaitOfNode;
 	createForInStatement(initializer: ForDeclaration, enumerable: ExpressionNode, body: ExpressionNode, range?: [number, number]): ForInNode;
 	createVariableDeclaration(id: DeclarationExpression, init?: ExpressionNode, range?: [number, number]): VariableDeclarator;
-	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode;
+	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const' | 'using' | 'await using', range?: [number, number]): VariableDeclarationNode;
 	createContinueStatement(label?: Identifier, range?: [number, number]): ContinueStatement;
 	createBreakStatement(label?: Identifier, range?: [number, number]): BreakStatement;
 	createReturnStatement(argument?: ExpressionNode, range?: [number, number]): ReturnStatement;

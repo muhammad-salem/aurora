@@ -1514,6 +1514,12 @@ export class TokenStreamImpl extends TokenStream {
 					return true;
 				}
 				return false;
+			case 'u':
+				if (/using\s/.test(this.expression.substring(this.pos, this.pos + 6))) {
+					this.current = this.newToken(Token.USING, [this.pos, (this.pos += 6)]);
+					return true;
+				}
+				return false;
 			default:
 				return false;
 		}
