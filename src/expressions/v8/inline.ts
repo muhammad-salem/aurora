@@ -524,6 +524,11 @@ export class JavaScriptInlineParser extends AbstractParser {
 			case Token.CONST:
 			case Token.USING:
 				return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
+			case Token.AWAIT:
+				if (this.isAwaitAllowed()) {
+					return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
+				}
+				break;
 			case Token.LET:
 				if (this.isNextLetKeyword()) {
 					return this.parseVariableDeclarations(VariableDeclarationContext.StatementListItem);
@@ -1420,6 +1425,7 @@ export class JavaScriptInlineParser extends AbstractParser {
 		//   ObjectLiteral
 		//   RegExpLiteral
 		//   '(' Expression ')'
+		//   TemplateLiteral
 		//   do Block
 		//   AsyncFunctionLiteral
 

@@ -6,9 +6,9 @@ using name1 = value1;
 using name1 = value1, name2 = value2;
 using name1 = value1, name2 = value2, /* …, */ nameN = valueN;
 
-// await using name1 = value1;
-// await using name1 = value1, name2 = value2;
-// await using name1 = value1, name2 = value2, /* …, */ nameN = valueN;
+await using name1 = value1;
+await using name1 = value1, name2 = value2;
+await using name1 = value1, name2 = value2, /* …, */ nameN = valueN;
 
 const resources = [new Resource(), new Resource(), new Resource()];
 for (using resource of resources) {
