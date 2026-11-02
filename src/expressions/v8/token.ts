@@ -746,7 +746,7 @@ export class Token {
 			case Token.NOT:
 			case Token.BIT_NOT:
 			case Token.DELETE:
-			case Token.AWAIT:
+			// case Token.AWAIT:
 			case Token.TYPEOF:
 			case Token.VOID:
 				return true;
