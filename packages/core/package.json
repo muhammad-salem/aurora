@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/core",
-	"version": "5.0.0",
+	"version": "5.1.0",
 	"description": "Ibyar core, Implements Aurora's core functionality, low-level services, and utilities",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/core",

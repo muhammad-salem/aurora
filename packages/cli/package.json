@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/cli",
-	"version": "5.0.0",
+	"version": "5.1.0",
 	"description": "The Ibyar/Aurora CLI tool",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",

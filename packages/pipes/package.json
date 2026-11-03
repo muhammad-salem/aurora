@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/pipes",
-	"version": "5.0.0",
+	"version": "5.1.0",
 	"description": "Ibyar pipes, build-in pipes for aurora lib, like json, translate, async, etc...",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/pipes",

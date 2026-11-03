@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/example",
-	"version": "5.0.0",
+	"version": "5.1.0",
 	"description": "Aurora test, all the test apps, used while building this lib",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",

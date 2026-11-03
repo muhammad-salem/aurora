@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/forms",
-	"version": "5.0.0",
+	"version": "5.1.0",
 	"description": "Ibyar forms contain form group, form builder and native ui form group",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/forms",
