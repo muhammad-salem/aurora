@@ -31,10 +31,7 @@
 		"ibyar:example:w": "npm run clean && ibyar -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
 		"publish": "npm run build && npm publish --workspaces",
-		"do:publish-no-git": "npm run build && npx lerna publish --force-publish --no-git-tag-version --no-push",
-		"do:publish-no-tag": "npm run build && npx lerna publish --force-publish --no-git-tag-version",
-		"do:publish-no-push": "npm run build && npx lerna publish --force-publish --no-push",
-		"do:publish": "npm run build && npx lerna publish --force-publish",
+		"version": "npm version minor --workspaces",
 		"docs": "npx typedoc --tsconfig ./tsconfig.json",
 		"serve": "serve -s -p 5000 ./example/public/",
 		"esmpack": "cd example && esmpack"
