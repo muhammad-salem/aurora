@@ -40,6 +40,15 @@
 				"<node_internals>/**"
 			],
 			"program": "${workspaceFolder}/test/expressions/test262.mjs"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "tests-using",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/test/expressions/using.spec.mjs"
 		}
 	]
 }

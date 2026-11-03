@@ -1,4 +1,4 @@
-# Aurora
+# ✨ Aurora: A Type-Safe Web Component Framework
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -109,9 +109,10 @@
 [typescript]: https://github.com/Microsoft/typescript
 [tslib]: https://github.com/Microsoft/tslib
 
-Ibyar Aurora, is a web framework, that can create and define a Web Component standards ('custom elements', 'Shadow DOM' and 'HTML Templates'), that compatible with other frameworks, using Typescript.
+Aurora is a powerful and modern framework designed to simplify the creation and management of Web Components. Built with TypeScript, Aurora provides a robust, reactive, and declarative way to build highly maintainable UI libraries and complex single-page applications (SPAs) that adhere strictly to Web Component standards.
 
-This framework build with-in a embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute Template syntax and attributes binding. 
+It uses a proprietary embedded JavaScript Engine [@ibyar/expressions](https://npmjs.org/package/@ibyar/expressions) to execute template syntax and attribute binding, offering a clean developer experience while ensuring maximum compatibility across frameworks.
+
 
 - Demo: https://muhammad-salem.github.io/aurora-demo
 - API Doc: https://muhammad-salem.github.io/aurora-docs

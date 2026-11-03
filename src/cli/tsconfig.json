@@ -1,14 +1,15 @@
 {
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"outDir": "../../packages/cli",
 		"rootDir": ".",
 		"composite": true,
+		"target": "es2025",
+		"module": "es2022",
+		"moduleResolution": "bundler",
 		"tsBuildInfoFile": "./tsBuild.info",
-		"allowSyntheticDefaultImports": true,
 		"lib": [
-			"ES2022",
+			"ES2025"
 		],
 		"types": [
 			"node"
@@ -16,7 +17,8 @@
 	},
 	"include": [
 		"**/*.ts",
-		"**/*.tsx"
+		"**/*.tsx",
+		"**/*.mts"
 	],
 	"files": [
 		"index.ts"

@@ -1,5 +1,5 @@
 import { normalize } from 'path';
-import ts from 'typescript/lib/tsserverlibrary.js';
+import ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { getConfigPath, getTransformers, scanDirectives } from '../compiler/compiler.js';
 
 let host: ts.CompilerHost;

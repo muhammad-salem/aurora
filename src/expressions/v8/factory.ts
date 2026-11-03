@@ -224,7 +224,7 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new VariableDeclarator(id, init, range, loc);
 	}
-	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const', range?: [number, number]): VariableDeclarationNode {
+	createVariableStatement(variables: VariableDeclarator[], kind: 'let' | 'var' | 'const' | 'using' | 'await using', range?: [number, number]): VariableDeclarationNode {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new VariableDeclarationNode(variables, kind, range, loc);
 	}

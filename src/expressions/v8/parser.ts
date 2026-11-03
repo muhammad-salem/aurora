@@ -549,16 +549,16 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// ExportDeclaration:
 		//    'export' '*' 'from' ModuleSpecifier ';'
 		//    'export' '*' 'from' ModuleSpecifier [no LineTerminator here]
-		//        AssertClause ';'
+		//        WithClause ';'
 		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier ';'
 		//    'export' '*' 'as' IdentifierName 'from' ModuleSpecifier
-		//        [no LineTerminator here] AssertClause ';'
+		//        [no LineTerminator here] WithClause ';'
 		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
 		//    'export' '*' 'as' ModuleExportName 'from' ModuleSpecifier ';'
-		//        [no LineTerminator here] AssertClause ';'
+		//        [no LineTerminator here] WithClause ';'
 		//    'export' ExportClause ('from' ModuleSpecifier)? ';'
 		//    'export' ExportClause ('from' ModuleSpecifier [no LineTerminator here]
-		//        AssertClause)? ';'
+		//        WithClause)? ';'
 		//    'export' VariableStatement
 		//    'export' Declaration
 		//    'export' 'default' ... (handled in ParseExportDefault)
@@ -606,7 +606,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 				if (this.checkContextualKeyword('from')) {
 					// Scanner::Location specifier_loc = scanner() -> peek_location();
 					moduleSpecifier = this.parseModuleSpecifier();
-					importAttributes = this.parseImportAttributeClause();
+					importAttributes = this.parseImportWithOrAssertClause();
 					this.expectSemicolon();
 
 					// if (exportData.isEmpty()) {
@@ -692,8 +692,8 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		//   'import' ImportClause 'from' ModuleSpecifier ';'
 		//   'import' ModuleSpecifier ';'
 		//   'import' ImportClause 'from' ModuleSpecifier [no LineTerminator here]
-		//       AssertClause ';'
-		//   'import' ModuleSpecifier [no LineTerminator here] AssertClause';'
+		//       WithClause ';'
+		//   'import' ModuleSpecifier [no LineTerminator here] WithClause';'
 		//
 		// ImportClause :
 		//   ImportedDefaultBinding
@@ -713,7 +713,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		if (tok.isType(Token.STRING)) {
 			// Scanner::Location specifier_loc = scanner() -> peek_location();
 			const moduleSpecifier = this.parseModuleSpecifier();
-			const importAttributes = this.parseImportAttributeClause();
+			const importAttributes = this.parseImportWithOrAssertClause();
 			this.expectSemicolon();
 
 			// module() -> AddEmptyImport(module_specifier, import_assertions, specifier_loc,zone());
@@ -758,7 +758,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		// ExpectContextualKeyword(ast_value_factory() -> from_string());
 		// Scanner::Location specifier_loc = scanner() -> peek_location();
 		const moduleSpecifier = this.parseModuleSpecifier();
-		const importAttributes = this.parseImportAttributeClause();
+		const importAttributes = this.parseImportWithOrAssertClause();
 		this.expectSemicolon();
 
 		// Now that we have all the information, we can make the appropriate
@@ -841,27 +841,18 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 		names.push(...declarations.getDeclarations().map(d => d.getId().toString()));
 		return declarations;
 	}
-	protected parseImportAttributeClause(): ImportAttribute[] | undefined {
-		// AssertClause :
-		//    assert '{' '}'
-		//    assert '{' AssertEntries '}'
+	protected parseImportWithOrAssertClause(): ImportAttribute[] | undefined {
+		// WithClause :
+		//    with '{' '}'
+		//    with '{' WithEntries ','? '}'
 
-		// AssertEntries :
-		//    IdentifierName: AssertionKey
-		//    IdentifierName: AssertionKey , AssertEntries
+		// WithEntries :
+		//    LiteralPropertyName
+		//    LiteralPropertyName ':' StringLiteral , WithEntries
 
-		// AssertionKey :
-		//     IdentifierName
-		//     StringLiteral
 
-		//   auto import_assertions = zone() -> New<ImportAssertions>(zone());
-
-		// if (!FLAG_harmony_import_assertions) {
-		// 	return import_assertions;
-		// }
-
-		// Assert clause is optional, and cannot be preceded by a LineTerminator.
-		if (this.scanner.hasLineTerminatorBeforeNext() || !this.checkContextualKeyword('assert')) {
+		// with clause is optional, and cannot be preceded by a LineTerminator.
+		if (this.scanner.hasLineTerminatorBeforeNext() || !this.expect(Token.WITH)) {
 			return undefined;
 		}
 		this.expect(Token.LBRACE);
@@ -1070,7 +1061,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 			this.expectContextualKeyword('from');
 			// Scanner::Location specifier_loc = scanner() -> peek_location();
 			const moduleSpecifier = this.parseModuleSpecifier();
-			const importAttributes = this.parseImportAttributeClause();
+			const importAttributes = this.parseImportWithOrAssertClause();
 			this.expectSemicolon();
 			// module() -> AddStarExport(module_specifier, import_assertions, loc,specifier_loc, zone());
 			return this.factory.createExportAllDeclaration(moduleSpecifier, undefined, importAttributes, this.createRange(start));
@@ -1097,7 +1088,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 		this.expectContextualKeyword('from');
 		const moduleSpecifier = this.parseModuleSpecifier();
-		const importAttributes = this.parseImportAttributeClause();
+		const importAttributes = this.parseImportWithOrAssertClause();
 		this.expectSemicolon();
 
 		// const specifiers = [new ExportSpecifier(exportName as Identifier, exportName as Identifier)];

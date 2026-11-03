@@ -8,7 +8,7 @@ export type ProviderType = 'component' | 'service' | 'directive' | 'pipe' | 'sel
 export class ClassRegistry {
 	viewSet: Set<MetadataClass> = new Set();
 	componentSet: Set<MetadataClass> = new Set();
-	injectableSet: Set<MetadataClass> = new Set();
+	serviceSet: Set<MetadataClass> = new Set();
 	directiveSet: Set<MetadataClass> = new Set();
 	pipeSet: Set<MetadataClass> = new Set();
 
@@ -18,8 +18,8 @@ export class ClassRegistry {
 	registerComponent(classRef: MetadataClass): void {
 		this.componentSet.add(classRef);
 	}
-	registerInjectable(classRef: MetadataClass): void {
-		this.injectableSet.add(classRef);
+	registerService(classRef: MetadataClass): void {
+		this.serviceSet.add(classRef);
 	}
 	registerDirective(classRef: MetadataClass): void {
 		this.directiveSet.add(classRef);
@@ -100,8 +100,8 @@ export class ClassRegistry {
 		return false;
 	}
 
-	hasInjectable<T>(name: string): boolean {
-		for (const modelClass of this.injectableSet) {
+	hasService<T>(name: string): boolean {
+		for (const modelClass of this.serviceSet) {
 			const componentRef = ReflectComponents.getMetaDate(modelClass) as InjectableRef<T>;
 			if (componentRef.name === name) {
 				return true;
@@ -158,17 +158,17 @@ export class ClassRegistry {
 		for (const modelClass of this.directiveSet) {
 			const directiveRef = ReflectComponents.getMetaDate(modelClass) as DirectiveRef<T>;
 			if (directiveRef?.selector === selector) {
-				this.injectableSet.delete(modelClass);
+				this.directiveSet.delete(modelClass);
 				break;
 			}
 		}
 	}
 
-	deleteInjectable<T>(name: string) {
-		for (const modelClass of this.injectableSet) {
+	deleteService<T>(name: string) {
+		for (const modelClass of this.serviceSet) {
 			const componentRef = ReflectComponents.getMetaDate(modelClass) as InjectableRef<T>;
 			if (componentRef.name === name) {
-				this.injectableSet.delete(modelClass);
+				this.serviceSet.delete(modelClass);
 				break;
 			}
 		}

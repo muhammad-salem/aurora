@@ -1,4 +1,4 @@
-import type ts from 'typescript/lib/tsserverlibrary.js';
+import type ts from '@typescript/typescript6/lib/tsserverlibrary.js';
 import { SignalKey } from './signals.js';
 
 export type ViewInfo = {

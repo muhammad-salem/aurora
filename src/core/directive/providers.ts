@@ -1,5 +1,4 @@
-import { ReactiveScope } from '@ibyar/expressions';
-import { TypeOf } from '@ibyar/expressions/api/utils';
+import { ReactiveScope, TypeOf } from '@ibyar/expressions';
 import { isOnInit } from '../component/lifecycle.js';
 import { classRegistryProvider } from '../providers/provider.js';
 import { AttributeDirective } from './directive.js';

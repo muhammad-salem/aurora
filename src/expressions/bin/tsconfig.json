@@ -1,0 +1,33 @@
+{
+	"extends": "../../../tsconfig.compilerOption.json",
+	"references": [
+		{
+			"path": "../../decorators/tsconfig.json"
+		},
+		{
+			"path": "../tsconfig.json"
+		}
+	],
+	"compilerOptions": {
+		"outDir": "../../../packages/expressions/bin",
+		"rootDir": ".",
+		"composite": true,
+		"target": "es2025",
+		"module": "es2022",
+		"moduleResolution": "bundler",
+		"tsBuildInfoFile": "./tsBuild.info",
+		"lib": [
+			"ES2025"
+		],
+		"types": [
+			"node"
+		]
+	},
+	"include": [
+		"cli.ts"
+	],
+	"files": [
+		"cli.ts"
+	],
+	"compileOnSave": true
+}

@@ -1,7 +1,6 @@
 {
 	"extends": "./tsconfig.dependency.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"outDir": "../../packages/expressions",
 		"rootDir": ".",
 		"composite": true,
@@ -13,6 +12,9 @@
 	],
 	"files": [
 		"index.ts"
+	],
+	"exclude": [
+		"bin/cli.ts"
 	],
 	"compileOnSave": true
 }

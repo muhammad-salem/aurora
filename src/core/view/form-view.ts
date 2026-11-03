@@ -81,7 +81,7 @@ export function baseFormFactoryView<T extends Object>(htmlElementType: Type<HTML
 			let valueControl: ValueControl<any> | undefined;
 			if (typeof componentRef.formAssociated === 'function') {
 				if (this._model instanceof componentRef.formAssociated) {
-					valueControl == this._model;
+					valueControl = this._model;
 				} else {
 					const args: any[] = [this]; /* resolve dependency injection*/;
 					valueControl = new componentRef.formAssociated(args);
