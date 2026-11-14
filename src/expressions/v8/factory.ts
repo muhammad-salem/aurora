@@ -328,9 +328,9 @@ export class ExpressionNodeFactory implements NodeFactory {
 		const loc = this.rangeFactory?.createSourcePosition(range);
 		return new LogicalExpression(operator, left, right, range, loc);
 	}
-	createConditionalExpression(test: ExpressionNode, alternate: ExpressionNode, consequent: ExpressionNode, range?: [number, number]): ConditionalExpression {
+	createConditionalExpression(test: ExpressionNode, consequent: ExpressionNode, alternate: ExpressionNode, range?: [number, number]): ConditionalExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);
-		return new ConditionalExpression(test, alternate, consequent, range, loc);
+		return new ConditionalExpression(test, consequent, alternate, range, loc);
 	}
 	createYieldExpression(delegate: boolean, argument?: ExpressionNode, range?: [number, number]): YieldExpression {
 		const loc = this.rangeFactory?.createSourcePosition(range);

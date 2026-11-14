@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/router",
-	"version": "5.0.0",
+	"version": "5.0.1",
 	"description": "Ibyar router has the built-in directives for router and navigation",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora/tree/dev/packages/router",
@@ -34,9 +34,9 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^5.0.0",
-		"@ibyar/elements": "^5.0.0",
-		"@ibyar/platform": "^5.0.0",
+		"@ibyar/core": "^5.0.1",
+		"@ibyar/elements": "^5.0.1",
+		"@ibyar/platform": "^5.0.1",
 		"tslib": "^2.9.1"
 	},
 	"devDependencies": {
@@ -52,6 +52,5 @@
 		"router",
 		"typescript",
 		"front-end"
-	],
-	"gitHead": "c0e54a3bb5807191ee8d18c55835f4dee535d78d"
+	]
 }

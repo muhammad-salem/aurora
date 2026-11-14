@@ -11,21 +11,21 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	static fromJSON(node: ConditionalExpression, deserializer: NodeDeserializer): ConditionalExpression {
 		return new ConditionalExpression(
 			deserializer(node.test),
-			deserializer(node.alternate),
 			deserializer(node.consequent),
+			deserializer(node.alternate),
 			node.range,
 			node.loc
 		);
 	}
 	static visit(node: ConditionalExpression, visitNode: VisitNodeType): void {
 		visitNode(node.test);
-		visitNode(node.alternate);
 		visitNode(node.consequent);
+		visitNode(node.alternate);
 	}
 	constructor(
 		private test: ExpressionNode,
-		private alternate: ExpressionNode,
 		private consequent: ExpressionNode,
+		private alternate: ExpressionNode,
 		range?: [number, number],
 		loc?: SourceLocation) {
 		super(range, loc);
@@ -48,25 +48,25 @@ export class ConditionalExpression extends AbstractExpressionNode {
 	dependency(computed?: true): ExpressionNode[] {
 		return this.test.dependency(computed)
 			.concat(
-				this.alternate.dependency(computed),
-				this.consequent.dependency(computed)
+				this.consequent.dependency(computed),
+				this.alternate.dependency(computed)
 			);
 	}
 	dependencyPath(computed?: true): ExpressionEventPath[] {
 		return this.test.dependencyPath(computed)
 			.concat(
-				this.alternate.dependencyPath(computed),
-				this.consequent.dependencyPath(computed)
+				this.consequent.dependencyPath(computed),
+				this.alternate.dependencyPath(computed)
 			);
 	}
 	toString() {
-		return `${this.test.toString()} ? (${this.alternate.toString()}):(${this.consequent.toString()})`;
+		return `${this.test.toString()} ? (${this.consequent.toString()}):(${this.alternate.toString()})`;
 	}
 	toJson(): object {
 		return {
 			test: this.test.toJSON(),
-			alternate: this.alternate.toJSON(),
-			consequent: this.consequent.toJSON()
+			consequent: this.consequent.toJSON(),
+			alternate: this.alternate.toJSON()
 		};
 	}
 }
