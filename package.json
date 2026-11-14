@@ -33,7 +33,7 @@
 		"publish": "npm run build && npm publish --workspaces",
 		"version": "npm version minor --workspaces",
 		"docs": "npx typedoc --tsconfig ./tsconfig.json",
-		"serve": "serve -s -p 5000 ./example/public/",
+		"serve": "npx serve -s -p 5000 ./example/public/",
 		"esmpack": "cd example && esmpack"
 	}
 }

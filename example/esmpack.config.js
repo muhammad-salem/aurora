@@ -8,7 +8,7 @@ const config = {
 	resources: {
 		files: [],
 		include: ["./src/**/*.*"],
-		exclude: ["./src/**/*.{js,ts,tsx}"]
+		exclude: ["./src/**/*.{js,jsx,ts,tsx}"]
 	},
 	pathMap: { 'src': 'dist' },
 	moduleResolution: "relative",
