@@ -1,6 +1,6 @@
 {
 	"name": "@ibyar/aurora",
-	"version": "5.1.0",
+	"version": "5.0.1",
 	"description": "Create and define a usable 'custom elements', that compatible with other frameworks, using Typescript",
 	"license": "MIT",
 	"homepage": "https://github.com/ibyar/aurora",
@@ -34,15 +34,15 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@ibyar/core": "^5.0.0",
-		"@ibyar/decorators": "^5.0.0",
-		"@ibyar/directives": "^5.0.0",
-		"@ibyar/elements": "^5.0.0",
-		"@ibyar/expressions": "^5.0.0",
-		"@ibyar/forms": "^5.0.0",
-		"@ibyar/pipes": "^5.0.0",
-		"@ibyar/platform": "^5.0.0",
-		"@ibyar/router": "^5.0.0",
+		"@ibyar/core": "^5.0.1",
+		"@ibyar/decorators": "^5.0.1",
+		"@ibyar/directives": "^5.0.1",
+		"@ibyar/elements": "^5.0.1",
+		"@ibyar/expressions": "^5.0.1",
+		"@ibyar/forms": "^5.0.1",
+		"@ibyar/pipes": "^5.0.1",
+		"@ibyar/platform": "^5.0.1",
+		"@ibyar/router": "^5.0.1",
 		"tslib": "^2.9.1"
 	},
 	"peerDependencies": {

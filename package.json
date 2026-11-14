@@ -31,7 +31,9 @@
 		"ibyar:example:w": "npm run clean && ibyar -b -v -w example/",
 		"test262": "node test/expressions/test262.mjs",
 		"publish": "npm run build && npm publish --workspaces",
-		"version": "npm version minor --workspaces",
+		"version:patch": "npm version patch --workspaces",
+		"version:minor": "npm version minor --workspaces",
+		"version:major": "npm version major --workspaces",
 		"docs": "npx typedoc --tsconfig ./tsconfig.json",
 		"serve": "npx serve -s -p 5000 ./example/public/",
 		"esmpack": "cd example && esmpack"
