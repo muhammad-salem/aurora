@@ -124,10 +124,11 @@ export abstract class AbstractParser {
 	protected createRange(start: Required<PositionMark>): Range;
 	protected createRange(start?: PositionMark): RangeOrVoid;
 	protected createRange(start?: PositionMark): RangeOrVoid {
-		if (Number.isNaN(start?.range?.[0])) {
+		const value = start?.range?.[0];
+		if (typeof value !== 'number') {
 			return;
 		}
-		return [start!.range![0], this.scanner.getPos()];
+		return [value, this.scanner.getPos()];
 	}
 	protected createRangeByStart(start: Required<PositionMark>): Range {
 		return [start!.range![0], this.scanner.getPos()];
