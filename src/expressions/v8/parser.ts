@@ -852,7 +852,7 @@ export class JavaScriptParser extends JavaScriptInlineParser {
 
 
 		// with clause is optional, and cannot be preceded by a LineTerminator.
-		if (this.scanner.hasLineTerminatorBeforeNext() || !this.expect(Token.WITH)) {
+		if (this.scanner.hasLineTerminatorBeforeNext() || !this.check(Token.WITH)) {
 			return undefined;
 		}
 		this.expect(Token.LBRACE);
